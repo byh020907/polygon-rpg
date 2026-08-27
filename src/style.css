@@ -1,0 +1,47 @@
+:root {
+  color: #eef2f6;
+  background: #080b10;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  overflow: hidden;
+}
+
+#app {
+  width: min(100vw, 1200px);
+  padding: 16px;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #253044;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 45%);
+  image-rendering: pixelated;
+}
+
+.help {
+  margin: 10px 0 0;
+  color: #8b98ab;
+  font-size: 0.875rem;
+  text-align: center;
+}
