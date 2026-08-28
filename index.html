@@ -3,14 +3,354 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#10151f" />
+    <meta name="theme-color" content="#080c13" />
     <title>Polygon RPG</title>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
-    <main id="app">
-      <canvas id="game" aria-label="Polygon RPG 게임 화면"></canvas>
-      <p class="help">이동: WASD / 방향키</p>
+    <div class="app-loading" x-data x-init="$el.remove()" role="status" aria-live="polite">
+      <div class="app-loading-mark" aria-hidden="true">◆</div>
+      <strong>POLYGON RPG</strong>
+      <span>게임을 불러오는 중입니다</span>
+      <small>화면이 오래 유지되면 페이지를 새로고침하세요.</small>
+    </div>
+    <noscript class="noscript-message"
+      >이 게임을 실행하려면 JavaScript를 활성화해야 합니다.</noscript
+    >
+    <main id="app" x-data="gameShell" x-cloak>
+      <section class="menu-screen" x-show="screen === 'menu'" aria-labelledby="game-title">
+        <div class="menu-world" aria-hidden="true">
+          <div class="menu-moon"></div>
+          <div class="menu-mountain menu-mountain--back"></div>
+          <div class="menu-mountain menu-mountain--front"></div>
+          <div class="menu-mine"></div>
+          <div class="menu-ground"></div>
+        </div>
+
+        <div class="menu-content">
+          <section class="title-card">
+            <p class="menu-kicker">A MAGIC ACADEMY · A BODY WITHOUT SPELLS</p>
+            <h1 id="game-title"><span>POLYGON</span><strong>RPG</strong></h1>
+            <p class="menu-subtitle">
+              Vector bones beneath the surface.<br />Pixel legends on the screen.
+            </p>
+
+            <div class="menu-actions">
+              <button
+                class="menu-button menu-button--primary"
+                type="button"
+                @click="startGame"
+                @touchend.prevent="startGame"
+              >
+                <span>새 게임 시작</span>
+                <small>ACADEMY VILLAGE</small>
+              </button>
+              <button
+                class="menu-button"
+                type="button"
+                @click="startMobileGame"
+                @touchend.prevent="startMobileGame"
+              >
+                <span>모바일 조작으로 시작</span>
+                <small>ORCA REMOTE CONTROLS</small>
+              </button>
+              <button
+                class="menu-button"
+                type="button"
+                @click="openRenderLab"
+                @touchend.prevent="openRenderLab"
+              >
+                <span>렌더 연구실</span>
+                <small>POLYGON / RETRO 비교</small>
+              </button>
+            </div>
+
+            <p class="menu-version">PRE-ALPHA · STATIC CANVAS BUILD</p>
+          </section>
+
+          <aside class="journey-card">
+            <p class="journey-index">JOURNEY 01</p>
+            <div class="journey-mark" aria-hidden="true">◆</div>
+            <h2>마법이 없는 몸</h2>
+            <p>
+              모두가 주문을 사용하는 학원촌에서 홀로 마법을 쓰지 못하는 주인공. 옆집의 전직
+              전투교관에게 맨몸으로 마법에 맞서는 법을 배운다.
+            </p>
+            <dl>
+              <div>
+                <dt>방식</dt>
+                <dd>2D 횡스크롤 액션 RPG</dd>
+              </div>
+              <div>
+                <dt>표현</dt>
+                <dd>Polygon → Retro Pixel</dd>
+              </div>
+              <div>
+                <dt>조작</dt>
+                <dd>키보드</dd>
+              </div>
+            </dl>
+          </aside>
+        </div>
+      </section>
+
+      <section
+        class="game-screen"
+        x-show="screen === 'game'"
+        x-bind:class="{ 'game-screen--mobile-controls': forceMobileControls }"
+      >
+        <div class="game-viewport">
+          <canvas id="game-canvas" aria-label="Polygon RPG 첫 번째 맵"></canvas>
+
+          <div class="game-hud-overlay" aria-label="캐릭터 상태">
+            <div class="vital-row">
+              <span>HP</span>
+              <div
+                class="vital-track vital-track--hp"
+                role="meter"
+                aria-label="체력"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                x-bind:aria-valuenow="health"
+              >
+                <i x-bind:style="`width: ${healthPercent}`"></i>
+              </div>
+            </div>
+            <div class="vital-row">
+              <span>STAMINA</span>
+              <div
+                class="vital-track vital-track--stamina"
+                role="meter"
+                aria-label="스태미나"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                x-bind:aria-valuenow="stamina"
+              >
+                <i x-bind:style="`width: ${staminaPercent}`"></i>
+              </div>
+            </div>
+            <div class="vital-row">
+              <span>MENTAL</span>
+              <div
+                class="vital-track vital-track--mental"
+                role="meter"
+                aria-label="정신력"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                x-bind:aria-valuenow="mental"
+              >
+                <i x-bind:style="`width: ${mentalPercent}`"></i>
+              </div>
+            </div>
+            <p class="hud-money"><span>MONEY</span> <strong x-text="`${gold} Gold`"></strong></p>
+          </div>
+
+          <div class="hud-item-counter" aria-label="도구 수량"><b>◆</b><span>× 0/20</span></div>
+          <div class="game-area-label">
+            <small x-text="`AREA 01 · ${timeLabel}`"></small><strong x-text="areaName"></strong>
+          </div>
+          <button
+            class="game-menu-button"
+            type="button"
+            @click="showMenu"
+            @touchend.prevent="showMenu"
+          >
+            MENU
+          </button>
+
+          <div class="quest-line">
+            <small>목표</small>
+            <strong x-text="objective"></strong>
+          </div>
+
+          <section class="mobile-controls" aria-label="모바일 게임 조작">
+            <div class="mobile-direction-pad" aria-label="이동과 자세">
+              <template x-for="control in mobileDirections" x-bind:key="control.id">
+                <button
+                  type="button"
+                  class="mobile-control-button"
+                  x-bind:data-slot="control.slot"
+                  x-bind:data-mobile-action="control.id"
+                  x-bind:aria-label="control.hint"
+                  @contextmenu.prevent
+                >
+                  <strong x-text="control.label"></strong>
+                  <small x-text="control.hint"></small>
+                </button>
+              </template>
+            </div>
+
+            <div class="mobile-action-pad" aria-label="전투 행동">
+              <template x-for="control in mobileActions" x-bind:key="control.id">
+                <button
+                  type="button"
+                  class="mobile-control-button mobile-control-button--action"
+                  x-bind:data-slot="control.slot"
+                  x-bind:data-mobile-action="control.id"
+                  x-bind:aria-label="control.hint"
+                  @contextmenu.prevent
+                >
+                  <strong x-text="control.label"></strong>
+                  <small x-text="control.hint"></small>
+                </button>
+              </template>
+            </div>
+          </section>
+
+          <div class="mobile-landscape-hint" role="status">
+            <strong>↻ 가로 화면 권장</strong>
+            <span>기기를 옆으로 돌리면 전투 조작이 표시됩니다.</span>
+          </div>
+        </div>
+
+        <footer class="game-footer">
+          <div class="control-hints">
+            <span><kbd>←</kbd><kbd>→</kbd> 이동</span>
+            <span><kbd>Space</kbd> 점프</span>
+            <span><kbd>A</kbd> 베기 · <kbd>S</kbd> 찌르기</span>
+            <span><kbd>Q</kbd> 내려베기 · <kbd>W</kbd> 올려베기</span>
+            <span><kbd>E</kbd> 회전 · <kbd>↑</kbd><kbd>↓</kbd> 방어/앉기·레인 전환</span>
+          </div>
+          <p x-text="gameStats"></p>
+        </footer>
+      </section>
+
+      <section class="lab-screen" x-show="screen === 'render-lab'">
+        <header class="lab-hero">
+          <div>
+            <p class="eyebrow">CANVAS 2D RENDER LAB</p>
+            <h1>Vector Mesh → Retro Pixel</h1>
+            <p class="hero-copy">
+              하나의 float 기반 RenderFrame을 두 렌더러가 공유합니다. 픽셀 처리는 오른쪽 최종
+              출력에만 적용됩니다.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button
+              class="primary-button"
+              type="button"
+              @click="togglePlayback"
+              x-text="playButtonLabel"
+            ></button>
+            <button class="secondary-button" type="button" @click="resetScene">위치 초기화</button>
+            <button class="secondary-button" type="button" @click="toggleWorldTime">
+              낮/밤 전환
+            </button>
+            <button class="secondary-button" type="button" @click="showMenu">메인 메뉴</button>
+          </div>
+        </header>
+
+        <section class="control-panel" aria-label="Retro Renderer 설정">
+          <label class="range-control" for="pixel-size">
+            <span>Pixel Size</span>
+            <input
+              id="pixel-size"
+              type="range"
+              min="2"
+              max="10"
+              step="1"
+              x-model.number="pixelSize"
+            />
+            <output for="pixel-size" x-text="`${pixelSize}px`"></output>
+          </label>
+
+          <label class="range-control" for="posterization-levels">
+            <span>Posterization</span>
+            <input
+              id="posterization-levels"
+              type="range"
+              min="2"
+              max="8"
+              step="1"
+              x-model.number="posterizationLevels"
+            />
+            <output for="posterization-levels" x-text="posterizationLevels"></output>
+          </label>
+
+          <label class="range-control" for="outline-width">
+            <span>Outline</span>
+            <input
+              id="outline-width"
+              type="range"
+              min="0"
+              max="2"
+              step="1"
+              x-model.number="outlineWidth"
+            />
+            <output for="outline-width" x-text="`${outlineWidth}px`"></output>
+          </label>
+
+          <label class="range-control" for="alpha-threshold">
+            <span>Alpha Threshold</span>
+            <input
+              id="alpha-threshold"
+              type="range"
+              min="1"
+              max="254"
+              step="1"
+              x-model.number="alphaThreshold"
+              x-bind:disabled="!alphaThresholdEnabled"
+            />
+            <output for="alpha-threshold" x-text="alphaThreshold"></output>
+          </label>
+
+          <label class="range-control" for="animation-speed">
+            <span>Animation Speed</span>
+            <input
+              id="animation-speed"
+              type="range"
+              min="0.25"
+              max="2"
+              step="0.05"
+              x-model.number="animationSpeed"
+            />
+            <output for="animation-speed" x-text="`${Number(animationSpeed).toFixed(2)}×`"></output>
+          </label>
+
+          <div class="toggle-group">
+            <label class="toggle"><input type="checkbox" x-model="pixelSnap" /> Pixel Snap</label>
+            <label class="toggle"
+              ><input type="checkbox" x-model="alphaThresholdEnabled" /> Alpha Threshold</label
+            >
+            <label class="toggle"><input type="checkbox" x-model="showMesh" /> Show Mesh</label>
+            <label class="toggle"
+              ><input type="checkbox" x-model="showPixelGrid" /> Pixel Grid</label
+            >
+          </div>
+        </section>
+
+        <section class="renderer-grid" aria-label="렌더러 비교">
+          <article class="render-panel">
+            <header class="panel-heading">
+              <div>
+                <p>REFERENCE</p>
+                <h2>POLYGON</h2>
+              </div>
+              <span>FLOAT SCREEN SPACE</span>
+            </header>
+            <canvas id="polygon-canvas" aria-label="Float 좌표 Polygon Renderer 출력"></canvas>
+          </article>
+
+          <article class="render-panel render-panel--retro">
+            <header class="panel-heading">
+              <div>
+                <p>FINAL OUTPUT</p>
+                <h2>RETRO PIXEL</h2>
+              </div>
+              <span>LOGICAL PIXEL SPACE</span>
+            </header>
+            <canvas id="retro-canvas" aria-label="Retro Pixel Renderer 출력"></canvas>
+          </article>
+        </section>
+
+        <footer class="status-bar">
+          <p>
+            이동 <kbd>←</kbd><kbd>→</kbd> · 점프 <kbd>Space</kbd> · 전투 <kbd>A</kbd><kbd>S</kbd
+            ><kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd>
+          </p>
+          <p x-text="renderStats" aria-live="polite"></p>
+        </footer>
+      </section>
     </main>
     <script type="module" src="./src/main.js"></script>
   </body>

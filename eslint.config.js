@@ -2,7 +2,7 @@ import eslint from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist', 'coverage'] },
+  { ignores: ['dist', 'coverage', 'src/vendor/**'] },
   eslint.configs.recommended,
   {
     files: ['src/**/*.js'],
