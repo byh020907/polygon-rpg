@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-003138
-status: integrating
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T00:31:38+09:00
@@ -74,7 +74,7 @@ source_ref: M1
 
 ## 결과
 
-팀장이 현재 candidate를 추가 수정 없이 승인했다. 모든 적용 rubric 축 2 이상이고 독립 re-verifier가 actionable finding 없이 통과했으므로 coordinator integration-ready 상태다. 이후 높은 우선순위 체감 feedback은 현재 통합과 분리해 처리한다.
+팀장이 현재 candidate를 추가 수정 없이 승인했다. 모든 적용 rubric 축 2 이상이고 독립 re-verifier가 actionable finding 없이 통과했으며 coordinator가 main에 통합했다. 이후 높은 우선순위 체감 feedback은 현재 통합과 분리해 처리한다.
 
 ## 취소 기록
 
@@ -83,4 +83,5 @@ source_ref: M1
 ## 연결
 
 - Roadmap: `M1 — 훈련방 첫 전투 조우`
+- Final commit: `b861a6aa98796dfcc261b40c3276981475659d06`
 - 업무보고: `docs/development/reports/WI-20260830-003138-training-room-first-encounter.md`
