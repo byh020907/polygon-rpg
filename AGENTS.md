@@ -14,7 +14,7 @@
 
 ## Project Development Process
 
-제품 방향, 플레이 피드백과 autonomous improvement loop는 프로젝트 요구사항인 [`docs/development/process.md`](./docs/development/process.md)가 소유한다. 프로젝트 개발 요청은 사용자가 직접 처리를 명시하지 않는 한 [`.agents/skills/dev-team-loop/SKILL.md`](./.agents/skills/dev-team-loop/SKILL.md)를 기본 흐름으로 사용한다. 이 프로세스는 별도 Engineering Method가 아니며 각 loop 안의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
+제품 방향, 플레이 피드백과 autonomous improvement lifecycle은 프로젝트 요구사항인 [`docs/development/process.md`](./docs/development/process.md)가, 각 work item의 페르소나·품질 rubric·평가 기반 개선 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 프로젝트 개발 요청은 사용자가 직접 처리를 명시하지 않는 한 [`.agents/skills/dev-team-loop/SKILL.md`](./.agents/skills/dev-team-loop/SKILL.md)를 기본 흐름으로 사용한다. 이 프로세스는 별도 Engineering Method가 아니며 각 loop 안의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
 
 ## Engineering References
 
@@ -65,17 +65,18 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 
 현재 작업과 직접 관련될 때만 읽는 중요 문맥이다. 선택한 문서는 일부만 추측해서 사용하지 말고 필요한 계약 전체를 확인한다.
 
-| 문서                             | 상태                        | 담당 영역                                                   | 로드 조건                                                             |
-| -------------------------------- | --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
-| `README.md`                      | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                    |
-| `docs/development/process.md`    | Canonical Process           | AI 주도 loop, 병렬 worktree, 피드백과 업무보고              | 모든 구현·통합·로드맵·업무보고 작업 시                                |
-| `docs/development/roadmap.md`    | Canonical Product Reference | 핵심 재미, Reference Brief, 플레이 가능한 수직 단위와 순서  | 새 작업 선택, 제품 방향, milestone과 우선순위 판단 시                 |
-| `docs/reference-repositories.md` | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
-| `docs/rendering-pipeline.md`     | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시                 |
-| `docs/ui-architecture.md`        | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시     |
-| `docs/animation-system.md`       | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
-| `docs/input-system.md`           | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
-| `docs/world-map-system.md`       | Migration Reference (STALE) | 현재 Depth Lane prototype과 상태 패치                       | Room/Portal migration에서 현재 구현과 제거 범위를 확인할 때           |
+| 문서                               | 상태                        | 담당 영역                                                   | 로드 조건                                                             |
+| ---------------------------------- | --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| `README.md`                        | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                    |
+| `docs/development/process.md`      | Canonical Process           | AI 주도 loop, 병렬 worktree, 피드백과 업무보고              | 모든 구현·통합·로드맵·업무보고 작업 시                                |
+| `docs/development/quality-loop.md` | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                    |
+| `docs/development/roadmap.md`      | Canonical Product Reference | 핵심 재미, Reference Brief, 플레이 가능한 수직 단위와 순서  | 새 작업 선택, 제품 방향, milestone과 우선순위 판단 시                 |
+| `docs/reference-repositories.md`   | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
+| `docs/rendering-pipeline.md`       | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시                 |
+| `docs/ui-architecture.md`          | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시     |
+| `docs/animation-system.md`         | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
+| `docs/input-system.md`             | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
+| `docs/world-map-system.md`         | Migration Reference (STALE) | 현재 Depth Lane prototype과 상태 패치                       | Room/Portal migration에서 현재 구현과 제거 범위를 확인할 때           |
 
 새로운 공식 설계, 개발 규칙 또는 운영 문서를 만들면 같은 변경에서 이 표에 등록한다. 인덱스에 없는 문서를 암묵적인 공식 규칙으로 취급하지 않는다.
 
@@ -119,24 +120,25 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 
 현재 저장소의 공식 프로젝트 계약은 다음과 같다.
 
-| Rule ID                   | Canonical Rule                                                                                                                                 | 검증 근거                                  |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                       | `package.json`, `index.html`               |
-| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                          | `README.md`, GitHub Pages source           |
-| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                            | `README.md`, Pages API 상태                |
-| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                        | `package.json`                             |
-| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                | `docs/ui-architecture.md`, `index.html`    |
-| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.                                                                       | 이 파일의 Engineering Method 절            |
-| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                           | `docs/reference-repositories.md`           |
-| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                           | `docs/rendering-pipeline.md`, 실제 caller  |
-| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                | 이 파일, 향후 effect 구현과 caller         |
-| `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다. | 사용자 결정, `package.json`, 최종 diff     |
-| `PROCESS-DEV-TEAM-LOOP`   | `dev-team-loop`로 팀장 요청을 Git 이력화하고 manager·worker가 플레이 가능한 단위의 인터뷰·구현·피드백·통합·의도 기반 보고를 반복한다.          | `docs/development/process.md`, skill       |
-| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                  | `docs/animation-system.md`, 실제 solver    |
-| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                          | `docs/input-system.md`, 실제 adapters      |
-| `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.    | `docs/development/roadmap.md`, 사용자 결정 |
-| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                            | `docs/world-map-system.md`, 실제 runtime   |
-| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                           | `docs/world-map-system.md`, 실제 resolver  |
+| Rule ID                   | Canonical Rule                                                                                                                                                                            | 검증 근거                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                                                                  | `package.json`, `index.html`               |
+| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                                                                     | `README.md`, GitHub Pages source           |
+| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                                                                       | `README.md`, Pages API 상태                |
+| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                                                                   | `package.json`                             |
+| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                                                           | `docs/ui-architecture.md`, `index.html`    |
+| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.                                                                                                                  | 이 파일의 Engineering Method 절            |
+| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                                                                      | `docs/reference-repositories.md`           |
+| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                                      | `docs/rendering-pipeline.md`, 실제 caller  |
+| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                           | 이 파일, 향후 effect 구현과 caller         |
+| `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                            | 사용자 결정, `package.json`, 최종 diff     |
+| `PROCESS-DEV-TEAM-LOOP`   | `dev-team-loop`로 팀장 요청을 Git 이력화하고 manager·worker가 플레이 가능한 단위의 인터뷰·구현·피드백·통합·의도 기반 보고를 반복한다.                                                     | `docs/development/process.md`, skill       |
+| `PROCESS-QUALITY-LOOP`    | work item마다 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 feedback을 끝까지 소유하고, 하위 lane 결과를 재평가하며 반복 feedback을 검증된 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
+| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                             | `docs/animation-system.md`, 실제 solver    |
+| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                                     | `docs/input-system.md`, 실제 adapters      |
+| `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                               | `docs/development/roadmap.md`, 사용자 결정 |
+| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                                                                       | `docs/world-map-system.md`, 실제 runtime   |
+| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                                                                      | `docs/world-map-system.md`, 실제 resolver  |
 
 공식 규칙이 추가·변경·폐기되면 이 Registry와 담당 문서를 같은 변경에서 갱신한다. 같은 의미의 규칙을 여러 문서에 서로 다른 표현으로 복제하지 않는다.
 
@@ -305,6 +307,10 @@ Verified Evidence:
 Decisions:
 Changed Files:
 Validation:
+Quality Baseline:
+Current Best:
+Next Bottleneck:
+Rule Candidates:
 Open Conflicts / Risks:
 Next Step:
 ```
@@ -345,6 +351,9 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 기존 동작과 사용자의 변경을 보존한다.
 - 작은 실행 가능 수직 단위로 구현하고 각 단계에서 브라우저 실행 상태를 유지한다.
 - 기능 목록이 아니라 처음부터 끝까지 플레이 가능한 사용자 시나리오를 하나의 개발·피드백 단위로 사용한다.
+- 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
+- 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
+- 병렬 하위 lane이 있어도 work item의 통합 artifact와 품질 판정은 단일 Vertical Slice Director가 끝까지 소유한다.
 - 메인 대화는 팀장 Interface로만 사용하고 background manager만 main Git write·queue·roadmap·병합을 수행한다.
 - 독립 구현은 별도 Orca worktree와 branch에서 수행하고, 실제 같은 hunk·공개 계약·roadmap을 여러 writer가 동시에 수정하지 않는다.
 - 구현 worktree는 자기 work item과 고유 업무보고만 작성하며 다른 worktree의 branch·index·이력은 수정하지 않는다.
@@ -367,6 +376,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - [ ] roadmap의 현재 수직 단위와 `docs/development/process.md` 확인
 - [ ] Layer 2 Task Reference 선택
 - [ ] 필요한 Layer 3만 로드
+- [ ] 품질 계약, 적용 rubric과 증거 경로 확정
 - [ ] 인덱스 링크와 문서 주장 검증
 - [ ] 충돌·레거시·고아 상태 확인
 
@@ -375,6 +385,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - [ ] 관련 syntax/lint/format 검사
 - [ ] `git diff --check`
 - [ ] 실제 사용자 경로 또는 Canvas 검증
+- [ ] 품질 rubric 재평가와 현재 best·남은 병목 기록
 - [ ] 구현 수직 단위라면 의도 기반 업무보고 작성
 - [ ] 명시 요청 없이 만든 임시 test·script·fixture 제거
 - [ ] 문서 인덱스와 Canonical Rule 정합 확인

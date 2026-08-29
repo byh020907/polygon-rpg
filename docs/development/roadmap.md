@@ -170,6 +170,7 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 - permanent `bugfix`·`maintenance` lane과 기능별 managed worktree
 - 등록·관리·실행·취소 맥락을 자동 routing하는 repo-local `dev-team-loop` skill
 - Manager가 교체돼도 Git·Orca·worktree 증거로 복구하는 상태 경계
+- Lead Game Developer & QA Director 페르소나, 공통 품질 rubric과 feedback 규칙 승격 계약
 
 ### 완료 gate
 
@@ -178,6 +179,7 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 - 취소·재개·통합과 worker slot 반환 조건이 모호하지 않다.
 - `AGENTS.md`는 32 KiB instruction budget 안에서 process와 skill을 찾을 수 있다.
 - Skill validation과 현실적인 mode routing 검증을 통과한다.
+- 새 구현 work item이 반복 프롬프트 없이 품질 계약, baseline, current best와 다음 병목을 기록한다.
 
 ## M1 — 훈련방 첫 전투 조우
 
@@ -210,14 +212,14 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 
 ### 첫 병렬 작업 경계
 
-통합 AI가 먼저 `CombatFrame`, `CombatEvent`, RenderFrame extension과 ownership을 고정한다. 이후 다음 lane을 dependency 순서에 맞게 별도 worktree에서 실행한다.
+M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFrame extension과 ownership을 고정한다. 이후 다음 lane을 dependency 순서에 맞게 별도 하위 task/worktree에서 실행한다.
 
 - Gameplay: player command와 frame state
 - Encounter: enemy pattern과 hit resolution
 - Presentation: 확정 CombatEvent를 소비하는 reaction·VFX·camera
 - Verification: frozen candidate의 수치·Canvas 경로
 
-여러 writer가 중앙 `GameScene`이나 같은 public contract를 동시에 수정하지 않는다. 내부 lane은 M1 하나로 통합된 뒤에만 팀장 피드백을 요청한다.
+여러 writer가 중앙 `GameScene`이나 같은 public contract를 동시에 수정하지 않는다. 하위 lane은 독립 feedback 단위가 아니며, Vertical Slice Director가 M1의 실제 플레이 경로로 통합·재채점하고 독립 검증을 통과한 뒤에만 팀장 피드백을 요청한다.
 
 ## M2 — 학원촌 ↔ 훈련장 Room Portal
 

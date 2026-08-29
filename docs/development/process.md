@@ -2,7 +2,7 @@
 
 이 문서는 사용자가 팀장으로 제품 방향과 우선순위를 결정하고, AI 개발 팀이 업무 이력의 등록·인터뷰·구현·피드백·통합과 다음 loop를 주도하는 프로젝트 운영 계약이다.
 
-Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당한다. 이 문서는 그 Method의 비범위인 제품 인터뷰, 플레이 가능한 개발 단위, 피드백, 병렬 worktree와 autonomous improvement loop를 프로젝트 요구사항으로 정의한다. 아직 다른 프로젝트에서 재사용할 독립 Method로 승격하지 않는다.
+Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당한다. 이 문서는 그 Method의 비범위인 제품 인터뷰, 플레이 가능한 개발 단위, 피드백, 병렬 worktree와 autonomous improvement lifecycle을 프로젝트 요구사항으로 정의한다. 각 work item 내부의 개발 페르소나, 품질 rubric, 평가 기반 개선과 규칙 승격은 [`quality-loop.md`](./quality-loop.md)가 소유한다. 아직 다른 프로젝트에서 재사용할 독립 Method로 승격하지 않는다.
 
 프로젝트 개발 요청에는 기본적으로 [`.agents/skills/dev-team-loop/SKILL.md`](../../.agents/skills/dev-team-loop/SKILL.md)를 사용한다. 사용자가 `이번 건은 직접 처리`처럼 workflow 우회를 명시한 요청만 일반 작업으로 처리한다.
 
@@ -33,17 +33,20 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 - 방향이 정해진 뒤에는 “진행할까요?”라고 다시 묻지 않고 실행 결과와 다음 행동을 보고한다.
 - 대화 기억을 source of truth로 사용하지 않는다. Context가 커지면 stable point에서 manager 대화를 교체하고 Git·Orca 상태로 복구한다.
 
-### Work Item 대화 — Developer
+### Work Item 대화 — Vertical Slice Director / Developer
 
+- 하나의 work item에 유일한 Vertical Slice Director이자 Lead Game Developer & QA Director로서 팀장이 정한 제품 방향 안에서 통합된 플레이 artifact의 품질을 소유한다.
 - 하나의 업무 이력, 하나의 대화 context와 하나의 실행 attempt를 소유한다.
-- 인터뷰, Reference Brief, 실행 계약, 구현, 검증, 팀장 피드백과 업무보고를 같은 대화에서 유지한다.
+- 인터뷰, Reference Brief, 실행·품질 계약, 평가 기록, 구현, 검증, 팀장 피드백과 업무보고를 같은 대화에서 유지한다.
 - 자기 worktree, branch, 할당 경로와 고유 work item·업무보고만 수정한다.
+- 하위 worker 결과를 통합한 뒤 전체 플레이 경로를 다시 평가하며 lane별 성공을 수직 단위의 품질로 대체하지 않는다.
 - `worker_done` 뒤 새 업무를 임의로 시작하지 않는다.
 
 ### 조사·검증 Worker
 
 - Reference 조사와 frozen candidate의 읽기 전용 검증처럼 writer와 충돌하지 않는 lane을 담당한다.
 - 같은 worktree에서 writer가 수정 중인 diff를 완료 근거로 평가하지 않는다.
+- parent work item의 제품 범위, rubric, 팀장 feedback과 최종 완료 상태를 소유하지 않는다.
 - 검증 결과를 제품 방향으로 독자 승격하지 않는다.
 
 ## 메인 업무 접수
@@ -150,9 +153,11 @@ Manager는 팀장에게 worktree 종류를 묻지 않고 원 요청의 예상 �
 work item 등록
 → 전용 대화 인터뷰
 → Reference Brief
-→ 수직 단위 계약과 ownership 고정
-→ 구현
-→ 결정적 검증 + 실제 Canvas 검증
+→ 수직 단위·품질 계약과 ownership 고정
+→ baseline 평가
+→ 가장 큰 품질 병목 하나 구현·개선
+→ 결정적 검증 + 실제 artifact/Canvas 평가
+→ 점수·현재 best·다음 병목 기록과 반복
 → Orca 로컬/모바일 플레이 피드백
 → Reference 비교 평가
 → 업무보고와 final commit
@@ -194,15 +199,17 @@ Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sou
 
 ### 구현과 검증
 
+- [`quality-loop.md`](./quality-loop.md)의 공통 rubric으로 baseline과 target을 기록하고 한 iteration에 가장 큰 병목 하나만 개선한다.
 - 게임 상태는 fixed-step에서 진행하고 Renderer는 읽기 전용 RenderFrame만 소비한다.
 - 시간·frame·판정은 DOM 없는 일회성 진단으로 먼저 확인하고 임시 검증 코드는 완료 전에 제거한다.
 - 사용자가 명시하지 않은 영구 test·fixture·test script는 추가하지 않는다.
 - 화면과 조작은 실제 Canvas에서 확인하고 로컬 서버·검증 tab은 증거 확보 후 종료한다.
 - core feel loop는 입력부터 hit reaction·effect·최종 Retro 출력까지 한 경로로 확인한다.
+- 기능·결정적 검사가 먼저 통과한 장기 또는 위험한 tuning은 worker branch checkpoint로 보존할 수 있지만, final candidate는 rubric threshold와 실제 artifact 증거가 확보된 뒤에만 만든다.
 
 ### 재개선과 정지 조건
 
-다음 중 하나라도 핵심 시나리오를 방해하면 다음 기능으로 넘어가지 않고 같은 work item을 반복 개선한다.
+적용 품질 축에 0 또는 1이 남아 있으면 다음 기능으로 넘어가지 않고 같은 work item에서 가장 큰 병목을 반복 개선한다. 다음은 현재 roadmap의 핵심 실패 예다.
 
 - 입력 의도와 화면 반응의 관계가 불명확하다.
 - 공격 적중, guard, 회피와 punish 성공을 즉시 인지하기 어렵다.
@@ -210,7 +217,7 @@ Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sou
 - Polygon과 Retro 출력이 같은 판정·animation 결과를 전달하지 않는다.
 - 플레이 경로가 중간 debug 조작이나 설명에 의존한다.
 
-같은 acceptance gate가 두 번 연속 실패하고 새 환경 증거·팀장 피드백·설계 변화가 없으면 자율 tuning을 중단하고 `feedback`으로 전환한다. 같은 blocker가 반복되거나 ownership이 불명확하면 `blocked`로 전환한다. 세부 완성도가 남아도 핵심 시나리오가 플레이 가능하고 방향이 맞으면 위험을 기록하고 다음 loop로 이동할 수 있다.
+같은 acceptance gate가 두 번 연속 실패하고 새 환경 증거·팀장 피드백·설계 변화가 없으면 자율 tuning을 중단하고 `feedback`으로 전환한다. 같은 blocker가 반복되거나 ownership이 불명확하면 `blocked`로 전환한다. 반복 지적은 [`quality-loop.md`](./quality-loop.md)의 규칙 승격 절차로 자산화한다. 적용 rubric이 threshold를 통과하면 3점 polish가 남아 있어도 위험과 다음 병목을 기록하고 feedback 또는 다음 loop로 이동할 수 있다.
 
 ## Feedback와 통합
 
@@ -235,29 +242,32 @@ Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sou
 ### 피드백 경로
 
 1. 구현 worktree에서 정적·결정적 검증을 완료한다.
-2. Orca 로컬 서버 또는 모바일 tunnel에서 통합된 플레이 경로를 연다.
-3. 팀장이 worker 대화에서 직접 피드백한다.
-4. 방향이 맞는 candidate만 final commit과 업무보고를 만든다.
-5. Manager가 최신 `main`과 통합·재검증·push한다.
-6. GitHub Pages는 안정화된 `main`의 공개 결과이며 개발 중 피드백 환경으로 사용하지 않는다.
+2. 적용 rubric을 재평가하고 현재 best, 남은 병목과 실제 증거 경로를 기록한다.
+3. Orca 로컬 서버 또는 모바일 tunnel에서 통합된 플레이 경로를 연다.
+4. 팀장이 worker 대화에서 직접 피드백한다.
+5. 방향이 맞는 candidate만 final commit과 업무보고를 만든다.
+6. Manager가 최신 `main`과 통합·재검증·push한다.
+7. GitHub Pages는 안정화된 `main`의 공개 결과이며 개발 중 피드백 환경으로 사용하지 않는다.
 
 ## 병렬 ownership
 
 - Background manager만 main Git write, roadmap, 공용 인덱스와 병합 순서를 소유한다.
-- Worker는 자기 branch, 할당 경로와 work item·업무보고만 수정한다.
+- 하나의 work item에는 하나의 authoritative 대화·root Dispatch·Vertical Slice Director만 둔다. Manager는 같은 work item을 여러 peer worker에게 공동 할당하지 않는다.
+- Vertical Slice Director만 해당 work item·업무보고·통합 artifact·품질 점수와 팀장 feedback을 소유한다.
+- 하위 worker는 Director가 고정한 계약 안에서 자기 branch와 할당 경로만 수정하며 parent work item의 완료나 feedback을 직접 보고하지 않는다.
 - 같은 hunk, public API, schema, 공용 index와 canonical 문서는 한 시점에 한 writer만 소유한다.
 - 같은 저장소라는 이유만으로 직렬화하지 않고 실제 diff·공개 계약이 겹칠 때만 선행 병합 순서를 둔다.
-- Writer가 완료하고 candidate fingerprint가 고정된 뒤 독립 verifier가 확인한다.
+- Director가 모든 lane을 통합하고 candidate fingerprint를 고정한 뒤 독립 verifier가 확인한다. 실패하면 같은 Director가 품질 loop로 돌아간다.
 - 완료된 worker 대화는 commit·업무보고·검증 결과로 인계하고 다시 구현 task를 주입하지 않는다.
 
-한 수직 단위 안에서는 다음 lane을 dependency 순서에 맞게 병렬화할 수 있다.
+Vertical Slice Director는 다음 lane을 dependency 순서에 맞게 하위 task로 병렬화할 수 있다. 모든 실행 중 하위 worker는 프로젝트의 worker 상한에 포함한다.
 
 - Gameplay: simulation state, 판정과 event DTO
 - Presentation: 확정 event DTO를 소비하는 animation·VFX·camera
 - Content: 확정 schema를 사용하는 Room·적·장비 definition
 - Verification: frozen candidate의 수치·브라우저 경로
 
-공개 DTO가 고정되기 전에 여러 worker가 중앙 `GameScene`이나 같은 canonical 문서를 동시에 수정하지 않는다. Read-heavy 조사·검증은 적극 병렬화하고 write-heavy 병렬화는 disjoint ownership이 증명될 때만 사용한다.
+공개 DTO가 고정되기 전에 여러 worker가 중앙 `GameScene`이나 같은 canonical 문서를 동시에 수정하지 않는다. Read-heavy 조사·검증은 적극 병렬화하고 write-heavy 병렬화는 disjoint ownership이 증명될 때만 사용한다. 하위 lane이 끝나도 Director의 end-to-end 재실행·재채점 전에는 feedback candidate가 아니다.
 
 ## 취소와 재개
 
@@ -307,7 +317,7 @@ Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sou
 
 ## 검증과 피드백
 
-확인한 실행 경로, 결과와 팀장 피드백
+확인한 실행 경로, 적용 rubric의 최종 수준, 결과와 팀장 피드백
 
 ## 다음 loop
 

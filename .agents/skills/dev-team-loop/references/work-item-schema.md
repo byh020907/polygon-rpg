@@ -32,6 +32,18 @@ review: team-lead
 
 플레이 경로, 완료 gate, ownership과 비범위를 기록한다.
 
+## 품질 계약
+
+단일 Vertical Slice Director, 적용 rubric 축, 목표 수준, baseline, 실제 통합 artifact·플레이 증거 경로와 정지 조건을 기록한다. 하위 task가 있으면 고정된 계약, 할당 경로와 반환 산출물을 기록하되 품질 ownership은 나누지 않는다.
+
+## 평가 기록
+
+현재 best 점수, 마지막 iteration의 변화, 좋아지거나 나빠진 근거와 다음 품질 병목을 유지한다.
+
+## 규칙 후보
+
+반복 feedback·결함의 원인, 적용 범위, 오탐 비용과 문서 규칙 또는 자동 검사로 승격할 근거를 기록한다.
+
 ## Reference Brief
 
 제품·Engineering Reference의 차용·비차용 판단을 기록한다.

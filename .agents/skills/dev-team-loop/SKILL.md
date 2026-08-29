@@ -1,6 +1,6 @@
 ---
 name: dev-team-loop
-description: Run Polygon RPG's default team-lead/AI development loop. Use for main-worktree development requests, queue and worker coordination, one-work-item developer conversations, integration, status changes, or cancellation. Route by the current worktree, work-item context, and request instead of requiring separate skills. Do not use when the user explicitly says to handle the request directly without the team workflow.
+description: Run Polygon RPG's quality-driven team-lead/AI development loop. Use for main-worktree development requests, queue and worker coordination, one-work-item developer conversations, artifact evaluation, integration, status changes, or cancellation. Route by the current worktree, work-item context, and request instead of requiring separate skills. Do not use when the user explicitly says to handle the request directly without the team workflow.
 ---
 
 # Dev Team Loop
@@ -28,6 +28,7 @@ If the role is ambiguous, inspect the current Orca worktree, terminal, Run/Task/
 
 - One team-lead message creates one work item unless the team lead explicitly requests a split.
 - The main conversation does not interview or implement. The work-item conversation owns both.
+- Each work item has exactly one root developer conversation and Vertical Slice Director. It owns the integrated artifact, rubric, team-lead feedback and final completion even when bounded subtask workers contribute.
 - The background manager is the only main-worktree Git writer and excludes itself from the three-worker limit.
 - A worker owns one work item and one conversation at a time. It never starts the next item itself.
 - Git work-item documents are durable history; Orca orchestration and worktree state are live execution evidence.
@@ -36,7 +37,9 @@ If the role is ambiguous, inspect the current Orca worktree, terminal, Run/Task/
 - Do not copy Reference IP, assets, commands, maps, names, balance values, or content.
 - No force push, shared-branch history rewrite, guessed cleanup, or mutation of another worktree's branch/index.
 - Use simple instruction-driven operation first. Add scripts or scheduled automation only after a demonstrated repeated failure justifies them.
+- Do not submit a candidate with an applicable quality axis below the threshold defined in `docs/development/quality-loop.md`.
+- Subtask success is not parent work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
 
 ## Completion
 
-Report the work-item ID, current lifecycle state, result direction, impact, verification boundary and next loop. Do not repeat file-by-file diff details that Git already preserves.
+Report the work-item ID, current lifecycle state, result direction, quality threshold and artifact evidence, impact, verification boundary and next loop. Do not repeat file-by-file diff details that Git already preserves.

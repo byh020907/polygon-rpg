@@ -68,9 +68,10 @@ Reuse a lane only after its previous item is integrated or cancelled and the lan
 ## Orca Coordination
 
 - Maintain one current Run for the manager lifecycle.
-- Map each work item to one Task and each attempt to one Dispatch.
+- Map each work item to one authoritative root Task/Dispatch and Vertical Slice Director. Do not fan one work item out as peer root workers.
 - Use supervised workers so completion, failure and cancellation have lifecycle authority.
 - Give the worker its exact work-item path and tell it to use `dev-team-loop` Run mode.
+- Treat bounded subtask workers as Director-owned lanes. Only the root Director can emit parent `feedback` or final `worker_done`; all executing subtask workers still count toward project capacity.
 - Accept concise status messages; do not ingest raw worker logs into manager context.
 - On `feedback`, release the execution slot but retain the conversation/worktree.
 - On team-lead feedback in that conversation, mark the worker executing again when capacity allows.
@@ -78,14 +79,15 @@ Reuse a lane only after its previous item is integrated or cancelled and the lan
 
 ## Integration
 
-1. Confirm the worker's final commit, work-item result and declared verification. Require a separate report only for a playable vertical slice or meaningful product milestone.
-2. Freeze the candidate and run independent verification only after the writer is done.
+1. Confirm the root Vertical Slice Director's final commit, work-item result, quality threshold, integrated artifact evidence and declared independent verification. Require a separate report only for a playable vertical slice or meaningful product milestone.
+2. Confirm independent verification targeted the frozen candidate after the last writer change. If integration changes the candidate tree, rerun affected verification before push.
 3. Fetch latest `origin/main`; never rewrite main or another shared branch.
 4. Integrate in dependency order and resolve conflicts only in the owning scope.
 5. Rerun checks affected by the new base or merge resolution.
 6. Merge and push only from the manager-owned main worktree.
-7. Mark the item `done`, update roadmap only when milestone state changed, and emit the lifecycle summary.
-8. Sync a permanent lane to latest main before its next item; close a completed dedicated worktree.
+7. Review `규칙 후보`; promote only repeated or high-impact evidence to the single owning canonical document or deterministic check.
+8. Mark the item `done`, update roadmap only when milestone state changed, and emit the lifecycle summary.
+9. Sync a permanent lane to latest main before its next item; close a completed dedicated worktree.
 
 Small proven bug fixes, document alignment and behavior-preserving internal changes may integrate automatically. Items with `review: team-lead`, including product feel, visuals and new features, wait for team-lead feedback.
 
