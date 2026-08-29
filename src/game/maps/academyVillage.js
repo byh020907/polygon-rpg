@@ -422,6 +422,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         chunkId: 'village-center',
         laneId: 'front-plaza',
         anchor: { x: 450, y: 432 },
+        spawn: { x: 450, y: 350 },
         radius: 46,
       },
       to: {
@@ -431,6 +432,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         spawn: { x: 469, y: 308 },
         radius: 46,
       },
+      transition: { durationSeconds: 0.28 },
     },
     {
       id: 'yard-to-hill',
@@ -441,6 +443,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         chunkId: 'village-center',
         laneId: 'middle-homes',
         anchor: { x: 786, y: 390 },
+        spawn: { x: 786, y: 308 },
         radius: 48,
       },
       to: {
@@ -450,6 +453,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         spawn: { x: 807, y: 254 },
         radius: 48,
       },
+      transition: { durationSeconds: 0.28 },
     },
   ],
   patches: [

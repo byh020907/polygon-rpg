@@ -4,10 +4,10 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 ## 우선 확인 저장소
 
-| 저장소               | 로컬 경로                 | 우선 참고 영역                                                                                       |
-| -------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Ball Fight Simulator | `../ball-fight-simulator` | 공용 `game-kit` 경계, 충돌 검출·응답, 물리 재질, Canvas 효과 유틸, 시뮬레이션 검증 규칙              |
-| Baeseongjin          | `../baeseongjin`          | fixed-step 실행, 입력 snapshot, 렌더 snapshot, Canvas host, 파티클 preset, 성능 예산과 hot-path 규칙 |
+| 저장소               | 로컬 경로                          | 우선 참고 영역                                                                                       |
+| -------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Ball Fight Simulator | `C:/projects/ball-fight-simulator` | 공용 `game-kit` 경계, 충돌 검출·응답, 물리 재질, Canvas 효과 유틸, 시뮬레이션 검증 규칙              |
+| Baeseongjin          | `C:/projects/baeseongjin`          | fixed-step 실행, 입력 snapshot, 렌더 snapshot, Canvas host, 파티클 preset, 성능 예산과 hot-path 규칙 |
 
 ## 영역별 레퍼런스
 
@@ -15,10 +15,10 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 먼저 다음을 확인한다.
 
-- `../ball-fight-simulator/src/game-kit/physics/`
-- `../ball-fight-simulator/docs/reusable-game-resources.md`
-- `../baeseongjin/src/game/physics/`
-- `../baeseongjin/docs/performance-architecture.md`
+- `C:/projects/ball-fight-simulator/src/game-kit/physics/`
+- `C:/projects/ball-fight-simulator/docs/reusable-game-resources.md`
+- `C:/projects/baeseongjin/src/game/physics/`
+- `C:/projects/baeseongjin/docs/performance-architecture.md`
 
 가져올 핵심 원칙:
 
@@ -37,9 +37,9 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 먼저 다음을 확인한다.
 
-- `../baeseongjin/src/core/sim/FixedStepRunner.js`
-- `../baeseongjin/src/core/input/InputSampler.js`
-- `../baeseongjin/src/game/GameApp.js`
+- `C:/projects/baeseongjin/src/core/sim/FixedStepRunner.js`
+- `C:/projects/baeseongjin/src/core/input/InputSampler.js`
+- `C:/projects/baeseongjin/src/game/GameApp.js`
 
 가져올 핵심 원칙:
 
@@ -56,9 +56,9 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 먼저 다음을 확인한다.
 
-- `../baeseongjin/src/render/CanvasRenderer.js`
-- `../baeseongjin/src/render/SceneRenderer.js`
-- `../ball-fight-simulator/src/game-kit/canvas/`
+- `C:/projects/baeseongjin/src/render/CanvasRenderer.js`
+- `C:/projects/baeseongjin/src/render/SceneRenderer.js`
+- `C:/projects/ball-fight-simulator/src/game-kit/canvas/`
 
 가져올 핵심 원칙:
 
@@ -70,10 +70,10 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 먼저 다음을 확인한다.
 
-- `../baeseongjin/docs/particle-system.md`
-- `../baeseongjin/src/game/combat/ParticlePresentation.js`
-- `../baeseongjin/src/game/combat/CombatEffectBuffer.js`
-- `../ball-fight-simulator/src/effects/`
+- `C:/projects/baeseongjin/docs/particle-system.md`
+- `C:/projects/baeseongjin/src/game/combat/ParticlePresentation.js`
+- `C:/projects/baeseongjin/src/game/combat/CombatEffectBuffer.js`
+- `C:/projects/ball-fight-simulator/src/effects/`
 
 가져올 핵심 원칙:
 
@@ -93,11 +93,11 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 먼저 다음을 확인한다.
 
-- `../ball-fight-simulator/index.html`의 Alpine.js bootstrap과 `x-data` 구조
-- `../ball-fight-simulator/docs/development-rules.md`의 UI 아키텍처
-- `../baeseongjin/src/game/ui/GameModeMenu.js`
-- `../baeseongjin/src/main.js`의 `launch()`와 `returnToMenu()`
-- `../baeseongjin/src/game/GameApp.js`의 `start()`와 `stop()`
+- `C:/projects/ball-fight-simulator/index.html`의 Alpine.js bootstrap과 `x-data` 구조
+- `C:/projects/ball-fight-simulator/docs/development-rules.md`의 UI 아키텍처
+- `C:/projects/baeseongjin/src/game/ui/GameModeMenu.js`
+- `C:/projects/baeseongjin/src/main.js`의 `launch()`와 `returnToMenu()`
+- `C:/projects/baeseongjin/src/game/GameApp.js`의 `start()`와 `stop()`
 
 가져올 핵심 원칙:
 

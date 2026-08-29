@@ -93,7 +93,11 @@ Renderer는 resolved map snapshot과 RenderFrame을 읽기만 하며 map state, 
 - 연결점 근처에서만 앞·뒤 레인 전환을 허용한다.
 - 초기 입력은 기존 `↑/↓`를 문맥적으로 사용한다. 연결점에서만 전환이 방어·앉기보다 우선하며, 그 밖의 위치에서는 기존 전투 동작을 보존한다.
 - 공중, 공격 motion 또는 전환 중에는 새 전환을 시작하지 않는다.
-- 전환은 fixed-step에서 시작·완료하고 Renderer는 결과를 보간해 표현한다.
+- Connection은 양수인 `transition.durationSeconds`를 가지며 생략 시 `0.28`초를 기본값으로 사용한다.
+- `beginTransition()`은 pending transition을 만들되 active lane과 collision은 source lane에 유지한다.
+- `advanceTransition(deltaSeconds)`가 fixed-step마다 elapsed/progress를 갱신하고 `GameScene`은 player 위치, lane visual scale과 render order를 보간한다.
+- 전환 중 이동·점프·전투 command와 새 lane 전환을 차단하되 input edge와 sequence는 소비한다.
+- Duration에 도달한 fixed-step에서 active lane, spawn과 collision snapshot을 destination으로 원자 교체한다. Renderer는 보간된 RenderFrame만 읽는다.
 - lane 교체와 dynamic collision 변경은 render 중 수행하지 않는다.
 
 ## 월드 상태와 패치
@@ -119,7 +123,7 @@ Resolved Map
 - 지역 오염도·경계도
 - local event와 고정 seed
 
-패치는 안정된 object ID를 대상으로 `enable`, `disable`, `override`만 수행한다. 같은 우선순위의 두 패치가 동일 필드를 다르게 요구하면 validator 오류로 처리한다.
+패치는 안정된 object ID를 대상으로 `set-enabled`, `set-active-connection`, `set`, `override` 연산만 수행한다. 앞의 두 연산은 `enabled`를 기록하고, `set`은 지정 property를 교체하며, `override`는 지정 필드를 shallow merge한다. 같은 우선순위에서 같은 target/property를 두 번 기록하면 값의 동일 여부와 무관하게 validator 오류로 처리한다.
 
 콘텐츠에서는 시스템의 모든 조합을 사용하려 하지 않는다. 한 지역은 base, 낮/밤, 대표 날씨 1~~2개, 주요 story phase 2~~3개와 특별 event 1개 정도를 기준으로 한다.
 

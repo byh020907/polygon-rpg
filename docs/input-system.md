@@ -12,6 +12,8 @@ MobileInputAdapter ───┘
 
 GameScene과 CombatCommandController는 입력 장치, DOM event 또는 pointer ID를 알지 않는다.
 
+Frozen Input Snapshot은 adapter가 만든 gameplay held state와 command sequence만 포함한다. Animation Speed 같은 UI·simulation 설정은 입력 DTO에 섞지 않고 `GameApp`이 별도 frozen Simulation Settings로 `GameScene`에 전달한다.
+
 ## Adapter Responsibilities
 
 ### KeyboardInputAdapter
@@ -48,7 +50,7 @@ GameScene과 CombatCommandController는 입력 장치, DOM event 또는 pointer 
 | Heavy / Rising / Spin | `Q/W/E`  | `Q/W/E`          |
 | Guard / Crouch        | `↑/↓`    | 위/아래 방향 pad |
 
-깊이 레인 연결점에서는 `↑/↓`가 문맥적인 lane 전환으로 우선 사용된다. 연결점 밖에서는 기존 Guard / Crouch intent가 그대로 유지된다. GameScene 또는 map runtime이 frozen input snapshot과 active connection을 함께 보고 우선순위를 결정하며 adapter는 맵 문맥을 알지 않는다.
+깊이 레인 연결점에서는 `↑/↓`가 문맥적인 lane 전환으로 우선 사용된다. 연결점 밖에서는 기존 Guard / Crouch intent가 그대로 유지된다. `GameScene`이 frozen input snapshot과 active connection을 함께 보고 우선순위를 결정하며 adapter는 맵 문맥을 알지 않는다. Pending transition 동안 새 이동·점프·전투 command는 적용하지 않지만 input edge와 sequence는 계속 소비한다.
 
 Alpine `gameShell`은 control catalog와 `data-mobile-action`만 렌더링한다. `MobileInputAdapter`가 DOM 이벤트를 공통 action으로 바꾸며 Alpine state나 DOM 버튼은 gameplay 상태를 직접 수정하지 않는다.
 
@@ -59,12 +61,15 @@ pointerdown
 → adapter.press(actionId, pointerId)
 → setPointerCapture(pointerId)
 
-pointerup | pointercancel | lostpointercapture
-→ adapter.release(pointerId)
+pointerup | pointercancel
 → releasePointerCapture(pointerId)
+→ adapter.release(pointerId)
+
+lostpointercapture
+→ adapter.release(pointerId)
 ```
 
-release는 멱등적이며 다른 pointer의 action을 해제하지 않는다.
+Capture 해제는 best-effort이며 브라우저가 이미 해제했거나 capture가 없으면 실패를 무시한다. `lostpointercapture`는 이미 capture가 종료된 알림이므로 adapter state만 해제한다. Input release는 멱등적이며 다른 pointer의 action을 해제하지 않는다.
 
 ## Layout
 

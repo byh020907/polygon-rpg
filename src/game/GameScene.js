@@ -18,6 +18,18 @@ function lerp(start, end, amount) {
   return start + (end - start) * amount;
 }
 
+function smoothStep(amount) {
+  const bounded = Math.max(0, Math.min(1, amount));
+  return bounded * bounded * (3 - 2 * bounded);
+}
+
+function lanePresentation(lane) {
+  return {
+    visualScale: lane.visualScale,
+    renderOrder: lane.renderOrder + 0.5,
+  };
+}
+
 function transformPoints(points, { x, y, rotation = 0, scaleX = 1, scaleY = 1 }) {
   const cosine = Math.cos(rotation);
   const sine = Math.sin(rotation);
@@ -403,6 +415,9 @@ export class GameScene {
     this.crouchWasPressed = false;
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
+    this.laneTransitionPresentation = null;
+    this.characterLanePresentation = lanePresentation(mapSnapshot.lane);
+    this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
     this.combatCommands.reset();
   }
 
@@ -428,6 +443,7 @@ export class GameScene {
   }
 
   tryLaneTransition(direction) {
+    if (this.mapRuntime.getTransition()) return false;
     const combatState = this.combatCommands.snapshot();
     if (!this.isGrounded || combatState.id !== 'idle') return false;
 
@@ -446,19 +462,56 @@ export class GameScene {
       : invertedDirection(connection.direction);
     if (effectiveDirection !== direction) return false;
 
-    this.mapRuntime.beginTransition(connection.id);
-    const result = this.mapRuntime.completeTransition(connection.id);
-    const destinationLane = this.mapRuntime.getActiveLane();
-    this.position.x = result.position.x;
-    this.position.y = destinationLane.groundY - CHARACTER_FOOT_OFFSET;
+    const transition = this.mapRuntime.beginTransition(connection.id);
+    this.laneTransitionPresentation = {
+      startPosition: { ...this.position },
+      destinationPosition: { ...transition.destinationPosition },
+      from: { ...this.characterLanePresentation },
+      to: {
+        visualScale: transition.destinationLane.visualScale,
+        renderOrder: transition.destinationLane.renderOrder + 0.5,
+      },
+    };
     this.verticalVelocity = 0;
     this.isGrounded = true;
     return true;
   }
 
-  update(deltaSeconds, inputSnapshot) {
+  updateLaneTransition(deltaSeconds) {
+    const presentation = this.laneTransitionPresentation;
+    if (!presentation) return false;
+
+    const { transition, completion } = this.mapRuntime.advanceTransition(deltaSeconds);
+    const amount = smoothStep(transition.progress);
+    this.position.x = lerp(
+      presentation.startPosition.x,
+      presentation.destinationPosition.x,
+      amount,
+    );
+    this.position.y = lerp(
+      presentation.startPosition.y,
+      presentation.destinationPosition.y,
+      amount,
+    );
+    this.characterLanePresentation = {
+      visualScale: lerp(presentation.from.visualScale, presentation.to.visualScale, amount),
+      renderOrder: lerp(presentation.from.renderOrder, presentation.to.renderOrder, amount),
+    };
+
+    if (!completion) return true;
+    this.position = { ...completion.position };
+    this.characterLanePresentation = { ...presentation.to };
+    this.laneTransitionPresentation = null;
+    return true;
+  }
+
+  update(deltaSeconds, inputSnapshot, simulationSettings = {}) {
+    const animationSpeed = Number.isFinite(simulationSettings.animationSpeed)
+      ? Math.max(0, simulationSettings.animationSpeed)
+      : 1;
     this.previousPosition = { ...this.position };
     this.previousAnimationTime = this.animationTime;
+    this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
     this.advanceWorldTime(deltaSeconds);
 
     const guardPressed = Boolean(inputSnapshot.guard);
@@ -469,32 +522,36 @@ export class GameScene {
         : crouchPressed && !this.crouchWasPressed
           ? 'front'
           : null;
-    const transitioned = transitionDirection ? this.tryLaneTransition(transitionDirection) : false;
-    const combatInput = transitioned
-      ? { ...inputSnapshot, guard: false, crouch: false }
-      : inputSnapshot;
-    const combatState = this.combatCommands.update(
-      deltaSeconds * inputSnapshot.animationSpeed,
-      combatInput,
-    );
+    if (transitionDirection) this.tryLaneTransition(transitionDirection);
+    const isTransitioning = this.mapRuntime.getTransition() !== null;
+    const combatState = this.combatCommands.update(deltaSeconds * animationSpeed, inputSnapshot, {
+      acceptCommands: !isTransitioning,
+    });
 
     const horizontal = Number(inputSnapshot.right) - Number(inputSnapshot.left);
-    if (horizontal !== 0) this.facing = Math.sign(horizontal);
-    this.position.x += horizontal * CHARACTER_SPEED * combatState.movementScale * deltaSeconds;
-
     const jumpPressed = Boolean(inputSnapshot.jump);
     const jumpSequence = inputSnapshot.jumpSequence;
     const jumpIssued = Number.isSafeInteger(jumpSequence)
       ? jumpSequence > this.lastJumpSequence
       : jumpPressed && !this.jumpWasPressed;
-    if (jumpIssued && this.isGrounded && combatState.canJump) {
-      this.verticalVelocity = -JUMP_SPEED;
-      this.isGrounded = false;
-    }
     this.jumpWasPressed = jumpPressed;
     this.guardWasPressed = guardPressed;
     this.crouchWasPressed = crouchPressed;
     if (Number.isSafeInteger(jumpSequence)) this.lastJumpSequence = jumpSequence;
+
+    if (isTransitioning) {
+      this.updateLaneTransition(deltaSeconds);
+      this.animationTime += deltaSeconds * animationSpeed * 0.35;
+      return;
+    }
+
+    if (horizontal !== 0) this.facing = Math.sign(horizontal);
+    this.position.x += horizontal * CHARACTER_SPEED * combatState.movementScale * deltaSeconds;
+
+    if (jumpIssued && this.isGrounded && combatState.canJump) {
+      this.verticalVelocity = -JUMP_SPEED;
+      this.isGrounded = false;
+    }
 
     const activeLane = this.mapRuntime.getActiveLane();
     const playerGroundY = activeLane.groundY - CHARACTER_FOOT_OFFSET;
@@ -511,8 +568,7 @@ export class GameScene {
       maxX: ACADEMY_VILLAGE_MAP.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
     };
     this.position.x = Math.max(movementBounds.minX, Math.min(movementBounds.maxX, this.position.x));
-    this.animationTime +=
-      deltaSeconds * inputSnapshot.animationSpeed * (1 + Math.abs(horizontal) * 0.65);
+    this.animationTime += deltaSeconds * animationSpeed * (1 + Math.abs(horizontal) * 0.65);
   }
 
   getWorldStatus() {
@@ -541,8 +597,17 @@ export class GameScene {
     const map = this.mapRuntime.getResolvedMap();
     const mapSnapshot = this.mapRuntime.getResolvedSnapshot();
     const activeLane = mapSnapshot.lane;
-    const characterRenderScale = CHARACTER_RENDER_SCALE * activeLane.visualScale;
-    const characterRenderOrder = activeLane.renderOrder + 0.5;
+    const laneVisualScale = lerp(
+      this.previousCharacterLanePresentation.visualScale,
+      this.characterLanePresentation.visualScale,
+      interpolationAlpha,
+    );
+    const characterRenderScale = CHARACTER_RENDER_SCALE * laneVisualScale;
+    const characterRenderOrder = lerp(
+      this.previousCharacterLanePresentation.renderOrder,
+      this.characterLanePresentation.renderOrder,
+      interpolationAlpha,
+    );
     const characterItems = createCharacterItems(
       renderPosition,
       renderAnimationTime,
@@ -602,6 +667,14 @@ export class GameScene {
         position: renderPosition,
         isGrounded: this.isGrounded,
         laneId: mapSnapshot.active.laneId,
+        laneTransition: mapSnapshot.transition
+          ? Object.freeze({
+              connectionId: mapSnapshot.transition.connectionId,
+              fromLaneId: mapSnapshot.transition.from.laneId,
+              toLaneId: mapSnapshot.transition.to.laneId,
+              progress: mapSnapshot.transition.progress,
+            })
+          : null,
       }),
       items,
     });

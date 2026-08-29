@@ -70,9 +70,9 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 | 모듈                                     | 책임                                                              |
 | ---------------------------------------- | ----------------------------------------------------------------- |
 | `src/core/FixedStepRunner.js`            | 120Hz fixed update, catch-up 상한, 보간 alpha와 dropped-step 계측 |
-| `src/animation/CombatPoseLibrary.js`     | 관절 회전 없이 Effector Target keyframe 보간                      |
+| `src/animation/CombatPoseLibrary.js`     | 0..1 progress 기반 Effector Target keyframe 보간                  |
 | `src/animation/TwoBoneIKSolver.js`       | 손 목표에서 어깨·팔꿈치·손 관절 자동 계산                         |
-| `src/combat/CombatCommandController.js`  | command edge, phase, sequence와 후속 입력 buffer                  |
+| `src/combat/CombatCommandController.js`  | gameplay motion 정책, command edge, phase, sequence와 입력 buffer |
 | `src/game/GameScene.js`                  | float 기반 장면 상태와 Polygon item으로 구성한 단일 RenderFrame   |
 | `src/rendering/Camera2D.js`              | World Space를 Screen Space로 투영                                 |
 | `src/rendering/CanvasHost.js`            | Canvas context, CSS 크기, DPR과 backing pixel 예산                |
@@ -80,7 +80,7 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 | `src/rendering/CanvasPolygonRenderer.js` | float Screen Space 원본 비교 출력                                 |
 | `src/rendering/CanvasRetroRenderer.js`   | logical resolution raster와 nearest upscale 조정                  |
 | `src/rendering/RetroPostProcessor.js`    | threshold, posterization과 outline ImageData 처리                 |
-| `src/app/GameApp.js`                     | 입력과 세 Canvas 조립, 프레임당 RenderFrame 1회 생성              |
+| `src/app/GameApp.js`                     | 입력·Simulation Settings·세 Canvas 조립, RenderFrame 1회 생성     |
 
 DOM 화면과 renderer control 상태는 `src/ui/gameShell.js`의 Alpine 컴포넌트가 소유하며, GameApp은 UI bridge의 읽기 전용 snapshot만 소비한다.
 
@@ -100,6 +100,8 @@ Outline은 처리 전 alpha를 재사용 가능한 source buffer에 복사하고
 - Show Mesh
 - Show Pixel Grid
 
+Animation Speed는 input intent에 포함하지 않는다. `GameApp`이 별도 simulation/debug setting으로 `GameScene`에 전달하며 keyboard/mobile input snapshot은 action과 sequence만 유지한다.
+
 ## 현재 성능 경계
 
 `RetroPostProcessor`의 `getImageData → CPU 처리 → putImageData`는 Canvas 2D 프로토타입 경계다. source outline buffer는 크기가 같으면 재사용하지만 `getImageData` 자체는 매 frame 수행한다. 실제 병목을 계측하기 전에는 WebGL이나 별도 worker로 확장하지 않는다.
@@ -111,7 +113,7 @@ Outline은 처리 전 alpha를 재사용 가능한 source buffer에 복사하고
 - Gameplay surface는 renderer item과 별도 계약이다.
 - Renderer는 active lane, collision 또는 조건 패치를 해석하지 않는다.
 - 앞·중간·뒤 lane의 표시 순서는 map runtime이 결정하며 Renderer는 전달받은 순서를 보존한다.
-- 동적 지형과 lane 전환은 fixed-step에서 적용하고 render 중 상태를 변경하지 않는다.
+- 동적 지형과 lane 전환 progress는 fixed-step에서만 적용한다. `GameScene`은 previous/current position, visual scale과 render order를 interpolation alpha로 보간해 RenderFrame에 기록하고 Renderer는 transition을 진행하지 않는다.
 
 ## 현재 비범위
 

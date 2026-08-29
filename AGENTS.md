@@ -113,22 +113,23 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 
 현재 저장소의 공식 프로젝트 계약은 다음과 같다.
 
-| Rule ID                   | Canonical Rule                                                                       | 검증 근거                                 |
-| ------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------- |
-| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                             | `package.json`, `index.html`              |
-| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                | `README.md`, GitHub Pages source          |
-| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                  | `README.md`, Pages API 상태               |
-| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                              | `package.json`                            |
-| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                      | `docs/ui-architecture.md`, `index.html`   |
-| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.             | 이 파일의 Engineering Method 절           |
-| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다. | `docs/reference-repositories.md`          |
-| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                 | `docs/rendering-pipeline.md`, 실제 caller |
-| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                      | 이 파일, 향후 effect 구현과 caller        |
-| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.        | `docs/animation-system.md`, 실제 solver   |
-| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                | `docs/input-system.md`, 실제 adapters     |
-| `MAP-LAYERED-CHUNKS`      | 월드는 청크와 지정 연결점으로 전환하는 깊이 레인으로 구성한다.                       | `docs/world-map-system.md`, 실제 runtime  |
-| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                  | `docs/world-map-system.md`, 실제 runtime  |
-| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                 | `docs/world-map-system.md`, 실제 resolver |
+| Rule ID                   | Canonical Rule                                                                                                                                 | 검증 근거                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                       | `package.json`, `index.html`              |
+| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                          | `README.md`, GitHub Pages source          |
+| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                            | `README.md`, Pages API 상태               |
+| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                        | `package.json`                            |
+| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                | `docs/ui-architecture.md`, `index.html`   |
+| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.                                                                       | 이 파일의 Engineering Method 절           |
+| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                           | `docs/reference-repositories.md`          |
+| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                           | `docs/rendering-pipeline.md`, 실제 caller |
+| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                | 이 파일, 향후 effect 구현과 caller        |
+| `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다. | 사용자 결정, `package.json`, 최종 diff    |
+| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                  | `docs/animation-system.md`, 실제 solver   |
+| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                          | `docs/input-system.md`, 실제 adapters     |
+| `MAP-LAYERED-CHUNKS`      | 월드는 청크와 지정 연결점으로 전환하는 깊이 레인으로 구성한다.                                                                                 | `docs/world-map-system.md`, 실제 runtime  |
+| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                            | `docs/world-map-system.md`, 실제 runtime  |
+| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                           | `docs/world-map-system.md`, 실제 resolver |
 
 공식 규칙이 추가·변경·폐기되면 이 Registry와 담당 문서를 같은 변경에서 갱신한다. 같은 의미의 규칙을 여러 문서에 서로 다른 표현으로 복제하지 않는다.
 
@@ -177,6 +178,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 - 구현 변경은 관련된 가장 작은 검사부터 실행한다.
 - 최소 기준은 syntax/lint, format, `git diff --check`와 실제 사용자 경로다.
 - 수학·물리·시간 기반 동작은 DOM 없는 결정적 검증과 Canvas 실행 검증을 분리한다.
+- 사용자가 테스트 자산의 영구 추가를 명시적으로 요청하지 않았다면 검증용 test 파일, script와 fixture를 저장소에 남기지 않는다. 필요한 임시 검증 코드는 작업 완료 전에 제거한다.
 - Renderer 변경은 console error 부재만으로 완료하지 않고 실제 Canvas 출력, resize와 동일 상태 공유를 확인한다.
 - 실행하지 않은 검사를 통과했다고 보고하지 않는다.
 
@@ -306,7 +308,7 @@ Next Step:
 
 공용 기반, 물리, Canvas 렌더링, 파티클, 게임 루프 또는 개발 환경 구현 전에는 `docs/reference-repositories.md`를 Layer 2로 로드한다.
 
-- 1차 로컬 레퍼런스는 `../ball-fight-simulator`와 `../baeseongjin`이다.
+- 1차 로컬 레퍼런스는 `C:/projects/ball-fight-simulator`와 `C:/projects/baeseongjin`이다.
 - 먼저 현재 저장소에서 같은 책임의 established and verified convention이 있는지 확인한다. 현재 Domain에 더 적합하고 반복 사용되며 실제 검증된 local convention은 그 영역에서 초기 Reference보다 우선한다.
 - 새 기반을 추측으로 설계하기 전에 두 저장소의 실제 코드, caller, 개발 규칙과 검증 방식을 확인한다.
 - Reference의 구조적 외형보다 책임의 크기, abstraction 도입 이유, dependency와 state 흐름, resource lifecycle, error handling, testing style 및 trade-off를 분석한다.
@@ -342,6 +344,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 외부 런타임 라이브러리는 사용자 승인 없이 추가하지 않는다.
 - Browser Implicit Global을 사용하지 않고 DOM 요소를 명시적으로 조회한다.
 - 시간 기반 상태는 frame count가 아닌 명시적인 delta/fixed time으로 갱신한다.
+- 사용자가 요청하지 않은 테스트 자산을 영구 관리 포인트로 추가하지 않는다. 개발 중 만든 임시 검증 코드는 완료 전에 제거한다.
 - placeholder, 생략된 구현과 설명 없는 TODO를 완료 결과로 남기지 않는다.
 
 ## 10. Work Start and Completion Checklist
@@ -360,6 +363,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - [ ] 관련 syntax/lint/format 검사
 - [ ] `git diff --check`
 - [ ] 실제 사용자 경로 또는 Canvas 검증
+- [ ] 명시 요청 없이 만든 임시 test·script·fixture 제거
 - [ ] 문서 인덱스와 Canonical Rule 정합 확인
 - [ ] Orphaned/Stale/Conflict 상태 보고
 - [ ] 변경 파일, 이유, 검증 결과와 다음 단계 보고

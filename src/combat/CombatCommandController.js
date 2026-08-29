@@ -1,9 +1,3 @@
-import {
-  COMBAT_POSE_DEFINITIONS,
-  combatMotionDuration,
-  combatMotionMovementScale,
-} from '../animation/CombatPoseLibrary.js';
-
 const COMMAND_INPUTS = Object.freeze([
   Object.freeze({ input: 'rageAttack', motion: 'spin' }),
   Object.freeze({ input: 'heavyAttack', motion: 'heavy' }),
@@ -13,6 +7,27 @@ const COMMAND_INPUTS = Object.freeze([
 ]);
 
 const INPUT_NAMES = Object.freeze(COMMAND_INPUTS.map(({ input }) => input));
+
+function motionPolicy(label, durationSeconds, movementScale, { canJump = false } = {}) {
+  return Object.freeze({ label, durationSeconds, movementScale, canJump });
+}
+
+const COMBAT_MOTION_POLICIES = Object.freeze({
+  idle: motionPolicy('대기', 0, 1, { canJump: true }),
+  slash: motionPolicy('기본 베기', 0.52, 0.28),
+  thrust: motionPolicy('찌르기', 0.42, 0.18),
+  heavy: motionPolicy('강한 내려베기', 0.76, 0.08),
+  rising: motionPolicy('올려베기', 0.6, 0.16),
+  spin: motionPolicy('회전 공격', 0.92, 0.1),
+  guard: motionPolicy('방어', 0, 0.22),
+  crouch: motionPolicy('앉기', 0, 0.34),
+});
+
+function combatMotionPolicy(id) {
+  const policy = COMBAT_MOTION_POLICIES[id];
+  if (!policy) throw new Error(`알 수 없는 combat motion입니다: ${id}`);
+  return policy;
+}
 
 function phaseForProgress(progress) {
   if (progress < 0.35) return 'windup';
@@ -34,14 +49,14 @@ export class CombatCommandController {
     this.previousSequences = Object.fromEntries(INPUT_NAMES.map((name) => [name, 0]));
   }
 
-  update(deltaSeconds, inputSnapshot) {
-    const issuedMotion = this.readIssuedMotion(inputSnapshot);
+  update(deltaSeconds, inputSnapshot, { acceptCommands = true } = {}) {
+    const issuedMotion = acceptCommands ? this.readIssuedMotion(inputSnapshot) : null;
     if (this.active) {
-      this.active.elapsed += deltaSeconds;
-      if (issuedMotion && this.active.elapsed >= this.active.duration * 0.3) {
+      this.active.elapsedSeconds += deltaSeconds;
+      if (issuedMotion && this.active.elapsedSeconds >= this.active.durationSeconds * 0.3) {
         this.queuedMotion = issuedMotion;
       }
-      if (this.active.elapsed >= this.active.duration) {
+      if (this.active.elapsedSeconds >= this.active.durationSeconds) {
         const nextMotion = this.queuedMotion;
         this.active = null;
         this.queuedMotion = null;
@@ -51,7 +66,12 @@ export class CombatCommandController {
       this.start(issuedMotion);
     }
 
-    this.heldPose = inputSnapshot.guard ? 'guard' : inputSnapshot.crouch ? 'crouch' : 'idle';
+    this.heldPose =
+      acceptCommands && inputSnapshot.guard
+        ? 'guard'
+        : acceptCommands && inputSnapshot.crouch
+          ? 'crouch'
+          : 'idle';
     for (const inputName of INPUT_NAMES) {
       this.previousInputs[inputName] = Boolean(inputSnapshot[inputName]);
       const sequence = inputSnapshot[`${inputName}Sequence`];
@@ -77,34 +97,45 @@ export class CombatCommandController {
   }
 
   start(motionId) {
-    const duration = combatMotionDuration(motionId);
-    if (!(duration > 0)) throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);
+    const durationSeconds = combatMotionPolicy(motionId).durationSeconds;
+    if (!(durationSeconds > 0)) {
+      throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);
+    }
     this.sequence += 1;
-    this.active = { id: motionId, elapsed: 0, duration, sequence: this.sequence };
+    this.active = {
+      id: motionId,
+      elapsedSeconds: 0,
+      durationSeconds,
+      sequence: this.sequence,
+    };
   }
 
   snapshot() {
     if (!this.active) {
-      const definition = COMBAT_POSE_DEFINITIONS[this.heldPose];
+      const motionPolicy = combatMotionPolicy(this.heldPose);
       return Object.freeze({
         id: this.heldPose,
-        label: definition.label,
+        label: motionPolicy.label,
         progress: 0,
         phase: this.heldPose,
-        movementScale: definition.movementScale,
-        canJump: this.heldPose === 'idle',
+        movementScale: motionPolicy.movementScale,
+        canJump: motionPolicy.canJump,
         sequence: this.sequence,
         queuedMotion: null,
       });
     }
 
-    const progress = Math.max(0, Math.min(1, this.active.elapsed / this.active.duration));
+    const progress = Math.max(
+      0,
+      Math.min(1, this.active.elapsedSeconds / this.active.durationSeconds),
+    );
+    const motionPolicy = combatMotionPolicy(this.active.id);
     return Object.freeze({
       id: this.active.id,
-      label: COMBAT_POSE_DEFINITIONS[this.active.id].label,
+      label: motionPolicy.label,
       progress,
       phase: phaseForProgress(progress),
-      movementScale: combatMotionMovementScale(this.active.id),
+      movementScale: motionPolicy.movementScale,
       canJump: false,
       sequence: this.active.sequence,
       queuedMotion: this.queuedMotion,

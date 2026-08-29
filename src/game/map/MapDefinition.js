@@ -147,6 +147,18 @@ function normalizeConnection(connection, source, mapId) {
   ) {
     throw new Error(`${normalized.qualifiedId}.direction은 front 또는 back이어야 합니다.`);
   }
+  normalized.transition = normalized.transition ?? { durationSeconds: 0.28 };
+  assertRecord(normalized.transition, `${normalized.qualifiedId}.transition`);
+  normalized.transition.durationSeconds = normalized.transition.durationSeconds ?? 0.28;
+  assertFinite(
+    normalized.transition.durationSeconds,
+    `${normalized.qualifiedId}.transition.durationSeconds`,
+  );
+  if (!(normalized.transition.durationSeconds > 0)) {
+    throw new RangeError(
+      `${normalized.qualifiedId}.transition.durationSeconds는 0보다 커야 합니다.`,
+    );
+  }
   return normalized;
 }
 

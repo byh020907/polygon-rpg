@@ -125,7 +125,6 @@ export class MapRuntime {
     }
     this.worldContext = deepFreeze({ ...nextContext });
     this.revision += 1;
-    this.pendingTransition = null;
     this.invalidate();
     return this.getResolvedSnapshot();
   }
@@ -219,11 +218,35 @@ export class MapRuntime {
   }
 
   beginTransition(connectionId) {
+    if (this.pendingTransition) {
+      throw new Error(
+        `이미 connection transition이 진행 중입니다: ${this.pendingTransition.connectionId}`,
+      );
+    }
     const connection = this.getConnection(connectionId);
     if (!connection)
       throw new Error(`현재 lane에서 사용할 수 없는 connection입니다: ${connectionId}`);
     const reverse = !connectionFromActive(connection, this.active);
     const destination = reverse ? connection.from : connection.to;
+    const destinationLaneDefinition = findLane(
+      this.getResolvedMap(),
+      destination.chunkId,
+      destination.laneId,
+    );
+    if (!destinationLaneDefinition) {
+      throw new Error(
+        `connection 목적지 lane을 찾을 수 없습니다: ${destination.chunkId}/${destination.laneId}`,
+      );
+    }
+    const destinationLane = worldLane(destinationLaneDefinition);
+    const destinationSpawn = endpointSpawn(destination);
+    const destinationPosition = offsetPoint(
+      {
+        x: destinationSpawn.x,
+        y: destinationSpawn.y ?? destinationLaneDefinition.groundY ?? 0,
+      },
+      destinationLaneDefinition.worldOffset,
+    );
     const intent = deepFreeze({
       connectionId: connection.id,
       direction: reverse
@@ -235,11 +258,53 @@ export class MapRuntime {
         : connection.direction,
       from: { ...this.active },
       to: { chunkId: destination.chunkId, laneId: destination.laneId },
-      spawn: endpointSpawn(destination),
+      destinationPosition,
+      destinationLane: {
+        id: destinationLane.id,
+        renderOrder: destinationLane.renderOrder,
+        visualScale: destinationLane.visualScale,
+      },
       transition: { ...(connection.transition ?? {}) },
+      durationSeconds: connection.transition.durationSeconds,
+      elapsedSeconds: 0,
+      progress: 0,
     });
     this.pendingTransition = intent;
+    this.revision += 1;
+    this.invalidate();
     return intent;
+  }
+
+  getTransition() {
+    return this.pendingTransition;
+  }
+
+  advanceTransition(deltaSeconds) {
+    if (!Number.isFinite(deltaSeconds) || deltaSeconds < 0) {
+      throw new TypeError('connection transition deltaSeconds는 0 이상의 유한한 숫자여야 합니다.');
+    }
+    if (!this.pendingTransition) {
+      throw new Error('진행 중인 connection transition이 없습니다.');
+    }
+
+    const elapsedSeconds = Math.min(
+      this.pendingTransition.durationSeconds,
+      this.pendingTransition.elapsedSeconds + deltaSeconds,
+    );
+    const transition = deepFreeze({
+      ...this.pendingTransition,
+      elapsedSeconds,
+      progress: elapsedSeconds / this.pendingTransition.durationSeconds,
+    });
+    this.pendingTransition = transition;
+    this.revision += 1;
+    this.snapshot = null;
+
+    if (transition.progress < 1) {
+      return deepFreeze({ transition, completion: null });
+    }
+    const completion = this.completeTransition(transition.connectionId);
+    return deepFreeze({ transition, completion });
   }
 
   completeTransition(connectionId = this.pendingTransition?.connectionId) {
@@ -247,13 +312,7 @@ export class MapRuntime {
       throw new Error(`시작되지 않은 connection transition입니다: ${connectionId}`);
     }
     const result = this.pendingTransition;
-    const destinationLane = findLane(this.getResolvedMap(), result.to.chunkId, result.to.laneId);
-    const destinationOffset = destinationLane?.worldOffset ?? { x: 0, y: 0 };
-    const localSpawn = {
-      x: result.spawn.x,
-      y: result.spawn.y ?? destinationLane?.groundY ?? 0,
-    };
-    const worldSpawn = offsetPoint(localSpawn, destinationOffset);
+    const worldSpawn = result.destinationPosition;
     this.active = Object.freeze({ ...result.to });
     this.activeSpawn = Object.freeze({ position: worldSpawn, facing: 1 });
     this.pendingTransition = null;
@@ -268,7 +327,11 @@ export class MapRuntime {
   }
 
   cancelTransition() {
+    if (!this.pendingTransition) return false;
     this.pendingTransition = null;
+    this.revision += 1;
+    this.invalidate();
+    return true;
   }
 
   getResolvedSnapshot() {
@@ -310,6 +373,7 @@ export class MapRuntime {
       revision: this.revision,
       appliedPatchIds: map.appliedPatchIds,
       active: { ...this.active },
+      transition: this.pendingTransition,
       spawn: this.activeSpawn,
       visibleChunkIds: [...visibleChunkIds],
       lane,

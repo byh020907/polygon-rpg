@@ -150,10 +150,12 @@ export class GameApp {
     this.retroHost.resize();
   }
 
-  createInputSnapshot(uiState) {
-    const inputSnapshot = this.input.snapshot();
+  createInputSnapshot() {
+    return this.input.snapshot();
+  }
+
+  createSimulationSettings(uiState) {
     return Object.freeze({
-      ...inputSnapshot,
       animationSpeed: uiState.screen === GAME_SCREEN.RENDER_LAB ? uiState.animationSpeed : 1,
     });
   }
@@ -173,7 +175,7 @@ export class GameApp {
       uiState.screen === GAME_SCREEN.GAME ||
       (uiState.screen === GAME_SCREEN.RENDER_LAB && uiState.isPlaying);
     if (!active) return;
-    this.scene.update(deltaSeconds, inputSnapshot);
+    this.scene.update(deltaSeconds, inputSnapshot, this.createSimulationSettings(uiState));
     this.syncWorldStatus();
   }
 
@@ -230,8 +232,7 @@ export class GameApp {
   }
 
   loop(currentTime) {
-    const uiState = this.uiBridge.snapshot();
-    this.runner.frame(currentTime, this.createInputSnapshot(uiState));
+    this.runner.frame(currentTime, this.createInputSnapshot());
     this.updateStats(currentTime);
     this.animationFrameId = requestAnimationFrame((time) => this.loop(time));
   }

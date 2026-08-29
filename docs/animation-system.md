@@ -30,7 +30,7 @@ Character Polygon RenderFrame
 
 ```js
 {
-  time: 0.3,
+  progress: 0.58,
   pose: {
     handTarget: { x: 70, y: 15 },
     shieldTarget: { x: -45, y: 2 },
@@ -46,6 +46,10 @@ Character Polygon RenderFrame
 ```
 
 `upperRotation`, `lowerRotation`, `elbow` 같은 관절 결과를 clip 데이터에 넣지 않는다.
+
+`progress`는 motion duration과 분리된 `0..1` 정규화 값이다. `CombatPoseLibrary`는 이 presentation keyframe과 Target Pose 보간만 소유하며 실제 지속시간이나 이동 제약을 결정하지 않는다.
+
+`CombatCommandController`는 animation module을 import하지 않는다. Controller가 공개한 normalized `motionState.progress`를 `CombatPoseLibrary`가 읽는 단방향 dependency를 유지한다.
 
 ## IK Solver
 
@@ -83,7 +87,7 @@ Character Polygon RenderFrame
 - active motion은 `windup → strike → recovery` phase로 진행한다.
 - active motion 30% 이후 입력한 다음 공격은 한 개까지 buffer한다.
 - 현재 motion 종료 시 buffer된 command를 새 sequence로 시작한다.
-- 공격 중 movement scale과 jump 허용 여부는 command state가 제공한다.
+- `CombatCommandController`가 label, duration, movement scale과 jump 허용 여부를 gameplay 정책으로 소유하고 command state로 제공한다.
 - Guard/Crouch는 공격이 없을 때 held pose로 적용한다.
 
 ## Current Motions

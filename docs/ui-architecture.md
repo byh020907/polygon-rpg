@@ -49,6 +49,8 @@ Alpine gameShell
 
 Bridge snapshot은 화면 상태와 Render Lab 설정만 가진 평평한 읽기 전용 DTO다. 물리, 캐릭터 위치와 전투 상태는 UI snapshot에 넣지 않는다.
 
+Render Lab의 Animation Speed는 UI bridge snapshot에 존재하지만 `GameApp`이 별도 frozen Simulation Settings DTO로 분류한다. Keyboard/Mobile Gameplay Input Snapshot과 합치지 않는다.
+
 지역명, 목표와 시간대는 GameScene이 소유한 읽기 전용 world status를 GameApp writer가 Alpine에 전달한다. Alpine은 이 값을 표시만 하며 map runtime을 직접 수정하지 않는다. Render Lab의 낮/밤 전환은 GameApp 공개 intent를 거쳐 GameScene world time을 변경한다.
 
 ## In-Game HUD

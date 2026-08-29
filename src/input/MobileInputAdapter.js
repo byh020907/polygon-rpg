@@ -30,7 +30,7 @@ export class MobileInputAdapter {
         signal,
       });
       for (const eventName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-        eventTarget.addEventListener(eventName, (event) => this.release(event.pointerId), {
+        eventTarget.addEventListener(eventName, (event) => this.onPointerReleased(event), {
           signal,
         });
       }
@@ -73,6 +73,18 @@ export class MobileInputAdapter {
     } catch {
       // Document-level release listeners still prevent a stuck input if capture is unavailable.
     }
+  }
+
+  onPointerReleased(event) {
+    if (event.type !== 'lostpointercapture') {
+      const control = this.findControl(event.target);
+      try {
+        control?.releasePointerCapture?.(event.pointerId);
+      } catch {
+        // The browser may have already released capture during pointer cancellation.
+      }
+    }
+    return this.release(event.pointerId);
   }
 
   onTouchStart(event) {

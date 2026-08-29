@@ -11,20 +11,20 @@ const DEFAULT_TARGET_POSE = Object.freeze({
   trailArc: 0,
 });
 
-function keyframe(time, pose = {}, easing = 'smoothStep') {
-  return Object.freeze({ time, pose: Object.freeze(pose), easing });
+function keyframe(progress, pose = {}, easing = 'smoothStep') {
+  return Object.freeze({ progress, pose: Object.freeze(pose), easing });
 }
 
-function definition(label, duration, movementScale, keyframes) {
-  return Object.freeze({ label, duration, movementScale, keyframes: Object.freeze(keyframes) });
+function definition(keyframes) {
+  return Object.freeze({ keyframes: Object.freeze(keyframes) });
 }
 
 export const COMBAT_POSE_DEFINITIONS = Object.freeze({
-  idle: definition('대기', 0, 1, [keyframe(0)]),
-  slash: definition('기본 베기', 0.52, 0.28, [
+  idle: definition([keyframe(0)]),
+  slash: definition([
     keyframe(0),
     keyframe(
-      0.17,
+      0.17 / 0.52,
       {
         handTarget: { x: 13, y: -71 },
         swordAngle: -1.92,
@@ -34,7 +34,7 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       'easeIn',
     ),
     keyframe(
-      0.3,
+      0.3 / 0.52,
       {
         handTarget: { x: 70, y: 15 },
         swordAngle: 0.3,
@@ -45,12 +45,12 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       },
       'easeOut',
     ),
-    keyframe(0.52),
+    keyframe(1),
   ]),
-  thrust: definition('찌르기', 0.42, 0.18, [
+  thrust: definition([
     keyframe(0),
     keyframe(
-      0.13,
+      0.13 / 0.42,
       {
         handTarget: { x: 25, y: -20 },
         swordAngle: -0.06,
@@ -60,7 +60,7 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       'easeIn',
     ),
     keyframe(
-      0.24,
+      0.24 / 0.42,
       {
         handTarget: { x: 91, y: -18 },
         swordAngle: -0.03,
@@ -71,12 +71,12 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       },
       'easeOut',
     ),
-    keyframe(0.42),
+    keyframe(1),
   ]),
-  heavy: definition('강한 내려베기', 0.76, 0.08, [
+  heavy: definition([
     keyframe(0),
     keyframe(
-      0.28,
+      0.28 / 0.76,
       {
         handTarget: { x: -4, y: -83 },
         swordAngle: -1.64,
@@ -86,7 +86,7 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       'easeInOut',
     ),
     keyframe(
-      0.49,
+      0.49 / 0.76,
       {
         handTarget: { x: 62, y: 31 },
         swordAngle: 0.82,
@@ -97,12 +97,12 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       },
       'overshoot',
     ),
-    keyframe(0.76),
+    keyframe(1),
   ]),
-  rising: definition('올려베기', 0.6, 0.16, [
+  rising: definition([
     keyframe(0),
     keyframe(
-      0.17,
+      0.17 / 0.6,
       {
         handTarget: { x: 63, y: 24 },
         swordAngle: 0.56,
@@ -112,7 +112,7 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       'easeIn',
     ),
     keyframe(
-      0.37,
+      0.37 / 0.6,
       {
         handTarget: { x: 21, y: -75 },
         swordAngle: -1.39,
@@ -123,41 +123,41 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       },
       'easeOut',
     ),
-    keyframe(0.6),
+    keyframe(1),
   ]),
-  spin: definition('회전 공격', 0.92, 0.1, [
+  spin: definition([
     keyframe(0),
-    keyframe(0.2, {
+    keyframe(0.2 / 0.92, {
       handTarget: { x: 61, y: -20 },
       swordAngle: -0.55,
       bodyLean: -0.08,
       trailOpacity: 0.45,
       trailArc: 1.1,
     }),
-    keyframe(0.4, {
+    keyframe(0.4 / 0.92, {
       handTarget: { x: 50, y: 20 },
       swordAngle: 0.95,
       bodyLean: 0.1,
       trailOpacity: 0.9,
       trailArc: 1.35,
     }),
-    keyframe(0.6, {
+    keyframe(0.6 / 0.92, {
       handTarget: { x: -20, y: 4 },
       swordAngle: 2.55,
       bodyLean: -0.1,
       trailOpacity: 1,
       trailArc: 1.45,
     }),
-    keyframe(0.78, {
+    keyframe(0.78 / 0.92, {
       handTarget: { x: 30, y: -62 },
       swordAngle: 4.05,
       bodyLean: 0.07,
       trailOpacity: 0.72,
       trailArc: 1.2,
     }),
-    keyframe(0.92),
+    keyframe(1),
   ]),
-  guard: definition('방어', 0, 0.22, [
+  guard: definition([
     keyframe(0, {
       handTarget: { x: 31, y: -38 },
       shieldTarget: { x: 35, y: -8 },
@@ -166,7 +166,7 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       bodyLean: -0.04,
     }),
   ]),
-  crouch: definition('앉기', 0, 0.34, [
+  crouch: definition([
     keyframe(0, {
       handTarget: { x: 47, y: -9 },
       shieldTarget: { x: -37, y: 17 },
@@ -211,39 +211,26 @@ function interpolatePose(startPose, endPose, amount) {
   });
 }
 
-export function combatMotionDuration(id) {
-  const definitionEntry = COMBAT_POSE_DEFINITIONS[id];
-  if (!definitionEntry) throw new Error(`알 수 없는 combat motion입니다: ${id}`);
-  return definitionEntry.duration;
-}
-
-export function combatMotionMovementScale(id) {
-  const definitionEntry = COMBAT_POSE_DEFINITIONS[id];
-  if (!definitionEntry) throw new Error(`알 수 없는 combat motion입니다: ${id}`);
-  return definitionEntry.movementScale;
-}
-
 export function sampleCombatTargetPose(motionState) {
   const definitionEntry = COMBAT_POSE_DEFINITIONS[motionState.id] ?? COMBAT_POSE_DEFINITIONS.idle;
-  const elapsed =
-    definitionEntry.duration > 0 ? motionState.progress * definitionEntry.duration : 0;
+  const progress = Math.max(0, Math.min(1, motionState.progress));
   const keyframes = definitionEntry.keyframes;
   let start = keyframes[0];
   let end = keyframes[keyframes.length - 1];
   for (let index = 1; index < keyframes.length; index += 1) {
-    if (elapsed <= keyframes[index].time) {
+    if (progress <= keyframes[index].progress) {
       end = keyframes[index];
       start = keyframes[index - 1];
       break;
     }
   }
-  const segmentDuration = Math.max(0.0001, end.time - start.time);
-  const segmentProgress = Math.max(0, Math.min(1, (elapsed - start.time) / segmentDuration));
+  const segmentDuration = Math.max(0.0001, end.progress - start.progress);
+  const segmentProgress = Math.max(0, Math.min(1, (progress - start.progress) / segmentDuration));
   const easedProgress = applyEasing(end.easing, segmentProgress);
   return Object.freeze({
     ...interpolatePose(start.pose, end.pose, easedProgress),
     id: motionState.id,
-    label: definitionEntry.label,
+    label: motionState.label,
     progress: motionState.progress,
     phase: motionState.phase,
   });
