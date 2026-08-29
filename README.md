@@ -11,7 +11,27 @@ npm install
 npm run dev
 ```
 
-개발 서버가 안내하는 로컬 주소를 브라우저에서 연 뒤 메인 메뉴에서 `새 게임 시작`을 선택하면 첫 생활 영역인 왕립 마법학교 학원촌에 캐릭터가 생성됩니다. `←/→`로 이동하고 `Space`로 점프합니다. `A/S/Q/W/E`는 서로 다른 검 공격, `↑/↓`는 방어와 앉기를 실행하며 지정된 계단 근처에서는 앞·뒤 깊이 레인 전환으로 우선 동작합니다. `렌더 연구실`에서는 같은 GameScene의 Polygon/Retro 출력과 낮/밤 상태를 비교할 수 있습니다.
+Node.js 내장 모듈로만 구성된 개발 서버가 `http://127.0.0.1:5173/`을 엽니다. Vite 같은 빌드 도구나 번들 단계는 사용하지 않습니다. 주소를 브라우저에서 연 뒤 메인 메뉴에서 `새 게임 시작`을 선택하면 첫 생활 영역인 왕립 마법학교 학원촌에 캐릭터가 생성됩니다. `←/→`로 이동하고 `Space`로 점프합니다. `A/S/Q/W/E`는 서로 다른 검 공격, `↑/↓`는 방어와 앉기를 실행하며 지정된 계단 근처에서는 앞·뒤 깊이 레인 전환으로 우선 동작합니다. `렌더 연구실`에서는 같은 GameScene의 Polygon/Retro 출력과 낮/밤 상태를 비교할 수 있습니다.
+
+## 모바일 검증
+
+Windows에 `cloudflared`를 한 번 설치합니다.
+
+```powershell
+winget install --id Cloudflare.cloudflared --exact
+```
+
+이후 원본 명령이나 PowerShell 단축 명령으로 로컬 서버와 임시 Cloudflare Quick Tunnel을 함께 실행합니다.
+
+```bash
+npm run dev:mobile
+# PowerShell profile shortcut
+dev
+```
+
+터미널에 출력되는 `모바일 검증 열기` 하이퍼링크나 바로 아래의 `https://...trycloudflare.com` 주소를 사용합니다. 같은 Wi-Fi에 연결할 필요는 없습니다. `Ctrl+C`를 누르면 로컬 서버만 종료되고 터널과 URL은 유지됩니다. 다시 `dev`를 실행하면 기다리지 않고 같은 터널에 서버만 연결됩니다. 검증을 마친 뒤 `dev stop-tunnel`로 터널을 명시적으로 종료합니다. 현재 주소만 다시 확인하려면 `dev url`을 사용합니다.
+
+Quick Tunnel은 인증이 없는 공개 개발 주소입니다. 실행 중인 주소를 신뢰할 수 없는 사람에게 공유하지 말고 저장 데이터나 비밀값을 검증 환경에 두지 않습니다. 이 경로는 모바일 개발 검증 전용이며 공개 배포에는 GitHub Pages를 사용합니다. `%USERPROFILE%\.cloudflared\config.yml` 또는 `config.yaml`이 있으면 Quick Tunnel이 동작하지 않을 수 있습니다. 자세한 제약은 [Cloudflare Quick Tunnels 문서](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)를 확인합니다.
 
 전체 월드는 학원촌을 중심으로 숲·밀림, 해변·바닷속, 협곡·화산, 산·설원 권역을 청크 단위로 확장합니다. 생활 영역, 필드, 던전, 깊이 레인과 조건 패치 계약은 [`docs/world-map-system.md`](./docs/world-map-system.md)를 따릅니다.
 
@@ -41,7 +61,11 @@ Pixel Size, Posterization, Outline, Alpha Threshold, Pixel Snap, Animation Speed
 
 ## 명령어
 
-- `npm run dev`: 개발 서버 실행
+- `npm run dev`: 로컬 개발 서버 실행
+- `npm run dev:mobile`: 영속 개발 터널을 재사용하며 로컬 서버 실행
+- `dev`: PowerShell에서 터널을 재사용하며 로컬 서버 실행
+- `dev url`: 실행 중인 모바일 검증 URL 출력
+- `dev stop-tunnel`: 영속 개발 터널 종료
 - `npm run lint`: ESLint 검사
 - `npm run check`: 린트와 포맷 검사
 - `npm run format`: Prettier로 포맷

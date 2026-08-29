@@ -7,7 +7,8 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/serve.mjs",
+    "dev:mobile": "pwsh -NoProfile -File scripts/dev.ps1",
     "lint": "eslint .",
     "check": "npm run lint && npm run format:check",
     "format": "prettier --write .",
@@ -18,7 +19,6 @@
     "alpinejs": "3.14.9",
     "eslint": "10.9.1",
     "globals": "17.11.0",
-    "prettier": "3.9.6",
-    "vite": "8.2.2"
+    "prettier": "3.9.6"
   }
 }
