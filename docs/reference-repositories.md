@@ -108,6 +108,34 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 현재 규모에서는 Ball Fight Simulator의 전역 `uiManager`와 태그 컴포넌트 loader, Baeseongjin의 Promise 기반 다중 모드 선택기는 가져오지 않는다. 단일 Alpine `gameShell`이 메뉴·게임·Render Lab 세 화면만 소유한다.
 
+### AI 개발 프로세스와 병렬 worktree
+
+먼저 다음을 확인한다.
+
+- `C:/projects/baeseongjin/docs/development-rules.md`의 효율 우선 실행, 병렬 ownership과 Git 운영
+- `C:/projects/baeseongjin/.codex/skills/github-task-flow/SKILL.md`의 최신 main 검증, worker branch와 통합 경계
+- [OpenAI Codex Worktrees](https://learn.chatgpt.com/codex/environments/git-worktrees)
+- [OpenAI Codex Subagents](https://learn.chatgpt.com/codex/agent-configuration/subagents)
+- [OpenAI Codex Skills](https://learn.chatgpt.com/codex/build-skills)
+- [OpenAI Codex AGENTS.md](https://learn.chatgpt.com/codex/agent-configuration/agents-md)
+- [Anthropic Building effective agents](https://www.anthropic.com/research/building-effective-agents)
+
+가져올 핵심 원칙:
+
+- Main context에는 요구사항·결정·lifecycle 요약만 유지하고 인터뷰·탐색·로그·구현은 work-item 대화로 격리한다.
+- 작은 반복 lane은 permanent worktree를 재사용하고 큰 기능은 chat 전용 managed worktree를 사용한다.
+- Read-heavy 조사·검증은 병렬화하고 write-heavy 작업은 disjoint hunk·public contract ownership이 증명될 때만 병렬화한다.
+- Skill은 `.agents/skills/`에 두고 하나의 좁은 workflow를 progressive disclosure로 routing한다.
+- `AGENTS.md`는 기본 32 KiB instruction budget을 고려해 문서 인덱스와 핵심 규칙만 유지한다.
+- Manager는 대화 기억이 아니라 Git work item, Orca orchestration과 실제 worktree 상태로 복구 가능해야 한다.
+- Agent loop는 환경 증거, human feedback checkpoint와 명시적인 정지 조건을 가진다.
+
+적용하지 않음:
+
+- Baeseongjin의 Issue·PR·단일 Lore commit 전체 절차를 현재 Polygon RPG의 자동 기본값으로 복제하지 않는다.
+- 새 scheduler, queue database 또는 polling daemon을 만들지 않는다. Git과 Orca state로 실패가 확인될 때만 추가 자동화를 검토한다.
+- 같은 skill을 register·manage·run·cancel 네 개로 노출하지 않는다. 사용자는 `dev-team-loop` 하나만 사용하고 내부 mode가 현재 맥락을 해석한다.
+
 ## 적용 절차
 
 공용 기반을 구현할 때 다음 순서를 따른다.
