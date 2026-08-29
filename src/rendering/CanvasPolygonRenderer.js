@@ -9,13 +9,28 @@ export class CanvasPolygonRenderer {
 
   render(frame, { showMesh = false, showWorldGrid = true } = {}) {
     const { context, viewport } = this.canvasHost;
-    context.setTransform(viewport.pixelRatio, 0, 0, viewport.pixelRatio, 0, 0);
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.imageSmoothingEnabled = true;
-    context.clearRect(0, 0, viewport.width, viewport.height);
+    context.clearRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    context.fillStyle = frame.palette.background;
+    context.fillRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    context.save();
+    context.translate(viewport.presentationX, viewport.presentationY);
+    context.scale(
+      viewport.presentationWidth / viewport.width,
+      viewport.presentationHeight / viewport.height,
+    );
 
     const project = (point) => this.camera.worldToScreen(point, viewport);
     const worldScale = this.camera.getScale(viewport);
     paintBackdrop(context, frame, viewport, project, { showWorldGrid });
-    paintSceneItems(context, frame, project, worldScale, { showMesh });
+    const diagnostics = paintSceneItems(context, frame, project, worldScale, { showMesh });
+    context.restore();
+    return Object.freeze({
+      logicalWidth: viewport.width,
+      logicalHeight: viewport.height,
+      degenerateItemIds: diagnostics.degenerateItemIds,
+      rasterCollapseItemIds: diagnostics.rasterCollapseItemIds,
+    });
   }
 }

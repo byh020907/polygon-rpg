@@ -379,6 +379,7 @@ export class MapRuntime {
       lane,
       renderItems,
       collisionSurfaces: lane.surfaces.filter((surface) => surface.enabled !== false),
+      entities: lane.entities.filter((entity) => entity.enabled !== false),
       connections,
       worldBounds: activeChunk?.bounds ?? null,
       cameraBounds: activeChunk?.cameraBounds ?? activeChunk?.bounds ?? null,

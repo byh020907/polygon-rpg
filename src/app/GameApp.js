@@ -37,6 +37,7 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.snapshot !== 'function' ||
     typeof uiBridge.setRenderStats !== 'function' ||
     typeof uiBridge.setGameStats !== 'function' ||
+    typeof uiBridge.setPlayerStatus !== 'function' ||
     typeof uiBridge.setWorldStatus !== 'function'
   ) {
     throw new TypeError(
@@ -182,6 +183,10 @@ export class GameApp {
   render(interpolationAlpha) {
     const uiState = this.uiBridge.snapshot();
     if (uiState.screen === GAME_SCREEN.MENU) return;
+    this.uiBridge.setPlayerStatus({
+      health: this.scene.playerHealth,
+      maxHealth: this.scene.playerMaxHealth,
+    });
 
     const renderFrame = this.scene.createRenderFrame(interpolationAlpha);
     if (uiState.screen === GAME_SCREEN.GAME) {
@@ -189,11 +194,11 @@ export class GameApp {
       return;
     }
 
-    this.polygonRenderer.render(renderFrame, {
+    const polygonStats = this.polygonRenderer.render(renderFrame, {
       showMesh: uiState.showMesh,
       showWorldGrid: true,
     });
-    this.latestRenderStats = this.retroRenderer.render(renderFrame, {
+    const retroStats = this.retroRenderer.render(renderFrame, {
       pixelSize: uiState.pixelSize,
       pixelSnap: uiState.pixelSnap,
       alphaThresholdEnabled: uiState.alphaThresholdEnabled,
@@ -203,6 +208,16 @@ export class GameApp {
       showMesh: uiState.showMesh,
       showPixelGrid: uiState.showPixelGrid,
       showWorldGrid: true,
+    });
+    this.latestRenderStats = Object.freeze({
+      ...retroStats,
+      degenerateItemIds: Object.freeze([
+        ...new Set([
+          ...(polygonStats.degenerateItemIds ?? []),
+          ...(retroStats.degenerateItemIds ?? []),
+        ]),
+      ]),
+      rasterCollapseItemIds: retroStats.rasterCollapseItemIds ?? Object.freeze([]),
     });
   }
 
@@ -222,10 +237,16 @@ export class GameApp {
       logicalWidth: this.latestRenderStats.logicalWidth,
       logicalHeight: this.latestRenderStats.logicalHeight,
       droppedSteps: this.runner.droppedSteps,
+      degenerateItemIds: this.latestRenderStats.degenerateItemIds ?? [],
+      rasterCollapseCount: this.latestRenderStats.rasterCollapseItemIds?.length ?? 0,
     });
 
     if (uiState.screen === GAME_SCREEN.GAME) {
       this.uiBridge.setGameStats(commonStats);
+      this.uiBridge.setPlayerStatus({
+        health: this.scene.playerHealth,
+        maxHealth: this.scene.playerMaxHealth,
+      });
     } else {
       this.uiBridge.setRenderStats(commonStats);
     }

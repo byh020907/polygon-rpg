@@ -10,16 +10,14 @@
 Input Snapshot
     ↓
 CombatCommandController
+    ├→ Motion State (id / progress / phase / queue)
+    ├→ SpinContactConstraint (pulse spacing / pull cap / release velocity)
+    ├→ CombatPoseLibrary arm/weapon targets
+    └→ CharacterBonePoseLibrary pelvis/head/foot targets
+             ↓
+       TwoBoneIKSolver (arms + legs)
     ↓
-Motion State (id / progress / phase / queue)
-    ↓
-CombatPoseLibrary Target Keyframes
-    ↓
-Target Pose interpolation
-    ↓
-TwoBoneIKSolver
-    ↓
-Shoulder → Elbow → Hand joint positions
+Shoulder → Elbow → Hand / Hip → Knee → Foot joint positions
     ↓
 Character Polygon RenderFrame
 ```
@@ -51,6 +49,20 @@ Character Polygon RenderFrame
 
 `CombatCommandController`는 animation module을 import하지 않는다. Controller가 공개한 normalized `motionState.progress`를 `CombatPoseLibrary`가 읽는 단방향 dependency를 유지한다.
 
+## Full-Body Bone Pose
+
+`CharacterBonePoseLibrary`는 관절 각도를 저장하지 않고 pelvis offset, body/head lean, rear/lead foot target과 cape lift를 계산한다. `GameScene`은 shoulder·hip root를 조립하고 같은 `TwoBoneIKSolver`로 팔꿈치·손과 무릎·발을 계산한다.
+
+- Idle: 작은 호흡과 머리 counter tilt
+- Move: 교차 보폭, 발 lift, 전경 상체와 뒤로 빠지는 scarf
+- Jump Rise/Fall: 서로 다른 무릎 tuck과 착지 준비
+- Landing: gameplay collider를 바꾸지 않는 140ms pelvis compression과 넓은 foot plant
+- Guard: 넓은 stance와 뒤로 물린 중심
+- Roll: 이동 방향을 고정한 tuck pose와 360° body rotation
+- Ground/Air Combat: motion progress에 맞춘 stance, head counter-motion과 cape lift
+
+레오곡의 작은 머리·좁은 몸통·긴 사지와 동작 방향으로 길게 뻗는 silhouette 원칙만 참고하며 원본 sprite, 색상과 authored frame을 복제하지 않는다.
+
 ## IK Solver
 
 현재 팔과 방패 팔은 해석적 Two-Bone IK를 사용한다.
@@ -69,26 +81,49 @@ Character Polygon RenderFrame
 
 ## Combat Commands
 
-| 키  | Command        | Motion         |
-| --- | -------------- | -------------- |
-| `A` | Primary Attack | 기본 베기      |
-| `S` | Thrust Attack  | 찌르기         |
-| `Q` | Heavy Attack   | 강한 내려베기  |
-| `W` | Rising Attack  | 올려베기       |
-| `E` | Rage Attack    | 회전 공격      |
-| `↑` | Guard          | 방패 전방 자세 |
-| `↓` | Crouch         | 낮은 자세      |
+| 키  | Command       | Motion         |
+| --- | ------------- | -------------- |
+| `A` | Basic Attack  | 기본 베기      |
+| `S` | Strong Attack | 강한 내려베기  |
+| `↑` | Jump          | 점프           |
+| `↓` | Guard         | 방패 전방 자세 |
 
-이동은 `←/→`, 점프는 `Space`가 소유한다. 전투 키와 충돌하므로 `A/D` 이동은 사용하지 않는다.
+이동은 `←/→`가 소유한다. 깊이 레인 연결점에서는 `↑/↓`가 뒤/앞 lane 전환으로 우선 동작하고 연결점 밖에서 점프/방어로 동작한다. 전투 키와 충돌하므로 `A/D` 이동은 사용하지 않는다.
+
+키보드와 모바일은 각각 A/S와 X/Y로 표시하지만 동일한 Basic/Strong Attack intent와 combo branch를 공유한다. 기술별 직접 입력은 두지 않는다.
+
+| Command sequence | Motion        |
+| ---------------- | ------------- |
+| `X` / `A`        | 기본 베기     |
+| `Y` / `S`        | 강한 내려베기 |
+| `XX` / `AA`      | 찌르기        |
+| `XY` / `AS`      | 올려베기      |
+| `YX` / `SA`      | 회전 공격     |
+
+공중에서는 같은 두 입력이 별도 air branch로 해석된다.
+
+| Command sequence | Motion         |
+| ---------------- | -------------- |
+| `X` / `A`        | 공중 베기      |
+| `Y` / `S`        | 공중 내려베기  |
+| `XX` / `AA`      | 공중 되베기    |
+| `XY` / `AS`      | 공중 회전      |
+| `YX` / `SA`      | 공중 교차 베기 |
 
 ## Command Lifecycle
 
 - keydown hold가 아니라 false→true edge에서 command를 한 번 발행한다.
 - active motion은 `windup → strike → recovery` phase로 진행한다.
-- active motion 30% 이후 입력한 다음 공격은 한 개까지 buffer한다.
+- active motion 중 입력한 다음 공격은 한 개까지 buffer하며 가장 최근 유효 입력으로 branch를 결정한다.
+- combo branch가 시작되면 직전 motion의 실제 chain pose를 branch별 50~80ms 동안 새 motion에 ease blend한다. Gameplay progress와 active window는 그대로 진행하되 weapon·limb·torso가 첫 frame에 순간이동하지 않게 한다.
+- queued ground motion은 기본적으로 recovery 초입 74%에서, air normal은 62~72%에서 남은 recovery를 cancel하고 시작한다.
+- Slash/Heavy starter 뒤의 Basic/Strong 입력은 combo table로 다음 motion을 해석한다. 다른 motion 뒤에서는 새 starter로 돌아간다.
+- 모든 grounded attack은 진행률과 hit 여부에 관계없이 jump cancel할 수 있다.
+- jump 입력은 active ground motion과 buffered motion을 먼저 폐기하고 airborne 상태를 확정한다. 같은 input snapshot의 attack은 ground command가 아니라 새 air command로 즉시 시작한다.
+- airborne snapshot에서 입력한 Basic/Strong은 ground queue와 분리된 air combo table로 해석한다.
 - 현재 motion 종료 시 buffer된 command를 새 sequence로 시작한다.
 - `CombatCommandController`가 label, duration, movement scale과 jump 허용 여부를 gameplay 정책으로 소유하고 command state로 제공한다.
-- Guard/Crouch는 공격이 없을 때 held pose로 적용한다.
+- Guard는 공격이 없을 때 held pose로 적용한다.
 
 ## Current Motions
 
@@ -98,6 +133,27 @@ Character Polygon RenderFrame
 - Rising: 낮은 준비 자세에서 위로 올려베기
 - Spin: 연속 목표 각도를 통과하는 회전 공격
 - Guard: 방패 손 Effector를 전방으로 이동
-- Crouch: 몸 높이 목표를 낮추고 무게 중심 하강
+- Air Slash/Heavy/Return/Spin/Cross: 공중 체공 자세에서 같은 두 버튼의 별도 연계
+- Ground Spin은 짧게 도약하되 화면 평면에서 몸 전체를 공중제비시키지 않는다. 몸통·발은 수평 yaw를 암시하는 폭·무게중심·실루엣을 바꾸고, 회전 전후면에 따라 sword/shield limb의 고정 draw order·opacity·뒷면 색조를 교대한다. Sword trail item은 opacity 0을 포함해 항상 유지하므로 RenderFrame item shape과 장비 order가 바뀌지 않는다. Depth phase에는 양 끝이 0인 ease envelope를 곱해 idle 진입·복귀 pose와 연속되게 하며, 뒷면 shade 결과는 제한된 palette cache에서 재사용한다. 검 Effector는 지면 위의 독립된 원형 궤도로 3개의 hit pulse를 만든다. `SpinContactConstraint`는 Heavy 이후 적의 실제 간격을 시작점으로 pulse 간격을 연속 보간하고 pull 속도를 초당 300 World unit으로 제한한다. 공개 update 경계는 motion progress/sequence, 좌표, `-1/+1` facing과 deltaSeconds를 유한성·범위 검증한다. 마지막 pulse의 수평 velocity는 명시적인 release DTO로 전달해 constraint 종료 직후 위치 snap 없이 launch feedback을 보존한다.
+- Air Heavy는 Player를 빠르게 하강시키고 적을 바닥에 70ms 박은 뒤 다시 bounce시키는 slam finisher다.
+
+## Combat Mob / Juggle Contract
+
+전투 실험 던전의 combat mob은 경공격·강공격·대공격을 순환하고 거리 접근, windup, active, recovery, guard, evade, hitstun을 독립 상태로 관리한다. 공격 중 고정한 facing을 판정과 렌더링이 함께 사용하며, 피격 반응은 현재 weapon/body pose에서 전용 180ms recovery로 이어진다. Player 피격 knockback은 Light < Anti-air < Heavy 순의 velocity와 decay profile을 사용하고 작은 잔여 속도는 0으로 정산한다.
+
+combat mob은 공중 hit마다 낙하 속도를 제거하고 감소하는 위쪽 impulse와 짧은 gravity suppression을 받는다. 공중 sustain 공격이 적중하면 Player도 적과 같은 위쪽 속도, gravity suppression과 progressive gravity scale을 받아 같은 높이 흐름을 유지한다. 허공 공격은 체공을 연장하지 않는다.
+
+combat mob의 가슴 core는 지원하는 최대 Retro Pixel Size 10에서도 최소 한 logical pixel 면적을 유지하는 청록색 육각형과 저강도 외곽 glow를 사용한다. Glow는 silhouette와 공격 telegraph보다 밝게 팽창하지 않고 core 위치만 식별시킨다. Geometry diagnostics는 world-space authored degeneracy와 Retro pixel-snap 이후 projected raster collapse를 별도 결과로 분류한다.
+
+- Air Slash/Return/Spin은 높이를 유지하는 extender다.
+- Air Heavy(`S/Y`)는 바닥에 박은 뒤 함께 튕겨 오르는 slam finisher이며, Air Cross(`SA/YX`)는 재부양하지 않는 finisher다.
+- sustain hit는 Player를 목표 간격 44 World unit으로 최대 32 unit 보정해 다음 대각선 타격의 거리도 유지한다.
+- 경공격 hit는 35ms, 강공격·finisher hit는 50ms hit-stop을 적용하며 stop 중 새 입력 sequence는 adapter에 보존된다.
+- launch를 포함해 최대 6 hit 또는 3.2초까지만 juggle할 수 있다.
+- hit마다 enemy gravity가 증가하고 relaunch impulse·float 시간이 감소한다.
+- 한계에 도달하면 강제 낙하하며 착지 전에는 추가 hit를 받지 않는다.
+- 착지하면 juggle count, 누적 시간과 gravity scale을 초기화한다.
+- Player가 정면 Guard에 성공하면 damage와 knockback 없이 40ms block-stop을 적용한다. 실제 shield polygon의 전방 끝점에서 impact와 spark를 만들며 Light/Heavy에 각각 120/240ms blockstun과 차등 recoil·effect 강도를 적용한다. Anti-air는 공중 목표만 맞히므로 지상 Guard 대상이 아니다.
+- blockstun과 KO 중에는 이동·점프뿐 아니라 새 combat command와 hit 판정도 잠근다. Block-stop 중 들어온 attack sequence는 blockstun의 첫 simulation tick에서 소비하되 실행하지 않아 숨은 공격이나 지연 발동을 남기지 않는다.
 
 Slash, Heavy, Rising과 Spin은 현재 검 위치와 목표 각도로 procedural ribbon을 생성한다. Trail은 별도 bone이 아니며 sampled target pose의 출력만 읽는다.

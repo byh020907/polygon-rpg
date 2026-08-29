@@ -1,14 +1,100 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
 
-function formatRuntimeStats({ fps, logicalWidth, logicalHeight, droppedSteps }) {
-  return `${fps} FPS · ${logicalWidth}×${logicalHeight} logical · ${droppedSteps} dropped`;
+function formatRuntimeStats({
+  fps,
+  logicalWidth,
+  logicalHeight,
+  droppedSteps,
+  degenerateItemIds,
+  rasterCollapseCount,
+}) {
+  const geometryWarning = degenerateItemIds?.length
+    ? ` · INVALID GEOMETRY: ${degenerateItemIds.join(', ')}`
+    : '';
+  const rasterWarning = rasterCollapseCount ? ` · RASTER COLLAPSE: ${rasterCollapseCount}` : '';
+  return `${fps} FPS · ${logicalWidth}×${logicalHeight} logical · ${droppedSteps} dropped${geometryWarning}${rasterWarning}`;
 }
 
 function formatGameStats({ fps, logicalWidth, logicalHeight }) {
   return `${fps} FPS · ${logicalWidth}×${logicalHeight} logical`;
 }
 
+function createMobileViewportController(browserDocument, browserScreen) {
+  let requestVersion = 0;
+  let ownedFullscreenElement = null;
+
+  async function exitOwnedFullscreen() {
+    const fullscreenElement = ownedFullscreenElement;
+    ownedFullscreenElement = null;
+
+    if (
+      !fullscreenElement ||
+      browserDocument.fullscreenElement !== fullscreenElement ||
+      typeof browserDocument.exitFullscreen !== 'function'
+    ) {
+      return;
+    }
+
+    try {
+      await browserDocument.exitFullscreen();
+    } catch {
+      // Fullscreen may already have been released by the browser or the user.
+    }
+  }
+
+  return Object.freeze({
+    async enterLandscape() {
+      const currentRequest = ++requestVersion;
+      const root = browserDocument?.documentElement;
+      if (!root) return;
+
+      if (!browserDocument.fullscreenElement && typeof root.requestFullscreen === 'function') {
+        try {
+          await root.requestFullscreen();
+          if (browserDocument.fullscreenElement === root) {
+            ownedFullscreenElement = root;
+          }
+        } catch {
+          // Installed apps and some browsers allow orientation lock without fullscreen.
+        }
+      }
+
+      if (currentRequest !== requestVersion) {
+        await exitOwnedFullscreen();
+        return;
+      }
+
+      const orientation = browserScreen?.orientation;
+      if (typeof orientation?.lock !== 'function') return;
+
+      try {
+        await orientation.lock('landscape');
+        if (currentRequest !== requestVersion && typeof orientation.unlock === 'function') {
+          orientation.unlock();
+        }
+      } catch {
+        // Portrait CSS keeps the rotate-device notice as the unsupported-browser fallback.
+      }
+    },
+
+    leaveLandscape() {
+      requestVersion += 1;
+      const orientation = browserScreen?.orientation;
+      if (typeof orientation?.unlock === 'function') {
+        try {
+          orientation.unlock();
+        } catch {
+          // The browser may have unlocked automatically while leaving fullscreen.
+        }
+      }
+      void exitOwnedFullscreen();
+    },
+  });
+}
+
 export function registerGameShell(Alpine, gameApp) {
+  const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
+
   Alpine.data('gameShell', () => ({
     screen: GAME_SCREEN.MENU,
     forceMobileControls: false,
@@ -35,18 +121,14 @@ export function registerGameShell(Alpine, gameApp) {
     maxMental: 100,
     gold: 0,
     mobileDirections: Object.freeze([
-      Object.freeze({ id: 'guard', label: '↑', hint: '방어·뒤길', slot: 'up' }),
+      Object.freeze({ id: 'jump', label: '↑', hint: '점프·뒤길', slot: 'up' }),
       Object.freeze({ id: 'left', label: '←', hint: '이동', slot: 'left' }),
-      Object.freeze({ id: 'crouch', label: '↓', hint: '앉기·앞길', slot: 'down' }),
+      Object.freeze({ id: 'guard', label: '↓', hint: '방어·회피', slot: 'down' }),
       Object.freeze({ id: 'right', label: '→', hint: '이동', slot: 'right' }),
     ]),
     mobileActions: Object.freeze([
-      Object.freeze({ id: 'heavyAttack', label: 'Q', hint: '강공', slot: 'q' }),
-      Object.freeze({ id: 'risingAttack', label: 'W', hint: '올려', slot: 'w' }),
-      Object.freeze({ id: 'rageAttack', label: 'E', hint: '회전', slot: 'e' }),
-      Object.freeze({ id: 'primaryAttack', label: 'A', hint: '베기', slot: 'a' }),
-      Object.freeze({ id: 'thrustAttack', label: 'S', hint: '찌르기', slot: 's' }),
-      Object.freeze({ id: 'jump', label: 'JUMP', hint: '점프', slot: 'jump' }),
+      Object.freeze({ id: 'basicAttack', label: 'X', hint: '기본', slot: 'attack' }),
+      Object.freeze({ id: 'strongAttack', label: 'Y', hint: '강한', slot: 'strong' }),
     ]),
 
     init() {
@@ -70,6 +152,10 @@ export function registerGameShell(Alpine, gameApp) {
         },
         setGameStats: (stats) => {
           this.gameStats = formatGameStats(stats);
+        },
+        setPlayerStatus: (status) => {
+          this.health = status.health;
+          this.maxHealth = status.maxHealth;
         },
         setWorldStatus: (status) => {
           this.areaName = status.areaName;
@@ -97,11 +183,13 @@ export function registerGameShell(Alpine, gameApp) {
     },
 
     startGame() {
+      mobileViewport.leaveLandscape();
       this.forceMobileControls = false;
       this.launchGame();
     },
 
     startMobileGame() {
+      void mobileViewport.enterLandscape();
       this.forceMobileControls = true;
       this.launchGame();
     },
@@ -113,12 +201,14 @@ export function registerGameShell(Alpine, gameApp) {
     },
 
     openRenderLab() {
+      mobileViewport.leaveLandscape();
       this.screen = GAME_SCREEN.RENDER_LAB;
       this.isPlaying = true;
       this.$nextTick(() => gameApp.onScreenChanged());
     },
 
     showMenu() {
+      mobileViewport.leaveLandscape();
       this.screen = GAME_SCREEN.MENU;
       this.isPlaying = false;
       this.forceMobileControls = false;
@@ -138,6 +228,7 @@ export function registerGameShell(Alpine, gameApp) {
     },
 
     destroy() {
+      mobileViewport.leaveLandscape();
       gameApp.destroy();
     },
   }));

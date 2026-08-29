@@ -315,6 +315,68 @@ const frontLaneItems = [
     order: 8,
     enabled: false,
   }),
+  renderItem('test-portal-outer', regularPolygon(104, 377, 42, 55, 14), '#273650', {
+    stroke: '#86d9d1',
+    lineWidth: 3,
+    opacity: 0.92,
+    order: 9,
+  }),
+  renderItem('test-portal-inner', regularPolygon(104, 380, 29, 43, 14), '#111329', {
+    stroke: '#c7fff2',
+    lineWidth: 1.5,
+    opacity: 0.96,
+    order: 10,
+  }),
+];
+
+const combatDungeonItems = [
+  renderItem('dungeon-backdrop', rectangle(0, 0, 960, 540), '#090d17', {
+    order: -100,
+  }),
+  renderItem(
+    'dungeon-vault',
+    [
+      { x: 0, y: 235 },
+      { x: 150, y: 118 },
+      { x: 310, y: 216 },
+      { x: 480, y: 92 },
+      { x: 650, y: 216 },
+      { x: 810, y: 118 },
+      { x: 960, y: 235 },
+      { x: 960, y: 420 },
+      { x: 0, y: 420 },
+    ],
+    '#171d2b',
+    { stroke: '#30394d', lineWidth: 3, order: -80 },
+  ),
+  renderItem('dungeon-floor', rectangle(0, 420, 960, 120), '#242735', {
+    stroke: '#4a5061',
+    lineWidth: 2,
+    order: 0,
+  }),
+  renderItem('dungeon-platform-line', rectangle(50, 405, 860, 15), '#3d4557', {
+    stroke: '#79869b',
+    lineWidth: 1.5,
+    order: 2,
+  }),
+  renderItem('dungeon-exit-outer', regularPolygon(104, 365, 42, 55, 14), '#273650', {
+    stroke: '#86d9d1',
+    lineWidth: 3,
+    order: 7,
+  }),
+  renderItem('dungeon-exit-inner', regularPolygon(104, 368, 29, 43, 14), '#111329', {
+    stroke: '#c7fff2',
+    lineWidth: 1.5,
+    order: 8,
+  }),
+  renderItem('training-rune-left', regularPolygon(360, 395, 24, 9, 6), '#5fb8ad', {
+    opacity: 0.5,
+    order: 3,
+  }),
+  renderItem('training-rune-right', regularPolygon(760, 395, 24, 9, 6), '#5fb8ad', {
+    opacity: 0.5,
+    order: 3,
+  }),
 ];
 
 export const ACADEMY_VILLAGE_MAP = defineMap({
@@ -407,7 +469,43 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
           renderItems: frontLaneItems,
           entities: [],
           triggers: [],
-          connections: ['plaza-to-homes'],
+          connections: ['plaza-to-homes', 'village-test-portal'],
+        },
+      ],
+    },
+    {
+      id: 'combat-test-dungeon',
+      bounds: { x: 0, y: 0, width: 960, height: 540 },
+      lanes: [
+        {
+          id: 'training-floor',
+          label: '전투 실험 던전',
+          renderOrder: 30,
+          visualScale: 1,
+          groundY: 420,
+          movementBounds: { minX: 24, maxX: 936 },
+          surfaces: [
+            {
+              id: 'training-floor-surface',
+              kind: 'solid',
+              material: 'sealed-stone',
+              points: [
+                { x: 0, y: 420 },
+                { x: 960, y: 420 },
+              ],
+            },
+          ],
+          renderItems: combatDungeonItems,
+          entities: [
+            {
+              id: 'combat-test-mob',
+              kind: 'combat-test-mob',
+              position: { x: 680, y: 420 },
+              maxHealth: 160,
+            },
+          ],
+          triggers: [],
+          connections: ['village-test-portal'],
         },
       ],
     },
@@ -454,6 +552,27 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         radius: 48,
       },
       transition: { durationSeconds: 0.28 },
+    },
+    {
+      id: 'village-test-portal',
+      direction: 'back',
+      bidirectional: true,
+      interactionId: 'dungeon-portal',
+      from: {
+        chunkId: 'village-center',
+        laneId: 'front-plaza',
+        anchor: { x: 104, y: 432 },
+        spawn: { x: 154, y: 350 },
+        radius: 52,
+      },
+      to: {
+        chunkId: 'combat-test-dungeon',
+        laneId: 'training-floor',
+        anchor: { x: 104, y: 420 },
+        spawn: { x: 150, y: 338 },
+        radius: 52,
+      },
+      transition: { durationSeconds: 0.36 },
     },
   ],
   patches: [

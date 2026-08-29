@@ -88,8 +88,8 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
     keyframe(
       0.49 / 0.76,
       {
-        handTarget: { x: 62, y: 31 },
-        swordAngle: 0.82,
+        handTarget: { x: 62, y: -38 },
+        swordAngle: 0.24,
         bodyOffset: { x: 11, y: 5 },
         bodyLean: 0.17,
         trailOpacity: 1,
@@ -135,14 +135,14 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       trailArc: 1.1,
     }),
     keyframe(0.4 / 0.92, {
-      handTarget: { x: 50, y: 20 },
+      handTarget: { x: 50, y: -48 },
       swordAngle: 0.95,
       bodyLean: 0.1,
       trailOpacity: 0.9,
       trailArc: 1.35,
     }),
     keyframe(0.6 / 0.92, {
-      handTarget: { x: -20, y: 4 },
+      handTarget: { x: -20, y: -56 },
       swordAngle: 2.55,
       bodyLean: -0.1,
       trailOpacity: 1,
@@ -155,6 +155,153 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       trailOpacity: 0.72,
       trailArc: 1.2,
     }),
+    keyframe(0.92, {
+      handTarget: { x: 63, y: -18 },
+      swordAngle: 5.2,
+      bodyLean: 0.03,
+      trailOpacity: 0.35,
+      trailArc: 0.85,
+    }),
+    keyframe(1, {
+      swordAngle: 5.58,
+    }),
+  ]),
+  airSlash: definition([
+    keyframe(0),
+    keyframe(0.22, {
+      handTarget: { x: 22, y: -52 },
+      swordAngle: -1.2,
+      bodyLean: -0.08,
+    }),
+    keyframe(
+      0.5,
+      {
+        handTarget: { x: 88, y: 24 },
+        swordAngle: 0.52,
+        bodyOffset: { x: 10, y: 6 },
+        bodyLean: 0.16,
+        trailOpacity: 0.94,
+        trailArc: 2.0,
+      },
+      'easeOut',
+    ),
+    keyframe(0.78, {
+      handTarget: { x: 58, y: 12 },
+      swordAngle: 0.28,
+      bodyOffset: { x: 5, y: 5 },
+      bodyLean: 0.08,
+      trailOpacity: 0.3,
+      trailArc: 0.8,
+    }),
+    keyframe(1),
+  ]),
+  airHeavy: definition([
+    keyframe(0),
+    keyframe(0.32, {
+      handTarget: { x: 24, y: -55 },
+      swordAngle: -1.15,
+      bodyLean: -0.08,
+    }),
+    keyframe(
+      0.62,
+      {
+        handTarget: { x: 82, y: 12 },
+        swordAngle: 0.38,
+        bodyOffset: { x: 10, y: 1 },
+        bodyLean: 0.14,
+        trailOpacity: 1,
+        trailArc: 1.9,
+      },
+      'overshoot',
+    ),
+    keyframe(0.78, {
+      handTarget: { x: 72, y: 10 },
+      swordAngle: 0.3,
+      bodyOffset: { x: 7, y: 2 },
+      bodyLean: 0.1,
+      trailOpacity: 0.42,
+      trailArc: 1.05,
+    }),
+    keyframe(1),
+  ]),
+  airReturn: definition([
+    keyframe(0),
+    keyframe(0.22, {
+      handTarget: { x: 84, y: 16 },
+      swordAngle: 0.4,
+      bodyOffset: { x: 6, y: 4 },
+    }),
+    keyframe(
+      0.54,
+      {
+        handTarget: { x: 8, y: 30 },
+        swordAngle: 2.65,
+        bodyOffset: { x: -8, y: 7 },
+        bodyLean: -0.14,
+        trailOpacity: 0.92,
+        trailArc: 2.05,
+      },
+      'easeOut',
+    ),
+    keyframe(0.8, {
+      handTarget: { x: 34, y: 8 },
+      swordAngle: 1.9,
+      bodyOffset: { x: -3, y: 5 },
+      bodyLean: -0.06,
+      trailOpacity: 0.28,
+      trailArc: 0.75,
+    }),
+    keyframe(1),
+  ]),
+  airSpin: definition([
+    keyframe(0),
+    keyframe(0.28, {
+      handTarget: { x: 70, y: -18 },
+      swordAngle: -0.42,
+      trailOpacity: 0.55,
+      trailArc: 1.2,
+    }),
+    keyframe(0.52, {
+      handTarget: { x: -25, y: 6 },
+      swordAngle: 2.65,
+      bodyLean: -0.12,
+      trailOpacity: 1,
+      trailArc: 1.55,
+    }),
+    keyframe(0.76, {
+      handTarget: { x: 48, y: -54 },
+      swordAngle: 4.18,
+      bodyLean: 0.1,
+      trailOpacity: 0.82,
+      trailArc: 1.35,
+    }),
+    keyframe(0.92, {
+      handTarget: { x: 68, y: -16 },
+      swordAngle: 5.15,
+      trailOpacity: 0.32,
+      trailArc: 0.8,
+    }),
+    keyframe(1, { swordAngle: 5.58 }),
+  ]),
+  airCross: definition([
+    keyframe(0),
+    keyframe(0.3, {
+      handTarget: { x: 70, y: 22 },
+      swordAngle: 0.52,
+      bodyLean: 0.1,
+    }),
+    keyframe(
+      0.62,
+      {
+        handTarget: { x: 7, y: -76 },
+        swordAngle: -1.38,
+        bodyOffset: { x: 7, y: 8 },
+        bodyLean: -0.12,
+        trailOpacity: 0.96,
+        trailArc: 2.55,
+      },
+      'easeOut',
+    ),
     keyframe(1),
   ]),
   guard: definition([
@@ -164,16 +311,6 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
       swordAngle: -1.32,
       bodyOffset: { x: -3, y: 2 },
       bodyLean: -0.04,
-    }),
-  ]),
-  crouch: definition([
-    keyframe(0, {
-      handTarget: { x: 47, y: -9 },
-      shieldTarget: { x: -37, y: 17 },
-      swordAngle: -0.35,
-      bodyOffset: { x: 0, y: 27 },
-      bodyLean: 0.03,
-      bodyScaleY: 0.72,
     }),
   ]),
 });
@@ -211,7 +348,7 @@ function interpolatePose(startPose, endPose, amount) {
   });
 }
 
-export function sampleCombatTargetPose(motionState) {
+function sampleDefinitionPose(motionState) {
   const definitionEntry = COMBAT_POSE_DEFINITIONS[motionState.id] ?? COMBAT_POSE_DEFINITIONS.idle;
   const progress = Math.max(0, Math.min(1, motionState.progress));
   const keyframes = definitionEntry.keyframes;
@@ -227,8 +364,40 @@ export function sampleCombatTargetPose(motionState) {
   const segmentDuration = Math.max(0.0001, end.progress - start.progress);
   const segmentProgress = Math.max(0, Math.min(1, (progress - start.progress) / segmentDuration));
   const easedProgress = applyEasing(end.easing, segmentProgress);
+  return interpolatePose(start.pose, end.pose, easedProgress);
+}
+
+function smoothStep(amount) {
+  const bounded = Math.max(0, Math.min(1, amount));
+  return bounded * bounded * (3 - 2 * bounded);
+}
+
+function interpolateTransitionPose(previousPose, currentPose, amount) {
+  const blended = interpolatePose(previousPose, currentPose, amount);
+  const angleDelta = Math.atan2(
+    Math.sin(currentPose.swordAngle - previousPose.swordAngle),
+    Math.cos(currentPose.swordAngle - previousPose.swordAngle),
+  );
   return Object.freeze({
-    ...interpolatePose(start.pose, end.pose, easedProgress),
+    ...blended,
+    swordAngle: previousPose.swordAngle + angleDelta * amount,
+  });
+}
+
+export function sampleCombatTargetPose(motionState) {
+  const currentPose = sampleDefinitionPose(motionState);
+  const transitionPose = motionState.transitionFrom
+    ? sampleDefinitionPose(motionState.transitionFrom)
+    : null;
+  const poseResult = transitionPose
+    ? interpolateTransitionPose(
+        transitionPose,
+        currentPose,
+        smoothStep(motionState.transitionProgress ?? 1),
+      )
+    : currentPose;
+  return Object.freeze({
+    ...poseResult,
     id: motionState.id,
     label: motionState.label,
     progress: motionState.progress,

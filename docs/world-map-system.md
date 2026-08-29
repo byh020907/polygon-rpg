@@ -91,7 +91,7 @@ Renderer는 resolved map snapshot과 RenderFrame을 읽기만 하며 map state, 
 ## 깊이 레인 전환
 
 - 연결점 근처에서만 앞·뒤 레인 전환을 허용한다.
-- 초기 입력은 기존 `↑/↓`를 문맥적으로 사용한다. 연결점에서만 전환이 방어·앉기보다 우선하며, 그 밖의 위치에서는 기존 전투 동작을 보존한다.
+- 초기 입력은 기존 `↑/↓`를 문맥적으로 사용한다. 연결점에서만 전환이 점프·방어보다 우선하며, 그 밖의 위치에서는 기존 전투 동작을 보존한다.
 - 공중, 공격 motion 또는 전환 중에는 새 전환을 시작하지 않는다.
 - Connection은 양수인 `transition.durationSeconds`를 가지며 생략 시 `0.28`초를 기본값으로 사용한다.
 - `beginTransition()`은 pending transition을 만들되 active lane과 collision은 source lane에 유지한다.
@@ -148,11 +148,13 @@ Resolved Map
 
 첫 구현은 전체 권역을 축소하지 않고 다음 한 조각으로 계약을 검증한다.
 
-- 학원촌 청크 1개
+- 학원촌 청크 1개와 격리된 전투 실험 청크 1개
 - 앞쪽 광장, 중간 주택가, 뒤쪽 언덕의 평평한 세 lane
 - 지정된 연결점 두 종류
 - 낮·밤 presentation variant
 - 동일 RenderFrame을 소비하는 Polygon / Retro Renderer
 - active lane만 사용하는 surface와 spawn
 
-이 수직 단위가 안정된 뒤 chunk streaming, editor JSON loader, condition validator, 지도 이동과 실제 던전을 같은 공개 계약 안에서 추가한다.
+전투 입력 검증을 위해 학원촌 중앙광장 왼쪽에는 `dungeon-portal` connection을 둔다. `↑`로 진입하는 `combat-test-dungeon/training-floor`는 독립 chunk이며 HP, Light/Heavy/Anti-air 패턴, guard/evade/hitstun, launch physics, progressive gravity, 6-hit juggle limit과 자동 복구를 가진 combat mob 한 개를 제공한다. 이 방은 combo와 presentation 검증용이고 정식 던전의 보스·체크포인트·보상 계약을 대신하지 않는다.
+
+이 수직 단위가 안정된 뒤 chunk streaming, editor JSON loader, condition validator, 지도 이동과 정식 던전을 같은 공개 계약 안에서 추가한다.

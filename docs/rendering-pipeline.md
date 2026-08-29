@@ -47,9 +47,19 @@ World float coordinates
 
 Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `screen / pixelSize` 결과를 정수화할 때만 적용한다.
 
+## Fixed Render Viewport
+
+게임, Polygon 비교와 Retro 비교 Canvas는 브라우저의 CSS 크기와 무관하게 PC Canvas 기준인 `1440×810` Render Viewport를 사용한다. `CanvasHost`는 실제 CSS 크기와 DPR로 backing canvas 예산을 계산하지만 카메라와 renderer에는 고정 Render Viewport를 제공한다. Camera는 이 viewport 안에 `960×540` World를 동일한 구도로 투영한다.
+
+- 게임 기본 `pixelSize=4`의 Retro surface는 항상 `360×203`이다.
+- 브라우저 resize는 backing canvas와 최종 presentation rectangle만 바꾼다.
+- PC와 모바일은 같은 Camera projection, 보이는 World 범위와 logical pixel 배열을 공유한다.
+- 화면 비율이 정확히 16:9가 아니면 고정 결과를 늘이거나 자르지 않고 중앙 letterbox로 맞춘다.
+- Polygon과 Retro renderer 모두 같은 presentation rectangle을 사용하며 renderer가 gameplay state를 변경하지 않는다.
+
 ## Character Presentation Scale
 
-현재 첫 맵 앞쪽 레인의 캐릭터 본체는 무기와 그림자를 제외한 약 `35×48` World unit으로, `48×48` logical cell 안에 들어가는 크기를 기준으로 한다. `GameScene`은 원본 Polygon character 좌표를 발밑 pivot 기준 `0.265×`로 변환하고, 중간·뒤쪽 레인에서는 여기에 authored lane visual scale을 곱해 RenderFrame에 기록한다.
+현재 첫 맵 앞쪽 레인의 idle articulated silhouette는 무기와 그림자를 제외하고 약 `32×45` World unit으로, `48×48` logical cell 안에 들어가는 크기를 기준으로 한다. 작은 머리, 좁은 torso, 긴 팔·다리, 얇은 shield와 긴 blade로 날렵한 방향성을 만든다. `GameScene`은 원본 Polygon character 좌표를 발밑 pivot 기준 `0.265×`로 변환하고, 중간·뒤쪽 레인에서는 여기에 authored lane visual scale을 곱해 RenderFrame에 기록한다.
 
 - gameplay position, jump height와 이동 속도는 이 배율의 영향을 받지 않는다.
 - lane visual scale은 presentation에만 적용하며 gameplay surface나 connection 범위를 바꾸지 않는다.
@@ -67,22 +77,26 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 
 ## 모듈 책임
 
-| 모듈                                     | 책임                                                              |
-| ---------------------------------------- | ----------------------------------------------------------------- |
-| `src/core/FixedStepRunner.js`            | 120Hz fixed update, catch-up 상한, 보간 alpha와 dropped-step 계측 |
-| `src/animation/CombatPoseLibrary.js`     | 0..1 progress 기반 Effector Target keyframe 보간                  |
-| `src/animation/TwoBoneIKSolver.js`       | 손 목표에서 어깨·팔꿈치·손 관절 자동 계산                         |
-| `src/combat/CombatCommandController.js`  | gameplay motion 정책, command edge, phase, sequence와 입력 buffer |
-| `src/game/GameScene.js`                  | float 기반 장면 상태와 Polygon item으로 구성한 단일 RenderFrame   |
-| `src/rendering/Camera2D.js`              | World Space를 Screen Space로 투영                                 |
-| `src/rendering/CanvasHost.js`            | Canvas context, CSS 크기, DPR과 backing pixel 예산                |
-| `src/rendering/ScenePainter.js`          | 전달받은 frame geometry만 Canvas path로 rasterize                 |
-| `src/rendering/CanvasPolygonRenderer.js` | float Screen Space 원본 비교 출력                                 |
-| `src/rendering/CanvasRetroRenderer.js`   | logical resolution raster와 nearest upscale 조정                  |
-| `src/rendering/RetroPostProcessor.js`    | threshold, posterization과 outline ImageData 처리                 |
-| `src/app/GameApp.js`                     | 입력·Simulation Settings·세 Canvas 조립, RenderFrame 1회 생성     |
+| 모듈                                        | 책임                                                                       |
+| ------------------------------------------- | -------------------------------------------------------------------------- |
+| `src/core/FixedStepRunner.js`               | 120Hz fixed update, catch-up 상한, 보간 alpha와 dropped-step 계측          |
+| `src/animation/CombatPoseLibrary.js`        | 0..1 progress 기반 Effector Target keyframe 보간                           |
+| `src/animation/CharacterBonePoseLibrary.js` | idle·move·jump·guard·roll·ground/air combat의 전신 target pose             |
+| `src/animation/TwoBoneIKSolver.js`          | 손 목표에서 어깨·팔꿈치·손 관절 자동 계산                                  |
+| `src/combat/CombatCommandController.js`     | gameplay motion 정책, command edge, phase, sequence와 입력 buffer          |
+| `src/combat/SpinContactConstraint.js`       | Spin pulse spacing, pull 상한과 종료 release를 계산하는 순수 constraint    |
+| `src/game/GameScene.js`                     | float 기반 장면 상태와 Polygon item으로 구성한 단일 RenderFrame            |
+| `src/rendering/Camera2D.js`                 | World Space를 Screen Space로 투영                                          |
+| `src/rendering/CanvasHost.js`               | 고정 Render Viewport, CSS 크기, DPR, backing 예산과 presentation rectangle |
+| `src/rendering/ScenePainter.js`             | 전달받은 frame geometry만 Canvas path로 rasterize                          |
+| `src/rendering/CanvasPolygonRenderer.js`    | float Screen Space 원본 비교 출력                                          |
+| `src/rendering/CanvasRetroRenderer.js`      | logical resolution raster와 nearest upscale 조정                           |
+| `src/rendering/RetroPostProcessor.js`       | threshold, posterization과 outline ImageData 처리                          |
+| `src/app/GameApp.js`                        | 입력·Simulation Settings·세 Canvas 조립, RenderFrame 1회 생성              |
 
 DOM 화면과 renderer control 상태는 `src/ui/gameShell.js`의 Alpine 컴포넌트가 소유하며, GameApp은 UI bridge의 읽기 전용 snapshot만 소비한다.
+
+`showMesh` debug overlay도 RenderFrame의 opacity를 존중한다. opacity 0 item은 raster와 mesh를 모두 생략하고, 보이는 item의 mesh alpha는 item opacity에 비례한다. World-space Shoelace area가 `0.0001` 이하이면 authored 구조 오류인 `degenerateItemIds`, source는 유효하지만 pixel-snap 이후 projected area가 사라지면 renderer 한정 `rasterCollapseItemIds`로 분리한다. Polygon/Retro renderer는 두 진단을 render stats로 반환하고 `GameApp`은 구조 오류만 renderer 간 union해 `INVALID GEOMETRY` ID를, Retro raster collapse는 변동 가능한 개수만 별도 표시한다. 유효하지 않은 opacity는 Canvas가 이전 `globalAlpha`를 암묵적으로 유지하게 두지 않고 1로 정규화한다.
 
 ## Outline 불변식
 
@@ -117,7 +131,6 @@ Animation Speed는 input intent에 포함하지 않는다. `GameApp`이 별도 s
 
 ## 현재 비범위
 
-- 전체 Skeleton hierarchy
 - Rigid 또는 weighted skinning
 - 범용 force/impulse 물리와 복잡한 polygon collision response
 - lifetime을 가진 다중 sample Sword Trail effect

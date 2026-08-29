@@ -11,6 +11,17 @@ function drawPolygonPath(context, points, project) {
   return true;
 }
 
+function polygonArea(points) {
+  if (points.length < 3) return 0;
+  let doubledArea = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+    doubledArea += current.x * next.y - next.x * current.y;
+  }
+  return Math.abs(doubledArea) / 2;
+}
+
 export function paintBackdrop(
   context,
   frame,
@@ -67,10 +78,15 @@ export function paintBackdrop(
 export function paintSceneItems(context, frame, project, worldScale, { showMesh = false } = {}) {
   context.lineJoin = 'round';
   context.lineCap = 'round';
+  const degenerateItemIds = [];
+  const rasterCollapseItemIds = [];
 
   for (const item of frame.items) {
+    const rawOpacity = item.opacity ?? 1;
+    const itemOpacity = Number.isFinite(rawOpacity) ? Math.max(0, Math.min(1, rawOpacity)) : 1;
+    if (itemOpacity <= 0) continue;
     if (!drawPolygonPath(context, item.points, project)) continue;
-    context.globalAlpha = item.opacity ?? 1;
+    context.globalAlpha = itemOpacity;
     context.fillStyle = item.fill;
     context.fill();
 
@@ -80,8 +96,12 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
       context.stroke();
     }
 
-    if (showMesh) {
-      context.globalAlpha = 0.82;
+    const sourceArea = showMesh ? polygonArea(item.points) : 0;
+    const projectedArea = showMesh ? polygonArea(item.points.map(project)) : 0;
+    if (showMesh && sourceArea <= 0.0001) degenerateItemIds.push(item.id);
+    else if (showMesh && projectedArea <= 0.0001) rasterCollapseItemIds.push(item.id);
+    if (showMesh && sourceArea > 0.0001 && projectedArea > 0.0001) {
+      context.globalAlpha = 0.82 * itemOpacity;
       context.strokeStyle = '#67e8f9';
       context.lineWidth = Math.max(0.6, worldScale * 0.7);
       context.stroke();
@@ -96,4 +116,8 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
   }
 
   context.globalAlpha = 1;
+  return Object.freeze({
+    degenerateItemIds: Object.freeze(degenerateItemIds),
+    rasterCollapseItemIds: Object.freeze(rasterCollapseItemIds),
+  });
 }

@@ -1,15 +1,50 @@
 const COMMAND_INPUTS = Object.freeze([
-  Object.freeze({ input: 'rageAttack', motion: 'spin' }),
-  Object.freeze({ input: 'heavyAttack', motion: 'heavy' }),
-  Object.freeze({ input: 'risingAttack', motion: 'rising' }),
-  Object.freeze({ input: 'thrustAttack', motion: 'thrust' }),
-  Object.freeze({ input: 'primaryAttack', motion: 'slash' }),
+  Object.freeze({ input: 'strongAttack', motion: 'heavy' }),
+  Object.freeze({ input: 'basicAttack', motion: 'slash' }),
 ]);
 
 const INPUT_NAMES = Object.freeze(COMMAND_INPUTS.map(({ input }) => input));
+const COMBO_MOTION_BY_STARTER = Object.freeze({
+  slash: Object.freeze({
+    basicAttack: 'thrust',
+    strongAttack: 'rising',
+  }),
+  heavy: Object.freeze({
+    basicAttack: 'spin',
+  }),
+});
+const AIR_COMMAND_MOTIONS = Object.freeze({
+  basicAttack: 'airSlash',
+  strongAttack: 'airHeavy',
+});
+const AIR_COMBO_MOTION_BY_STARTER = Object.freeze({
+  airSlash: Object.freeze({
+    basicAttack: 'airReturn',
+    strongAttack: 'airSpin',
+  }),
+  airHeavy: Object.freeze({
+    basicAttack: 'airCross',
+  }),
+});
+const AIR_MOTION_IDS = Object.freeze(
+  new Set(['airSlash', 'airHeavy', 'airReturn', 'airSpin', 'airCross']),
+);
+const TRANSITION_SECONDS_BY_MOTION = Object.freeze({
+  thrust: 0.06,
+  rising: 0.06,
+  spin: 0.08,
+  airReturn: 0.075,
+  airSpin: 0.06,
+  airCross: 0.075,
+});
 
-function motionPolicy(label, durationSeconds, movementScale, { canJump = false } = {}) {
-  return Object.freeze({ label, durationSeconds, movementScale, canJump });
+function motionPolicy(
+  label,
+  durationSeconds,
+  movementScale,
+  { canJump = false, chainStartRatio = 0.74 } = {},
+) {
+  return Object.freeze({ label, durationSeconds, movementScale, canJump, chainStartRatio });
 }
 
 const COMBAT_MOTION_POLICIES = Object.freeze({
@@ -18,9 +53,13 @@ const COMBAT_MOTION_POLICIES = Object.freeze({
   thrust: motionPolicy('찌르기', 0.42, 0.18),
   heavy: motionPolicy('강한 내려베기', 0.76, 0.08),
   rising: motionPolicy('올려베기', 0.6, 0.16),
-  spin: motionPolicy('회전 공격', 0.92, 0.1),
+  spin: motionPolicy('회전 공격', 0.82, 0.45, { chainStartRatio: 0.78 }),
+  airSlash: motionPolicy('공중 베기', 0.42, 1, { chainStartRatio: 0.62 }),
+  airHeavy: motionPolicy('공중 내려베기', 0.5, 0.82, { chainStartRatio: 0.58 }),
+  airReturn: motionPolicy('공중 되베기', 0.4, 1, { chainStartRatio: 0.62 }),
+  airSpin: motionPolicy('공중 회전', 0.68, 1, { chainStartRatio: 0.7 }),
+  airCross: motionPolicy('공중 교차 베기', 0.5, 1, { chainStartRatio: 0.72 }),
   guard: motionPolicy('방어', 0, 0.22),
-  crouch: motionPolicy('앉기', 0, 0.34),
 });
 
 function combatMotionPolicy(id) {
@@ -49,29 +88,40 @@ export class CombatCommandController {
     this.previousSequences = Object.fromEntries(INPUT_NAMES.map((name) => [name, 0]));
   }
 
-  update(deltaSeconds, inputSnapshot, { acceptCommands = true } = {}) {
-    const issuedMotion = acceptCommands ? this.readIssuedMotion(inputSnapshot) : null;
+  update(
+    deltaSeconds,
+    inputSnapshot,
+    { acceptCommands = true, isAirborne = false, allowGuard = true } = {},
+  ) {
+    const issuedMotion = acceptCommands
+      ? this.readIssuedMotion(inputSnapshot, { isAirborne })
+      : null;
     if (this.active) {
       this.active.elapsedSeconds += deltaSeconds;
-      if (issuedMotion && this.active.elapsedSeconds >= this.active.durationSeconds * 0.3) {
+      if (issuedMotion && isAirborne && !AIR_MOTION_IDS.has(this.active.id)) {
+        this.active = null;
+        this.queuedMotion = null;
+        this.start(issuedMotion);
+      } else if (issuedMotion) {
         this.queuedMotion = issuedMotion;
       }
-      if (this.active.elapsedSeconds >= this.active.durationSeconds) {
+      const chainStartSeconds =
+        this.active.durationSeconds * combatMotionPolicy(this.active.id).chainStartRatio;
+      if (
+        (this.queuedMotion && this.active.elapsedSeconds >= chainStartSeconds) ||
+        this.active.elapsedSeconds >= this.active.durationSeconds
+      ) {
+        const transitionFrom = this.snapshot();
         const nextMotion = this.queuedMotion;
         this.active = null;
         this.queuedMotion = null;
-        if (nextMotion) this.start(nextMotion);
+        if (nextMotion) this.start(nextMotion, transitionFrom);
       }
     } else if (issuedMotion) {
       this.start(issuedMotion);
     }
 
-    this.heldPose =
-      acceptCommands && inputSnapshot.guard
-        ? 'guard'
-        : acceptCommands && inputSnapshot.crouch
-          ? 'crouch'
-          : 'idle';
+    this.heldPose = acceptCommands && allowGuard && inputSnapshot.guard ? 'guard' : 'idle';
     for (const inputName of INPUT_NAMES) {
       this.previousInputs[inputName] = Boolean(inputSnapshot[inputName]);
       const sequence = inputSnapshot[`${inputName}Sequence`];
@@ -80,7 +130,7 @@ export class CombatCommandController {
     return this.snapshot();
   }
 
-  readIssuedMotion(inputSnapshot) {
+  readIssuedMotion(inputSnapshot, { isAirborne = false } = {}) {
     for (const command of COMMAND_INPUTS) {
       const sequence = inputSnapshot[`${command.input}Sequence`];
       const sequenceIssued =
@@ -90,13 +140,19 @@ export class CombatCommandController {
         inputSnapshot[command.input] &&
         !this.previousInputs[command.input];
       if (sequenceIssued || booleanEdgeIssued) {
-        return command.motion;
+        if (isAirborne) {
+          return (
+            AIR_COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input] ??
+            AIR_COMMAND_MOTIONS[command.input]
+          );
+        }
+        return COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input] ?? command.motion;
       }
     }
     return null;
   }
 
-  start(motionId) {
+  start(motionId, transitionFrom = null) {
     const durationSeconds = combatMotionPolicy(motionId).durationSeconds;
     if (!(durationSeconds > 0)) {
       throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);
@@ -107,7 +163,18 @@ export class CombatCommandController {
       elapsedSeconds: 0,
       durationSeconds,
       sequence: this.sequence,
+      transitionFrom: transitionFrom
+        ? Object.freeze({ id: transitionFrom.id, progress: transitionFrom.progress })
+        : null,
+      transitionSeconds: transitionFrom ? (TRANSITION_SECONDS_BY_MOTION[motionId] ?? 0.05) : 0,
     };
+  }
+
+  cancelForJump() {
+    if (!this.active) return false;
+    this.active = null;
+    this.queuedMotion = null;
+    return true;
   }
 
   snapshot() {
@@ -136,9 +203,13 @@ export class CombatCommandController {
       progress,
       phase: phaseForProgress(progress),
       movementScale: motionPolicy.movementScale,
-      canJump: false,
+      canJump: true,
       sequence: this.active.sequence,
       queuedMotion: this.queuedMotion,
+      transitionFrom: this.active.transitionFrom,
+      transitionProgress: this.active.transitionFrom
+        ? Math.min(1, this.active.elapsedSeconds / this.active.transitionSeconds)
+        : 1,
     });
   }
 }

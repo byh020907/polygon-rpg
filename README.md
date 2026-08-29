@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Node.js 내장 모듈로만 구성된 개발 서버가 `http://127.0.0.1:5173/`을 엽니다. Vite 같은 빌드 도구나 번들 단계는 사용하지 않습니다. 주소를 브라우저에서 연 뒤 메인 메뉴에서 `새 게임 시작`을 선택하면 첫 생활 영역인 왕립 마법학교 학원촌에 캐릭터가 생성됩니다. `←/→`로 이동하고 `Space`로 점프합니다. `A/S/Q/W/E`는 서로 다른 검 공격, `↑/↓`는 방어와 앉기를 실행하며 지정된 계단 근처에서는 앞·뒤 깊이 레인 전환으로 우선 동작합니다. `렌더 연구실`에서는 같은 GameScene의 Polygon/Retro 출력과 낮/밤 상태를 비교할 수 있습니다.
+Node.js 내장 모듈로만 구성된 개발 서버가 `http://127.0.0.1:5173/`을 엽니다. Vite 같은 빌드 도구나 번들 단계는 사용하지 않습니다. 주소를 브라우저에서 연 뒤 메인 메뉴에서 `새 게임 시작`을 선택하면 첫 생활 영역인 왕립 마법학교 학원촌에 캐릭터가 생성됩니다. `←/→`로 이동하고 `↑/↓`로 점프와 방어를 실행하며, 이동 중 `↓`를 누르면 해당 방향으로 구릅니다. `A/S`는 기본·강한 공격이며 `AA/AS/SA` 조합으로 찌르기·올려베기·회전 공격을 실행합니다. 지정된 계단 근처에서는 `↑/↓`가 앞·뒤 깊이 레인 전환으로 우선 동작합니다. `렌더 연구실`에서는 같은 GameScene의 Polygon/Retro 출력과 낮/밤 상태를 비교할 수 있습니다.
 
 ## 모바일 검증
 
@@ -37,9 +37,11 @@ Quick Tunnel은 인증이 없는 공개 개발 주소입니다. 실행 중인 �
 
 전투 animation은 관절별 회전을 직접 keyframe으로 저장하지 않습니다. 손과 방패의 Effector Target, 검 방향과 몸통 의도만 frame 데이터로 정의하고 Two-Bone IK가 팔꿈치와 손목 결과를 자동 계산합니다. 자세한 계약은 [`docs/animation-system.md`](./docs/animation-system.md)를 따릅니다.
 
-터치 기기와 폭 900px 이하 화면에서는 이동·점프·방어·앉기와 A/S/Q/W/E 공격 버튼을 Canvas 위에 표시합니다. 키보드와 모바일은 별도 adapter를 거쳐 같은 input snapshot을 사용하며, 자세한 계약은 [`docs/input-system.md`](./docs/input-system.md)를 따릅니다.
+터치 기기와 폭 900px 이하 화면에서는 이동·점프·방어 방향 pad와 기본공격 X·강한공격 Y 버튼을 Canvas 위에 표시합니다. 키보드 A/S와 모바일 X/Y는 같은 조합형 input snapshot을 사용하며, 자세한 계약은 [`docs/input-system.md`](./docs/input-system.md)를 따릅니다.
 
-첫 맵의 앞쪽 레인 캐릭터 본체는 무기와 그림자를 제외하고 약 `35×48` World unit으로, `48×48` logical cell 안에 들어가는 크기를 사용합니다. 뒤쪽 레인에서는 같은 presentation geometry에 lane visual scale만 적용합니다. 게임 HUD는 Canvas 좌상단의 HP/STAMINA/MENTAL/MONEY 최소 계기판 형태를 사용합니다.
+첫 맵의 앞쪽 레인 캐릭터는 무기와 그림자를 제외한 idle silhouette가 약 `32×45` World unit이며, `48×48` logical cell 안에서 작은 머리·좁은 몸통·긴 사지의 전신 bone pose를 사용합니다. 뒤쪽 레인에서는 같은 presentation geometry에 lane visual scale만 적용합니다. 게임 HUD는 Canvas 좌상단의 HP/STAMINA/MENTAL/MONEY 최소 계기판 형태를 사용합니다.
+
+중앙광장 왼쪽 포탈에서 `↑`를 누르면 전투 실험 던전으로 이동합니다. `AS` 올려베기로 전투 몹을 띄우고 공격 도중 `↑`로 즉시 jump cancel한 뒤 이동과 함께 공중 `AA/AS/SA` 조합을 이어갈 수 있습니다. 전투 몹은 경공격·강공격·대공격과 방어·회피·피격 반응을 사용하며 HP가 0이 되면 자동 복구됩니다.
 
 DOM UI는 저장소에 vendoring한 Alpine.js `3.14.9` ES Module을 사용합니다. 외부 CDN 연결 없이 모바일과 정적 Pages에서 실행되며, UI와 게임 경계는 [`docs/ui-architecture.md`](./docs/ui-architecture.md)를 따릅니다.
 

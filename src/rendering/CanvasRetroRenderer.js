@@ -81,7 +81,9 @@ export class CanvasRetroRenderer {
       retro: true,
       showWorldGrid,
     });
-    paintSceneItems(this.foregroundContext, frame, project, logicalWorldScale, { showMesh });
+    const diagnostics = paintSceneItems(this.foregroundContext, frame, project, logicalWorldScale, {
+      showMesh,
+    });
 
     this.postProcessor.process(this.foregroundContext, logicalWidth, logicalHeight, {
       alphaThresholdEnabled,
@@ -94,6 +96,8 @@ export class CanvasRetroRenderer {
 
     outputContext.setTransform(1, 0, 0, 1, 0, 0);
     outputContext.clearRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    outputContext.fillStyle = frame.palette.background;
+    outputContext.fillRect(0, 0, viewport.backingWidth, viewport.backingHeight);
     outputContext.imageSmoothingEnabled = false;
     outputContext.drawImage(
       this.sceneCanvas,
@@ -101,34 +105,45 @@ export class CanvasRetroRenderer {
       0,
       logicalWidth,
       logicalHeight,
-      0,
-      0,
-      viewport.backingWidth,
-      viewport.backingHeight,
+      viewport.presentationX,
+      viewport.presentationY,
+      viewport.presentationWidth,
+      viewport.presentationHeight,
     );
 
     if (showPixelGrid) {
-      this.drawPixelGrid(outputContext, viewport, boundedPixelSize);
+      this.drawPixelGrid(outputContext, viewport, logicalWidth, logicalHeight);
     }
 
-    return Object.freeze({ logicalWidth, logicalHeight, pixelSize: boundedPixelSize });
+    return Object.freeze({
+      logicalWidth,
+      logicalHeight,
+      pixelSize: boundedPixelSize,
+      degenerateItemIds: diagnostics.degenerateItemIds,
+      rasterCollapseItemIds: diagnostics.rasterCollapseItemIds,
+    });
   }
 
-  drawPixelGrid(context, viewport, pixelSize) {
-    const deviceCellSize = pixelSize * viewport.pixelRatio;
+  drawPixelGrid(context, viewport, logicalWidth, logicalHeight) {
+    const deviceCellWidth = viewport.presentationWidth / logicalWidth;
+    const deviceCellHeight = viewport.presentationHeight / logicalHeight;
+    const right = viewport.presentationX + viewport.presentationWidth;
+    const bottom = viewport.presentationY + viewport.presentationHeight;
     context.save();
     context.strokeStyle = 'rgb(226 232 240 / 10%)';
     context.lineWidth = 1;
-    for (let x = 0; x <= viewport.backingWidth; x += deviceCellSize) {
+    for (let column = 0; column <= logicalWidth; column += 1) {
+      const x = viewport.presentationX + column * deviceCellWidth;
       context.beginPath();
-      context.moveTo(Math.round(x) + 0.5, 0);
-      context.lineTo(Math.round(x) + 0.5, viewport.backingHeight);
+      context.moveTo(Math.round(x) + 0.5, viewport.presentationY);
+      context.lineTo(Math.round(x) + 0.5, bottom);
       context.stroke();
     }
-    for (let y = 0; y <= viewport.backingHeight; y += deviceCellSize) {
+    for (let row = 0; row <= logicalHeight; row += 1) {
+      const y = viewport.presentationY + row * deviceCellHeight;
       context.beginPath();
-      context.moveTo(0, Math.round(y) + 0.5);
-      context.lineTo(viewport.backingWidth, Math.round(y) + 0.5);
+      context.moveTo(viewport.presentationX, Math.round(y) + 0.5);
+      context.lineTo(right, Math.round(y) + 0.5);
       context.stroke();
     }
     context.restore();

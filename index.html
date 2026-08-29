@@ -181,6 +181,10 @@
             </div>
 
             <div class="mobile-action-pad" aria-label="전투 행동">
+              <small class="mobile-combo-guide">
+                <span>지상 XX 찌르기 · XY 올려 · YX 회전</span>
+                <span>공중 XX 되베기 · XY 회전 · YX 교차</span>
+              </small>
               <template x-for="control in mobileActions" x-bind:key="control.id">
                 <button
                   type="button"
@@ -206,10 +210,10 @@
         <footer class="game-footer">
           <div class="control-hints">
             <span><kbd>←</kbd><kbd>→</kbd> 이동</span>
-            <span><kbd>Space</kbd> 점프</span>
-            <span><kbd>A</kbd> 베기 · <kbd>S</kbd> 찌르기</span>
-            <span><kbd>Q</kbd> 내려베기 · <kbd>W</kbd> 올려베기</span>
-            <span><kbd>E</kbd> 회전 · <kbd>↑</kbd><kbd>↓</kbd> 방어/앉기·레인 전환</span>
+            <span><kbd>↑</kbd> 점프 · <kbd>↓</kbd> 방어 · 이동+<kbd>↓</kbd> 구르기</span>
+            <span><kbd>A</kbd> 기본 · <kbd>S</kbd> 강한 공격</span>
+            <span><kbd>AA</kbd> 찌르기 · <kbd>AS</kbd> 올려베기 · <kbd>SA</kbd> 회전</span>
+            <span>공중 <kbd>AA</kbd> 되베기 · <kbd>AS</kbd> 회전 · <kbd>SA</kbd> 교차</span>
           </div>
           <p x-text="gameStats"></p>
         </footer>
@@ -345,8 +349,8 @@
 
         <footer class="status-bar">
           <p>
-            이동 <kbd>←</kbd><kbd>→</kbd> · 점프 <kbd>Space</kbd> · 전투 <kbd>A</kbd><kbd>S</kbd
-            ><kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd>
+            이동 <kbd>←</kbd><kbd>→</kbd> · 점프/방어 <kbd>↑</kbd><kbd>↓</kbd> · 기본/강한
+            <kbd>A</kbd><kbd>S</kbd>
           </p>
           <p x-text="renderStats" aria-live="polite"></p>
         </footer>

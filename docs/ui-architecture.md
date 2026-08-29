@@ -71,6 +71,7 @@ Alpine `gameShell`은 하나의 control catalog에서 모바일 방향 pad와 ac
 - UI는 action ID를 DOM dataset으로만 노출한다.
 - 버튼은 gameplay state나 keyboard event를 직접 만들지 않는다.
 - 모바일 control의 표시와 반응형 배치는 CSS presentation 책임이다.
+- 모바일 action pad는 기본공격 X와 강한공격 Y 두 버튼만 표시하고 작은 command guide로 지상/공중 `XX/XY/YX` branch를 안내한다.
 - 메뉴의 모바일 진입 경로는 데스크톱 크기의 Orca 원격 viewport에서도 control 표시를 강제할 수 있다.
 - 세부 입력·해제 계약은 `docs/input-system.md`를 따른다.
 
