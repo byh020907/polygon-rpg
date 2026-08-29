@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-001904
-status: integrating
+status: done
 priority: high
 lane: maintenance
 created_at: 2026-08-30T00:19:04+09:00
@@ -77,5 +77,5 @@ Git work item과 품질 loop는 유지하되, 별도 Orca manager·Run·Task·Di
 ## 연결
 
 - Bootstrap migration: 새 lifecycle 활성화 전 메인 coordinator가 일회성으로 수행하고 독립 verifier가 검증함
-- Final commit: integration 후 기록
+- Final commit: `72c63044b4c6b2390b4bc5614f46b462176b7e9d`
 - 업무보고: maintenance item이므로 별도 보고서 없음
