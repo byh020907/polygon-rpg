@@ -1,6 +1,6 @@
 # Work Item Schema
 
-Store work items at `docs/development/work-items/<id>-<slug>.md`. The base ID is `WI-YYYYMMDD-HHmmss`; same-second registrations append `-02`, `-03`, and so on after checking Git and Orca state.
+Store work items at `docs/development/work-items/<id>-<slug>.md`. The base ID is `WI-YYYYMMDD-HHmmss`; same-second registrations append `-02`, `-03`, and so on after checking Git and active Codex agent assignments.
 
 ```markdown
 ---
@@ -28,7 +28,7 @@ source_ref: null
 
 ## 인터뷰와 결정
 
-전용 대화의 확정 결정과 대체 이유를 시간순으로 기록한다.
+root agent 대화의 확정 결정과 대체 이유를 시간순으로 기록한다.
 
 ## 실행 계약
 
@@ -60,7 +60,7 @@ source_ref: null
 
 ## 연결
 
-worktree/branch, 최종 commit과 업무보고를 기록한다. Runtime ID는 쓰지 않는다.
+root agent task name, 최종 commit과 업무보고를 기록한다. 런타임 agent ID는 쓰지 않는다.
 ```
 
 ## Allowed Values
@@ -74,8 +74,7 @@ worktree/branch, 최종 commit과 업무보고를 기록한다. Runtime ID는 �
 
 ## Ownership
 
-- The manager creates the document on main.
-- Once dispatched, the worker owns decision/body edits on its branch.
-- The manager uses Orca live state rather than concurrently editing the active worker's file.
-- Integration brings the final worker version back to main.
-- Cancel mode may update main only after the worker is stopped and its partial branch will not be merged.
+- The main coordinator creates and integrates the document.
+- The root agent owns decision/body edits while active but does not stage, commit or push.
+- The coordinator does not edit the same work-item body while its root agent is writing.
+- Live agent IDs are not durable and never enter Git.

@@ -2,7 +2,7 @@
 
 - 상태: **제품 방향 확정 / 구현 전**
 - 기준 인터뷰: 2026-08-29
-- 소유자: 통합 AI worktree
+- 소유자: Codex 메인 coordinator
 
 이 roadmap은 기능 목록이나 일정표가 아니라 AI 개발 팀이 다음 Playable Reference Loop를 선택하는 기준이다. 각 milestone은 팀장이 처음부터 끝까지 플레이하고 방향 피드백을 줄 수 있을 때만 완료된다.
 
@@ -164,21 +164,21 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 
 ### 결과물
 
-- 팀장 Interface와 background manager를 분리한 기본 개발 흐름
+- 팀장 Interface인 메인 대화와 work item root agent를 분리한 기본 개발 흐름
 - Git 추적 work item, 전용 대화 인터뷰와 의도 기반 업무보고 계약
-- 실제 worker 최대 3개, `feedback` idle 제외와 priority 자동 소비
-- permanent `bugfix`·`maintenance` lane과 기능별 managed worktree
+- 공유 checkout의 write-heavy root item 1개와 최대 3개 supporting agent
+- `bugfix`·`maintenance`·`dedicated` scheduling lane과 Codex-native agent routing
 - 등록·관리·실행·취소 맥락을 자동 routing하는 repo-local `dev-team-loop` skill
-- Manager가 교체돼도 Git·Orca·worktree 증거로 복구하는 상태 경계
+- Coordinator context가 교체돼도 Git·agent tree·filesystem 증거로 복구하는 상태 경계
 - Lead Game Developer & QA Director 페르소나, 공통 품질 rubric과 feedback 규칙 승격 계약
 - 승인된 현재 milestone에서 다음 미충족 gate를 자동 파생·소비하는 roadmap-driven outer loop
-- bare `$dev-team-loop` 한 번으로 manager를 시작·복구하고 stop condition까지 roadmap을 지속 소비하는 entrypoint
+- bare `$dev-team-loop` 한 번으로 메인 coordinator가 root agent를 시작·복구하고 stop condition까지 roadmap을 지속 소비하는 entrypoint
 
 ### 완료 gate
 
 - 새 요청 하나가 인터뷰 없이 work item 하나로 등록되는 규칙이 명확하다.
 - 인터뷰·구현·피드백이 전용 대화에 남고 메인 context에는 lifecycle 요약만 남는다.
-- 취소·재개·통합과 worker slot 반환 조건이 모호하지 않다.
+- 취소·재개·통합과 root/supporting agent lifecycle이 모호하지 않다.
 - `AGENTS.md`는 32 KiB instruction budget 안에서 process와 skill을 찾을 수 있다.
 - Skill validation과 현실적인 mode routing 검증을 통과한다.
 - 새 구현 work item이 반복 프롬프트 없이 품질 계약, baseline, current best와 다음 병목을 기록한다.
@@ -212,11 +212,11 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 - 입력 실패와 판정 실패를 화면에서 구분할 수 있다.
 - 공격 적중·guard·회피·punish를 한 frame 안에 인지할 수 있는 결합 피드백이 있다.
 - 쉬운 기본 연계와 숙련자가 사용할 cancel/배후 route가 함께 존재한다.
-- 팀장이 Orca 로컬 또는 모바일 터널에서 방향이 맞다고 판단한다.
+- 팀장이 Codex 앱에서 열린 로컬 또는 모바일 플레이 경로로 방향이 맞다고 판단한다.
 
 ### 첫 병렬 작업 경계
 
-M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFrame extension과 ownership을 고정한다. 이후 다음 lane을 dependency 순서에 맞게 별도 하위 task/worktree에서 실행한다.
+M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFrame extension과 ownership을 고정한다. 이후 다음 lane을 dependency 순서에 맞게 Codex supporting agent로 실행한다.
 
 - Gameplay: player command와 frame state
 - Encounter: enemy pattern과 hit resolution

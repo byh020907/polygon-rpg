@@ -68,7 +68,7 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 | 문서                               | 상태                        | 담당 영역                                                   | 로드 조건                                                             |
 | ---------------------------------- | --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
 | `README.md`                        | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                    |
-| `docs/development/process.md`      | Canonical Process           | AI 주도 loop, 병렬 worktree, 피드백과 업무보고              | 모든 구현·통합·로드맵·업무보고 작업 시                                |
+| `docs/development/process.md`      | Canonical Process           | Codex-native agent loop, 피드백과 업무보고                  | 모든 구현·통합·로드맵·업무보고 작업 시                                |
 | `docs/development/quality-loop.md` | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                    |
 | `docs/development/roadmap.md`      | Canonical Product Reference | 핵심 재미, Reference Brief, 플레이 가능한 수직 단위와 순서  | 새 작업 선택, 제품 방향, milestone과 우선순위 판단 시                 |
 | `docs/reference-repositories.md`   | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
@@ -132,7 +132,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                                      | `docs/rendering-pipeline.md`, 실제 caller  |
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                           | 이 파일, 향후 effect 구현과 caller         |
 | `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                            | 사용자 결정, `package.json`, 최종 diff     |
-| `PROCESS-DEV-TEAM-LOOP`   | `dev-team-loop` manager는 승인된 roadmap의 다음 미충족 gate를 work item으로 지속 파생·소비하고, 팀장 지시·feedback을 우선 입력으로 처리하며 worker의 구현·검증·통합·보고를 반복한다.      | `docs/development/process.md`, skill       |
+| `PROCESS-DEV-TEAM-LOOP`   | 메인 coordinator는 승인된 roadmap의 다음 미충족 gate를 지속 파생·소비하고, work item마다 하나의 Codex root agent를 재사용하며 구현·검증·feedback·통합을 반복한다.                         | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work item마다 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 feedback을 끝까지 소유하고, 하위 lane 결과를 재평가하며 반복 feedback을 검증된 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                             | `docs/animation-system.md`, 실제 solver    |
 | `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                                     | `docs/input-system.md`, 실제 adapters      |
@@ -354,9 +354,9 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
 - 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
 - 병렬 하위 lane이 있어도 work item의 통합 artifact와 품질 판정은 단일 Vertical Slice Director가 끝까지 소유한다.
-- 메인 대화는 팀장 Interface로만 사용하고 background manager만 main Git write·queue·roadmap·병합을 수행한다.
-- 독립 구현은 별도 Orca worktree와 branch에서 수행하고, 실제 같은 hunk·공개 계약·roadmap을 여러 writer가 동시에 수정하지 않는다.
-- 구현 worktree는 자기 work item과 고유 업무보고만 작성하며 다른 worktree의 branch·index·이력은 수정하지 않는다.
+- 메인 대화는 팀장 Interface와 roadmap coordinator로 사용하고 main Git write·queue·roadmap·commit·push를 단독 소유한다.
+- 공유 checkout에서는 write-heavy root work item을 하나만 실행하고, 병렬 supporting agent는 read-heavy 또는 증명된 disjoint ownership에만 사용한다.
+- Root와 supporting agent는 할당 파일만 수정하며 branch·worktree·index·commit·push와 다른 agent의 변경을 수정하지 않는다.
 - 게임 규칙은 공용 `game-kit` 기반이 알지 못하게 한다.
 - 물리 상태의 최종 쓰기 권한은 물리 시스템에 둔다.
 - Renderer는 읽기 전용 상태만 소비하고 animation, physics 또는 effect lifetime을 진행하지 않는다.

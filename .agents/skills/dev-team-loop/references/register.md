@@ -11,57 +11,43 @@ Do not create a work item for:
 - pause, cancel or reopen requests;
 - merge or push instructions;
 - roadmap reordering;
-- starting, continuing or resuming consumption of the already-approved roadmap;
+- starting, continuing or resuming the approved roadmap;
 - additional direction explicitly targeting an existing work-item ID.
 
 Everything else that asks for a bug fix, feature, investigation, improvement or planning result is a new work item.
-
-For a roadmap continuation request, send a structured manager operation instead of registration:
-
-```json
-{
-  "kind": "continue_roadmap",
-  "operationId": "opaque-main-invocation-id"
-}
-```
-
-The main interface generates and retains `operationId` until it receives the correlated `continue_roadmap_receipt`. The manager reconciles the current milestone and open work before deriving anything. It does not turn the continuation message itself into a work item.
 
 ## Register Without Interviewing
 
 1. Preserve the user's complete original message.
 2. Do not clarify, decompose or implement it in the main conversation.
 3. Treat one message as one item. Split only on explicit user instruction.
-4. Send a structured registration request to the single background manager.
-5. If no live manager exists, start exactly one manager conversation in the main worktree, then deliver the request.
-6. Wait only for the registration receipt, not for implementation.
+4. Reconcile Git work items and active Codex agent assignments.
+5. Allocate the ID, create the Git-tracked document, commit and push that registration from the main conversation.
+6. Spawn exactly one root `worker` agent when the item is ready; otherwise leave it queued.
+7. Emit a concise registration/start update, then keep coordinating the root agent in the same main turn until feedback, completion, blocker or another defined stop condition.
 
-The manager allocates the ID, creates and pushes the Git-tracked document, then decides whether to queue or dispatch it.
+The user request explicitly authorizes creation of the work item and its root subagent thread. It does not authorize a separate manager task or unrelated tasks.
 
-Use this payload shape so the manager does not have to infer message semantics:
+## Root Agent Prompt
 
-```json
-{
-  "kind": "register_work_item",
-  "originalRequest": "complete team-lead message",
-  "requestedPriority": null,
-  "requestedLane": null,
-  "splitRequested": false,
-  "requestedItems": null,
-  "targetWorkItemId": null
-}
-```
+Include:
 
-Set optional values only when the team lead stated them. When split is explicit, `requestedItems` contains only the team-lead-named partitions; otherwise it stays null. Do not invent a target ID or mark a split from punctuation alone.
+- the exact work-item ID and path;
+- an instruction to invoke `dev-team-loop` Run mode;
+- the owned paths or responsibility boundary known at registration;
+- a reminder that other agents may share the checkout and must not revert their edits;
+- a prohibition on branch, commit, push and worktree mutations.
 
-## Main Reply
+## Main Lifecycle Update
+
+This is an intermediate commentary update, not the final response for the coordinator turn.
 
 Return only:
 
 - work-item ID and title;
 - inferred priority and lane;
 - queued or started state;
-- worker conversation/worktree when started;
+- root-agent task name when started;
 - any dependency preventing start.
 
-Do not copy the future interview into the main conversation.
+Do not copy the future interview into the main conversation. Registration alone is not a reason to end the coordinator turn while the root agent is still active.

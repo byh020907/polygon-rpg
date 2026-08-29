@@ -4,57 +4,31 @@ Use this mode in the team-lead-facing main conversation when the team lead invok
 
 ## Canonical Start
 
-The bare skill invocation is the canonical start command. It is an operation, not a work item.
+The bare skill invocation is the canonical start command. It is an operation, not a work item, and explicitly authorizes this conversation to start or resume the next Codex root-agent work item.
 
-1. Inspect Git work items, roadmap state, Orca Run/Task/Dispatch, worktrees and live terminals.
-2. Resolve the manager using the singleton identity and arbitration contract in `manage.md`. Reuse or recover its Run; create a new manager only when no matching or conflicting manager state exists. If arbitration returns `manager-conflict`, the main interface emits the correlated conflict receipt below and stops without creating or binding a manager.
-3. Generate one opaque operation ID for this invocation. Reuse that exact ID if delivery or receipt is uncertain, then send:
+1. Inspect Git work items, roadmap state, repository status and the current Codex subagent tree.
+2. Reuse the exact root agent already associated with an open work item. If duplicates or conflicting writers exist, stop with `agent-conflict`.
+3. Reconcile active work before deriving anything. Resume a genuinely resumable item or derive one item from the approved current milestone's next unmet gate.
+4. If an item is waiting for team-lead feedback, do not resume it from the bare invocation. Return `waiting` with `stopCondition: team-lead-feedback`; actual feedback targeting that item resumes its existing root agent.
+5. If no item owns the gate, register one roadmap-derived work item, commit and push only that durable registration, then spawn one root `worker` agent with the exact work-item path and Run-mode instruction.
+6. Wait for the root agent's result or attention request. Keep raw exploration and command output inside the agent thread.
 
-```json
-{
-  "kind": "continue_roadmap",
-  "operationId": "opaque-main-invocation-id"
-}
-```
-
-4. The manager reconciles active work before deriving anything. It may resume a genuinely resumable item or derive one item from the approved current milestone's next unmet gate.
-5. If an item is waiting for team-lead feedback, do not resume it from the bare invocation. Return `waiting` with `stopCondition: team-lead-feedback`; only actual feedback in that work-item conversation resumes it.
-6. Wait only for the correlated `continue_roadmap_receipt`. Do not wait in the main conversation for implementation.
-
-Do not create a work item whose content is the skill invocation or “continue the roadmap.” Do not create a duplicate manager, root Task or Dispatch when recovery evidence already exists.
+Do not create a work item whose content is the skill invocation or “continue the roadmap.” Do not create a separate manager task or duplicate root agent.
 
 ## Continued Operation
 
-After the receipt, the manager keeps running `roadmap gate → work item → quality loop → feedback/integration → next gate` without another start invocation. A new invocation is needed only to recover or resume after pause, manager loss or an explicit stop. Feedback and product-decision stops require the missing answer in the same work-item conversation, not another bare invocation.
+After start, the main coordinator keeps running `roadmap gate → work item → quality loop → feedback/integration → next gate` in this conversation until a defined stop condition.
 
-The loop remains bounded by the approved roadmap. Stop at team-lead feedback, a required product decision, Canonical Conflict, blocker, pause or no approved next milestone.
+- Use the native agent wait mechanism for active root agents; a timeout is only a checkpoint.
+- Forward team-lead feedback to the same root agent with a follow-up task so its work-item context is preserved.
+- When a root agent completes, independently verify the frozen candidate, integrate from the main conversation, then reevaluate the roadmap before deriving another item.
+- Do not keep a background manager task, polling terminal or external Run alive.
 
 ## Main Reply
-
-After successful manager resolution, the manager replies with this exact shape and echoes `operationId`. If preflight cannot select a manager, the main interface emits the same shape with `managerState: conflict`, `action: blocked` and `stopCondition: manager-conflict`:
-
-```json
-{
-  "kind": "continue_roadmap_receipt",
-  "operationId": "opaque-main-invocation-id",
-  "managerKey": "polygon-rpg-roadmap-manager-v1",
-  "managerState": "started|reused|recovered|conflict",
-  "milestone": "M1",
-  "action": "active|resumed|derived|waiting|blocked|complete",
-  "workItemId": null,
-  "title": null,
-  "status": null,
-  "worktree": null,
-  "stopCondition": null
-}
-```
-
-Process one `operationId` idempotently. A replay returns the same logical outcome after state reconciliation instead of deriving another item.
 
 Render only:
 
 - current milestone;
-- manager state (`started`, `reused`, `recovered` or `conflict`);
 - active, resumed or newly derived work-item ID and title;
-- current lifecycle state and worktree when started;
+- current lifecycle state and root-agent thread when started;
 - the stop condition when no item can start.
