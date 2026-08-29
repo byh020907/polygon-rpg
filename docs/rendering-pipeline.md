@@ -80,6 +80,8 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 | 모듈                                        | 책임                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
 | `src/core/FixedStepRunner.js`               | 120Hz fixed update, catch-up 상한, 보간 alpha와 dropped-step 계측          |
+| `src/combat/CombatFrame.js`                 | 60Hz integer combat frame 정의·초 변환과 120Hz simulation sample           |
+| `src/combat/CombatEvent.js`                 | bounded causal combat event identity, lifetime과 read-only snapshot        |
 | `src/animation/CombatPoseLibrary.js`        | 0..1 progress 기반 Effector Target keyframe 보간                           |
 | `src/animation/CharacterBonePoseLibrary.js` | idle·move·jump·guard·roll·ground/air combat의 전신 target pose             |
 | `src/animation/TwoBoneIKSolver.js`          | 손 목표에서 어깨·팔꿈치·손 관절 자동 계산                                  |
@@ -102,6 +104,8 @@ DOM 화면과 renderer control 상태는 `src/ui/gameShell.js`의 Alpine 컴포�
 Combat camera feedback은 물리 위치나 `Camera2D` 상태를 바꾸지 않는다. Fixed-step presentation state가 수평축 최대 5 World unit, 140ms 이하의 짧은 방향성 offset을 RenderFrame에 기록하고 Polygon/Retro renderer가 동일하게 투영한다. Guard < Light hit < Heavy/finisher 순으로 강도를 제한하고 빠르게 제곱 감쇠해 전투 공간 가독성을 유지한다. OS `prefers-reduced-motion: reduce`에서는 offset을 즉시 0으로 만들고 hit-stop·flash·reaction만 유지한다.
 
 Sword trail의 polygon은 gameplay-owned swept-contact geometry를 읽어 그린다. Renderer는 해당 geometry의 lifetime, opacity와 색상만 소비하고 hit 판정이나 sweep history를 진행하지 않는다.
+
+RenderFrame의 `combatMotion.frame`은 현재 60Hz authored frame index와 startup/active/recovery 경계를, `combatEvents`는 fixed-step이 확정한 guard·evade·hit·launch·punish·landing event의 남은 presentation lifetime을 제공한다. `GameScene`만 event를 발행·진행하고 같은 frame을 받는 Polygon/Retro renderer는 event를 재판정하거나 중복 소비하지 않는다.
 
 ## Outline 불변식
 

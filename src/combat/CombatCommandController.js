@@ -1,3 +1,5 @@
+import { combatFramesToSeconds, defineCombatFrame, sampleCombatFrame } from './CombatFrame.js';
+
 const COMMAND_INPUTS = Object.freeze([
   Object.freeze({ input: 'strongAttack', motion: 'heavy' }),
   Object.freeze({ input: 'basicAttack', motion: 'slash' }),
@@ -50,25 +52,43 @@ const TRANSITION_SECONDS_BY_MOTION = Object.freeze({
 
 function motionPolicy(
   label,
-  durationSeconds,
+  durationFrames,
   movementScale,
-  { canJump = false, chainStartRatio = 0.74 } = {},
+  { canJump = false, chainStartFrame } = {},
 ) {
-  return Object.freeze({ label, durationSeconds, movementScale, canJump, chainStartRatio });
+  if (durationFrames === 0) {
+    return Object.freeze({ label, durationFrames, durationSeconds: 0, movementScale, canJump });
+  }
+  const startupFrames = Math.max(1, Math.round(durationFrames * 0.35));
+  const activeFrames = Math.max(1, Math.round(durationFrames * 0.33));
+  const frame = defineCombatFrame({
+    durationFrames,
+    startupFrames,
+    activeFrames,
+    chainStartFrame: chainStartFrame ?? Math.round(durationFrames * 0.74),
+  });
+  return Object.freeze({
+    label,
+    durationFrames,
+    durationSeconds: combatFramesToSeconds(durationFrames),
+    movementScale,
+    canJump,
+    frame,
+  });
 }
 
 const COMBAT_MOTION_POLICIES = Object.freeze({
   idle: motionPolicy('대기', 0, 1, { canJump: true }),
-  slash: motionPolicy('기본 베기', 0.52, 0.28),
-  thrust: motionPolicy('찌르기', 0.42, 0.18),
-  heavy: motionPolicy('강한 내려베기', 0.76, 0.08),
-  rising: motionPolicy('올려베기', 0.6, 0.16),
-  spin: motionPolicy('회전 공격', 0.82, 0.45, { chainStartRatio: 0.78 }),
-  airSlash: motionPolicy('공중 베기', 0.42, 1, { chainStartRatio: 0.62 }),
-  airHeavy: motionPolicy('공중 내려베기', 0.5, 0.82, { chainStartRatio: 0.58 }),
-  airReturn: motionPolicy('공중 되베기', 0.4, 1, { chainStartRatio: 0.62 }),
-  airSpin: motionPolicy('공중 회전', 0.68, 1, { chainStartRatio: 0.7 }),
-  airCross: motionPolicy('공중 교차 베기', 0.5, 1, { chainStartRatio: 0.72 }),
+  slash: motionPolicy('기본 베기', 31, 0.28),
+  thrust: motionPolicy('찌르기', 25, 0.18),
+  heavy: motionPolicy('강한 내려베기', 46, 0.08),
+  rising: motionPolicy('올려베기', 36, 0.16),
+  spin: motionPolicy('회전 공격', 49, 0.45, { chainStartFrame: 38 }),
+  airSlash: motionPolicy('공중 베기', 25, 1, { chainStartFrame: 16 }),
+  airHeavy: motionPolicy('공중 내려베기', 30, 0.82, { chainStartFrame: 17 }),
+  airReturn: motionPolicy('공중 되베기', 24, 1, { chainStartFrame: 15 }),
+  airSpin: motionPolicy('공중 회전', 41, 1, { chainStartFrame: 29 }),
+  airCross: motionPolicy('공중 교차 베기', 30, 1, { chainStartFrame: 22 }),
   guard: motionPolicy('방어', 0, 0.22),
 });
 
@@ -78,10 +98,8 @@ function combatMotionPolicy(id) {
   return policy;
 }
 
-function phaseForProgress(progress) {
-  if (progress < 0.35) return 'windup';
-  if (progress < 0.68) return 'strike';
-  return 'recovery';
+export function combatMotionFrameData(id) {
+  return combatMotionPolicy(id).frame ?? null;
 }
 
 export class CombatCommandController {
@@ -117,8 +135,9 @@ export class CombatCommandController {
       } else if (issuedMotion) {
         this.queuedMotion = issuedMotion;
       }
-      const chainStartSeconds =
-        this.active.durationSeconds * combatMotionPolicy(this.active.id).chainStartRatio;
+      const chainStartSeconds = combatFramesToSeconds(
+        combatMotionPolicy(this.active.id).frame.chainStartFrame,
+      );
       if (
         (this.queuedMotion && this.active.elapsedSeconds >= chainStartSeconds) ||
         this.active.elapsedSeconds >= this.active.durationSeconds
@@ -171,7 +190,8 @@ export class CombatCommandController {
   }
 
   start(motionId, transitionFrom = null, { continuesCombo = false } = {}) {
-    const durationSeconds = combatMotionPolicy(motionId).durationSeconds;
+    const policy = combatMotionPolicy(motionId);
+    const durationSeconds = policy.durationSeconds;
     if (!(durationSeconds > 0)) {
       throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);
     }
@@ -221,16 +241,14 @@ export class CombatCommandController {
       });
     }
 
-    const progress = Math.max(
-      0,
-      Math.min(1, this.active.elapsedSeconds / this.active.durationSeconds),
-    );
     const motionPolicy = combatMotionPolicy(this.active.id);
+    const frame = sampleCombatFrame(motionPolicy.frame, this.active.elapsedSeconds);
     return Object.freeze({
       id: this.active.id,
       label: motionPolicy.label,
-      progress,
-      phase: phaseForProgress(progress),
+      progress: frame.progress,
+      phase: frame.phase,
+      frame,
       movementScale: motionPolicy.movementScale,
       canJump: true,
       sequence: this.active.sequence,

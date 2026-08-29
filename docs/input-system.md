@@ -57,6 +57,18 @@ Frozen Input Snapshot은 adapter가 만든 gameplay held state와 command sequen
 
 지상 공격 중 `↑` Jump가 발행되면 진행률과 hit 여부에 관계없이 Jump를 최우선 처리한다. active attack과 buffered attack을 모두 취소하고 airborne 상태를 먼저 확정한 뒤, 같은 snapshot에 포함된 Basic/Strong 입력은 air command로 해석한다.
 
+### Command Resolution Priority
+
+같은 frozen simulation snapshot 안에서 충돌하는 intent는 다음 순서로 해석한다.
+
+1. controls lock과 공간 전환이 새 gameplay command를 막거나 소비한다.
+2. 수평 방향과 함께 들어온 `↓` edge는 그 방향으로 Roll을 시작하고 시작 방향을 고정한다.
+3. `↑` Jump는 active·buffered ground attack을 취소한다. 같은 snapshot의 Basic/Strong은 air command로 해석한다.
+4. Basic과 Strong이 같은 simulation tick에 함께 발행되면 Strong을 선택한다.
+5. 위 command가 없고 공격이 idle일 때 `↓` held를 Guard pose로 적용한다.
+
+active motion 중에는 가장 최근 유효 공격 하나만 buffer한다. 이 순위는 `GameScene`과 `CombatCommandController`가 소유하며 adapter는 key/pointer 상태와 단조 증가 sequence만 제공한다.
+
 | Air sequence | Motion         |
 | ------------ | -------------- |
 | `A` / `X`    | 공중 베기      |

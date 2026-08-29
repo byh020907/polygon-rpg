@@ -56,7 +56,7 @@ Character Polygon RenderFrame
 - Idle: 작은 호흡과 머리 counter tilt
 - Move: 교차 보폭, 발 lift, 전경 상체와 뒤로 빠지는 scarf
 - Jump Rise/Fall: 서로 다른 무릎 tuck과 착지 준비
-- Landing: gameplay collider를 바꾸지 않는 140ms pelvis compression과 넓은 foot plant
+- Landing: gameplay collider를 바꾸지 않는 8 combat frame(약 133ms) pelvis compression과 넓은 foot plant
 - Guard: 넓은 stance와 뒤로 물린 중심
 - Roll: 이동 방향을 고정한 tuck pose와 360° body rotation
 - Ground/Air Combat: motion progress에 맞춘 stance, head counter-motion과 cape lift
@@ -112,6 +112,8 @@ Character Polygon RenderFrame
 
 ## Command Lifecycle
 
+실행 가능한 player combat motion과 training enemy 공격은 60Hz integer `CombatFrame` data로 startup / active / recovery와 cancel frame을 기록한다. 120Hz fixed-step은 같은 authored frame을 두 simulation tick 동안 결정적으로 샘플하며, RenderFrame은 현재 frame index와 authored 경계를 읽기 전용 진단으로 제공한다. 이동·IK·Render interpolation은 계속 float 계산을 사용하고 판정 frame data를 renderer가 진행하지 않는다.
+
 - keydown hold가 아니라 false→true edge에서 command를 한 번 발행한다.
 - active motion은 `windup → strike → recovery` phase로 진행한다.
 - 공격의 progress/range/vertical 범위는 broad phase만 담당한다. Player 공격 range는 contact tolerance 4 World unit을 더하고, Enemy 공격은 실제 presentation weapon 길이와 Player silhouette 여유를 포함한 보수적 범위를 사용한다. 최종 hit 승인은 gameplay가 같은 Target Pose·IK 표본에서 만든 현재 sword blade와 최근 3 fixed-step의 swept-contact polygon을 combat mob body/head/limb hurt polygon과 비교해 교차·최대 4 World unit 간격에서만 허용한다. Renderer는 이 swept polygon을 sword trail로 표시하지만 opacity·색상은 damage를 바꾸지 않는다. Enemy 공격도 현재 weapon polygon과 Player body/head/limb/shield hurt polygon의 같은 접촉 계약을 사용하며 Guard 중에는 shield contact를 우선한다. 성공한 attacker, weapon/hurt ID와 fixed-step `simulationGap`은 RenderFrame `combatContact`에 180ms 기록해 시각 프레임과 damage 프레임을 함께 검증한다.
@@ -143,6 +145,8 @@ Character Polygon RenderFrame
 
 전투 실험 던전의 combat mob은 경공격·강공격·대공격을 순환하고 거리 접근, windup, active, recovery, guard, evade, hitstun을 독립 상태로 관리한다. 공격 중 고정한 facing을 판정과 렌더링이 함께 사용하며, 피격 반응은 현재 weapon/body pose에서 전용 180ms recovery로 이어진다. Player 피격 knockback은 Light < Anti-air < Heavy 순의 velocity와 decay profile을 사용하고 작은 잔여 속도는 0으로 정산한다.
 
+훈련 조우의 첫 neutral은 Guard 가능한 Light로 시작하고 다음 지상 공격은 Roll이 필요한 Heavy로 이어진다. Heavy의 고정 attack facing 반대편으로 통과한 뒤 attack recovery 중 Rising을 적중하면 `back-punish` event를 확정한다. 이 event는 추가 hit 판정을 만들지 않고 gold burst와 강화된 camera feedback으로 배후 punish 성공만 선명하게 전달한다.
+
 combat mob은 공중 hit마다 낙하 속도를 제거하고 감소하는 위쪽 impulse와 짧은 gravity suppression을 받는다. 공중 sustain 공격이 적중하면 Player도 적과 같은 위쪽 속도, gravity suppression과 progressive gravity scale을 받아 같은 높이 흐름을 유지한다. 허공 공격은 체공을 연장하지 않는다.
 
 combat mob의 가슴 core는 지원하는 최대 Retro Pixel Size 10에서도 최소 한 logical pixel 면적을 유지하는 청록색 육각형과 저강도 외곽 glow를 사용한다. Glow는 silhouette와 공격 telegraph보다 밝게 팽창하지 않고 core 위치만 식별시킨다. Geometry diagnostics는 world-space authored degeneracy와 Retro pixel-snap 이후 projected raster collapse를 별도 결과로 분류한다.
@@ -158,8 +162,10 @@ combat mob의 가슴 core는 지원하는 최대 Retro Pixel Size 10에서도 �
 - hit마다 enemy gravity가 증가하고 relaunch impulse·float 시간이 감소한다.
 - 한계에 도달하면 강제 낙하하며 착지 전에는 추가 hit를 받지 않는다.
 - 착지하면 juggle count, 누적 시간과 gravity scale을 초기화한다.
-- Player가 정면 Guard에 성공하면 damage와 knockback 없이 40ms block-stop을 적용한다. 실제 shield polygon의 전방 끝점에서 impact와 spark를 만들며 Light/Heavy에 각각 120/240ms blockstun과 차등 recoil·effect 강도를 적용한다. Anti-air는 공중 목표만 맞히므로 지상 Guard 대상이 아니다.
+- Player가 정면에서 적 Light를 Guard하면 damage와 knockback 없이 40ms block-stop과 7 combat frame blockstun을 적용한다. 실제 shield polygon의 전방 끝점에서 impact와 spark를 만든다. Heavy는 Guard할 수 없고 telegraph를 읽어 방향+`↓` Roll의 이동·무적 구간으로 통과해야 한다. Anti-air는 공중 목표만 맞히므로 지상 Guard 대상이 아니다.
 - blockstun과 KO 중에는 이동·점프뿐 아니라 새 combat command와 hit 판정도 잠근다. Block-stop 중 들어온 attack sequence는 blockstun의 첫 simulation tick에서 소비하되 실행하지 않아 숨은 공격이나 지연 발동을 남기지 않는다.
 - 한쪽이 한 combo command cycle을 끝내면 피격자는 550ms retaliation invulnerability를 얻는다. 이 보호는 새 피해만 거부하고 보호받는 Player/Combat mob의 이동·Guard·공격은 허용해 다음 neutral에서 반격할 수 있게 한다. Player는 hitstun 종료에 시작하고, combat mob은 command controller의 새 `comboCycle` 경계에서 시작하며 공중에서는 시간이 소모되지 않는다. 보호 시간 안에 다음 공격 cycle이 시작되면 episode당 최초 한 cycle ID만 전체 보호 대상으로 고정해 후반 branch도 피해를 주지 못한다. 다음 cycle은 남은 시간만 보호하고 만료 뒤 정상 적중한다. Rising의 jump cancel과 착지 전 air chase는 기존 cycle ID를 보존하므로 정상 launcher combo는 끊지 않는다. 보호 중 combat mob은 연속 공격을 다시 Guard하는 대신 공격 접근을 우선한다. Retaliation aura는 양쪽 silhouette 뒤에서 표시한다.
 
 Slash, Heavy, Rising과 Spin의 trail polygon은 gameplay가 최근 blade pose에서 계산한 swept-contact geometry를 그대로 사용한다. Target Pose는 trail opacity와 색 표현만 제공하고 Renderer는 sweep history나 hit lifetime을 진행하지 않는다.
+
+`CombatEventBuffer`는 guard, evade, hit, launch, back-punish와 landing의 bounded result event를 fixed-step에서 한 번 기록하고 짧은 feedback lifetime을 소유한다. 실제 weapon/hurt 접촉 근거는 기존 `lastVisualContact`와 `combatContactSeconds`가 RenderFrame `combatContact` DTO로 제공하고, hit-stop·reaction·camera는 피해·Guard 판정 branch가 직접 갱신한다. Event buffer는 이 판정을 다시 해석하거나 effect authority가 되지 않으며 evade·punish procedural feedback과 결과 진단을 같은 RenderFrame에 전달한다. Polygon/Retro renderer는 동일 event와 geometry를 읽기만 한다. Roll 무적이 실제 enemy contact를 통과하면 cyan evade afterimage를, enemy attack recovery의 배후 launcher가 적중하면 gold punish burst를 표시한다.

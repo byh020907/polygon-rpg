@@ -1,27 +1,72 @@
 import { sampleCombatTargetPose } from '../animation/CombatPoseLibrary.js';
 import { sampleCharacterBonePose } from '../animation/CharacterBonePoseLibrary.js';
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
-import { CombatCommandController } from '../combat/CombatCommandController.js';
+import {
+  combatMotionFrameData,
+  CombatCommandController,
+} from '../combat/CombatCommandController.js';
 import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { SpinContactConstraint } from '../combat/SpinContactConstraint.js';
+import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
+import { combatFramesToSeconds } from '../combat/CombatFrame.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
 const GRAVITY = 1180;
-const ROLL_DURATION_SECONDS = 0.42;
+const ROLL_DURATION_SECONDS = combatFramesToSeconds(25);
 const ROLL_SPEED = 320;
-const COMBAT_ENEMY_RESET_SECONDS = 1;
+const COMBAT_ENEMY_RESET_SECONDS = combatFramesToSeconds(60);
 const MAX_JUGGLE_HITS = 6;
 const MAX_JUGGLE_SECONDS = 3.2;
-const LANDING_RECOVERY_SECONDS = 0.14;
+const LANDING_RECOVERY_SECONDS = combatFramesToSeconds(8);
 const JUGGLE_GRAVITY_STEP = 0.3;
+
+function enemyAttackProfile({
+  windupFrames,
+  attackFrames,
+  recoveryFrames,
+  contactStartFrame,
+  contactEndFrame,
+  blockstunFrames = 0,
+  ...profile
+}) {
+  if (
+    contactStartFrame < 0 ||
+    contactEndFrame > attackFrames ||
+    contactEndFrame < contactStartFrame
+  ) {
+    throw new RangeError('Enemy contact frame window가 attackFrames 범위를 벗어났습니다.');
+  }
+  return Object.freeze({
+    ...profile,
+    frame: Object.freeze({
+      rate: 60,
+      windupFrames,
+      attackFrames,
+      recoveryFrames,
+      contactStartFrame,
+      contactEndFrame,
+      blockstunFrames,
+    }),
+    windupSeconds: combatFramesToSeconds(windupFrames),
+    attackSeconds: combatFramesToSeconds(attackFrames),
+    recoverySeconds: combatFramesToSeconds(recoveryFrames),
+    contactStart: contactStartFrame / attackFrames,
+    contactEnd: contactEndFrame / attackFrames,
+    blockstunSeconds: combatFramesToSeconds(blockstunFrames),
+  });
+}
+
 const ENEMY_ATTACK_PROFILES = Object.freeze({
-  light: Object.freeze({
-    windupSeconds: 0.24,
-    attackSeconds: 0.16,
-    recoverySeconds: 0.24,
+  light: enemyAttackProfile({
+    windupFrames: 14,
+    attackFrames: 10,
+    recoveryFrames: 14,
+    contactStartFrame: 3,
+    contactEndFrame: 8,
+    blockstunFrames: 7,
     desiredRange: 46,
     attackRange: 52,
     verticalRange: 68,
@@ -31,31 +76,34 @@ const ENEMY_ATTACK_PROFILES = Object.freeze({
     guardable: true,
     knockbackVelocity: 110,
     knockbackDecayRate: 0.0067,
-    blockstunSeconds: 0.12,
     blockStrength: 0.55,
     weaponLength: 96,
   }),
-  heavy: Object.freeze({
-    windupSeconds: 0.5,
-    attackSeconds: 0.26,
-    recoverySeconds: 0.58,
+  heavy: enemyAttackProfile({
+    windupFrames: 30,
+    attackFrames: 16,
+    recoveryFrames: 35,
+    contactStartFrame: 8,
+    contactEndFrame: 14,
     desiredRange: 54,
     attackRange: 60,
     verticalRange: 68,
     contactStart: 0.48,
     contactEnd: 0.84,
     damage: 20,
-    guardable: true,
+    guardable: false,
     knockbackVelocity: 220,
     knockbackDecayRate: 0.015,
-    blockstunSeconds: 0.24,
+    blockstunFrames: 0,
     blockStrength: 1,
     weaponLength: 110,
   }),
-  antiAir: Object.freeze({
-    windupSeconds: 0.32,
-    attackSeconds: 0.2,
-    recoverySeconds: 0.46,
+  antiAir: enemyAttackProfile({
+    windupFrames: 19,
+    attackFrames: 12,
+    recoveryFrames: 28,
+    contactStartFrame: 5,
+    contactEndFrame: 10,
     desiredRange: 52,
     attackRange: 58,
     verticalRange: 150,
@@ -68,17 +116,77 @@ const ENEMY_ATTACK_PROFILES = Object.freeze({
     weaponLength: 230,
   }),
 });
-const ENEMY_HIT_REACTION_RECOVERY_SECONDS = 0.18;
+
+function sampleEnemyCombatFrame(enemy) {
+  if (!enemy || !['windup', 'attack', 'recovery'].includes(enemy.aiState)) return null;
+  const profile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
+  const durationFrames =
+    enemy.aiState === 'windup'
+      ? profile.frame.windupFrames
+      : enemy.aiState === 'attack'
+        ? profile.frame.attackFrames
+        : Math.max(1, Math.round(enemy.recoveryDurationSeconds * 60));
+  const durationSeconds = combatFramesToSeconds(durationFrames);
+  const progress = Math.max(0, Math.min(1, 1 - enemy.aiSeconds / durationSeconds));
+  return Object.freeze({
+    rate: 60,
+    phase: enemy.aiState,
+    index: Math.min(durationFrames - 1, Math.max(0, Math.floor(progress * durationFrames + 1e-7))),
+    duration: durationFrames,
+    authored: profile.frame,
+  });
+}
+const ENEMY_HIT_REACTION_RECOVERY_SECONDS = combatFramesToSeconds(11);
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
 const COMBAT_ENEMY_PRESENTATION_SCALE = 0.48;
 const PLAYER_COMBAT_HURT_MARGIN = 28;
+function attackHitProfile(motionId, { startFrame, endFrame, hitPulseFrames, ...profile }) {
+  const motionFrame = combatMotionFrameData(motionId);
+  if (!motionFrame) throw new Error(`${motionId}에는 CombatFrame data가 필요합니다.`);
+  if (startFrame < 0 || endFrame > motionFrame.durationFrames || endFrame < startFrame) {
+    throw new RangeError(`${motionId} hit frame window가 motion duration을 벗어났습니다.`);
+  }
+  return Object.freeze({
+    ...profile,
+    frame: Object.freeze({ startFrame, endFrame }),
+    start: startFrame / motionFrame.durationFrames,
+    end: endFrame / motionFrame.durationFrames,
+    ...(hitPulseFrames
+      ? {
+          hitPulseFrames: Object.freeze(hitPulseFrames),
+          hitPulses: Object.freeze(
+            hitPulseFrames.map((frame) => frame / motionFrame.durationFrames),
+          ),
+        }
+      : {}),
+  });
+}
+
 const ATTACK_HIT_PROFILES = Object.freeze({
-  slash: Object.freeze({ start: 0.34, end: 0.7, damage: 12, range: 28, launchY: -90 }),
-  heavy: Object.freeze({ start: 0.42, end: 0.72, damage: 22, range: 68, launchY: -150 }),
-  thrust: Object.freeze({ start: 0.38, end: 0.72, damage: 15, range: 82, launchY: -80 }),
-  rising: Object.freeze({
-    start: 0.42,
-    end: 0.76,
+  slash: attackHitProfile('slash', {
+    startFrame: 11,
+    endFrame: 22,
+    damage: 12,
+    range: 28,
+    launchY: -90,
+  }),
+  heavy: attackHitProfile('heavy', {
+    startFrame: 19,
+    endFrame: 33,
+    damage: 22,
+    range: 68,
+    launchY: -150,
+  }),
+  thrust: attackHitProfile('thrust', {
+    startFrame: 10,
+    endFrame: 18,
+    damage: 15,
+    range: 82,
+    launchY: -80,
+  }),
+  rising: attackHitProfile('rising', {
+    startFrame: 15,
+    endFrame: 27,
     damage: 18,
     range: 66,
     launchY: -470,
@@ -86,20 +194,20 @@ const ATTACK_HIT_PROFILES = Object.freeze({
     relaunchSpeed: 310,
     floatSeconds: 0.16,
   }),
-  spin: Object.freeze({
-    start: 0.24,
-    end: 0.84,
+  spin: attackHitProfile('spin', {
+    startFrame: 12,
+    endFrame: 41,
     damage: 8,
     range: 72,
     launchY: -70,
     relaunchSpeed: 260,
     floatSeconds: 0.08,
-    hitPulses: Object.freeze([0.28, 0.5, 0.74]),
+    hitPulseFrames: [14, 25, 36],
     contactSpacings: Object.freeze([23, 17, 5]),
   }),
-  airSlash: Object.freeze({
-    start: 0.34,
-    end: 0.72,
+  airSlash: attackHitProfile('airSlash', {
+    startFrame: 9,
+    endFrame: 18,
     damage: 13,
     range: 70,
     launchY: -110,
@@ -107,18 +215,18 @@ const ATTACK_HIT_PROFILES = Object.freeze({
     relaunchSpeed: 190,
     floatSeconds: 0.1,
   }),
-  airHeavy: Object.freeze({
-    start: 0.4,
-    end: 0.78,
+  airHeavy: attackHitProfile('airHeavy', {
+    startFrame: 12,
+    endFrame: 23,
     damage: 26,
     range: 72,
     launchY: 300,
     juggleRole: 'finisher',
     groundBounce: true,
   }),
-  airReturn: Object.freeze({
-    start: 0.34,
-    end: 0.7,
+  airReturn: attackHitProfile('airReturn', {
+    startFrame: 8,
+    endFrame: 17,
     damage: 15,
     range: 70,
     launchY: -90,
@@ -126,9 +234,9 @@ const ATTACK_HIT_PROFILES = Object.freeze({
     relaunchSpeed: 170,
     floatSeconds: 0.09,
   }),
-  airSpin: Object.freeze({
-    start: 0.09,
-    end: 0.2,
+  airSpin: attackHitProfile('airSpin', {
+    startFrame: 4,
+    endFrame: 8,
     damage: 20,
     range: 76,
     launchY: -150,
@@ -136,9 +244,9 @@ const ATTACK_HIT_PROFILES = Object.freeze({
     relaunchSpeed: 250,
     floatSeconds: 0.17,
   }),
-  airCross: Object.freeze({
-    start: 0.38,
-    end: 0.76,
+  airCross: attackHitProfile('airCross', {
+    startFrame: 11,
+    endFrame: 23,
     damage: 24,
     range: 74,
     launchY: 250,
@@ -856,6 +964,80 @@ function createRetaliationAuraItems(position, seconds, idPrefix, renderOrder) {
   ];
 }
 
+function createEvadeFeedbackItems(position, event, renderOrder) {
+  if (!event) return [];
+  const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
+  const opacity = 1 - progress;
+  const radius = lerp(18, 42, smoothStep(progress));
+  const direction = event.direction || 1;
+  const center = { x: position.x, y: position.y + 35 };
+  const arcs = [
+    arcRibbonPoints(center, -1.12, -0.28, radius - 3, radius, 5),
+    arcRibbonPoints(center, 2.02, 2.86, radius - 3, radius, 5),
+  ];
+  const items = arcs.map((points, index) =>
+    Object.freeze({
+      ...polygon(`player-evade-ring-${index}`, points, { x: 0, y: 0 }, '#8ef8ee', {
+        opacity: opacity * 0.72,
+      }),
+      renderOrder,
+      order: 110 + index,
+    }),
+  );
+  items.push(
+    Object.freeze({
+      ...limbSegment(
+        'player-evade-streak',
+        { x: center.x - direction * lerp(12, 28, progress), y: center.y },
+        { x: center.x - direction * lerp(38, 62, progress), y: center.y },
+        4,
+        '#effffb',
+        { opacity: opacity * 0.9 },
+      ),
+      renderOrder,
+      order: 112,
+    }),
+  );
+  return items;
+}
+
+function createPunishFeedbackItems(position, event, renderOrder) {
+  if (!event || !position) return [];
+  const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
+  const opacity = 1 - progress;
+  const center = { x: position.x, y: position.y - 36 };
+  return Array.from({ length: 6 }, (_, index) => {
+    const angle = (index / 6) * Math.PI * 2;
+    const inner = lerp(8, 24, progress);
+    const outer = lerp(20, 48, progress);
+    return Object.freeze({
+      ...limbSegment(
+        `enemy-punish-spark-${index}`,
+        {
+          x: center.x + Math.cos(angle) * inner,
+          y: center.y + Math.sin(angle) * inner,
+        },
+        {
+          x: center.x + Math.cos(angle) * outer,
+          y: center.y + Math.sin(angle) * outer,
+        },
+        3.5,
+        index % 2 === 0 ? '#fff3a6' : '#f6a84a',
+        { opacity },
+      ),
+      renderOrder,
+      order: 120 + index,
+    });
+  });
+}
+
+function latestCombatEvent(events, type) {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    if (events[index].type === type) return events[index];
+  }
+  return null;
+}
+
 function createCombatEnemyItems(enemy, renderOrder) {
   if (!enemy) return [];
   const { x, y } = enemy.position;
@@ -1118,6 +1300,7 @@ export class GameScene {
   constructor({ mapDefinition = ACADEMY_VILLAGE_MAP } = {}) {
     this.combatCommands = new CombatCommandController();
     this.combatCameraFeedback = new CombatCameraFeedback();
+    this.combatEvents = new CombatEventBuffer();
     this.spinContactConstraint = new SpinContactConstraint({
       hitPulses: ATTACK_HIT_PROFILES.spin.hitPulses,
       contactSpacings: ATTACK_HIT_PROFILES.spin.contactSpacings,
@@ -1186,6 +1369,7 @@ export class GameScene {
     this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
     this.combatCommands.reset();
     this.combatCameraFeedback.reset();
+    this.combatEvents.reset();
     this.spinContactConstraint.reset();
     this.syncCombatEnemy();
   }
@@ -1361,7 +1545,7 @@ export class GameScene {
       groundImpactSeconds: 0,
       aiState: 'idle',
       aiSeconds: 0.45,
-      patternIndex: 0,
+      patternIndex: -1,
       attackConnected: false,
       hitstunSeconds: 0,
       attackKind: 'light',
@@ -1579,8 +1763,31 @@ export class GameScene {
           : null;
         const rollInvulnerable =
           rollProgress !== null && rollProgress >= 0.12 && rollProgress <= 0.62;
-        if (!rollInvulnerable && this.playerInvulnerableSeconds <= 0) {
+        if (rollInvulnerable) {
+          this.combatEvents.emit(COMBAT_EVENT_TYPE.EVADE, {
+            actor: 'player',
+            target: 'enemy',
+            attackId: enemy.attackKind,
+            position: this.position,
+            direction: this.rollState?.direction ?? this.facing,
+            strength: enemy.attackKind === 'heavy' ? 1.4 : 1,
+            durationSeconds: 0.16,
+          });
+          this.combatCameraFeedback.trigger({
+            direction: this.rollState?.direction ?? this.facing,
+            strength: 0.65,
+            durationSeconds: 0.065,
+          });
+        } else if (this.playerInvulnerableSeconds <= 0) {
           if (guarding) {
+            this.combatEvents.emit(COMBAT_EVENT_TYPE.GUARD, {
+              actor: 'player',
+              target: 'enemy',
+              attackId: enemy.attackKind,
+              position: visualContact.position,
+              direction: Math.sign(distance) || 1,
+              strength: 1 + attackProfile.blockStrength,
+            });
             enemy.velocityX = -Math.sign(distance) * 90;
             this.playerBlockImpactSeconds = 0.14;
             this.playerBlockImpactStrength = attackProfile.blockStrength;
@@ -1596,6 +1803,14 @@ export class GameScene {
               durationSeconds: 0.08,
             });
           } else {
+            this.combatEvents.emit(COMBAT_EVENT_TYPE.HIT, {
+              actor: 'enemy',
+              target: 'player',
+              attackId: enemy.attackKind,
+              position: visualContact.position,
+              direction: Math.sign(distance) || 1,
+              strength: 1 + attackProfile.damage * 0.08,
+            });
             this.playerHealth = Math.max(0, this.playerHealth - attackProfile.damage);
             this.pendingPlayerKnockbackX = Math.sign(distance) * attackProfile.knockbackVelocity;
             this.pendingPlayerKnockbackDecayRate = attackProfile.knockbackDecayRate;
@@ -1895,6 +2110,14 @@ export class GameScene {
     this.combatContactSeconds = 0.18;
     if (enemy.aiState === 'evade') return false;
     if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY) {
+      this.combatEvents.emit(COMBAT_EVENT_TYPE.GUARD, {
+        actor: 'enemy',
+        target: 'player',
+        attackId: combatState.id,
+        position: visualContact.position,
+        direction: this.facing,
+        strength: 0.8,
+      });
       enemy.hitFlashSeconds = 0.08;
       this.startCombatEnemyRecovery({
         source: 'guard',
@@ -1905,11 +2128,31 @@ export class GameScene {
       return true;
     }
     const enemyAirborne = enemy.position.y < enemy.groundY;
+    const backPunish =
+      enemy.aiState === 'recovery' &&
+      enemy.recoverySource === 'attack' &&
+      (this.position.x - enemy.position.x) * enemy.attackFacing < 0;
     const finalPulse = !profile.hitPulses || pulseIndex === profile.hitPulses.length - 1;
     const juggleRole =
       profile.juggleRole ?? (enemyAirborne ? 'sustain' : finalPulse ? 'launcher' : null);
     const damageScale = enemyAirborne ? Math.max(0.4, 1 - enemy.juggleHits * 0.1) : 1;
     const damage = Math.max(1, Math.round(profile.damage * damageScale));
+    this.combatEvents.emit(
+      backPunish
+        ? COMBAT_EVENT_TYPE.PUNISH
+        : juggleRole === 'launcher'
+          ? COMBAT_EVENT_TYPE.LAUNCH
+          : COMBAT_EVENT_TYPE.HIT,
+      {
+        actor: 'player',
+        target: 'enemy',
+        attackId: combatState.id,
+        position: visualContact.position,
+        direction: this.facing,
+        outcome: backPunish ? 'back-punish' : undefined,
+        strength: 1 + Math.min(2.5, damage * 0.08) + (backPunish ? 0.5 : 0),
+      },
+    );
     enemy.health = Math.max(0, enemy.health - damage);
     this.confirmedComboCycle = combatState.comboCycle;
     enemy.comboCycleHitPending = enemy.health > 0;
@@ -1941,7 +2184,11 @@ export class GameScene {
     enemy.hitFlashSeconds = 0.12;
     this.combatCameraFeedback.trigger({
       direction: this.facing,
-      strength: 1.2 + Math.min(3.3, damage * 0.12) + (juggleRole === 'finisher' ? 0.5 : 0),
+      strength:
+        1.2 +
+        Math.min(3.3, damage * 0.12) +
+        (juggleRole === 'finisher' ? 0.5 : 0) +
+        (backPunish ? 0.5 : 0),
       durationSeconds: profile.damage >= 20 || juggleRole === 'finisher' ? 0.12 : 0.085,
     });
     this.hitStopSeconds = Math.max(
@@ -2020,6 +2267,7 @@ export class GameScene {
     this.previousAnimationTime = this.animationTime;
     this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
     this.combatCameraFeedback.update(deltaSeconds);
+    this.combatEvents.update(deltaSeconds);
     this.combatContactSeconds = Math.max(0, this.combatContactSeconds - deltaSeconds);
     if (this.hitStopSeconds > 0) {
       this.hitStopSeconds = Math.max(0, this.hitStopSeconds - deltaSeconds);
@@ -2078,7 +2326,9 @@ export class GameScene {
     const jumpEdge = jumpPressed && !this.jumpWasPressed;
     const guardEdge = guardPressed && !this.guardWasPressed;
     if (jumpEdge && !this.tryPortalTransition()) this.tryLaneTransition('back');
-    if (guardEdge && !this.tryLaneTransition('front')) this.tryStartRoll(horizontal);
+    if (this.mapRuntime.getTransition() === null && guardEdge && !this.tryLaneTransition('front')) {
+      this.tryStartRoll(horizontal);
+    }
     const isTransitioning = this.mapRuntime.getTransition() !== null;
     const isRolling = this.rollState !== null;
     const jumpSequence = inputSnapshot.jumpSequence;
@@ -2220,7 +2470,17 @@ export class GameScene {
       }
       this.isGrounded = true;
       this.combatCommands.clearComboContinuation();
-      if (!wasGrounded) this.landingRecoverySeconds = LANDING_RECOVERY_SECONDS;
+      if (!wasGrounded) {
+        this.landingRecoverySeconds = LANDING_RECOVERY_SECONDS;
+        this.combatEvents.emit(COMBAT_EVENT_TYPE.LANDING, {
+          actor: 'player',
+          target: 'player',
+          position: this.position,
+          direction: this.facing,
+          strength: 0.6,
+          durationSeconds: LANDING_RECOVERY_SECONDS,
+        });
+      }
     }
 
     const movementBounds = activeLane.movementBounds ?? {
@@ -2352,6 +2612,19 @@ export class GameScene {
       'player',
       characterRenderOrder - 0.005,
     );
+    const combatEvents = this.combatEvents.snapshot();
+    const evadeEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.EVADE);
+    const punishEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.PUNISH);
+    const evadeFeedbackItems = createEvadeFeedbackItems(
+      renderPosition,
+      evadeEvent,
+      characterRenderOrder + 0.02,
+    );
+    const punishFeedbackItems = createPunishFeedbackItems(
+      this.combatEnemy?.position,
+      punishEvent,
+      activeLane.renderOrder + 0.48,
+    );
     const combatEnemyItems = createCombatEnemyItems(
       this.combatEnemy,
       activeLane.renderOrder + 0.45,
@@ -2363,6 +2636,8 @@ export class GameScene {
         ...characterItems,
         ...playerRetaliationItems,
         ...blockImpactItems,
+        ...evadeFeedbackItems,
+        ...punishFeedbackItems,
       ]
         .filter((item) => item.enabled !== false)
         .sort(
@@ -2410,7 +2685,9 @@ export class GameScene {
         sequence: combatState.sequence,
         comboCycle: combatState.comboCycle,
         queuedMotion: combatState.queuedMotion,
+        frame: combatState.frame ?? null,
       }),
+      combatEvents,
       combatContact:
         this.combatContactSeconds > 0 && this.lastVisualContact
           ? Object.freeze({
@@ -2455,6 +2732,10 @@ export class GameScene {
             juggleLimit: MAX_JUGGLE_HITS,
             juggleLocked: this.combatEnemy.juggleLocked,
             retaliationSeconds: this.combatEnemy.retaliationInvulnerableSeconds,
+            attack: Object.freeze({
+              kind: this.combatEnemy.attackKind,
+              frame: sampleEnemyCombatFrame(this.combatEnemy),
+            }),
           })
         : null,
       items,

@@ -1,6 +1,6 @@
 # Polygon RPG Development Roadmap
 
-- 상태: **제품 방향 확정 / 구현 전**
+- 상태: **M1 완료 / M2 구현 전**
 - 기준 인터뷰: 2026-08-29
 - 소유자: Codex 메인 coordinator
 
@@ -142,8 +142,8 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 
 ### 교체하거나 확장할 기반
 
-- 현재 combat은 motion demo이며 enemy, hitbox/hurtbox, damage, stun, hitstop, roll과 juggle 판정이 없다.
-- A/S/Q/W/E 직접 기술 선택은 방향+공격 command resolver로 확장해야 한다.
+- M1 combat은 60Hz `CombatFrame`을 120Hz simulation에서 결정적으로 샘플하고, 첫 training enemy의 Light guard, Heavy roll-through, 배후 punish, launcher, 공중 combo, juggle과 landing을 직접 판정 feedback·bounded 결과 `CombatEvent`·공유 RenderFrame으로 전달한다. Contact와 trail은 별도 `combatContact` DTO와 weapon geometry를 사용한다. 이후 조우는 이 계약을 확장한다.
+- M4의 장비·기술 성장은 현재 A/S Basic·Strong과 방향+공격 command grammar를 유지하면서 frame, 공격 성질과 cancel route를 확장해야 한다.
 - static `Camera2D`에는 Room portal travel/follow가 필요하다.
 - `Depth Lane + character scale/order transition`은 Room/Portal로 교체한다.
 - `GameScene`에 집중된 combat, world, character geometry와 RenderFrame 조립은 병렬 작업 전에 필요한 공개 DTO 경계만 분리한다.
@@ -154,7 +154,7 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 | 순서 | Playable milestone          | 팀장이 플레이할 결과                                              | 상태 |
 | ---- | --------------------------- | ----------------------------------------------------------------- | ---- |
 | M0   | AI 개발 loop와 roadmap      | Git 이력 queue와 단일 skill로 접수·병렬 실행·피드백·통합을 추적   | 완료 |
-| M1   | 훈련방 첫 전투 조우         | guard → roll 배후 회피 → launcher → 공중 combo → 착지             | 대기 |
+| M1   | 훈련방 첫 전투 조우         | guard → roll 배후 회피 → launcher → 공중 combo → 착지             | 완료 |
 | M2   | 학원촌 ↔ 훈련장 Room Portal | 장비를 선택하고 camera travel로 두 Room을 왕복해 훈련 전투를 반복 | 대기 |
 | M3   | 첫 Field·Dungeon·Boss loop  | 마을 준비부터 boss 보상과 shortcut 귀환까지 한 번에 플레이        | 대기 |
 | M4   | 장비·command 성장 loop      | 장비 교체와 기술 해금·level이 같은 command 전투의 선택지를 확장   | 대기 |
@@ -220,7 +220,7 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 
 - Gameplay: player command와 frame state
 - Encounter: enemy pattern과 hit resolution
-- Presentation: 확정 CombatEvent를 소비하는 reaction·VFX·camera
+- Presentation: `combatContact`·weapon geometry, 직접 판정 feedback과 bounded 결과 `CombatEvent`를 각 책임에 맞게 소비하는 reaction·VFX·camera
 - Verification: frozen candidate의 수치·Canvas 경로
 
 여러 writer가 중앙 `GameScene`이나 같은 public contract를 동시에 수정하지 않는다. 하위 lane은 독립 feedback 단위가 아니며, Vertical Slice Director가 M1의 실제 플레이 경로로 통합·재채점하고 독립 검증을 통과한 뒤에만 팀장 피드백을 요청한다.
@@ -309,7 +309,6 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 
 아래 결정만 해당 수직 단위 시작 시 결과와 영향 범위를 붙여 팀장에게 질문한다.
 
-- M1: 기본/강공/구르기의 실제 키 조합과 command 우선순위
 - M2: Portal 사용 입력과 첫 두 장비의 체감 축
 - M4: 재화 종류, skill level 상한과 save 범위
 
