@@ -63,7 +63,14 @@ export class CanvasRetroRenderer {
     this.foregroundContext.imageSmoothingEnabled = false;
 
     const project = (worldPosition) => {
-      const screenPosition = this.camera.worldToScreen(worldPosition, viewport);
+      const cameraOffset = frame.cameraOffset ?? { x: 0, y: 0 };
+      const screenPosition = this.camera.worldToScreen(
+        {
+          x: worldPosition.x - cameraOffset.x,
+          y: worldPosition.y - cameraOffset.y,
+        },
+        viewport,
+      );
       const logicalX = screenPosition.x / boundedPixelSize;
       const logicalY = screenPosition.y / boundedPixelSize;
       return {

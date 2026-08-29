@@ -29,6 +29,16 @@ const AIR_COMBO_MOTION_BY_STARTER = Object.freeze({
 const AIR_MOTION_IDS = Object.freeze(
   new Set(['airSlash', 'airHeavy', 'airReturn', 'airSpin', 'airCross']),
 );
+const COMBO_CONTINUATIONS = Object.freeze(
+  new Set([
+    ...Object.entries(COMBO_MOTION_BY_STARTER).flatMap(([starter, branches]) =>
+      Object.values(branches).map((motion) => `${starter}:${motion}`),
+    ),
+    ...Object.entries(AIR_COMBO_MOTION_BY_STARTER).flatMap(([starter, branches]) =>
+      Object.values(branches).map((motion) => `${starter}:${motion}`),
+    ),
+  ]),
+);
 const TRANSITION_SECONDS_BY_MOTION = Object.freeze({
   thrust: 0.06,
   rising: 0.06,
@@ -83,7 +93,9 @@ export class CombatCommandController {
     this.active = null;
     this.queuedMotion = null;
     this.sequence = 0;
+    this.comboCycle = 0;
     this.heldPose = 'idle';
+    this.continueNextStarterInCombo = false;
     this.previousInputs = Object.fromEntries(INPUT_NAMES.map((name) => [name, false]));
     this.previousSequences = Object.fromEntries(INPUT_NAMES.map((name) => [name, 0]));
   }
@@ -115,10 +127,16 @@ export class CombatCommandController {
         const nextMotion = this.queuedMotion;
         this.active = null;
         this.queuedMotion = null;
-        if (nextMotion) this.start(nextMotion, transitionFrom);
+        if (nextMotion) {
+          const continuesCombo = COMBO_CONTINUATIONS.has(`${transitionFrom.id}:${nextMotion}`);
+          this.start(nextMotion, transitionFrom, { continuesCombo });
+        }
       }
     } else if (issuedMotion) {
-      this.start(issuedMotion);
+      this.start(issuedMotion, null, {
+        continuesCombo: this.continueNextStarterInCombo,
+      });
+      this.continueNextStarterInCombo = false;
     }
 
     this.heldPose = acceptCommands && allowGuard && inputSnapshot.guard ? 'guard' : 'idle';
@@ -152,17 +170,19 @@ export class CombatCommandController {
     return null;
   }
 
-  start(motionId, transitionFrom = null) {
+  start(motionId, transitionFrom = null, { continuesCombo = false } = {}) {
     const durationSeconds = combatMotionPolicy(motionId).durationSeconds;
     if (!(durationSeconds > 0)) {
       throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);
     }
     this.sequence += 1;
+    if (!continuesCombo) this.comboCycle += 1;
     this.active = {
       id: motionId,
       elapsedSeconds: 0,
       durationSeconds,
       sequence: this.sequence,
+      comboCycle: this.comboCycle,
       transitionFrom: transitionFrom
         ? Object.freeze({ id: transitionFrom.id, progress: transitionFrom.progress })
         : null,
@@ -170,11 +190,19 @@ export class CombatCommandController {
     };
   }
 
-  cancelForJump() {
-    if (!this.active) return false;
+  cancelForJump({ preserveComboCycle = false } = {}) {
+    if (!this.active) {
+      if (!preserveComboCycle) this.continueNextStarterInCombo = false;
+      return false;
+    }
+    this.continueNextStarterInCombo = preserveComboCycle;
     this.active = null;
     this.queuedMotion = null;
     return true;
+  }
+
+  clearComboContinuation() {
+    this.continueNextStarterInCombo = false;
   }
 
   snapshot() {
@@ -188,6 +216,7 @@ export class CombatCommandController {
         movementScale: motionPolicy.movementScale,
         canJump: motionPolicy.canJump,
         sequence: this.sequence,
+        comboCycle: this.comboCycle,
         queuedMotion: null,
       });
     }
@@ -205,6 +234,7 @@ export class CombatCommandController {
       movementScale: motionPolicy.movementScale,
       canJump: true,
       sequence: this.active.sequence,
+      comboCycle: this.active.comboCycle,
       queuedMotion: this.queuedMotion,
       transitionFrom: this.active.transitionFrom,
       transitionProgress: this.active.transitionFrom

@@ -70,6 +70,9 @@ export class GameApp {
     this.frameSamples = { count: 0, startTime: performance.now(), fps: 0 };
     this.latestRenderStats = { logicalWidth: 1, logicalHeight: 1 };
     this.latestWorldStatusKey = '';
+    this.reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? {
+      matches: false,
+    };
 
     this.runner = new FixedStepRunner({
       stepHz: 120,
@@ -158,6 +161,7 @@ export class GameApp {
   createSimulationSettings(uiState) {
     return Object.freeze({
       animationSpeed: uiState.screen === GAME_SCREEN.RENDER_LAB ? uiState.animationSpeed : 1,
+      cameraFeedbackEnabled: !this.reducedMotionQuery.matches,
     });
   }
 

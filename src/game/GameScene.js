@@ -2,6 +2,7 @@ import { sampleCombatTargetPose } from '../animation/CombatPoseLibrary.js';
 import { sampleCharacterBonePose } from '../animation/CharacterBonePoseLibrary.js';
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 import { CombatCommandController } from '../combat/CombatCommandController.js';
+import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { SpinContactConstraint } from '../combat/SpinContactConstraint.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
@@ -69,6 +70,8 @@ const ENEMY_ATTACK_PROFILES = Object.freeze({
 });
 const ENEMY_HIT_REACTION_RECOVERY_SECONDS = 0.18;
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
+const COMBAT_ENEMY_PRESENTATION_SCALE = 0.48;
+const PLAYER_COMBAT_HURT_MARGIN = 28;
 const ATTACK_HIT_PROFILES = Object.freeze({
   slash: Object.freeze({ start: 0.34, end: 0.7, damage: 12, range: 28, launchY: -90 }),
   heavy: Object.freeze({ start: 0.42, end: 0.72, damage: 22, range: 68, launchY: -150 }),
@@ -160,6 +163,31 @@ const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
   'sword-blade': 20,
   'sword-shine': 21,
 });
+const COMBAT_ENEMY_NON_HURT_ITEM_IDS = Object.freeze(
+  new Set([
+    'combat-enemy-shadow',
+    'combat-enemy-impact-ring',
+    'combat-enemy-impact-crack',
+    'combat-enemy-retaliation-aura',
+    'combat-enemy-core-glow',
+    'combat-enemy-weapon',
+    'combat-enemy-weapon-glow',
+    'combat-enemy-anti-air-trail',
+    'combat-enemy-health-back',
+    'combat-enemy-health-fill',
+  ]),
+);
+const PLAYER_NON_HURT_ITEM_IDS = Object.freeze(
+  new Set([
+    'shadow',
+    'cape',
+    'scarf-tail',
+    'sword-trail',
+    'sword-hilt',
+    'sword-blade',
+    'sword-shine',
+  ]),
+);
 const SCALED_HEX_COLOR_CACHE = new Map();
 const MAX_SCALED_HEX_COLOR_CACHE_ENTRIES = 512;
 
@@ -195,6 +223,131 @@ function scaleHexColor(color, scale) {
   }
   SCALED_HEX_COLOR_CACHE.set(cacheKey, result);
   return result;
+}
+
+function pointToSegmentDistance(pointValue, start, end) {
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  const lengthSquared = deltaX * deltaX + deltaY * deltaY;
+  const amount =
+    lengthSquared === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            1,
+            ((pointValue.x - start.x) * deltaX + (pointValue.y - start.y) * deltaY) / lengthSquared,
+          ),
+        );
+  return Math.hypot(
+    pointValue.x - (start.x + deltaX * amount),
+    pointValue.y - (start.y + deltaY * amount),
+  );
+}
+
+function pointInPolygon(pointValue, polygonPoints) {
+  let inside = false;
+  for (
+    let index = 0, previous = polygonPoints.length - 1;
+    index < polygonPoints.length;
+    previous = index, index += 1
+  ) {
+    const currentPoint = polygonPoints[index];
+    const previousPoint = polygonPoints[previous];
+    const crosses =
+      currentPoint.y > pointValue.y !== previousPoint.y > pointValue.y &&
+      pointValue.x <
+        ((previousPoint.x - currentPoint.x) * (pointValue.y - currentPoint.y)) /
+          (previousPoint.y - currentPoint.y) +
+          currentPoint.x;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+function segmentsIntersect(firstStart, firstEnd, secondStart, secondEnd) {
+  const cross = (origin, left, right) =>
+    (left.x - origin.x) * (right.y - origin.y) - (left.y - origin.y) * (right.x - origin.x);
+  const firstSideA = cross(firstStart, firstEnd, secondStart);
+  const firstSideB = cross(firstStart, firstEnd, secondEnd);
+  const secondSideA = cross(secondStart, secondEnd, firstStart);
+  const secondSideB = cross(secondStart, secondEnd, firstEnd);
+  const crossesProperly = firstSideA * firstSideB < 0 && secondSideA * secondSideB < 0;
+  if (crossesProperly) return true;
+  const onSegment = (start, end, pointValue) =>
+    pointValue.x >= Math.min(start.x, end.x) - 0.0001 &&
+    pointValue.x <= Math.max(start.x, end.x) + 0.0001 &&
+    pointValue.y >= Math.min(start.y, end.y) - 0.0001 &&
+    pointValue.y <= Math.max(start.y, end.y) + 0.0001;
+  return (
+    (Math.abs(firstSideA) <= 0.0001 && onSegment(firstStart, firstEnd, secondStart)) ||
+    (Math.abs(firstSideB) <= 0.0001 && onSegment(firstStart, firstEnd, secondEnd)) ||
+    (Math.abs(secondSideA) <= 0.0001 && onSegment(secondStart, secondEnd, firstStart)) ||
+    (Math.abs(secondSideB) <= 0.0001 && onSegment(secondStart, secondEnd, firstEnd))
+  );
+}
+
+function polygonDistance(leftPoints, rightPoints) {
+  if (
+    leftPoints.some((pointValue) => pointInPolygon(pointValue, rightPoints)) ||
+    rightPoints.some((pointValue) => pointInPolygon(pointValue, leftPoints))
+  )
+    return 0;
+  for (let leftIndex = 0; leftIndex < leftPoints.length; leftIndex += 1) {
+    const leftStart = leftPoints[leftIndex];
+    const leftEnd = leftPoints[(leftIndex + 1) % leftPoints.length];
+    for (let rightIndex = 0; rightIndex < rightPoints.length; rightIndex += 1) {
+      if (
+        segmentsIntersect(
+          leftStart,
+          leftEnd,
+          rightPoints[rightIndex],
+          rightPoints[(rightIndex + 1) % rightPoints.length],
+        )
+      )
+        return 0;
+    }
+  }
+  let minimum = Infinity;
+  for (let leftIndex = 0; leftIndex < leftPoints.length; leftIndex += 1) {
+    const leftStart = leftPoints[leftIndex];
+    const leftEnd = leftPoints[(leftIndex + 1) % leftPoints.length];
+    for (const rightPoint of rightPoints) {
+      minimum = Math.min(minimum, pointToSegmentDistance(rightPoint, leftStart, leftEnd));
+    }
+  }
+  for (let rightIndex = 0; rightIndex < rightPoints.length; rightIndex += 1) {
+    const rightStart = rightPoints[rightIndex];
+    const rightEnd = rightPoints[(rightIndex + 1) % rightPoints.length];
+    for (const leftPoint of leftPoints) {
+      minimum = Math.min(minimum, pointToSegmentDistance(leftPoint, rightStart, rightEnd));
+    }
+  }
+  return minimum;
+}
+
+function convexHull(points) {
+  const unique = [
+    ...new Map(
+      points.map((pointValue) => [`${pointValue.x}:${pointValue.y}`, pointValue]),
+    ).values(),
+  ];
+  if (unique.length <= 3) return unique;
+  unique.sort((left, right) => left.x - right.x || left.y - right.y);
+  const cross = (origin, left, right) =>
+    (left.x - origin.x) * (right.y - origin.y) - (left.y - origin.y) * (right.x - origin.x);
+  const lower = [];
+  for (const pointValue of unique) {
+    while (lower.length >= 2 && cross(lower.at(-2), lower.at(-1), pointValue) <= 0) lower.pop();
+    lower.push(pointValue);
+  }
+  const upper = [];
+  for (let index = unique.length - 1; index >= 0; index -= 1) {
+    const pointValue = unique[index];
+    while (upper.length >= 2 && cross(upper.at(-2), upper.at(-1), pointValue) <= 0) upper.pop();
+    upper.push(pointValue);
+  }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
 function sampleCombatEnemyWeaponLength(enemy) {
@@ -685,6 +838,24 @@ function createBlockImpactItems(
   return items.map((item, index) => Object.freeze({ ...item, renderOrder, order: 100 + index }));
 }
 
+function createRetaliationAuraItems(position, seconds, idPrefix, renderOrder) {
+  if (seconds <= 0) return [];
+  const pulse = 0.5 + Math.sin(seconds * 34) * 0.5;
+  return [
+    Object.freeze({
+      ...polygon(
+        `${idPrefix}-retaliation-aura`,
+        regularPolygon(25 + pulse * 3, 30 + pulse * 3, 12, Math.PI / 12),
+        position,
+        '#7ff7e4',
+        { stroke: '#effffb', lineWidth: 1.5, opacity: 0.08 + pulse * 0.08 },
+      ),
+      renderOrder,
+      order: 98,
+    }),
+  ];
+}
+
 function createCombatEnemyItems(enemy, renderOrder) {
   if (!enemy) return [];
   const { x, y } = enemy.position;
@@ -698,7 +869,7 @@ function createCombatEnemyItems(enemy, renderOrder) {
         : '#a74651';
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
   const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
-  const presentationScale = 0.48;
+  const presentationScale = COMBAT_ENEMY_PRESENTATION_SCALE;
   const attackProfile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
   const attackDuration = attackProfile.attackSeconds;
   const attackProgress = enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackDuration : 0;
@@ -783,6 +954,17 @@ function createCombatEnemyItems(enemy, renderOrder) {
             { x, y: enemy.groundY + 1 },
             '#76cbbf',
             { opacity: enemy.groundImpactSeconds / 0.22 },
+          ),
+        ]
+      : []),
+    ...(enemy.retaliationInvulnerableSeconds > 0
+      ? [
+          polygon(
+            'combat-enemy-retaliation-aura',
+            regularPolygon(33, 42, 12, Math.PI / 12),
+            { x, y: y - 44 },
+            '#76eadc',
+            { stroke: '#effffb', lineWidth: 2, opacity: 0.14 },
           ),
         ]
       : []),
@@ -935,6 +1117,7 @@ function invertedDirection(direction) {
 export class GameScene {
   constructor({ mapDefinition = ACADEMY_VILLAGE_MAP } = {}) {
     this.combatCommands = new CombatCommandController();
+    this.combatCameraFeedback = new CombatCameraFeedback();
     this.spinContactConstraint = new SpinContactConstraint({
       hitPulses: ATTACK_HIT_PROFILES.spin.hitPulses,
       contactSpacings: ATTACK_HIT_PROFILES.spin.contactSpacings,
@@ -963,6 +1146,8 @@ export class GameScene {
     this.airComboFloatSeconds = 0;
     this.airComboGravityScale = 1;
     this.airComboFacing = 0;
+    this.combatFacingCycle = 0;
+    this.combatFacing = 1;
     this.landingRecoverySeconds = 0;
     this.isGrounded = true;
     this.jumpWasPressed = false;
@@ -979,6 +1164,8 @@ export class GameScene {
     this.playerBlockImpactStrength = 0;
     this.playerBlockstunSeconds = 0;
     this.playerBlockstunDurationSeconds = 0;
+    this.playerRetaliationPending = false;
+    this.playerRetaliationSeconds = 0;
     this.pendingPlayerKnockbackX = 0;
     this.pendingPlayerKnockbackDecayRate = 0.02;
     this.playerKnockbackVelocityX = 0;
@@ -987,12 +1174,18 @@ export class GameScene {
     this.slamAttackerBouncePending = false;
     this.combatEnemy = null;
     this.lastHitMotionSequence = '';
+    this.lastVisualContact = null;
+    this.combatContactSeconds = 0;
+    this.playerWeaponContactHistory = [];
+    this.playerWeaponContactGeometry = null;
+    this.confirmedComboCycle = 0;
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
     this.laneTransitionPresentation = null;
     this.characterLanePresentation = lanePresentation(mapSnapshot.lane);
     this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
     this.combatCommands.reset();
+    this.combatCameraFeedback.reset();
     this.spinContactConstraint.reset();
     this.syncCombatEnemy();
   }
@@ -1180,6 +1373,11 @@ export class GameScene {
       recoverySource: 'attack',
       recoveryAdvanceDeferred: false,
       recoveryCompletionPending: false,
+      retaliationInvulnerableSeconds: 0,
+      comboCycleHitPending: false,
+      lastReceivedComboCycle: 0,
+      retaliationProtectedComboCycle: 0,
+      retaliationCycleClaimed: false,
       hitReactionWeaponAngle: -0.65,
       hitReactionWeaponLength: ENEMY_ATTACK_PROFILES.light.weaponLength,
     };
@@ -1210,6 +1408,12 @@ export class GameScene {
     if (!enemy) return;
 
     enemy.hitFlashSeconds = Math.max(0, enemy.hitFlashSeconds - deltaSeconds);
+    if (enemy.position.y >= enemy.groundY) {
+      enemy.retaliationInvulnerableSeconds = Math.max(
+        0,
+        enemy.retaliationInvulnerableSeconds - deltaSeconds,
+      );
+    }
     const previousHitstun = enemy.hitstunSeconds;
     enemy.hitstunSeconds = Math.max(0, enemy.hitstunSeconds - deltaSeconds);
     if (previousHitstun > 0 && enemy.hitstunSeconds === 0) {
@@ -1337,6 +1541,10 @@ export class GameScene {
         enemy.position.y - (this.position.y + CHARACTER_FOOT_OFFSET),
       );
       const attackRange = attackProfile.attackRange;
+      const visualBroadRange = Math.max(
+        attackRange + 4,
+        attackProfile.weaponLength * COMBAT_ENEMY_PRESENTATION_SCALE + PLAYER_COMBAT_HURT_MARGIN,
+      );
       const verticalRange = attackProfile.verticalRange;
       const contactStart = attackProfile.contactStart;
       const contactEnd = attackProfile.contactEnd;
@@ -1346,24 +1554,33 @@ export class GameScene {
         attackProgress >= contactStart &&
         attackProgress <= contactEnd &&
         forwardDistance >= 0 &&
-        forwardDistance <= attackRange &&
-        verticalDistance <= verticalRange &&
+        forwardDistance <= visualBroadRange &&
+        verticalDistance <= verticalRange + 4 &&
         (enemy.attackKind !== 'antiAir' || verticalDistance >= 25)
       ) {
+        const enemyInFront = -distance * this.facing > 0;
+        const guarding =
+          attackProfile.guardable &&
+          this.isGrounded &&
+          enemyInFront &&
+          this.combatCommands.snapshot().id === 'guard';
+        const visualContact = this.sampleEnemyVisualWeaponContact({ preferShield: guarding });
+        if (!visualContact.contact) return;
         enemy.attackConnected = true;
+        this.lastVisualContact = Object.freeze({
+          attacker: 'enemy',
+          attackKind: enemy.attackKind,
+          ...visualContact,
+          simulationGap: visualContact.gap,
+        });
+        this.combatContactSeconds = 0.18;
         const rollProgress = this.rollState
           ? this.rollState.elapsedSeconds / this.rollState.durationSeconds
           : null;
         const rollInvulnerable =
           rollProgress !== null && rollProgress >= 0.12 && rollProgress <= 0.62;
         if (!rollInvulnerable && this.playerInvulnerableSeconds <= 0) {
-          const enemyInFront = -distance * this.facing > 0;
-          if (
-            attackProfile.guardable &&
-            this.isGrounded &&
-            enemyInFront &&
-            this.combatCommands.snapshot().id === 'guard'
-          ) {
+          if (guarding) {
             enemy.velocityX = -Math.sign(distance) * 90;
             this.playerBlockImpactSeconds = 0.14;
             this.playerBlockImpactStrength = attackProfile.blockStrength;
@@ -1373,11 +1590,17 @@ export class GameScene {
             );
             this.playerBlockstunDurationSeconds = attackProfile.blockstunSeconds;
             this.hitStopSeconds = Math.max(this.hitStopSeconds, 0.04);
+            this.combatCameraFeedback.trigger({
+              direction: Math.sign(distance) || 1,
+              strength: 1 + attackProfile.blockStrength * 1.5,
+              durationSeconds: 0.08,
+            });
           } else {
             this.playerHealth = Math.max(0, this.playerHealth - attackProfile.damage);
             this.pendingPlayerKnockbackX = Math.sign(distance) * attackProfile.knockbackVelocity;
             this.pendingPlayerKnockbackDecayRate = attackProfile.knockbackDecayRate;
             this.playerHitstunSeconds = 0.22;
+            this.playerRetaliationPending = this.playerHealth > 0;
             this.playerInvulnerableSeconds = 0.38;
             this.hitStopSeconds = Math.max(
               this.hitStopSeconds,
@@ -1385,6 +1608,11 @@ export class GameScene {
             );
             this.combatCommands.cancelForJump();
             this.rollState = null;
+            this.combatCameraFeedback.trigger({
+              direction: Math.sign(distance) || 1,
+              strength: 1.6 + attackProfile.damage * 0.12,
+              durationSeconds: enemy.attackKind === 'heavy' ? 0.12 : 0.09,
+            });
             if (this.playerHealth === 0) this.playerKoSeconds = 1;
           }
         }
@@ -1413,7 +1641,9 @@ export class GameScene {
     if (enemy.aiSeconds > 0) return;
     enemy.patternIndex += 1;
     const playerMotion = this.combatCommands.snapshot().id;
-    if (!['idle', 'guard'].includes(playerMotion) && absoluteDistance < 130) {
+    if (enemy.retaliationInvulnerableSeconds > 0) {
+      enemy.aiState = 'approach';
+    } else if (!['idle', 'guard'].includes(playerMotion) && absoluteDistance < 130) {
       enemy.aiState = enemy.patternIndex % 3 === 0 ? 'evade' : 'guard';
       enemy.aiSeconds = enemy.aiState === 'guard' ? 0.45 : 0.28;
     } else {
@@ -1424,6 +1654,10 @@ export class GameScene {
   updateSpinContactConstraint(combatState, deltaSeconds) {
     const enemy = this.combatEnemy;
     if (!enemy || enemy.health <= 0) {
+      this.spinContactConstraint.reset();
+      return;
+    }
+    if (combatState.id === 'spin' && this.confirmedComboCycle !== combatState.comboCycle) {
       this.spinContactConstraint.reset();
       return;
     }
@@ -1439,6 +1673,176 @@ export class GameScene {
     else if (result.releaseVelocityX !== 0) enemy.velocityX = result.releaseVelocityX;
   }
 
+  finishCombatEnemyComboCycle(combatState) {
+    const enemy = this.combatEnemy;
+    const cycleChanged = combatState.comboCycle !== enemy?.lastReceivedComboCycle;
+    if (
+      !enemy ||
+      !enemy.comboCycleHitPending ||
+      enemy.health <= 0 ||
+      (!cycleChanged && combatState.id !== 'idle')
+    ) {
+      return false;
+    }
+    enemy.comboCycleHitPending = false;
+    enemy.retaliationInvulnerableSeconds = 0.55;
+    enemy.retaliationProtectedComboCycle = cycleChanged ? combatState.comboCycle : 0;
+    enemy.retaliationCycleClaimed = cycleChanged;
+    enemy.hitstunSeconds = 0;
+    this.startCombatEnemyRecovery({
+      source: 'retaliation',
+      durationSeconds: 0.08,
+      weaponStartAngle: enemy.hitReactionWeaponAngle,
+      bodyStartRotation: enemy.rotation,
+    });
+    return true;
+  }
+
+  updateCombatEnemyRetaliationProtection(combatState) {
+    const enemy = this.combatEnemy;
+    if (!enemy) return;
+    if (
+      enemy.retaliationProtectedComboCycle !== 0 &&
+      combatState.id !== 'idle' &&
+      combatState.comboCycle !== enemy.retaliationProtectedComboCycle
+    ) {
+      enemy.retaliationProtectedComboCycle = 0;
+    }
+    if (
+      enemy.retaliationInvulnerableSeconds > 0 &&
+      enemy.retaliationProtectedComboCycle === 0 &&
+      !enemy.retaliationCycleClaimed &&
+      combatState.id !== 'idle'
+    ) {
+      enemy.retaliationProtectedComboCycle = combatState.comboCycle;
+      enemy.retaliationCycleClaimed = true;
+    }
+    if (enemy.retaliationInvulnerableSeconds === 0 && enemy.retaliationProtectedComboCycle === 0)
+      enemy.retaliationCycleClaimed = false;
+  }
+
+  sampleVisualWeaponContact(combatState) {
+    const enemy = this.combatEnemy;
+    if (!enemy) return Object.freeze({ contact: false, gap: Infinity });
+    if (this.playerWeaponContactGeometry?.sequence !== combatState.sequence) {
+      this.updatePlayerWeaponContactGeometry(combatState);
+    }
+    const geometry = this.playerWeaponContactGeometry;
+    const weaponItems = geometry
+      ? [
+          { id: 'sword-blade', points: geometry.bladePoints },
+          { id: 'sword-trail', points: geometry.sweepPoints },
+        ]
+      : [];
+    const hurtItems = createCombatEnemyItems(enemy, 0).filter(
+      (item) => !COMBAT_ENEMY_NON_HURT_ITEM_IDS.has(item.id),
+    );
+    return this.findClosestVisualContact(weaponItems, hurtItems);
+  }
+
+  updatePlayerWeaponContactGeometry(combatState) {
+    if (!ATTACK_HIT_PROFILES[combatState.id]) {
+      this.playerWeaponContactHistory = [];
+      this.playerWeaponContactGeometry = null;
+      return null;
+    }
+    const blade = this.createPlayerCombatPresentationItems(combatState).find(
+      (item) => item.id === 'sword-blade',
+    );
+    if (!blade) return null;
+    if (this.playerWeaponContactGeometry?.comboCycle !== combatState.comboCycle) {
+      this.playerWeaponContactHistory = [];
+    }
+    this.playerWeaponContactHistory.push(blade.points);
+    if (this.playerWeaponContactHistory.length > 3) this.playerWeaponContactHistory.shift();
+    const sweepPoints = convexHull(this.playerWeaponContactHistory.flat());
+    this.playerWeaponContactGeometry = Object.freeze({
+      sequence: combatState.sequence,
+      comboCycle: combatState.comboCycle,
+      position: Object.freeze({ ...this.position }),
+      bladePoints: Object.freeze([...blade.points]),
+      sweepPoints: Object.freeze(sweepPoints),
+    });
+    return this.playerWeaponContactGeometry;
+  }
+
+  createPlayerCombatPresentationItems(combatState) {
+    const poseCombatState =
+      this.playerBlockstunSeconds > 0
+        ? Object.freeze({
+            ...combatState,
+            id: 'guard',
+            label: '방어 반동',
+            progress: 0,
+            phase: 'guard',
+          })
+        : combatState;
+    const targetPose = sampleCombatTargetPose(poseCombatState);
+    const bonePose = sampleCharacterBonePose({
+      animationTime: this.animationTime,
+      movementIntent: this.movementIntent,
+      isGrounded: this.isGrounded,
+      verticalVelocity: this.verticalVelocity,
+      landingRecovery: this.landingRecoverySeconds / LANDING_RECOVERY_SECONDS,
+      hitstunProgress: this.playerHitstunSeconds / 0.22,
+      blockstunProgress:
+        this.playerBlockstunDurationSeconds > 0
+          ? this.playerBlockstunSeconds / this.playerBlockstunDurationSeconds
+          : 0,
+      blockStrength: this.playerBlockImpactStrength,
+      knockedOut: this.playerHealth === 0,
+      rollProgress: this.rollState
+        ? this.rollState.elapsedSeconds / this.rollState.durationSeconds
+        : null,
+      motionState: poseCombatState,
+    });
+    return createCharacterItems(
+      this.position,
+      this.facing,
+      targetPose,
+      bonePose,
+      CHARACTER_RENDER_SCALE * this.characterLanePresentation.visualScale,
+      0,
+    );
+  }
+
+  sampleEnemyVisualWeaponContact({ preferShield = false } = {}) {
+    const enemy = this.combatEnemy;
+    if (!enemy) return Object.freeze({ contact: false, gap: Infinity });
+    const weaponItems = createCombatEnemyItems(enemy, 0).filter(
+      (item) => item.id === 'combat-enemy-weapon',
+    );
+    const playerItems = this.createPlayerCombatPresentationItems(this.combatCommands.snapshot());
+    if (preferShield) {
+      const shieldContact = this.findClosestVisualContact(
+        weaponItems,
+        playerItems.filter((item) => ['shield', 'shield-mark'].includes(item.id)),
+        5,
+      );
+      if (shieldContact.contact) return shieldContact;
+    }
+    const hurtItems = playerItems.filter((item) => !PLAYER_NON_HURT_ITEM_IDS.has(item.id));
+    return this.findClosestVisualContact(weaponItems, hurtItems);
+  }
+
+  findClosestVisualContact(weaponItems, hurtItems, maximumGap = 4) {
+    let closest = Object.freeze({ contact: false, gap: Infinity });
+    for (const weaponItem of weaponItems) {
+      for (const hurtItem of hurtItems) {
+        const gap = polygonDistance(weaponItem.points, hurtItem.points);
+        if (gap < closest.gap) {
+          closest = Object.freeze({
+            contact: gap <= maximumGap,
+            gap,
+            weaponItemId: weaponItem.id,
+            hurtItemId: hurtItem.id,
+          });
+        }
+      }
+    }
+    return closest;
+  }
+
   resolveCombatEnemyHit(combatState) {
     const enemy = this.combatEnemy;
     const profile = ATTACK_HIT_PROFILES[combatState.id];
@@ -1448,6 +1852,8 @@ export class GameScene {
       this.playerHealth <= 0 ||
       this.playerHitstunSeconds > 0 ||
       this.playerBlockstunSeconds > 0 ||
+      enemy.retaliationInvulnerableSeconds > 0 ||
+      enemy.retaliationProtectedComboCycle === combatState.comboCycle ||
       !profile ||
       (enemy.juggleLocked && enemy.position.y < enemy.groundY) ||
       combatState.progress < profile.start ||
@@ -1461,11 +1867,13 @@ export class GameScene {
     const forwardDistance = deltaX * this.facing;
     if (
       forwardDistance < -18 ||
-      forwardDistance > profile.range ||
-      Math.abs(enemy.position.y - playerFootY) > 112
+      forwardDistance > profile.range + 4 ||
+      Math.abs(enemy.position.y - playerFootY) > 116
     ) {
       return false;
     }
+    const visualContact = this.sampleVisualWeaponContact(combatState);
+    if (!visualContact.contact) return false;
 
     const pulseIndex = profile.hitPulses
       ? profile.hitPulses.reduce(
@@ -1477,6 +1885,14 @@ export class GameScene {
     const hitKey = `${combatState.sequence}:${pulseIndex}`;
     if (hitKey === this.lastHitMotionSequence) return false;
     this.lastHitMotionSequence = hitKey;
+    this.lastVisualContact = Object.freeze({
+      attacker: 'player',
+      sequence: combatState.sequence,
+      pulseIndex,
+      ...visualContact,
+      simulationGap: visualContact.gap,
+    });
+    this.combatContactSeconds = 0.18;
     if (enemy.aiState === 'evade') return false;
     if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY) {
       enemy.hitFlashSeconds = 0.08;
@@ -1495,6 +1911,9 @@ export class GameScene {
     const damageScale = enemyAirborne ? Math.max(0.4, 1 - enemy.juggleHits * 0.1) : 1;
     const damage = Math.max(1, Math.round(profile.damage * damageScale));
     enemy.health = Math.max(0, enemy.health - damage);
+    this.confirmedComboCycle = combatState.comboCycle;
+    enemy.comboCycleHitPending = enemy.health > 0;
+    enemy.lastReceivedComboCycle = combatState.comboCycle;
     enemy.hitstunSeconds = Math.max(enemy.hitstunSeconds, 0.16 + damage * 0.008);
     enemy.hitReactionWeaponLength = sampleCombatEnemyWeaponLength(enemy);
     enemy.hitReactionWeaponAngle =
@@ -1520,6 +1939,11 @@ export class GameScene {
       (combatState.sequence % 2 === 0 ? -2.8 : 2.8) *
       (juggleRole === 'finisher' ? 1.4 : 1);
     enemy.hitFlashSeconds = 0.12;
+    this.combatCameraFeedback.trigger({
+      direction: this.facing,
+      strength: 1.2 + Math.min(3.3, damage * 0.12) + (juggleRole === 'finisher' ? 0.5 : 0),
+      durationSeconds: profile.damage >= 20 || juggleRole === 'finisher' ? 0.12 : 0.085,
+    });
     this.hitStopSeconds = Math.max(
       this.hitStopSeconds,
       profile.damage >= 20 || juggleRole === 'finisher' ? 0.05 : 0.035,
@@ -1591,9 +2015,12 @@ export class GameScene {
     const animationSpeed = Number.isFinite(simulationSettings.animationSpeed)
       ? Math.max(0, simulationSettings.animationSpeed)
       : 1;
+    this.combatCameraFeedback.setEnabled(simulationSettings.cameraFeedbackEnabled !== false);
     this.previousPosition = { ...this.position };
     this.previousAnimationTime = this.animationTime;
     this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
+    this.combatCameraFeedback.update(deltaSeconds);
+    this.combatContactSeconds = Math.max(0, this.combatContactSeconds - deltaSeconds);
     if (this.hitStopSeconds > 0) {
       this.hitStopSeconds = Math.max(0, this.hitStopSeconds - deltaSeconds);
       if (this.hitStopSeconds === 0 && this.pendingPlayerKnockbackX !== 0) {
@@ -1604,8 +2031,20 @@ export class GameScene {
       return;
     }
     this.advanceWorldTime(deltaSeconds);
+    const previousPlayerHitstunSeconds = this.playerHitstunSeconds;
     this.playerHitstunSeconds = Math.max(0, this.playerHitstunSeconds - deltaSeconds);
     this.playerInvulnerableSeconds = Math.max(0, this.playerInvulnerableSeconds - deltaSeconds);
+    this.playerRetaliationSeconds = Math.max(0, this.playerRetaliationSeconds - deltaSeconds);
+    if (
+      previousPlayerHitstunSeconds > 0 &&
+      this.playerHitstunSeconds === 0 &&
+      this.playerRetaliationPending &&
+      this.playerHealth > 0
+    ) {
+      this.playerRetaliationPending = false;
+      this.playerRetaliationSeconds = 0.55;
+      this.playerInvulnerableSeconds = Math.max(this.playerInvulnerableSeconds, 0.55);
+    }
     this.playerKoSeconds = Math.max(0, this.playerKoSeconds - deltaSeconds);
     this.playerBlockImpactSeconds = Math.max(0, this.playerBlockImpactSeconds - deltaSeconds);
     this.playerBlockstunSeconds = Math.max(0, this.playerBlockstunSeconds - deltaSeconds);
@@ -1621,6 +2060,8 @@ export class GameScene {
       this.playerKnockbackVelocityX = 0;
       this.playerBlockstunSeconds = 0;
       this.playerBlockImpactSeconds = 0;
+      this.playerRetaliationPending = false;
+      this.playerRetaliationSeconds = 0;
       this.isGrounded = true;
       this.syncCombatEnemy();
     }
@@ -1654,7 +2095,7 @@ export class GameScene {
       this.isGrounded &&
       currentCombatState.canJump
     ) {
-      this.combatCommands.cancelForJump();
+      this.combatCommands.cancelForJump({ preserveComboCycle: true });
       this.verticalVelocity = -JUMP_SPEED;
       this.airComboFloatSeconds = 0;
       this.airComboGravityScale = 1;
@@ -1665,6 +2106,17 @@ export class GameScene {
       isAirborne: !this.isGrounded,
       allowGuard: this.isGrounded,
     });
+    const activeAttackProfile = ATTACK_HIT_PROFILES[combatState.id];
+    if (activeAttackProfile) {
+      if (this.combatFacingCycle !== combatState.comboCycle) {
+        this.combatFacingCycle = combatState.comboCycle;
+        this.combatFacing = horizontal !== 0 ? Math.sign(horizontal) : this.facing;
+      }
+      this.facing = this.combatFacing;
+      if (combatState.id.startsWith('air') && this.airComboFacing === 0) {
+        this.airComboFacing = this.combatFacing;
+      }
+    }
     if (
       combatState.id === 'airHeavy' &&
       combatState.sequence !== this.airHeavyConnectedSequence &&
@@ -1678,9 +2130,48 @@ export class GameScene {
     this.jumpWasPressed = jumpPressed;
     this.guardWasPressed = guardPressed;
     if (Number.isSafeInteger(jumpSequence)) this.lastJumpSequence = jumpSequence;
+    if (!isTransitioning && !isRolling) {
+      const movementStartX = this.position.x;
+      if (!activeAttackProfile && horizontal !== 0) {
+        this.facing = Math.sign(horizontal);
+      }
+      this.position.x += horizontal * CHARACTER_SPEED * combatState.movementScale * deltaSeconds;
+      this.position.x += this.playerKnockbackVelocityX * deltaSeconds;
+      this.playerKnockbackVelocityX *= Math.pow(this.playerKnockbackDecayRate, deltaSeconds);
+      if (Math.abs(this.playerKnockbackVelocityX) < PLAYER_KNOCKBACK_STOP_SPEED) {
+        this.playerKnockbackVelocityX = 0;
+      }
+      if (this.isGrounded && this.combatEnemy && !['idle', 'guard'].includes(combatState.id)) {
+        const previousForwardGap = (this.combatEnemy.position.x - movementStartX) * this.facing;
+        const forwardGap = (this.combatEnemy.position.x - this.position.x) * this.facing;
+        if (previousForwardGap >= 0 && forwardGap < 12) {
+          this.position.x = this.combatEnemy.position.x - this.facing * 12;
+        }
+      }
+      if (
+        combatState.id.startsWith('air') &&
+        this.combatEnemy &&
+        this.combatEnemy.position.y < this.combatEnemy.groundY &&
+        !this.combatEnemy.juggleLocked
+      ) {
+        const comboFacing = this.airComboFacing || this.facing;
+        const targetGap = (this.combatEnemy.position.x - this.position.x) * comboFacing;
+        const maximumComboGap = combatState.id === 'airReturn' ? 22 : 44;
+        const comboPullSpeed = combatState.id === 'airReturn' ? 420 : 300;
+        if (targetGap >= 0 && targetGap < 18) {
+          this.position.x = this.combatEnemy.position.x - comboFacing * 18;
+        } else if (targetGap > maximumComboGap) {
+          this.position.x +=
+            comboFacing * Math.min(comboPullSpeed * deltaSeconds, targetGap - maximumComboGap);
+        }
+      }
+    }
+    this.updatePlayerWeaponContactGeometry(combatState);
     this.updateCombatEnemy(deltaSeconds);
     this.updateSpinContactConstraint(combatState, deltaSeconds);
     this.updateCombatEnemyCombat(deltaSeconds);
+    this.finishCombatEnemyComboCycle(combatState);
+    this.updateCombatEnemyRetaliationProtection(combatState);
     this.resolveCombatEnemyHit(combatState);
 
     if (isTransitioning) {
@@ -1704,15 +2195,6 @@ export class GameScene {
       return;
     }
 
-    if (!(combatState.id.startsWith('air') && this.airComboFacing !== 0) && horizontal !== 0) {
-      this.facing = Math.sign(horizontal);
-    }
-    this.position.x += horizontal * CHARACTER_SPEED * combatState.movementScale * deltaSeconds;
-    this.position.x += this.playerKnockbackVelocityX * deltaSeconds;
-    this.playerKnockbackVelocityX *= Math.pow(this.playerKnockbackDecayRate, deltaSeconds);
-    if (Math.abs(this.playerKnockbackVelocityX) < PLAYER_KNOCKBACK_STOP_SPEED) {
-      this.playerKnockbackVelocityX = 0;
-    }
     if (
       this.combatEnemy &&
       (this.slamAttackerBouncePending || this.combatEnemy.groundBounceDelaySeconds > 0)
@@ -1721,17 +2203,6 @@ export class GameScene {
       this.position.x = this.combatEnemy.position.x - comboFacing * 30;
       this.facing = comboFacing;
     }
-    if (
-      combatState.id.startsWith('air') &&
-      this.combatEnemy &&
-      this.combatEnemy.position.y < this.combatEnemy.groundY &&
-      !this.combatEnemy.juggleLocked
-    ) {
-      const comboFacing = this.airComboFacing || this.facing;
-      const targetGap = (this.combatEnemy.position.x - this.position.x) * comboFacing;
-      if (targetGap < 18) this.position.x = this.combatEnemy.position.x - comboFacing * 18;
-    }
-
     const activeLane = this.mapRuntime.getActiveLane();
     const playerGroundY = activeLane.groundY - CHARACTER_FOOT_OFFSET;
     this.airComboFloatSeconds = Math.max(0, this.airComboFloatSeconds - deltaSeconds);
@@ -1748,6 +2219,7 @@ export class GameScene {
         this.airComboFacing = 0;
       }
       this.isGrounded = true;
+      this.combatCommands.clearComboContinuation();
       if (!wasGrounded) this.landingRecoverySeconds = LANDING_RECOVERY_SECONDS;
     }
 
@@ -1827,13 +2299,45 @@ export class GameScene {
       this.characterLanePresentation.renderOrder,
       interpolationAlpha,
     );
-    const characterItems = createCharacterItems(
+    const sampledCharacterItems = createCharacterItems(
       renderPosition,
       this.facing,
       targetPose,
       bonePose,
       characterRenderScale,
       characterRenderOrder,
+    );
+    const contactGeometry =
+      this.playerWeaponContactGeometry?.sequence === combatState.sequence
+        ? this.playerWeaponContactGeometry
+        : null;
+    const contactOffset = contactGeometry
+      ? {
+          x: renderPosition.x - contactGeometry.position.x,
+          y: renderPosition.y - contactGeometry.position.y,
+        }
+      : { x: 0, y: 0 };
+    const contactProfile = ATTACK_HIT_PROFILES[combatState.id];
+    const contactSweepVisible =
+      contactGeometry &&
+      contactProfile &&
+      combatState.progress >= contactProfile.start &&
+      combatState.progress <= contactProfile.end;
+    const characterItems = sampledCharacterItems.map((item) =>
+      item.id === 'sword-trail' && contactGeometry
+        ? Object.freeze({
+            ...item,
+            opacity: Math.max(item.opacity, contactSweepVisible ? 0.25 : 0),
+            points: Object.freeze(
+              contactGeometry.sweepPoints.map((pointValue) =>
+                Object.freeze({
+                  x: pointValue.x + contactOffset.x,
+                  y: pointValue.y + contactOffset.y,
+                }),
+              ),
+            ),
+          })
+        : item,
     );
     const blockImpactItems = createBlockImpactItems(
       characterItems,
@@ -1842,12 +2346,24 @@ export class GameScene {
       this.playerBlockImpactStrength,
       characterRenderOrder + 0.01,
     );
+    const playerRetaliationItems = createRetaliationAuraItems(
+      { x: renderPosition.x, y: renderPosition.y + 20 },
+      this.playerRetaliationSeconds,
+      'player',
+      characterRenderOrder - 0.005,
+    );
     const combatEnemyItems = createCombatEnemyItems(
       this.combatEnemy,
       activeLane.renderOrder + 0.45,
     );
     const items = Object.freeze(
-      [...mapSnapshot.renderItems, ...combatEnemyItems, ...characterItems, ...blockImpactItems]
+      [
+        ...mapSnapshot.renderItems,
+        ...combatEnemyItems,
+        ...characterItems,
+        ...playerRetaliationItems,
+        ...blockImpactItems,
+      ]
         .filter((item) => item.enabled !== false)
         .sort(
           (left, right) =>
@@ -1869,6 +2385,7 @@ export class GameScene {
       gridSize: map.gridSize,
       palette: map.palette,
       animationTime: renderAnimationTime,
+      cameraOffset: Object.freeze({ ...this.combatCameraFeedback.snapshot() }),
       characterRenderScale,
       worldBounds: Object.freeze({
         minX: bounds.x,
@@ -1891,14 +2408,23 @@ export class GameScene {
         progress: combatState.progress,
         phase: combatState.phase,
         sequence: combatState.sequence,
+        comboCycle: combatState.comboCycle,
         queuedMotion: combatState.queuedMotion,
       }),
+      combatContact:
+        this.combatContactSeconds > 0 && this.lastVisualContact
+          ? Object.freeze({
+              ...this.lastVisualContact,
+              remainingSeconds: this.combatContactSeconds,
+            })
+          : null,
       player: Object.freeze({
         position: renderPosition,
         isGrounded: this.isGrounded,
         health: this.playerHealth,
         maxHealth: this.playerMaxHealth,
         hitstunSeconds: this.playerHitstunSeconds,
+        retaliationSeconds: this.playerRetaliationSeconds,
         laneId: mapSnapshot.active.laneId,
         laneTransition: mapSnapshot.transition
           ? Object.freeze({
@@ -1928,6 +2454,7 @@ export class GameScene {
             juggleHits: this.combatEnemy.juggleHits,
             juggleLimit: MAX_JUGGLE_HITS,
             juggleLocked: this.combatEnemy.juggleLocked,
+            retaliationSeconds: this.combatEnemy.retaliationInvulnerableSeconds,
           })
         : null,
       items,

@@ -114,8 +114,10 @@ Character Polygon RenderFrame
 
 - keydown hold가 아니라 false→true edge에서 command를 한 번 발행한다.
 - active motion은 `windup → strike → recovery` phase로 진행한다.
+- 공격의 progress/range/vertical 범위는 broad phase만 담당한다. Player 공격 range는 contact tolerance 4 World unit을 더하고, Enemy 공격은 실제 presentation weapon 길이와 Player silhouette 여유를 포함한 보수적 범위를 사용한다. 최종 hit 승인은 gameplay가 같은 Target Pose·IK 표본에서 만든 현재 sword blade와 최근 3 fixed-step의 swept-contact polygon을 combat mob body/head/limb hurt polygon과 비교해 교차·최대 4 World unit 간격에서만 허용한다. Renderer는 이 swept polygon을 sword trail로 표시하지만 opacity·색상은 damage를 바꾸지 않는다. Enemy 공격도 현재 weapon polygon과 Player body/head/limb/shield hurt polygon의 같은 접촉 계약을 사용하며 Guard 중에는 shield contact를 우선한다. 성공한 attacker, weapon/hurt ID와 fixed-step `simulationGap`은 RenderFrame `combatContact`에 180ms 기록해 시각 프레임과 damage 프레임을 함께 검증한다.
 - active motion 중 입력한 다음 공격은 한 개까지 buffer하며 가장 최근 유효 입력으로 branch를 결정한다.
 - combo branch가 시작되면 직전 motion의 실제 chain pose를 branch별 50~80ms 동안 새 motion에 ease blend한다. Gameplay progress와 active window는 그대로 진행하되 weapon·limb·torso가 첫 frame에 순간이동하지 않게 한다.
+- 한 combo cycle의 attack facing은 starter가 시작될 때 결정하고 착지 또는 다음 cycle 전까지 고정한다. 이동 입력은 계속 위치를 바꾸지만 공격 도중 반대 방향 입력이 검과 캐릭터를 적 반대편으로 순간이동시키지 않는다.
 - queued ground motion은 기본적으로 recovery 초입 74%에서, air normal은 62~72%에서 남은 recovery를 cancel하고 시작한다.
 - Slash/Heavy starter 뒤의 Basic/Strong 입력은 combo table로 다음 motion을 해석한다. 다른 motion 뒤에서는 새 starter로 돌아간다.
 - 모든 grounded attack은 진행률과 hit 여부에 관계없이 jump cancel할 수 있다.
@@ -148,12 +150,16 @@ combat mob의 가슴 core는 지원하는 최대 Retro Pixel Size 10에서도 �
 - Air Slash/Return/Spin은 높이를 유지하는 extender다.
 - Air Heavy(`S/Y`)는 바닥에 박은 뒤 함께 튕겨 오르는 slam finisher이며, Air Cross(`SA/YX`)는 재부양하지 않는 finisher다.
 - sustain hit는 Player를 목표 간격 44 World unit으로 최대 32 unit 보정해 다음 대각선 타격의 거리도 유지한다.
+- Air combo 중 same-side target gap은 기본 44 World unit, 되베기 진입은 22 World unit을 상한으로 부드럽게 pull한다. 반대편에 있는 목표에는 좌표 clamp를 적용하지 않아 away 이동이나 cross-up이 반대편 순간이동으로 바뀌지 않는다.
+- Ground active movement는 이동 전·후 signed gap을 비교해 같은 면의 12 World unit contact plane에서 멈추며, target이 airborne여도 접촉면을 통과하지 않는다. Spin target constraint는 같은 combo cycle에서 Heavy 또는 첫 Spin pulse가 실제 hit-confirm된 뒤에만 켜지므로 whiff한 starter가 적을 끌어오지 않는다.
 - 경공격 hit는 35ms, 강공격·finisher hit는 50ms hit-stop을 적용하며 stop 중 새 입력 sequence는 adapter에 보존된다.
+- 적중과 Guard는 hit-stop 동안에도 진행되는 짧은 방향성 camera kick을 함께 발생시킨다. Camera offset은 gameplay position과 분리되고 공격 강도에 따라 bounded scale을 사용한다.
 - launch를 포함해 최대 6 hit 또는 3.2초까지만 juggle할 수 있다.
 - hit마다 enemy gravity가 증가하고 relaunch impulse·float 시간이 감소한다.
 - 한계에 도달하면 강제 낙하하며 착지 전에는 추가 hit를 받지 않는다.
 - 착지하면 juggle count, 누적 시간과 gravity scale을 초기화한다.
 - Player가 정면 Guard에 성공하면 damage와 knockback 없이 40ms block-stop을 적용한다. 실제 shield polygon의 전방 끝점에서 impact와 spark를 만들며 Light/Heavy에 각각 120/240ms blockstun과 차등 recoil·effect 강도를 적용한다. Anti-air는 공중 목표만 맞히므로 지상 Guard 대상이 아니다.
 - blockstun과 KO 중에는 이동·점프뿐 아니라 새 combat command와 hit 판정도 잠근다. Block-stop 중 들어온 attack sequence는 blockstun의 첫 simulation tick에서 소비하되 실행하지 않아 숨은 공격이나 지연 발동을 남기지 않는다.
+- 한쪽이 한 combo command cycle을 끝내면 피격자는 550ms retaliation invulnerability를 얻는다. 이 보호는 새 피해만 거부하고 보호받는 Player/Combat mob의 이동·Guard·공격은 허용해 다음 neutral에서 반격할 수 있게 한다. Player는 hitstun 종료에 시작하고, combat mob은 command controller의 새 `comboCycle` 경계에서 시작하며 공중에서는 시간이 소모되지 않는다. 보호 시간 안에 다음 공격 cycle이 시작되면 episode당 최초 한 cycle ID만 전체 보호 대상으로 고정해 후반 branch도 피해를 주지 못한다. 다음 cycle은 남은 시간만 보호하고 만료 뒤 정상 적중한다. Rising의 jump cancel과 착지 전 air chase는 기존 cycle ID를 보존하므로 정상 launcher combo는 끊지 않는다. 보호 중 combat mob은 연속 공격을 다시 Guard하는 대신 공격 접근을 우선한다. Retaliation aura는 양쪽 silhouette 뒤에서 표시한다.
 
-Slash, Heavy, Rising과 Spin은 현재 검 위치와 목표 각도로 procedural ribbon을 생성한다. Trail은 별도 bone이 아니며 sampled target pose의 출력만 읽는다.
+Slash, Heavy, Rising과 Spin의 trail polygon은 gameplay가 최근 blade pose에서 계산한 swept-contact geometry를 그대로 사용한다. Target Pose는 trail opacity와 색 표현만 제공하고 Renderer는 sweep history나 hit lifetime을 진행하지 않는다.

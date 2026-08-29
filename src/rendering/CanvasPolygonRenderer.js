@@ -21,7 +21,12 @@ export class CanvasPolygonRenderer {
       viewport.presentationHeight / viewport.height,
     );
 
-    const project = (point) => this.camera.worldToScreen(point, viewport);
+    const cameraOffset = frame.cameraOffset ?? { x: 0, y: 0 };
+    const project = (point) =>
+      this.camera.worldToScreen(
+        { x: point.x - cameraOffset.x, y: point.y - cameraOffset.y },
+        viewport,
+      );
     const worldScale = this.camera.getScale(viewport);
     paintBackdrop(context, frame, viewport, project, { showWorldGrid });
     const diagnostics = paintSceneItems(context, frame, project, worldScale, { showMesh });
