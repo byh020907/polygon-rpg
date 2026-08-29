@@ -1,6 +1,6 @@
 ---
 name: dev-team-loop
-description: Run Polygon RPG's quality-driven team-lead/AI development loop. Use for main-worktree development requests, queue and worker coordination, one-work-item developer conversations, artifact evaluation, integration, status changes, or cancellation. Route by the current worktree, work-item context, and request instead of requiring separate skills. Do not use when the user explicitly says to handle the request directly without the team workflow.
+description: Start or run Polygon RPG's quality-driven roadmap loop. A bare `$dev-team-loop` invocation in the main conversation starts or resumes autonomous consumption of the approved roadmap. Also use for queue and worker coordination, one-work-item developer conversations, artifact evaluation, integration, status changes, or cancellation. Route by the current worktree, work-item context, and request instead of requiring separate skills. Do not use when the user explicitly says to handle the request directly without the team workflow.
 ---
 
 # Dev Team Loop
@@ -19,14 +19,17 @@ Choose the first matching mode.
 
 1. **Cancel:** The user cancels or reopens an exact work item, or a worker receives a cancellation. Read [`references/cancel.md`](references/cancel.md).
 2. **Run:** The prompt or live Orca Dispatch identifies one work-item path/ID for this developer conversation. Read [`references/run.md`](references/run.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
-3. **Manage:** This is the background manager conversation, an Orca coordinator event, or a main-worktree queue/status/priority/integration operation. Read [`references/manage.md`](references/manage.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
-4. **Register:** This is the team-lead-facing main conversation receiving a new development request. Read [`references/register.md`](references/register.md).
+3. **Start/Continue:** This is a bare `$dev-team-loop` invocation in the team-lead-facing main conversation or an explicit start/continue/resume roadmap request. Read [`references/start.md`](references/start.md).
+4. **Manage:** This is the background manager conversation, an Orca coordinator event, or a main-worktree queue/status/priority/integration operation after main-interface routing. Read [`references/manage.md`](references/manage.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
+5. **Register:** This is the team-lead-facing main conversation receiving a new development request. Read [`references/register.md`](references/register.md).
 
 If the role is ambiguous, inspect the current Orca worktree, terminal, Run/Task/Dispatch and Git state. Never create a second background manager or duplicate Dispatch from a guess.
 
 ## Shared Invariants
 
-- One team-lead message creates one work item unless the team lead explicitly requests a split.
+- One independent team-lead development request creates one work item unless the team lead explicitly requests a split. Bare start/continue invocations and lifecycle operations do not.
+- The approved current roadmap is the default work source. When no open item owns its next unmet gate, the manager derives one non-duplicate vertical work item without waiting for another team-lead prompt.
+- Team roles define execution and ownership, not what to build. Never wait for a team-lead prompt when an approved roadmap gate can safely determine the next item.
 - The main conversation does not interview or implement. The work-item conversation owns both.
 - Each work item has exactly one root developer conversation and Vertical Slice Director. It owns the integrated artifact, rubric, team-lead feedback and final completion even when bounded subtask workers contribute.
 - The background manager is the only main-worktree Git writer and excludes itself from the three-worker limit.
@@ -39,6 +42,8 @@ If the role is ambiguous, inspect the current Orca worktree, terminal, Run/Task/
 - Use simple instruction-driven operation first. Add scripts or scheduled automation only after a demonstrated repeated failure justifies them.
 - Do not submit a candidate with an applicable quality axis below the threshold defined in `docs/development/quality-loop.md`.
 - Subtask success is not parent work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
+- Keep serial work with the Director; add subtask workers only for demonstrated parallel value with disjoint ownership.
+- Stop roadmap derivation at team-lead feedback, an unresolved product decision, canonical conflict, blocker, pause or the absence of an approved next milestone.
 
 ## Completion
 

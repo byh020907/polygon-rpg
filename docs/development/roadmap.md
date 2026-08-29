@@ -171,6 +171,8 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 - 등록·관리·실행·취소 맥락을 자동 routing하는 repo-local `dev-team-loop` skill
 - Manager가 교체돼도 Git·Orca·worktree 증거로 복구하는 상태 경계
 - Lead Game Developer & QA Director 페르소나, 공통 품질 rubric과 feedback 규칙 승격 계약
+- 승인된 현재 milestone에서 다음 미충족 gate를 자동 파생·소비하는 roadmap-driven outer loop
+- bare `$dev-team-loop` 한 번으로 manager를 시작·복구하고 stop condition까지 roadmap을 지속 소비하는 entrypoint
 
 ### 완료 gate
 
@@ -180,6 +182,8 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 - `AGENTS.md`는 32 KiB instruction budget 안에서 process와 skill을 찾을 수 있다.
 - Skill validation과 현실적인 mode routing 검증을 통과한다.
 - 새 구현 work item이 반복 프롬프트 없이 품질 계약, baseline, current best와 다음 병목을 기록한다.
+- 다음 미충족 gate를 소유한 open item이 없으면 팀장 메시지 없이 roadmap에서 vertical work item 하나를 파생하고, feedback·blocker·제품 결정 gate까지 계속한다.
+- bare skill 호출이 work item으로 등록되지 않고 기존 state reconcile 뒤 roadmap loop를 시작·재개한다.
 
 ## M1 — 훈련방 첫 전투 조우
 

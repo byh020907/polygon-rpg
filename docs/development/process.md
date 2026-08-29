@@ -2,6 +2,8 @@
 
 이 문서는 사용자가 팀장으로 제품 방향과 우선순위를 결정하고, AI 개발 팀이 업무 이력의 등록·인터뷰·구현·피드백·통합과 다음 loop를 주도하는 프로젝트 운영 계약이다.
 
+팀장·manager·worker 역할은 다음 개발 목표를 고르는 source가 아니라 Git·대화·병렬 실행의 ownership topology다. 기본 목표 선택은 승인된 roadmap과 통합 artifact의 품질 evidence가 담당한다.
+
 Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당한다. 이 문서는 그 Method의 비범위인 제품 인터뷰, 플레이 가능한 개발 단위, 피드백, 병렬 worktree와 autonomous improvement lifecycle을 프로젝트 요구사항으로 정의한다. 각 work item 내부의 개발 페르소나, 품질 rubric, 평가 기반 개선과 규칙 승격은 [`quality-loop.md`](./quality-loop.md)가 소유한다. 아직 다른 프로젝트에서 재사용할 독립 Method로 승격하지 않는다.
 
 프로젝트 개발 요청에는 기본적으로 [`.agents/skills/dev-team-loop/SKILL.md`](../../.agents/skills/dev-team-loop/SKILL.md)를 사용한다. 사용자가 `이번 건은 직접 처리`처럼 workflow 우회를 명시한 요청만 일반 작업으로 처리한다.
@@ -49,7 +51,38 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 - parent work item의 제품 범위, rubric, 팀장 feedback과 최종 완료 상태를 소유하지 않는다.
 - 검증 결과를 제품 방향으로 독자 승격하지 않는다.
 
-## 메인 업무 접수
+## Outer Loop 입력과 업무 생성
+
+기본 개발 동력은 팀장 메시지가 아니라 승인된 roadmap이다. 팀장 메시지는 새 제품 방향, 우선순위·상태 조작, 현재 candidate feedback 또는 roadmap 밖의 새 요청을 주입한다.
+
+### Canonical 시작 명령
+
+메인 대화에서 bare `$dev-team-loop`를 한 번 호출하면 approved roadmap loop를 시작하거나 복구한다. 이 호출은 work item이 아니다.
+
+```text
+$dev-team-loop
+→ 기존 manager·work item·Orca 상태 reconcile
+→ manager가 없으면 정확히 하나 시작
+→ continue_roadmap operation
+→ 기존 item 재개 또는 현재 milestone의 다음 gate 파생
+→ feedback·blocker·pause까지 지속 소비
+```
+
+각 work item마다 스킬을 다시 호출하지 않는다. 명시적 pause·stop 또는 manager 유실 뒤에만 같은 호출로 복구·재개한다. Feedback·제품 결정 stop은 bare 호출이 아니라 해당 work-item 대화의 실제 답으로 해제한다.
+
+Bare 호출은 feedback 내용이 아니다. Candidate가 `feedback`에서 기다리면 상태만 보고하고, 해당 work-item 대화에 실제 팀장 feedback이 도착할 때만 Director를 재개한다. Start operation은 상관 ID가 있는 receipt로 exactly-once 처리하며 manager는 repo-local singleton key와 Orca Run objective로 식별한다.
+
+### Roadmap 자동 파생
+
+현재 milestone의 다음 미충족 gate를 소유한 open work item이 없으면 background manager가 다음 vertical result 하나를 work item으로 파생한다.
+
+1. roadmap의 현재 milestone, 실제 통합 artifact, 완료 이력과 열린 work item을 대조한다.
+2. 아직 다른 item이 소유하지 않은 가장 큰 플레이·품질 gate를 선택한다.
+3. `source: roadmap`과 정확한 milestone/gate를 기록하고 work item 하나를 생성·commit·push한다.
+4. dependency와 worker capacity가 허용되면 Vertical Slice Director를 즉시 시작한다.
+5. feedback·통합 뒤 같은 절차로 다음 gate를 다시 평가한다.
+
+Manager는 roadmap에 없는 새 Product Requirement를 만들거나, 이미 열린 item과 중복되는 이력을 생성하거나, 한 milestone의 내부 lane을 peer root work item으로 임의 분할하지 않는다. 팀장 feedback, 남은 제품 인터뷰, Canonical Conflict, blocker, pause 또는 승인된 다음 milestone 부재에서는 파생을 멈추고 필요한 lifecycle만 보고한다.
 
 ### 한 요청은 한 이력
 
@@ -69,13 +102,13 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 - roadmap 재정렬
 - ID가 명시된 기존 work item 대화로 추가 지시 전달
 
-그 밖의 버그·기능·조사·개선 요청은 work item 하나로 등록한다.
+`로드맵 계속 진행`, `다음 loop 실행`처럼 승인된 roadmap 소비를 재개하는 요청은 새 work item이 아니라 manager operation이다. 그 밖의 버그·기능·조사·개선 요청은 work item 하나로 등록한다.
 
 ### Durable 등록
 
 ```text
-팀장 요청
-→ 메인 Interface가 manager에 원문 전달
+팀장 요청 또는 roadmap 미충족 gate
+→ 메인 Interface 원문 전달 또는 manager 파생 근거 확정
 → manager가 고유 work item 문서 생성
 → 문서 하나짜리 접수 commit
 → origin/main에 즉시 push
@@ -86,7 +119,7 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 - 기본 ID는 `WI-YYYYMMDD-HHmmss`이며 같은 초에 등록되면 Git·Orca 충돌 검사 뒤 `-02`, `-03` suffix를 붙인다.
 - 접수 commit은 사용자 추가 승인 없이 main에 push한다.
 - manager만 ID를 발급하고 work item 파일을 처음 생성한다.
-- 원문은 요약으로 대체하지 않고 문서에 그대로 보존한다.
+- 팀장 요청은 원문을 그대로 보존한다. Roadmap 파생은 원문을 꾸미지 않고 milestone, gate와 현재 evidence를 정확히 기록한다.
 - Runtime Run ID, Dispatch ID와 terminal handle은 Git에 기록하지 않는다.
 
 ## Work Item 상태
@@ -115,7 +148,7 @@ Git work item은 최초 접수와 최종 통합·취소 상태를 durable하게 
 
 Pause는 대화·worktree·미병합 diff를 보존하고 실행 slot만 반환한다. Paused item은 해당 worktree를 계속 점유하므로 같은 permanent lane이 다른 item을 소비하지 않는다. Resume는 같은 item·branch·대화에서 현재 main과 dependency를 다시 확인한 뒤 이어간다.
 
-## 우선순위와 자동 소비
+## 우선순위와 지속 소비
 
 팀장이 별도 순서를 지정하지 않으면 manager가 다음 순서로 ready queue를 소비한다.
 
@@ -128,6 +161,7 @@ Pause는 대화·worktree·미병합 diff를 보존하고 실행 slot만 반환�
 - dependency가 끝나지 않은 이력은 priority가 높아도 실행하지 않는다.
 - 기본 worker 상한은 3개이며 팀장이 특정 이력의 추가 실행을 명시하면 초과할 수 있다.
 - manager는 선택한 이유, lane과 대기 중인 blocker를 lifecycle 요약에 남긴다.
+- 현재 roadmap의 다음 미충족 gate를 소유한 open item이 없으면 item 하나를 파생하고, stop condition이 없는 동안 `파생 → 실행 → feedback·통합 → 재평가`를 계속한다.
 
 ## Worktree Routing
 
@@ -331,6 +365,7 @@ Vertical Slice Director는 다음 lane을 dependency 순서에 맞게 하위 tas
 메인 대화에는 다음 요약만 남긴다.
 
 - 등록: ID, 제목, 우선순위와 대기/실행 상태
+- roadmap 파생: ID, milestone, 선택한 미충족 gate와 실행 상태
 - 실행 시작: worker 대화와 worktree
 - 피드백 준비: 확인할 플레이 결과
 - 완료: 결과 방향, 영향과 통합 commit
@@ -354,5 +389,6 @@ Git work item은 durable 이력이고 Orca orchestration은 live 실행 상태�
 - roadmap은 날짜 약속이나 기능 수가 아니라 플레이 가능한 milestone 순서와 품질 gate를 소유한다.
 - Background manager만 수직 단위의 `대기 → 진행 → 피드백 → 완료` 상태를 바꾼다.
 - 핵심 조작감·타격감·effect·graphics가 gate를 통과하지 못하면 콘텐츠 확장을 미루고 같은 수직 단위를 다시 연다.
-- 새 제품 결정이 필요하지 않으면 manager가 다음 loop와 영향 범위를 보고하고 자율 진행한다.
+- 새 제품 결정이 필요하지 않으면 manager가 현재 milestone의 다음 미충족 gate를 work item으로 파생하고 자율 진행한다. 팀장은 매 loop마다 새 지시를 보내지 않는다.
+- 통합된 `규칙 후보`는 다음 item의 품질 계약에 반영해 loop 자체의 판단과 검증 능력도 누적 개선한다.
 - 이 프로세스를 다른 프로젝트의 Method로 승격하는 결정은 충분한 반복 검증 뒤 사용자만 내린다.

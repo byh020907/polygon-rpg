@@ -17,9 +17,11 @@
 
 팀 orchestration은 work item을 선택·배치·통합하는 바깥 loop고, 품질 loop는 한 work item 안에서 artifact를 완성하는 안쪽 loop다.
 
+팀 역할은 개발 목표를 만드는 조직 시뮬레이션이 아니라 ownership topology다. 무엇을 할지는 roadmap과 품질 evidence가 결정하고, 역할은 누가 파생·구현·검증·통합할지만 제한한다.
+
 ```text
-Product Director — 방향·우선순위·최종 체감
-→ Manager — queue·배치·통합 gate
+Product Director — roadmap·방향·우선순위·최종 체감
+→ Manager — roadmap에서 다음 work item 파생·queue·배치·통합 gate
 → Vertical Slice Director — 구현·통합 artifact·품질 loop
    ↳ Subtask Worker — 고정된 계약 안의 좁은 lane
    ↳ Independent Verifier — frozen candidate 읽기 전용 검증
@@ -28,10 +30,33 @@ Product Director — 방향·우선순위·최종 체감
 ```
 
 - work item마다 하나의 authoritative 대화와 **Vertical Slice Director**만 둔다. 이 Director가 해당 work item의 Lead Game Developer & QA Director다.
+- 작은 serial item은 Director 한 명으로 끝낸다. 명확한 병렬 이점과 disjoint ownership이 있을 때만 하위 worker를 추가한다.
 - Director는 공개 계약을 고정한 뒤 read-heavy 조사나 disjoint implementation을 하위 worker에 위임할 수 있다. 하위 worker는 할당 경로와 산출물만 소유하며 제품 범위, rubric, 팀장 feedback과 parent work-item 완료를 소유하지 않는다.
 - Director는 모든 하위 결과를 통합한 실제 플레이 경로를 다시 실행하고 전체 rubric을 재평가한다. 부분 lane의 성공 점수를 합쳐 수직 단위의 품질로 간주하지 않는다.
 - Independent Verifier는 마지막 writer 변경 뒤 frozen candidate를 검사한다. 실패하면 같은 Director가 품질 loop로 돌아가며, verifier가 제품 방향을 바꾸거나 candidate를 직접 수정하지 않는다.
 - Manager는 artifact를 대리 채점하지 않는다. 단일 Director, threshold, 실제 증거와 독립 검증이 갖춰졌는지를 gate하고 main 통합과 규칙 승격만 소유한다.
+
+## Roadmap-Driven Outer Loop
+
+팀장 메시지는 개발을 한 번씩 시동하는 필수 입력이 아니다. 승인된 roadmap의 현재 milestone과 품질 gate가 manager의 지속 objective다.
+
+메인 대화의 bare `$dev-team-loop` 호출이 이 objective를 시작·복구하는 canonical command다. 호출은 한 번만 필요하며, 이후 manager가 stop condition까지 다음 gate를 계속 소비한다.
+
+```text
+현재 milestone과 통합 artifact 평가
+→ 아직 충족되지 않은 가장 큰 플레이·품질 gate 선택
+→ roadmap-derived work item 하나 생성
+→ Vertical Slice Director의 품질 loop
+→ feedback·통합
+→ roadmap 상태와 규칙 갱신
+→ 다음 미충족 gate로 반복
+```
+
+- 현재 milestone의 다음 미충족 gate를 소유한 open item이 없으면 manager가 팀장 메시지를 기다리지 않고 다음 work item을 파생한다.
+- 파생 work item은 roadmap에 이미 승인된 결과를 구체화할 뿐 새로운 milestone, Product Requirement, IP, 외부 부작용이나 대규모 범위를 발명하지 않는다.
+- 한 번에 다음 vertical result 하나만 파생한다. 같은 milestone의 병렬 lane은 Vertical Slice Director가 고정된 계약 아래 하위 task로 관리한다.
+- 팀장 지시·feedback·우선순위 변경은 roadmap-derived queue보다 우선하며 같은 목표를 구체화하면 현재 item에 누적한다.
+- 팀장 feedback, 남은 제품 인터뷰 gate, Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서는 자동 파생을 멈춘다.
 
 ## Work Item 품질 계약
 
@@ -123,6 +148,8 @@ Final candidate commit은 적용 rubric이 threshold를 통과하고 실제 arti
 3. 결정적으로 판정 가능하고 반복 가치가 있을 때만 script/check로 자동화한다. 새 영구 test·fixture·test script는 `VERIFY-USER-OWNED-TESTS`에 따라 팀장의 명시적 요청이 있을 때만 추가한다. 정성 판단은 rubric 또는 system 문서의 이유가 있는 규칙으로 남긴다.
 4. manager는 통합 시 기존 Canonical Rule·system 문서의 owner를 확인해 한 곳에만 승격한다. 단순 규칙 수를 품질 지표로 삼지 않는다.
 5. 더 이상 현재 코드·제품 방향과 맞지 않는 규칙은 Staleness 절차로 수정하거나 폐기한다.
+
+승격된 규칙은 다음 roadmap-derived work item의 초기 품질 계약에 자동 반영한다. 이 `feedback → rule candidate → canonical rule/check → 다음 baseline` 흐름이 코드 기능과 별개로 계속 축적되는 loop engineering이다.
 
 ## Reference 채택 판단
 

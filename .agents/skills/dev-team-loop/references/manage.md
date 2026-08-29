@@ -2,19 +2,48 @@
 
 The background manager is a replaceable Orca coordinator and the only Git writer in the main worktree. Its memory is not authoritative.
 
+## Singleton Identity And Arbitration
+
+The durable logical identity is:
+
+```json
+{
+  "managerKey": "polygon-rpg-roadmap-manager-v1",
+  "runObjective": "Polygon RPG roadmap loop [manager-key:polygon-rpg-roadmap-manager-v1]",
+  "workspace": "the repository main worktree"
+}
+```
+
+Resolve it before starting or recovering a manager:
+
+1. Inspect ordinary non-legacy Runs with the exact objective, their bound coordinator terminals, every Polygon RPG Task/Dispatch and the repository main worktree.
+2. A manager is live only when its bound coordinator terminal still exists, is writable and belongs to the main worktree. Idle or quiet output alone does not make it stale.
+3. If exactly one live matching Run exists, reuse it.
+4. If no live Run exists and exactly one matching stale Run exists, recover that same Run even when it currently has no open item or Task.
+5. If multiple matching stale Runs exist, first select the only Run that owns all current open work-item Tasks/active Dispatches. If there is no open Task/Dispatch, select the Run with the greatest `updated_at`, breaking an exact timestamp tie by lexically smallest Run ID. Recover only that Run and treat the others as non-authoritative audit state.
+6. If no matching Run and no conflicting Polygon RPG Task/Dispatch exists, start one manager conversation in main and create/bind one Run with the exact objective.
+7. If multiple live candidates exist, open work/Dispatch ownership is split across Runs, or a nonmatching Run owns current Polygon RPG work, create and bind nothing. Return `manager-conflict` through the main-interface preflight receipt.
+
+Terminal titles and recent output are discovery hints, not identity. Never create a second Run merely because the manager is idle, the terminal preview is old or a previous conversation ended at a prompt.
+
 ## Event Loop
+
+For a `continue_roadmap` event, also read `start.md` for the operation and receipt schema.
 
 For every registration, worker status, `worker_done`, cancellation, team-lead operation or restart:
 
 1. Reconcile Git work items, roadmap, Orca Run/Task/Dispatch, worktree branch/status/comment and live terminals.
 2. Process the triggering event exactly once.
 3. Integrate or cancel settled work before starting dependent work.
-4. Select ready items by priority and dependency.
-5. Start workers until three are executing, unless the team lead authorized more.
-6. Send lifecycle summaries to the main interface.
-7. Wait for the next structured event without polling raw worker output.
+4. When no open item owns the current milestone's next unmet gate, derive one work item for it.
+5. Select ready items by priority and dependency.
+6. Start workers until three are executing, unless the team lead authorized more.
+7. Send lifecycle summaries to the main interface.
+8. Continue after integration until a defined roadmap stop condition, otherwise wait for the next structured event without polling raw worker output.
 
 `feedback` conversations and the manager itself do not count toward the three executing workers.
+
+For `continue_roadmap`, deduplicate by `operationId`. Reconcile first, perform the logical action at most once, and echo the ID in a `continue_roadmap_receipt` using the schema in `start.md`. A receipt with `action: waiting` must not resume `feedback` without actual team-lead feedback in that work-item conversation.
 
 ## Registration
 
@@ -44,6 +73,18 @@ Reply to the main Interface with this receipt shape:
 Populate worktree/conversation only after Orca confirms creation. Never return provisional IDs or guessed live state.
 
 Do not store Run IDs, Dispatch IDs or terminal handles in Git.
+
+## Roadmap Derivation
+
+When no open item owns the approved current milestone's next unmet gate:
+
+1. Compare the roadmap gate, integrated artifact, completed work items and every open item.
+2. Choose the single largest unmet playable or quality gate that is not already owned.
+3. Create a work item with `source: roadmap`, `source_ref` naming the milestone/gate and a factual derivation basis instead of invented team-lead prose.
+4. Commit and push that document using the same durable registration rules, create its Orca Task and dispatch it when capacity allows.
+5. After feedback/integration, reevaluate before deriving the next item.
+
+Do not derive a new Product Requirement or speculative future-milestone item. Stop at team-lead feedback, a required product interview, Canonical Conflict, blocker, pause or no approved next milestone. A `continue_roadmap` operation resumes this reconciliation and never becomes a work item itself.
 
 ## Priority
 

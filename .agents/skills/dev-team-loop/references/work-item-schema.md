@@ -12,13 +12,15 @@ created_at: YYYY-MM-DDTHH:mm:ss+09:00
 depends_on: []
 reopens: null
 review: team-lead
+source: team-lead
+source_ref: null
 ---
 
 # 제목
 
-## 팀장 원문
+## 팀장 원문 또는 파생 근거
 
-최초 요청을 그대로 보존한다.
+`source: team-lead`는 최초 요청을 그대로 보존한다. `source: roadmap`은 팀장 발언을 꾸며 쓰지 않고 milestone, 미충족 gate와 현재 evidence를 기록한다.
 
 ## 접수 해석
 
@@ -67,6 +69,8 @@ worktree/branch, 최종 commit과 업무보고를 기록한다. Runtime ID는 �
 - `priority`: `urgent`, `high`, `normal`, `low`
 - `lane`: `bugfix`, `maintenance`, `dedicated`
 - `review`: `team-lead`, `auto`
+- `source`: `team-lead`, `roadmap`, `feedback`, `quality-rule`
+- `source_ref`: 팀장 요청이면 `null`, 파생 item이면 milestone·work item·rule ID 등 durable source
 
 ## Ownership
 

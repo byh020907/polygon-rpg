@@ -14,7 +14,7 @@
 
 ## Project Development Process
 
-제품 방향, 플레이 피드백과 autonomous improvement lifecycle은 프로젝트 요구사항인 [`docs/development/process.md`](./docs/development/process.md)가, 각 work item의 페르소나·품질 rubric·평가 기반 개선 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 프로젝트 개발 요청은 사용자가 직접 처리를 명시하지 않는 한 [`.agents/skills/dev-team-loop/SKILL.md`](./.agents/skills/dev-team-loop/SKILL.md)를 기본 흐름으로 사용한다. 이 프로세스는 별도 Engineering Method가 아니며 각 loop 안의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
+제품 방향, 플레이 피드백과 autonomous improvement lifecycle은 프로젝트 요구사항인 [`docs/development/process.md`](./docs/development/process.md)가, 각 work item의 페르소나·품질 rubric·평가 기반 개선 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. Bare `$dev-team-loop`가 approved roadmap loop의 canonical 시작·복구 명령이며, 사용자가 직접 처리를 명시한 요청만 이 흐름을 우회한다. 이 프로세스는 별도 Engineering Method가 아니며 각 loop 안의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
 
 ## Engineering References
 
@@ -132,7 +132,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                                      | `docs/rendering-pipeline.md`, 실제 caller  |
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                           | 이 파일, 향후 effect 구현과 caller         |
 | `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                            | 사용자 결정, `package.json`, 최종 diff     |
-| `PROCESS-DEV-TEAM-LOOP`   | `dev-team-loop`로 팀장 요청을 Git 이력화하고 manager·worker가 플레이 가능한 단위의 인터뷰·구현·피드백·통합·의도 기반 보고를 반복한다.                                                     | `docs/development/process.md`, skill       |
+| `PROCESS-DEV-TEAM-LOOP`   | `dev-team-loop` manager는 승인된 roadmap의 다음 미충족 gate를 work item으로 지속 파생·소비하고, 팀장 지시·feedback을 우선 입력으로 처리하며 worker의 구현·검증·통합·보고를 반복한다.      | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work item마다 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 feedback을 끝까지 소유하고, 하위 lane 결과를 재평가하며 반복 feedback을 검증된 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                             | `docs/animation-system.md`, 실제 solver    |
 | `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                                     | `docs/input-system.md`, 실제 adapters      |

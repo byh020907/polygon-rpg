@@ -11,9 +11,21 @@ Do not create a work item for:
 - pause, cancel or reopen requests;
 - merge or push instructions;
 - roadmap reordering;
+- starting, continuing or resuming consumption of the already-approved roadmap;
 - additional direction explicitly targeting an existing work-item ID.
 
 Everything else that asks for a bug fix, feature, investigation, improvement or planning result is a new work item.
+
+For a roadmap continuation request, send a structured manager operation instead of registration:
+
+```json
+{
+  "kind": "continue_roadmap",
+  "operationId": "opaque-main-invocation-id"
+}
+```
+
+The main interface generates and retains `operationId` until it receives the correlated `continue_roadmap_receipt`. The manager reconciles the current milestone and open work before deriving anything. It does not turn the continuation message itself into a work item.
 
 ## Register Without Interviewing
 
