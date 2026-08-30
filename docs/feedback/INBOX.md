@@ -76,19 +76,25 @@
 
 ## IN-20260831-005246
 
-- status: new
+- status: implementing
 - received_at: 2026-08-31T00:52:46+09:00
 - priority: normal
 - source: team-lead-main
-- title: null
+- title: Core Engineering Principles 전환
 - supersedes: null
-- executor_branch: null
+- executor_branch: codex/loop/in-20260831-005246
 - registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
-- accepted_at: null
+- accepted_at: 2026-08-31T02:32:37+09:00
 - checkpoint_commit: null
 - final_commit: null
 - integration: null
-- owned_paths: []
+- owned_paths:
+  - AGENTS.md
+  - README.md
+  - docs/DESIGN.md
+  - docs/development/quality-loop.md
+  - docs/reference-repositories.md
+  - docs/runtime-architecture.md
 
 ### 원문 — 불변
 
@@ -98,17 +104,17 @@
 
 ### 실행 계약 — coordinator 소유
 
-- 목표: 미정
-- 완료 조건: 미정
-- 비범위: 미정
-- 적용 품질 축: 미정
+- 목표: 초기 Engineering 기준을 세우기 위해 선택했던 Reference-Guided Engineering과 두 로컬 exemplar의 mandatory local-first 규칙을 제거하고, 같은 Method 저장소의 Core Engineering Principles를 이 프로젝트의 유일한 Engineering Method로 채택한다. 기존에 검증된 Polygon RPG의 architecture·runtime·process 계약은 보존하면서 순수 함수 → Is-A → Has-A → Can-Do 판단, Node·Scene·Scene Tree·Signal의 개념 경계, 예상 확장 구조화, 반복 문제의 ownership 재검토, 단일 문서 owner와 목적 단위 Git 기록을 canonical 규칙으로 정합한다.
+- 완료 조건: `AGENTS.md`의 Method link·선택 선언·Canonical Rule Registry·context routing·implementation policy가 Core Engineering Principles 원문과 일치하고 `METHOD-REFERENCE-GUIDED`, `REF-LOCAL-FIRST`, Reference-Guided 전용 우선순위·정책과 mandatory local exemplar 경로가 제거된다. README·DESIGN·quality/runtime 문서와 reference repository 문서의 현재 역할을 교차 검증해 old Method 강제 규칙은 제거하거나 canonical owner로 통합하되, established project 계약과 현재 동작을 설명하는 근거는 잃지 않는다. Method source/link 무결성, 관련 용어 검색, `npm run check`, `git diff --check`를 통과한다.
+- 비범위: gameplay·rendering·input·world 동작 변경, 제품 경험 Reference와 autonomous loop의 출처/evidence를 단어가 같다는 이유만으로 삭제, 새 runtime dependency 도입, 기존 architecture를 새 Method 예시에 맞춰 불필요하게 재구현, 다른 sibling Method 병용.
+- 적용 품질 축: 기능 완결성, Method 원문 정합, 문서 단일 소유권, 회귀 안전성.
 
 ### 실행 상태 — coordinator 소유
 
-- 기준선: 미정
-- 현재 최선: 미정
-- 다음 병목: 미정
-- 검증: 미정
+- 기준선: 현재 `AGENTS.md`는 Reference-Guided Engineering을 유일한 Method로 선택하고 두 로컬 저장소의 mandatory local-first 조사, 별도 reference repository index와 전용 §8 policy를 요구한다. README·DESIGN·quality 문서에도 이 초기화 방식의 강제 규칙이 남아 있다.
+- 현재 최선: Core Engineering Principles의 현재 upstream 원문과 단독 AGENTS 예제를 확인했고, 기존 Polygon RPG는 이미 Scene/Node/Signal lifecycle, 문서 index·canonical owner, 목적 단위 Korean Git 기록과 확장 가능한 event 경계를 갖추고 있어 Method를 교체하면서 established 계약을 보존할 수 있다.
+- 다음 병목: old Reference-Guided 규칙과 현재 프로젝트에 남겨야 할 검증 근거를 구분해, 중복 없이 Core Engineering Principles 일곱 규칙의 canonical owner와 검사 경로를 구현한다.
+- 검증: clean `main == origin/main` `d301219b50fa816a65ff25c7688451de4c302e2c`, no live lease와 해당 executor ref/worktree 부재를 확인했다. `ai-development-methods`의 Reference-Guided Engineering, Core Engineering Principles 전체 원문과 Core 단독 AGENTS 예제를 읽고 repository-wide Reference 규칙 위치를 검색했다. 명시 사용자 요청이 기존 Method 선택을 대체하므로 Canonical Conflict는 없다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
