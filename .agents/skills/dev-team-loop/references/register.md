@@ -1,53 +1,33 @@
 # Register Mode
 
-Use this mode only in the team-lead-facing main conversation.
+Use this mode only in the team-lead-facing main task.
 
 ## Classify
 
-Do not create a work item for:
-
-- overall status requests;
-- priority changes;
-- pause, cancel or reopen requests;
-- merge or push instructions;
-- roadmap reordering;
-- starting, continuing or resuming the approved roadmap;
-- additional direction explicitly targeting an existing work-item ID.
-
-Everything else that asks for a bug fix, feature, investigation, improvement or planning result is a new work item.
+Do not create a work item for overall status, priority changes, pause/cancel/reopen, integration/push instructions, roadmap reordering, bare start/continue, or additional direction explicitly targeting an existing work-item ID. Other development requests create one work item unless the team lead explicitly requests a split.
 
 ## Register And Start Without Reconfirmation
 
 1. Preserve the user's complete original message.
-2. Treat the request as implementation input. Do not ask the team lead to approve a restatement, plan, Reference Brief, execution contract, quality contract, task list or work-item document.
-3. Treat one message as one item. Split only on explicit user instruction.
-4. Reconcile Git work items and active Codex agent assignments.
-5. Allocate the ID, create the Git-tracked document, commit it from the main conversation with a concise, result-oriented Korean subject, then push the registration.
-6. Spawn exactly one root `worker` agent when dependencies and ownership allow; otherwise leave it queued.
-7. Emit a concise registration/start update, then keep coordinating the root agent in the same main turn until feedback, completion, blocker or another defined stop condition.
+2. Treat it as implementation input. Do not ask approval for a restatement, plan, Reference Brief, execution/quality contract, task list or work-item document.
+3. Reconcile Git work items and existing Codex tasks, then allocate the ID and create the Git-tracked document.
+4. Commit and push the registration from main with a concise Korean message.
+5. Resolve the saved project with the Codex project listing. For a Git repository, use the user-owned Codex task creation surface to create exactly one task in a Codex-managed worktree, titled `WI-... 제목`, with the exact work-item path and `dev-team-loop` Run instruction. Do not use subagent spawn as a substitute.
+6. Keep coordinating only queue/status/integration. The work-item task owns implementation, direct feedback and its final commit.
 
-The user request explicitly authorizes creation of the work item and its root subagent thread. It does not authorize a separate manager task or unrelated tasks.
+Creation of the work item and its separate Codex task is part of the requested project workflow. It does not authorize unrelated tasks, model overrides, external side effects or a background manager task.
 
-## Root Agent Prompt
+## Work-Item Task Prompt
 
 Include:
 
-- the exact work-item ID and path;
-- an instruction to invoke `dev-team-loop` Run mode;
-- the owned paths or responsibility boundary known at registration;
-- a reminder that other agents may share the checkout and must not revert their edits;
-- a prohibition on branch, commit, push and worktree mutations.
+- exact work-item ID/path and stable title;
+- instruction to invoke `dev-team-loop` Run mode;
+- expected worktree ownership and known path boundary;
+- requirement to preserve other changes and avoid main/remote mutation;
+- direct team-lead feedback responsibility;
+- final evidence order and final scoped worktree commit requirement.
 
 ## Main Lifecycle Update
 
-This is an intermediate commentary update, not the final response for the coordinator turn.
-
-Return only:
-
-- work-item ID and title;
-- inferred priority and lane;
-- queued or started state;
-- root-agent task name when started;
-- any dependency preventing start.
-
-Do not copy internal planning into the main conversation. Registration alone is not a reason to end the coordinator turn while the root agent is still active.
+Return only the work-item ID/title, task link, queued/started status, stop condition and integration result if any. Do not copy internal planning or candidate evidence into main. Registration is followed by compact task observation until a defined stop condition.

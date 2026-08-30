@@ -1,37 +1,28 @@
 # Start Or Continue Mode
 
-Use this mode in the team-lead-facing main conversation when the team lead invokes `$dev-team-loop` without a separate development request, or explicitly says to start, continue or resume the approved roadmap.
+Use this mode only in the team-lead-facing main task when the team lead invokes bare `$dev-team-loop`, or explicitly starts, continues or resumes the approved roadmap.
 
 ## Canonical Start
 
-The bare skill invocation is the canonical start command. It is an operation, not a work item, and explicitly authorizes this conversation to start or resume the next Codex root-agent work item.
+The bare invocation is an operation, not a work item. It authorizes the main coordinator to reconcile the queue, observe the current work-item task, integrate a completed commit and create the next approved work item in a new Codex task.
 
-1. Inspect Git work items, roadmap state, repository status and the current Codex subagent tree.
-2. Reuse the exact root agent already associated with an open work item. If duplicates or conflicting writers exist, stop with `agent-conflict`.
-3. Reconcile active work before deriving anything. Resume a genuinely resumable item or derive one item from the approved current milestone's next unmet gate.
-4. If an item is waiting for team-lead feedback, do not resume it from the bare invocation. Return `waiting` with `stopCondition: team-lead-feedback`; actual feedback targeting that item resumes its existing root agent.
-5. If no item owns the gate, register one roadmap-derived work item, commit and push only that durable registration, then spawn one root `worker` agent with the exact work-item path and Run-mode instruction.
-6. Wait for the root agent's result or attention request. Keep raw exploration and command output inside the agent thread.
+1. Inspect Git work items, roadmap state, main checkout status and current Codex tasks.
+2. Match an open item to exactly one task by its stable `WI-... 제목` title and recorded main-context task link. If duplicate active tasks or conflicting integration evidence exist, stop with `task-conflict`.
+3. Reconcile current work before deriving anything. Observe an active task with the Codex task `wait`/`read` surface; do not use subagent status as its identity or reproduce internal logs.
+4. If the task is waiting for team-lead feedback or a blocking choice, report its link and stop condition. The team lead replies directly in that task.
+5. If the task returned a final worktree commit, verify and integrate it using Manage mode, update Git/roadmap, then reevaluate the next gate.
+6. If no open item owns the next gate, register one item, persist its registration on main, then create a new user-owned Codex task using the project's Codex-managed worktree environment.
 
-Do not create a work item whose content is the skill invocation or “continue the roadmap.” Do not create a separate manager task or duplicate root agent.
+Never create a work item whose content is the skill invocation or “continue the roadmap.” Never substitute a root subagent for the user-owned work-item task.
 
 ## Continued Operation
 
-After start, the main coordinator keeps running `roadmap gate → work item → quality loop → feedback/integration → next gate` in this conversation until a defined stop condition.
-
-- Use the native agent wait mechanism for active root agents; a timeout is only a checkpoint.
-- Forward team-lead feedback to the same root agent with a follow-up task so its work-item context is preserved.
-- Do not pause for approval of internal plans or work-item prose. A genuinely blocking decision is one short Yes/No or 2–3-choice interview; reversible choices become implemented defaults and are disclosed with the candidate.
-- When a root agent completes, independently verify the frozen candidate, integrate from the main conversation, then reevaluate the roadmap before deriving another item.
-- Do not keep a background manager task, polling terminal or external Run alive.
+- Use task status tools for bounded waits and compact reads; unchanged timeouts are checkpoints, not failures.
+- Main context retains only `ID`, `title`, `task link`, `status`, `stop condition` and `integration result`.
+- Do not ask implementation questions, inspect/tune the candidate on behalf of the Director or relay feedback between tasks.
+- After successful integration, derive the next approved gate and create it in a new Codex task. Never reuse a completed work-item task for a different item.
+- Stop at direct feedback or a blocking choice pending in the work-item task, canonical conflict, external blocker, pause or no approved next milestone.
 
 ## Main Reply
 
-For lifecycle-only start updates, render only:
-
-- current milestone;
-- active, resumed or newly derived work-item ID and title;
-- current lifecycle state and root-agent thread when started;
-- the stop condition when no item can start.
-
-For feedback or completion, use the concrete result handoff defined by Run mode instead of this abbreviated start update.
+Render only the current work-item ID/title, clickable task link, lifecycle status, stop condition and integration result. Do not copy the work-item task's changed tree, tuning logs or interview into main context; the team lead reviews those in the task itself.

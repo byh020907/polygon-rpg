@@ -153,7 +153,7 @@ Portal 사용 입력은 M2의 가역적인 첫 candidate 기본값으로 구현�
 
 | 순서 | Playable milestone          | 팀장이 플레이할 결과                                              | 상태 |
 | ---- | --------------------------- | ----------------------------------------------------------------- | ---- |
-| M0   | AI 개발 loop와 roadmap      | Git 이력 queue와 단일 skill로 접수·병렬 실행·피드백·통합을 추적   | 완료 |
+| M0   | AI 개발 loop와 roadmap      | Work item별 독립 task/worktree와 Git queue·commit 통합을 추적     | 완료 |
 | M1   | 훈련방 첫 전투 조우         | guard → roll 배후 회피 → launcher → 공중 combo → 착지             | 완료 |
 | M2   | 학원촌 ↔ 훈련장 Room Portal | 장비를 선택하고 camera travel로 두 Room을 왕복해 훈련 전투를 반복 | 대기 |
 | M3   | 첫 Field·Dungeon·Boss loop  | 마을 준비부터 boss 보상과 shortcut 귀환까지 한 번에 플레이        | 대기 |
@@ -164,25 +164,26 @@ Portal 사용 입력은 M2의 가역적인 첫 candidate 기본값으로 구현�
 
 ### 결과물
 
-- 팀장 Interface인 메인 대화와 work item root agent를 분리한 기본 개발 흐름
-- 최소 Git work item, 전용 구현 대화와 실체 기반 업무보고 계약
-- 공유 checkout의 write-heavy root item 1개와 최대 3개 supporting agent
+- 순수 roadmap·queue·integration 역할의 메인 task와 사용자 소유 work-item task를 분리한 개발 흐름
+- 최소 Git work item, sidebar에서 직접 여는 전용 구현·feedback task와 실체 기반 업무보고 계약
+- Git work item마다 기본 Codex-managed worktree와 final scoped commit으로 다른 업무를 격리하는 계약
 - `bugfix`·`maintenance`·`dedicated` scheduling lane과 Codex-native agent routing
 - 등록·관리·실행·취소 맥락을 자동 routing하는 repo-local `dev-team-loop` skill
-- Coordinator context가 교체돼도 Git·agent tree·filesystem 증거로 복구하는 상태 경계
+- Coordinator context가 교체돼도 Git·Codex task·managed worktree·commit 증거로 복구하는 상태 경계
 - Lead Game Developer & QA Director 페르소나, 공통 품질 rubric과 feedback 규칙 승격 계약
 - 승인된 현재 milestone에서 다음 미충족 gate를 자동 파생·소비하는 roadmap-driven outer loop
-- bare `$dev-team-loop` 한 번으로 메인 coordinator가 root agent를 시작·복구하고 stop condition까지 roadmap을 지속 소비하는 entrypoint
+- bare `$dev-team-loop` 한 번으로 메인 coordinator가 독립 work-item task를 시작·복구하고 stop condition까지 roadmap을 지속 소비하는 entrypoint
+- Subagent를 work-item task 내부의 bounded exploration·disjoint implementation·독립 검증으로 제한하고 parent task가 결과를 수집하는 계약
 
 ### 완료 gate
 
 - 새 요청 하나가 재확인 없이 work item 하나로 등록되고 즉시 구현 입력이 되는 규칙이 명확하다.
-- 내부 판단·구현은 전용 대화에 남고 메인 context에는 lifecycle과 concrete candidate 요약만 남는다.
-- 취소·재개·통합과 root/supporting agent lifecycle이 모호하지 않다.
+- 제품 인터뷰·구현·품질 tuning·direct feedback은 전용 task에 남고 메인 context에는 ID/title/task link/status/stop condition/integration result만 남는다.
+- 취소·pause·recovery·통합이 Codex task/worktree와 Git commit evidence로 정의된다.
 - `AGENTS.md`는 32 KiB instruction budget 안에서 process와 skill을 찾을 수 있다.
 - Skill validation과 현실적인 mode routing 검증을 통과한다.
 - 새 구현 work item이 반복 프롬프트 없이 내부 품질 기준, baseline, current best와 다음 병목을 유지하고 Git에는 실제 결과만 기록한다.
-- 다음 미충족 gate를 소유한 open item이 없으면 팀장 메시지 없이 roadmap에서 vertical work item 하나를 파생하고, feedback·blocker·제품 결정 gate까지 계속한다.
+- 다음 미충족 gate를 소유한 open item이 없으면 vertical work item을 파생해 반드시 새 Codex-managed worktree task로 시작하고, direct feedback·blocker·제품 결정 gate까지 계속한다.
 - bare skill 호출이 work item으로 등록되지 않고 기존 state reconcile 뒤 roadmap loop를 시작·재개한다.
 
 ## M1 — 훈련방 첫 전투 조우
