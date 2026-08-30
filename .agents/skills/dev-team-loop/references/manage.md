@@ -32,7 +32,7 @@ For registration, worker results, cancellation, team-lead operations or recovery
 2. Create exactly one document from the schema unless the team lead explicitly requested a split.
 3. Preserve the team-lead original verbatim, or record factual roadmap derivation evidence.
 4. Infer priority, lane and dependencies without reconfirming the request.
-5. Commit only the new work-item document and push `main` after verifying the remote tip.
+5. Commit only the new work-item document with a concise, result-oriented Korean subject and push `main` after verifying the remote tip.
 6. Spawn one root `worker` agent with the exact work-item path and Run-mode instruction when capacity and dependencies allow.
 
 Reply with the confirmed ID, title, priority, lane, queued/started state, root-agent task name and dependencies. Never return guessed live state.
@@ -74,7 +74,7 @@ The root agent works in the shared checkout under strict path ownership. `lane` 
 1. Confirm the root Director's actual changed code tree, behavior/play path, quality threshold, integrated artifact evidence, work-report path and declared verification boundary.
 2. Freeze writes and run an independent read-only verification of the current candidate.
 3. Fetch latest `origin/main`; never rewrite shared history.
-4. Inspect and stage only paths owned by the item, run affected checks and create a scoped commit from the main conversation.
+4. Inspect and stage only paths owned by the item, run affected checks and create a scoped commit from the main conversation. Use a concise, result-oriented Korean subject and Korean body when one is needed. If integration genuinely requires an explicitly authored merge commit, its message follows the same rule; do not create one for a fast-forward merge solely to provide a message.
 5. Push `main`, mark the item `done`, and update roadmap only when milestone state changed.
 6. Review rule candidates and promote only repeated or high-impact evidence to one canonical owner.
 7. Reevaluate the roadmap before starting another root item.

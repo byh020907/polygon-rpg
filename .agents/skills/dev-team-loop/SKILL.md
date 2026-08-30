@@ -37,6 +37,7 @@ If the role is ambiguous, inspect Git work items, the current Codex subagent tre
 - Git work-item documents are minimal durable queue/result history. Codex subagent state and the current filesystem/Git state own internal planning and live execution evidence.
 - Keep one write-heavy root work item active at a time in the shared checkout. Add bounded subagents only for demonstrated parallel value with disjoint ownership; read-heavy exploration and frozen-candidate verification are preferred.
 - The main coordinator is the only branch, commit, push, queue, roadmap and integration writer. Worker agents edit only assigned files and do not mutate Git history.
+- When the coordinator authors Git messages, follow the Korean message policy in `docs/development/process.md`: use Korean by default without manufacturing merge commits or rewriting existing history.
 - Do not add permanent tests unless the user explicitly requests them. Remove temporary validation artifacts.
 - Do not copy Reference IP, assets, commands, maps, names, balance values or content.
 - No force push, shared-branch history rewrite, guessed cleanup or mutation of another agent's owned changes.

@@ -93,6 +93,16 @@ $dev-team-loop
 - 팀장 원문은 그대로 보존한다. Roadmap 파생은 milestone, gate와 현재 evidence를 사실대로 기록한다. 사전 계획·승인 섹션은 만들지 않는다.
 - Runtime agent ID와 thread handle은 Git에 기록하지 않는다.
 
+## Git 메시지 언어 기준
+
+- 에이전트가 새로 작성하는 local commit의 subject와 필요한 body는 기본적으로 한국어로 작성한다.
+- 에이전트가 merge commit 메시지를 명시적으로 작성하는 경우에도 subject와 필요한 body를 한국어로 작성한다.
+- subject는 구현 결과가 바로 드러나도록 간결하게 쓴다. `feat:`, `docs:` 같은 영문 Conventional Commit prefix는 요구하지 않으며, 한국어 범주 표현도 필요할 때만 사용한다.
+- 코드 식별자, 경로, 명령, work-item ID, branch 이름, commit hash, 외부 issue·PR 제목과 그 밖의 기술 token은 정확성을 위해 원문을 보존할 수 있다.
+- 예시는 `훈련방 전투 입력 판정 정리`, `업무 등록: 장비 선택과 Room Portal`, `WI-... 훈련방 조우 통합`, `Scene·Node·Signal 구조 변경 되돌림`이며 고정 형식은 아니다.
+- fast-forward merge에는 새 merge 메시지가 없으므로 이 기준을 맞추기 위해 merge commit을 만들지 않는다.
+- 과거 영문 메시지는 이 기준만으로 rewrite하거나 amend하지 않는다. Git 또는 provider가 에이전트 통제 밖에서 생성한 메시지도 공유 이력을 다시 쓰지 않고, 이후 에이전트가 직접 작성하는 메시지부터 이 기준을 적용한다.
+
 ## Work Item 상태
 
 ```text

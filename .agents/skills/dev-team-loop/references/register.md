@@ -22,7 +22,7 @@ Everything else that asks for a bug fix, feature, investigation, improvement or 
 2. Treat the request as implementation input. Do not ask the team lead to approve a restatement, plan, Reference Brief, execution contract, quality contract, task list or work-item document.
 3. Treat one message as one item. Split only on explicit user instruction.
 4. Reconcile Git work items and active Codex agent assignments.
-5. Allocate the ID, create the Git-tracked document, commit and push that registration from the main conversation.
+5. Allocate the ID, create the Git-tracked document, commit it from the main conversation with a concise, result-oriented Korean subject, then push the registration.
 6. Spawn exactly one root `worker` agent when dependencies and ownership allow; otherwise leave it queued.
 7. Emit a concise registration/start update, then keep coordinating the root agent in the same main turn until feedback, completion, blocker or another defined stop condition.
 
