@@ -162,3 +162,44 @@ Core Engineering Principles 일곱 규칙을 Polygon RPG의 단일 Engineering M
 ### 결과 — coordinator 소유
 
 진행 전
+
+## IN-20260831-030641
+
+- status: new
+- received_at: 2026-08-31T03:06:41+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: 868353b20e0bfb97d77c07133f0cb3ed0d030726
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+현재 기본적인 맵시스템은 완성되었는데, 맵 포탈을 더 자연스럽게 문이나 주변 환경에 맞는 형태로 모양을 개선할거야, 인터넷에 적절한 레퍼런스 참고해서 진행해, 그리고 크기도 유저 정도로 줄여야해
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
