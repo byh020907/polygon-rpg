@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 유저 피격 effect 통합 완료 · 다음 entry 수락 대기
-- 현재 active inbox entry: 없음 (`IN-20260831-003439`가 가장 오래된 `new` entry)
-- 현재 executor branch/worktree: 없음 · 완료 evidence `IN-20260831-002426` final `70d320127d5d5b48a80bb499fedf55d52829d21a`
+- 상태: 완료 entry 자동 정리 · 구현 준비
+- 현재 active inbox entry: `IN-20260831-003439` · `implementing`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-003439` · 이 수락 commit에서 persistent worktree provision
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -32,10 +32,11 @@
 - Player hit effect writer checkpoint: `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5` · contact 좌표 결정적 검증, `npm run check`, `git diff --check`, 실제 훈련장 Retro Canvas와 console 확인 통과.
 - Player hit effect fresh final: `70d320127d5d5b48a80bb499fedf55d52829d21a` · latest main merge, owned diff, deterministic anchor/guard/evade/enemy-hit 격리, 훈련장 HP `43→36`, 유리바람 Field HP `100→85`, enemy HP `75→49`, Polygon/Retro shared state, `900×600` resize와 console 검증 통과.
 - Player hit effect integration: final의 clean source와 owned-path diff, `npm run check`, `git diff --check`, 기록된 실제 Canvas 품질 evidence를 재확인하고 main에 non-rewriting merge.
+- 완료 entry 자동 정리 accept/provision: current process·quality·manage·schema와 lock/worktree helper를 대조하고, `done` block만 정리하되 nonterminal 원문과 Git 복구 evidence를 보존하는 실행 계약을 수락했다.
 
 ## Next
 
-다음 fresh run은 가장 오래된 `new` entry `IN-20260831-003439`의 원문을 보존한 채 실행 계약을 파생하고 deterministic executor branch/worktree를 accept/provision한다. 그 run에서 구현까지 연쇄하지 않는다.
+다음 fresh run은 `IN-20260831-003439` executor worktree에서 완료 entry cleanup의 deterministic block 선택·integration caller를 한 runnable checkpoint로 구현한다. Writer run은 final 검증이나 integration까지 연쇄하지 않는다.
 
 ## Update Contract
 

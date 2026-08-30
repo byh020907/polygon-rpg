@@ -122,19 +122,28 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 
 ## IN-20260831-003439
 
-- status: new
+- status: implementing
 - received_at: 2026-08-31T00:34:39+09:00
 - priority: normal
 - source: team-lead-main
-- title: null
+- title: 완료 entry 자동 정리
 - supersedes: null
-- executor_branch: null
+- executor_branch: codex/loop/in-20260831-003439
 - registration_base: a2b926581d80f5b9fb1c842785f60a74000584e7
-- accepted_at: null
+- accepted_at: 2026-08-31T01:30:57+09:00
 - checkpoint_commit: null
 - final_commit: null
 - integration: null
-- owned_paths: []
+- owned_paths:
+  - AGENTS.md
+  - loop/PROMPT.md
+  - loop/inbox.mjs
+  - .agents/skills/dev-team-loop/SKILL.md
+  - .agents/skills/dev-team-loop/references/manage.md
+  - .agents/skills/dev-team-loop/references/inbox-schema.md
+  - docs/development/process.md
+  - docs/development/quality-loop.md
+  - docs/development/loop-engineering-references.md
 
 ### 원문 — 불변
 
@@ -145,17 +154,17 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 
 ### 실행 계약 — coordinator 소유
 
-- 목표: 미정
-- 완료 조건: 미정
-- 비범위: 미정
-- 적용 품질 축: 미정
+- 목표: 성공적으로 통합을 마친 `done` entry를 live INBOX에서 자동 정리해, 현재 실행할 항목만 빠르게 읽히게 하면서 원문·결과·통합 근거는 Git history와 STATUS에서 복구 가능하게 보존한다. 이 process 변경 자체는 전용 executor worktree의 checkpoint와 fresh verification을 거쳐 통합한다.
+- 완료 조건: main-owned integration이 완료된 entry의 정확한 Markdown block만 결정적으로 제거하고 다른 `new`·nonterminal entry와 각 `원문 — 불변` byte를 바꾸지 않는다. 임의 삭제나 별도 queue 문서를 만들지 않으며, interruption 뒤 commit graph에서 entry 결과와 integration을 재구성할 수 있다. 실제 current INBOX를 직접 훼손하지 않는 fixture/copy 검증, `npm run check`, `git diff --check`, branch/worktree ownership·recovery 규칙 정합을 통과한다.
+- 비범위: nonterminal·paused·blocked·cancelled·superseded entry 정리, executor branch/worktree 자동 삭제, Git history rewrite, 별도 archive/queue/service 도입, gameplay·rendering 변경.
+- 적용 품질 축: 기능 완결성, Reference 정합, 회귀 안전성.
 
 ### 실행 상태 — coordinator 소유
 
-- 기준선: 미정
-- 현재 최선: 미정
-- 다음 병목: 미정
-- 검증: 미정
+- 기준선: 현재 live INBOX는 integration이 끝난 `done` entry도 계속 보존해 새 entry와 함께 누적한다.
+- 현재 최선: 원문·lifecycle·result는 main Git history와 executor commit graph에 이미 durable하게 남고, main-only INBOX 규칙과 deterministic worktree helper가 process 변경을 격리할 기반을 제공한다.
+- 다음 병목: arbitrary Markdown fence를 가진 entry 중 지정한 `done` block만 안전하게 찾고 제거하는 deterministic cleanup 계약과 integration caller를 구현한다.
+- 검증: clean `main == origin/main` `9c31550eed5881781eb45fe8e329d916fa161b5d`, no live lease, 해당 executor ref/worktree 부재를 확인했다. Current process·quality·manage·schema와 `loop/lock.mjs`, `loop/worktree.mjs`를 교차 확인했다. Baeseongjin의 worktree ownership은 원칙만 차용하고 branch 삭제 절차는 적용하지 않는다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
