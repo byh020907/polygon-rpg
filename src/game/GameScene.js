@@ -12,9 +12,13 @@ import { SceneNode } from '../core/SceneNode.js';
 import { Scene } from '../core/Scene.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
+import {
+  DEFAULT_EQUIPMENT_PROFILE_ID,
+  getEquipmentProfile,
+} from './equipment/EquipmentProfiles.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
-import { TRAINING_ENCOUNTER_SCENE } from './training/TrainingEncounterNode.js';
+import { ROOM_SCENE } from './room/RoomNode.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -46,7 +50,7 @@ function attackHitProfile(motionId, { startFrame, endFrame, hitPulseFrames, ...p
   });
 }
 
-const ATTACK_HIT_PROFILES = Object.freeze({
+const BASE_ATTACK_HIT_PROFILES = Object.freeze({
   slash: attackHitProfile('slash', {
     startFrame: 11,
     endFrame: 22,
@@ -216,11 +220,30 @@ function convexHull(points) {
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
-function lanePresentation(lane) {
-  return {
-    visualScale: lane.visualScale,
-    renderOrder: lane.renderOrder + 0.5,
-  };
+function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile) {
+  const baseProfile = BASE_ATTACK_HIT_PROFILES[motionId];
+  if (!baseProfile || !motionFrame) return null;
+  const baseMotionFrame = combatMotionFrameData(motionId);
+  const startupShift = motionFrame.startupFrames - baseMotionFrame.startupFrames;
+  const startFrame = baseProfile.frame.startFrame + startupShift;
+  const endFrame = baseProfile.frame.endFrame + startupShift;
+  const hitPulseFrames = baseProfile.hitPulseFrames?.map((frame) => frame + startupShift);
+  return Object.freeze({
+    ...baseProfile,
+    range: baseProfile.range * equipmentProfile.attack.rangeScale,
+    hitstunScale: equipmentProfile.attack.hitstunScale,
+    frame: Object.freeze({ startFrame, endFrame }),
+    start: startFrame / motionFrame.durationFrames,
+    end: endFrame / motionFrame.durationFrames,
+    ...(hitPulseFrames
+      ? {
+          hitPulseFrames: Object.freeze(hitPulseFrames),
+          hitPulses: Object.freeze(
+            hitPulseFrames.map((frame) => frame / motionFrame.durationFrames),
+          ),
+        }
+      : {}),
+  });
 }
 
 function transformPoints(points, { x, y, rotation = 0, scaleX = 1, scaleY = 1 }) {
@@ -293,7 +316,15 @@ function regularPolygon(radiusX, radiusY, sides, angleOffset = 0) {
   });
 }
 
-function createCharacterItems(position, facing, targetPose, bonePose, renderScale, renderOrder) {
+function createCharacterItems(
+  position,
+  facing,
+  targetPose,
+  bonePose,
+  renderScale,
+  renderOrder,
+  weaponLengthScale = 1,
+) {
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const swordRotation = targetPose.swordAngle;
@@ -343,7 +374,13 @@ function createCharacterItems(position, facing, targetPose, bonePose, renderScal
   const trailItems = [
     polygon(
       'sword-trail',
-      arcRibbonPoints(swordOrigin, swordRotation - targetPose.trailArc, swordRotation, 42, 111),
+      arcRibbonPoints(
+        swordOrigin,
+        swordRotation - targetPose.trailArc,
+        swordRotation,
+        42,
+        111 * weaponLengthScale,
+      ),
       { x: 0, y: 0 },
       '#bff8ef',
       { opacity: targetPose.trailOpacity * 0.5 },
@@ -537,9 +574,9 @@ function createCharacterItems(position, facing, targetPose, bonePose, renderScal
       'sword-blade',
       [
         { x: 0, y: -3 },
-        { x: 100, y: -3 },
-        { x: 126, y: 0 },
-        { x: 100, y: 4 },
+        { x: 100 * weaponLengthScale, y: -3 },
+        { x: 126 * weaponLengthScale, y: 0 },
+        { x: 100 * weaponLengthScale, y: 4 },
         { x: 0, y: 4 },
       ],
       { x: bladeOrigin.x, y: bladeOrigin.y, rotation: swordRotation },
@@ -550,8 +587,8 @@ function createCharacterItems(position, facing, targetPose, bonePose, renderScal
       'sword-shine',
       [
         { x: 12, y: -2 },
-        { x: 99, y: -2 },
-        { x: 117, y: -0.5 },
+        { x: 99 * weaponLengthScale, y: -2 },
+        { x: 117 * weaponLengthScale, y: -0.5 },
         { x: 22, y: 0 },
       ],
       { x: bladeOrigin.x, y: bladeOrigin.y, rotation: swordRotation },
@@ -762,22 +799,22 @@ function timePhaseForHour(hour) {
   return hour >= 6 && hour < 18 ? 'day' : 'night';
 }
 
-function invertedDirection(direction) {
-  return direction === 'back' ? 'front' : 'back';
-}
-
 export class GameScene extends SceneNode {
   constructor({ mapDefinition = ACADEMY_VILLAGE_MAP } = {}) {
     super('GameScene');
-    this.combatCommands = new CombatCommandController();
+    this.equipmentProfile = getEquipmentProfile(DEFAULT_EQUIPMENT_PROFILE_ID);
+    this.combatCommands = new CombatCommandController({
+      timingProfile: this.equipmentProfile.combatTiming,
+    });
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: { timePhase: 'day', weather: 'clear', storyFlags: {} },
     });
     this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
-    this.trainingEncounterNode = null;
-    this.trainingEncounterConnections = [];
+    this.roomChanged = this.ownSignal(new Signal('roomChanged'));
+    this.roomSceneNode = null;
+    this.roomSceneConnections = [];
     this.statusNode = this.addChild(new GameStatusNode(this));
     this.playerStatusChanged = this.statusNode.playerStatusChanged;
     this.worldStatusChanged = this.statusNode.worldStatusChanged;
@@ -790,8 +827,7 @@ export class GameScene extends SceneNode {
   }
 
   onEnterTree() {
-    if (this.trainingEncounterNode)
-      this.connectTrainingEncounterSignals(this.trainingEncounterNode);
+    if (this.roomSceneNode) this.connectRoomSceneSignals(this.roomSceneNode);
   }
 
   reset() {
@@ -841,13 +877,15 @@ export class GameScene extends SceneNode {
     this.playerWeaponContactGeometry = null;
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
-    this.laneTransitionPresentation = null;
-    this.characterLanePresentation = lanePresentation(mapSnapshot.lane);
-    this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
+    this.portalTransitionPresentation = null;
+    this.cameraPosition = { ...mapSnapshot.cameraPosition };
+    this.previousCameraPosition = { ...this.cameraPosition };
+    this.equipmentProfile = getEquipmentProfile(DEFAULT_EQUIPMENT_PROFILE_ID);
     this.combatCommands.reset();
+    this.combatCommands.setTimingProfile(this.equipmentProfile.combatTiming);
     this.combatCameraFeedback.reset();
     this.combatEvents.reset();
-    this.syncTrainingEncounter({ resetExisting: true });
+    this.replaceRoomScene(mapSnapshot, { resetExisting: true });
     this.statusNode.publish({ force: true });
   }
 
@@ -874,22 +912,19 @@ export class GameScene extends SceneNode {
     this.updateTimePhase();
   }
 
-  canStartConnectionTransition() {
+  canStartPortalTransition() {
     if (this.mapRuntime.getTransition()) return false;
     const combatState = this.combatCommands.snapshot();
     return this.isGrounded && !this.rollState && combatState.id === 'idle';
   }
 
-  beginConnectionTransition(connection) {
-    const transition = this.mapRuntime.beginTransition(connection.id);
-    this.laneTransitionPresentation = {
+  beginPortalTransition(portal) {
+    const transition = this.mapRuntime.beginPortalTransition(portal.id);
+    this.portalTransitionPresentation = {
       startPosition: { ...this.position },
       destinationPosition: { ...transition.destinationPosition },
-      from: { ...this.characterLanePresentation },
-      to: {
-        visualScale: transition.destinationLane.visualScale,
-        renderOrder: transition.destinationLane.renderOrder + 0.5,
-      },
+      sourceCameraPosition: { ...this.cameraPosition },
+      destinationCameraPosition: { ...transition.destinationCameraPosition },
     };
     this.verticalVelocity = 0;
     this.airComboFloatSeconds = 0;
@@ -899,37 +934,14 @@ export class GameScene extends SceneNode {
   }
 
   tryPortalTransition() {
-    if (!this.canStartConnectionTransition()) return false;
-    const lane = this.mapRuntime.getActiveLane();
-    const connection = this.mapRuntime.findConnectionAt(
-      { x: this.position.x, y: lane.groundY },
-      { interactionId: 'dungeon-portal' },
-    );
-    return connection ? this.beginConnectionTransition(connection) : false;
+    if (!this.canStartPortalTransition()) return false;
+    const room = this.mapRuntime.getActiveRoom();
+    const portal = this.mapRuntime.findPortalAt({ x: this.position.x, y: room.groundY });
+    return portal ? this.beginPortalTransition(portal) : false;
   }
 
-  tryLaneTransition(direction) {
-    if (!this.canStartConnectionTransition()) return false;
-
-    const lane = this.mapRuntime.getActiveLane();
-    const connection = this.mapRuntime.findConnectionAt(
-      { x: this.position.x, y: lane.groundY },
-      { interactionId: 'lane-transition' },
-    );
-    if (!connection) return false;
-
-    const location = this.mapRuntime.getActiveLocation();
-    const fromActive =
-      connection.from.chunkId === location.chunkId && connection.from.laneId === location.laneId;
-    const effectiveDirection = fromActive
-      ? connection.direction
-      : invertedDirection(connection.direction);
-    if (effectiveDirection !== direction) return false;
-    return this.beginConnectionTransition(connection);
-  }
-
-  updateLaneTransition(deltaSeconds) {
-    const presentation = this.laneTransitionPresentation;
+  updatePortalTransition(deltaSeconds) {
+    const presentation = this.portalTransitionPresentation;
     if (!presentation) return false;
 
     const { transition, completion } = this.mapRuntime.advanceTransition(deltaSeconds);
@@ -944,16 +956,58 @@ export class GameScene extends SceneNode {
       presentation.destinationPosition.y,
       amount,
     );
-    this.characterLanePresentation = {
-      visualScale: lerp(presentation.from.visualScale, presentation.to.visualScale, amount),
-      renderOrder: lerp(presentation.from.renderOrder, presentation.to.renderOrder, amount),
+    this.cameraPosition = {
+      x: lerp(
+        presentation.sourceCameraPosition.x,
+        presentation.destinationCameraPosition.x,
+        amount,
+      ),
+      y: lerp(
+        presentation.sourceCameraPosition.y,
+        presentation.destinationCameraPosition.y,
+        amount,
+      ),
     };
 
     if (!completion) return true;
     this.position = { ...completion.position };
-    this.characterLanePresentation = { ...presentation.to };
-    this.laneTransitionPresentation = null;
-    this.syncTrainingEncounter();
+    this.cameraPosition = { ...presentation.destinationCameraPosition };
+    this.portalTransitionPresentation = null;
+    this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
+    this.roomChanged.emit(
+      Object.freeze({
+        portalId: completion.portalId,
+        active: Object.freeze({ ...completion.active }),
+      }),
+    );
+    return true;
+  }
+
+  updateCameraFollow(deltaSeconds) {
+    const snapshot = this.mapRuntime.getResolvedSnapshot();
+    const bounds = snapshot.cameraBounds;
+    const minimumX = bounds.x + 480;
+    const maximumX = bounds.x + bounds.width - 480;
+    const targetX = Math.max(minimumX, Math.min(maximumX, this.position.x));
+    const targetY = bounds.y + 270;
+    const followAmount = 1 - Math.exp(-10 * deltaSeconds);
+    this.cameraPosition.x = lerp(this.cameraPosition.x, targetX, followAmount);
+    this.cameraPosition.y = lerp(this.cameraPosition.y, targetY, followAmount);
+  }
+
+  selectEquipment(profileId) {
+    const location = this.mapRuntime.getActiveLocation();
+    if (
+      location.roomId !== 'academy-plaza' ||
+      this.mapRuntime.getTransition() ||
+      this.combatCommands.snapshot().id !== 'idle'
+    ) {
+      return false;
+    }
+    const profile = getEquipmentProfile(profileId);
+    this.combatCommands.setTimingProfile(profile.combatTiming);
+    this.equipmentProfile = profile;
+    this.statusNode.publish({ force: true });
     return true;
   }
 
@@ -987,57 +1041,59 @@ export class GameScene extends SceneNode {
     return true;
   }
 
-  syncTrainingEncounter({ resetExisting = false } = {}) {
-    const snapshot = this.mapRuntime.getResolvedSnapshot();
-    const entity = snapshot.entities.find((candidate) => candidate.kind === 'combat-test-mob');
-    const activeEncounter = this.trainingEncounterNode;
-
-    if (!entity) {
-      if (activeEncounter) {
-        if (activeEncounter.parent === this) this.removeChild(activeEncounter);
-        activeEncounter.dispose();
-        this.trainingEncounterNode = null;
-      }
-      return null;
-    }
-
-    if (activeEncounter?.entity.id === entity.id) {
-      if (resetExisting) activeEncounter.reset();
-      return activeEncounter;
-    }
-
-    if (activeEncounter) {
-      if (activeEncounter.parent === this) this.removeChild(activeEncounter);
-      activeEncounter.dispose();
-    }
-
-    const encounter = TRAINING_ENCOUNTER_SCENE.instantiate({
-      entity,
-      groundY: snapshot.lane.groundY,
-      spinContact: {
-        hitPulses: ATTACK_HIT_PROFILES.spin.hitPulses,
-        contactSpacings: ATTACK_HIT_PROFILES.spin.contactSpacings,
-      },
-    });
-    this.trainingEncounterNode = encounter;
-    this.connectTrainingEncounterSignals(encounter);
-    this.addChild(encounter);
-    return encounter;
+  getAttackHitProfile(motionId) {
+    return resolveEquipmentAttackProfile(
+      motionId,
+      this.combatCommands.getMotionFrameData(motionId),
+      this.equipmentProfile,
+    );
   }
 
-  connectTrainingEncounterSignals(encounter) {
-    this.trainingEncounterConnections = this.trainingEncounterConnections.filter(
+  replaceRoomScene(
+    snapshot = this.mapRuntime.getResolvedSnapshot(),
+    { resetExisting = false } = {},
+  ) {
+    const activeRoomScene = this.roomSceneNode;
+    if (
+      activeRoomScene?.location.regionId === snapshot.active.regionId &&
+      activeRoomScene?.location.roomId === snapshot.active.roomId
+    ) {
+      if (resetExisting) activeRoomScene.resetEncounter();
+      return activeRoomScene;
+    }
+
+    if (activeRoomScene) {
+      if (activeRoomScene.parent === this) this.removeChild(activeRoomScene);
+      activeRoomScene.dispose();
+    }
+
+    const spinProfile = this.getAttackHitProfile('spin');
+    const roomScene = ROOM_SCENE.instantiate({
+      snapshot,
+      spinContact: {
+        hitPulses: spinProfile.hitPulses,
+        contactSpacings: spinProfile.contactSpacings,
+      },
+    });
+    this.roomSceneNode = roomScene;
+    this.connectRoomSceneSignals(roomScene);
+    this.addChild(roomScene);
+    return roomScene;
+  }
+
+  connectRoomSceneSignals(roomScene) {
+    this.roomSceneConnections = this.roomSceneConnections.filter(
       (connection) => connection.connected,
     );
-    if (this.trainingEncounterConnections.length > 0) return;
-    this.trainingEncounterConnections = [
-      this.connectTo(encounter.playerResultResolved, (result) =>
+    if (this.roomSceneConnections.length > 0) return;
+    this.roomSceneConnections = [
+      this.connectTo(roomScene.playerResultResolved, (result) =>
         this.applyTrainingEncounterPlayerResult(result),
       ),
-      this.connectTo(encounter.combatEventOccurred, ({ type, payload }) =>
+      this.connectTo(roomScene.combatEventOccurred, ({ type, payload }) =>
         this.combatEvents.emit(type, payload),
       ),
-      this.connectTo(encounter.cameraFeedbackOccurred, (feedback) =>
+      this.connectTo(roomScene.cameraFeedbackOccurred, (feedback) =>
         this.combatCameraFeedback.trigger(feedback),
       ),
     ];
@@ -1087,7 +1143,7 @@ export class GameScene extends SceneNode {
   }
 
   updatePlayerWeaponContactGeometry(combatState) {
-    if (!ATTACK_HIT_PROFILES[combatState.id]) {
+    if (!this.getAttackHitProfile(combatState.id)) {
       this.playerWeaponContactHistory = [];
       this.playerWeaponContactGeometry = null;
       return null;
@@ -1147,8 +1203,9 @@ export class GameScene extends SceneNode {
       this.facing,
       targetPose,
       bonePose,
-      CHARACTER_RENDER_SCALE * this.characterLanePresentation.visualScale,
+      CHARACTER_RENDER_SCALE,
       0,
+      this.equipmentProfile.presentation.weaponLengthScale,
     );
   }
 
@@ -1191,7 +1248,7 @@ export class GameScene extends SceneNode {
     this.combatCameraFeedback.setEnabled(simulationSettings.cameraFeedbackEnabled !== false);
     this.previousPosition = { ...this.position };
     this.previousAnimationTime = this.animationTime;
-    this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
+    this.previousCameraPosition = { ...this.cameraPosition };
     this.combatCameraFeedback.update(deltaSeconds);
     this.combatEvents.update(deltaSeconds);
     if (this.hitStopSeconds > 0) {
@@ -1222,10 +1279,11 @@ export class GameScene extends SceneNode {
     this.playerBlockImpactSeconds = Math.max(0, this.playerBlockImpactSeconds - deltaSeconds);
     this.playerBlockstunSeconds = Math.max(0, this.playerBlockstunSeconds - deltaSeconds);
     if (this.playerHealth === 0 && this.playerKoSeconds === 0) {
+      const activeRoom = this.mapRuntime.getActiveRoom();
       this.playerHealth = this.playerMaxHealth;
       this.position = {
-        x: 164,
-        y: this.mapRuntime.getActiveLane().groundY - CHARACTER_FOOT_OFFSET,
+        x: (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140,
+        y: activeRoom.groundY - CHARACTER_FOOT_OFFSET,
       };
       this.previousPosition = { ...this.position };
       this.verticalVelocity = 0;
@@ -1236,7 +1294,7 @@ export class GameScene extends SceneNode {
       this.playerRetaliationPending = false;
       this.playerRetaliationSeconds = 0;
       this.isGrounded = true;
-      this.syncTrainingEncounter({ resetExisting: true });
+      this.roomSceneNode?.resetEncounter();
     }
     this.landingRecoverySeconds = Math.max(0, this.landingRecoverySeconds - deltaSeconds);
     const wasGrounded = this.isGrounded;
@@ -1248,24 +1306,22 @@ export class GameScene extends SceneNode {
       : Number(inputSnapshot.right) - Number(inputSnapshot.left);
     const jumpPressed = controlsLocked ? false : Boolean(inputSnapshot.jump);
     const guardPressed = controlsLocked ? false : Boolean(inputSnapshot.guard);
-    const jumpEdge = jumpPressed && !this.jumpWasPressed;
     const guardEdge = guardPressed && !this.guardWasPressed;
-    if (jumpEdge && !this.tryPortalTransition()) this.tryLaneTransition('back');
-    if (this.mapRuntime.getTransition() === null && guardEdge && !this.tryLaneTransition('front')) {
-      this.tryStartRoll(horizontal);
-    }
-    const isTransitioning = this.mapRuntime.getTransition() !== null;
-    const isRolling = this.rollState !== null;
     const jumpSequence = inputSnapshot.jumpSequence;
     const jumpIssued = controlsLocked
       ? false
       : Number.isSafeInteger(jumpSequence)
         ? jumpSequence > this.lastJumpSequence
         : jumpPressed && !this.jumpWasPressed;
+    const portalStarted = jumpIssued && this.tryPortalTransition();
+    if (this.mapRuntime.getTransition() === null && guardEdge) this.tryStartRoll(horizontal);
+    const isTransitioning = this.mapRuntime.getTransition() !== null;
+    const isRolling = this.rollState !== null;
     const currentCombatState = this.combatCommands.snapshot();
     if (
       !isTransitioning &&
       !isRolling &&
+      !portalStarted &&
       jumpIssued &&
       this.isGrounded &&
       currentCombatState.canJump
@@ -1281,7 +1337,7 @@ export class GameScene extends SceneNode {
       isAirborne: !this.isGrounded,
       allowGuard: this.isGrounded,
     });
-    const activeAttackProfile = ATTACK_HIT_PROFILES[combatState.id];
+    const activeAttackProfile = this.getAttackHitProfile(combatState.id);
     if (activeAttackProfile) {
       if (this.combatFacingCycle !== combatState.comboCycle) {
         this.combatFacingCycle = combatState.comboCycle;
@@ -1305,6 +1361,11 @@ export class GameScene extends SceneNode {
     this.jumpWasPressed = jumpPressed;
     this.guardWasPressed = guardPressed;
     if (Number.isSafeInteger(jumpSequence)) this.lastJumpSequence = jumpSequence;
+    if (isTransitioning) {
+      this.updatePortalTransition(deltaSeconds);
+      this.animationTime += deltaSeconds * animationSpeed * 0.35;
+      return;
+    }
     if (!isTransitioning && !isRolling) {
       const movementStartX = this.position.x;
       if (!activeAttackProfile && horizontal !== 0) {
@@ -1316,7 +1377,7 @@ export class GameScene extends SceneNode {
       if (Math.abs(this.playerKnockbackVelocityX) < PLAYER_KNOCKBACK_STOP_SPEED) {
         this.playerKnockbackVelocityX = 0;
       }
-      const encounterBeforeStep = this.trainingEncounterNode?.getGameplaySnapshot() ?? null;
+      const encounterBeforeStep = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
       if (this.isGrounded && encounterBeforeStep && !['idle', 'guard'].includes(combatState.id)) {
         const previousForwardGap = (encounterBeforeStep.position.x - movementStartX) * this.facing;
         const forwardGap = (encounterBeforeStep.position.x - this.position.x) * this.facing;
@@ -1343,21 +1404,15 @@ export class GameScene extends SceneNode {
       }
     }
     this.updatePlayerWeaponContactGeometry(combatState);
-    this.trainingEncounterNode?.step(
+    this.roomSceneNode?.stepEncounter(
       deltaSeconds,
       this.createTrainingEncounterFrame(combatState, activeAttackProfile),
     );
 
-    if (isTransitioning) {
-      this.updateLaneTransition(deltaSeconds);
-      this.animationTime += deltaSeconds * animationSpeed * 0.35;
-      return;
-    }
-
     if (isRolling) {
       this.updateRoll(deltaSeconds);
-      const activeLane = this.mapRuntime.getActiveLane();
-      const movementBounds = activeLane.movementBounds ?? {
+      const activeRoom = this.mapRuntime.getActiveRoom();
+      const movementBounds = activeRoom.movementBounds ?? {
         minX: CHARACTER_BOUNDARY_HALF_WIDTH,
         maxX: ACADEMY_VILLAGE_MAP.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
       };
@@ -1365,11 +1420,12 @@ export class GameScene extends SceneNode {
         movementBounds.minX,
         Math.min(movementBounds.maxX, this.position.x),
       );
+      this.updateCameraFollow(deltaSeconds);
       this.animationTime += deltaSeconds * animationSpeed * 1.8;
       return;
     }
 
-    const encounterAfterStep = this.trainingEncounterNode?.getGameplaySnapshot() ?? null;
+    const encounterAfterStep = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
     if (
       encounterAfterStep &&
       (encounterAfterStep.slamAttackerBouncePending ||
@@ -1379,8 +1435,8 @@ export class GameScene extends SceneNode {
       this.position.x = encounterAfterStep.position.x - comboFacing * 30;
       this.facing = comboFacing;
     }
-    const activeLane = this.mapRuntime.getActiveLane();
-    const playerGroundY = activeLane.groundY - CHARACTER_FOOT_OFFSET;
+    const activeRoom = this.mapRuntime.getActiveRoom();
+    const playerGroundY = activeRoom.groundY - CHARACTER_FOOT_OFFSET;
     this.airComboFloatSeconds = Math.max(0, this.airComboFloatSeconds - deltaSeconds);
     const playerGravityMultiplier =
       this.airComboFloatSeconds > 0 ? 0.08 : this.airComboGravityScale;
@@ -1412,25 +1468,30 @@ export class GameScene extends SceneNode {
       }
     }
 
-    const movementBounds = activeLane.movementBounds ?? {
+    const movementBounds = activeRoom.movementBounds ?? {
       minX: CHARACTER_BOUNDARY_HALF_WIDTH,
       maxX: ACADEMY_VILLAGE_MAP.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
     };
     this.position.x = Math.max(movementBounds.minX, Math.min(movementBounds.maxX, this.position.x));
+    this.updateCameraFollow(deltaSeconds);
     this.animationTime += deltaSeconds * animationSpeed * (1 + Math.abs(horizontal) * 0.65);
   }
 
   getWorldStatus() {
     const map = this.mapRuntime.getResolvedMap();
-    const lane = this.mapRuntime.getActiveLane();
-    const inTrainingDungeon = this.mapRuntime.getActiveLocation().chunkId === 'combat-test-dungeon';
+    const room = this.mapRuntime.getActiveRoom();
+    const inTrainingRoom = this.mapRuntime.getActiveLocation().roomId === 'training-room';
     return Object.freeze({
-      areaName: `${map.name} · ${lane.label}`,
-      objective: inTrainingDungeon
-        ? 'AS로 띄운 뒤 ↑+방향+공격으로 추격해 공중 AA/AS/SA를 이어보세요.'
-        : '광장 왼쪽 포탈에서 ↑를 눌러 전투 실험 던전에 입장하세요.',
+      areaName: `${map.name} · ${room.label}`,
+      objective: inTrainingRoom
+        ? 'M1 전투를 반복하거나 왼쪽 Portal에서 ↑로 학원촌에 돌아가세요.'
+        : '장비를 고른 뒤 광장 왼쪽 Portal에서 ↑로 훈련장에 입장하세요.',
       timePhase: this.timePhase,
       timeLabel: this.timePhase === 'night' ? '밤' : '낮',
+      roomId: this.mapRuntime.getActiveLocation().roomId,
+      canSelectEquipment: !inTrainingRoom && this.mapRuntime.getTransition() === null,
+      equipmentId: this.equipmentProfile.id,
+      equipmentLabel: this.equipmentProfile.label,
     });
   }
 
@@ -1483,18 +1544,9 @@ export class GameScene extends SceneNode {
     });
     const map = this.mapRuntime.getResolvedMap();
     const mapSnapshot = this.mapRuntime.getResolvedSnapshot();
-    const activeLane = mapSnapshot.lane;
-    const laneVisualScale = lerp(
-      this.previousCharacterLanePresentation.visualScale,
-      this.characterLanePresentation.visualScale,
-      interpolationAlpha,
-    );
-    const characterRenderScale = CHARACTER_RENDER_SCALE * laneVisualScale;
-    const characterRenderOrder = lerp(
-      this.previousCharacterLanePresentation.renderOrder,
-      this.characterLanePresentation.renderOrder,
-      interpolationAlpha,
-    );
+    const activeRoom = mapSnapshot.room;
+    const characterRenderScale = CHARACTER_RENDER_SCALE;
+    const characterRenderOrder = activeRoom.renderOrder + 0.5;
     const sampledCharacterItems = createCharacterItems(
       renderPosition,
       this.facing,
@@ -1502,6 +1554,7 @@ export class GameScene extends SceneNode {
       bonePose,
       characterRenderScale,
       characterRenderOrder,
+      this.equipmentProfile.presentation.weaponLengthScale,
     );
     const contactGeometry =
       this.playerWeaponContactGeometry?.sequence === combatState.sequence
@@ -1513,7 +1566,7 @@ export class GameScene extends SceneNode {
           y: renderPosition.y - contactGeometry.position.y,
         }
       : { x: 0, y: 0 };
-    const contactProfile = ATTACK_HIT_PROFILES[combatState.id];
+    const contactProfile = this.getAttackHitProfile(combatState.id);
     const contactSweepVisible =
       contactGeometry &&
       contactProfile &&
@@ -1556,13 +1609,13 @@ export class GameScene extends SceneNode {
       evadeEvent,
       characterRenderOrder + 0.02,
     );
-    const encounterRender = this.trainingEncounterNode?.createRenderSnapshot(
-      activeLane.renderOrder + 0.45,
+    const encounterRender = this.roomSceneNode?.createEncounterRenderSnapshot(
+      activeRoom.renderOrder + 0.45,
     ) ?? { enemy: null, items: [], contact: null };
     const punishFeedbackItems = createPunishFeedbackItems(
       encounterRender.enemy?.position,
       punishEvent,
-      activeLane.renderOrder + 0.48,
+      activeRoom.renderOrder + 0.48,
     );
     const items = Object.freeze(
       [
@@ -1589,13 +1642,22 @@ export class GameScene extends SceneNode {
       height: map.worldSize.height,
     };
 
+    const renderCameraPosition = {
+      x: lerp(this.previousCameraPosition.x, this.cameraPosition.x, interpolationAlpha),
+      y: lerp(this.previousCameraPosition.y, this.cameraPosition.y, interpolationAlpha),
+    };
+    const combatCameraOffset = this.combatCameraFeedback.snapshot();
     const renderFrame = Object.freeze({
       worldSize: map.worldSize,
       groundY: map.groundY,
       gridSize: map.gridSize,
       palette: map.palette,
       animationTime: renderAnimationTime,
-      cameraOffset: Object.freeze({ ...this.combatCameraFeedback.snapshot() }),
+      cameraOffset: Object.freeze({
+        x: renderCameraPosition.x - 480 + combatCameraOffset.x,
+        y: renderCameraPosition.y - 270 + combatCameraOffset.y,
+      }),
+      camera: Object.freeze({ position: Object.freeze(renderCameraPosition) }),
       characterRenderScale,
       worldBounds: Object.freeze({
         minX: bounds.x,
@@ -1603,15 +1665,16 @@ export class GameScene extends SceneNode {
         minY: bounds.y,
         maxY: bounds.y + bounds.height,
       }),
-      playerMovementBounds: activeLane.movementBounds,
+      playerMovementBounds: activeRoom.movementBounds,
       map: Object.freeze({
         id: map.id,
         name: map.name,
-        activeChunkId: mapSnapshot.active.chunkId,
-        activeLaneId: mapSnapshot.active.laneId,
+        activeRegionId: mapSnapshot.active.regionId,
+        activeRoomId: mapSnapshot.active.roomId,
         timePhase: this.timePhase,
         appliedPatchIds: mapSnapshot.appliedPatchIds,
       }),
+      equipment: this.equipmentProfile,
       combatMotion: Object.freeze({
         id: combatState.id,
         label: combatState.label,
@@ -1631,12 +1694,12 @@ export class GameScene extends SceneNode {
         maxHealth: this.playerMaxHealth,
         hitstunSeconds: this.playerHitstunSeconds,
         retaliationSeconds: this.playerRetaliationSeconds,
-        laneId: mapSnapshot.active.laneId,
-        laneTransition: mapSnapshot.transition
+        roomId: mapSnapshot.active.roomId,
+        portalTransition: mapSnapshot.transition
           ? Object.freeze({
-              connectionId: mapSnapshot.transition.connectionId,
-              fromLaneId: mapSnapshot.transition.from.laneId,
-              toLaneId: mapSnapshot.transition.to.laneId,
+              portalId: mapSnapshot.transition.portalId,
+              fromRoomId: mapSnapshot.transition.from.roomId,
+              toRoomId: mapSnapshot.transition.to.roomId,
               progress: mapSnapshot.transition.progress,
             })
           : null,

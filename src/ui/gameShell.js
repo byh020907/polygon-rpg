@@ -1,4 +1,5 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
+import { EQUIPMENT_PROFILES } from '../game/equipment/EquipmentProfiles.js';
 
 function formatRuntimeStats({
   fps,
@@ -111,8 +112,16 @@ export function registerGameShell(Alpine, gameApp) {
     renderStats: 'Renderer idle',
     gameStats: 'World ready',
     areaName: '왕립 마법학교 학원촌',
-    objective: '계단 근처에서 ↑/↓로 앞뒤 레인을 이동하세요.',
+    objective: '학원촌에서 장비를 고르고 왼쪽 Portal에서 ↑로 훈련장에 이동하세요.',
     timeLabel: '낮',
+    canSelectEquipment: true,
+    selectedEquipmentId: EQUIPMENT_PROFILES[0].id,
+    selectedEquipmentLabel: EQUIPMENT_PROFILES[0].label,
+    equipmentOptions: Object.freeze(
+      EQUIPMENT_PROFILES.map(({ id, shortLabel, description }) =>
+        Object.freeze({ id, shortLabel, description }),
+      ),
+    ),
     health: 100,
     maxHealth: 100,
     stamina: 100,
@@ -121,7 +130,7 @@ export function registerGameShell(Alpine, gameApp) {
     maxMental: 100,
     gold: 0,
     mobileDirections: Object.freeze([
-      Object.freeze({ id: 'jump', label: '↑', hint: '점프·뒤길', slot: 'up' }),
+      Object.freeze({ id: 'jump', label: '↑', hint: '점프·Portal', slot: 'up' }),
       Object.freeze({ id: 'left', label: '←', hint: '이동', slot: 'left' }),
       Object.freeze({ id: 'guard', label: '↓', hint: '방어·회피', slot: 'down' }),
       Object.freeze({ id: 'right', label: '→', hint: '이동', slot: 'right' }),
@@ -161,6 +170,9 @@ export function registerGameShell(Alpine, gameApp) {
           this.areaName = status.areaName;
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
+          this.canSelectEquipment = status.canSelectEquipment;
+          this.selectedEquipmentId = status.equipmentId;
+          this.selectedEquipmentLabel = status.equipmentLabel;
         },
       });
       this.$nextTick(() => gameApp.start());
@@ -225,6 +237,10 @@ export function registerGameShell(Alpine, gameApp) {
 
     toggleWorldTime() {
       gameApp.toggleWorldTime();
+    },
+
+    selectEquipment(profileId) {
+      gameApp.selectEquipment(profileId);
     },
 
     destroy() {

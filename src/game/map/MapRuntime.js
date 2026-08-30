@@ -5,80 +5,87 @@ function offsetPoint(point, offset) {
   return Object.freeze({ x: point.x + offset.x, y: point.y + offset.y });
 }
 
+function roomOffset(room) {
+  return Object.freeze({ x: room.bounds.x, y: room.bounds.y });
+}
+
 function withWorldCoordinates(object, offset) {
-  if (!object.points) return object;
+  const result = { ...object };
+  if (object.points) {
+    result.points = Object.freeze(object.points.map((point) => offsetPoint(point, offset)));
+  }
+  if (object.position) result.position = offsetPoint(object.position, offset);
+  return Object.freeze(result);
+}
+
+function worldRoom(room) {
+  const offset = roomOffset(room);
   return Object.freeze({
-    ...object,
-    points: Object.freeze(object.points.map((point) => offsetPoint(point, offset))),
+    ...room,
+    groundY: room.groundY + offset.y,
+    movementBounds: room.movementBounds
+      ? Object.freeze({
+          minX: room.movementBounds.minX + offset.x,
+          maxX: room.movementBounds.maxX + offset.x,
+        })
+      : null,
+    cameraAnchor: offsetPoint(
+      room.cameraAnchor ?? { x: room.bounds.width / 2, y: room.bounds.height / 2 },
+      offset,
+    ),
+    surfaces: Object.freeze(room.surfaces.map((surface) => withWorldCoordinates(surface, offset))),
+    renderItems: Object.freeze(
+      room.renderItems.map((item) =>
+        Object.freeze({
+          ...withWorldCoordinates(item, offset),
+          renderOrder: item.renderOrder ?? room.renderOrder,
+        }),
+      ),
+    ),
+    entities: Object.freeze(room.entities.map((entity) => withWorldCoordinates(entity, offset))),
+    triggers: Object.freeze(room.triggers.map((trigger) => withWorldCoordinates(trigger, offset))),
   });
 }
 
-function endpointAnchor(endpoint) {
-  const nested = endpoint.anchor;
-  return Object.freeze({
-    x: nested?.x ?? endpoint.x ?? 0,
-    y: nested?.y ?? endpoint.y,
-  });
+function findRoom(map, regionId, roomId) {
+  return (
+    map.regions
+      .find((region) => region.id === regionId)
+      ?.rooms.find((room) => room.id === roomId) ?? null
+  );
 }
 
-function endpointSpawn(endpoint) {
-  const nested = endpoint.spawn ?? endpoint.anchor;
-  return Object.freeze({
-    x: nested?.x ?? endpoint.x ?? 0,
-    y: nested?.y ?? endpoint.y,
-  });
+function endpointMatches(endpoint, active) {
+  return endpoint.regionId === active.regionId && endpoint.roomId === active.roomId;
+}
+
+function endpointAnchor(endpoint, room) {
+  return offsetPoint(endpoint.anchor ?? { x: 0, y: room.groundY }, roomOffset(room));
+}
+
+function endpointSpawn(endpoint, room) {
+  return offsetPoint(
+    endpoint.spawn ?? endpoint.anchor ?? { x: 0, y: room.groundY },
+    roomOffset(room),
+  );
 }
 
 function distanceBetween(left, right) {
   return Math.hypot(left.x - right.x, left.y - right.y);
 }
 
-function worldLane(lane) {
-  const offset = lane.worldOffset ?? { x: 0, y: 0 };
-  const movementBounds = lane.movementBounds
-    ? Object.freeze({
-        minX: lane.movementBounds.minX + offset.x,
-        maxX: lane.movementBounds.maxX + offset.x,
-      })
-    : null;
-  return Object.freeze({
-    ...lane,
-    groundY: lane.groundY === undefined ? undefined : lane.groundY + offset.y,
-    movementBounds,
-    surfaces: Object.freeze(lane.surfaces.map((surface) => withWorldCoordinates(surface, offset))),
-    renderItems: Object.freeze(lane.renderItems.map((item) => withWorldCoordinates(item, offset))),
-    entities: Object.freeze(
-      lane.entities.map((entity) =>
-        entity.position
-          ? Object.freeze({ ...entity, position: offsetPoint(entity.position, offset) })
-          : entity,
+function sortedRenderItems(rooms) {
+  return Object.freeze(
+    rooms
+      .flatMap((room) => room.renderItems)
+      .filter((item) => item.enabled !== false)
+      .sort(
+        (left, right) =>
+          (left.renderOrder ?? 0) - (right.renderOrder ?? 0) ||
+          (left.order ?? 0) - (right.order ?? 0) ||
+          left.qualifiedId.localeCompare(right.qualifiedId),
       ),
-    ),
-    triggers: Object.freeze(
-      lane.triggers.map((trigger) => {
-        const result = { ...trigger };
-        if (trigger.position) result.position = offsetPoint(trigger.position, offset);
-        if (trigger.points)
-          result.points = Object.freeze(trigger.points.map((point) => offsetPoint(point, offset)));
-        return Object.freeze(result);
-      }),
-    ),
-  });
-}
-
-function findLane(map, chunkId, laneId) {
-  return (
-    map.chunks.find((chunk) => chunk.id === chunkId)?.lanes.find((lane) => lane.id === laneId) ??
-    null
   );
-}
-
-function connectionFromActive(connection, active) {
-  return connection.from.chunkId === active.chunkId && connection.from.laneId === active.laneId;
-}
-
-function connectionToActive(connection, active) {
-  return connection.to.chunkId === active.chunkId && connection.to.laneId === active.laneId;
 }
 
 export class MapRuntime {
@@ -97,14 +104,14 @@ export class MapRuntime {
     const spawn = spawnId ? this.definition.getSpawn(spawnId) : null;
     if (spawnId && !spawn) throw new Error(`존재하지 않는 spawn입니다: ${spawnId}`);
     this.active = Object.freeze({
-      chunkId: spawn?.chunkId ?? this.definition.initialChunkId,
-      laneId: spawn?.laneId ?? this.definition.initialLaneId,
+      regionId: spawn?.regionId ?? this.definition.initialRegionId,
+      roomId: spawn?.roomId ?? this.definition.initialRoomId,
     });
-    const spawnLane = spawn ? this.definition.getLane(spawn.chunkId, spawn.laneId) : null;
+    const spawnRoom = spawn ? this.definition.getRoom(spawn.regionId, spawn.roomId) : null;
     this.activeSpawn = spawn
       ? Object.freeze({
           id: spawn.id,
-          position: offsetPoint(spawn.position, spawnLane.worldOffset),
+          position: offsetPoint(spawn.position, roomOffset(spawnRoom)),
           facing: spawn.facing,
         })
       : null;
@@ -137,11 +144,11 @@ export class MapRuntime {
     return this.active;
   }
 
-  setActiveLocation(chunkId, laneId) {
-    if (!this.definition.getLane(chunkId, laneId)) {
-      throw new Error(`존재하지 않는 chunk/lane입니다: ${chunkId}/${laneId}`);
+  setActiveLocation(regionId, roomId) {
+    if (!this.definition.getRoom(regionId, roomId)) {
+      throw new Error(`존재하지 않는 region/room입니다: ${regionId}/${roomId}`);
     }
-    this.active = Object.freeze({ chunkId, laneId });
+    this.active = Object.freeze({ regionId, roomId });
     this.activeSpawn = null;
     this.pendingTransition = null;
     this.revision += 1;
@@ -154,124 +161,94 @@ export class MapRuntime {
     return this.resolvedMap;
   }
 
-  getActiveLane() {
-    const lane = findLane(this.getResolvedMap(), this.active.chunkId, this.active.laneId);
-    if (!lane)
-      throw new Error(`활성 lane을 찾을 수 없습니다: ${this.active.chunkId}/${this.active.laneId}`);
-    return worldLane(lane);
+  getActiveRoom() {
+    const room = findRoom(this.getResolvedMap(), this.active.regionId, this.active.roomId);
+    if (!room) {
+      throw new Error(
+        `활성 room을 찾을 수 없습니다: ${this.active.regionId}/${this.active.roomId}`,
+      );
+    }
+    return worldRoom(room);
   }
 
-  getConnections({ direction, includeDisabled = false } = {}) {
+  getPortals({ includeDisabled = false } = {}) {
     const map = this.getResolvedMap();
-    const inlineIds = new Set(this.getActiveLane().connections);
+    const portalIds = new Set(this.getActiveRoom().portals);
     return Object.freeze(
-      map.connections.filter(
-        (connection) =>
-          (includeDisabled || connection.enabled !== false) &&
-          (direction === undefined || connection.direction === direction) &&
-          (connectionFromActive(connection, this.active) ||
-            (connection.bidirectional === true && connectionToActive(connection, this.active))) &&
-          (inlineIds.size === 0 || inlineIds.has(connection.id)),
+      map.portals.filter(
+        (portal) =>
+          (includeDisabled || portal.enabled !== false) &&
+          (endpointMatches(portal.from, this.active) ||
+            (portal.bidirectional === true && endpointMatches(portal.to, this.active))) &&
+          portalIds.has(portal.id),
       ),
     );
   }
 
-  findConnectionAt(position, { interactionId = 'interact', direction, maxDistance } = {}) {
+  findPortalAt(position, { maxDistance } = {}) {
     if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) {
-      throw new TypeError('connection 탐색 위치에는 유한한 x/y가 필요합니다.');
+      throw new TypeError('portal 탐색 위치에는 유한한 x/y가 필요합니다.');
     }
-    const lane = this.getActiveLane();
-    const candidates = this.getConnections({ direction })
-      .filter(
-        (connection) =>
-          interactionId === undefined ||
-          connection.interactionId === undefined ||
-          connection.interactionId === interactionId,
-      )
-      .map((connection) => {
-        const reverse = !connectionFromActive(connection, this.active);
-        const endpoint = reverse ? connection.to : connection.from;
-        const localAnchor = endpointAnchor(endpoint);
-        const anchor = { x: localAnchor.x + lane.worldOffset.x };
-        if (localAnchor.y !== undefined) anchor.y = localAnchor.y + lane.worldOffset.y;
-        const radius = maxDistance ?? endpoint.radius ?? endpoint.minDistance ?? 48;
-        const distance =
-          anchor.y === undefined
-            ? Math.abs(position.x - anchor.x)
-            : distanceBetween(position, anchor);
-        return { connection, distance, radius };
-      })
-      .filter(({ distance, radius }) => distance <= radius)
-      .sort(
-        (left, right) =>
-          left.distance - right.distance || left.connection.id.localeCompare(right.connection.id),
-      );
-    return candidates[0]?.connection ?? null;
-  }
-
-  getConnection(connectionId) {
+    const room = findRoom(this.getResolvedMap(), this.active.regionId, this.active.roomId);
     return (
-      this.getConnections({ includeDisabled: false }).find(
-        (connection) => connection.id === connectionId,
-      ) ?? null
+      this.getPortals()
+        .map((portal) => {
+          const endpoint = endpointMatches(portal.from, this.active) ? portal.from : portal.to;
+          const anchor = endpointAnchor(endpoint, room);
+          const radius = maxDistance ?? endpoint.radius ?? 48;
+          return { portal, distance: distanceBetween(position, anchor), radius };
+        })
+        .filter(({ distance, radius }) => distance <= radius)
+        .sort(
+          (left, right) =>
+            left.distance - right.distance || left.portal.id.localeCompare(right.portal.id),
+        )[0]?.portal ?? null
     );
   }
 
-  beginTransition(connectionId) {
+  getPortal(portalId) {
+    return this.getPortals().find((portal) => portal.id === portalId) ?? null;
+  }
+
+  beginPortalTransition(portalId) {
     if (this.pendingTransition) {
-      throw new Error(
-        `이미 connection transition이 진행 중입니다: ${this.pendingTransition.connectionId}`,
-      );
+      throw new Error(`이미 portal transition이 진행 중입니다: ${this.pendingTransition.portalId}`);
     }
-    const connection = this.getConnection(connectionId);
-    if (!connection)
-      throw new Error(`현재 lane에서 사용할 수 없는 connection입니다: ${connectionId}`);
-    const reverse = !connectionFromActive(connection, this.active);
-    const destination = reverse ? connection.from : connection.to;
-    const destinationLaneDefinition = findLane(
+    const portal = this.getPortal(portalId);
+    if (!portal) throw new Error(`현재 room에서 사용할 수 없는 portal입니다: ${portalId}`);
+    const reverse = !endpointMatches(portal.from, this.active);
+    const destination = reverse ? portal.from : portal.to;
+    const sourceRoomDefinition = findRoom(
       this.getResolvedMap(),
-      destination.chunkId,
-      destination.laneId,
+      this.active.regionId,
+      this.active.roomId,
     );
-    if (!destinationLaneDefinition) {
+    const destinationRoomDefinition = findRoom(
+      this.getResolvedMap(),
+      destination.regionId,
+      destination.roomId,
+    );
+    if (!destinationRoomDefinition) {
       throw new Error(
-        `connection 목적지 lane을 찾을 수 없습니다: ${destination.chunkId}/${destination.laneId}`,
+        `portal 목적지 room을 찾을 수 없습니다: ${destination.regionId}/${destination.roomId}`,
       );
     }
-    const destinationLane = worldLane(destinationLaneDefinition);
-    const destinationSpawn = endpointSpawn(destination);
-    const destinationPosition = offsetPoint(
-      {
-        x: destinationSpawn.x,
-        y: destinationSpawn.y ?? destinationLaneDefinition.groundY ?? 0,
-      },
-      destinationLaneDefinition.worldOffset,
-    );
+    const sourceRoom = worldRoom(sourceRoomDefinition);
+    const destinationRoom = worldRoom(destinationRoomDefinition);
     const intent = deepFreeze({
-      connectionId: connection.id,
-      direction: reverse
-        ? connection.direction === 'front'
-          ? 'back'
-          : connection.direction === 'back'
-            ? 'front'
-            : connection.direction
-        : connection.direction,
+      portalId: portal.id,
       from: { ...this.active },
-      to: { chunkId: destination.chunkId, laneId: destination.laneId },
-      destinationPosition,
-      destinationLane: {
-        id: destinationLane.id,
-        renderOrder: destinationLane.renderOrder,
-        visualScale: destinationLane.visualScale,
-      },
-      transition: { ...(connection.transition ?? {}) },
-      durationSeconds: connection.transition.durationSeconds,
+      to: { regionId: destination.regionId, roomId: destination.roomId },
+      destinationPosition: endpointSpawn(destination, destinationRoomDefinition),
+      sourceCameraPosition: sourceRoom.cameraAnchor,
+      destinationCameraPosition: destinationRoom.cameraAnchor,
+      durationSeconds: portal.transition.durationSeconds,
       elapsedSeconds: 0,
       progress: 0,
     });
     this.pendingTransition = intent;
     this.revision += 1;
-    this.invalidate();
+    this.snapshot = null;
     return intent;
   }
 
@@ -281,12 +258,9 @@ export class MapRuntime {
 
   advanceTransition(deltaSeconds) {
     if (!Number.isFinite(deltaSeconds) || deltaSeconds < 0) {
-      throw new TypeError('connection transition deltaSeconds는 0 이상의 유한한 숫자여야 합니다.');
+      throw new TypeError('portal transition deltaSeconds는 0 이상의 유한한 숫자여야 합니다.');
     }
-    if (!this.pendingTransition) {
-      throw new Error('진행 중인 connection transition이 없습니다.');
-    }
-
+    if (!this.pendingTransition) throw new Error('진행 중인 portal transition이 없습니다.');
     const elapsedSeconds = Math.min(
       this.pendingTransition.durationSeconds,
       this.pendingTransition.elapsedSeconds + deltaSeconds,
@@ -299,30 +273,29 @@ export class MapRuntime {
     this.pendingTransition = transition;
     this.revision += 1;
     this.snapshot = null;
-
-    if (transition.progress < 1) {
-      return deepFreeze({ transition, completion: null });
-    }
-    const completion = this.completeTransition(transition.connectionId);
-    return deepFreeze({ transition, completion });
+    if (transition.progress < 1) return deepFreeze({ transition, completion: null });
+    return deepFreeze({ transition, completion: this.completeTransition(transition.portalId) });
   }
 
-  completeTransition(connectionId = this.pendingTransition?.connectionId) {
-    if (!this.pendingTransition || connectionId !== this.pendingTransition.connectionId) {
-      throw new Error(`시작되지 않은 connection transition입니다: ${connectionId}`);
+  completeTransition(portalId = this.pendingTransition?.portalId) {
+    if (!this.pendingTransition || portalId !== this.pendingTransition.portalId) {
+      throw new Error(`시작되지 않은 portal transition입니다: ${portalId}`);
     }
     const result = this.pendingTransition;
-    const worldSpawn = result.destinationPosition;
     this.active = Object.freeze({ ...result.to });
-    this.activeSpawn = Object.freeze({ position: worldSpawn, facing: 1 });
+    this.activeSpawn = Object.freeze({ position: result.destinationPosition, facing: 1 });
     this.pendingTransition = null;
     this.revision += 1;
     this.invalidate();
+    const snapshot = this.getResolvedSnapshot();
     return deepFreeze({
-      connectionId: result.connectionId,
+      portalId: result.portalId,
       active: { ...this.active },
-      position: { ...worldSpawn },
+      position: { ...result.destinationPosition },
       facing: this.activeSpawn.facing,
+      room: snapshot.room,
+      collisionSurfaces: snapshot.collisionSurfaces,
+      entities: snapshot.entities,
     });
   }
 
@@ -330,44 +303,25 @@ export class MapRuntime {
     if (!this.pendingTransition) return false;
     this.pendingTransition = null;
     this.revision += 1;
-    this.invalidate();
+    this.snapshot = null;
     return true;
   }
 
   getResolvedSnapshot() {
     if (this.snapshot) return this.snapshot;
     const map = this.getResolvedMap();
-    const lane = this.getActiveLane();
-    const connections = this.getConnections();
-    const visibleChunkIds = new Set([this.active.chunkId]);
-    for (const connection of connections) {
-      visibleChunkIds.add(
-        connectionFromActive(connection, this.active)
-          ? connection.to.chunkId
-          : connection.from.chunkId,
+    const roomDefinition = findRoom(map, this.active.regionId, this.active.roomId);
+    const room = worldRoom(roomDefinition);
+    const portals = this.getPortals();
+    const presentationRooms = [room];
+    if (this.pendingTransition) {
+      const destinationDefinition = findRoom(
+        map,
+        this.pendingTransition.to.regionId,
+        this.pendingTransition.to.roomId,
       );
+      if (destinationDefinition) presentationRooms.push(worldRoom(destinationDefinition));
     }
-    const activeChunk = map.chunks.find((chunk) => chunk.id === this.active.chunkId);
-    const renderItems = (activeChunk?.lanes ?? [])
-      .flatMap((chunkLane) => {
-        const resolvedLane = worldLane(chunkLane);
-        return resolvedLane.renderItems
-          .filter((item) => item.enabled !== false)
-          .map((item) => ({
-            item: Object.freeze({
-              ...item,
-              laneId: resolvedLane.id,
-              renderOrder: item.renderOrder ?? resolvedLane.renderOrder,
-            }),
-          }));
-      })
-      .sort(
-        (left, right) =>
-          left.item.renderOrder - right.item.renderOrder ||
-          (left.item.order ?? 0) - (right.item.order ?? 0) ||
-          left.item.qualifiedId.localeCompare(right.item.qualifiedId),
-      )
-      .map(({ item }) => item);
     this.snapshot = deepFreeze({
       mapId: map.id,
       revision: this.revision,
@@ -375,14 +329,15 @@ export class MapRuntime {
       active: { ...this.active },
       transition: this.pendingTransition,
       spawn: this.activeSpawn,
-      visibleChunkIds: [...visibleChunkIds],
-      lane,
-      renderItems,
-      collisionSurfaces: lane.surfaces.filter((surface) => surface.enabled !== false),
-      entities: lane.entities.filter((entity) => entity.enabled !== false),
-      connections,
-      worldBounds: activeChunk?.bounds ?? null,
-      cameraBounds: activeChunk?.cameraBounds ?? activeChunk?.bounds ?? null,
+      visibleRoomIds: presentationRooms.map((candidate) => candidate.id),
+      room,
+      renderItems: sortedRenderItems(presentationRooms),
+      collisionSurfaces: room.surfaces.filter((surface) => surface.enabled !== false),
+      entities: room.entities.filter((entity) => entity.enabled !== false),
+      portals,
+      worldBounds: room.bounds,
+      cameraBounds: room.cameraBounds ?? room.bounds,
+      cameraPosition: room.cameraAnchor,
     });
     return this.snapshot;
   }

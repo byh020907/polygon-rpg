@@ -77,7 +77,7 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 | `docs/runtime-architecture.md`     | Canonical Reference         | Scene·Node tree lifecycle, Signal과 runtime composition     | App/Scene 조립, subsystem lifecycle와 system communication 작업 시    |
 | `docs/animation-system.md`         | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
 | `docs/input-system.md`             | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
-| `docs/world-map-system.md`         | Migration Reference (STALE) | 현재 Depth Lane prototype과 상태 패치                       | Room/Portal migration에서 현재 구현과 제거 범위를 확인할 때           |
+| `docs/world-map-system.md`         | Canonical Reference         | Region·Room·Portal, active snapshot과 상태 패치             | Room/Portal, map runtime, 공간 전환과 camera travel 작업 시           |
 
 새로운 공식 설계, 개발 규칙 또는 운영 문서를 만들면 같은 변경에서 이 표에 등록한다. 인덱스에 없는 문서를 암묵적인 공식 규칙으로 취급하지 않는다.
 

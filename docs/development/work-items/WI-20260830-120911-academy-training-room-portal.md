@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-120911
-status: queued
+status: feedback
 priority: high
 lane: dedicated
 created_at: 2026-08-30T12:09:11+09:00
@@ -20,7 +20,11 @@ source_ref: M2
 
 ## 결과
 
-진행 중.
+`Region → Room → Portal`로 Depth Lane runtime을 교체했다. 학원촌의 균형형/중량형 장비 선택 후 `↑` Portal과 0.32s camera travel로 fresh 훈련 Room Scene에 진입하고, M1 전투를 반복한 뒤 같은 Portal로 귀환한다.
+
+`MapRuntime`이 완료 fixed-step에 active Room/spawn/collision/entity를 원자 교체하고 `RoomNode` Scene이 `TrainingEncounter` child lifecycle을 소유한다. Pending 입력은 sequence를 소비하며 Portal 범위 밖 Jump와 Guard/Roll은 보존된다. 중량형은 debug Animation Speed와 분리된 immutable profile로 startup/recovery·range·hitstun·weapon geometry를 함께 변경한다.
+
+Deterministic Room/Portal/equipment/combat 진단, `npm run check`, `git diff --check`, 실제 Canvas 왕복, `844×390` 모바일, Polygon/Retro, resize와 console 경로가 통과했다. 독립 verifier가 발견한 Room 재진입 Signal 단절을 `onEnterTree()` 재연결로 수리해 connection `3 → 0 → 3`과 재진입 결과 전달을 확인했다. 문서·schema·legacy UI finding도 정합한 뒤 모든 적용 품질 축 2, actionable finding 없음으로 재검증을 통과했다.
 
 ## 피드백
 
@@ -34,3 +38,4 @@ source_ref: M2
 
 - Roadmap: `M2 — 학원촌 ↔ 훈련장 Room Portal`
 - Depends on: `WI-20260830-112538`
+- 업무보고: [`WI-20260830-120911-academy-training-room-portal.md`](../reports/WI-20260830-120911-academy-training-room-portal.md)

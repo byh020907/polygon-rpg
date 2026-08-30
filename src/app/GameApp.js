@@ -158,6 +158,10 @@ export class GameApp extends SceneNode {
     this.scene.toggleTimePhase();
   }
 
+  selectEquipment(profileId) {
+    return this.scene.selectEquipment(profileId);
+  }
+
   resize() {
     this.gameHost.resize();
     this.polygonHost.resize();

@@ -155,10 +155,10 @@ function inferKind(path) {
   if (path.includes('.renderItems.')) return 'renderItem';
   if (path.includes('.entities.')) return 'entity';
   if (path.includes('.triggers.')) return 'trigger';
-  if (path.startsWith('connections.')) return 'connection';
+  if (path.startsWith('portals.')) return 'portal';
   if (path.startsWith('spawns.')) return 'spawn';
-  if (path.includes('.lanes.')) return 'lane';
-  if (path.startsWith('chunks.')) return 'chunk';
+  if (path.includes('.rooms.')) return 'room';
+  if (path.startsWith('regions.')) return 'region';
   return 'map';
 }
 
@@ -168,8 +168,8 @@ function collectTargets(root, locator) {
     if (!isRecord(value) && !Array.isArray(value)) return;
     const kind = inferKind(path);
     const currentContext = { ...context };
-    if (isRecord(value) && kind === 'chunk') currentContext.chunkId = value.id;
-    if (isRecord(value) && kind === 'lane') currentContext.laneId = value.id;
+    if (isRecord(value) && kind === 'region') currentContext.regionId = value.id;
+    if (isRecord(value) && kind === 'room') currentContext.roomId = value.id;
     if (isRecord(value) && value.id !== undefined) {
       const stringMatch =
         typeof locator === 'string' && (value.id === locator || value.qualifiedId === locator);
@@ -179,8 +179,8 @@ function collectTargets(root, locator) {
         (locator.qualifiedId === undefined || locator.qualifiedId === value.qualifiedId) &&
         (locator.kind === undefined || locator.kind === kind) &&
         (locator.type === undefined || locator.type === kind) &&
-        (locator.chunkId === undefined || locator.chunkId === currentContext.chunkId) &&
-        (locator.laneId === undefined || locator.laneId === currentContext.laneId);
+        (locator.regionId === undefined || locator.regionId === currentContext.regionId) &&
+        (locator.roomId === undefined || locator.roomId === currentContext.roomId);
       if (stringMatch || objectMatch) matches.push(value);
     }
     if (Array.isArray(value)) {
@@ -208,7 +208,7 @@ function applyOperation(root, operation, patchId) {
   for (const target of targets) {
     switch (operation.op) {
       case 'set-enabled':
-      case 'set-active-connection':
+      case 'set-active-portal':
         target.enabled = operation.value ?? operation.enabled ?? !operation.disable;
         break;
       case 'set':

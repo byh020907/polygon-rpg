@@ -63,10 +63,10 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 
 ## Character Presentation Scale
 
-현재 첫 맵 앞쪽 레인의 idle articulated silhouette는 무기와 그림자를 제외하고 약 `32×45` World unit으로, `48×48` logical cell 안에 들어가는 크기를 기준으로 한다. 작은 머리, 좁은 torso, 긴 팔·다리, 얇은 shield와 긴 blade로 날렵한 방향성을 만든다. `GameScene`은 원본 Polygon character 좌표를 발밑 pivot 기준 `0.265×`로 변환하고, 중간·뒤쪽 레인에서는 여기에 authored lane visual scale을 곱해 RenderFrame에 기록한다.
+현재 articulated silhouette는 무기와 그림자를 제외하고 약 `32×45` World unit으로, `48×48` logical cell 안에 들어가는 크기를 기준으로 한다. `GameScene`은 원본 Polygon character 좌표를 발밑 pivot 기준 `0.265×`로 변환하며 Room에 따른 visual scale은 사용하지 않는다.
 
 - gameplay position, jump height와 이동 속도는 이 배율의 영향을 받지 않는다.
-- lane visual scale은 presentation에만 적용하며 gameplay surface나 connection 범위를 바꾸지 않는다.
+- 장비 weapon length scale은 검 geometry와 contact range의 같은 data profile에서 유래한다.
 - 캐릭터 크기 조정은 world/physics 좌표가 아니라 presentation geometry에서만 수행한다.
 - 좌우 반전도 같은 presentation transform에서 처리한다.
 - 향후 collider 또는 Skeleton을 이 배율에 암묵적으로 결합하지 않는다.
@@ -97,7 +97,9 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 | `src/core/Signal.js`                        | 동기 사건 통지, 멱등 disconnect와 producer cleanup                         |
 | `src/game/GameScene.js`                     | Scene root, float 기반 gameplay state와 Polygon item 단일 RenderFrame      |
 | `src/game/GameStatusNode.js`                | player/world status 변화 감지와 lifecycle-owned Signal                     |
-| `src/rendering/Camera2D.js`                 | World Space를 Screen Space로 투영                                          |
+| `src/game/room/RoomNode.js`                 | active Room Scene subtree와 encounter lifecycle                            |
+| `src/game/equipment/EquipmentProfiles.js`   | debug speed와 분리된 combat timing·range·hitstun·weapon data profile       |
+| `src/rendering/Camera2D.js`                 | RenderFrame camera position을 World Space에서 Screen Space로 투영          |
 | `src/rendering/CanvasHost.js`               | 고정 Render Viewport, CSS 크기, DPR, backing 예산과 presentation rectangle |
 | `src/rendering/ScenePainter.js`             | 전달받은 frame geometry만 Canvas path로 rasterize                          |
 | `src/rendering/CanvasPolygonRenderer.js`    | float Screen Space 원본 비교 출력                                          |
@@ -141,12 +143,12 @@ Animation Speed는 input intent에 포함하지 않는다. `GameApp`이 별도 s
 
 ## 월드 맵 경계
 
-맵의 gameplay surface, active chunk/lane과 상태 패치는 `docs/world-map-system.md`가 소유한다. GameScene은 fixed-step에서 resolved map snapshot을 소비하고 RenderFrame에는 정렬된 읽기 전용 render item만 기록한다.
+맵의 gameplay surface, active Region/Room과 상태 패치는 `docs/world-map-system.md`가 소유한다. GameScene은 fixed-step에서 resolved map snapshot을 소비하고 RenderFrame에는 정렬된 읽기 전용 render item만 기록한다.
 
 - Gameplay surface는 renderer item과 별도 계약이다.
-- Renderer는 active lane, collision 또는 조건 패치를 해석하지 않는다.
-- 앞·중간·뒤 lane의 표시 순서는 map runtime이 결정하며 Renderer는 전달받은 순서를 보존한다.
-- 동적 지형과 lane 전환 progress는 fixed-step에서만 적용한다. `GameScene`은 previous/current position, visual scale과 render order를 interpolation alpha로 보간해 RenderFrame에 기록하고 Renderer는 transition을 진행하지 않는다.
+- Renderer는 active Room, Portal, collision 또는 조건 패치를 해석하지 않는다.
+- Portal travel 중 source/destination presentation item의 선택과 정렬은 MapRuntime이 결정한다. Active collision/entity는 source Room 하나만 유지한다.
+- `GameScene`은 previous/current player·camera position을 interpolation alpha로 보간해 RenderFrame에 기록하고 Renderer는 transition을 진행하지 않는다.
 
 ## 현재 비범위
 

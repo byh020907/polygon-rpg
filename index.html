@@ -158,6 +158,27 @@
             MENU
           </button>
 
+          <section class="equipment-select" x-show="canSelectEquipment" aria-label="훈련 장비 선택">
+            <header>
+              <small>TRAINING LOADOUT</small>
+              <strong x-text="selectedEquipmentLabel"></strong>
+            </header>
+            <div>
+              <template x-for="option in equipmentOptions" x-bind:key="option.id">
+                <button
+                  type="button"
+                  x-bind:class="{ 'is-selected': selectedEquipmentId === option.id }"
+                  x-bind:aria-pressed="selectedEquipmentId === option.id"
+                  @click="selectEquipment(option.id)"
+                  @touchend.prevent="selectEquipment(option.id)"
+                >
+                  <strong x-text="option.shortLabel"></strong>
+                  <small x-text="option.description"></small>
+                </button>
+              </template>
+            </div>
+          </section>
+
           <div class="quest-line">
             <small>목표</small>
             <strong x-text="objective"></strong>
@@ -210,7 +231,7 @@
         <footer class="game-footer">
           <div class="control-hints">
             <span><kbd>←</kbd><kbd>→</kbd> 이동</span>
-            <span><kbd>↑</kbd> 점프 · <kbd>↓</kbd> 방어 · 이동+<kbd>↓</kbd> 구르기</span>
+            <span><kbd>↑</kbd> 점프·Portal · <kbd>↓</kbd> 방어 · 이동+<kbd>↓</kbd> 구르기</span>
             <span><kbd>A</kbd> 기본 · <kbd>S</kbd> 강한 공격</span>
             <span><kbd>AA</kbd> 찌르기 · <kbd>AS</kbd> 올려베기 · <kbd>SA</kbd> 회전</span>
             <span>공중 <kbd>AA</kbd> 되베기 · <kbd>AS</kbd> 회전 · <kbd>SA</kbd> 교차</span>

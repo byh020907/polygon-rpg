@@ -53,6 +53,8 @@ Bridge snapshot은 화면 상태와 Render Lab 설정만 가진 평평한 읽기
 
 Render Lab의 Animation Speed는 UI bridge snapshot에 존재하지만 `GameApp`이 별도 frozen Simulation Settings DTO로 분류한다. Keyboard/Mobile Gameplay Input Snapshot과 합치지 않는다.
 
+학원촌의 장비 선택 panel은 Alpine `gameShell`이 선언적으로 렌더한다. Button은 `GameApp.selectEquipment(profileId)` → `GameScene.selectEquipment(profileId)` direct command를 호출하고, 선택 완료 결과는 `GameStatus` world status Signal이 `equipmentId/label`로 다시 표시한다. UI는 combat timing과 range를 직접 쓰지 않는다.
+
 지역명, 목표와 시간대는 GameScene이 소유한 읽기 전용 world status를 `GameStatus` child Node가 변화 시에만 Signal로 발행하고 GameApp writer가 Alpine에 전달한다. Player HP도 같은 경계를 사용하므로 GameApp과 Alpine이 GameScene field를 직접 읽지 않는다. Alpine은 값을 표시만 하며 map runtime을 직접 수정하지 않는다. Render Lab의 낮/밤 전환은 GameApp 공개 intent를 거쳐 GameScene world time을 변경한다.
 
 ## In-Game HUD
@@ -63,6 +65,7 @@ Render Lab의 Animation Speed는 UI bridge snapshot에 존재하지만 `GameApp`
 - MONEY는 meter 아래 한 줄, 도구 수량은 meter 오른쪽에 표시한다.
 - 메뉴는 Canvas 우상단의 작은 버튼으로 유지한다.
 - 지역명은 상단 중앙, 현재 목표는 좌하단 한 줄로 표시한다.
+- 학원촌에서는 우상단에 균형형/중량형 장비 card를 표시하고 active 선택을 명확히 구분한다.
 - HUD 값과 표시 여부는 Alpine `gameShell`이 소유하고 GameScene/Renderer에 넣지 않는다.
 - HUD 크기 조정은 Canvas world scale, 캐릭터 크기 또는 gameplay 판정에 영향을 주지 않는다.
 

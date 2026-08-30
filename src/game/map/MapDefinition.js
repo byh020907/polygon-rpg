@@ -36,36 +36,35 @@ function validatePoint(point, label) {
   assertFinite(point.y, `${label}.y`);
 }
 
-function qualify(mapId, chunkId, laneId, localId) {
-  return [mapId, chunkId, laneId, localId].filter(Boolean).join(':');
+function qualify(mapId, regionId, roomId, localId) {
+  return [mapId, regionId, roomId, localId].filter(Boolean).join(':');
 }
 
-function normalizeLane(mapId, chunkId, lane, laneIndex) {
-  assertRecord(lane, `chunks[${chunkId}].lanes[${laneIndex}]`);
-  assertId(lane.id, `chunks[${chunkId}].lanes[${laneIndex}].id`);
-  const normalized = cloneValue(lane);
-  normalized.qualifiedId = normalized.qualifiedId ?? qualify(mapId, chunkId, lane.id);
-  normalized.worldOffset = normalized.worldOffset ?? { x: 0, y: 0 };
-  validatePoint(normalized.worldOffset, `${normalized.qualifiedId}.worldOffset`);
-  normalized.renderOrder = normalized.renderOrder ?? 0;
+function normalizeRoom(mapId, regionId, room, roomIndex) {
+  assertRecord(room, `regions[${regionId}].rooms[${roomIndex}]`);
+  assertId(room.id, `regions[${regionId}].rooms[${roomIndex}].id`);
+  const normalized = cloneValue(room);
+  normalized.qualifiedId = normalized.qualifiedId ?? qualify(mapId, regionId, room.id);
+  assertRecord(normalized.bounds, `${normalized.qualifiedId}.bounds`);
+  for (const key of ['x', 'y', 'width', 'height']) {
+    assertFinite(normalized.bounds[key], `${normalized.qualifiedId}.bounds.${key}`);
+  }
+  if (!(normalized.bounds.width > 0 && normalized.bounds.height > 0)) {
+    throw new RangeError(`${normalized.qualifiedId}.bounds의 크기는 0보다 커야 합니다.`);
+  }
+  assertFinite(normalized.groundY, `${normalized.qualifiedId}.groundY`);
+  normalized.renderOrder = normalized.renderOrder ?? 30;
   assertFinite(normalized.renderOrder, `${normalized.qualifiedId}.renderOrder`);
-  normalized.visualScale = normalized.visualScale ?? 1;
-  assertFinite(normalized.visualScale, `${normalized.qualifiedId}.visualScale`);
-  if (!(normalized.visualScale > 0)) {
-    throw new RangeError(`${normalized.qualifiedId}.visualScale은(는) 0보다 커야 합니다.`);
-  }
-  if (normalized.groundY !== undefined) {
-    assertFinite(normalized.groundY, `${normalized.qualifiedId}.groundY`);
-  }
   if (normalized.movementBounds !== undefined) {
     assertRecord(normalized.movementBounds, `${normalized.qualifiedId}.movementBounds`);
     assertFinite(normalized.movementBounds.minX, `${normalized.qualifiedId}.movementBounds.minX`);
     assertFinite(normalized.movementBounds.maxX, `${normalized.qualifiedId}.movementBounds.maxX`);
     if (normalized.movementBounds.maxX < normalized.movementBounds.minX) {
-      throw new RangeError(
-        `${normalized.qualifiedId}.movementBounds의 maxX는 minX 이상이어야 합니다.`,
-      );
+      throw new RangeError(`${normalized.qualifiedId}.movementBounds의 maxX가 minX보다 작습니다.`);
     }
+  }
+  if (normalized.cameraAnchor !== undefined) {
+    validatePoint(normalized.cameraAnchor, `${normalized.qualifiedId}.cameraAnchor`);
   }
 
   for (const collectionName of OBJECT_COLLECTIONS) {
@@ -84,7 +83,7 @@ function normalizeLane(mapId, chunkId, lane, laneIndex) {
       }
       localIds.add(entry.id);
       const result = cloneValue(entry);
-      result.qualifiedId = result.qualifiedId ?? qualify(mapId, chunkId, lane.id, result.id);
+      result.qualifiedId = result.qualifiedId ?? qualify(mapId, regionId, room.id, result.id);
       result.enabled = result.enabled ?? true;
       if (collectionName === 'surfaces') {
         if (!Array.isArray(result.points) || result.points.length < 2) {
@@ -106,50 +105,38 @@ function normalizeLane(mapId, chunkId, lane, laneIndex) {
     });
   }
 
-  normalized.connections = normalized.connections ?? [];
-  if (!Array.isArray(normalized.connections)) {
-    throw new TypeError(`${normalized.qualifiedId}.connections은(는) 배열이어야 합니다.`);
+  normalized.portals = normalized.portals ?? [];
+  if (!Array.isArray(normalized.portals)) {
+    throw new TypeError(`${normalized.qualifiedId}.portals은(는) 배열이어야 합니다.`);
   }
+  normalized.portals.forEach((portalId, index) =>
+    assertId(portalId, `${normalized.qualifiedId}.portals[${index}]`),
+  );
   return normalized;
 }
 
 function normalizeEndpoint(endpoint, label) {
   assertRecord(endpoint, label);
-  assertId(endpoint.chunkId, `${label}.chunkId`);
-  assertId(endpoint.laneId, `${label}.laneId`);
+  assertId(endpoint.regionId, `${label}.regionId`);
+  assertId(endpoint.roomId, `${label}.roomId`);
   const normalized = cloneValue(endpoint);
-  if (normalized.x !== undefined) assertFinite(normalized.x, `${label}.x`);
-  if (normalized.y !== undefined) assertFinite(normalized.y, `${label}.y`);
   if (normalized.anchor !== undefined) validatePoint(normalized.anchor, `${label}.anchor`);
   if (normalized.spawn !== undefined) validatePoint(normalized.spawn, `${label}.spawn`);
-  if (normalized.minDistance !== undefined) {
-    assertFinite(normalized.minDistance, `${label}.minDistance`);
-  }
   if (normalized.radius !== undefined) assertFinite(normalized.radius, `${label}.radius`);
   return normalized;
 }
 
-function normalizeConnection(connection, source, mapId) {
-  assertRecord(connection, `connection(${source.chunkId}/${source.laneId})`);
-  assertId(connection.id, 'connection.id');
-  const normalized = cloneValue(connection);
-  normalized.qualifiedId = normalized.qualifiedId ?? `${mapId}:connection:${normalized.id}`;
+function normalizePortal(portal, mapId, index) {
+  assertRecord(portal, `portals[${index}]`);
+  assertId(portal.id, `portals[${index}].id`);
+  const normalized = cloneValue(portal);
+  normalized.qualifiedId = normalized.qualifiedId ?? `${mapId}:portal:${normalized.id}`;
   normalized.enabled = normalized.enabled ?? true;
-  normalized.from = normalizeEndpoint(
-    { chunkId: source.chunkId, laneId: source.laneId, ...normalized.from },
-    `${normalized.qualifiedId}.from`,
-  );
+  normalized.from = normalizeEndpoint(normalized.from, `${normalized.qualifiedId}.from`);
   normalized.to = normalizeEndpoint(normalized.to, `${normalized.qualifiedId}.to`);
-  if (
-    normalized.direction !== undefined &&
-    normalized.direction !== 'front' &&
-    normalized.direction !== 'back'
-  ) {
-    throw new Error(`${normalized.qualifiedId}.direction은 front 또는 back이어야 합니다.`);
-  }
-  normalized.transition = normalized.transition ?? { durationSeconds: 0.28 };
+  normalized.transition = normalized.transition ?? { durationSeconds: 0.32 };
   assertRecord(normalized.transition, `${normalized.qualifiedId}.transition`);
-  normalized.transition.durationSeconds = normalized.transition.durationSeconds ?? 0.28;
+  normalized.transition.durationSeconds = normalized.transition.durationSeconds ?? 0.32;
   assertFinite(
     normalized.transition.durationSeconds,
     `${normalized.qualifiedId}.transition.durationSeconds`,
@@ -180,7 +167,7 @@ function normalizePatch(patch, index) {
       throw new TypeError(`${normalized.id}.operations[${operationIndex}].target이 필요합니다.`);
     }
     const op = result.op ?? (result.override ? 'override' : 'set-enabled');
-    if (!['set-enabled', 'set-active-connection', 'set', 'override'].includes(op)) {
+    if (!['set-enabled', 'set-active-portal', 'set', 'override'].includes(op)) {
       throw new Error(
         `${normalized.id}.operations[${operationIndex}]의 op를 지원하지 않습니다: ${op}`,
       );
@@ -222,9 +209,7 @@ function validatePatchConflicts(patches) {
   for (const patch of patches) {
     for (const operation of patch.operations) {
       const key = `${patch.priority}|${targetKey(operation)}`;
-      if (writes.has(key)) {
-        throw new Error(`동일 우선순위의 패치가 같은 대상을 변경합니다: ${key}`);
-      }
+      if (writes.has(key)) throw new Error(`동일 우선순위의 패치가 같은 대상을 변경합니다: ${key}`);
       writes.add(key);
     }
   }
@@ -234,85 +219,53 @@ function normalizeDefinition(rawDefinition) {
   assertRecord(rawDefinition, 'map definition');
   assertId(rawDefinition.id, 'map definition.id');
   const normalized = cloneValue(rawDefinition);
-  normalized.version = normalized.version ?? 1;
-  if (!Array.isArray(normalized.chunks) || normalized.chunks.length === 0) {
-    throw new Error('map definition.chunks에는 최소 한 개의 chunk가 필요합니다.');
+  normalized.version = normalized.version ?? 2;
+  if (!Array.isArray(normalized.regions) || normalized.regions.length === 0) {
+    throw new Error('map definition.regions에는 최소 한 개의 region이 필요합니다.');
   }
 
-  const chunkIds = new Set();
-  const laneKeys = new Set();
-  const inlineConnections = [];
-  normalized.chunks = normalized.chunks.map((chunk, chunkIndex) => {
-    assertRecord(chunk, `chunks[${chunkIndex}]`);
-    assertId(chunk.id, `chunks[${chunkIndex}].id`);
-    if (chunkIds.has(chunk.id)) throw new Error(`중복 chunk ID입니다: ${chunk.id}`);
-    chunkIds.add(chunk.id);
-    const result = cloneValue(chunk);
+  const roomKeys = new Set();
+  const regionIds = new Set();
+  normalized.regions = normalized.regions.map((region, regionIndex) => {
+    assertRecord(region, `regions[${regionIndex}]`);
+    assertId(region.id, `regions[${regionIndex}].id`);
+    if (regionIds.has(region.id)) throw new Error(`중복 region ID입니다: ${region.id}`);
+    regionIds.add(region.id);
+    const result = cloneValue(region);
     result.qualifiedId = result.qualifiedId ?? qualify(normalized.id, result.id);
-    if (result.bounds !== undefined) {
-      assertRecord(result.bounds, `${result.qualifiedId}.bounds`);
-      for (const key of ['x', 'y', 'width', 'height']) {
-        assertFinite(result.bounds[key], `${result.qualifiedId}.bounds.${key}`);
-      }
-      if (!(result.bounds.width > 0 && result.bounds.height > 0)) {
-        throw new RangeError(`${result.qualifiedId}.bounds의 크기는 0보다 커야 합니다.`);
-      }
+    if (!Array.isArray(result.rooms) || result.rooms.length === 0) {
+      throw new Error(`${result.qualifiedId}.rooms에는 최소 한 개의 room이 필요합니다.`);
     }
-    if (!Array.isArray(result.lanes) || result.lanes.length === 0) {
-      throw new Error(`${result.qualifiedId}.lanes에는 최소 한 개의 lane이 필요합니다.`);
-    }
-    const localLaneIds = new Set();
-    result.lanes = result.lanes.map((lane, laneIndex) => {
-      const normalizedLane = normalizeLane(normalized.id, result.id, lane, laneIndex);
-      if (localLaneIds.has(normalizedLane.id)) {
-        throw new Error(`${result.qualifiedId}에 중복 lane ID가 있습니다: ${normalizedLane.id}`);
-      }
-      localLaneIds.add(normalizedLane.id);
-      laneKeys.add(`${result.id}/${normalizedLane.id}`);
-      for (const connection of normalizedLane.connections) {
-        if (typeof connection !== 'string') {
-          inlineConnections.push(
-            normalizeConnection(
-              connection,
-              { chunkId: result.id, laneId: normalizedLane.id },
-              normalized.id,
-            ),
-          );
-        }
-      }
-      normalizedLane.connections = normalizedLane.connections.map((connection) =>
-        typeof connection === 'string' ? connection : connection.id,
-      );
-      return normalizedLane;
+    const roomIds = new Set();
+    result.rooms = result.rooms.map((room, roomIndex) => {
+      const normalizedRoom = normalizeRoom(normalized.id, result.id, room, roomIndex);
+      if (roomIds.has(normalizedRoom.id))
+        throw new Error(`중복 room ID입니다: ${normalizedRoom.id}`);
+      roomIds.add(normalizedRoom.id);
+      roomKeys.add(`${result.id}/${normalizedRoom.id}`);
+      return normalizedRoom;
     });
     return result;
   });
 
-  const connections = normalized.connections ?? [];
-  if (!Array.isArray(connections))
-    throw new TypeError('map definition.connections은(는) 배열이어야 합니다.');
-  normalized.connections = [
-    ...connections.map((connection) => normalizeConnection(connection, {}, normalized.id)),
-    ...inlineConnections,
-  ];
-  const connectionIds = new Set();
-  for (const connection of normalized.connections) {
-    if (connectionIds.has(connection.id))
-      throw new Error(`중복 connection ID입니다: ${connection.id}`);
-    connectionIds.add(connection.id);
-    for (const [name, endpoint] of Object.entries({ from: connection.from, to: connection.to })) {
-      if (!laneKeys.has(`${endpoint.chunkId}/${endpoint.laneId}`)) {
-        throw new Error(`${connection.qualifiedId}.${name}이 존재하지 않는 lane을 가리킵니다.`);
+  normalized.portals = (normalized.portals ?? []).map((portal, index) =>
+    normalizePortal(portal, normalized.id, index),
+  );
+  const portalIds = new Set();
+  for (const portal of normalized.portals) {
+    if (portalIds.has(portal.id)) throw new Error(`중복 portal ID입니다: ${portal.id}`);
+    portalIds.add(portal.id);
+    for (const endpoint of [portal.from, portal.to]) {
+      if (!roomKeys.has(`${endpoint.regionId}/${endpoint.roomId}`)) {
+        throw new Error(`${portal.qualifiedId}이 존재하지 않는 room을 가리킵니다.`);
       }
     }
   }
-  for (const chunk of normalized.chunks) {
-    for (const lane of chunk.lanes) {
-      for (const connectionId of lane.connections) {
-        if (!connectionIds.has(connectionId)) {
-          throw new Error(
-            `${lane.qualifiedId}이 존재하지 않는 connection을 참조합니다: ${connectionId}`,
-          );
+  for (const region of normalized.regions) {
+    for (const room of region.rooms) {
+      for (const portalId of room.portals) {
+        if (!portalIds.has(portalId)) {
+          throw new Error(`${room.qualifiedId}이 존재하지 않는 portal을 참조합니다: ${portalId}`);
         }
       }
     }
@@ -327,34 +280,28 @@ function normalizeDefinition(rawDefinition) {
     assertId(spawn.id, `spawns[${index}].id`);
     if (spawnIds.has(spawn.id)) throw new Error(`중복 spawn ID입니다: ${spawn.id}`);
     spawnIds.add(spawn.id);
-    if (!laneKeys.has(`${spawn.chunkId}/${spawn.laneId}`)) {
-      throw new Error(`spawn(${spawn.id})이 존재하지 않는 lane을 가리킵니다.`);
+    if (!roomKeys.has(`${spawn.regionId}/${spawn.roomId}`)) {
+      throw new Error(`spawn(${spawn.id})이 존재하지 않는 room을 가리킵니다.`);
     }
     validatePoint(spawn.position, `spawn(${spawn.id}).position`);
     return { facing: 1, ...cloneValue(spawn), qualifiedId: `${normalized.id}:spawn:${spawn.id}` };
   });
 
   if (normalized.initialSpawnId !== undefined && !spawnIds.has(normalized.initialSpawnId)) {
-    throw new Error(
-      `initialSpawnId가 존재하지 않는 spawn을 가리킵니다: ${normalized.initialSpawnId}`,
-    );
+    throw new Error(`initialSpawnId가 존재하지 않습니다: ${normalized.initialSpawnId}`);
   }
   const initialSpawn = normalized.spawns.find((spawn) => spawn.id === normalized.initialSpawnId);
-  normalized.initialChunkId =
-    initialSpawn?.chunkId ??
-    normalized.initialChunkId ??
-    normalized.initial?.chunkId ??
-    normalized.chunks[0].id;
-  const initialChunk = normalized.chunks.find((chunk) => chunk.id === normalized.initialChunkId);
-  if (!initialChunk)
-    throw new Error(`initialChunkId가 존재하지 않습니다: ${normalized.initialChunkId}`);
-  normalized.initialLaneId =
-    initialSpawn?.laneId ??
-    normalized.initialLaneId ??
-    normalized.initial?.laneId ??
-    initialChunk.lanes[0].id;
-  if (!laneKeys.has(`${normalized.initialChunkId}/${normalized.initialLaneId}`)) {
-    throw new Error('초기 chunk/lane 조합이 존재하지 않습니다.');
+  normalized.initialRegionId =
+    initialSpawn?.regionId ?? normalized.initialRegionId ?? normalized.regions[0].id;
+  const initialRegion = normalized.regions.find(
+    (region) => region.id === normalized.initialRegionId,
+  );
+  if (!initialRegion)
+    throw new Error(`initialRegionId가 존재하지 않습니다: ${normalized.initialRegionId}`);
+  normalized.initialRoomId =
+    initialSpawn?.roomId ?? normalized.initialRoomId ?? initialRegion.rooms[0].id;
+  if (!roomKeys.has(`${normalized.initialRegionId}/${normalized.initialRoomId}`)) {
+    throw new Error('초기 region/room 조합이 존재하지 않습니다.');
   }
 
   normalized.patches = (normalized.patches ?? []).map(normalizePatch);
@@ -369,21 +316,20 @@ function normalizeDefinition(rawDefinition) {
 
 export class MapDefinition {
   constructor(rawDefinition) {
-    const normalized = normalizeDefinition(rawDefinition);
-    Object.assign(this, normalized);
+    Object.assign(this, normalizeDefinition(rawDefinition));
     deepFreeze(this);
   }
 
-  getChunk(chunkId) {
-    return this.chunks.find((chunk) => chunk.id === chunkId) ?? null;
+  getRegion(regionId) {
+    return this.regions.find((region) => region.id === regionId) ?? null;
   }
 
-  getLane(chunkId, laneId) {
-    return this.getChunk(chunkId)?.lanes.find((lane) => lane.id === laneId) ?? null;
+  getRoom(regionId, roomId) {
+    return this.getRegion(regionId)?.rooms.find((room) => room.id === roomId) ?? null;
   }
 
-  getConnection(connectionId) {
-    return this.connections.find((connection) => connection.id === connectionId) ?? null;
+  getPortal(portalId) {
+    return this.portals.find((portal) => portal.id === portalId) ?? null;
   }
 
   getSpawn(spawnId) {

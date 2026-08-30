@@ -165,13 +165,20 @@ function freezePosition(position) {
 }
 
 export class TrainingEncounterNode extends SceneNode {
-  constructor({ entity, groundY, spinContact }) {
+  constructor({ entity, groundY, movementBounds, spinContact }) {
     super('TrainingEncounter');
     if (!entity || entity.kind !== 'combat-test-mob') {
       throw new TypeError('TrainingEncounter Scene에는 combat-test-mob entity가 필요합니다.');
     }
     if (!Number.isFinite(groundY)) {
       throw new TypeError('TrainingEncounter Scene에는 유효한 groundY가 필요합니다.');
+    }
+    if (
+      !movementBounds ||
+      !Number.isFinite(movementBounds.minX) ||
+      !Number.isFinite(movementBounds.maxX)
+    ) {
+      throw new TypeError('TrainingEncounter Scene에는 Room movementBounds가 필요합니다.');
     }
     if (!spinContact?.hitPulses || !spinContact?.contactSpacings) {
       throw new TypeError('TrainingEncounter Scene에는 spin contact frame data가 필요합니다.');
@@ -183,6 +190,7 @@ export class TrainingEncounterNode extends SceneNode {
       maxHealth: Number.isFinite(entity.maxHealth) ? Math.max(1, entity.maxHealth) : 100,
     });
     this.groundY = groundY;
+    this.movementBounds = Object.freeze({ ...movementBounds });
     this.spinContactOptions = Object.freeze({
       hitPulses: spinContact.hitPulses,
       contactSpacings: spinContact.contactSpacings,
@@ -414,7 +422,10 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.rotation = 0;
       enemy.angularVelocity = 0;
     }
-    enemy.position.x = Math.max(48, Math.min(912, enemy.position.x));
+    enemy.position.x = Math.max(
+      this.movementBounds.minX,
+      Math.min(this.movementBounds.maxX, enemy.position.x),
+    );
     enemy.rotation = Math.max(-0.32, Math.min(0.32, enemy.velocityX / 420));
   }
 
@@ -788,7 +799,10 @@ export class TrainingEncounterNode extends SceneNode {
     this.confirmedComboCycle = combatState.comboCycle;
     enemy.comboCycleHitPending = enemy.health > 0;
     enemy.lastReceivedComboCycle = combatState.comboCycle;
-    enemy.hitstunSeconds = Math.max(enemy.hitstunSeconds, 0.16 + damage * 0.008);
+    enemy.hitstunSeconds = Math.max(
+      enemy.hitstunSeconds,
+      (0.16 + damage * 0.008) * (profile.hitstunScale ?? 1),
+    );
     enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(enemy);
     enemy.hitReactionWeaponAngle =
       profile.damage >= 22 ? 0.35 : profile.launchY < -300 ? -1.1 : 0.2;

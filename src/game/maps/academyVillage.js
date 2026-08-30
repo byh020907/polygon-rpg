@@ -47,7 +47,7 @@ function renderItem(id, points, fill, options = {}) {
   };
 }
 
-const backLaneItems = [
+const backLayerItems = [
   renderItem(
     'distant-ridge',
     [
@@ -139,7 +139,7 @@ const backLaneItems = [
   }),
 ];
 
-const middleLaneItems = [
+const middleLayerItems = [
   renderItem(
     'middle-ground',
     [
@@ -233,7 +233,7 @@ const middleLaneItems = [
   ),
 ];
 
-const frontLaneItems = [
+const frontLayerItems = [
   renderItem(
     'front-ground',
     [
@@ -379,11 +379,15 @@ const combatDungeonItems = [
   }),
 ];
 
+function withRenderLayer(items, renderOrder) {
+  return items.map((item) => ({ ...item, renderOrder }));
+}
+
 export const ACADEMY_VILLAGE_MAP = defineMap({
   id: 'academy-village',
-  name: '왕립 마법학교 학원촌',
-  version: 1,
-  worldSize: { width: 960, height: 540 },
+  name: '왕립 마법학교 학원권',
+  version: 2,
+  worldSize: { width: 2304, height: 540 },
   gridSize: 48,
   palette: DAY_PALETTE,
   groundY: null,
@@ -391,111 +395,83 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
   spawns: [
     {
       id: 'plaza-arrival',
-      chunkId: 'village-center',
-      laneId: 'front-plaza',
+      regionId: 'academy-region',
+      roomId: 'academy-plaza',
       position: { x: 270, y: 350 },
       facing: 1,
     },
   ],
-  chunks: [
+  regions: [
     {
-      id: 'village-center',
-      bounds: { x: 0, y: 0, width: 960, height: 540 },
-      lanes: [
+      id: 'academy-region',
+      label: '왕립 마법학교 학원권',
+      rooms: [
         {
-          id: 'back-hill',
-          label: '교직원 언덕',
-          renderOrder: 10,
-          visualScale: 0.82,
-          groundY: 336,
-          movementBounds: { minX: 24, maxX: 936 },
-          surfaces: [
-            {
-              id: 'back-ground-surface',
-              kind: 'solid',
-              material: 'academy-grass',
-              points: [
-                { x: 0, y: 336 },
-                { x: 960, y: 336 },
-              ],
-            },
-          ],
-          renderItems: backLaneItems,
-          entities: [],
-          triggers: [],
-          connections: ['yard-to-hill'],
-        },
-        {
-          id: 'middle-homes',
-          label: '교관 주택가',
-          renderOrder: 20,
-          visualScale: 0.92,
-          groundY: 390,
-          movementBounds: { minX: 24, maxX: 936 },
-          surfaces: [
-            {
-              id: 'middle-ground-surface',
-              kind: 'solid',
-              material: 'packed-soil',
-              points: [
-                { x: 0, y: 390 },
-                { x: 960, y: 390 },
-              ],
-            },
-          ],
-          renderItems: middleLaneItems,
-          entities: [],
-          triggers: [],
-          connections: ['plaza-to-homes', 'yard-to-hill'],
-        },
-        {
-          id: 'front-plaza',
+          id: 'academy-plaza',
           label: '학원촌 중앙광장',
-          renderOrder: 30,
-          visualScale: 1,
+          bounds: { x: 0, y: 0, width: 1024, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
           groundY: 432,
-          movementBounds: { minX: 24, maxX: 936 },
+          movementBounds: { minX: 24, maxX: 1000 },
+          renderOrder: 30,
           surfaces: [
             {
-              id: 'front-ground-surface',
+              id: 'plaza-ground-surface',
               kind: 'solid',
               material: 'academy-stone',
               points: [
                 { x: 0, y: 432 },
-                { x: 960, y: 432 },
+                { x: 1024, y: 432 },
               ],
             },
           ],
-          renderItems: frontLaneItems,
+          renderItems: [
+            ...withRenderLayer(backLayerItems, 10),
+            ...withRenderLayer(middleLayerItems, 20),
+            ...withRenderLayer(frontLayerItems, 30),
+            renderItem('plaza-ground-extension', rectangle(960, 432, 64, 108), '#51473d', {
+              stroke: '#332f2c',
+              lineWidth: 2,
+              order: 0,
+              renderOrder: 30,
+            }),
+          ],
           entities: [],
           triggers: [],
-          connections: ['plaza-to-homes', 'village-test-portal'],
+          portals: ['academy-training-portal'],
         },
-      ],
-    },
-    {
-      id: 'combat-test-dungeon',
-      bounds: { x: 0, y: 0, width: 960, height: 540 },
-      lanes: [
         {
-          id: 'training-floor',
-          label: '전투 실험 던전',
-          renderOrder: 30,
-          visualScale: 1,
+          id: 'training-room',
+          label: '독립 훈련장',
+          bounds: { x: 1240, y: 0, width: 1024, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
           groundY: 420,
-          movementBounds: { minX: 24, maxX: 936 },
+          movementBounds: { minX: 24, maxX: 1000 },
+          renderOrder: 30,
           surfaces: [
             {
-              id: 'training-floor-surface',
+              id: 'training-ground-surface',
               kind: 'solid',
               material: 'sealed-stone',
               points: [
                 { x: 0, y: 420 },
-                { x: 960, y: 420 },
+                { x: 1024, y: 420 },
               ],
             },
           ],
-          renderItems: combatDungeonItems,
+          renderItems: [
+            ...withRenderLayer(combatDungeonItems, 30),
+            renderItem('training-backdrop-extension', rectangle(960, 0, 64, 540), '#090d17', {
+              order: -100,
+              renderOrder: 30,
+            }),
+            renderItem('training-floor-extension', rectangle(960, 420, 64, 120), '#242735', {
+              stroke: '#4a5061',
+              lineWidth: 2,
+              order: 0,
+              renderOrder: 30,
+            }),
+          ],
           entities: [
             {
               id: 'combat-test-mob',
@@ -505,74 +481,30 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
             },
           ],
           triggers: [],
-          connections: ['village-test-portal'],
+          portals: ['academy-training-portal'],
         },
       ],
     },
   ],
-  connections: [
+  portals: [
     {
-      id: 'plaza-to-homes',
-      direction: 'back',
+      id: 'academy-training-portal',
       bidirectional: true,
-      interactionId: 'lane-transition',
       from: {
-        chunkId: 'village-center',
-        laneId: 'front-plaza',
-        anchor: { x: 450, y: 432 },
-        spawn: { x: 450, y: 350 },
-        radius: 46,
-      },
-      to: {
-        chunkId: 'village-center',
-        laneId: 'middle-homes',
-        anchor: { x: 469, y: 390 },
-        spawn: { x: 469, y: 308 },
-        radius: 46,
-      },
-      transition: { durationSeconds: 0.28 },
-    },
-    {
-      id: 'yard-to-hill',
-      direction: 'back',
-      bidirectional: true,
-      interactionId: 'lane-transition',
-      from: {
-        chunkId: 'village-center',
-        laneId: 'middle-homes',
-        anchor: { x: 786, y: 390 },
-        spawn: { x: 786, y: 308 },
-        radius: 48,
-      },
-      to: {
-        chunkId: 'village-center',
-        laneId: 'back-hill',
-        anchor: { x: 807, y: 336 },
-        spawn: { x: 807, y: 254 },
-        radius: 48,
-      },
-      transition: { durationSeconds: 0.28 },
-    },
-    {
-      id: 'village-test-portal',
-      direction: 'back',
-      bidirectional: true,
-      interactionId: 'dungeon-portal',
-      from: {
-        chunkId: 'village-center',
-        laneId: 'front-plaza',
+        regionId: 'academy-region',
+        roomId: 'academy-plaza',
         anchor: { x: 104, y: 432 },
         spawn: { x: 154, y: 350 },
         radius: 52,
       },
       to: {
-        chunkId: 'combat-test-dungeon',
-        laneId: 'training-floor',
+        regionId: 'academy-region',
+        roomId: 'training-room',
         anchor: { x: 104, y: 420 },
         spawn: { x: 150, y: 338 },
         radius: 52,
       },
-      transition: { durationSeconds: 0.36 },
+      transition: { durationSeconds: 0.32 },
     },
   ],
   patches: [

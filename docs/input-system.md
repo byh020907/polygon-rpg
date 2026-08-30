@@ -49,9 +49,9 @@ Frozen Input Snapshot은 adapter가 만든 gameplay held state와 command sequen
 | Basic / Strong Attack  | `A/S`      | `X/Y`          |
 | Thrust / Rising / Spin | `AA/AS/SA` | `XX/XY/YX`     |
 
-깊이 레인 연결점에서는 `↑/↓`가 문맥적인 뒤/앞 lane 전환으로 우선 사용된다. 연결점 밖에서는 Jump / Guard intent가 그대로 유지된다. `GameScene`이 frozen input snapshot과 active connection을 함께 보고 우선순위를 결정하며 adapter는 맵 문맥을 알지 않는다. Pending transition 동안 새 이동·점프·전투 command는 적용하지 않지만 input edge와 sequence는 계속 소비한다.
+Portal 범위 안에서는 `↑` command sequence edge가 Room 전환으로 우선 사용된다. 범위 밖에서는 Jump intent가 그대로 유지되고 `↓` Guard/Roll은 Portal과 경쟁하지 않는다. `GameScene`이 frozen input snapshot과 active Portal을 함께 보고 우선순위를 결정하며 adapter는 맵 문맥을 알지 않는다. Pending transition 동안 새 이동·Jump·combat command는 적용하지 않지만 input edge와 sequence는 계속 소비한다.
 
-지상 이동 중 `↓` Guard edge는 현재 이동 방향으로 구르기를 시작한다. 계단·포탈 connection이 같은 위치에서 활성화되면 공간 전환을 우선하고, 정지 상태의 `↓`는 Guard held pose를 유지한다. 구르기 시작 뒤에는 방향을 바꾸지 않으며 진행률 12~62% 구간에 무적 판정을 둔다.
+지상 이동 중 `↓` Guard edge는 현재 이동 방향으로 구르기를 시작하고, 정지 상태의 `↓`는 Guard held pose를 유지한다. 구르기 시작 뒤에는 방향을 바꾸지 않으며 진행률 12~62% 구간에 무적 판정을 둔다.
 
 공중에서도 같은 Basic/Strong intent를 사용한다.
 
@@ -61,11 +61,12 @@ Frozen Input Snapshot은 adapter가 만든 gameplay held state와 command sequen
 
 같은 frozen simulation snapshot 안에서 충돌하는 intent는 다음 순서로 해석한다.
 
-1. controls lock과 공간 전환이 새 gameplay command를 막거나 소비한다.
-2. 수평 방향과 함께 들어온 `↓` edge는 그 방향으로 Roll을 시작하고 시작 방향을 고정한다.
-3. `↑` Jump는 active·buffered ground attack을 취소한다. 같은 snapshot의 Basic/Strong은 air command로 해석한다.
-4. Basic과 Strong이 같은 simulation tick에 함께 발행되면 Strong을 선택한다.
-5. 위 command가 없고 공격이 idle일 때 `↓` held를 Guard pose로 적용한다.
+1. controls lock과 pending Portal transition이 새 gameplay command를 막고 sequence를 소비한다.
+2. Portal 범위의 `↑` edge는 Room transition을 시작하고, 범위 밖의 같은 edge는 Jump로 이어진다.
+3. 수평 방향과 함께 들어온 `↓` edge는 그 방향으로 Roll을 시작하고 시작 방향을 고정한다.
+4. `↑` Jump는 active·buffered ground attack을 취소한다. 같은 snapshot의 Basic/Strong은 air command로 해석한다.
+5. Basic과 Strong이 같은 simulation tick에 함께 발행되면 Strong을 선택한다.
+6. 위 command가 없고 공격이 idle일 때 `↓` held를 Guard pose로 적용한다.
 
 active motion 중에는 가장 최근 유효 공격 하나만 buffer한다. 이 순위는 `GameScene`과 `CombatCommandController`가 소유하며 adapter는 key/pointer 상태와 단조 증가 sequence만 제공한다.
 

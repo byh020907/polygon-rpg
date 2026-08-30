@@ -77,7 +77,7 @@ function motionPolicy(
   });
 }
 
-const COMBAT_MOTION_POLICIES = Object.freeze({
+const BASE_COMBAT_MOTION_POLICIES = Object.freeze({
   idle: motionPolicy('대기', 0, 1, { canJump: true }),
   slash: motionPolicy('기본 베기', 31, 0.28),
   thrust: motionPolicy('찌르기', 25, 0.18),
@@ -92,19 +92,78 @@ const COMBAT_MOTION_POLICIES = Object.freeze({
   guard: motionPolicy('방어', 0, 0.22),
 });
 
-function combatMotionPolicy(id) {
-  const policy = COMBAT_MOTION_POLICIES[id];
+function baseCombatMotionPolicy(id) {
+  const policy = BASE_COMBAT_MOTION_POLICIES[id];
   if (!policy) throw new Error(`알 수 없는 combat motion입니다: ${id}`);
   return policy;
 }
 
-export function combatMotionFrameData(id) {
-  return combatMotionPolicy(id).frame ?? null;
+function normalizeTimingProfile(timingProfile = {}) {
+  const startupScale = timingProfile.startupScale ?? 1;
+  const recoveryScale = timingProfile.recoveryScale ?? 1;
+  if (!(Number.isFinite(startupScale) && startupScale > 0)) {
+    throw new RangeError('combat timing startupScale은 0보다 커야 합니다.');
+  }
+  if (!(Number.isFinite(recoveryScale) && recoveryScale > 0)) {
+    throw new RangeError('combat timing recoveryScale은 0보다 커야 합니다.');
+  }
+  return Object.freeze({ startupScale, recoveryScale });
+}
+
+function scaleMotionPolicy(policy, timingProfile) {
+  if (!policy.frame) return policy;
+  const startupFrames = Math.max(
+    1,
+    Math.round(policy.frame.startupFrames * timingProfile.startupScale),
+  );
+  const activeFrames = policy.frame.activeFrames;
+  const recoveryFrames = Math.max(
+    0,
+    Math.round(policy.frame.recoveryFrames * timingProfile.recoveryScale),
+  );
+  const durationFrames = startupFrames + activeFrames + recoveryFrames;
+  const baseActiveEnd = policy.frame.startupFrames + policy.frame.activeFrames;
+  const chainRecoveryOffset = Math.max(0, policy.frame.chainStartFrame - baseActiveEnd);
+  const chainStartFrame = Math.min(
+    durationFrames,
+    startupFrames + activeFrames + Math.round(chainRecoveryOffset * timingProfile.recoveryScale),
+  );
+  const frame = defineCombatFrame({
+    durationFrames,
+    startupFrames,
+    activeFrames,
+    chainStartFrame,
+  });
+  return Object.freeze({
+    ...policy,
+    durationFrames,
+    durationSeconds: combatFramesToSeconds(durationFrames),
+    frame,
+  });
+}
+
+function combatMotionPolicy(id, timingProfile) {
+  return scaleMotionPolicy(baseCombatMotionPolicy(id), timingProfile);
+}
+
+export function combatMotionFrameData(id, timingProfile = {}) {
+  return combatMotionPolicy(id, normalizeTimingProfile(timingProfile)).frame ?? null;
 }
 
 export class CombatCommandController {
-  constructor() {
+  constructor({ timingProfile } = {}) {
+    this.timingProfile = normalizeTimingProfile(timingProfile);
     this.reset();
+  }
+
+  setTimingProfile(timingProfile) {
+    if (this.active) throw new Error('전투 motion 중에는 장비 timing을 바꿀 수 없습니다.');
+    this.timingProfile = normalizeTimingProfile(timingProfile);
+    return this.timingProfile;
+  }
+
+  getMotionFrameData(id) {
+    return combatMotionPolicy(id, this.timingProfile).frame ?? null;
   }
 
   reset() {
@@ -136,7 +195,7 @@ export class CombatCommandController {
         this.queuedMotion = issuedMotion;
       }
       const chainStartSeconds = combatFramesToSeconds(
-        combatMotionPolicy(this.active.id).frame.chainStartFrame,
+        combatMotionPolicy(this.active.id, this.timingProfile).frame.chainStartFrame,
       );
       if (
         (this.queuedMotion && this.active.elapsedSeconds >= chainStartSeconds) ||
@@ -190,7 +249,7 @@ export class CombatCommandController {
   }
 
   start(motionId, transitionFrom = null, { continuesCombo = false } = {}) {
-    const policy = combatMotionPolicy(motionId);
+    const policy = combatMotionPolicy(motionId, this.timingProfile);
     const durationSeconds = policy.durationSeconds;
     if (!(durationSeconds > 0)) {
       throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);
@@ -227,7 +286,7 @@ export class CombatCommandController {
 
   snapshot() {
     if (!this.active) {
-      const motionPolicy = combatMotionPolicy(this.heldPose);
+      const motionPolicy = combatMotionPolicy(this.heldPose, this.timingProfile);
       return Object.freeze({
         id: this.heldPose,
         label: motionPolicy.label,
@@ -241,7 +300,7 @@ export class CombatCommandController {
       });
     }
 
-    const motionPolicy = combatMotionPolicy(this.active.id);
+    const motionPolicy = combatMotionPolicy(this.active.id, this.timingProfile);
     const frame = sampleCombatFrame(motionPolicy.frame, this.active.elapsedSeconds);
     return Object.freeze({
       id: this.active.id,
