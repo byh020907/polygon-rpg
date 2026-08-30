@@ -74,7 +74,7 @@ Approved vertical sequence는 다음과 같다. 실제 완료 상태와 다음 �
 - 개발 단위는 처음부터 끝까지 반복 실행 가능한 사용자 시나리오다.
 - 기능 완결성·조작 명료성·타격감/Effect·Graphics·설계 정합·회귀 안전성의 적용 축은 모두 2/3 이상이어야 한다.
 - 결정적 검사와 실제 Canvas/mobile 관찰은 별도 증거다.
-- Writer checkpoint 뒤 fresh session이 final artifact를 독립 검증한다.
+- Writer checkpoint 뒤 같은 session이 새 final artifact를 결과 기준으로 재검증한다. 중단된 경우에만 다음 fresh session이 checkpoint에서 복구한다.
 - 같은 원인의 결함·지적이 두 번 확인되고 기계적으로 측정 가능할 때만 가장 작은 durable check로 승격한다.
 
 ## Product Experience References
