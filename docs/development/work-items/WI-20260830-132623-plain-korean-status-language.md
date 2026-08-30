@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-132623
-status: ready-for-integration
+status: done
 priority: normal
 lane: maintenance
 created_at: 2026-08-30T13:26:23+09:00
@@ -41,5 +41,6 @@ source_ref: null
 
 ## 연결
 
-- 최종 worktree commit: 구현 task 완료 후 기록
-- main integration commit: 통합 후 기록
+- 최종 worktree commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191`
+- main integration commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191` (fast-forward)
+- 메인 확인: 쉬운 한국어 규칙·최상위 규칙 보존·파일 크기·전체 검사 통과
