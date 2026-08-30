@@ -36,6 +36,34 @@ const ENCOUNTER_PROFILES = Object.freeze({
     ]),
     guardOutsidePunish: true,
   }),
+  'glasswind-field': Object.freeze({
+    id: 'glasswind-field',
+    role: 'glasswind',
+    species: 'glasswind',
+    label: '유리바람 풍식 사냥꾼',
+    respawns: false,
+    approachSpeed: 94,
+    idleSeconds: 0.22,
+    activationRange: 235,
+    presentationScale: 0.5,
+    attackPatterns: Object.freeze([Object.freeze(['sweep', 'light', 'sweep'])]),
+    guardOutsidePunish: false,
+  }),
+  'glasswind-boss': Object.freeze({
+    id: 'glasswind-boss',
+    role: 'boss',
+    species: 'glasswind',
+    label: '폭풍 유리핵의 섭정',
+    respawns: false,
+    approachSpeed: 92,
+    idleSeconds: 0.2,
+    presentationScale: 0.62,
+    attackPatterns: Object.freeze([
+      Object.freeze(['sweep', 'light', 'heavy']),
+      Object.freeze(['sweep', 'heavy', 'sweep']),
+    ]),
+    guardOutsidePunish: true,
+  }),
 });
 
 export function getEncounterProfile(profileId = 'training') {

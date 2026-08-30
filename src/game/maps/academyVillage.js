@@ -5,6 +5,12 @@ import {
   FIRST_JOURNEY_PORTALS,
   FIRST_JOURNEY_ROOMS,
 } from './firstJourney.js';
+import {
+  ACADEMY_GLASSWIND_PORTAL_ITEMS,
+  GLASSWIND_PATCHES,
+  GLASSWIND_PORTALS,
+  GLASSWIND_REGION,
+} from './glasswindRegion.js';
 
 const DAY_PALETTE = Object.freeze({
   background: '#18333b',
@@ -394,7 +400,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
   id: 'academy-village',
   name: '왕립 마법학교 학원권',
   version: 2,
-  worldSize: { width: 7240, height: 540 },
+  worldSize: { width: 10960, height: 540 },
   gridSize: 48,
   palette: DAY_PALETTE,
   groundY: null,
@@ -436,6 +442,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
             ...withRenderLayer(backLayerItems, 10),
             ...withRenderLayer(middleLayerItems, 20),
             ...withRenderLayer(frontLayerItems, 30),
+            ...withRenderLayer(ACADEMY_GLASSWIND_PORTAL_ITEMS, 30),
             renderItem('plaza-ground-extension', rectangle(960, 432, 64, 108), '#51473d', {
               stroke: '#332f2c',
               lineWidth: 2,
@@ -445,7 +452,12 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
           ],
           entities: [],
           triggers: [],
-          portals: ['academy-training-portal', 'academy-field-portal', 'boss-shortcut-portal'],
+          portals: [
+            'academy-training-portal',
+            'academy-glasswind-portal',
+            'academy-field-portal',
+            'boss-shortcut-portal',
+          ],
         },
         {
           id: 'training-room',
@@ -493,6 +505,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         ...FIRST_JOURNEY_ROOMS,
       ],
     },
+    GLASSWIND_REGION,
   ],
   portals: [
     {
@@ -515,6 +528,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
       transition: { durationSeconds: 0.32 },
     },
     ...FIRST_JOURNEY_PORTALS,
+    ...GLASSWIND_PORTALS,
   ],
   patches: [
     {
@@ -532,6 +546,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
       ],
     },
     ...FIRST_JOURNEY_PATCHES,
+    ...GLASSWIND_PATCHES,
   ],
 });
 
