@@ -76,7 +76,7 @@
 
 ## IN-20260831-025240
 
-- status: verifying
+- status: done
 - received_at: 2026-08-31T02:52:40+09:00
 - priority: normal
 - source: team-lead-main
@@ -86,8 +86,8 @@
 - registration_base: e3706a331f9f802a7a3072b0f79f0f5c66a08b87
 - accepted_at: 2026-08-31T04:33:00+09:00
 - checkpoint_commit: 679e1b0aeb58b4667db534f61a884c42a80a04c9
-- final_commit: null
-- integration: null
+- final_commit: 4b038df4b379c2ecdf3dce84b4d70d8492947638
+- integration: the merge commit that marks this entry done
 - owned_paths: [loop/completion.mjs, loop/loop.ps1, loop/PROMPT.md, docs/development/process.md, docs/development/loop-engineering-references.md]
 
 ### 원문 — 불변
@@ -107,14 +107,14 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: current main은 phase별 정상 종료를 없애고 한 session complete-work prompt를 사용하지만 `loop/loop.ps1`의 성공 판정은 selected entry 부재만 확인해 clean/push/integration/lease durable proof를 강제하지 않는다.
-- 현재 최선: writer checkpoint `679e1b0aeb58b4667db534f61a884c42a80a04c9`은 outer loop가 origin을 fetch한 뒤 live entry, main branch/clean/push, executor local/remote final과 main ancestry, lease를 한 snapshot에서 판정하고 failure evidence를 run summary에 남긴다.
-- 다음 병목: latest main을 executor final에 포함한 뒤 동일 fixture·parser·lint/format·owned diff를 최종 재검증하고 main 통합·exact cleanup을 완결한다.
-- 검증: completion pure decision의 정상·live entry·wrong branch·dirty/unpushed main·live lease·missing/unpushed/unmerged executor·blocked·ROADMAP 12개 fixture, actual implementing/lease-held snapshot의 실패 사유, PowerShell parser, `npm run check`, `git diff --check`가 통과했다. 운영 문서 변경이라 visible game screen은 적용되지 않는다.
+- 현재 최선: latest main `b8985a7bc8da8d9b690bda49cbfe4dff343bbaa1`을 포함한 clean final `4b038df4b379c2ecdf3dce84b4d70d8492947638`이 outer loop의 성공 조건을 live entry 부재, clean pushed main, pushed integrated executor final, released lease의 단일 executable postcondition으로 강제한다.
+- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block만 정리하고 STATUS에 실제 merge hash를 기록한다.
+- 검증: completion pure decision의 정상·live entry·wrong branch·dirty/unpushed main·live lease·missing/unpushed/unmerged executor·blocked·ROADMAP 12개 fixture, actual lifecycle snapshot의 단계별 실패 사유, PowerShell parser, branch-only owned path 5개, `npm run check`, `git diff --check`, clean local/remote executor final과 latest-main ancestry를 확인했다. 운영 문서·supervisor 변경이라 applicable game screen이 없어 visible PNG QA는 적용하지 않았다. 기능 완결성·설계/Method 정합·회귀 안전성은 모두 2 이상이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-진행 전
+한 fresh `codex exec`이 entry를 live INBOX에서 지운 것만으로 성공하지 않도록 outer supervisor를 수정했다. 이제 main branch/clean/origin push, deterministic executor local/remote final 일치와 main 포함, lease 해제를 모두 만족해야 exit 0이 되며 빠진 증거는 run summary의 구체적 failure로 남아 다음 fresh session이 복구한다. Final은 `4b038df4b379c2ecdf3dce84b4d70d8492947638`이다.
 
 ## IN-20260831-030641
 

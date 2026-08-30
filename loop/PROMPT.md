@@ -26,6 +26,7 @@
 - PNG나 검사가 실패하면 같은 session에서 수정 → 검사 → checkpoint → capture를 반복한다.
 - 정상 edit·검사·commit·branch push·non-rewriting main merge/push에 승인을 묻지 않는다.
 - Force push, shared-history rewrite, broad reset, guessed cleanup과 품질 threshold 하향을 하지 않는다.
+- Session이 끝난 뒤 outer loop는 origin을 다시 fetch하고 selected entry 부재뿐 아니라 clean `main == origin/main`, executor local/remote final 일치·main 포함과 lease 해제를 모두 확인한다. 하나라도 빠지면 성공이 아니라 abnormal recovery 대상이다.
 
 ## ④ 한 바퀴 도는 순서
 
@@ -43,7 +44,9 @@ DESIGN·STATUS·INBOX 읽기
 → latest main 재확인·non-rewriting merge
 → INBOX done/result와 STATUS를 merge commit에 보존
 → exact done block cleanup·actual merge hash 기록
-→ main push·lease 해제·정상 종료
+→ main push·lease 해제
+→ clean main/origin·pushed integrated executor ref·released lease postcondition 확인
+→ 정상 종료
 ```
 
 사람의 Product Decision, credential 또는 외부 장애만 exact `blocked` evidence를 기록하고 정상 종료할 수 있다. 그 외 incomplete entry를 남기고 종료하면 비정상 실패다.

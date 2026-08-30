@@ -123,6 +123,7 @@ Outer supervisor
 | Ready entry                                | final diff/check 재확인 후 main merge                      | integration commit                       |
 | Partial main merge                         | intent/staged paths가 유일하면 완료, 아니면 안전하게 abort | clean main                               |
 | Integration 뒤 done block 잔류             | exact parser로 block만 제거, actual hash 기록              | live queue cleanup                       |
+| Entry 부재지만 durable postcondition 미달  | origin 재조회, main/ref/lease의 빠진 증거부터 복구         | clean pushed integrated final·no lease   |
 | Push 실패                                  | 같은 commit hash push 재시도                               | local==remote                            |
 | Codex crash/tool failure                   | nonzero exit; Task Scheduler restart                       | 새 ephemeral session이 evidence에서 복구 |
 | Concrete product/credential/external block | INBOX·STATUS에 exact blocker 기록                          | blocked 정상 종료                        |
@@ -138,6 +139,8 @@ Outer loop는 단순히 queue가 잠시 비었다는 이유로 프로젝트를 �
 - Clean `main == origin/main`
 - Canonical Conflict와 concrete blocker 없음
 - Completion evidence가 STATUS/Git에 push됨
+
+Entry run의 더 좁은 성공 조건은 `loop/completion.mjs`가 판정한다. Live entry 부재, clean `main == origin/main`, deterministic executor local/remote ref 일치와 main ancestry, lease 해제가 같은 snapshot에서 모두 참이어야 한다. 이 조건은 문서상 권고가 아니라 outer supervisor가 nonzero recovery를 결정하는 executable postcondition이다.
 
 Task Scheduler는 설치 직후 disabled다. `run-once` 두 회가 Codex fresh-session 실행, Git integration, log와 visible QA 경로를 검증한 뒤에만 `start`/`enable`한다.
 

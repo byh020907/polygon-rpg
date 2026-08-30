@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 한 loop 완전 작업 단위 · verifying
-- 현재 active inbox entry: `IN-20260831-025240` · `verifying`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-025240` · checkpoint `679e1b0aeb58b4667db534f61a884c42a80a04c9`
+- 상태: 한 loop 완전 작업 단위 · integration cleanup 예정
+- 현재 active inbox entry: `IN-20260831-025240` · `done` block cleanup 예정
+- 현재 executor branch/worktree: `codex/loop/in-20260831-025240` · final `4b038df4b379c2ecdf3dce84b4d70d8492947638`
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 수동 검증 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · `PAUSED`
 - Main: clean `main == origin/main`
@@ -48,10 +48,11 @@
 - Visible QA preflight: 실제 visible Chrome에서 `GAME_START=dungeon`, `GAME_FRAME=180`, `1440×810` sealed-forest-dungeon PNG와 metadata를 생성하고 이미지를 직접 판독했다. Console error는 0개이며 browser/server가 종료됐다. Artifact는 `artifacts/visual-qa/manual-dungeon-180/`에 있다.
 - 한 loop 완전 작업 단위 accept: current complete-work 문서·prompt·runner를 대조해, selected entry 부재만 확인하는 성공 판정이 main push·executor 통합·lease 해제 누락을 잡지 못하는 마지막 실행상 병목임을 확인했다. 이 entry는 gameplay 변경 없이 durable completion postcondition을 강제한다.
 - 한 loop 완전 작업 단위 writer checkpoint: `679e1b0aeb58b4667db534f61a884c42a80a04c9` · `loop/completion.mjs`의 pure decision과 실제 Git/INBOX/lease inspector를 추가하고 outer loop의 exit-0 조건에 연결했다. 12개 pass/fail fixture, 실제 incomplete snapshot, PowerShell parser, `npm run check`, `git diff --check`를 통과했다. 화면 없는 운영 변경이라 visible PNG QA는 적용하지 않는다.
+- 한 loop 완전 작업 단위 clean final: `4b038df4b379c2ecdf3dce84b4d70d8492947638` · latest main checkpoint를 non-rewriting merge한 뒤 12개 completion state fixture, actual lifecycle failure boundary, PowerShell parser, branch-only owned path 5개, `npm run check`, `git diff --check`, clean local/remote branch를 재확인했다. 적용 품질 축은 모두 2 이상이며 화면 비적용이다.
 
 ## Next
 
-현재 session은 checkpoint를 latest main에 정합해 최종 회귀 검사한 뒤 `IN-20260831-025240` final·main integration·exact cleanup까지 완결한다.
+현재 session은 final의 non-rewriting main merge를 terminal 원문·결과와 함께 보존한 뒤 exact `done` block cleanup, 실제 merge hash 기록, push와 lease 해제까지 완결한다.
 
 ## Update Contract
 

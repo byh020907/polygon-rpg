@@ -28,14 +28,14 @@ function Get-LoopEntry {
   return $next
 }
 
-function Get-EntryAfterRun {
+function Get-CompletionEvidence {
   param([string]$EntryId)
 
-  $json = & $script:LoopConfig.NodePath (Join-Path $PSScriptRoot 'inbox.mjs') list --repo $repoRoot
+  $json = & $script:LoopConfig.NodePath (Join-Path $PSScriptRoot 'completion.mjs') inspect --repo $repoRoot --entry $EntryId
   if ($LASTEXITCODE -ne 0) {
-    throw 'INBOX completion 조회가 실패했습니다.'
+    throw 'Loop durable completion 조회가 실패했습니다.'
   }
-  return @(($json | ConvertFrom-Json).entries | Where-Object { $_.id -eq $EntryId })
+  return $json | ConvertFrom-Json
 }
 
 function Write-RunSummary {
@@ -110,19 +110,29 @@ If a human Product Decision or external credential truly blocks completion, reco
     $prompt | & $script:LoopConfig.CodexPath @codexArguments 2>&1 |
       Tee-Object -FilePath $eventsPath
     $codexExitCode = $LASTEXITCODE
+
+    & $script:LoopConfig.GitPath -C $repoRoot fetch origin --prune
+    if ($LASTEXITCODE -ne 0) {
+      throw '완료 검증 전 origin fetch가 실패했습니다.'
+    }
     $endHead = & $script:LoopConfig.GitPath -C $repoRoot rev-parse HEAD
-    $remainingEntry = if ($isRoadmapRun) { @() } else { @(Get-EntryAfterRun -EntryId $entryId) }
+    $completionEvidence = Get-CompletionEvidence -EntryId $entryId
     $statusPath = Join-Path $repoRoot 'docs\STATUS.md'
     $latestSubject = & $script:LoopConfig.GitPath -C $repoRoot log -1 --format=%s
     $roadmapComplete = $isRoadmapRun -and
       (Select-String -LiteralPath $statusPath -SimpleMatch '- Loop completion: VERIFIED' -Quiet) -and
       $latestSubject -eq '루프 전체 완료 증명'
     $progressed = $endHead -ne $startHead
-    $completed = if ($isRoadmapRun) { $progressed -or $roadmapComplete } else { $remainingEntry.Count -eq 0 }
-    $blocked = if ($isRoadmapRun) {
-      Select-String -LiteralPath $statusPath -SimpleMatch '- Loop blocker:' -Quiet
+    $completed = if ($isRoadmapRun) {
+      ($progressed -or $roadmapComplete) -and $completionEvidence.complete
     } else {
-      $remainingEntry.Count -eq 1 -and $remainingEntry[0].status -eq 'blocked'
+      $completionEvidence.complete
+    }
+    $blocked = if ($isRoadmapRun) {
+      (Select-String -LiteralPath $statusPath -SimpleMatch '- Loop blocker:' -Quiet) -and
+        $completionEvidence.repositoryDurable
+    } else {
+      $completionEvidence.blocked
     }
 
     Write-RunSummary -Path $summaryPath -Summary ([ordered]@{
@@ -135,6 +145,7 @@ If a human Product Decision or external credential truly blocks completion, reco
       completed = $completed
       blocked = $blocked
       roadmapComplete = $roadmapComplete
+      completionEvidence = $completionEvidence
       events = $eventsPath
       lastMessage = $lastMessagePath
       visualQa = $env:VISUAL_QA_OUTPUT
