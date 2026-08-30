@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-120911
-status: feedback
+status: implementing
 priority: high
 lane: dedicated
 created_at: 2026-08-30T12:09:11+09:00
@@ -10,6 +10,30 @@ reopens: null
 review: team-lead
 source: roadmap
 source_ref: M2
+task_title: WI-20260830-120911 — 학원촌 ↔ 훈련장 Room Portal
+registration_base: 186ecb3c49cb70eddff67bd9414c9cb1723dae32
+owned_paths:
+  - AGENTS.md
+  - docs/development/reports/WI-20260830-120911-academy-training-room-portal.md
+  - docs/development/work-items/WI-20260830-120911-academy-training-room-portal.md
+  - docs/input-system.md
+  - docs/rendering-pipeline.md
+  - docs/runtime-architecture.md
+  - docs/ui-architecture.md
+  - docs/world-map-system.md
+  - index.html
+  - src/app/GameApp.js
+  - src/combat/CombatCommandController.js
+  - src/game/GameScene.js
+  - src/game/equipment/EquipmentProfiles.js
+  - src/game/map/MapDefinition.js
+  - src/game/map/MapRuntime.js
+  - src/game/map/MapStateResolver.js
+  - src/game/maps/academyVillage.js
+  - src/game/room/RoomNode.js
+  - src/game/training/TrainingEncounterNode.js
+  - src/style.css
+  - src/ui/gameShell.js
 ---
 
 # M2 학원촌 ↔ 훈련장 Room Portal
@@ -38,4 +62,5 @@ Deterministic Room/Portal/equipment/combat 진단, `npm run check`, `git diff --
 
 - Roadmap: `M2 — 학원촌 ↔ 훈련장 Room Portal`
 - Depends on: `WI-20260830-112538`
+- Recovery source commit: `14fc3a66a462d594b1ab3f703cf50faf164ab53e`
 - 업무보고: [`WI-20260830-120911-academy-training-room-portal.md`](../reports/WI-20260830-120911-academy-training-room-portal.md)

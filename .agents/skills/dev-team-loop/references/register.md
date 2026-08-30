@@ -1,53 +1,25 @@
 # Register Mode
 
-Use this mode only in the team-lead-facing main conversation.
+Use this mode only in the team-lead-facing main task. The main task is a Git queue intake/status surface, not the coordinator runtime.
 
 ## Classify
 
-Do not create a work item for:
+- A new independent development request creates one minimal work item unless the team lead explicitly requests a split.
+- Priority, pause, cancel, reopen and additional direction for an exact item update that item's durable queue command; they do not create a second feature item.
+- Overall status, automation state and bare start/continue are lifecycle operations, not work items.
 
-- overall status requests;
-- priority changes;
-- pause, cancel or reopen requests;
-- merge or push instructions;
-- roadmap reordering;
-- starting, continuing or resuming the approved roadmap;
-- additional direction explicitly targeting an existing work-item ID.
+## Record And Return
 
-Everything else that asks for a bug fix, feature, investigation, improvement or planning result is a new work item.
+1. Preserve the user's complete original request or exact lifecycle command.
+2. Reconcile Git work items and exact Codex task titles only enough to prevent duplicate registration.
+3. Allocate the stable ID and write the minimal work-item/queue update with `task_title`, `registration_base`, `owned_paths` when known and source evidence.
+4. Commit and push only that queue mutation from clean, current main with a concise Korean message.
+5. Return immediately after reporting what was queued, which existing task can be opened and any real blocker.
 
-## Register And Start Without Reconfirmation
+Do not create a work-item task, implement, integrate, wait/poll, tune quality or relay feedback in this main request. The next standalone coordinator tick rechecks Git and creates or resumes the authoritative task.
 
-1. Preserve the user's complete original message.
-2. Treat the request as implementation input. Do not ask the team lead to approve a restatement, plan, Reference Brief, execution contract, quality contract, task list or work-item document.
-3. Treat one message as one item. Split only on explicit user instruction.
-4. Reconcile Git work items and active Codex agent assignments.
-5. Allocate the ID, create the Git-tracked document, commit it from the main conversation with a concise, result-oriented Korean subject, then push the registration.
-6. Spawn exactly one root `worker` agent when dependencies and ownership allow; otherwise leave it queued.
-7. Emit a concise registration/start update, then keep coordinating the root agent in the same main turn until feedback, completion, blocker or another defined stop condition.
+If the main task cannot safely mutate because main is dirty, behind/ahead, or an ownership conflict exists, record nothing and report exact evidence. Do not guess-clean or move another task's worktree.
 
-The user request explicitly authorizes creation of the work item and its root subagent thread. It does not authorize a separate manager task or unrelated tasks.
+## Durable Partial-Failure Rule
 
-## Root Agent Prompt
-
-Include:
-
-- the exact work-item ID and path;
-- an instruction to invoke `dev-team-loop` Run mode;
-- the owned paths or responsibility boundary known at registration;
-- a reminder that other agents may share the checkout and must not revert their edits;
-- a prohibition on branch, commit, push and worktree mutations.
-
-## Main Lifecycle Update
-
-This is an intermediate commentary update, not the final response for the coordinator turn.
-
-Return only:
-
-- work-item ID and title;
-- inferred priority and lane;
-- queued or started state;
-- root-agent task name when started;
-- any dependency preventing start.
-
-Do not copy internal planning into the main conversation. Registration alone is not a reason to end the coordinator turn while the root agent is still active.
+Task creation is coordinator-owned and happens only after the registration commit is pushed. If a coordinator creates a task and exits before any follow-up record, a later tick finds the exact `WI-... 제목` and reconciles it. Transient task IDs are not stored in Git.

@@ -1,39 +1,33 @@
 # Cancel Mode
 
-Cancellation is terminal for one exact work item. Reopening creates a new item linked with `reopens`.
+Cancellation is terminal for one exact work item. Reopening creates a new item and a new user-owned Codex task linked with `reopens`.
 
-## Before Mutation
+## Team-Lead Main Intake
 
-1. Require the exact work-item ID.
-2. Inspect its Git document, authoritative root agent, current checkout changes and lifecycle.
-3. Interrupt the exact root agent and any item-owned supporting agents before changing files.
-4. Determine whether the item is unstarted, uncommitted or already integrated.
+1. Require and resolve the exact work-item ID and authoritative task link/title.
+2. Record the cancellation command on current clean main with a Korean scoped commit and push.
+3. Return immediately. Do not wait, interrupt a subagent, manipulate another task's files or relay a reply.
 
-## Unstarted
+## Stateless Coordinator Ticks
 
-- Mark `inbox` or `queued` as `cancelled`.
-- Record the reason and do not spawn an agent.
-- Commit and push the cancellation document from the main conversation.
+1. A tick finds the durable cancellation command and sends it to the exact authoritative task, then exits without waiting.
+2. A later tick reconciles the task's last commit, dirty-tree paths, validation state and cancellation impact.
+3. Mark the item `cancelled` with that evidence and push main. Do not cherry-pick partial implementation.
+4. Do not manually delete the managed worktree. Archive only after durable cancellation evidence exists and continued recovery is unnecessary.
 
-## Running Or Feedback
+Report the outcome to the team lead in plain Korean: what work stopped, what remains visible or recoverable and whether anything is blocked. Keep the item ID, last commit and folder terminology as supporting evidence only when needed.
 
-1. Confirm the exact root agent is stopped.
-2. Record confirmed decisions, partial state, cancellation reason and impact.
-3. Verify every changed path belongs only to this item.
-4. Discard only proven item-owned, uncommitted implementation with targeted patches or file operations. Do not use broad reset/cleanup commands.
-5. If user or other-agent ownership is mixed or uncertain, preserve everything and mark `blocked` instead.
-6. Do not merge code and do not create a completion report.
-7. Commit and push only the cancellation history after the checkout is safe.
+If the task cannot be reached, preserve its worktree and record `blocked` until ownership is proven. Never guess-clean a worktree.
 
-The user's cancellation authorizes discarding this item's proven agent-owned partial implementation, not unrelated changes.
+## Work-Item Task
 
-## Already Integrated
+1. Stop new implementation and any item-owned subagents.
+2. Inspect the current tree without broad reset or cleanup.
+3. Report decisions, changed paths, last valid commit, uncommitted state, validation and cancellation impact.
+4. Do not push, merge, integrate partial code or create a completion report. A safe checkpoint commit is allowed only when it preserves recoverable item-owned evidence and the cancellation request does not require discarding it.
+5. End with `cancelled` or `blocked` evidence for the next coordinator tick.
 
-Do not rewrite or silently revert main. Register a new work item describing the desired revert and link the integrated item.
+## Already Integrated And Reopen
 
-## Reopen
-
-- Create a new work item and root agent.
-- Set `reopens` to the cancelled item ID.
-- Read the old request, result/feedback and cancellation reason before implementing the new candidate.
-- Leave the original item `cancelled`.
+- Already integrated work is not cancelled by history rewrite. Register a new revert work item with impact analysis.
+- Reopen creates a new work item and new Codex task, sets `reopens` to the old ID and reads the old request/result/cancellation evidence. The original remains `cancelled`.

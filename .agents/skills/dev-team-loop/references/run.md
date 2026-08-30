@@ -1,70 +1,52 @@
 # Run Mode
 
-One root developer subagent owns one work item from implementation through concrete-candidate feedback and final handoff.
-
-This developer is the work item's sole Vertical Slice Director and quality owner. Bounded supporting agents may contribute, but they do not become peer owners.
+One user-owned Codex task owns one work item from implementation through direct team-lead feedback and its final worktree commit. This task is the sole Vertical Slice Director and quality owner. Bounded subagents may help, but they do not become peer owners or user-facing work items.
 
 ## Start
 
 1. Read the exact work-item document, roadmap milestone, project process, `docs/development/quality-loop.md` and relevant canonical system docs.
-2. Verify assigned path ownership and current Git state. Do not create branches, commits, pushes or worktrees; the main coordinator owns Git integration.
-3. Treat the team lead's explicit intent as implementation input. Do not reinterpret it as a request to approve a plan, Reference Brief, execution contract, quality contract, task list or work-item document.
-4. Keep internal planning and implementation detail in this agent thread. Return only concise lifecycle summaries and concrete result evidence to the parent.
+2. Verify the exact task title, `registration_base`, assigned `owned_paths`, worktree status and starting commit. Preserve unrelated or inherited changes.
+3. Confirm this is a Codex-managed worktree for a Git repository. If it is unexpectedly running in the shared local checkout, report `blocked: worktree-required` rather than becoming the main checkout writer.
+4. Treat explicit team-lead intent as implementation input. Do not ask for approval of a plan, Reference Brief, execution contract, quality contract, task list or work-item prose.
+5. Keep internal planning and implementation detail in this task. Do not send implementation or feedback through the team-lead main task or coordinator tick.
 
 ## Blocking Decision Interview
 
-- Default to the safest reversible implementation that fits the stated intent, roadmap, current code and verified References. Disclose the default after the candidate exists; do not request pre-approval.
+- Default to the safest reversible implementation that fits stated intent, roadmap, current code and verified References. Disclose the default after the candidate exists.
 - Ask only when a decision genuinely blocks implementation, materially changes the product and cannot be safely inferred or made reversible.
-- Ask exactly one short question. Its answer must be Yes/No or one of 2–3 mutually exclusive choices, each with a one-line impact. Never send a planning document as the question.
-- Record the answer as concise feedback in the same work item, then continue autonomously in the same agent thread.
-
-## Internal Execution Frame
-
-Before editing, determine only the internal context needed to execute safely:
-
-- product and Engineering References with adopt/adapt/principle-only/reject decisions;
-- playable start-to-finish scenario, ownership paths, public contracts and non-scope;
-- applicable rubric axes, target level, baseline evidence and stopping conditions;
-- actual artifact/local/mobile feedback path and rule candidates.
-
-Keep this transient in the agent thread unless a verified decision belongs in a canonical owner document or the implemented result belongs in the work item/report. Do not make completion of planning sections a lifecycle gate. Do not ask for details that the request, roadmap, code and References already establish.
+- Ask exactly one short question in this work-item task. Its answer must be Yes/No or one of 2–3 mutually exclusive choices, each with a one-line impact.
+- The team lead answers here. Record the accepted direction in the work item and continue in this same task/worktree.
 
 ## Implement And Evaluate
 
 - Implement the complete playable slice, not isolated feature checkboxes.
-- Treat each iteration as `baseline → largest bottleneck → one focused change → deterministic checks → artifact inspection → rescore`.
-- Use `explorer` or supporting agents only for genuinely independent read-heavy or disjoint ownership work.
-- Before delegation, freeze the shared contract and assign exact paths/results. Supporting agents do not change the parent scope, rubric, work-item document, report, feedback state or completion.
-- Integrate every supporting result, rerun the full playable path and rescore the combined artifact.
+- Use `baseline → largest bottleneck → one focused change → deterministic checks → artifact inspection → rescore`.
+- Use subagents only for bounded exploration, proven disjoint implementation or independent verification. Freeze shared contracts and exact ownership first.
+- Integrate every subagent result in this parent task, rerun the full playable path and rescore the combined artifact.
 - Verify deterministic frame/state behavior separately from the actual Canvas path.
-- Keep current best scores, iteration evidence, next bottleneck and rule candidates in the agent thread while active; record the final threshold, result evidence and durable rule candidates in the work item/report.
-- A long or risky tuning pass may use an uncommitted checkpoint description after functional checks pass; only the main coordinator creates Git commits.
-- Freeze the last writer result and request an independent read-only verifier through the parent before feedback or completion.
+- Keep transient iteration detail in this task; record final threshold, evidence and durable rule candidates in the work item/report.
 - Do not enter feedback or completion while an applicable quality axis is 0 or 1.
-- If the same acceptance gate fails twice without new evidence or design change, preserve the best threshold-passing candidate and return concrete `feedback`; if no candidate passes, return `blocked` with the failed evidence instead of weakening the threshold.
-- Repeated blockers or unclear ownership return `blocked`.
+- If the same gate fails twice without new evidence or design change, preserve a threshold-passing current best for feedback; otherwise return `blocked` with failed evidence instead of weakening the threshold.
 
-## Feedback
+## Direct Feedback
 
-For product feel, visuals, new features or any item with `review: team-lead`:
+Enter this state only when human observation is genuinely required. `review: team-lead` does not justify a generic wait.
 
-1. Prepare the best available local/mobile playable path.
-2. Update the work-item result and, when applicable, its intent-first report with the actual candidate evidence.
-3. Return a concise `feedback` result that leads with:
-   - the actual changed code tree;
-   - the behavior/play path and exactly what the team lead should experience;
-   - verification and independent-verifier boundary;
-   - the work-report link (a dedicated report when one exists, otherwise the work-item result).
-4. Include the rubric level and remaining bottleneck after the concrete evidence.
-5. End without asking the team lead to confirm or approve. Concrete feedback targeting this result resumes the same agent.
+1. Prepare the best available local/mobile playable path in this worktree.
+2. Update the work-item result and any intent-first report with actual candidate evidence.
+3. If requirements and verification can decide the result, skip `feedback` and continue to Finalize.
+4. Otherwise send one plain-Korean message containing the implemented feature and play path; inspection location or controls; 1–3 observable questions; and one line explaining what the answers will change.
+5. Wait here for those answers. Apply them in this same task/worktree and repeat evaluation until accepted or blocked.
 
-Do not declare completion while feedback or implementation remains.
+Never send a generic “의견을 기다립니다”, “확인해 주세요” or equivalent. Do not create a final commit while concrete required judgment or implementation remains.
 
-## Finish
+## Finalize
 
-1. Set the final work-item state and record the actual result and accepted feedback.
+1. Set the work-item state to `ready-for-integration` and record actual result, accepted judgment when any, quality threshold and verification evidence.
 2. For a playable vertical slice or meaningful milestone, write one intent-first report under `docs/development/reports/`. Small maintenance items use the work-item result only.
-3. Confirm the quality threshold and artifact evidence, then return a final summary led by the changed code tree, behavior/play path, validation, verification boundary and work-report path.
-4. End the turn. Do not stage, commit, push or consume the next item.
+3. Run affected syntax/lint/format checks, `git diff --check`, the actual user path and independent verification appropriate to the change.
+4. Inspect and stage only `owned_paths`. Create a scoped commit in this worktree with a concise Korean message. Do not push, rewrite history, update main roadmap state or start another work item. When recovering base drift, merge current `origin/main` only when the item explicitly requires it and preserve the resulting parent evidence.
+5. Confirm the final commit includes the intended changed tree and that the worktree is clean.
+6. Finish with this exact team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash.
 
-Routine, unambiguous bug fixes may use `review: auto` only when behavior and acceptance are already explicit. Promote the item to `review: team-lead` when the result changes control feel, visuals, product rules or public data.
+The final hash is returned by this task, then verified and integrated by a later standalone coordinator tick. It is not self-recorded inside the same commit.

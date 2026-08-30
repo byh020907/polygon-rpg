@@ -2,10 +2,10 @@
 
 이 디렉터리는 플레이 가능한 수직 단위별 업무보고를 보관한다.
 
-- 작성·ownership·형식은 [`../process.md`](../process.md)의 **업무보고** 절을 따른다.
-- 파일명은 `WI-YYYYMMDD-HHmmss-<slice-slug>.md`를 사용해 work item 간 충돌을 막는다.
-- 한 root agent는 자기 수직 단위의 보고서 파일 하나만 수정한다.
-- 보고서는 팀장이 구현 범위를 즉시 파악할 수 있는 compact changed code tree로 시작하고, 의도, 플레이 결과, 영향, 검증·피드백과 다음 loop를 기록한다.
-- 계획, Reference Brief, 실행·품질 계약과 task list의 승인을 받는 문서로 사용하지 않는다. 구현된 candidate의 evidence만 기록한다.
-- 기능 하나, 진행 중 상태와 긴 command log를 별도 보고서로 만들지 않는다.
-- 작은 bug·문서 정합·maintenance 결과는 work item의 `결과`가 업무보고 링크 역할을 하며 별도 보고서를 만들지 않는다.
+- 작성·ownership·형식은 [`../process.md`](../process.md)의 **완료 결과 전달과 업무보고** 절을 따른다.
+- 파일명은 `WI-YYYYMMDD-HHmmss-<slice-slug>.md`를 사용한다.
+- 한 사용자 소유 work-item task가 자기 수직 단위의 보고서 파일 하나를 수정하고 final worktree commit에 포함한다.
+- 보고서는 실제 변경 파일로 시작하고, 의도, 플레이 결과, 영향, 검증·팀장 의견과 다음 개선 단계를 쉬운 한국어로 기록한다.
+- 계획, Reference Brief, 실행·품질 계약과 task list의 승인 문서로 사용하지 않는다.
+- 작은 bug·문서 정합·maintenance는 work item의 `결과`가 업무보고이며 별도 보고서를 만들지 않는다.
+- Team-lead main은 보고서를 대리 작성하거나 context에 복제하지 않는다. Stateless coordinator tick은 final commit 검증·통합과 work-item 연결만 수행하고, gameplay 품질을 대신 작성·평가하지 않는다.

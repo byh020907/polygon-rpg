@@ -1,37 +1,22 @@
 # Start Or Continue Mode
 
-Use this mode in the team-lead-facing main conversation when the team lead invokes `$dev-team-loop` without a separate development request, or explicitly says to start, continue or resume the approved roadmap.
+Bare `$dev-team-loop` and explicit start/continue/resume requests authorize exactly one manual stateless coordinator tick. They do not create a work item and do not turn the current conversation into a long-running supervisor.
 
-## Canonical Start
+## Manual Tick
 
-The bare skill invocation is the canonical start command. It is an operation, not a work item, and explicitly authorizes this conversation to start or resume the next Codex root-agent work item.
+1. Read `references/manage.md` and run its Acquire, Snapshot and One-Tick Decision Order once.
+2. Recover only from current Git, exact Codex task titles/status, managed worktrees and commit graph. Do not use prior main/coordinator memory.
+3. Integrate at most one ready item, or dispatch at most one queued/roadmap item, or report one active/conflict/stop state.
+4. Release the coordinator lease and return immediately. Do not wait for a work-item task after dispatch.
 
-1. Inspect Git work items, roadmap state, repository status and the current Codex subagent tree.
-2. Reuse the exact root agent already associated with an open work item. If duplicates or conflicting writers exist, stop with `agent-conflict`.
-3. Reconcile active work before deriving anything. Resume a genuinely resumable item or derive one item from the approved current milestone's next unmet gate.
-4. If an item is waiting for team-lead feedback, do not resume it from the bare invocation. Return `waiting` with `stopCondition: team-lead-feedback`; actual feedback targeting that item resumes its existing root agent.
-5. If no item owns the gate, register one roadmap-derived work item, commit and push only that durable registration, then spawn one root `worker` agent with the exact work-item path and Run-mode instruction.
-6. Wait for the root agent's result or attention request. Keep raw exploration and command output inside the agent thread.
+The recurring project automation is the default continuation mechanism. Manual start is a recovery and immediate-tick surface, not an outer conversation loop.
 
-Do not create a work item whose content is the skill invocation or “continue the roadmap.” Do not create a separate manager task or duplicate root agent.
+## Stop Conditions
 
-## Continued Operation
+Do not dispatch a new item when there is an authoritative implementing/feedback/blocked/paused item, a concrete observable question in its task, an irreversible product choice without a safe default, Canonical Conflict, external blocker, explicit pause/cancel, no approved next milestone or completed roadmap.
 
-After start, the main coordinator keeps running `roadmap gate → work item → quality loop → feedback/integration → next gate` in this conversation until a defined stop condition.
+A task completion, tick response, unchanged timeout, successful integration or missing previous conversation context is not a stop condition. A later standalone tick continues from Git evidence.
 
-- Use the native agent wait mechanism for active root agents; a timeout is only a checkpoint.
-- Forward team-lead feedback to the same root agent with a follow-up task so its work-item context is preserved.
-- Do not pause for approval of internal plans or work-item prose. A genuinely blocking decision is one short Yes/No or 2–3-choice interview; reversible choices become implemented defaults and are disclosed with the candidate.
-- When a root agent completes, independently verify the frozen candidate, integrate from the main conversation, then reevaluate the roadmap before deriving another item.
-- Do not keep a background manager task, polling terminal or external Run alive.
+## Reply
 
-## Main Reply
-
-For lifecycle-only start updates, render only:
-
-- current milestone;
-- active, resumed or newly derived work-item ID and title;
-- current lifecycle state and root-agent thread when started;
-- the stop condition when no item can start.
-
-For feedback or completion, use the concrete result handoff defined by Run mode instead of this abbreviated start update.
+Report in plain Korean: what is being built, which exact task can be opened and what is actually blocked. Include lifecycle IDs/hashes only as supporting evidence. Never copy implementation logs or relay feedback.
