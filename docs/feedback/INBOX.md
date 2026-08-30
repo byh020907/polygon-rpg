@@ -203,3 +203,46 @@ Core Engineering Principles 일곱 규칙을 Polygon RPG의 단일 Engineering M
 ### 결과 — coordinator 소유
 
 진행 전
+
+## IN-20260831-030839
+
+- status: new
+- received_at: 2026-08-31T03:08:39+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: 8aa23206fb705807c52f841cc0dcd059ce546436
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+로드맵 1차 구현 완료 햇다햇는데 더 구체화하자
+현재 가장 안된 부분이 스토리 진행과
+실제 마을, 던전, 필드 등 맵 구현이야
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
