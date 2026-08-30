@@ -5,8 +5,8 @@
 ## Current State
 
 - 상태: Core Engineering Principles 전환 · 통합 완료
-- 현재 active inbox entry: `IN-20260831-025240` · `new`
-- 현재 executor branch/worktree: 없음 · 다음 entry 미수락
+- 현재 active inbox entry: `IN-20260831-025240` · `implementing`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-025240` · provisioning 예정
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 수동 검증 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · `PAUSED`
 - Main: clean `main == origin/main`
@@ -46,10 +46,11 @@
 - Core Engineering Principles integration: `aafa4383d7edeaddd258f78ad73671f2f07ce1ed` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤, 같은 transition의 cleanup에서 live INBOX의 exact `IN-20260831-005246` block만 제거했다.
 - Complete-work loop preflight: `codex-cli 0.150.1`, absolute Codex/Node/Git/PowerShell/Chrome path, PowerShell parser, Task Scheduler disabled registration과 `MultipleInstances=IgnoreNew`, abnormal restart `3 × 1m`, unlimited execution time를 확인했다.
 - Visible QA preflight: 실제 visible Chrome에서 `GAME_START=dungeon`, `GAME_FRAME=180`, `1440×810` sealed-forest-dungeon PNG와 metadata를 생성하고 이미지를 직접 판독했다. Console error는 0개이며 browser/server가 종료됐다. Artifact는 `artifacts/visual-qa/manual-dungeon-180/`에 있다.
+- 한 loop 완전 작업 단위 accept: current complete-work 문서·prompt·runner를 대조해, selected entry 부재만 확인하는 성공 판정이 main push·executor 통합·lease 해제 누락을 잡지 못하는 마지막 실행상 병목임을 확인했다. 이 entry는 gameplay 변경 없이 durable completion postcondition을 강제한다.
 
 ## Next
 
-다음 fresh session은 `IN-20260831-025240`의 한 loop 완전 작업 단위 요청을 current complete-work 구현과 대조하고, 필요한 수정부터 main integration과 exact cleanup까지 같은 session에서 완결한다.
+현재 session은 `IN-20260831-025240`에서 outer loop의 durable completion postcondition을 구현·검증하고 같은 session에서 final·main integration·exact cleanup까지 완결한다.
 
 ## Update Contract
 

@@ -76,19 +76,19 @@
 
 ## IN-20260831-025240
 
-- status: new
+- status: implementing
 - received_at: 2026-08-31T02:52:40+09:00
 - priority: normal
 - source: team-lead-main
-- title: null
+- title: 한 loop 완전 작업 단위 강제
 - supersedes: null
-- executor_branch: null
+- executor_branch: codex/loop/in-20260831-025240
 - registration_base: e3706a331f9f802a7a3072b0f79f0f5c66a08b87
-- accepted_at: null
+- accepted_at: 2026-08-31T04:33:00+09:00
 - checkpoint_commit: null
 - final_commit: null
 - integration: null
-- owned_paths: []
+- owned_paths: [loop/loop.ps1, loop/PROMPT.md, docs/development/process.md, docs/development/loop-engineering-references.md]
 
 ### 원문 — 불변
 
@@ -99,17 +99,17 @@
 
 ### 실행 계약 — coordinator 소유
 
-- 목표: 미정
-- 완료 조건: 미정
-- 비범위: 미정
-- 적용 품질 축: 미정
+- 목표: fresh `codex exec` 한 번이 entry 전체 구현·검사·checkpoint·해당 시 visible PNG QA·final·main 통합·INBOX 정리·push·lease 해제까지 완결한 경우에만 loop 한 회차가 성공하도록 실행 종료 조건을 강제한다.
+- 완료 조건: 선택 entry가 live INBOX에서 사라졌을 뿐 아니라 main clean·`origin/main` 동기화, executor local/remote ref 일치와 main 포함, lease 해제까지 확인해야 성공하고 어느 하나라도 빠지면 nonzero recovery 대상으로 남는다. Prompt와 canonical process/reference가 같은 계약을 설명하며 affected deterministic check, `npm run check`, `git diff --check`가 통과한다.
+- 비범위: gameplay·화면·balance 변경, Task Scheduler 활성화, 다른 INBOX entry 구현, 기존 executor worktree 추측 정리.
+- 적용 품질 축: 기능 완결성, 설계·Method 정합, 회귀 안전성. 화면 출력이 없는 loop 운영 변경이므로 Graphics·타격감·조작 명료성과 visible PNG QA는 적용하지 않는다.
 
 ### 실행 상태 — coordinator 소유
 
-- 기준선: 미정
-- 현재 최선: 미정
-- 다음 병목: 미정
-- 검증: 미정
+- 기준선: current main은 phase별 정상 종료를 없애고 한 session complete-work prompt를 사용하지만 `loop/loop.ps1`의 성공 판정은 selected entry 부재만 확인해 clean/push/integration/lease durable proof를 강제하지 않는다.
+- 현재 최선: `f51b92c7095c111716378a4d86e97283e777cf46`이 Windows complete-work loop와 visible QA 경로를 도입했고 process·quality·skill은 entry 전체 완결을 명시한다.
+- 다음 병목: outer loop의 완료 postcondition을 Git ref·main cleanliness·lease evidence까지 확장하고 실제 fixture state로 pass/fail 경계를 검증한다.
+- 검증: 문서·실제 `loop.ps1` caller·Task Scheduler disabled 상태·clean `main == origin/main`·entry branch/lease 부재 기준선을 확인했다. 구현 검사는 아직 실행 전이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
