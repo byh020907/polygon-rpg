@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-014120
-status: integrating
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T01:41:20+09:00
@@ -63,6 +63,5 @@ HEAD `7a3b732` 재정합에서 바뀐 파일은 개발 workflow 문서뿐이고 
 
 ## 연결
 
-- Root agent: `/root/wi_20260830_014120`
-- Integration commit: coordinator pending
+- Integration commit: `62a7b48f330bc540648f227b9db22efbd5d3464e`
 - 업무보고: `docs/development/reports/WI-20260830-014120-godot-scene-node-signal-architecture.md`
