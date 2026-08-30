@@ -1,4 +1,10 @@
 import { defineMap } from '../map/MapDefinition.js';
+import {
+  ACADEMY_FIELD_PORTAL_ITEMS,
+  FIRST_JOURNEY_PATCHES,
+  FIRST_JOURNEY_PORTALS,
+  FIRST_JOURNEY_ROOMS,
+} from './firstJourney.js';
 
 const DAY_PALETTE = Object.freeze({
   background: '#18333b',
@@ -327,6 +333,7 @@ const frontLayerItems = [
     opacity: 0.96,
     order: 10,
   }),
+  ...ACADEMY_FIELD_PORTAL_ITEMS,
 ];
 
 const combatDungeonItems = [
@@ -387,7 +394,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
   id: 'academy-village',
   name: '왕립 마법학교 학원권',
   version: 2,
-  worldSize: { width: 2304, height: 540 },
+  worldSize: { width: 7240, height: 540 },
   gridSize: 48,
   palette: DAY_PALETTE,
   groundY: null,
@@ -438,7 +445,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
           ],
           entities: [],
           triggers: [],
-          portals: ['academy-training-portal'],
+          portals: ['academy-training-portal', 'academy-field-portal', 'boss-shortcut-portal'],
         },
         {
           id: 'training-room',
@@ -483,6 +490,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
           triggers: [],
           portals: ['academy-training-portal'],
         },
+        ...FIRST_JOURNEY_ROOMS,
       ],
     },
   ],
@@ -506,6 +514,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
       },
       transition: { durationSeconds: 0.32 },
     },
+    ...FIRST_JOURNEY_PORTALS,
   ],
   patches: [
     {
@@ -522,6 +531,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         { op: 'set-enabled', target: 'lamp-glow', value: true },
       ],
     },
+    ...FIRST_JOURNEY_PATCHES,
   ],
 });
 

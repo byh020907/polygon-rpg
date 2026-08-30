@@ -16,6 +16,7 @@ import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
   getEquipmentProfile,
 } from './equipment/EquipmentProfiles.js';
+import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
@@ -808,8 +809,13 @@ export class GameScene extends SceneNode {
     });
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
+    this.journeyProgress = new FirstJourneyProgress();
     this.mapRuntime = new MapRuntime(mapDefinition, {
-      worldContext: { timePhase: 'day', weather: 'clear', storyFlags: {} },
+      worldContext: {
+        timePhase: 'day',
+        weather: 'clear',
+        storyFlags: this.journeyProgress.snapshot().storyFlags,
+      },
     });
     this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
     this.roomChanged = this.ownSignal(new Signal('roomChanged'));
@@ -831,12 +837,13 @@ export class GameScene extends SceneNode {
   }
 
   reset() {
+    const journey = this.journeyProgress.reset();
     this.worldTimeHours = 10;
     this.timePhase = timePhaseForHour(this.worldTimeHours);
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
       weather: 'clear',
-      storyFlags: {},
+      storyFlags: journey.storyFlags,
     });
     const mapSnapshot = this.mapRuntime.reset();
     const spawn = mapSnapshot.spawn?.position ?? { x: 270, y: 350 };
@@ -907,6 +914,13 @@ export class GameScene extends SceneNode {
     });
   }
 
+  syncJourneyWorldContext() {
+    this.mapRuntime.setWorldContext({
+      ...this.mapRuntime.getWorldContext(),
+      storyFlags: this.journeyProgress.snapshot().storyFlags,
+    });
+  }
+
   advanceWorldTime(deltaSeconds) {
     this.worldTimeHours = (this.worldTimeHours + deltaSeconds * WORLD_HOURS_PER_SECOND + 24) % 24;
     this.updateTimePhase();
@@ -974,6 +988,7 @@ export class GameScene extends SceneNode {
     this.cameraPosition = { ...presentation.destinationCameraPosition };
     this.portalTransitionPresentation = null;
     this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
+    this.journeyProgress.recordPortal(completion.portalId);
     this.roomChanged.emit(
       Object.freeze({
         portalId: completion.portalId,
@@ -1096,7 +1111,88 @@ export class GameScene extends SceneNode {
       this.connectTo(roomScene.cameraFeedbackOccurred, (feedback) =>
         this.combatCameraFeedback.trigger(feedback),
       ),
+      this.connectTo(roomScene.encounterCompleted, (result) =>
+        this.resolveJourneyEncounter(result),
+      ),
     ];
+  }
+
+  resolveJourneyEncounter(result) {
+    const resolution = this.journeyProgress.resolveEncounter(result.profileId);
+    if (!resolution.changed) return resolution;
+    if (resolution.kind === 'field-guardian-defeated') {
+      this.playerMaxHealth += resolution.maxHealthBonus;
+      this.playerHealth = Math.min(
+        this.playerMaxHealth,
+        this.playerHealth + resolution.maxHealthBonus,
+      );
+    }
+    this.syncJourneyWorldContext();
+    this.statusNode.publish({ force: true });
+    return resolution;
+  }
+
+  updateJourneyTriggers() {
+    const snapshot = this.mapRuntime.getResolvedSnapshot();
+    for (const trigger of snapshot.triggers ?? []) {
+      const radius = Number.isFinite(trigger.radius) ? trigger.radius : 48;
+      const distance = Math.hypot(
+        this.position.x - trigger.position.x,
+        snapshot.room.groundY - trigger.position.y,
+      );
+      if (distance > radius) continue;
+
+      if (trigger.kind === 'checkpoint') {
+        const result = this.journeyProgress.activateCheckpoint({
+          regionId: snapshot.active.regionId,
+          roomId: snapshot.active.roomId,
+          position: {
+            x: trigger.position.x,
+            y: trigger.position.y - CHARACTER_FOOT_OFFSET,
+          },
+        });
+        if (!result.changed) continue;
+        this.playerHealth = this.playerMaxHealth;
+        this.syncJourneyWorldContext();
+        this.statusNode.publish({ force: true });
+      }
+
+      if (trigger.kind === 'boss-reward') {
+        const result = this.journeyProgress.claimBossReward(trigger.gold);
+        if (!result.changed) continue;
+        this.syncJourneyWorldContext();
+        this.statusNode.publish({ force: true });
+      }
+    }
+  }
+
+  respawnPlayerAfterKo() {
+    const journey = this.journeyProgress.snapshot();
+    if (journey.checkpointActivated && journey.checkpoint) {
+      const checkpoint = journey.checkpoint;
+      const mapSnapshot = this.mapRuntime.setActiveLocation(checkpoint.regionId, checkpoint.roomId);
+      this.replaceRoomScene(mapSnapshot);
+      this.position = { ...checkpoint.position };
+      this.cameraPosition = { ...mapSnapshot.cameraPosition };
+    } else {
+      const activeRoom = this.mapRuntime.getActiveRoom();
+      this.position = {
+        x: (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140,
+        y: activeRoom.groundY - CHARACTER_FOOT_OFFSET,
+      };
+      this.roomSceneNode?.resetEncounter();
+    }
+    this.previousPosition = { ...this.position };
+    this.previousCameraPosition = { ...this.cameraPosition };
+    this.playerHealth = this.playerMaxHealth;
+    this.verticalVelocity = 0;
+    this.pendingPlayerKnockbackX = 0;
+    this.playerKnockbackVelocityX = 0;
+    this.playerBlockstunSeconds = 0;
+    this.playerBlockImpactSeconds = 0;
+    this.playerRetaliationPending = false;
+    this.playerRetaliationSeconds = 0;
+    this.isGrounded = true;
   }
 
   applyTrainingEncounterPlayerResult(result) {
@@ -1279,22 +1375,7 @@ export class GameScene extends SceneNode {
     this.playerBlockImpactSeconds = Math.max(0, this.playerBlockImpactSeconds - deltaSeconds);
     this.playerBlockstunSeconds = Math.max(0, this.playerBlockstunSeconds - deltaSeconds);
     if (this.playerHealth === 0 && this.playerKoSeconds === 0) {
-      const activeRoom = this.mapRuntime.getActiveRoom();
-      this.playerHealth = this.playerMaxHealth;
-      this.position = {
-        x: (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140,
-        y: activeRoom.groundY - CHARACTER_FOOT_OFFSET,
-      };
-      this.previousPosition = { ...this.position };
-      this.verticalVelocity = 0;
-      this.pendingPlayerKnockbackX = 0;
-      this.playerKnockbackVelocityX = 0;
-      this.playerBlockstunSeconds = 0;
-      this.playerBlockImpactSeconds = 0;
-      this.playerRetaliationPending = false;
-      this.playerRetaliationSeconds = 0;
-      this.isGrounded = true;
-      this.roomSceneNode?.resetEncounter();
+      this.respawnPlayerAfterKo();
     }
     this.landingRecoverySeconds = Math.max(0, this.landingRecoverySeconds - deltaSeconds);
     const wasGrounded = this.isGrounded;
@@ -1408,6 +1489,7 @@ export class GameScene extends SceneNode {
       deltaSeconds,
       this.createTrainingEncounterFrame(combatState, activeAttackProfile),
     );
+    this.updateJourneyTriggers();
 
     if (isRolling) {
       this.updateRoll(deltaSeconds);
@@ -1480,16 +1562,87 @@ export class GameScene extends SceneNode {
   getWorldStatus() {
     const map = this.mapRuntime.getResolvedMap();
     const room = this.mapRuntime.getActiveRoom();
-    const inTrainingRoom = this.mapRuntime.getActiveLocation().roomId === 'training-room';
+    const roomId = this.mapRuntime.getActiveLocation().roomId;
+    const journey = this.journeyProgress.snapshot();
+    const encounter = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
+    const phaseLabels = {
+      prepare: '학원촌 준비',
+      field: 'Field 탐험',
+      dungeon: 'Dungeon 진입',
+      checkpoint: 'Checkpoint 확보',
+      boss: 'Boss 공략',
+      reward: '보상 회수',
+      returned: '첫 원정 완료',
+    };
+    let objective = '오른쪽 황금 Portal에서 ↑로 첫 Field 원정을 시작하세요.';
+    let encounterHint = '';
+
+    if (roomId === 'training-room') {
+      objective = 'M1 전투를 반복하거나 왼쪽 Portal에서 ↑로 학원촌에 돌아가세요.';
+    }
+    if (roomId === 'field-crossing') {
+      objective = journey.fieldGuardianDefeated
+        ? '수호 수액으로 최대 HP +20. 오른쪽 Portal에서 ↑로 Dungeon에 들어가세요.'
+        : '감시 골렘을 쓰러뜨리거나 중간 초록 Portal에서 ↑로 우회하세요.';
+      if (!journey.fieldGuardianDefeated) {
+        encounterHint = '일반 조우 보상: 수호 수액 · 최대 HP +20';
+      }
+    }
+    if (roomId === 'field-canopy') {
+      objective = '전투를 우회했습니다. 오른쪽 Portal에서 ↑로 폐쇄 실습림에 진입하세요.';
+    }
+    if (roomId === 'sealed-forest-dungeon') {
+      objective = journey.checkpointActivated
+        ? 'Checkpoint 확보. 오른쪽 붉은 Portal에서 ↑로 Boss에게 도전하세요.'
+        : '회랑의 청록 봉인석에 접근해 Checkpoint를 활성화하세요.';
+      encounterHint = journey.checkpointActivated
+        ? '사망 시 이 Checkpoint에서 회복합니다.'
+        : 'Checkpoint는 HP를 모두 회복하고 Boss Portal을 엽니다.';
+    }
+    if (roomId === 'sealed-forest-boss') {
+      if (journey.bossRewardClaimed) {
+        objective = '보상 획득 완료. 오른쪽 황금 shortcut Portal에서 ↑로 귀환하세요.';
+        encounterHint = '+120 Gold · 학원촌 shortcut 해금';
+      } else if (journey.bossDefeated) {
+        objective = 'Boss가 남긴 황금 결정에 접근해 보상을 회수하세요.';
+        encounterHint = '보상 결정이 shortcut Portal을 활성화합니다.';
+      } else if (encounter?.punishWindowOpen) {
+        objective = '청록 틈이 열렸습니다. 지금 공격해 Punish를 이어가세요.';
+        encounterHint = 'PUNISH WINDOW · 공격 가능';
+      } else if (encounter?.attackKind === 'heavy' && encounter?.aiState === 'windup') {
+        objective = '붉은 강공격은 막을 수 없습니다. 이동+↓ 구르기로 통과하세요.';
+        encounterHint = 'HEAVY · ROLL REQUIRED';
+      } else if (encounter?.attackKind === 'light' && encounter?.aiState === 'windup') {
+        objective = '기본공격은 ↓로 Guard한 뒤 청록 회복 틈을 노리세요.';
+        encounterHint = 'BASIC · GUARDABLE';
+      } else {
+        objective = '기본공격 Guard → 강공격 Roll → 청록 회복 틈 Punish로 공략하세요.';
+        encounterHint = 'GUARD · ROLL · PUNISH';
+      }
+    }
+    if (roomId === 'academy-plaza' && journey.returnedWithReward) {
+      objective = '첫 원정 완료. 장비를 바꿔 오른쪽 Portal에서 전체 loop를 반복할 수 있습니다.';
+      encounterHint = 'M3 COMPLETE · 보상과 shortcut 귀환 완료';
+    }
+
     return Object.freeze({
       areaName: `${map.name} · ${room.label}`,
-      objective: inTrainingRoom
-        ? 'M1 전투를 반복하거나 왼쪽 Portal에서 ↑로 학원촌에 돌아가세요.'
-        : '장비를 고른 뒤 광장 왼쪽 Portal에서 ↑로 훈련장에 입장하세요.',
+      objective,
+      encounterHint,
+      encounterHealthLabel:
+        encounter && encounter.health > 0
+          ? `${encounter.label} · HP ${encounter.health}/${encounter.maxHealth}`
+          : '',
+      journeyLabel: phaseLabels[journey.phase] ?? journey.phase,
+      wardLabel: journey.fieldWardActive
+        ? '수호 수액 · HP +20'
+        : journey.routeChoice === 'bypass'
+          ? '우회 · 수액 없음'
+          : '수호 수액 미획득',
       timePhase: this.timePhase,
       timeLabel: this.timePhase === 'night' ? '밤' : '낮',
-      roomId: this.mapRuntime.getActiveLocation().roomId,
-      canSelectEquipment: !inTrainingRoom && this.mapRuntime.getTransition() === null,
+      roomId,
+      canSelectEquipment: roomId === 'academy-plaza' && this.mapRuntime.getTransition() === null,
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
     });
@@ -1499,6 +1652,7 @@ export class GameScene extends SceneNode {
     return Object.freeze({
       health: this.playerHealth,
       maxHealth: this.playerMaxHealth,
+      gold: this.journeyProgress.snapshot().gold,
     });
   }
 

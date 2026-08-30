@@ -227,16 +227,18 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
   if (!enemy) return [];
   const { x, y } = enemy.position;
   const flash = enemy.hitFlashSeconds > 0;
+  const roleColor =
+    enemy.role === 'boss' ? '#71436f' : enemy.role === 'field' ? '#7f6341' : '#a74651';
   const bodyFill = flash
     ? '#f4e3ce'
     : enemy.aiState === 'windup'
       ? '#e28b45'
       : enemy.aiState === 'guard'
         ? '#4f7f9d'
-        : '#a74651';
+        : roleColor;
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
   const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
-  const presentationScale = TRAINING_ENEMY_PRESENTATION_SCALE;
+  const presentationScale = enemy.presentationScale ?? TRAINING_ENEMY_PRESENTATION_SCALE;
   const attackProfile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
   const attackProgress =
     enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackProfile.attackSeconds : 0;
@@ -334,6 +336,32 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
             { x, y: y - 44 },
             '#76eadc',
             { stroke: '#effffb', lineWidth: 2, opacity: 0.14 },
+          ),
+        ]
+      : []),
+    ...(enemy.role === 'boss' && enemy.aiState === 'windup' && enemy.attackKind === 'heavy'
+      ? [
+          polygon(
+            'combat-enemy-heavy-warning',
+            regularPolygon(72, 82, 14, Math.PI / 14),
+            { x, y: y - 44 },
+            '#e65e53',
+            {
+              stroke: '#ffd6a0',
+              lineWidth: 3,
+              opacity: 0.18 + Math.max(0, 1 - enemy.aiSeconds / attackProfile.windupSeconds) * 0.34,
+            },
+          ),
+        ]
+      : []),
+    ...(enemy.role === 'boss' && enemy.punishWindowOpen
+      ? [
+          polygon(
+            'combat-enemy-punish-window',
+            regularPolygon(60, 70, 14, Math.PI / 14),
+            { x, y: y - 44 },
+            '#6ce3cd',
+            { stroke: '#eafff9', lineWidth: 2, opacity: 0.24 },
           ),
         ]
       : []),

@@ -4,12 +4,12 @@ import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
+import { getEncounterProfile, selectEncounterAttack } from '../encounter/EncounterProfiles.js';
 import {
   createTrainingEnemyItems,
   sampleTrainingEnemyCombatFrame,
   sampleTrainingEnemyWeaponLength,
   TRAINING_ENEMY_ATTACK_PROFILES,
-  TRAINING_ENEMY_PRESENTATION_SCALE,
 } from './TrainingEncounterPresentation.js';
 
 const GRAVITY = 1180;
@@ -30,6 +30,8 @@ const ENEMY_NON_HURT_ITEM_IDS = new Set([
   'combat-enemy-anti-air-trail',
   'combat-enemy-health-back',
   'combat-enemy-health-fill',
+  'combat-enemy-heavy-warning',
+  'combat-enemy-punish-window',
 ]);
 const PLAYER_NON_HURT_ITEM_IDS = new Set([
   'shadow',
@@ -167,8 +169,8 @@ function freezePosition(position) {
 export class TrainingEncounterNode extends SceneNode {
   constructor({ entity, groundY, movementBounds, spinContact }) {
     super('TrainingEncounter');
-    if (!entity || entity.kind !== 'combat-test-mob') {
-      throw new TypeError('TrainingEncounter Scene에는 combat-test-mob entity가 필요합니다.');
+    if (!entity || !['combat-test-mob', 'combat-enemy'].includes(entity.kind)) {
+      throw new TypeError('Encounter Scene에는 지원하는 combat enemy entity가 필요합니다.');
     }
     if (!Number.isFinite(groundY)) {
       throw new TypeError('TrainingEncounter Scene에는 유효한 groundY가 필요합니다.');
@@ -184,10 +186,12 @@ export class TrainingEncounterNode extends SceneNode {
       throw new TypeError('TrainingEncounter Scene에는 spin contact frame data가 필요합니다.');
     }
 
+    const encounterProfile = getEncounterProfile(entity.encounterProfileId ?? 'training');
     this.entity = Object.freeze({
       id: entity.id,
       position: freezePosition(entity.position ?? { x: 680, y: groundY }),
       maxHealth: Number.isFinite(entity.maxHealth) ? Math.max(1, entity.maxHealth) : 100,
+      encounterProfile,
     });
     this.groundY = groundY;
     this.movementBounds = Object.freeze({ ...movementBounds });
@@ -198,14 +202,20 @@ export class TrainingEncounterNode extends SceneNode {
     this.playerResultResolved = this.ownSignal(new Signal('playerResultResolved'));
     this.combatEventOccurred = this.ownSignal(new Signal('combatEventOccurred'));
     this.cameraFeedbackOccurred = this.ownSignal(new Signal('cameraFeedbackOccurred'));
+    this.encounterCompleted = this.ownSignal(new Signal('encounterCompleted'));
     this.reset();
   }
 
   reset() {
     this.assertNotDisposed();
     const maxHealth = this.entity.maxHealth;
+    const encounterProfile = this.entity.encounterProfile;
     this.enemy = {
       id: this.entity.id,
+      profileId: encounterProfile.id,
+      role: encounterProfile.role,
+      label: encounterProfile.label,
+      presentationScale: encounterProfile.presentationScale,
       position: { ...this.entity.position },
       groundY: this.groundY,
       velocityX: 0,
@@ -245,7 +255,10 @@ export class TrainingEncounterNode extends SceneNode {
       retaliationCycleClaimed: false,
       hitReactionWeaponAngle: -0.65,
       hitReactionWeaponLength: TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength,
+      punishWindowOpen: false,
+      punishComboCycle: 0,
     };
+    this.completionEmitted = false;
     this.lastHitMotionSequence = '';
     this.lastVisualContact = null;
     this.contactSeconds = 0;
@@ -269,6 +282,13 @@ export class TrainingEncounterNode extends SceneNode {
       groundY: enemy.groundY,
       health: enemy.health,
       maxHealth: enemy.maxHealth,
+      profileId: enemy.profileId,
+      role: enemy.role,
+      label: enemy.label,
+      aiState: enemy.aiState,
+      attackKind: enemy.attackKind,
+      recoverySource: enemy.recoverySource,
+      punishWindowOpen: enemy.punishWindowOpen,
       velocityX: enemy.velocityX,
       velocityY: enemy.velocityY,
       juggleHits: enemy.juggleHits,
@@ -292,6 +312,9 @@ export class TrainingEncounterNode extends SceneNode {
         juggleLimit: MAX_JUGGLE_HITS,
         juggleLocked: enemy.juggleLocked,
         retaliationSeconds: enemy.retaliationInvulnerableSeconds,
+        role: enemy.role,
+        label: enemy.label,
+        punishWindowOpen: enemy.punishWindowOpen,
         attack: Object.freeze({
           kind: enemy.attackKind,
           frame: sampleTrainingEnemyCombatFrame(enemy),
@@ -332,6 +355,8 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.recoveryBodyStartRotation = bodyStartRotation;
     enemy.recoveryAdvanceDeferred = deferAdvance;
     enemy.recoveryCompletionPending = false;
+    enemy.punishWindowOpen = source === 'attack';
+    if (!enemy.punishWindowOpen) enemy.punishComboCycle = 0;
   }
 
   updateEnemyPhysics(deltaSeconds, player) {
@@ -356,8 +381,10 @@ export class TrainingEncounterNode extends SceneNode {
     }
     enemy.groundImpactSeconds = Math.max(0, enemy.groundImpactSeconds - deltaSeconds);
     if (enemy.health <= 0) {
-      enemy.resetSeconds = Math.max(0, enemy.resetSeconds - deltaSeconds);
-      if (enemy.resetSeconds <= 0) this.reset();
+      if (this.entity.encounterProfile.respawns) {
+        enemy.resetSeconds = Math.max(0, enemy.resetSeconds - deltaSeconds);
+        if (enemy.resetSeconds <= 0) this.reset();
+      }
       return;
     }
     if (enemy.groundBounceDelaySeconds > 0) {
@@ -463,6 +490,15 @@ export class TrainingEncounterNode extends SceneNode {
       return;
     const distance = player.position.x - enemy.position.x;
     const absoluteDistance = Math.abs(distance);
+    if (
+      Number.isFinite(this.entity.encounterProfile.activationRange) &&
+      absoluteDistance > this.entity.encounterProfile.activationRange &&
+      ['idle', 'approach'].includes(enemy.aiState)
+    ) {
+      enemy.aiState = 'idle';
+      enemy.aiSeconds = Math.min(enemy.aiSeconds, 0.1);
+      return;
+    }
     if (enemy.aiState === 'recovery' && enemy.recoveryAdvanceDeferred) {
       enemy.recoveryAdvanceDeferred = false;
       return;
@@ -470,11 +506,15 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.aiSeconds = Math.max(0, enemy.aiSeconds - deltaSeconds);
     if (distance !== 0) enemy.facing = Math.sign(distance);
     if (enemy.aiState === 'approach') {
+      enemy.punishWindowOpen = false;
+      enemy.punishComboCycle = 0;
       enemy.attackKind = !player.isGrounded
         ? 'antiAir'
-        : enemy.patternIndex % 2 === 0
-          ? 'light'
-          : 'heavy';
+        : selectEncounterAttack(
+            this.entity.encounterProfile,
+            enemy.patternIndex,
+            enemy.health / enemy.maxHealth,
+          );
       const profile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
       if (absoluteDistance <= profile.desiredRange) {
         enemy.aiState = 'windup';
@@ -482,7 +522,8 @@ export class TrainingEncounterNode extends SceneNode {
         enemy.aiSeconds = profile.windupSeconds;
         enemy.attackConnected = false;
       } else {
-        enemy.position.x += Math.sign(distance) * 78 * deltaSeconds;
+        enemy.position.x +=
+          Math.sign(distance) * this.entity.encounterProfile.approachSpeed * deltaSeconds;
       }
       return;
     }
@@ -513,7 +554,9 @@ export class TrainingEncounterNode extends SceneNode {
         return;
       }
       enemy.aiState = 'idle';
-      enemy.aiSeconds = 0.3;
+      enemy.punishWindowOpen = false;
+      enemy.punishComboCycle = 0;
+      enemy.aiSeconds = this.entity.encounterProfile.idleSeconds;
       return;
     }
     if (enemy.aiSeconds > 0) return;
@@ -536,7 +579,7 @@ export class TrainingEncounterNode extends SceneNode {
     const verticalDistance = Math.abs(enemy.position.y - (player.position.y + 82));
     const visualBroadRange = Math.max(
       profile.attackRange + 4,
-      profile.weaponLength * TRAINING_ENEMY_PRESENTATION_SCALE + PLAYER_HURT_MARGIN,
+      profile.weaponLength * enemy.presentationScale + PLAYER_HURT_MARGIN,
     );
     const forwardDistance = distance * enemy.attackFacing;
     if (
@@ -671,6 +714,8 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.retaliationProtectedComboCycle = cycleChanged ? combatState.comboCycle : 0;
     enemy.retaliationCycleClaimed = cycleChanged;
     enemy.hitstunSeconds = 0;
+    enemy.punishWindowOpen = false;
+    enemy.punishComboCycle = 0;
     this.startRecovery({
       source: 'retaliation',
       durationSeconds: 0.08,
@@ -751,6 +796,25 @@ export class TrainingEncounterNode extends SceneNode {
     });
     this.contactSeconds = 0.18;
     if (enemy.aiState === 'evade') return false;
+    const bossPunishAccepted =
+      enemy.role !== 'boss' ||
+      enemy.punishWindowOpen ||
+      enemy.punishComboCycle === combatState.comboCycle;
+    if (this.entity.encounterProfile.guardOutsidePunish && !bossPunishAccepted) {
+      this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
+        actor: 'enemy',
+        target: 'player',
+        attackId: combatState.id,
+        position: visualContact.position,
+        direction: player.facing,
+        strength: 1.25,
+      });
+      enemy.hitFlashSeconds = 0.07;
+      this.cameraFeedbackOccurred.emit(
+        Object.freeze({ direction: player.facing, strength: 1, durationSeconds: 0.055 }),
+      );
+      return true;
+    }
     if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'enemy',
@@ -771,9 +835,9 @@ export class TrainingEncounterNode extends SceneNode {
     }
     const enemyAirborne = enemy.position.y < enemy.groundY;
     const backPunish =
-      enemy.aiState === 'recovery' &&
-      enemy.recoverySource === 'attack' &&
-      (player.position.x - enemy.position.x) * enemy.attackFacing < 0;
+      enemy.punishWindowOpen &&
+      (enemy.role === 'boss' || (player.position.x - enemy.position.x) * enemy.attackFacing < 0);
+    if (backPunish && enemy.role === 'boss') enemy.punishComboCycle = combatState.comboCycle;
     const finalPulse = !profile.hitPulses || pulseIndex === profile.hitPulses.length - 1;
     const juggleRole =
       profile.juggleRole ?? (enemyAirborne ? 'sustain' : finalPulse ? 'launcher' : null);
@@ -796,6 +860,16 @@ export class TrainingEncounterNode extends SceneNode {
       },
     );
     enemy.health = Math.max(0, enemy.health - damage);
+    if (enemy.health === 0 && !this.completionEmitted) {
+      this.completionEmitted = true;
+      this.encounterCompleted.emit(
+        Object.freeze({
+          entityId: enemy.id,
+          profileId: enemy.profileId,
+          role: enemy.role,
+        }),
+      );
+    }
     this.confirmedComboCycle = combatState.comboCycle;
     enemy.comboCycleHitPending = enemy.health > 0;
     enemy.lastReceivedComboCycle = combatState.comboCycle;
@@ -890,7 +964,9 @@ export class TrainingEncounterNode extends SceneNode {
     } else {
       enemy.velocityY = profile.hitPulses && finalPulse ? -260 : profile.launchY;
     }
-    if (enemy.health <= 0) enemy.resetSeconds = RESET_SECONDS;
+    if (enemy.health <= 0 && this.entity.encounterProfile.respawns) {
+      enemy.resetSeconds = RESET_SECONDS;
+    }
     this.playerResultResolved.emit(
       Object.freeze({
         kind: 'player-attack',

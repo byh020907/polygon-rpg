@@ -549,6 +549,11 @@ dd {
   font-size: 0.82rem;
 }
 
+.hud-item-counter span {
+  color: #dce8df;
+  font-size: 0.6rem;
+}
+
 .game-area-label {
   position: absolute;
   z-index: 2;
@@ -675,6 +680,50 @@ dd {
   border-color: #86d9d1;
   background: rgb(24 72 69 / 78%);
   box-shadow: inset 0 0 0 1px rgb(199 255 242 / 18%);
+}
+
+.encounter-readout {
+  position: absolute;
+  z-index: 3;
+  top: clamp(48px, 5vw, 66px);
+  left: 50%;
+  display: grid;
+  gap: 3px;
+  min-width: min(360px, 48vw);
+  padding: 7px 12px;
+  border: 1px solid rgb(226 190 110 / 42%);
+  color: #f2ead4;
+  background: linear-gradient(90deg, transparent, rgb(6 11 16 / 86%) 16% 84%, transparent);
+  filter: drop-shadow(0 3px 8px #000);
+  text-align: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.encounter-readout small {
+  color: #d7aa62;
+  font:
+    800 0.46rem ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.encounter-readout strong {
+  font-size: clamp(0.56rem, 0.85vw, 0.76rem);
+  letter-spacing: 0.02em;
+}
+
+.encounter-readout em {
+  color: #b7c7c0;
+  font:
+    700 0.46rem ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  font-style: normal;
 }
 
 .quest-line {

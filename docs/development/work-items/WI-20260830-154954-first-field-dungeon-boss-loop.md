@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-154954
-status: queued
+status: ready-for-integration
 priority: high
 lane: dedicated
 created_at: 2026-08-30T15:49:54+09:00
@@ -46,7 +46,17 @@ owned_paths:
 
 ## 결과
 
-진행 중.
+학원촌 장비 준비에서 Field 정면 조우/우회, 폐쇄 실습림 checkpoint, Guard·Roll·Punish Boss, 120 Gold 보상과 shortcut 귀환까지 하나의 진행 상태와 Portal graph로 연결했다.
+
+- 일반 적과 Boss는 M1의 같은 `TrainingEncounterNode.step(frame)`·contact·CombatEvent 계약을 사용한다.
+- Field 감시 골렘을 이기면 최대 HP +20, 초록 Portal로 우회하면 보너스가 없어 탐험 선택이 Boss 준비에 영향을 준다.
+- checkpoint가 HP 회복·Boss Portal 개방·KO 복귀 위치를 소유한다.
+- Boss는 basic Guard, unblockable heavy Roll, recovery Punish 밖의 공격을 막으며 격파 뒤 보상 trigger와 shortcut을 순서대로 연다.
+- 적용 rubric은 기능 완결성·조작 명료성·타격감/Effect·Graphics·Reference 정합·회귀 안전성 모두 2다.
+- `npm run check`, `git diff --check`, 120Hz 전체 경로/전투 진단, 실제 Canvas/mobile pointer 경로, `900×600` resize와 browser warning/error 검사를 통과했다.
+- 사용자 요청 없는 영구 test/script/fixture는 추가하지 않았다.
+
+업무보고: [`WI-20260830-154954-first-field-dungeon-boss-loop.md`](../reports/WI-20260830-154954-first-field-dungeon-boss-loop.md)
 
 ## 피드백
 
@@ -60,3 +70,4 @@ owned_paths:
 
 - Roadmap: `M3 — 첫 Field·Dungeon·Boss loop`
 - Depends on: `WI-20260830-120911`
+- Report: `docs/development/reports/WI-20260830-154954-first-field-dungeon-boss-loop.md`

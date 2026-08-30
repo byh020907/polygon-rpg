@@ -334,6 +334,7 @@ export class MapRuntime {
       renderItems: sortedRenderItems(presentationRooms),
       collisionSurfaces: room.surfaces.filter((surface) => surface.enabled !== false),
       entities: room.entities.filter((entity) => entity.enabled !== false),
+      triggers: room.triggers.filter((trigger) => trigger.enabled !== false),
       portals,
       worldBounds: room.bounds,
       cameraBounds: room.cameraBounds ?? room.bounds,

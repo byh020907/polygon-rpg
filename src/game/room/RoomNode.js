@@ -14,9 +14,12 @@ export class RoomNode extends SceneNode {
     this.playerResultResolved = this.ownSignal(new Signal('playerResultResolved'));
     this.combatEventOccurred = this.ownSignal(new Signal('combatEventOccurred'));
     this.cameraFeedbackOccurred = this.ownSignal(new Signal('cameraFeedbackOccurred'));
+    this.encounterCompleted = this.ownSignal(new Signal('encounterCompleted'));
     this.encounter = null;
 
-    const entity = snapshot.entities.find((candidate) => candidate.kind === 'combat-test-mob');
+    const entity = snapshot.entities.find((candidate) =>
+      ['combat-test-mob', 'combat-enemy'].includes(candidate.kind),
+    );
     if (!entity) return;
     this.encounter = this.addChild(
       TRAINING_ENCOUNTER_SCENE.instantiate({
@@ -38,6 +41,9 @@ export class RoomNode extends SceneNode {
     );
     this.connectTo(this.encounter.cameraFeedbackOccurred, (feedback) =>
       this.cameraFeedbackOccurred.emit(feedback),
+    );
+    this.connectTo(this.encounter.encounterCompleted, (result) =>
+      this.encounterCompleted.emit(result),
     );
   }
 

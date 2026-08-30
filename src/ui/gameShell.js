@@ -112,7 +112,11 @@ export function registerGameShell(Alpine, gameApp) {
     renderStats: 'Renderer idle',
     gameStats: 'World ready',
     areaName: '왕립 마법학교 학원촌',
-    objective: '학원촌에서 장비를 고르고 왼쪽 Portal에서 ↑로 훈련장에 이동하세요.',
+    objective: '장비를 고르고 오른쪽 황금 Portal에서 ↑로 첫 Field 원정을 시작하세요.',
+    journeyLabel: '학원촌 준비',
+    encounterHint: '',
+    encounterHealthLabel: '',
+    wardLabel: '수호 수액 미획득',
     timeLabel: '낮',
     canSelectEquipment: true,
     selectedEquipmentId: EQUIPMENT_PROFILES[0].id,
@@ -165,6 +169,7 @@ export function registerGameShell(Alpine, gameApp) {
         setPlayerStatus: (status) => {
           this.health = status.health;
           this.maxHealth = status.maxHealth;
+          this.gold = status.gold;
         },
         setWorldStatus: (status) => {
           this.areaName = status.areaName;
@@ -173,6 +178,10 @@ export function registerGameShell(Alpine, gameApp) {
           this.canSelectEquipment = status.canSelectEquipment;
           this.selectedEquipmentId = status.equipmentId;
           this.selectedEquipmentLabel = status.equipmentLabel;
+          this.journeyLabel = status.journeyLabel;
+          this.encounterHint = status.encounterHint;
+          this.encounterHealthLabel = status.encounterHealthLabel;
+          this.wardLabel = status.wardLabel;
         },
       });
       this.$nextTick(() => gameApp.start());
