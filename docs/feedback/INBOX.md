@@ -120,57 +120,6 @@
 
 Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge했다. 실제 훈련장·유리바람 Field 피격, Polygon/Retro shared state, resize, console과 회귀 검증 evidence를 보존했다.
 
-## IN-20260831-003439
-
-- status: done
-- received_at: 2026-08-31T00:34:39+09:00
-- priority: normal
-- source: team-lead-main
-- title: 완료 entry 자동 정리
-- supersedes: null
-- executor_branch: codex/loop/in-20260831-003439
-- registration_base: a2b926581d80f5b9fb1c842785f60a74000584e7
-- accepted_at: 2026-08-31T01:30:57+09:00
-- checkpoint_commit: 83bd913672a4b7efe2a78cd9456d7bcd57212869
-- final_commit: c5daca93afba8b1efd9d7c6385da0b1a4c690486
-- integration: the merge commit that marks this entry done
-- owned_paths:
-  - AGENTS.md
-  - loop/PROMPT.md
-  - loop/inbox.mjs
-  - .agents/skills/dev-team-loop/SKILL.md
-  - .agents/skills/dev-team-loop/references/manage.md
-  - .agents/skills/dev-team-loop/references/inbox-schema.md
-  - docs/development/process.md
-  - docs/development/quality-loop.md
-  - docs/development/loop-engineering-references.md
-
-### 원문 — 불변
-
-```text
-인박스 정리도 포함되어있지? 완료후
-ㄴㄴ 이런게 워크트리로 반영할 대상이지
-```
-
-### 실행 계약 — coordinator 소유
-
-- 목표: 성공적으로 통합을 마친 `done` entry를 live INBOX에서 자동 정리해, 현재 실행할 항목만 빠르게 읽히게 하면서 원문·결과·통합 근거는 Git history와 STATUS에서 복구 가능하게 보존한다. 이 process 변경 자체는 전용 executor worktree의 checkpoint와 fresh verification을 거쳐 통합한다.
-- 완료 조건: main-owned integration이 완료된 entry의 정확한 Markdown block만 결정적으로 제거하고 다른 `new`·nonterminal entry와 각 `원문 — 불변` byte를 바꾸지 않는다. 임의 삭제나 별도 queue 문서를 만들지 않으며, interruption 뒤 commit graph에서 entry 결과와 integration을 재구성할 수 있다. 실제 current INBOX를 직접 훼손하지 않는 fixture/copy 검증, `npm run check`, `git diff --check`, branch/worktree ownership·recovery 규칙 정합을 통과한다.
-- 비범위: nonterminal·paused·blocked·cancelled·superseded entry 정리, executor branch/worktree 자동 삭제, Git history rewrite, 별도 archive/queue/service 도입, gameplay·rendering 변경.
-- 적용 품질 축: 기능 완결성, Reference 정합, 회귀 안전성.
-
-### 실행 상태 — coordinator 소유
-
-- 기준선: 현재 live INBOX는 integration이 끝난 `done` entry도 계속 보존해 새 entry와 함께 누적한다.
-- 현재 최선: final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`을 main에 non-rewriting merge해 terminal 원문·결과를 merge commit에 보존했다.
-- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block을 정리하고 STATUS에 실제 merge hash를 기록한다.
-- 검증: clean local/remote executor branch와 latest-main ancestry, branch-only owned paths를 확인했다. `npm run check`, branch/worktree `git diff --check`가 통과했다. 실제 current INBOX byte stream과 file copy에서 기존 `done` block만 제거되고 두 nonterminal 원문 byte가 그대로 유지됐다. 4-backtick 안의 3-backtick·가짜 `## IN-*`와 tilde fence는 entry 경계로 오인하지 않았고, 중복 entry와 `implementing` entry 삭제를 거부했다. CLI atomic replacement 뒤 임시 파일이 남지 않았으며 잘못된 live main expected HEAD에서는 exit 3으로 쓰기를 거부하고 INBOX hash를 보존했다. 기능 완결성·Reference 정합·회귀 안전성은 모두 2 이상이다. Baeseongjin의 worktree ownership은 원칙만 차용하고 branch 삭제 절차는 적용하지 않았다.
-- 실제 blocker: 없음
-
-### 결과 — coordinator 소유
-
-Final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`을 main에 non-rewriting merge했다. 실제 INBOX copy, arbitrary fence, duplicate/non-done 거부, live main guard와 atomic cleanup 검증 evidence를 terminal 원문·결과와 함께 보존했다.
-
 ## IN-20260831-005246
 
 - status: new
