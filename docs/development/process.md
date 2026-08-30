@@ -49,7 +49,7 @@ Subagent는 한 run 내부의 bounded exploration, 증명된 disjoint implementa
 fresh tick → new entry 실행 계약 파생·persistent branch/worktree provision → main·branch push → 종료
 fresh tick → 같은 worktree 직접 구현·검사 → checkpoint branch push·main inbox 갱신 → 종료
 fresh tick → 독립 재검증·실제 화면 QA → final branch push·main inbox 갱신 → 종료
-fresh tick → final diff 재검증 → main merge commit·INBOX done·STATUS/DESIGN 갱신·push → 종료
+fresh tick → final diff 재검증 → main merge에 INBOX done 보존 → exact done block cleanup·STATUS actual hash → 두 commit push → 종료
 다음 fresh tick → 다음 inbox entry, DESIGN gate 또는 완료 증명
 ```
 
@@ -58,7 +58,7 @@ Run 종료, interruption, checkpoint와 한 entry 통합은 전체 loop 종료�
 ## Inbox Identity와 원문 불변
 
 - 새 실행 ID는 `IN-YYYYMMDD-HHmmss`; 충돌에는 `-02`, `-03`을 붙인다.
-- `docs/feedback/INBOX.md`가 새 개발의 유일한 queue, lifecycle, execution state와 result owner다.
+- `docs/feedback/INBOX.md`가 새 개발의 유일한 live queue, lifecycle과 execution state owner다. 통합 merge commit이 terminal raw/result를 보존한 뒤 live file에서는 exact `done` block을 제거하고, current integration projection은 STATUS와 Git ancestry에 둔다.
 - Main은 등록 대상으로 지정된 원문을 공백·오탈자·Markdown까지 그대로 `원문 — 불변` block에 넣는다. 요약 title, 목표와 완료 조건은 raw block 밖에 coordinator가 파생한다.
 - 원문 정정은 새 entry와 `supersedes` link로 남긴다. Terminal/nonterminal status와 executor evidence가 같은 entry의 중복 소비를 막는다.
 - Entry는 deterministic `executor_branch: codex/loop/<lowercase-in-id>`를 소유한다.
@@ -84,8 +84,8 @@ new → implementing → verifying → ready-for-integration → integrating →
 1. **New / accept-provision:** 원문을 보존한 채 title·goal·completion·non-scope·quality axes·owned paths를 파생한다. Main entry를 `implementing`으로 commit/push하고 그 commit에서 worktree/baseline branch를 만들어 push한다.
 2. **Implementing:** Worktree에서 가장 큰 병목 하나를 개선한다. Affected checks 뒤 checkpoint를 branch에 commit/push하고 main entry의 current best·next bottleneck·validation과 다음 phase를 commit/push한다.
 3. **Verifying:** 새 run이 branch-only owned diff, 결정적 검사와 실제 artifact를 재검증한다. 실패하면 correction checkpoint와 `implementing`, 통과하면 clean final branch commit과 main `ready-for-integration`을 기록한다.
-4. **Ready:** Final이 latest main을 포함하지 않으면 main을 branch에 non-rewriting merge하고 `verifying`으로 되돌린다. 통과하면 main에서 `--no-ff --no-commit` merge 후 INBOX `done`, result, STATUS와 필요한 DESIGN을 같은 integration commit에 정합하고 push한다.
-5. **Done:** Final/result와 integration self-reference를 INBOX·STATUS에 남긴다. Branch/worktree를 자동 삭제하거나 history rewrite하지 않는다.
+4. **Ready:** Final이 latest main을 포함하지 않으면 main을 branch에 non-rewriting merge하고 `verifying`으로 되돌린다. 통과하면 main에서 `--no-ff --no-commit` merge 후 INBOX `done`, result, STATUS와 필요한 DESIGN을 같은 integration merge commit에 정합한다.
+5. **Done cleanup:** Merge hash를 얻은 뒤 exact `done` block만 `loop/inbox.mjs`로 제거하고 STATUS에 실제 integration hash를 기록한 cleanup commit을 만든다. 두 commit을 같은 transition에서 normal push하며 branch/worktree를 자동 삭제하거나 history rewrite하지 않는다.
 
 한 transition은 필요한 branch commit/push와 main inbox evidence commit/push를 함께 끝낼 수 있다. 다음 phase나 entry까지 연쇄 실행하지 않는다.
 
@@ -135,6 +135,7 @@ baseline 실행·채점 → 가장 큰 병목 하나 → safe reversible 구현
 - Latest main drift는 branch에 merge하고 다시 `verifying`한다.
 - Push 실패는 같은 hash를 재시도한다.
 - Partial main merge는 intent와 staged paths가 유일할 때만 완료하거나 abort한다.
+- Integration merge 뒤 `done` block이 live INBOX에 남았으면 다음 entry 전에 exact cleanup과 STATUS hash 기록을 완료한다.
 - 같은 실패를 두 번 단순 보고하지 않고 다음 safe repair로 승격한다.
 
 Force push, shared-history rewrite, broad reset, guessed cleanup, threshold 하향과 별도 queue/task 생성은 복구 수단이 아니다.
@@ -159,4 +160,4 @@ Automation은 approved milestone 모두 완료, nonterminal inbox entry 없음, 
 
 팀장-facing 답변은 `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 실제로 막힘` 순서의 쉬운 한국어로 쓴다. 원문은 inbox에서 그대로 유지하고 derived title·summary는 원문을 대체하지 않는다.
 
-완료 기록은 INBOX·STATUS에 실제 변경 파일, 새 동작/플레이 결과, 검증·미확인 범위와 checkpoint/final/integration evidence 순서로 남긴다.
+완료 기록은 integration merge commit의 terminal INBOX block과 current STATUS에 실제 변경 파일, 새 동작/플레이 결과, 검증·미확인 범위와 checkpoint/final/integration evidence 순서로 남긴다.

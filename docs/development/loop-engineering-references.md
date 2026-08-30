@@ -131,6 +131,7 @@ Codex-native 수정 채택:
 | Clean final과 ready evidence 있음     | Owned diff 검증 후 main merge·done push        | Done                        |
 | Push 실패, local commit 있음          | 같은 hash push 재시도                          | Remote durable state        |
 | Main lifecycle가 branch보다 뒤짐      | Commit graph에서 idempotent 상태 정합          | Single authoritative phase  |
+| Integration merge 뒤 done block 잔존  | Exact block cleanup·STATUS merge hash commit   | 다음 live entry             |
 | 사람 질문·외부 blocker                | 새 dispatch만 보류, automation은 계속 관찰     | 답/외부 상태 변경 후 resume |
 | 모든 completion proof 통과            | 완료 commit·push 후 automation pause           | Roadmap complete            |
 

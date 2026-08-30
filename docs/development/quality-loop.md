@@ -100,7 +100,7 @@ baseline 실행·채점
 
 ### Integration
 
-Main integration run은 final이 latest main을 포함하고 source worktree가 clean인지 확인한다. Main drift가 있으면 executor branch에 non-rewriting merge하고 다시 fresh verification으로 보낸다. 모든 gate가 통과하면 INBOX 결과, STATUS와 필요한 DESIGN/canonical 문서를 같은 Korean merge commit에 정합하고 main을 push한다. 일반 merge/push를 사람 승인 대기로 바꾸지 않는다.
+Main integration run은 final이 latest main을 포함하고 source worktree가 clean인지 확인한다. Main drift가 있으면 executor branch에 non-rewriting merge하고 다시 fresh verification으로 보낸다. 모든 gate가 통과하면 INBOX terminal 결과, STATUS와 필요한 DESIGN/canonical 문서를 Korean merge commit에 정합한다. 이어 exact `done` block만 제거하고 STATUS에 actual merge hash를 남기는 cleanup commit을 만들어 두 commit을 함께 main에 push한다. 일반 merge/push를 사람 승인 대기로 바꾸지 않는다.
 
 ## 팀장 판단
 
