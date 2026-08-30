@@ -4,10 +4,10 @@
 
 ## Current State
 
-- 상태: approved M0~M5 완료
-- 현재 active inbox entry: 없음
-- 현재 executor branch/worktree: 없음
-- Automation: `Polygon RPG file-memory loop` PAUSED
+- 상태: 유저 피격 effect 위치 수정 진행 중
+- 현재 active inbox entry: `IN-20260831-002426` (`implementing`)
+- 현재 executor branch/worktree: `codex/loop/in-20260831-002426` provision 대상
+- Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
 
@@ -32,7 +32,7 @@
 
 ## Next
 
-팀장이 메인 대화에서 평소처럼 새 개발을 명령하면 별도 등록 키워드 없이 현재 메시지 전체를 `docs/feedback/INBOX.md`에 그대로 append하고 automation을 재활성화한다. 다음 fresh run은 가장 높은 우선순위의 가장 오래된 `new` entry 하나만 accept/provision한다.
+다음 fresh run은 `IN-20260831-002426` executor worktree에서 실제 플레이어 피격 effect 위치를 재현하고, real contact world 좌표와 effect anchor의 어긋남 하나를 수정해 runnable checkpoint를 branch에 commit/push한다.
 
 ## Update Contract
 
