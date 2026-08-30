@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 완료 entry 자동 정리 · 독립 검증 준비
-- 현재 active inbox entry: `IN-20260831-003439` · `verifying`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-003439` · checkpoint `83bd913672a4b7efe2a78cd9456d7bcd57212869`
+- 상태: 완료 entry 자동 정리 · 통합 준비
+- 현재 active inbox entry: `IN-20260831-003439` · `ready-for-integration`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-003439` · final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -34,10 +34,11 @@
 - Player hit effect integration: final의 clean source와 owned-path diff, `npm run check`, `git diff --check`, 기록된 실제 Canvas 품질 evidence를 재확인하고 main에 non-rewriting merge.
 - 완료 entry 자동 정리 accept/provision: current process·quality·manage·schema와 lock/worktree helper를 대조하고, `done` block만 정리하되 nonterminal 원문과 Git 복구 evidence를 보존하는 실행 계약을 수락했다.
 - 완료 entry 자동 정리 writer checkpoint: `83bd913672a4b7efe2a78cd9456d7bcd57212869` · fence-aware exact block parser, `done` guard, main expected-HEAD guard와 atomic replacement를 구현했다. Actual INBOX copy와 4-backtick/tilde fixture에서 다른 nonterminal 원문 byte 보존, 비-done 거부, `npm run check`, `git diff --check`를 확인했다.
+- 완료 entry 자동 정리 fresh final: `c5daca93afba8b1efd9d7c6385da0b1a4c690486` · latest main ancestry와 owned diff, actual INBOX byte/copy, 4-backtick·tilde fence, duplicate/non-done 거부, live main expected-HEAD guard, atomic replacement와 임시 파일 정리, `npm run check`, `git diff --check`를 독립 확인했다. 적용 품질 축은 모두 2 이상이다.
 
 ## Next
 
-다음 fresh run은 `IN-20260831-003439` checkpoint의 latest-main ancestry·owned diff를 확인하고 actual INBOX copy, arbitrary fence, duplicate/non-done 거부, live main guard와 atomic cleanup을 독립 검증한다. 모든 적용 품질 축이 2 이상이면 clean final과 `ready-for-integration` evidence를 만든다.
+다음 fresh run은 `IN-20260831-003439` final의 latest-main ancestry·owned diff와 검증 evidence를 재확인한 뒤 main에 non-rewriting merge한다. Merge commit에 terminal raw/result를 먼저 보존하고, exact `done` block cleanup·STATUS actual merge hash commit까지 같은 integration transition으로 push하며 다음 entry는 소비하지 않는다.
 
 ## Update Contract
 
