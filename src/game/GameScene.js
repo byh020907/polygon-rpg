@@ -18,6 +18,7 @@ import {
   getEquipmentProfile,
 } from './equipment/EquipmentProfiles.js';
 import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
+import { RegionExpansionProgress } from './encounter/RegionExpansionProgress.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
 import {
@@ -838,11 +839,15 @@ export class GameScene extends SceneNode {
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
     this.journeyProgress = new FirstJourneyProgress();
+    this.regionExpansionProgress = new RegionExpansionProgress();
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: {
         timePhase: 'day',
         weather: 'clear',
-        storyFlags: this.journeyProgress.snapshot().storyFlags,
+        storyFlags: {
+          ...this.journeyProgress.snapshot().storyFlags,
+          ...this.regionExpansionProgress.snapshot().storyFlags,
+        },
       },
     });
     this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
@@ -871,12 +876,13 @@ export class GameScene extends SceneNode {
 
   reset() {
     const journey = this.journeyProgress.reset();
+    const regionExpansion = this.regionExpansionProgress.reset();
     this.worldTimeHours = 10;
     this.timePhase = timePhaseForHour(this.worldTimeHours);
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
       weather: 'clear',
-      storyFlags: journey.storyFlags,
+      storyFlags: { ...journey.storyFlags, ...regionExpansion.storyFlags },
     });
     const mapSnapshot = this.mapRuntime.reset();
     const spawn = mapSnapshot.spawn?.position ?? { x: 270, y: 350 };
@@ -952,7 +958,10 @@ export class GameScene extends SceneNode {
   syncJourneyWorldContext() {
     this.mapRuntime.setWorldContext({
       ...this.mapRuntime.getWorldContext(),
-      storyFlags: this.journeyProgress.snapshot().storyFlags,
+      storyFlags: {
+        ...this.journeyProgress.snapshot().storyFlags,
+        ...this.regionExpansionProgress.snapshot().storyFlags,
+      },
     });
   }
 
@@ -1024,6 +1033,7 @@ export class GameScene extends SceneNode {
     this.portalTransitionPresentation = null;
     this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
     this.journeyProgress.recordPortal(completion.portalId);
+    this.regionExpansionProgress.recordPortal(completion.portalId);
     this.roomChanged.emit(
       Object.freeze({
         portalId: completion.portalId,
@@ -1225,7 +1235,10 @@ export class GameScene extends SceneNode {
         snapshot: transaction.snapshot,
       });
     }
-    const resolution = this.journeyProgress.resolveEncounter(result.profileId);
+    const regionExpansionEncounter = result.profileId.startsWith('glasswind-');
+    const resolution = regionExpansionEncounter
+      ? this.regionExpansionProgress.resolveEncounter(result.profileId)
+      : this.journeyProgress.resolveEncounter(result.profileId);
     if (!resolution.changed) return resolution;
     if (resolution.kind === 'field-guardian-defeated') {
       this.playerMaxHealth += resolution.maxHealthBonus;
@@ -1270,13 +1283,44 @@ export class GameScene extends SceneNode {
         this.syncJourneyWorldContext();
         this.statusNode.publish({ force: true });
       }
+
+      if (trigger.kind === 'glasswind-checkpoint') {
+        const result = this.regionExpansionProgress.activateCheckpoint({
+          regionId: snapshot.active.regionId,
+          roomId: snapshot.active.roomId,
+          position: {
+            x: trigger.position.x,
+            y: trigger.position.y - CHARACTER_FOOT_OFFSET,
+          },
+        });
+        if (!result.changed) continue;
+        this.playerHealth = this.playerMaxHealth;
+        this.syncJourneyWorldContext();
+        this.statusNode.publish({ force: true });
+      }
+
+      if (trigger.kind === 'glasswind-boss-reward') {
+        const result = this.regionExpansionProgress.claimBossReward(trigger.gold);
+        if (!result.changed) continue;
+        this.syncJourneyWorldContext();
+        this.statusNode.publish({ force: true });
+      }
     }
   }
 
   respawnPlayerAfterKo() {
     const journey = this.journeyProgress.snapshot();
-    if (journey.checkpointActivated && journey.checkpoint) {
-      const checkpoint = journey.checkpoint;
+    const regionExpansion = this.regionExpansionProgress.snapshot();
+    const activeRegionId = this.mapRuntime.getActiveLocation().regionId;
+    const checkpoint =
+      activeRegionId === 'glasswind-region'
+        ? regionExpansion.checkpointActivated
+          ? regionExpansion.checkpoint
+          : null
+        : journey.checkpointActivated
+          ? journey.checkpoint
+          : null;
+    if (checkpoint) {
       const mapSnapshot = this.mapRuntime.setActiveLocation(checkpoint.regionId, checkpoint.roomId);
       this.replaceRoomScene(mapSnapshot);
       this.position = { ...checkpoint.position };
@@ -1675,8 +1719,10 @@ export class GameScene extends SceneNode {
   getWorldStatus() {
     const map = this.mapRuntime.getResolvedMap();
     const room = this.mapRuntime.getActiveRoom();
-    const roomId = this.mapRuntime.getActiveLocation().roomId;
+    const location = this.mapRuntime.getActiveLocation();
+    const roomId = location.roomId;
     const journey = this.journeyProgress.snapshot();
+    const regionExpansion = this.regionExpansionProgress.snapshot();
     const progression = this.progressionSnapshot;
     const skill = this.getCombatSkillProfile();
     const encounter = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
@@ -1689,12 +1735,21 @@ export class GameScene extends SceneNode {
       reward: '보상 회수',
       returned: '첫 원정 완료',
     };
+    const regionExpansionPhaseLabels = {
+      prepare: '새 Region 준비',
+      field: '유리바람 Field',
+      dungeon: '관측소 Dungeon',
+      checkpoint: '바람닻 확보',
+      boss: '폭풍눈 Boss',
+      reward: '프리즘 회수',
+      returned: '유리바람 원정 완료',
+    };
     const progressionComplete =
       progression.combatSkillLevel === 3 &&
       progression.ownedEquipmentIds.length === EQUIPMENT_PROFILES.length;
     let objective = progressionComplete
-      ? '장비와 command 성장이 완성되었습니다. 원하는 Portal에서 전투 route를 비교하세요.'
-      : '왼쪽 청록 Portal에서 훈련 골렘을 쓰러뜨리고 인장으로 장비·command를 성장시키세요.';
+      ? '장비를 고른 뒤 중앙 청록 Portal에서 ↑로 유리바람 협곡 원정을 시작하세요.'
+      : '훈련으로 성장하거나 중앙 청록 Portal에서 새 유리바람 협곡 원정을 시작하세요.';
     let encounterHint = '';
 
     if (roomId === 'training-room') {
@@ -1741,13 +1796,68 @@ export class GameScene extends SceneNode {
         encounterHint = 'GUARD · ROLL · PUNISH';
       }
     }
+    if (roomId === 'glasswind-approach') {
+      if (regionExpansion.glasswindBridgeStable) {
+        objective = '풍식 사냥꾼을 쓰러뜨려 바람다리가 고정됐습니다. 오른쪽 Portal로 진입하세요.';
+        encounterHint = 'SURFACE + COLLISION + PORTAL 안정화';
+      } else if (encounter?.attackKind === 'sweep' && encounter?.aiState === 'windup') {
+        objective = '지면을 훑는 청록 Sweep가 옵니다. ↑로 뛰어넘고 공중 공격으로 반격하세요.';
+        encounterHint = 'LOW SWEEP · JUMP REQUIRED';
+      } else if (encounter?.attackKind === 'antiAir' && encounter?.aiState === 'windup') {
+        objective = '공중에 오래 머물면 긴 대공창이 따라옵니다. 착지해 다시 Sweep 타이밍을 보세요.';
+        encounterHint = 'ANTI-AIR · LAND AND RESET';
+      } else {
+        objective =
+          '풍식 사냥꾼의 지면 Sweep를 점프로 넘고 회복 틈에 반격해 바람다리를 고정하세요.';
+        encounterHint = 'JUMP OVER SWEEP · AIR PUNISH';
+      }
+    }
+    if (roomId === 'glasswind-observatory') {
+      objective = regionExpansion.checkpointActivated
+        ? '바람닻 확보. 오른쪽 보라 Portal에서 폭풍눈 Boss에게 도전하세요.'
+        : '관측소 중앙의 청록 바람닻에 접근해 Checkpoint와 Boss Portal을 활성화하세요.';
+      encounterHint = regionExpansion.checkpointActivated
+        ? '사망 시 관측소 Checkpoint에서 회복합니다.'
+        : '바람닻이 Boss Portal과 부활 위치를 함께 고정합니다.';
+    }
+    if (roomId === 'glasswind-storm-eye') {
+      if (regionExpansion.bossRewardClaimed) {
+        objective = '프리즘 회수 완료. 오른쪽 황금 shortcut Portal에서 ↑로 학원촌에 귀환하세요.';
+        encounterHint = '+180 Gold · 학원촌 영구 shortcut 해금';
+      } else if (regionExpansion.bossDefeated) {
+        objective = '폭풍 유리핵이 남긴 황금 프리즘에 접근해 보상과 shortcut을 여세요.';
+        encounterHint = '보상 프리즘이 귀환 Portal을 영구 활성화합니다.';
+      } else if (encounter?.punishWindowOpen) {
+        objective = '청록 균열이 열렸습니다. 회복이 끝나기 전에 command 연계를 적중시키세요.';
+        encounterHint = 'PUNISH WINDOW · ATTACK NOW';
+      } else if (encounter?.attackKind === 'sweep' && encounter?.aiState === 'windup') {
+        objective = '바닥을 덮는 Sweep는 Guard할 수 없습니다. ↑ 점프 후 공중 route로 Punish하세요.';
+        encounterHint = 'LOW SWEEP · JUMP → AIR PUNISH';
+      } else if (encounter?.attackKind === 'heavy' && encounter?.aiState === 'windup') {
+        objective = '보라 강공격은 이동+↓ 구르기로 통과하고 반대편 회복 틈을 노리세요.';
+        encounterHint = 'HEAVY · ROLL THROUGH';
+      } else if (encounter?.attackKind === 'light' && encounter?.aiState === 'windup') {
+        objective = '기본공격은 ↓ Guard. 막은 뒤 다음 Sweep를 위해 점프 거리를 확보하세요.';
+        encounterHint = 'BASIC · GUARDABLE';
+      } else {
+        objective = 'Guard 기본기 · Jump Sweep · Roll 강공격을 구분하고 각 회복 틈을 공략하세요.';
+        encounterHint = 'GUARD · JUMP · ROLL · PUNISH';
+      }
+    }
     if (roomId === 'academy-plaza' && journey.returnedWithReward) {
-      objective = progressionComplete
-        ? '첫 원정과 성장 완료. 속공형/중량형을 바꿔 전체 loop를 반복할 수 있습니다.'
-        : objective;
-      encounterHint = progressionComplete
-        ? 'M4 COMPLETE · 장비 trade-off와 Lv.3 loop cancel 해금'
-        : this.progressionNotice;
+      objective = regionExpansion.returnedWithReward
+        ? objective
+        : '첫 원정 장비를 정비하고 중앙 청록 Portal에서 새 유리바람 협곡으로 출발하세요.';
+      encounterHint = regionExpansion.returnedWithReward
+        ? encounterHint
+        : progressionComplete
+          ? 'M4 COMPLETE · 새 Sweep Jump 전투 준비'
+          : this.progressionNotice;
+    }
+    if (roomId === 'academy-plaza' && regionExpansion.returnedWithReward) {
+      objective =
+        '유리바람 협곡 원정 완료. 장비를 바꾸고 중앙 청록 Portal에서 전체 loop를 반복할 수 있습니다.';
+      encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
 
     const nextSkillLevel = Math.min(3, progression.combatSkillLevel + 1);
@@ -1769,12 +1879,22 @@ export class GameScene extends SceneNode {
         encounter && encounter.health > 0
           ? `${encounter.label} · HP ${encounter.health}/${encounter.maxHealth}`
           : '',
-      journeyLabel: phaseLabels[journey.phase] ?? journey.phase,
-      wardLabel: journey.fieldWardActive
-        ? '수호 수액 · HP +20'
-        : journey.routeChoice === 'bypass'
-          ? '우회 · 수액 없음'
-          : '수호 수액 미획득',
+      journeyLabel:
+        location.regionId === 'glasswind-region' ||
+        (roomId === 'academy-plaza' && regionExpansion.phase !== 'prepare')
+          ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
+          : (phaseLabels[journey.phase] ?? journey.phase),
+      wardLabel:
+        location.regionId === 'glasswind-region' ||
+        (roomId === 'academy-plaza' && regionExpansion.phase !== 'prepare')
+          ? regionExpansion.glasswindBridgeStable
+            ? '유리바람 다리 · 안정'
+            : '횡풍 장벽 · 활성'
+          : journey.fieldWardActive
+            ? '수호 수액 · HP +20'
+            : journey.routeChoice === 'bypass'
+              ? '우회 · 수액 없음'
+              : '수호 수액 미획득',
       timePhase: this.timePhase,
       timeLabel: this.timePhase === 'night' ? '밤' : '낮',
       roomId,
@@ -1814,7 +1934,7 @@ export class GameScene extends SceneNode {
     return Object.freeze({
       health: this.playerHealth,
       maxHealth: this.playerMaxHealth,
-      gold: this.journeyProgress.snapshot().gold,
+      gold: this.journeyProgress.snapshot().gold + this.regionExpansionProgress.snapshot().gold,
       trainingMarks: this.progressionSnapshot.trainingMarks,
     });
   }

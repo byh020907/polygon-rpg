@@ -32,6 +32,10 @@ const ENEMY_NON_HURT_ITEM_IDS = new Set([
   'combat-enemy-health-fill',
   'combat-enemy-heavy-warning',
   'combat-enemy-punish-window',
+  'combat-enemy-sweep-warning',
+  'combat-enemy-sweep-trail',
+  'combat-enemy-glasswind-wing-back',
+  'combat-enemy-glasswind-wing-front',
 ]);
 const PLAYER_NON_HURT_ITEM_IDS = new Set([
   'shadow',
@@ -214,6 +218,7 @@ export class TrainingEncounterNode extends SceneNode {
       id: this.entity.id,
       profileId: encounterProfile.id,
       role: encounterProfile.role,
+      species: encounterProfile.species ?? 'golem',
       label: encounterProfile.label,
       presentationScale: encounterProfile.presentationScale,
       position: { ...this.entity.position },
@@ -284,6 +289,7 @@ export class TrainingEncounterNode extends SceneNode {
       maxHealth: enemy.maxHealth,
       profileId: enemy.profileId,
       role: enemy.role,
+      species: enemy.species,
       label: enemy.label,
       aiState: enemy.aiState,
       attackKind: enemy.attackKind,
@@ -313,6 +319,7 @@ export class TrainingEncounterNode extends SceneNode {
         juggleLocked: enemy.juggleLocked,
         retaliationSeconds: enemy.retaliationInvulnerableSeconds,
         role: enemy.role,
+        species: enemy.species,
         label: enemy.label,
         punishWindowOpen: enemy.punishWindowOpen,
         attack: Object.freeze({
@@ -622,7 +629,11 @@ export class TrainingEncounterNode extends SceneNode {
     });
     this.contactSeconds = 0.18;
     const rollProgress = player.rollProgress;
-    const rollInvulnerable = rollProgress !== null && rollProgress >= 0.12 && rollProgress <= 0.62;
+    const rollInvulnerable =
+      profile.rollPiercing !== true &&
+      rollProgress !== null &&
+      rollProgress >= 0.12 &&
+      rollProgress <= 0.62;
     if (rollInvulnerable) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.EVADE, {
         actor: 'player',

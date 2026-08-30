@@ -112,7 +112,7 @@ export function registerGameShell(Alpine, gameApp) {
     renderStats: 'Renderer idle',
     gameStats: 'World ready',
     areaName: '왕립 마법학교 학원촌',
-    objective: '장비를 고르고 오른쪽 황금 Portal에서 ↑로 첫 Field 원정을 시작하세요.',
+    objective: '장비를 고르고 중앙 청록 Portal에서 ↑로 유리바람 협곡 원정을 시작하세요.',
     journeyLabel: '학원촌 준비',
     encounterHint: '',
     encounterHealthLabel: '',

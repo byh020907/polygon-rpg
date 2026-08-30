@@ -87,6 +87,23 @@ export const TRAINING_ENEMY_ATTACK_PROFILES = Object.freeze({
     knockbackDecayRate: 0.01,
     weaponLength: 230,
   }),
+  sweep: enemyAttackProfile({
+    windupFrames: 24,
+    attackFrames: 18,
+    recoveryFrames: 26,
+    contactStartFrame: 5,
+    contactEndFrame: 14,
+    desiredRange: 118,
+    attackRange: 168,
+    verticalRange: 28,
+    damage: 16,
+    guardable: false,
+    rollPiercing: true,
+    knockbackVelocity: 175,
+    knockbackDecayRate: 0.011,
+    blockStrength: 0.9,
+    weaponLength: 195,
+  }),
 });
 
 function lerp(start, end, amount) {
@@ -227,8 +244,16 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
   if (!enemy) return [];
   const { x, y } = enemy.position;
   const flash = enemy.hitFlashSeconds > 0;
-  const roleColor =
-    enemy.role === 'boss' ? '#71436f' : enemy.role === 'field' ? '#7f6341' : '#a74651';
+  const glasswind = enemy.species === 'glasswind';
+  const roleColor = glasswind
+    ? enemy.role === 'boss'
+      ? '#66528f'
+      : '#397f89'
+    : enemy.role === 'boss'
+      ? '#71436f'
+      : enemy.role === 'field'
+        ? '#7f6341'
+        : '#a74651';
   const bodyFill = flash
     ? '#f4e3ce'
     : enemy.aiState === 'windup'
@@ -251,17 +276,21 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
     enemy.aiState === 'hitstun'
       ? enemy.hitReactionWeaponAngle
       : enemy.aiState === 'windup'
-        ? enemy.attackKind === 'heavy'
-          ? -1.8
-          : enemy.attackKind === 'antiAir'
-            ? 0.1
-            : -1.2
+        ? enemy.attackKind === 'sweep'
+          ? -1.4
+          : enemy.attackKind === 'heavy'
+            ? -1.8
+            : enemy.attackKind === 'antiAir'
+              ? 0.1
+              : -1.2
         : enemy.aiState === 'attack'
-          ? enemy.attackKind === 'antiAir'
-            ? 0.1 - attackProgress * 3
-            : enemy.attackKind === 'heavy'
-              ? -1.8 + attackProgress * 2.4
-              : -1.2 + attackProgress * 1.8
+          ? enemy.attackKind === 'sweep'
+            ? -0.3 + attackProgress * 0.55
+            : enemy.attackKind === 'antiAir'
+              ? 0.1 - attackProgress * 3
+              : enemy.attackKind === 'heavy'
+                ? -1.8 + attackProgress * 2.4
+                : -1.2 + attackProgress * 1.8
           : enemy.aiState === 'recovery'
             ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
             : -0.65;
@@ -277,8 +306,8 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
           : enemy.aiState === 'attack'
             ? -0.14 + attackProgress * 0.42
             : 0);
-  const weaponHand = { x: x + 8, y: y - 56 };
-  const weaponShoulder = { x: x - 8, y: y - 59 };
+  const weaponHand = { x: x + 8, y: y - (enemy.attackKind === 'sweep' ? 20 : 56) };
+  const weaponShoulder = { x: x - 8, y: y - (enemy.attackKind === 'sweep' ? 45 : 59) };
   const weaponElbow = {
     x: lerp(weaponShoulder.x, weaponHand.x, 0.5) + Math.sin(weaponAngle) * 8,
     y: lerp(weaponShoulder.y, weaponHand.y, 0.5) - Math.cos(weaponAngle) * 8,
@@ -365,10 +394,71 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
           ),
         ]
       : []),
+    ...(glasswind && enemy.aiState === 'windup' && enemy.attackKind === 'sweep'
+      ? [
+          polygon(
+            'combat-enemy-sweep-warning',
+            arcRibbonPoints({ x, y: enemy.groundY - 4 }, -0.15, 0.15, 72, 188, 10),
+            { x: 0, y: 0 },
+            '#72edf0',
+            {
+              stroke: '#efffff',
+              lineWidth: 2,
+              opacity: 0.16 + Math.max(0, 1 - enemy.aiSeconds / attackProfile.windupSeconds) * 0.4,
+            },
+          ),
+        ]
+      : []),
+    ...(glasswind && enemy.aiState === 'attack' && enemy.attackKind === 'sweep'
+      ? [
+          polygon(
+            'combat-enemy-sweep-trail',
+            arcRibbonPoints(
+              { x: weaponHand.x, y: enemy.groundY - 8 },
+              weaponAngle - 0.24,
+              weaponAngle + 0.08,
+              54,
+              weaponLength,
+              10,
+            ),
+            { x: 0, y: 0 },
+            '#8ff5ef',
+            { opacity: 0.38 },
+          ),
+        ]
+      : []),
     limbSegment('combat-enemy-back-leg', { x: x - 7, y: y - 29 }, { x: x - 9, y }, 8, '#552c3a', {
       stroke: '#251824',
       lineWidth: 1.5,
     }),
+    ...(glasswind
+      ? [
+          polygon(
+            'combat-enemy-glasswind-wing-back',
+            [
+              { x: -10, y: 0 },
+              { x: -70, y: -46 },
+              { x: -82, y: 4 },
+              { x: -34, y: 28 },
+            ],
+            { x: x - 2, y: y - 58, rotation: poseRotation * 0.45 },
+            enemy.role === 'boss' ? '#755eb0' : '#4ba5ad',
+            { stroke: '#b8f6ef', lineWidth: 2, opacity: 0.72 },
+          ),
+          polygon(
+            'combat-enemy-glasswind-wing-front',
+            [
+              { x: 8, y: -2 },
+              { x: 72, y: -40 },
+              { x: 80, y: 10 },
+              { x: 32, y: 30 },
+            ],
+            { x: x + 2, y: y - 58, rotation: -poseRotation * 0.35 },
+            enemy.role === 'boss' ? '#9a76c2' : '#63c5c2',
+            { stroke: '#d8fffa', lineWidth: 2, opacity: 0.76 },
+          ),
+        ]
+      : []),
     limbSegment('combat-enemy-front-leg', { x: x + 7, y: y - 29 }, { x: x + 10, y }, 8, '#783342', {
       stroke: '#251824',
       lineWidth: 1.5,
@@ -415,7 +505,7 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
         { x: 0, y: 4 },
       ],
       { ...weaponHand, rotation: weaponAngle },
-      '#dce5e6',
+      glasswind ? '#b9fff6' : '#dce5e6',
       { stroke: '#37434b', lineWidth: 2 },
     ),
     ...(antiAirGlowOpacity > 0

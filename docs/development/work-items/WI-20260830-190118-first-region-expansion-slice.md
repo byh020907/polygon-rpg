@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-190118
-status: queued
+status: ready-for-integration
 priority: high
 lane: dedicated
 created_at: 2026-08-30T19:01:18+09:00
@@ -51,7 +51,11 @@ owned_paths:
 
 ## 결과
 
-진행 중
+`유리바람 협곡` 두 번째 Region을 학원촌에 연결했다. 풍식 사냥꾼의 지면 Sweep는 Guard·Roll을 관통하고 Jump 뒤 공중 Punish를 요구한다. 사냥꾼 격파 뒤 바람다리 surface·render geometry·실제 movement collision·Dungeon Portal이 함께 열리고, 관측소 checkpoint → 복합 Boss → 프리즘 180 Gold → 학원촌 shortcut 귀환까지 이어진다.
+
+적용 품질 축은 모두 2 이상이다. `npm run check`, `git diff --check`, 120Hz Map/전투/회귀 진단, 실제 Canvas Field·Sweep jump·Polygon/Retro·`900×600` resize·console 확인을 통과했다. 실제 Boss 격파 이후 보상·shortcut 완료 순서는 production module 기반 결정적 전체 경로로 검증했다. 사용자 요청 없는 영구 test/script/fixture는 추가하지 않았다.
+
+업무보고: [`../reports/WI-20260830-190118-first-region-expansion-slice.md`](../reports/WI-20260830-190118-first-region-expansion-slice.md)
 
 ## 피드백
 
@@ -63,4 +67,6 @@ owned_paths:
 
 ## 연결
 
-미연결
+업무보고: [`../reports/WI-20260830-190118-first-region-expansion-slice.md`](../reports/WI-20260830-190118-first-region-expansion-slice.md)
+
+Final worktree commit은 이 task의 완료 응답으로 전달하고 standalone coordinator가 main integration hash를 기록한다.
