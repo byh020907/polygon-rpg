@@ -1,56 +1,11 @@
-# Run Mode
+# Legacy Work-Item Task Recovery
 
-One user-owned Codex task owns one work item from implementation through direct team-lead feedback and its final worktree commit. This task is the sole Vertical Slice Director and quality owner. Bounded subagents may help, but they do not become peer owners or user-facing work items.
+This mode exists only for a pre-migration open item already running in a Codex-managed worktree task. New items never use it.
 
-## Start
+1. Stop requesting command, commit or merge approval. Preserve the task/worktree exactly as evidence.
+2. Read the legacy item, registration base, owned paths, worktree HEAD/dirty state and any checkpoint/final commit.
+3. If the task can finish without new permissions, create one clean scoped checkpoint/final commit and record its evidence. Do not push/merge main.
+4. If tool-level permission blocks work, do not ask the user to approve repeatedly and do not spawn a replacement task. Record `blocked: execution-permission` with the failed operation.
+5. A later direct coordinator tick adopts only a clean proven commit or reconstructs the item on its deterministic executor branch. Unknown dirty changes stay preserved until ownership is unambiguous.
 
-1. Read the exact work-item document, roadmap milestone, project process, `docs/development/quality-loop.md` and relevant canonical system docs.
-2. Verify the exact task title, `registration_base`, assigned `owned_paths`, worktree status and starting commit. Preserve unrelated or inherited changes.
-3. Confirm this is a Codex-managed worktree for a Git repository. If it is unexpectedly running in the shared local checkout, report `blocked: worktree-required` rather than becoming the main checkout writer.
-4. Treat explicit team-lead intent as implementation input. Do not ask for approval of a plan, Reference Brief, execution contract, quality contract, task list or work-item prose.
-5. Keep internal planning and implementation detail in this task. Do not send implementation or feedback through the team-lead main task or coordinator tick.
-
-## Blocking Decision Interview
-
-- Default to the safest reversible implementation that fits stated intent, roadmap, current code and verified References. Disclose the default after the candidate exists.
-- Ask only when a decision genuinely blocks implementation, materially changes the product and cannot be safely inferred or made reversible.
-- Ask exactly one short question in this work-item task. Its answer must be Yes/No or one of 2–3 mutually exclusive choices, each with a one-line impact.
-- The team lead answers here. Record the accepted direction in the work item and continue in this same task/worktree.
-
-## Implement And Evaluate
-
-- Implement the complete playable slice, not isolated feature checkboxes.
-- Use `baseline → largest bottleneck → one focused change → deterministic checks → artifact inspection → rescore`.
-- Use subagents only for bounded exploration, proven disjoint implementation or independent verification. Freeze shared contracts and exact ownership first.
-- Integrate every subagent result in this parent task, rerun the full playable path and rescore the combined artifact.
-- Verify deterministic frame/state behavior separately from the actual Canvas path.
-- Keep transient iteration detail in this task; record final threshold, evidence and durable rule candidates in the work item/report.
-- Do not enter feedback or completion while an applicable quality axis is 0 or 1.
-- If the same gate fails twice without new evidence or design change, preserve a threshold-passing current best for feedback; otherwise return `blocked` with failed evidence instead of weakening the threshold.
-
-## Direct Feedback
-
-Enter this state only when human observation is genuinely required. `review: team-lead` does not justify a generic wait.
-
-1. Prepare the best available local/mobile playable path in this worktree.
-2. Update the work-item result and any intent-first report with actual candidate evidence.
-3. If requirements and verification can decide the result, skip `feedback` and continue to Finalize.
-4. Otherwise send one plain-Korean message containing the implemented feature and play path; inspection location or controls; 1–3 observable questions; and one line explaining what the answers will change.
-5. Wait here for those answers. Apply them in this same task/worktree and repeat evaluation until accepted or blocked.
-
-Never send a generic “의견을 기다립니다”, “확인해 주세요” or equivalent. Do not create a final integration candidate while concrete required judgment or implementation remains.
-
-### Recoverable Candidate Before Visual Feedback
-
-When the intended playable path and affected deterministic checks pass, create a scoped local candidate checkpoint commit before opening the result for visual or team-lead inspection. This is required, not optional: it preserves the best runnable state if the task is interrupted during QA. The checkpoint is not `ready-for-integration`, must not be pushed or merged, and may be followed by correction commits. After visual inspection, feedback and independent verification, Finalize produces the clean final worktree commit that the coordinator may integrate.
-
-## Finalize
-
-1. Set the work-item state to `ready-for-integration` and record actual result, accepted judgment when any, quality threshold and verification evidence.
-2. For a playable vertical slice or meaningful milestone, write one intent-first report under `docs/development/reports/`. Small maintenance items use the work-item result only.
-3. Run affected syntax/lint/format checks, `git diff --check`, the actual user path and independent verification appropriate to the change.
-4. Inspect and stage only `owned_paths`. If the verified tree is already the candidate checkpoint commit, confirm that hash; otherwise create the final correction commit with a concise Korean message. Do not push, rewrite history, update main roadmap state or start another work item. When recovering base drift, merge current `origin/main` only when the item explicitly requires it and preserve the resulting parent evidence.
-5. Confirm the final commit includes the intended changed tree and that the worktree is clean.
-6. Finish with this exact team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash.
-
-The final hash is returned by this task, then verified and integrated by a later standalone coordinator tick. It is not self-recorded inside the same commit.
+Legacy conversation memory never becomes the new durable source. After migration, all continuation occurs through the scheduled coordinator branch/worktree flow in Manage mode.

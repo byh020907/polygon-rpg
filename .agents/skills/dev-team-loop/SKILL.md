@@ -1,56 +1,50 @@
 ---
 name: dev-team-loop
-description: Run Polygon RPG's roadmap queue, one-user-owned-Codex-task-per-work-item execution, worktree commit integration, status recovery, or cancellation. A bare `$dev-team-loop` starts or resumes the approved roadmap loop. Do not use when the user explicitly asks to handle a request directly in the current task.
+description: Run Polygon RPG's approval-free Git-state roadmap loop. Fresh scheduled or manual ticks directly continue one work item in its persistent executor branch/worktree, checkpoint, independently verify, merge and push, or recover/cancel it. A bare `$dev-team-loop` runs one reconcile transition. Do not use when the user explicitly asks to handle a feature directly in the current task.
 ---
 
 # Dev Team Loop
 
-Use one project workflow while loading only the instructions for the current role.
+Use the repository's Git-state controller instead of a long-lived supervisor conversation or an approval-gated work-item task.
 
 ## Required Context
 
-Read [`docs/development/process.md`](../../../docs/development/process.md) and the current milestone in [`docs/development/roadmap.md`](../../../docs/development/roadmap.md). Preserve `AGENTS.md` precedence and all authorization boundaries.
+Read [`docs/development/process.md`](../../../docs/development/process.md), [`docs/development/quality-loop.md`](../../../docs/development/quality-loop.md) and the current milestone in [`docs/development/roadmap.md`](../../../docs/development/roadmap.md). Preserve `AGENTS.md`, explicit user scope and authorization boundaries.
 
-The team-lead-facing main task is only the Git queue intake and status surface. A fresh standalone coordinator tick owns queue reconciliation, task dispatch and Git integration without relying on prior conversation memory. Every work item executes from implementation through feedback and final commit in a separate user-owned Codex task, using a Codex-managed worktree by default for Git repositories. A subagent is only an internal helper of that work-item task; it is never the work item itself.
+The team-lead main task is the queue/status surface. Each fresh standalone coordinator run is the autonomous writer: it continues the same durable executor branch/worktree, performs one lifecycle transition, checkpoints or finalizes it, and later merges/pushes it without requesting command or merge approval. Conversation memory is disposable.
 
 ## Select One Mode
 
 Choose the first matching mode.
 
-1. **Cancel:** The user cancels or reopens an exact work item, or a work-item task receives cancellation. Read [`references/cancel.md`](references/cancel.md).
-2. **Run:** This user-owned Codex task prompt identifies one work-item path or ID. Read [`references/run.md`](references/run.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
-3. **Coordinator Tick:** This is a standalone automation run or an explicit request to run one reconcile tick. Read [`references/manage.md`](references/manage.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
-4. **Start/Continue:** This is a bare `$dev-team-loop` invocation or an explicit start/continue/resume roadmap request. Read [`references/start.md`](references/start.md); it delegates one manual coordinator tick and returns.
-5. **Register:** The team-lead main task receives a new request, priority change, pause, cancel or reopen instruction. Read [`references/register.md`](references/register.md).
+1. **Cancel/Reopen:** The user changes an exact work item's lifecycle. Read [`references/cancel.md`](references/cancel.md).
+2. **Coordinator Tick:** This is a scheduled run or an explicit one-tick reconcile request. Read [`references/manage.md`](references/manage.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
+3. **Start/Continue:** This is bare `$dev-team-loop` or an explicit start/resume request. Read [`references/start.md`](references/start.md).
+4. **Register:** The team-lead main task receives a new request, priority change or pause instruction. Read [`references/register.md`](references/register.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
+5. **Legacy Run Recovery:** A pre-migration Codex-managed task explicitly names an old open item. Read [`references/run.md`](references/run.md). Do not create this mode for new items.
 
-If the role is ambiguous, inspect Git work items, Codex task titles/status and repository/worktree commits. Do not create a second active task for the same item.
+If ambiguous, inspect main work items, executor refs, `git worktree list --porcelain`, commit ancestry and lease. Do not create a second writer.
 
 ## Shared Invariants
 
-- One independent team-lead development request creates one work item unless the team lead explicitly requests a split. Bare start/continue invocations and lifecycle operations do not.
-- The approved roadmap is the default work source. When no open item owns its next unmet gate, derive one non-duplicate vertical work item and create a new Codex task for it.
-- The team-lead main task only writes new requests and lifecycle commands to Git queue, reports compact state and manages the coordinator automation. It does not wait for completion, integrate, implement, tune quality or relay feedback.
-- Every coordinator tick starts from a fresh standalone context, acquires the repo-local lease, reconciles Git/task/worktree/commit evidence once, performs one forward or recovery action, releases the lease and exits. Prior main/coordinator memory and transient IDs are never authoritative.
-- A coordinator may repair a malformed work-item task title only when one open item, one matching task/worktree, registration ancestry and owned paths prove a unique identity. Ambiguity remains `task-conflict`.
-- Each work item has exactly one user-owned Codex task and one Vertical Slice Director. The team lead opens that task directly to inspect code/artifacts and provide feedback there.
-- Explicit team-lead intent is implementation input, never a request for reconfirmation. Implement a safe reversible candidate first; ask one short blocking choice only inside the work-item task when necessary.
-- A Git work-item task uses a Codex-managed worktree by default. It owns its scoped files, verification, report and final worktree commit; it does not push, merge, consume another item or change main queue/roadmap state.
-- Git work-item documents are minimal durable queue/result history. The work-item task and its worktree own live planning and execution evidence.
-- Subagents are optional bounded helpers inside a work-item task for exploration, proven disjoint implementation or independent verification. Their parent work-item task integrates and verifies their results.
-- Coordinator ticks own serialized registration/integration/result commits and pushes. Work-item tasks own only their final scoped worktree commit.
-- When an agent authors Git messages, follow the Korean message policy in `docs/development/process.md`.
-- Do not add permanent tests for one-off failures. When the same cause is confirmed twice and is mechanically measurable, the canonical user-approved repeat-prevention rule requires the smallest durable check. Remove other temporary validation artifacts.
-- Do not copy Reference IP, assets, commands, maps, names, balance values or content.
-- No force push, shared-history rewrite, guessed cleanup or mutation of another task's worktree.
-- Do not submit a candidate with an applicable quality axis below the threshold in `docs/development/quality-loop.md`.
-- Subagent success is not work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
-- After deterministic checks pass, a work-item task checkpoints the runnable candidate before visual/team-lead inspection so an interrupted QA cycle does not erase the best state. Only the later visually verified clean final commit is integration-ready.
-- Human questions, canonical conflicts and external blockers suspend new vertical dispatch but do not stop the recurring automation; later ticks keep observing and recover when evidence changes. Pause only on explicit team-lead pause or after durable roadmap-completion proof.
+- One independent team-lead request creates one work item unless the team lead explicitly splits it. Lifecycle and status requests do not.
+- The approved roadmap is the default work source. When no open item owns its next unmet gate, derive one non-duplicate vertical item.
+- New items use `executor: scheduled-coordinator` and deterministic `codex/roadmap/<lowercase-id>` branches. Do not call `create_thread`, fork, handoff or create a managed-worktree task for autonomous implementation.
+- Persistent worktree, local/remote executor branch and commits are durable state. Run titles and transient task IDs are diagnostic only.
+- Each tick acquires/renews/releases the repo lease and performs one lifecycle transition: provision, implement/checkpoint, fresh verification/finalize, integrate or recover.
+- A long tick renews its 30-minute lease at least every 10 minutes and before every mutation. Main drift or unknown paths stop mutation without deleting evidence.
+- The scheduled writer directly edits the executor worktree, runs the quality loop, commits Korean messages, pushes its branch, and later merges/pushes main. These normal operations do not require a separate approval question.
+- The fresh run after the last writer is the independent verifier. A writer run cannot mark its own new candidate ready and integrate it in the same tick.
+- Checkpoint commits preserve runnable current best; only a later fresh-run verified clean final is integration-ready.
+- Integration uses a non-rewriting merge commit that includes the final branch and `done`/roadmap records atomically. Never force push, rebase shared history or guess-delete worktrees.
+- Human input blocks only a concrete, non-inferable Product Decision, Canonical Conflict, credential or external system condition. Generic approval/feedback waiting is invalid.
+- Do not add permanent tests for one-off failures. Two confirmed mechanically measurable repetitions may justify the smallest durable check.
+- Do not stop automation until explicit pause or durable approved-roadmap completion proof.
 
 ## Team-Lead Wording
 
-Apply [`docs/development/process.md`](../../../docs/development/process.md#팀장-안내-문장-기준) to every team-lead-facing reply. Never use a generic request for feedback or confirmation. If human judgment is unnecessary, continue through verification, final commit and integration readiness. If it is necessary, one message must state the implemented feature and play path, where/how to inspect it, 1–3 observable questions and one line describing what the answers change. Main may summarize those exact questions with the task link; answers stay in the work-item task.
+Report `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 실제로 막힘` in plain Korean. Do not ask for approval of plans, edits, commands, commits, merges or pushes. A real human decision includes the implemented path, inspection method, 1–3 observable questions and what the answer changes.
 
 ## Completion
 
-In a work-item task, use this team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash. In the team-lead main task, report `what is being built → what task can be opened → what is actually blocked`. If there is no concrete question, do not report feedback waiting.
+For a transition, report actual changed files/result, verification, executor checkpoint/final or integration hash, and the next durable phase. For status-only main replies, show the feature and real blocker without dumping internal logs.

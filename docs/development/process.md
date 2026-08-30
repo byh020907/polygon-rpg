@@ -1,333 +1,181 @@
-# Polygon RPG Codex-Native Development Process
+# Polygon RPG Autonomous Development Process
 
-이 문서는 사용자가 팀장으로 제품 방향과 우선순위를 결정하고, Git queue를 기준으로 매번 새로 시작하는 standalone coordinator tick과 독립 work-item task가 roadmap을 지속 소비하는 프로젝트 운영 계약이다.
+이 문서는 사용자가 제품 방향을 정하고, 매번 새로 시작하는 standalone scheduled run이 Git에 기록된 desired state를 직접 개발·검증·통합해 roadmap 완료로 수렴시키는 운영 계약이다. 제품 milestone은 [`roadmap.md`](./roadmap.md), 품질 기준은 [`quality-loop.md`](./quality-loop.md), 일반 controller 근거는 [`loop-engineering-references.md`](./loop-engineering-references.md)가 소유한다.
 
-Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당한다. 제품 방향과 milestone은 [`roadmap.md`](./roadmap.md)가, 각 work item의 품질 rubric과 개선 loop는 [`quality-loop.md`](./quality-loop.md)가 소유한다.
+프로젝트 개발 요청에는 [`.agents/skills/dev-team-loop/SKILL.md`](../../.agents/skills/dev-team-loop/SKILL.md)를 사용한다. `$dev-loop-status`는 같은 상태를 변경하지 않고 진단한다.
 
-Coordinator의 일반 loop engineering 근거와 채택 범위는 [`loop-engineering-references.md`](./loop-engineering-references.md)가 소유한다.
+## 공식 Codex 실행 근거와 현지 판정
 
-프로젝트 개발 요청에는 기본적으로 [`.agents/skills/dev-team-loop/SKILL.md`](../../.agents/skills/dev-team-loop/SKILL.md)를 사용한다. 사용자가 `이번 건은 직접 처리`처럼 workflow 우회를 명시한 요청만 현재 task에서 일반 작업으로 처리한다.
+- [OpenAI Scheduled tasks](https://learn.chatgpt.com/docs/automations)는 standalone run이 매번 새 대화에서 무인 실행되고, Git project의 local checkout 또는 격리 worktree에서 실행될 수 있으며, 조직 정책이 허용하면 scheduled task가 `approval_policy = "never"`를 사용한다고 설명한다.
+- [OpenAI Worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees)는 Git worktree가 같은 repository의 변경을 독립 checkout으로 격리한다고 설명한다.
+- 이 저장소의 실제 session evidence에서는 local scheduled run은 `approval_policy = "never"`였지만, run이 `create_thread`로 생성한 Codex-managed worktree task는 `on-request`였다. Prompt의 “승인 없이 진행” 문장은 이 도구 권한 경계를 바꾸지 못한다.
 
-## 공식 Codex 실행 근거
+따라서 autonomous writer는 승인 요청이 생기는 별도 work-item task가 아니라 **scheduled run 자신**이다. 새 대화는 disposable execution context이고, 지속 상태는 work item·전용 branch·persistent worktree·checkpoint/final/integration commit에 둔다. Computer Use로 승인 버튼을 대신 누르거나 prompt로 시스템 권한을 우회하지 않는다.
 
-- [OpenAI Worktrees 문서](https://learn.chatgpt.com/docs/environments/git-worktrees)는 worktree가 같은 project의 여러 독립 chat을 서로 방해하지 않고 실행하게 하며, 기본 Codex-managed worktree는 보통 하나의 chat에 전용이고 같은 chat이 다시 돌아오면 같은 worktree를 유지한다고 설명한다.
-- [OpenAI Subagents 문서](https://learn.chatgpt.com/docs/agent-configuration/subagents)는 subagent workflow가 parent/main thread에서 병렬 agent 결과를 수집·통합하고, main thread가 최종 응답을 만든다고 설명한다.
-- [OpenAI Scheduled tasks 문서](https://learn.chatgpt.com/docs/automations)는 standalone scheduled task가 run마다 새 chat을 만들고, local Git project의 main checkout 또는 격리 worktree에서 실행할 수 있으며, skill을 prompt에서 명시적으로 호출할 수 있다고 설명한다.
+## 역할과 소유권
 
-따라서 Polygon RPG의 durable work item은 parent-main에 종속된 subagent가 아니라 사이드바에서 팀장이 직접 열 수 있는 사용자 소유 Codex task다. Subagent는 그 task 내부의 bounded helper다. Coordinator는 Codex 프로젝트 대상 standalone automation으로 매 tick 새 task/context에서 시작하며 heartbeat나 장기 실행 메인 대화가 아니다.
+### Product Director — 사용자
 
-## 역할과 task 경계
+- 핵심 재미, 제품 방향, 우선순위와 approved roadmap 범위를 결정한다.
+- 새 요구·수정·pause·cancel·reopen을 메인 대화에 남긴다.
+- 자동 검사와 기존 의도로 결정할 수 없는 양립 불가 제품 선택이나 실제 체감 질문에만 답한다.
+- 명령 실행, checkpoint, commit, merge, push와 안전한 복구를 반복 승인하지 않는다.
 
-### 팀장 — 사용자
+### Team-Lead Main — Git Queue / Status
 
-- 핵심 재미, 제품 방향, 우선순위와 Reference를 결정한다.
-- 사이드바의 work-item task를 직접 열어 실제 코드 트리, 실행 artifact와 검증을 본다.
-- 구현된 기능의 구체적 관찰 질문과 blocking 제품 선택에 해당 task에서 직접 답한다.
-- 이미 밝힌 의도, 계획 문서와 코드에서 추론 가능한 Engineering Decision을 반복 승인하지 않는다.
+- 요청 원문과 lifecycle 명령을 최소 Git work item에 기록하고 main에 commit/push한 뒤 즉시 반환한다.
+- automation이 완료 후 멈춰 있었다면 같은 automation을 재활성화한다.
+- 현재 기능, 실행 단계, 볼 수 있는 결과와 실제 blocker를 Git evidence에서 요약한다.
+- gameplay 구현·품질 tuning·완료 대기·main integration은 수행하지 않는다. 사용자가 현재 대화에서 직접 처리를 명시한 workflow 자체 maintenance는 예외다.
 
-### 팀장 메인 task — Git Queue Intake / Status
+### Standalone Direct Executor Tick
 
-- 팀장의 새 요청·우선순위·pause·cancel·reopen을 최소 Git work item 또는 queue mutation으로 기록하고 즉시 반환한다.
-- 현재 만드는 기능, 팀장이 직접 열 업무 task와 실제 blocker만 조회·표시한다.
-- standalone coordinator automation의 활성·중지 상태를 관리한다.
-- work-item task 생성, 완료 wait/poll, 구현, 품질 tuning, artifact 대리 평가, feedback 중계와 main integration을 수행하지 않는다.
-- changed tree와 검증 로그를 대화 context에 복제하거나 지속되는 outer-loop engine 역할을 하지 않는다.
+- 매 run fresh context에서 `origin/main`, roadmap, open work item, executor branch/worktree, commit graph와 lease를 다시 읽는다.
+- 하나의 open item에 대해 `provision`, `implement/checkpoint`, `fresh verification/finalize`, `integrate`, `recover` 중 **한 lifecycle transition**만 수행하고 종료한다.
+- persistent worktree에서 직접 코드를 작성하고 품질 loop를 실행한다. 별도 사용자 소유 task를 생성·재개·승인 대기하지 않는다.
+- deterministic checks가 통과한 runnable candidate를 checkpoint commit으로 보존하고 executor branch를 push한다.
+- 다음 fresh run이 마지막 writer와 분리된 verifier가 되어 실제 Canvas/mobile path와 affected checks를 다시 확인한다.
+- clean final을 non-rewriting merge commit으로 main에 통합하고 work item·roadmap을 갱신해 push한다. Merge/commit/push 허가는 승인된 loop 범위에 포함된다.
+- transient run/task ID와 이전 대화 memory를 source of truth로 사용하지 않는다.
 
-### Standalone Roadmap Coordinator Tick
+### Optional Helper
 
-- 매 tick 독립된 실행 context에서 Git work item·roadmap·Codex task title/status·managed worktree·commit graph를 다시 읽는다.
-- repo-local lease로 writer를 직렬화하고, main HEAD drift·dirty main·중복 task·겹치는 ownership·상충 commit은 recovery ladder로 분류한다. 유일한 안전 action을 증명할 수 없을 때만 mutation 없이 다음 tick으로 넘긴다.
-- exact title이 없더라도 open item·original prompt의 ID/path·managed worktree·registration ancestry·owned paths가 후보 하나를 유일하게 증명하면 시스템 task-title tool로 exact `WI-... 제목`만 복구하고 종료한다. 후보가 둘 이상이거나 commit/ownership이 애매하면 수리하지 않는다.
-- ready item 하나의 독립 검증·main 통합·done 기록 또는 queued/roadmap item 하나의 등록·새 task 생성만 수행하고 종료한다.
-- recoverable drift가 있으면 같은 task의 title/resume/base repair, 증거 기반 replacement 또는 recovery item 생성 중 하나를 수행하고 종료한다. 같은 conflict 보고만 반복하지 않는다.
-- active task를 기다리거나 gameplay를 구현·tuning·대리 평가하지 않으며 feedback을 중계하지 않는다.
-- 이전 coordinator/main 대화, transient task ID, subagent ID와 working context를 source of truth로 사용하지 않는다.
+Subagent는 한 scheduled run 내부의 bounded exploration, 증명된 disjoint implementation 또는 read-only verification에만 사용할 수 있다. Parent run이 결과를 수집·통합하고 같은 executor worktree와 quality gate를 소유한다. 새 Codex task·handoff·별도 writer는 autonomous work item을 대체하지 않는다.
 
-### Work-Item Task — Vertical Slice Director
-
-- 하나의 work item에 하나만 존재하는 사용자 소유 Codex task이며 Lead Game Developer & QA Director다.
-- Git repository에서는 기본적으로 Codex-managed worktree에서 시작해 다른 업무와 filesystem/index를 격리한다.
-- 팀장의 명시적 의도를 구현 입력으로 받아 안전하고 되돌릴 수 있는 candidate를 먼저 구현한다.
-- Reference 판단, 구현, 품질 loop, 실제 artifact, 직접 feedback, 업무보고와 final scoped commit을 처음부터 끝까지 소유한다.
-- 팀장은 이 task를 직접 열고 feedback하며 Director는 같은 task/worktree에서 반영한다.
-- final worktree commit을 만들되 push·merge·main roadmap 갱신·다음 item 시작은 하지 않는다.
-
-### Task-Internal Subagent / Independent Verifier
-
-- work-item task 안의 bounded exploration, 증명된 disjoint implementation 또는 frozen-candidate verification만 수행한다.
-- parent work-item task가 공개 계약, path ownership, 결과 수집·통합과 전체 품질을 소유한다.
-- subagent thread는 사용자 소유 work-item task나 durable queue item을 대체하지 않는다.
-- 제품 범위, rubric, 팀장 feedback, final commit과 parent 완료를 소유하지 않는다.
-
-## 구현 우선과 짧은 선택 인터뷰
-
-- 명시된 의도는 구현 입력이며 재확인 요청이 아니다.
-- 기본 흐름은 `구현 → 현재 결과 검증 → 실제 tree·동작·검증 공개 → 필요한 경우에만 팀장 판단 → final commit`이다.
-- 계획, Reference Brief, 실행·품질 계약과 task list는 work-item task의 내부 context다.
-- 현재 코드·roadmap·Reference에서 추론 가능하거나 안전하게 되돌릴 수 있는 선택은 먼저 구현한다.
-- 구현을 실제로 막고 추론·가역 default가 불가능한 결정만 work-item task에서 한 번에 하나씩 묻는다. 질문은 Yes/No 또는 2~3개의 상호 배타적 선택지와 각 한 줄 영향만 제시한다.
-- 메인 task는 질문이나 답을 대신 만들지 않는다. 구체적 판단 항목과 task link만 요약하고 답은 해당 task에서 받는다.
-
-## Canonical 시작과 bounded continuous roadmap loop
-
-기본 실행 장치는 saved Polygon RPG 프로젝트의 standalone recurring automation이다. Bare `$dev-team-loop`는 같은 stateless coordinator tick을 즉시 한 번 수동 실행하는 복구 명령이며, 호출 자체는 work item이 아니다.
+## Durable 실행 구조
 
 ```text
-팀장 메인 대화 → Git queue 기록 → 즉시 종료
-standalone coordinator tick → lease·Git/task/worktree reconcile
-→ ready item 하나 통합 또는 next item 하나 등록·새 task 생성 → 종료
-work-item task → 구현·품질·직접 feedback·final commit → ready-for-integration
-다음 standalone tick → 통합 → 다음 tick에서 새 업무를 반드시 새 task로 시작
+팀장 메인 → work item 등록·main push → 즉시 종료
+fresh tick → lease → queued item의 전용 branch/worktree provision → main·baseline branch push → 종료
+fresh tick → 같은 worktree 직접 구현·검사 → checkpoint commit·branch push → 종료
+fresh tick → 독립 재검증·실제 화면 QA → final commit·branch push → 종료
+fresh tick → final diff 재검증 → main merge commit·done/roadmap 기록·push → 종료
+다음 fresh tick → 다음 queue/roadmap item 또는 완료 증명
 ```
 
-- coordinator tick은 장시간 wait하지 않고 active task가 있으면 상태만 남기고 종료한다.
-- 완료 task를 다른 work item에 재사용하지 않는다.
-- 다음 미충족 gate를 소유한 open item이 없으면 roadmap에서 vertical work item 하나를 파생한다.
-- 구체적 관찰 질문, 비가역 제품 결정, Canonical Conflict와 외부 blocker는 새 vertical dispatch만 보류한다. Automation은 계속 ACTIVE로 상태를 관찰하고 evidence가 바뀌면 같은 task를 재개한다.
-- 일반 task 완료, tick 종료, unchanged timeout, 한 기능 통합과 이전 대화 context 소실은 전체 loop 종료 조건이 아니다.
-- Automation은 명시적 팀장 pause 또는 모든 approved milestone·open item·quality·main/origin 조건을 증명한 roadmap 완료에서만 PAUSED된다.
+대화 종료, run interruption, 한 checkpoint, 한 item 통합과 이전 context 소실은 전체 loop 종료가 아니다. 명시적 pause 또는 durable roadmap 완료만 automation을 멈춘다.
 
-### Standalone automation 계약
-
-- 이름: `Polygon RPG 무상태 roadmap coordinator`
-- 대상: saved `polygon-rpg` Git project의 local standalone cron run
-- 기본 주기: 10분. 한 tick이 20분 lease 안에서 reconcile 한 번만 수행하므로 다음 실행과 겹치면 새 writer를 만들지 않고 종료한다.
-- automation prompt는 `AGENTS.md`와 `dev-team-loop` Coordinator Tick/Manage mode를 읽고 one-tick decision order를 실행한 뒤 종료하도록 한다.
-- heartbeat, 메인 대화 wakeup, 장기 wait, daemon, Orca manager와 외부 database를 기반으로 사용하지 않는다.
-- automation을 사용할 수 없는 환경에서는 구현됐다고 기록하지 않고, 수동 대체 명령은 bare `$dev-team-loop` 한 번뿐이다.
-- 각 standalone run은 Computer Use 없이 Codex task-title tool로 자기 제목을 바꾼다. 시작은 `C yyyyMMdd-HHmm · 실행중`, 정상 종료는 `C yyyyMMdd-HHmm · <M/WI> · <결과>` 형식이며 결과는 `진행확인`, `통합`, `업무생성`, `복구`, `충돌`, `잠금중`, `중단`, `완료` 중 하나다.
-- 예상하지 못한 interruption으로 `실행중`이 남으면 status audit의 진단 증거로 사용한다. Coordinator는 work-item task의 exact `WI-... 제목`을 변경하지 않는다.
-
-### 파일 기억과 Codex-native 제어 대응
-
-외부 daemon용 고정 파일 세트를 병렬로 만들지 않고 기존 canonical owner와 Codex 기능에 개념을 대응시킨다.
-
-| 자율 loop 개념        | Polygon RPG owner                                                                       | 이유                                                                                             |
-| --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 거의 변하지 않는 설계 | `docs/development/roadmap.md`와 canonical system docs                                   | 별도 `DESIGN.md`는 제품·시스템 결정을 중복시켜 stale source를 만든다.                            |
-| 현재 상태와 다음 일   | open `docs/development/work-items/`, roadmap milestone과 report                         | work-item status·commit·owned path를 함께 복구해야 실제 진행을 증명할 수 있다.                   |
-| 팀장 지시 inbox       | 팀장 메인 task가 원문을 보존한 Git work item                                            | free-form inbox와 실행 queue를 분리하면 같은 요청이 중복 등록될 수 있다.                         |
-| 회차 prompt           | standalone automation prompt + `dev-team-loop` Coordinator Tick/Manage mode             | automation에는 짧은 route를, repo file에는 versioned 상세 계약을 둔다.                           |
-| 날짜별 회차 log       | 매 run 새 Codex task, `C yyyyMMdd-HHmm · <item> · <result>` title과 Git commit evidence | Codex가 이미 run별 대화·tool output을 보존하므로 같은 transcript를 repository에 복제하지 않는다. |
-| STOP                  | automation `PAUSED`와 Git work-item `paused/cancelled`                                  | scheduler가 제공하는 상태를 사용하면 별도 STOP file과 상태가 어긋나지 않는다.                    |
-| env 설정              | automation의 model·reasoning·rrule·project·execution environment                        | Codex scheduler가 직접 소유하는 설정을 shell env에 복제하지 않는다.                              |
-
-Codex standalone scheduled run 자체가 회차마다 새 task/context이므로 별도 headless process를 중첩 실행하지 않는다. 한 회차 최대 범위는 turn 수가 아니라 `one state-changing action 후 종료`로 제한한다. Prompt·모델·주기를 바꾸면 변경 전 최근 두 run의 failure pattern을 읽고, 변경 후 첫 두 run의 title·final evidence를 비교해 반복 실패나 폭주가 없는지 확인한다.
-
-### 읽기 전용 상태 점검
-
-진행이 멈춘 것처럼 보일 때는 [`.agents/skills/dev-loop-status/SKILL.md`](../../.agents/skills/dev-loop-status/SKILL.md)의 `$dev-loop-status`를 사용한다. 이 skill은 최근 coordinator run, open work item, exact task title, task 최신 상태, managed worktree, commit graph, automation과 lease를 한 번만 대조하고 `정상 진행`, `통합 대기`, `dispatch 대기`, `blocker`, `conflict`, `automation 중지`, `정체 의심` 중 하나로 판정한다.
-
-- 기본 동작은 read-only이며 lease 획득, Git mutation, task rename/resume/message, integration과 wait/poll을 하지 않는다.
-- task title null·축약·prompt-shaped를 unique evidence로 자동 복구 가능한 경우와 실제 conflict로 구분하고, completed task와 stale Git status, final commit 미통합, 반복 conflict와 stale lease를 실제 증거로 구분한다.
-- 복구가 필요하면 원인과 다음 안전 조치만 보고하고, 사용자가 복구를 요청한 뒤 `$dev-team-loop`의 exact recovery로 분리한다.
-
-### 자동 복구와 수렴
-
-- Coordinator는 title drift → same-task resume/unarchive → base-drift merge 요청 → clean final commit 직접 통합 → 증거 기반 replacement → duplicate recovery item 순으로 안전한 다음 action 하나를 수행한다.
-- 동일 실패를 두 번 보고한 뒤에는 다음 safe recovery action으로 승격하고, 세 번 반복되면 별도 high-priority recovery item/task를 생성하거나 재개한다.
-- 사람 질문과 외부 blocker는 automation을 중지하지 않는다. 새 작업 생성만 보류하고 이후 tick이 같은 Git/task/worktree evidence를 다시 확인한다.
-- Force push, history rewrite, guessed worktree 삭제, 품질 threshold 하향과 미확인 사용자 변경 덮어쓰기는 자동 수렴 수단이 아니다.
-- 모든 M0~M5 상태가 완료이고 open item이 없으며 마지막 slice 검증, clean `main == origin/main`, canonical conflict 부재를 다시 확인한 뒤 완료 commit을 push하고 automation을 PAUSED한다.
-
-## Work Item 등록과 task 생성
-
-### 한 요청은 한 이력
-
-- 하나의 독립 개발 요청은 기본적으로 work item 하나다.
-- 팀장이 명시적으로 분리하지 않으면 여러 세부 기능도 하나의 수직 결과로 다룬다.
-- status, priority, pause·cancel·reopen, integration·push, roadmap continue와 기존 ID 대상 추가 지시는 새 item이 아니다.
-- 메인은 등록 전에 요청 재확인이나 계획 승인을 받지 않는다.
-
-### Durable 등록과 dispatch
-
-```text
-팀장 요청 → ID와 최소 Git queue 문서 생성·push → 메인 대화 종료
-다음 coordinator tick → exact title·main HEAD 재확인
-→ 저장 project가 Git repository인지 확인
-→ `WI-... 제목`의 새 Codex task를 managed worktree로 생성 → 종료
-```
+## Work Item과 executor identity
 
 - 위치: `docs/development/work-items/<id>-<slug>.md`
-- 기본 ID: `WI-YYYYMMDD-HHmmss`; Git과 Codex task title을 확인해 충돌에는 `-02`, `-03`을 붙인다.
-- 문서에는 exact `task_title`, `registration_base`와 검증 가능한 `owned_paths`를 기록한다. Transient task ID는 기록하지 않는다.
-- work-item task는 registration commit 이후의 main을 starting state로 사용한다.
-- task prompt에는 exact ID/path, Run mode, ownership, direct-feedback 책임, final evidence 순서와 final worktree commit 요구를 포함한다.
-- `create_thread` 계열의 사용자 소유 task 생성 기능만 사용한다. `fork_thread`, handoff, rename, 완료 task 재사용과 root subagent 대체를 금지한다.
-- 새 task prompt는 work item·roadmap gate·Run mode·ownership·완료 조건만 전달하며 main/이전 업무 history를 상속하지 않는다.
-- task 생성 뒤 coordinator는 wait/poll하지 않는다. 부분 실패는 다음 tick이 exact title과 Git registration으로 복구한다.
+- ID: `WI-YYYYMMDD-HHmmss`; 충돌에는 `-02`, `-03`을 붙인다.
+- 새 item은 `executor: scheduled-coordinator`와 deterministic `executor_branch: codex/roadmap/<lowercase-id>`를 기록한다.
+- `registration_base`는 등록 commit 직전 main, `owned_paths`는 branch-only diff가 허용되는 최소 write boundary다.
+- worktree 절대 경로는 Git 문서에 저장하지 않는다. `git worktree list --porcelain`과 executor branch가 identity이며, 기본 경로는 `~/.codex/roadmap-worktrees/polygon-rpg/<ID>`다.
+- `scripts/roadmap-worktree.mjs ensure --repo <repo> --item <ID> --base <commit>`은 기존 branch/worktree를 재사용하고, 없으면 보존된 local/remote branch에서 복구하거나 새 worktree를 만든다. 예상 경로에 미등록 파일이 있으면 삭제하지 않고 중단한다.
+- 과거 item의 `task_title`과 Codex-managed worktree는 legacy evidence로 보존하지만 새 item identity나 writer로 사용하지 않는다.
 
-## Git 책임과 메시지 언어
+진행 중 baseline, current best, 다음 병목, checkpoint/final hash와 검증 evidence는 executor branch의 work-item `실행 상태`에 기록한다. Main의 item은 queue와 lifecycle phase를 표시하고, 다음 run은 branch의 더 최신 item body와 actual diff를 함께 읽는다.
 
-### Stateless coordinator tick
-
-- registration commit, final worktree commit의 main 통합, work-item `done`/integration hash, roadmap·canonical owner 갱신과 push를 직렬화한다.
-- 시작 시 `scripts/roadmap-coordinator-lock.mjs`의 20분 lease를 얻고 exact main HEAD를 고정한다. mutation 직전 HEAD가 바뀌면 release 후 종료한다.
-- latest `origin/main`, registration base, parent graph, item-owned diff와 실제 검증을 확인하고 history rewrite 없이 fast-forward·merge·cherry-pick 중 증거에 맞는 방식을 사용한다.
-- 같은 registration/integration commit이 이미 존재하면 idempotent success로 처리한다.
-
-### Work-item task
-
-- item-owned code, 문서, work-item result와 report만 stage해 worktree에서 scoped commit한다.
-- final 응답에서 `git rev-parse HEAD`의 final worktree commit hash를 제공한다.
-- 같은 commit 안에 자기 hash를 기록하려 하지 않는다. Main이 통합 후 source worktree hash와 integration hash를 문서에 기록한다.
-- push, merge, rebase, branch/main queue 변경과 다음 item 소비를 하지 않는다.
-
-### 한국어 메시지 기준
-
-- 에이전트가 새로 작성하는 local commit의 subject와 필요한 body는 기본적으로 한국어다.
-- 명시적 merge commit message도 한국어를 사용하지만 fast-forward나 cherry-pick에 불필요한 merge commit을 만들지 않는다.
-- 코드 식별자, 경로, 명령, work-item ID, branch, hash와 외부 issue 제목은 정확성을 위해 원문을 보존할 수 있다.
-- 과거 이력을 이 규칙만으로 rewrite하거나 amend하지 않는다.
-
-## 팀장 안내 문장 기준
-
-메인 대화의 진행 보고와 각 업무 대화의 팀장-facing 답변에는 `COMM-TEAMLEAD-PLAIN-KO`를 적용한다. 내부 Git 문서와 agent 간 기술 계약은 정확성을 위해 기존 전문 용어와 상태값을 유지할 수 있다.
-
-- 실제 기능명과 쉬운 한국어를 먼저 쓴다. `M2 feedback`처럼 내부 ID와 영어 용어만 조합하지 않는다.
-- 내부 ID, commit hash, 파일 경로와 명령은 정확성에 필요할 때만 한국어 설명 뒤의 보조 정보로 둔다. 같은 내부 용어를 반복해서 덧붙이지 않는다.
-- 처음부터 내부 용어 목록을 팀장에게 보여 주지 않는다. 현재 상황에 필요한 뜻만 문장 안에서 자연스럽게 설명한다.
-- 질문을 받으면 첫 문장으로 그 뜻을 답하고, 뒤에 필요한 상태나 선택지를 붙인다.
-- 진행 보고는 `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 막힘` 순서로 짧고 구체적으로 쓴다. 해당 내용이 없으면 억지로 항목을 만들지 않는다.
-- `의견을 기다립니다`, `확인해 주세요`, `피드백이 필요합니다`처럼 판단 대상을 알 수 없는 문장을 단독으로 쓰지 않는다.
-- 사람의 판단이 필요하지 않으면 `feedback` 상태로 멈추지 않고 검증·final commit·메인 반영 준비까지 진행한다.
-- 사람의 판단이 꼭 필요하면 한 메시지에 `구현된 기능과 실행·플레이 경로`, `볼 위치 또는 조작 방법`, `관찰 가능한 질문 1~3개`, `답에 따라 바뀌는 것 한 줄`을 모두 쓴다.
-- 메인은 task link와 정확한 판단 항목을 요약할 수 있지만 질문과 답은 해당 업무 담당 대화에 둔다. 구체적 항목이 없으면 `의견 대기`라고 보고하지 않는다.
-
-다음 치환은 팀장에게 보이는 문장을 작성할 때 쓰는 내부 기준이며, 이 표 자체를 먼저 노출하지 않는다.
-
-| 내부 표현                | 팀장에게 보이는 표현                                                                    |
-| ------------------------ | --------------------------------------------------------------------------------------- |
-| `M2` 같은 milestone ID   | `학원촌과 훈련장을 오가는 기능`처럼 실제 기능명. 필요하면 처음 한 번만 `(M2)`를 붙인다. |
-| `feedback`               | 구체적 관찰 질문이 있을 때만 실제 기능명과 함께 설명하고, 없으면 대기하지 않는다.       |
-| `candidate`              | `현재 구현 결과`                                                                        |
-| `gate`                   | `완료 조건`                                                                             |
-| `artifact`               | 문맥에 따라 `실행 화면` 또는 `플레이 결과`                                              |
-| `integration`            | `메인 반영`                                                                             |
-| `work item`              | `업무`                                                                                  |
-| `root agent`, `Director` | `업무 담당 대화` 또는 문맥상 생략                                                       |
-| `managed worktree`       | 팀장에게 폴더 경로를 설명해야 할 때만 `격리된 작업 폴더`                                |
-
-## Work Item 상태
+## 상태와 one-tick transition
 
 ```text
-queued → implementing → feedback → ready-for-integration → integrating → done
-                 └────────────────→ ready-for-integration
+queued → implementing → verifying → ready-for-integration → integrating → done
+             ↑              │
+             └── fix/checkpoint ──┘
 ```
 
 예외 상태는 `blocked`, `paused`, `cancelled`, `superseded`다.
 
-- Git 문서는 durable queue/result source다.
-- 진행 중 live state는 Codex task와 managed worktree가 소유한다.
-- `feedback`은 자동 검증으로 정할 수 없는 구체적 관찰 질문이 있을 때만 같은 task/worktree에서 답을 기다린다.
-- `ready-for-integration`은 task가 threshold·검증·final commit을 끝냈지만 main에 아직 통합되지 않은 상태다.
-- `integrating`과 `done`은 standalone coordinator tick이 commit evidence로 확정한다.
+1. **Queued / provision:** main에 executor identity와 `implementing`을 기록·push하고 persistent worktree를 provision commit에서 생성한 뒤 baseline executor branch도 push한다. 중간에 끊기면 다음 run이 main/local/remote branch 존재 여부로 idempotent하게 완성한다.
+2. **Implementing:** 같은 worktree에서 가장 큰 병목 하나를 구현한다. affected deterministic checks 뒤 runnable checkpoint와 실행 상태를 commit하고 executor branch를 push한다. Candidate가 완전하면 branch item을 `verifying`으로 둔다.
+3. **Verifying:** 새 run이 branch-only diff, owned paths, Reference 결정, 결정적 검사와 실제 artifact를 독립 재검증한다. 실패하면 원인과 다음 병목을 기록한 correction checkpoint를 만들고 `implementing`으로 되돌린다. 통과하면 clean final commit과 `ready-for-integration`을 push한다.
+4. **Ready:** latest `origin/main`이 final의 조상이 아니면 executor branch에 non-rewriting merge하고 재검증 대상으로 되돌린다. 조상이면 main에서 `git merge --no-ff --no-commit <executor_branch>` 후 item을 `done`으로, 필요한 roadmap/report를 같은 integration commit에 정합하고 검사 뒤 push한다.
+5. **Done:** source final, main integration hash와 검증 evidence를 Git에 남긴다. Executor branch/worktree를 자동 삭제하거나 history rewrite하지 않는다.
 
-## Scheduling과 one-tick 관찰
+한 transition 안의 commit·push·상태 기록은 하나의 recoverable state change다. Transition 뒤 다음 item까지 연쇄 실행하지 않는다.
 
-기본 우선순위는 팀장 명시 우선순위, 현재 playable slice의 버그, 현재 milestone 핵심 경로, dependency, 오래된 queue 순이다.
+## Lease와 동시 실행
 
-- 기본 roadmap loop는 current vertical item을 한 tick에서 통합하고, 다음 tick이 다음 task를 만든다.
-- worktree 격리는 shared-checkout writer 제한을 대체하지만 dependency와 integration-order 검증을 없애지 않는다.
-- coordinator는 exact title 기준 compact task 상태를 한 번 읽고 raw log polling·완료 대기·main context 복제를 하지 않는다.
-- 사람의 판단이 필요한 상태에서는 task link와 구체적 관찰 질문을 제시하고 팀장이 그 task를 직접 연다.
-- 완료 task의 final hash가 없거나 dirty tree가 남으면 통합하지 않는다.
-- concurrent tick은 lease를 얻지 못하면 새 item/task를 만들지 않고 종료한다. Lease 뒤 main HEAD drift가 보이면 mutation을 중단한다.
+- main mutation 또는 executor worktree write 전 `scripts/roadmap-coordinator-lock.mjs acquire --repo <repo> --expected-head <main-head> --lease-minutes 30`으로 writer lease를 얻는다.
+- 10분 이상 걸리는 run은 각 조사·구현·검증·commit 단계 사이와 모든 mutation 직전에 `renew --token <token> --expected-head <current-main-head> --lease-minutes 30`을 실행한다.
+- Renew는 main branch·exact HEAD·clean state가 모두 맞을 때만 성공한다. Coordinator 자신이 main commit을 만든 뒤에는 새 HEAD로 renew한다.
+- 다른 live lease가 있으면 아무것도 만들지 않고 종료한다. Heartbeat가 30분 끊긴 stale lease만 script의 deterministic rule로 takeover하며 기존 owner evidence를 보존한다.
+- 항상 exact token을 `finally` 방식으로 release한다. Crash는 timeout 뒤 다음 run이 복구한다.
+- 같은 repository라는 이유만으로 충돌로 보지 않고 branch-only diff, `owned_paths`, dependency와 commit ancestry를 확인한다.
 
-## Candidate-First Quality Loop
+## 승인 없는 실행과 실제 정지 조건
+
+- Scheduled run은 현재 host에서 확인된 `approval_policy = never`와 local full-access execution을 사용한다. Automation prompt는 이 경계를 좁히는 별도 task를 만들지 않는다.
+- 안전한 file edit, 명령, 검사, checkpoint, executor branch push, non-rewriting main merge와 main push는 추가 승인을 묻지 않는다.
+- Prompt로 권한을 우회하거나 Computer Use로 승인 UI를 조작하지 않는다. 조직 정책이 `never`를 허용하지 않아 tool permission이 막히면 `blocked: execution-permission`으로 정확히 기록한다.
+- 사람에게 묻는 것은 현재 요구·roadmap·Reference로 추론할 수 없고 가역 default도 없는 양립 불가 Product Decision, Canonical Conflict, credential/외부 system 차단뿐이다.
+- 조작감·Graphics 같은 정성 축도 기존 의도와 rubric으로 합리적 candidate를 만들 수 있으면 먼저 구현·검증·통합한다. 포괄적인 “승인해 주세요”나 “의견을 기다립니다” 상태는 금지한다.
+
+## Candidate-First 품질 loop
 
 ```text
-work-item task 시작
-→ 요청·roadmap·코드·Reference에서 내부 실행 기준 추론
-→ safe reversible candidate 구현
-→ 가장 큰 병목 하나 개선
-→ 결정적 검사 + 실제 artifact 관찰
-→ 같은 rubric 재평가
-→ task-internal 독립 검증
-→ 필요할 때만 task에서 구체적 관찰 질문
-→ result/report와 final worktree commit
-→ 다음 coordinator tick의 검증·통합
+baseline 실행·채점
+→ 가장 큰 병목 하나
+→ safe reversible 구현
+→ 결정적 검사
+→ runnable checkpoint commit·branch push
+→ 다음 fresh run의 실제 artifact·독립 검증
+→ final commit 또는 correction checkpoint
 ```
 
-- 개발·feedback 최소 단위는 처음부터 끝까지 실행 가능한 사용자 시나리오다.
-- Renderer는 읽기 전용 RenderFrame만 소비하고 시간 기반 상태는 simulation에서 진행한다.
-- 수학·frame·판정 검증과 실제 Canvas/모바일 관찰을 분리한다.
-- 같은 원인의 결함·지적이 두 번 확인되어 기계적으로 측정 가능한 반복 방지 check 외에는 영구 test·fixture·script를 추가하지 않는다.
-- 적용 품질 축에 0 또는 1이 남으면 feedback candidate나 final commit으로 제출하지 않는다.
+- 개발 단위는 처음부터 끝까지 실행 가능한 사용자 시나리오다.
+- 적용 품질 축에 0 또는 1이 남으면 final/integration으로 진행하지 않는다.
+- 수학·frame·판정 검증과 실제 Canvas/mobile 관찰을 분리한다.
+- 같은 원인의 결함·지적이 두 번 확인되고 기계적으로 측정 가능할 때만 가장 작은 durable check로 승격한다.
+- 팀장 판단이 정말 필요하면 최신 coordinator run 제목을 `C yyyyMMdd-HHmm · <item> · 대기`로 남기고 work item에 `볼 위치·조작 방법·질문 1~3개·답이 바꾸는 것`을 기록한다. Automation은 ACTIVE로 관찰만 계속한다.
 
-## 팀장 의견과 자동 메인 반영
+## 자동 복구
 
-검사와 기존 요구사항만으로 결론을 낼 수 있으면 팀장 답을 기다리지 않고 검증·final commit·메인 반영 준비까지 진행한다. `review: team-lead`는 포괄적인 의견 대기를 허용하는 상태가 아니다.
+다음 evidence를 순서대로 대조한다.
 
-조작감·타격감·Graphics·Effect나 양립할 수 없는 제품 방향처럼 사람의 관찰이 꼭 필요할 때만 업무 담당 대화에서 판단을 요청한다. 요청은 실제 기능과 실행·플레이 경로, 팀장이 볼 위치나 조작 방법, 관찰 가능한 질문 1~3개, 답에 따라 바뀌는 것 한 줄을 포함한다.
+1. main의 open item·roadmap과 automation 상태
+2. `executor_branch` local/remote ref와 registration ancestry
+3. `git worktree list --porcelain`, worktree HEAD와 dirty paths
+4. checkpoint/final/integration commit graph와 branch-only diff
+5. work-item 실행 상태, report와 검증 evidence
 
-팀장 메인은 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 보여 줄 수 있다. 질문과 답변은 해당 업무 담당 대화에서 직접 진행하며, 구체적 항목이 없으면 `의견 대기`라고 보고하지 않는다.
+복구 action은 다음 순서로 하나만 수행한다.
 
-standalone coordinator tick은 final worktree commit을 독립적으로 확인한 뒤에만 통합한다.
+- branch는 있으나 worktree가 없으면 같은 branch에서 worktree를 재생성한다.
+- worktree dirty면 owned paths와 마지막 checkpoint를 확인해 같은 item을 이어간다. Unknown path는 보존하고 `conflict`로 분류한다.
+- local branch가 없고 remote executor branch가 있으면 remote branch를 tracking해 복구한다.
+- `verifying`/`ready` evidence가 commit보다 앞서면 commit graph를 우선하고 상태를 정합한다.
+- latest main drift는 executor branch에 merge하고 다시 `verifying`한다. Rebase·force push·shared-history rewrite를 하지 않는다.
+- partial main merge는 MERGE_HEAD, owned diff와 intended item이 유일할 때만 완료하거나 abort 후 재시도한다. Unknown main change는 건드리지 않는다.
+- 같은 실패를 두 번 단순 보고하지 않는다. 다음 safe repair로 승격하고 세 번 반복되면 high-priority recovery item에 exact evidence를 기록한다.
 
-## 완료 결과 전달과 업무보고
+Guessed worktree 삭제, broad reset, 품질 threshold 하향, 미확인 사용자 변경 overwrite와 별도 승인 대화 생성은 복구 수단이 아니다.
 
-업무 담당 대화의 최종 답변 순서는 다음과 같다.
+## 자동 main 반영
 
-1. 실제 변경 파일
-2. 새 동작 또는 볼 수 있는 플레이 결과
-3. 실행한 검증과 확인하지 못한 범위
-4. 업무보고 또는 업무 결과 링크
-5. 최종 commit hash
+Integration은 다음 조건을 모두 만족해야 한다.
 
-- 플레이 가능한 수직 단위나 의미 있는 milestone은 `docs/development/reports/WI-...-<slug>.md`를 만든다.
-- 작은 bug·문서 정합·maintenance는 work item의 `결과`가 업무보고다.
-- 팀장 메인 context는 위 상세를 복제하지 않고 Git queue 상태와 task link만 보여 준다.
+- executor worktree가 clean이고 branch item이 `ready-for-integration`이다.
+- final commit과 report/result가 존재하고 latest `origin/main`을 포함한다.
+- `git diff <merge-base>...<final>`의 모든 path가 `owned_paths` 안이다.
+- affected syntax/lint/format, `git diff --check`, 실제 사용자/Canvas path와 fresh-run independent verification이 통과했다.
+- main이 clean하고 lease의 exact HEAD와 같다.
 
-## Pause, Cancel, Reopen, Recovery
+Coordinator는 명시적 한국어 merge commit으로 executor branch와 main 상태 기록을 함께 통합하고 일반 push한다. Work item 안의 integration reference는 self-referential hash 대신 `이 문서를 done으로 만든 merge commit`으로 기록하며 실제 hash는 Git graph와 run 결과가 제공한다. Fast-forward만 해 두고 status 기록을 뒤에 남기는 두 단계 partial integration을 기본값으로 사용하지 않는다. Push 실패는 commit을 보존하고 다음 run이 같은 hash를 재시도한다.
 
-### Pause
+## Pause, Cancel, Reopen
 
-- 팀장 메인은 pause 명령을 Git queue에 기록하고 종료한다. 다음 coordinator tick이 exact task에 전달하고 기다리지 않는다.
-- 이후 tick이 task link와 checkpoint hash를 기록하지만 통합하지 않는다.
-- Resume은 새 task를 만들지 않고 같은 task/worktree를 연다.
+- **Pause:** 메인이 item을 `paused`로 commit/push한다. Tick은 branch/worktree를 보존하고 write하지 않는다. Resume은 같은 branch/worktree를 쓴다.
+- **Cancel:** partial branch와 checkpoint evidence를 보존하고 main item을 `cancelled`로 기록한다. Partial implementation을 merge하거나 worktree를 자동 삭제하지 않는다.
+- **Reopen:** 기존 item은 terminal 상태로 유지하고 `reopens`로 연결한 새 item·새 executor branch를 만든다.
+- 이미 통합된 변경을 취소하려면 history rewrite 대신 별도 revert work item을 등록한다.
 
-### Cancel
+## Automation과 run 제목
 
-- 팀장 메인은 cancel 명령을 Git queue에 기록하고 종료한다. 다음 coordinator tick이 exact task에 전달하고, 이후 tick이 last commit·dirty paths·validation·영향을 reconcile한다.
-- coordinator는 partial implementation을 cherry-pick하지 않고 main work-item 문서만 `cancelled`로 기록·push한다.
-- managed worktree를 broad cleanup으로 삭제하지 않는다. Durable cancellation evidence 뒤 보존이 불필요할 때만 task를 archive하며 Codex snapshot/restore 경계를 따른다.
-- 이미 통합된 결과는 history rewrite로 취소하지 않고 별도 revert work item을 만든다.
+- 이름: `Polygon RPG 무상태 roadmap coordinator`
+- 대상: saved `polygon-rpg` local Git project
+- 기본 주기: 10분
+- 각 run 시작 제목: `C yyyyMMdd-HHmm · 실행중`
+- 정상 종료: `C yyyyMMdd-HHmm · <M/WI> · <결과>`; 결과는 `진행`, `검증`, `통합`, `복구`, `대기`, `충돌`, `잠금중`, `중단`, `완료` 중 하나다.
+- `실행중`이 남으면 interruption evidence다. 이전 run memory는 current state가 아니다.
 
-### Reopen
+Automation은 approved milestone 모두 완료, open lifecycle item 없음, 마지막 slice 품질 통과, clean `main == origin/main`, unreconciled executor branch/commit과 Canonical Conflict 없음이 한 fresh snapshot에서 모두 증명된 뒤에만 completion record를 push하고 `PAUSED`로 바뀐다. 새 요청 등록 시 같은 automation을 다시 `ACTIVE`로 만든다.
 
-- 과거 item은 `cancelled`로 유지하고 `reopens`로 연결한 새 item과 새 Codex task를 만든다.
+## 팀장 안내 문장
 
-### Recovery
+팀장-facing 답변은 쉬운 한국어로 `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 실제로 막힘` 순서로 쓴다. 내부 ID·branch·hash는 정확성 보조 정보로만 붙인다. 질문에 답할 때는 첫 문장에 뜻을 직접 답한다.
 
-다음을 대조한다.
+구체적 판단 항목 없이 `승인`, `feedback`, `확인`을 요청하지 않는다. 판단이 필요하면 구현된 기능과 실행 경로, 볼 위치·조작, 관찰 질문 1~3개와 답에 따라 달라지는 것을 한 번에 제시한다.
 
-1. Git-tracked work item과 roadmap
-2. exact `WI-... 제목`의 Codex task link/status/history
-3. managed worktree 또는 Codex restore snapshot
-4. final/checkpoint commit graph와 실제 diff
-5. reports와 검증 evidence
-
-같은 task/worktree를 우선 복구한다. 원본이 존재하거나 writer가 남아 있으면 replacement task를 만들지 않는다. 원본 소실과 writer 부재가 증명된 경우에만 같은 ID의 recovery task를 만들고 work item에 사건을 기록한다.
-
-## Durable recovery와 팀장 상태 계약
-
-Git과 task/worktree/commit evidence로 다음을 복구한다.
-
-- `ID`
-- `title`
-- exact `task_title`과 열 수 있는 `task link`
-- `status`
-- `stop condition`
-- `integration result`
-- `registration_base`, `owned_paths`, source/final/integration commit
-
-Changed tree, artifact, 구현 로그, 품질 tuning, blocking 질문의 내용과 팀장 feedback은 work-item task에 둔다. 이전 main/coordinator 대화의 기억과 transient task/subagent ID는 복구 근거가 아니다.
-
-위 키는 내부 상태 계약이다. 팀장에게 메인 진행 상황을 보여 줄 때는 ID나 상태값만 나열하지 않고 다음 순서로 자연스럽게 번역한다.
-
-1. `무엇을 만들고 있음`: 실제 기능명과 현재 단계
-2. `무엇을 볼 수 있음`: 열어 볼 업무 대화나 이미 메인에 반영된 결과
-3. `무엇이 막힘`: 팀장이 판단할 관찰 질문, 선택 또는 외부 문제를 구체적으로 설명
-
-업무 ID, 대화 링크와 메인 반영 commit은 필요한 문장 뒤에 정확성 보조 정보로 붙인다.
+업무 완료 기록은 실제 변경 파일, 새 동작/플레이 결과, 실행한 검증과 미확인 범위, report 링크, checkpoint/final/integration hash 순서로 남긴다. 작은 bug·maintenance는 work-item `결과`가 report를 대신한다.

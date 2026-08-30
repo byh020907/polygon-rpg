@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const LOCK_NAME = 'polygon-rpg-roadmap-coordinator.lock';
-const DEFAULT_LEASE_MINUTES = 20;
+const DEFAULT_LEASE_MINUTES = 30;
 
 function fail(message, code = 1, details = {}) {
   process.stdout.write(`${JSON.stringify({ ok: false, message, ...details })}\n`);
@@ -79,9 +79,16 @@ function acquire(values) {
   } catch (error) {
     if (error.code !== 'EEXIST') throw error;
     const owner = readOwner(lockPath);
-    const acquiredAt = Date.parse(owner?.acquiredAt ?? '');
-    const ageMs = Date.now() - acquiredAt;
-    if (!Number.isFinite(ageMs) || ageMs < leaseMinutes * 60_000) {
+    const lastRenewedAt = Date.parse(owner?.renewedAt ?? owner?.acquiredAt ?? '');
+    const lockUpdatedAt = statSync(lockPath).mtimeMs;
+    const leaseReference = Number.isFinite(lastRenewedAt) ? lastRenewedAt : lockUpdatedAt;
+    const parsedOwnerLeaseMinutes = Number(owner?.leaseMinutes);
+    const ownerLeaseMinutes =
+      Number.isFinite(parsedOwnerLeaseMinutes) && parsedOwnerLeaseMinutes > 0
+        ? parsedOwnerLeaseMinutes
+        : leaseMinutes;
+    const ageMs = Date.now() - leaseReference;
+    if (ageMs < ownerLeaseMinutes * 60_000) {
       fail('다른 coordinator tick이 lease를 보유하고 있습니다.', 2, {
         owner,
       });
@@ -100,9 +107,12 @@ function acquire(values) {
   }
 
   const token = randomUUID();
+  const acquiredAt = new Date().toISOString();
   const owner = {
     token,
-    acquiredAt: new Date().toISOString(),
+    acquiredAt,
+    renewedAt: acquiredAt,
+    leaseMinutes,
     expectedHead,
     pid: process.pid,
   };
@@ -113,6 +123,46 @@ function acquire(values) {
   process.stdout.write(
     `${JSON.stringify({ ok: true, command: 'acquire', owner, staleRecovered })}\n`,
   );
+}
+
+function renew(values) {
+  const { root, lockPath } = resolveContext(values);
+  const token = values.get('token');
+  const expectedHead = values.get('expected-head');
+  const owner = readOwner(lockPath);
+  if (!token || owner?.token !== token) {
+    fail('현재 lease token과 일치하지 않아 갱신하지 않습니다.', 4, { owner });
+  }
+  if (!expectedHead) {
+    fail('renew에는 --expected-head가 필요합니다.');
+  }
+
+  const branch = git(['branch', '--show-current'], root);
+  const actualHead = git(['rev-parse', 'HEAD'], root);
+  const dirtyPaths = git(['status', '--porcelain'], root);
+  if (branch !== 'main' || actualHead !== expectedHead || dirtyPaths) {
+    fail('main branch, expected HEAD 또는 clean 상태가 달라 lease를 갱신하지 않습니다.', 3, {
+      branch,
+      expectedHead,
+      actualHead,
+      dirtyPaths: dirtyPaths ? dirtyPaths.split(/\r?\n/) : [],
+    });
+  }
+
+  const leaseMinutes = Number(values.get('lease-minutes') ?? owner.leaseMinutes);
+  if (!Number.isFinite(leaseMinutes) || leaseMinutes <= 0) {
+    fail('--lease-minutes는 양수여야 합니다.');
+  }
+
+  const renewed = {
+    ...owner,
+    renewedAt: new Date().toISOString(),
+    leaseMinutes,
+    expectedHead,
+    pid: process.pid,
+  };
+  writeFileSync(join(lockPath, 'owner.json'), `${JSON.stringify(renewed, null, 2)}\n`, 'utf8');
+  process.stdout.write(`${JSON.stringify({ ok: true, command: 'renew', owner: renewed })}\n`);
 }
 
 function release(values) {
@@ -135,6 +185,7 @@ function status(values) {
 
 const { command, values } = parseArgs(process.argv.slice(2));
 if (command === 'acquire') acquire(values);
+else if (command === 'renew') renew(values);
 else if (command === 'release') release(values);
 else if (command === 'status') status(values);
-else fail('명령은 acquire, release 또는 status여야 합니다.');
+else fail('명령은 acquire, renew, release 또는 status여야 합니다.');

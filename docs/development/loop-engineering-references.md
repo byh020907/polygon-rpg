@@ -13,8 +13,7 @@ Desired State
 
 Observed State
   Git work item·roadmap
-  exact Codex task title/status/history
-  managed worktree·dirty paths
+  executor branch·persistent worktree·dirty paths
   registration/final/integration commit graph
   automation·lease
 
@@ -32,14 +31,14 @@ Reconcile Tick
 
 채택:
 
-- roadmap과 work item을 desired state, task/worktree/commit을 observed state로 분리한다.
+- roadmap과 work item을 desired state, executor branch/worktree/commit을 observed state로 분리한다.
 - 한 tick의 성공을 “대화가 끝남”이 아니라 desired state와의 차이가 줄었는지로 판단한다.
-- Work item ID, exact title, owned paths와 commit ancestry를 ownership label처럼 사용한다.
-- Coordinator는 gameplay를 직접 구현하지 않아도 work-item task 생성·재개·통합을 통해 desired state를 실현한다.
+- Work item ID, executor branch, owned paths와 commit ancestry를 ownership label처럼 사용한다.
+- Approval-free scheduled coordinator가 persistent worktree를 직접 개발·검증·통합해 desired state를 실현한다.
 
 수정 채택:
 
-- Kubernetes API server 대신 Git main과 Codex task/worktree evidence가 durable shared state다.
+- Kubernetes API server 대신 Git main, executor branch/worktree와 commit evidence가 durable shared state다.
 - Event stream 대신 10분 standalone scheduled tick으로 reconcile한다.
 
 ### Temporal Durable Execution
@@ -48,9 +47,9 @@ Reconcile Tick
 
 채택:
 
-- 이전 coordinator chat memory가 없어도 registration/final/integration commit과 work-item recovery record에서 재개한다.
-- Interrupted/idle task는 새 기능으로 넘어가지 않고 같은 task/worktree를 먼저 resume한다.
-- Task가 없어졌을 때도 clean checkpoint/final commit을 보존하고 그 증거에서 replacement recovery를 시작한다.
+- 이전 coordinator chat memory가 없어도 registration/checkpoint/final/integration commit과 work-item recovery record에서 재개한다.
+- Interrupted run은 새 기능으로 넘어가지 않고 같은 executor branch/worktree를 먼저 resume한다.
+- Worktree가 없어져도 local/remote executor branch의 clean checkpoint/final commit에서 같은 worktree를 재구성한다.
 
 비채택:
 
@@ -71,15 +70,22 @@ Reconcile Tick
 - 별도 retry timer 대신 scheduled tick이 retry interval이다.
 - Error payload 대신 work item의 `복구 기록`에 action과 commit/worktree evidence를 남긴다.
 
-### OpenAI Scheduled Tasks And Worktrees
+### OpenAI Scheduled Tasks, Permissions And Worktrees
 
-[OpenAI Scheduled tasks](https://learn.chatgpt.com/docs/automations)는 standalone scheduled run이 매번 새 chat에서 시작하고 local Git project 또는 worktree에서 실행될 수 있다고 설명한다. [OpenAI Worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees)는 task별 변경 격리 경계를 제공한다.
+[OpenAI Scheduled tasks](https://learn.chatgpt.com/docs/automations)는 standalone scheduled run이 매번 새 chat에서 무인 시작하고 local Git project 또는 worktree에서 실행될 수 있으며, 조직 정책이 허용하면 `approval_policy = "never"`를 사용한다고 설명한다. [OpenAI Worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees)는 변경 격리 경계를 제공한다.
 
 채택:
 
 - Coordinator context는 disposable하고 Git evidence만 durable하다.
-- 실제 개발은 one-work-item/one-managed-worktree task가 소유한다.
-- Scheduled run은 active task를 기다리지 않고 reconcile action 하나 뒤 종료한다.
+- Scheduled run 자신을 autonomous writer로 사용해 unattended permission 경계를 유지한다.
+- 실제 개발 identity는 one-work-item/one-executor-branch/persistent-worktree다.
+- 구현 checkpoint와 fresh-run verification을 서로 다른 run으로 분리해 writer와 verifier를 분리한다.
+- Scheduled run은 lifecycle transition 하나 뒤 종료한다.
+
+비채택:
+
+- Scheduled run이 `create_thread`로 별도 Codex-managed worktree task를 만들고 그 task의 승인을 기다리는 구조. 이 저장소의 2026-08-30 runtime evidence에서 child task는 `on-request`였고 prompt text로 권한 경계를 바꿀 수 없었다.
+- Computer Use로 permission approval UI를 대신 누르는 구조.
 
 ### Fresh-Session File-Memory Loop Prompt
 
@@ -89,7 +95,7 @@ Reconcile Tick
 
 - Codex standalone automation의 각 run을 새 coordinator task/context로 사용하고 이전 run 대화를 잇지 않는다.
 - 한 tick은 state-changing action 하나만 수행한다.
-- gameplay candidate는 deterministic checks 뒤 visual/team-lead QA 전에 local checkpoint commit으로 보존한다.
+- gameplay candidate는 deterministic checks 뒤 visual QA 전에 executor branch checkpoint commit으로 보존하고 push한다.
 - 실제 Canvas artifact와 반복 failure evidence를 품질·규칙 승격 입력으로 사용한다.
 
 Codex-native 수정 채택:
@@ -114,18 +120,18 @@ Codex-native 수정 채택:
 
 ## Recovery State Table
 
-| Observed drift                         | Reconcile action                                 | 다음 tick의 기대 상태       |
-| -------------------------------------- | ------------------------------------------------ | --------------------------- |
-| Title null·축약·prompt-shaped          | Unique evidence 확인 후 exact title 복구         | Exact task 재발견           |
-| Task idle/interrupted, final 없음      | 같은 task에 missing gate와 evidence로 resume     | Implementing 또는 ready     |
-| Task archived                          | Unarchive, 다음 tick에 같은 task resume          | Recoverable task active     |
-| Final commit base drift                | 같은 task에 non-rewriting main merge·재검증 요청 | 새 clean final commit       |
-| Task 없음, clean final 있음            | Owned diff 검증 후 직접 통합                     | Done                        |
-| Task 없음, recoverable checkpoint 있음 | 같은 item의 replacement recovery task 하나       | Implementing                |
-| Duplicate, 한 commit이 엄격히 우세     | Authoritative 하나 보존, redundant archive       | Single writer               |
-| Divergent unique commits               | Dedicated recovery item/task에서 조정            | Single reconciled final     |
-| 사람 질문·외부 blocker                 | 새 dispatch만 보류, automation은 계속 관찰       | 답/외부 상태 변경 후 resume |
-| 모든 completion proof 통과             | 완료 commit·push 후 automation pause             | Roadmap complete            |
+| Observed drift                        | Reconcile action                               | 다음 tick의 기대 상태       |
+| ------------------------------------- | ---------------------------------------------- | --------------------------- |
+| Executor branch 있음, worktree 없음   | 같은 branch에서 persistent worktree 재생성     | Implementing 또는 verifying |
+| Local branch 없음, remote branch 있음 | Remote tracking branch와 worktree 복구         | Recoverable writer          |
+| Run interrupted, dirty owned paths    | Checkpoint/current best 대조 후 같은 item 계속 | Implementing                |
+| Unknown dirty/overlapping paths       | 보존하고 exact conflict 기록                   | Conflict 또는 recovery item |
+| Final commit base drift               | Executor branch에 non-rewriting main merge     | Fresh verification          |
+| Clean final과 ready evidence 있음     | Owned diff 검증 후 main merge·done push        | Done                        |
+| Push 실패, local commit 있음          | 같은 hash push 재시도                          | Remote durable state        |
+| Main lifecycle가 branch보다 뒤짐      | Commit graph에서 idempotent 상태 정합          | Single authoritative phase  |
+| 사람 질문·외부 blocker                | 새 dispatch만 보류, automation은 계속 관찰     | 답/외부 상태 변경 후 resume |
+| 모든 completion proof 통과            | 완료 commit·push 후 automation pause           | Roadmap complete            |
 
 ## Completion Contract
 
@@ -135,14 +141,14 @@ Codex-native 수정 채택:
 2. Open lifecycle work item이 없다.
 3. 마지막 integrated vertical slice가 quality threshold와 실제 사용자 경로 검증을 통과했다.
 4. `main`이 clean하고 `origin/main`과 같다.
-5. Unreconciled owned commit, duplicate writer와 Canonical Conflict가 없다.
+5. Unreconciled executor commit, duplicate writer와 Canonical Conflict가 없다.
 
 완료 증거를 Git에 push하기 전에는 automation을 멈추지 않는다. 완료 후 새 팀장 요청이 등록되면 같은 automation을 재활성화하고 새 desired state를 소비한다.
 
 ## 적용하지 않는 수렴 방식
 
 - force push, shared-history rewrite와 broad reset
-- task/worktree의 guessed deletion
+- executor branch/worktree의 guessed deletion
 - 품질 threshold 하향 또는 실패를 완료로 재분류
 - 미확인 사용자 변경 overwrite
 - 외부 daemon, workflow database 또는 장기 실행 manager conversation

@@ -1,22 +1,12 @@
 # Start Or Continue Mode
 
-Bare `$dev-team-loop` and explicit start/continue/resume requests authorize exactly one manual stateless coordinator tick. They do not create a work item and do not turn the current conversation into a long-running supervisor.
+Bare `$dev-team-loop` or an explicit start/resume request authorizes one manual Direct Executor Coordinator transition. It does not create a work item, a long-running supervisor or an approval-gated task.
 
-## Manual Tick
+1. Read [`manage.md`](manage.md) and [`work-item-schema.md`](work-item-schema.md).
+2. Reconstruct current state from main work items, executor refs/worktrees, commit graph, automation and lease.
+3. Perform exactly one provision, implementation checkpoint, fresh verification/finalize, integration, recovery or completion transition.
+4. Release the lease and return. The recurring automation owns later transitions.
 
-1. Read `references/manage.md` and run its Acquire, Snapshot and One-Tick Decision Order once.
-2. Recover only from current Git, exact Codex task titles/status, managed worktrees and commit graph. Do not use prior main/coordinator memory.
-3. Integrate at most one ready item, or dispatch at most one queued/roadmap item, or report one active/conflict/stop state.
-4. Release the coordinator lease and return immediately. Do not wait for a work-item task after dispatch.
+Do not wait/poll after the transition and do not chain into the next item. A run ending is not a roadmap stop. Pause only for explicit team-lead pause or Manage mode's durable completion proof.
 
-The recurring project automation is the default continuation mechanism. Manual start is a recovery and immediate-tick surface, not an outer conversation loop.
-
-## Dispatch Suspension And Completion
-
-Do not dispatch a new vertical item when there is an authoritative implementing/feedback/blocked/paused item, a concrete observable question, an irreversible product choice without a safe default, Canonical Conflict or external blocker. The recurring automation remains active, observes the same evidence and performs safe recovery when possible.
-
-A task completion, tick response, unchanged timeout, successful integration or missing previous conversation context is not a loop stop. Pause the automation only for an explicit team-lead pause or after Manage mode's durable completion proof.
-
-## Reply
-
-Report in plain Korean: what is being built, which exact task can be opened and what is actually blocked. Include lifecycle IDs/hashes only as supporting evidence. Never copy implementation logs or relay feedback.
+Report in plain Korean what is being built, the current durable phase/checkpoint or integrated result, and the exact real blocker. Do not request approval for normal execution or merge.

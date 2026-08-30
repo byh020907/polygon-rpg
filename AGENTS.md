@@ -115,28 +115,28 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 
 현재 저장소의 공식 프로젝트 계약은 다음과 같다.
 
-| Rule ID                   | Canonical Rule                                                                                                                                                                                    | 검증 근거                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                                                                          | `package.json`, `index.html`               |
-| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                                                                             | `README.md`, GitHub Pages source           |
-| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                                                                               | `README.md`, Pages API 상태                |
-| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                                                                           | `package.json`                             |
-| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                                                                   | `docs/ui-architecture.md`, `index.html`    |
-| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.                                                                                                                          | 이 파일의 Engineering Method 절            |
-| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                                                                              | `docs/reference-repositories.md`           |
-| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                                              | `docs/rendering-pipeline.md`, 실제 caller  |
-| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
-| `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                                            | `docs/runtime-architecture.md`             |
-| `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                                              | 사용자 결정, quality loop, 최종 diff       |
-| `PROCESS-DEV-TEAM-LOOP`   | 메인은 Git queue만 소유한다. Fresh standalone tick은 file evidence로 action 하나만 수행하며 Codex run과 Git commit을 회차 기록으로 삼는다.                                                        | process, skill                             |
-| `PROCESS-QUALITY-LOOP`    | work-item task의 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 직접 feedback을 끝까지 소유하고, task 내부 subagent 결과를 재평가해 반복 feedback을 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
-| `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다.                 | `docs/development/process.md`              |
-| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                                           | `docs/development/process.md`, skill       |
-| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                                     | `docs/animation-system.md`, 실제 solver    |
-| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                                             | `docs/input-system.md`, 실제 adapters      |
-| `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                                       | `docs/development/roadmap.md`, 사용자 결정 |
-| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                                                                               | `docs/world-map-system.md`, 실제 runtime   |
-| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                                                                              | `docs/world-map-system.md`, 실제 resolver  |
+| Rule ID                   | Canonical Rule                                                                                                                                                                    | 검증 근거                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                                                          | `package.json`, `index.html`               |
+| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                                                             | `README.md`, GitHub Pages source           |
+| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                                                               | `README.md`, Pages API 상태                |
+| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                                                           | `package.json`                             |
+| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                                                   | `docs/ui-architecture.md`, `index.html`    |
+| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.                                                                                                          | 이 파일의 Engineering Method 절            |
+| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                                                              | `docs/reference-repositories.md`           |
+| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                              | `docs/rendering-pipeline.md`, 실제 caller  |
+| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
+| `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`             |
+| `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff       |
+| `PROCESS-DEV-TEAM-LOOP`   | 메인은 Git queue만 소유한다. Fresh tick은 deterministic executor branch/worktree를 직접 개발·검증·merge·push하며 transition 하나만 수행한다.                                      | process, skill                             |
+| `PROCESS-QUALITY-LOOP`    | Work item·executor branch가 Director 경계다. Writer checkpoint 뒤 fresh run이 artifact를 독립 검증하고 final/integration을 진행한다.                                              | `docs/development/quality-loop.md`, skill  |
+| `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`              |
+| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                           | `docs/development/process.md`, skill       |
+| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                     | `docs/animation-system.md`, 실제 solver    |
+| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                             | `docs/input-system.md`, 실제 adapters      |
+| `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                       | `docs/development/roadmap.md`, 사용자 결정 |
+| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                                                               | `docs/world-map-system.md`, 실제 runtime   |
+| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                                                              | `docs/world-map-system.md`, 실제 resolver  |
 
 공식 규칙이 추가·변경·폐기되면 이 Registry와 담당 문서를 같은 변경에서 갱신한다. 같은 의미의 규칙을 여러 문서에 서로 다른 표현으로 복제하지 않는다.
 
@@ -342,12 +342,14 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 기능 목록이 아니라 처음부터 끝까지 플레이 가능한 사용자 시나리오를 하나의 개발·피드백 단위로 사용한다.
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
 - 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
-- 병렬 하위 lane이 있어도 사용자 소유 work-item task의 단일 Vertical Slice Director가 통합 artifact와 품질 판정을 끝까지 소유한다.
+- 병렬 lane이 있어도 하나의 work item·executor branch가 통합 artifact와 품질 판정을 소유한다.
 - 팀장 메인 task는 새 요청·우선순위·pause·cancel·reopen을 Git queue에 기록하고 상태를 조회할 뿐, 구현·품질 tuning·feedback 중계·완료 대기·main integration을 소유하지 않는다.
-- standalone coordinator tick은 Git·task·worktree·commit 증거로 진행 또는 복구 action 하나를 수행하며, 승인된 roadmap 완료를 증명하기 전에는 자동화를 멈추지 않는다.
-- Git work item은 기본적으로 별도 Codex-managed worktree task에서 실행하고, 그 task가 할당 파일·검증·업무보고와 final scoped commit을 소유한다. Push·merge·main roadmap 갱신은 하지 않는다.
-- Subagent는 work-item task 내부의 bounded exploration, 증명된 disjoint implementation 또는 independent verification에만 사용하며 parent task가 결과를 수집·통합한다.
-- 메인과 work-item task는 다른 task/worktree의 변경을 수정하거나 guessed cleanup하지 않는다.
+- Tick은 work item·executor branch/worktree·commit 증거로 transition 하나를 직접 수행하고 roadmap 완료 전에는 automation을 멈추지 않는다.
+- 새 item은 `codex/roadmap/<ID>` persistent worktree에서 scheduled run이 직접 실행한다. 별도 approval-gated task 없이 branch push와 검증된 main merge/push를 수행한다.
+- Checkpoint writer는 같은 tick에 final/integration하지 않고 다음 fresh run이 artifact와 affected checks를 독립 검증한다.
+- Subagent는 한 run 내부의 bounded helper이며 parent가 같은 executor branch에 통합한다.
+- 다른 item의 executor branch/worktree를 수정하거나 guessed cleanup하지 않는다.
+- 정상 범위 edit·검사·commit·branch push·non-rewriting main merge/push에 승인을 묻지 않는다. 사람에게 묻는 것은 가역 default 없는 Product Decision, Canonical Conflict, credential·외부 차단뿐이다.
 - 게임 규칙은 공용 `game-kit` 기반이 알지 못하게 한다.
 - 물리 상태의 최종 쓰기 권한은 물리 시스템에 둔다.
 - Renderer는 읽기 전용 상태만 소비하고 animation, physics 또는 effect lifetime을 진행하지 않는다.
