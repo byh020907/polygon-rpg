@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-105407
-status: integrating
+status: done
 priority: high
 lane: maintenance
 created_at: 2026-08-30T10:54:07+09:00
@@ -74,4 +74,4 @@ docs/development/
 
 - root agent task: `wi_20260830_105407`
 - 업무보고: 이 문서의 `결과`
-- 최종 commit: 메인 coordinator 통합 대기
+- 최종 commit: `e27c5c1dd8aa4aea16357fe850007a70dbc8e674`
