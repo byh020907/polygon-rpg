@@ -17,6 +17,7 @@
 ### Product Director — 사용자
 
 - 메인 대화에서 평소처럼 새 개발을 명령한다. 별도 `등록` 키워드는 필요 없다.
+- 등록 전에 제품 요구를 구체화하고 싶으면 `$dev-inbox-interview` 또는 “인터뷰 먼저”라고 말한다. 합성된 최종 요청문을 명시적으로 확정하기 전에는 INBOX에 기록하지 않는다.
 - 핵심 재미, 제품 방향, 우선순위와 approved DESIGN 범위를 결정한다.
 - 자동 검사와 기존 의도로 결정할 수 없는 양립 불가 Product Decision이나 구체적 체감 질문에만 답한다.
 - 명령, checkpoint, commit, merge, push와 안전한 복구를 반복 승인하지 않는다.
@@ -24,7 +25,7 @@
 ### Team-Lead Main — Inbox Intake / Status
 
 - 일반적인 build/change/fix 명령을 새 개발 등록으로 해석하고 현재 사용자 메시지 전체를 한 글자도 재작성하지 않은 `IN-*` entry로 append한다.
-- 질문·상태 조회·기존 entry lifecycle·예시/가정·현재 task 직접 처리 요청은 새 entry로 등록하지 않는다.
+- 질문·상태 조회·기존 entry lifecycle·예시/가정·사전 인터뷰·현재 task 직접 처리 요청은 새 entry로 등록하지 않는다.
 - Inbox append만 commit/push하고 완료 후 멈춘 automation을 재활성화한 뒤 즉시 반환한다.
 - 상태·priority·pause·cancel·reopen은 exact entry metadata만 바꾸며 원문 block을 수정하지 않는다.
 - 구현·품질 tuning·완료 대기·main integration은 수행하지 않는다. 사용자가 현재 대화에서 직접 처리를 명시한 workflow maintenance는 예외다.

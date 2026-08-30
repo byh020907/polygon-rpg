@@ -346,7 +346,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
 - 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
 - INBOX entry·executor branch 하나가 통합 artifact와 품질 판정을 소유한다.
-- 메인은 새 개발 명령의 현재 메시지를 INBOX에 그대로 기록한다. 질문·상태·lifecycle·예시·직접 처리는 등록하지 않는다.
+- 메인은 새 개발 명령을 INBOX에 그대로 기록한다. 질문·상태·lifecycle·예시·사전 인터뷰·직접 처리는 등록하지 않는다.
 - Tick은 INBOX·STATUS·branch/worktree·commit으로 transition 하나를 수행하고 DESIGN 완료 전에는 멈추지 않는다.
 - Entry는 `codex/loop/<IN-ID>` worktree에서 실행하며 별도 task 없이 branch/main을 push한다.
 - Checkpoint writer는 같은 tick에 final/integration하지 않고 다음 fresh run이 artifact와 affected checks를 독립 검증한다.
