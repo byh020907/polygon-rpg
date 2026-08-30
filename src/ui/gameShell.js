@@ -93,11 +93,11 @@ function createMobileViewportController(browserDocument, browserScreen) {
   });
 }
 
-export function registerGameShell(Alpine, gameApp) {
+export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
 
   Alpine.data('gameShell', () => ({
-    screen: GAME_SCREEN.MENU,
+    screen: visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU,
     forceMobileControls: false,
     isPlaying: true,
     pixelSize: 6,
@@ -216,7 +216,22 @@ export function registerGameShell(Alpine, gameApp) {
           this.saveStatus = status;
         },
       });
-      this.$nextTick(() => gameApp.start());
+      this.$nextTick(() => {
+        if (visualQaRequest) {
+          this.isPlaying = false;
+          try {
+            gameApp.runVisualQa(visualQaRequest);
+          } catch (error) {
+            globalThis.__POLYGON_RPG_VISUAL_QA__ = Object.freeze({
+              ready: false,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            throw error;
+          }
+          return;
+        }
+        gameApp.start();
+      });
     },
 
     get playButtonLabel() {

@@ -1,5 +1,6 @@
 import Alpine from './vendor/alpine.esm.js';
 import { GameApp } from './app/GameApp.js';
+import { readVisualQaRequest } from './app/VisualQaConfig.js';
 import { registerGameShell } from './ui/gameShell.js';
 
 function requireCanvas(id) {
@@ -16,7 +17,7 @@ const gameApp = new GameApp({
   retroCanvas: requireCanvas('retro-canvas'),
 });
 
-registerGameShell(Alpine, gameApp);
+registerGameShell(Alpine, gameApp, { visualQaRequest: readVisualQaRequest() });
 globalThis.Alpine = Alpine;
 Alpine.start();
 globalThis.addEventListener('pagehide', () => gameApp.destroy(), { once: true });

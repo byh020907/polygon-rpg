@@ -1,10 +1,9 @@
 # Start Or Continue Mode
 
-Bare `$dev-team-loop` or an explicit start/resume request authorizes one manual inbox coordinator transition. It creates neither a new inbox entry nor a supervisor/task.
+Bare `$dev-team-loop` or `loop/control.ps1 run-once` starts one fresh complete-work execution. It does not create an entry.
 
-1. Read [`manage.md`](manage.md), [`inbox-schema.md`](inbox-schema.md) and the canonical inbox.
-2. Reconstruct state from nonterminal entries, executor refs/worktrees, commit graph, automation and lease.
-3. Perform exactly one accept/provision, implementation checkpoint, fresh verification/finalize, integration, recovery or completion transition.
-4. Release the lease and return. Recurring automation owns later transitions.
+1. Select the active entry, otherwise highest-priority oldest `new` entry.
+2. Read Complete-Work Executor mode and finish that entry through visible QA, integration and cleanup in this session.
+3. Return only after the entry is absent from live INBOX or has a concrete `blocked` record.
 
-A run ending is not a DESIGN stop. Do not ask approval for normal execution or merge.
+An incomplete phase is an abnormal failure, not a successful manual run.

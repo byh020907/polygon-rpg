@@ -12,7 +12,7 @@
 
 ## Main-Only Inbox Rule
 
-Executor branches never edit `docs/feedback/INBOX.md` or `docs/STATUS.md`. After a branch checkpoint/final commit is pushed, the same coordinator transition updates both files on main and commits/pushes that state. This keeps new main-dialogue appends conflict-free and makes the main inbox authoritative.
+Executor branches never edit `docs/feedback/INBOX.md` or `docs/STATUS.md`. The complete-work session pushes branch checkpoint/final evidence, updates both files on main, then continues through integration and cleanup. This keeps new main-dialogue appends conflict-free and makes the main inbox authoritative.
 
 When a branch needs current process or code from main, merge latest `origin/main` without rewriting history. The old inbox snapshot carried by the branch remains untouched, so the merge takes the current main copy.
 
@@ -30,7 +30,7 @@ When a branch needs current process or code from main, merge latest `origin/main
 - Lifecycle corrections change metadata only. A changed request is a new entry linked with `supersedes`.
 - Do not consume one `new` entry twice. Status plus executor branch/commit evidence is authoritative even if a transition was interrupted.
 
-## Coordinator-Derived Fields
+## Executor-Derived Fields
 
 From the raw request, DESIGN, current repository and verified References, derive outside the raw block:
 

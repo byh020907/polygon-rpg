@@ -10,11 +10,11 @@
 
 이 프로젝트가 명시적으로 선택한 Engineering Method는 **Core Engineering Principles** 하나뿐이다. 사용자가 다른 Method를 프로젝트에 명시적으로 추가하기 전에는 같은 저장소의 sibling Method를 탐색·읽기·적용하거나 실행 전략을 암묵적으로 결합하지 않는다.
 
-이 Method는 구현 단위, abstraction, dependency, state ownership, lifecycle, 예상 확장, 문서 owner와 Git 기록 같은 Engineering Decision에 적용한다. Product Requirement, Domain Model, Gameplay Rule, 화면·asset·balance, iteration 횟수와 autonomous improvement loop는 이 Method가 결정하지 않는다.
+이 Method는 구현 단위·abstraction·dependency·state ownership·lifecycle·예상 확장·문서·Git 같은 Engineering Decision에만 적용한다. Product Requirement, Domain Model, Gameplay Rule, 화면·asset·balance와 loop 운영은 결정하지 않는다.
 
 ## Project Development Process
 
-File memory는 [`DESIGN`](./docs/DESIGN.md)·[`STATUS`](./docs/STATUS.md)·[`INBOX`](./docs/feedback/INBOX.md), lifecycle은 [`process`](./docs/development/process.md), 품질은 [`quality-loop`](./docs/development/quality-loop.md)가 소유한다. 메인은 원문 등록, fresh tick은 실행·복구·통합을 담당한다.
+File memory는 [`DESIGN`](./docs/DESIGN.md)·[`STATUS`](./docs/STATUS.md)·[`INBOX`](./docs/feedback/INBOX.md), lifecycle은 [`process`](./docs/development/process.md), 품질은 [`quality-loop`](./docs/development/quality-loop.md)가 소유한다. 메인은 원문을 등록하고 fresh Codex session은 entry 하나를 완결한다.
 
 ## 1. Instruction Precedence
 
@@ -53,11 +53,11 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 | `README.md`                                       | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                 |
 | `docs/development/process.md`                     | Canonical Process           | Codex-native loop, 피드백과 완료 evidence                   | 모든 구현·통합·상태 갱신 시                                        |
 | `docs/development/quality-loop.md`                | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                 |
-| `docs/development/loop-engineering-references.md` | Canonical Reference         | Reconcile·recovery·완료 증명                                | Coordinator·automation 작업 시                                     |
+| `docs/development/loop-engineering-references.md` | Canonical Reference         | Reconcile·supervision·recovery·완료 증명                    | Loop·scheduler 작업 시                                             |
 | `docs/DESIGN.md`                                  | Canonical Product Reference | 안정된 제품 방향·milestone·non-scope                        | 새 작업·제품 방향 판단 시                                          |
 | `docs/STATUS.md`                                  | Canonical Working Memory    | 현재 단계·current best·다음 병목                            | Loop 시작·종료 시                                                  |
 | `docs/feedback/INBOX.md`                          | Canonical Queue             | 등록 원문·lifecycle·실행 상태·결과                          | 등록·실행·복구·완료 시                                             |
-| `loop/PROMPT.md`                                  | Canonical Run Prompt        | Fresh run의 읽기·commit·QA 순서                             | Coordinator 실행 시                                                |
+| `loop/PROMPT.md`                                  | Canonical Run Prompt        | Fresh session의 읽기·commit·QA·통합 순서                    | Executor 실행 시                                                   |
 | `docs/reference-repositories.md`                  | Evidence Catalog            | 현재 계약을 만든 과거 Engineering 근거와 채택 범위          | 기존 결정의 출처·trade-off를 재검증할 때                           |
 | `docs/rendering-pipeline.md`                      | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시              |
 | `docs/ui-architecture.md`                         | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시  |
@@ -124,8 +124,8 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff       |
-| `PROCESS-DEV-TEAM-LOOP`   | 메인은 등록 요청 원문을 INBOX에 그대로 append한다. Fresh tick은 transition 하나만 수행하고 통합 뒤 `done` block을 정리한다.                                                       | process, skill                             |
-| `PROCESS-QUALITY-LOOP`    | INBOX entry·executor branch가 Director 경계다. Writer checkpoint 뒤 fresh run이 artifact를 독립 검증하고 final/integration을 진행한다.                                            | `docs/development/quality-loop.md`, skill  |
+| `PROCESS-DEV-TEAM-LOOP`   | 메인은 원문을 INBOX에 append한다. 각 fresh Codex session은 entry 하나를 복구·구현·검사·시각 QA·통합·정리까지 완결한다.                                                            | process, skill                             |
+| `PROCESS-QUALITY-LOOP`    | INBOX entry·branch가 Director 경계다. Checkpoint는 visible PNG QA와 same-session repair 전의 복구 evidence다.                                                                     | quality loop, skill                        |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`              |
 | `GIT-PURPOSE-COMMITS`     | 큰 작업은 독립적으로 이해·검증·되돌릴 수 있는 목적 단위로 나누고 commit에는 변경 이유와 검증 근거를 남긴다.                                                                       | Core Engineering Principles·process        |
 | `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                           | `docs/development/process.md`, skill       |
@@ -314,7 +314,7 @@ Next Step:
 
 ## 8. Core Engineering Principles Policy
 
-구체 구현 전 질문과 책임을 고정하고 current code·caller·검증 경로를 확인한 뒤 같은 책임의 Reference를 검색한다. 고정 저장소나 순서는 없으며 계약·trade-off·적용 여부를 근거에 남긴다. Canonical Rule과 충돌하면 **Conflict Resolution Control**을 적용한다.
+구체 구현 전 질문·책임·current code·caller·검증 경로를 고정한 뒤 같은 책임의 Reference를 검색한다. 고정 저장소는 없으며 trade-off와 적용 여부를 기록하고 Canonical Rule 충돌은 **Conflict Resolution Control**로 처리한다.
 
 ### 구현 단위 선택
 
@@ -325,18 +325,18 @@ Next Step:
 3. **Has-A:** 독립 state·invariant·validation·lifecycle을 owner가 생성·사용·해제하는가?
 4. **Can-Do:** 서로 다른 identity의 독립 능력이며 concrete class·UI·global state·적용 순서와 무관한가?
 
-처음 만족하는 단위로 구현한다. 어디에도 맞지 않으면 현재 책임의 구체 구현으로 둔다. 새 class·component·mixin은 `X is a Y`, `X has a Y`, `X can do Y` 중 하나로 설명되어야 하며 두 문장이 같은 책임이면 ownership을 다시 나눈다.
+처음 만족하는 단위로 구현하고 모두 아니면 현재 책임의 구체 구현으로 둔다. 새 class·component·mixin은 `X is a Y`, `X has a Y`, `X can do Y` 중 하나로 설명하며 두 문장이 같은 책임이면 ownership을 다시 나눈다.
 
 ### Runtime 개념과 실제 구현
 
-Node·Scene·Scene Tree·Signal은 개념과 실제 구현을 구분한다. 적용 계약은 [`docs/runtime-architecture.md`](./docs/runtime-architecture.md)가 소유한다. Tree lifecycle이 필요한 책임만 Node로 구현하고 행동 시작은 command, 완료 사건 통지는 Signal로 둔다.
+Node·Scene·Scene Tree·Signal의 적용 계약은 [`docs/runtime-architecture.md`](./docs/runtime-architecture.md)가 소유한다. Tree lifecycle 책임만 Node로, 행동 시작은 command로, 완료 사건 통지는 Signal로 둔다.
 
 ### 확장·반복 문제·문서·Git
 
-- DESIGN·확인된 caller 변화에서 예상되는 확장은 명시적인 state·event·dependency boundary로 선제 구조화한다. 막연한 가능성만으로 범용 framework를 만들지 않는다.
+- DESIGN·확인된 caller 변화에서 예상되는 확장은 state·event·dependency boundary로 구조화하되 막연한 가능성만으로 범용 framework를 만들지 않는다.
 - 같은 상태·사건의 문제가 반복되면 증상보다 최종 writer, ownership과 전달 방향을 재검토한다.
-- 기존 문서 owner를 먼저 검색한다. 규칙·설계 결정·외부 동작은 한 owner에만 쓰고 다른 문서는 링크하며, 구현·owner·인덱스를 같은 작업에서 갱신한다.
-- 큰 작업은 독립적으로 이해·검증·되돌릴 목적 단위로 commit한다. 한 목적의 작은 변경은 함께 commit하고 이유와 검증 근거를 남긴다.
+- 기존 문서 owner를 먼저 찾아 규칙·설계 결정·외부 동작을 한 곳에만 쓰고 구현·owner·인덱스를 함께 갱신한다.
+- 큰 작업은 독립적으로 이해·검증·되돌릴 목적 단위로 commit하고 이유와 검증 근거를 남긴다.
 
 ## 9. Implementation Guardrails
 
@@ -345,12 +345,14 @@ Node·Scene·Scene Tree·Signal은 개념과 실제 구현을 구분한다. 적�
 - 작은 실행 가능 수직 단위로 구현하고 각 단계에서 브라우저 실행 상태를 유지한다.
 - 기능 목록이 아니라 처음부터 끝까지 플레이 가능한 사용자 시나리오를 하나의 개발·피드백 단위로 사용한다.
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
-- 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
+- 한 inner iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교하되, 같은 session에서 entry 전체 합격까지 반복한다.
 - INBOX entry·executor branch 하나가 통합 artifact와 품질 판정을 소유한다.
 - 메인은 새 개발 명령을 INBOX에 그대로 기록한다. 질문·상태·lifecycle·예시·사전 인터뷰·직접 처리는 등록하지 않는다.
-- Tick은 INBOX·STATUS·branch/worktree·commit으로 transition 하나를 수행하고 DESIGN 완료 전에는 멈추지 않는다.
-- Entry는 `codex/loop/<IN-ID>` worktree에서 실행하며 별도 task 없이 branch/main을 push한다.
-- Checkpoint writer는 같은 tick에 final/integration하지 않고 다음 fresh run이 artifact와 affected checks를 독립 검증한다.
+- Outer PowerShell loop는 entry마다 새 `codex exec --ephemeral` session을 열고 session은 clean integration까지 수행한다.
+- Entry는 `codex/loop/<IN-ID>` worktree에서 실행한다. `resume`, `fork`, `--continue`를 쓰지 않는다.
+- Checkpoint는 same-session visual QA 전 복구점이다. 정상 session은 checkpoint·verifying·ready에서 끝나지 않는다.
+- 화면 작업은 `loop/visual-qa.ps1`의 visible Chrome PNG를 직접 판독하고 같은 session에서 수리한다.
+- `loop/STOP`은 entry 완결 뒤 정상 종료한다. 미완료/tool failure는 nonzero로 끝나 scheduler가 복구한다.
 - Subagent는 한 run 내부의 bounded helper이며 parent가 같은 executor branch에 통합한다.
 - 다른 entry의 executor branch/worktree를 수정하거나 guessed cleanup하지 않는다.
 - 정상 범위 edit·검사·commit·branch push·non-rewriting main merge/push에 승인을 묻지 않는다. 사람에게 묻는 것은 가역 default 없는 Product Decision, Canonical Conflict, credential·외부 차단뿐이다.
