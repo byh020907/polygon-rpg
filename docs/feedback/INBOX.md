@@ -246,3 +246,56 @@
 ### 결과 — coordinator 소유
 
 진행 전
+
+## IN-20260831-032804
+
+- status: new
+- received_at: 2026-08-31T03:28:04+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: 8a34dbb7bae0ee530944f8d736ccc89043b69753
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+현재 Polygon/Retro 캐릭터의 디테일과 완성도가 낮으므로, 실제 플레이 기본 배율에서 읽히는 실루엣과 장비 구조를 개선해줘.
+
+플레이어는 검술 학원 전투생의 정체성이 드러나야 한다. 교복형 천 레이어 위에 머리카락과 머리 방향, 어깨 장비, 흉갑, 장갑, 부츠, 손과 검·방패의 결합을 큰 polygon 면으로 분리해서 작은 Retro 출력에서도 구분되게 만들어줘.
+
+기본적인 인간형 체형은 레전드 오브 곡괭이처럼 몸통과 팔다리가 가늘고 길쭉한 스틱맨형 비율을 사용해줘. 가는 골격 위에 큰 장비 면과 관절 구분을 얹어 동작이 명확하게 읽혀야 한다.
+
+대표 적은 훈련장 인간형 적 1종을 함께 개선해줘. 플레이어와 체형, 색 분할, 장비와 자세가 명확히 달라야 하며 이후 다른 캐릭터에 확장할 수 있는 공통 시각 문법을 정립해야 해.
+
+레전드 오브 곡괭이 등 기존 제품 Reference에서 작은 화면의 강한 silhouette, 가늘고 과장된 인간형 비율, 장비와 동작의 명확한 색면 분리를 참고하되 캐릭터·의상·asset은 복제하지 마.
+
+실제 플레이 기본 배율에서 확대하지 않아도 머리 방향, 머리카락, 상체 장비, 손발, 검과 방패가 구분되어야 한다. Idle, 이동, guard, roll, 기본 공격, 강공격과 피격 pose에서도 polygon이 겹치거나 형태가 무너지지 않아야 하며 Polygon과 Retro 화면이 같은 캐릭터 상태를 전달해야 한다.
+
+캐릭터의 현재 gameplay 크기, collider, 공격 판정, 이동·전투 balance, camera와 world scale은 변경하지 마. 실제 훈련장 플레이와 Polygon/Retro 출력, resize 및 console 상태를 직접 확인해 완료해줘.
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
