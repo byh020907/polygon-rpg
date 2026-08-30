@@ -1,6 +1,6 @@
 ---
 name: dev-team-loop
-description: Run Polygon RPG's approval-free file-memory development loop from the canonical Markdown inbox. Fresh scheduled or manual ticks continue one IN entry in its persistent executor branch/worktree, checkpoint, independently verify, merge and push, or recover/cancel it. A bare `$dev-team-loop` runs one reconcile transition. Do not use when the user explicitly asks to handle a feature directly in the current task.
+description: Register plain new Polygon RPG development requests from the team-lead main conversation verbatim into the Markdown inbox, then run the approval-free file-memory loop. Fresh ticks continue one IN entry in its executor worktree through checkpoint, independent verification, merge/push or recovery. No "register" keyword is required. Do not register questions, status/lifecycle requests, examples/hypotheticals, or work explicitly requested directly in the current task.
 ---
 
 # Dev Team Loop
@@ -20,13 +20,13 @@ Choose the first matching mode.
 1. **Cancel/Reopen:** The user changes an exact `IN-*` entry lifecycle. Read [`references/cancel.md`](references/cancel.md).
 2. **Coordinator Tick:** This is a scheduled run or explicit one-tick reconcile. Read [`references/manage.md`](references/manage.md) and [`references/inbox-schema.md`](references/inbox-schema.md).
 3. **Start/Continue:** This is bare `$dev-team-loop` or an explicit start/resume request. Read [`references/start.md`](references/start.md).
-4. **Register:** The team-lead main task is asked to register a new request. Read [`references/register.md`](references/register.md) and [`references/inbox-schema.md`](references/inbox-schema.md).
+4. **Register:** The team-lead main receives a plain imperative to build, change or fix the project, even without the words `register` or `inbox`. Read [`references/register.md`](references/register.md) and [`references/inbox-schema.md`](references/inbox-schema.md).
 
 If ambiguous, inspect inbox entries, executor refs, `git worktree list --porcelain`, commit ancestry and lease. Do not create a second writer or a parallel queue document.
 
 ## Shared Invariants
 
-- One registration request appends one `IN-*` entry unless explicitly split. The `원문 — 불변` block is copied exactly, including wording and whitespace.
+- One plain new development request appends one `IN-*` entry unless explicitly split. The entire current user message is copied exactly, including wording and whitespace.
 - `docs/feedback/INBOX.md` owns status, execution contract, current best, blocker and result; `docs/STATUS.md` is its current-state projection.
 - The inbox is main-owned. Executor branches never edit it; after each branch checkpoint/final, the coordinator records that evidence on main in the same lifecycle transition.
 - New entries use deterministic `codex/loop/<lowercase-in-id>` branches. Do not call `create_thread`, fork or handoff.

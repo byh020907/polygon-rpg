@@ -32,7 +32,7 @@
 
 ## Next
 
-팀장이 메인 대화에서 새 개발 원문의 등록을 요청하면 `docs/feedback/INBOX.md`에 그대로 append하고 automation을 재활성화한다. 다음 fresh run은 가장 높은 우선순위의 가장 오래된 `new` entry 하나만 accept/provision한다.
+팀장이 메인 대화에서 평소처럼 새 개발을 명령하면 별도 등록 키워드 없이 현재 메시지 전체를 `docs/feedback/INBOX.md`에 그대로 append하고 automation을 재활성화한다. 다음 fresh run은 가장 높은 우선순위의 가장 오래된 `new` entry 하나만 accept/provision한다.
 
 ## Update Contract
 
