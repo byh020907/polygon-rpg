@@ -16,14 +16,14 @@ Do not create a work item for:
 
 Everything else that asks for a bug fix, feature, investigation, improvement or planning result is a new work item.
 
-## Register Without Interviewing
+## Register And Start Without Reconfirmation
 
 1. Preserve the user's complete original message.
-2. Do not clarify, decompose or implement it in the main conversation.
+2. Treat the request as implementation input. Do not ask the team lead to approve a restatement, plan, Reference Brief, execution contract, quality contract, task list or work-item document.
 3. Treat one message as one item. Split only on explicit user instruction.
 4. Reconcile Git work items and active Codex agent assignments.
 5. Allocate the ID, create the Git-tracked document, commit and push that registration from the main conversation.
-6. Spawn exactly one root `worker` agent when the item is ready; otherwise leave it queued.
+6. Spawn exactly one root `worker` agent when dependencies and ownership allow; otherwise leave it queued.
 7. Emit a concise registration/start update, then keep coordinating the root agent in the same main turn until feedback, completion, blocker or another defined stop condition.
 
 The user request explicitly authorizes creation of the work item and its root subagent thread. It does not authorize a separate manager task or unrelated tasks.
@@ -50,4 +50,4 @@ Return only:
 - root-agent task name when started;
 - any dependency preventing start.
 
-Do not copy the future interview into the main conversation. Registration alone is not a reason to end the coordinator turn while the root agent is still active.
+Do not copy internal planning into the main conversation. Registration alone is not a reason to end the coordinator turn while the root agent is still active.

@@ -29,9 +29,12 @@ If the role is ambiguous, inspect Git work items, the current Codex subagent tre
 
 - One independent team-lead development request creates one work item unless the team lead explicitly requests a split. Bare start/continue invocations and lifecycle operations do not.
 - The approved current roadmap is the default work source. When no open item owns its next unmet gate, derive one non-duplicate vertical work item without waiting for another team-lead prompt.
-- The main conversation coordinates, records, verifies and integrates; it does not perform the work item's product interview or implementation itself.
+- The main conversation coordinates, records, verifies and integrates; it does not perform the work item's implementation itself.
 - Each work item has exactly one root developer subagent and Vertical Slice Director. Reuse that same agent with follow-up tasks for feedback and revision.
-- Git work-item documents are durable history. Codex subagent state and the current filesystem/Git state are live execution evidence.
+- Explicitly stated team-lead intent is implementation input, never a request for reconfirmation. Planning, Reference Briefs, execution contracts, quality contracts, task lists and work-item prose are internal agent context; do not ask the team lead to approve them.
+- Implement a safe, reversible default first. Validate the concrete candidate, then hand off its actual changed code tree, behavior/play path, verification and work-report link so feedback can target real output.
+- Ask only when one decision genuinely blocks implementation, cannot be inferred from approved intent or evidence and cannot be made reversible. Ask exactly one short interview question whose answer is Yes/No or one of 2–3 mutually exclusive choices, each with a one-line impact. Never send a document as the question.
+- Git work-item documents are minimal durable queue/result history. Codex subagent state and the current filesystem/Git state own internal planning and live execution evidence.
 - Keep one write-heavy root work item active at a time in the shared checkout. Add bounded subagents only for demonstrated parallel value with disjoint ownership; read-heavy exploration and frozen-candidate verification are preferred.
 - The main coordinator is the only branch, commit, push, queue, roadmap and integration writer. Worker agents edit only assigned files and do not mutate Git history.
 - Do not add permanent tests unless the user explicitly requests them. Remove temporary validation artifacts.
@@ -39,8 +42,8 @@ If the role is ambiguous, inspect Git work items, the current Codex subagent tre
 - No force push, shared-branch history rewrite, guessed cleanup or mutation of another agent's owned changes.
 - Do not submit a candidate with an applicable quality axis below the threshold defined in `docs/development/quality-loop.md`.
 - Subtask success is not parent work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
-- Stop roadmap derivation at team-lead feedback, an unresolved product decision, canonical conflict, blocker, pause or the absence of an approved next milestone.
+- Stop roadmap derivation at team-lead feedback on a concrete candidate, a genuinely blocking unresolved product decision, canonical conflict, blocker, pause or the absence of an approved next milestone.
 
 ## Completion
 
-Report the work-item ID, lifecycle state, result direction, quality threshold and artifact evidence, impact, verification boundary and next loop. Do not repeat file-by-file diff details that Git already preserves.
+Lead with the actual changed code tree, behavior/play path, verification and work-report link. Then report the work-item ID, lifecycle state, quality threshold, impact, verification boundary and next loop. Do not end with a request to confirm or approve; the team lead may respond with concrete feedback.

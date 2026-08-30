@@ -31,7 +31,7 @@ For registration, worker results, cancellation, team-lead operations or recovery
 1. Allocate `WI-YYYYMMDD-HHmmss` as the stable ID. Check Git work items and active agent assignments; on collision append the smallest deterministic suffix `-02`, `-03`, and so on.
 2. Create exactly one document from the schema unless the team lead explicitly requested a split.
 3. Preserve the team-lead original verbatim, or record factual roadmap derivation evidence.
-4. Infer priority, lane and dependencies without a product interview.
+4. Infer priority, lane and dependencies without reconfirming the request.
 5. Commit only the new work-item document and push `main` after verifying the remote tip.
 6. Spawn one root `worker` agent with the exact work-item path and Run-mode instruction when capacity and dependencies allow.
 
@@ -46,7 +46,7 @@ When no open item owns the approved current milestone's next unmet gate:
 3. Register it with `source: roadmap` and an exact milestone/gate reference.
 4. Start its root Director when safe, then wait for its quality-loop result.
 
-Do not invent a Product Requirement or speculative future-milestone item. Stop at team-lead feedback, a required product interview, Canonical Conflict, blocker, pause or no approved next milestone.
+Do not invent a Product Requirement or speculative future-milestone item. Use safe reversible defaults and disclose them with the candidate. Stop only at team-lead feedback on a concrete candidate, one genuinely blocking product decision, Canonical Conflict, blocker, pause or no approved next milestone.
 
 ## Priority And Placement
 
@@ -56,7 +56,7 @@ Use this order unless the team lead overrides it:
 2. bug or regression breaking the current playable slice;
 3. current roadmap milestone's core path;
 4. dependency blocking other work;
-5. oldest ready item.
+5. oldest queued item.
 
 The root agent works in the shared checkout under strict path ownership. `lane` is scheduling metadata, not a permanent workspace. When concrete filesystem or branch isolation is required, use a Codex-managed worktree only with an explicitly created task; otherwise serialize write-heavy work.
 
@@ -71,7 +71,7 @@ The root agent works in the shared checkout under strict path ownership. `lane` 
 
 ## Integration
 
-1. Confirm the root Director's result, quality threshold, integrated artifact evidence and declared verification boundary.
+1. Confirm the root Director's actual changed code tree, behavior/play path, quality threshold, integrated artifact evidence, work-report path and declared verification boundary.
 2. Freeze writes and run an independent read-only verification of the current candidate.
 3. Fetch latest `origin/main`; never rewrite shared history.
 4. Inspect and stage only paths owned by the item, run affected checks and create a scoped commit from the main conversation.
@@ -79,7 +79,7 @@ The root agent works in the shared checkout under strict path ownership. `lane` 
 6. Review rule candidates and promote only repeated or high-impact evidence to one canonical owner.
 7. Reevaluate the roadmap before starting another root item.
 
-Items with product feel, visuals, new features or `review: team-lead` wait for feedback before integration. Small proven bug fixes, document alignment and behavior-preserving internal changes may integrate automatically.
+Items with product feel, visuals, new features or `review: team-lead` wait for feedback on the concrete candidate before integration. The user-facing handoff leads with code tree, behavior/play path, verification and work-report link and never ends in a plan approval request. Small proven bug fixes, document alignment and behavior-preserving internal changes may integrate automatically.
 
 ## Pause, Cancel And Recovery
 

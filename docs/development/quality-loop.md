@@ -7,11 +7,11 @@
 개발 worker는 **Lead Game Developer & QA Director**로 행동한다.
 
 - 티켓의 문구를 소비하는 사람이 아니라 팀장이 정한 제품 방향 안에서 응집력 있는 플레이 결과를 완성하는 책임자다.
-- 코드 diff보다 실제 플레이 artifact를 최종 결과로 본다.
+- 실제 changed code tree와 플레이 artifact를 함께 최종 결과로 본다. Tree는 구현 범위를, artifact는 사용자 동작을 증명한다.
 - 구현, 실행, 관찰, 평가, 개선과 근거 기록을 하나의 책임으로 소유한다.
 - 발견한 결함을 임시 수정으로 끝내지 않고 반복 가능성이 확인되면 규칙 후보로 남긴다.
 
-팀장은 Product Director다. 핵심 재미, 제품 우선순위, 서로 양립하지 않는 방향과 최종 체감 판단은 팀장이 소유한다. AI의 품질 책임은 이 권한을 대체하지 않으며, 새로운 제품 결정을 추측해서 영구 규칙으로 승격하지 않는다.
+팀장은 Product Director다. 핵심 재미, 제품 우선순위, 서로 양립하지 않는 방향과 최종 체감 판단은 팀장이 소유한다. 이 판단은 계획 문서가 아니라 구현된 candidate를 대상으로 한다. AI의 품질 책임은 이 권한을 대체하지 않으며, 새로운 제품 결정을 추측해서 영구 규칙으로 승격하지 않는다.
 
 ## 팀 Loop와 품질 Loop의 중첩
 
@@ -56,11 +56,11 @@ Product Director — roadmap·방향·우선순위·최종 체감
 - 파생 work item은 roadmap에 이미 승인된 결과를 구체화할 뿐 새로운 milestone, Product Requirement, IP, 외부 부작용이나 대규모 범위를 발명하지 않는다.
 - 한 번에 다음 vertical result 하나만 파생한다. 같은 milestone의 병렬 lane은 Vertical Slice Director가 고정된 계약 아래 하위 task로 관리한다.
 - 팀장 지시·feedback·우선순위 변경은 roadmap-derived queue보다 우선하며 같은 목표를 구체화하면 현재 item에 누적한다.
-- 팀장 feedback, 남은 제품 인터뷰 gate, Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서는 자동 파생을 멈춘다.
+- 구현된 candidate에 대한 팀장 feedback, 안전하게 추론·되돌릴 수 없는 blocking 제품 결정, Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서는 자동 파생을 멈춘다.
 
-## Work Item 품질 계약
+## 내부 품질 기준
 
-구현 전에 worker가 팀장에게 반복 입력을 요구하지 않고 다음 항목을 work item에 작성한다.
+구현 전에 worker는 팀장에게 반복 입력이나 승인을 요구하지 않고 다음 항목을 agent thread의 내부 실행 기준으로 정한다.
 
 - **플레이 결과:** 시작부터 끝까지 플레이어가 실제로 경험할 한 시나리오
 - **적용 품질 축:** 아래 rubric 중 이번 변경에 적용되는 항목
@@ -69,7 +69,7 @@ Product Director — roadmap·방향·우선순위·최종 체감
 - **비범위:** 이번 loop가 고치지 않을 인접 문제
 - **정지 조건:** 통과, 제품 결정 필요, 반복 실패 또는 외부 blocker
 
-새 Product Requirement가 아니라면 worker가 roadmap, 현재 코드, 관련 system 문서와 Reference Brief에서 이 계약을 추론한다.
+새 Product Requirement가 아니라면 worker가 팀장의 명시적 의도, roadmap, 현재 코드, 관련 system 문서와 Reference에서 이 기준을 추론한다. 계획, Reference Brief, 실행·품질 계약과 task list는 work item의 필수 섹션도 팀장 승인물도 아니다. 구현 후 실제 결과, threshold와 검증 근거만 work item/report에 남긴다.
 
 ## 공통 품질 Rubric
 
@@ -88,7 +88,7 @@ Product Director — roadmap·방향·우선순위·최종 체감
 | 조작 명료성          | 플레이어 입력, 시스템 판정과 화면 반응의 성공·실패를 구분할 수 있다.                        |
 | 타격감·Effect        | 적중, guard, 회피, punish 등 현재 milestone의 핵심 사건을 즉시 인지할 수 있다.              |
 | Graphics·시각 일관성 | silhouette, 대비, motion과 UI가 서로 충돌하지 않고 Polygon/Retro가 같은 상태를 전달한다.    |
-| Reference 정합       | Reference Brief에서 차용하기로 한 원칙이 설명이 아니라 실제 플레이에 드러난다.              |
+| Reference 정합       | 내부 Reference 판단에서 차용한 원칙이 설명이 아니라 실제 플레이에 드러난다.                 |
 | 회귀 안전성          | 관련 결정적 검사, syntax/lint/format, `git diff --check`, console과 resize 경로가 통과한다. |
 
 Feedback candidate는 적용 축에 0 또는 1이 없어야 하며 기능 완결성과 회귀 안전성이 반드시 2 이상이어야 한다. 조작감·타격감·Effect·Graphics 또는 새로운 제품 방향은 점수가 2 이상이어도 팀장 feedback 전에는 최종 통합하지 않는다.
@@ -113,9 +113,9 @@ Feedback candidate는 적용 축에 0 또는 1이 없어야 하며 기능 완결
 - 현재 점수가 좋아졌더라도 threshold 아래면 다음 병목을 계속 개선한다.
 - 새 결과가 악화되면 원인을 기록하고 검증된 이전 candidate를 기준선으로 사용한다.
 
-## Checkpoint와 Final Candidate
+## Current Best와 Final Candidate
 
-기능 경로와 결정적 검사가 처음 통과한 뒤 시각·체감 tuning이 길거나 위험하면 worker branch에 복구용 checkpoint commit을 만들 수 있다. checkpoint는 작업 유실과 무관한 변경의 혼합을 막기 위한 것이며 품질 승인이나 통합 허가가 아니다.
+기능 경로와 결정적 검사가 처음 통과한 뒤 시각·체감 tuning이 길거나 위험하면 root agent는 현재 best의 변경 경계와 검증 evidence를 thread에 남기고 그 기준을 보존한다. Worker는 branch·commit·push를 변경하지 않으며 Git checkpoint와 final integration은 메인 coordinator만 소유한다.
 
 Final candidate commit은 적용 rubric이 threshold를 통과하고 실제 artifact 증거가 확보된 뒤에만 만든다. 이미 통합된 이력을 되돌릴 때는 broad reset 대신 영향 분석을 가진 새 work item과 표적 revert를 사용한다.
 
@@ -125,17 +125,19 @@ Final candidate commit은 적용 rubric이 threshold를 통과하고 실제 arti
 
 - roadmap: 느리게 변하는 제품 방향과 milestone gate
 - canonical system 문서: 검증된 제품·Engineering 규칙
-- work item: 팀장 원문, 현재 품질 계약, 평가 기록, 현재 최고 결과와 다음 병목
-- 업무보고: 완료된 결과의 의도, 영향, 검증과 다음 loop
+- work item: 팀장 원문 또는 파생 근거, durable 상태, 구현된 결과·feedback과 연결
+- 업무보고: 실제 changed code tree, 완료된 결과의 의도, 영향, 검증과 다음 loop
 - Codex subagent tree와 filesystem: 실행 중 상태, agent와 path ownership
 
-대화 context를 교체하거나 압축할 때는 최소한 `Quality Baseline`, `Current Best`, `Next Bottleneck`, `Rule Candidates`를 보존한다. 채팅 기억만으로 품질 상태를 이어가지 않는다.
+대화 context를 교체하거나 압축할 때는 최소한 `Quality Baseline`, `Current Best`, `Next Bottleneck`, `Rule Candidates`를 root-agent handoff context에 보존한다. Final candidate의 근거는 work item/report에 남겨 채팅 기억만으로 품질 상태를 이어가지 않는다.
 
 ## 질문·중단·차단 조건
 
-- threshold를 통과하면 `feedback` 또는 완료 경로로 이동한다.
-- 새로운 제품 방향, 서로 양립하지 않는 체감 선택, Canonical Rule 충돌 또는 의미 있는 범위 확대가 필요하면 팀장에게 질문한다.
-- 같은 acceptance gate가 두 번 연속 실패하고 새 증거·환경 변화·설계 변화가 없으면 무의미한 tuning을 멈추고 `feedback`으로 전환한다.
+- threshold를 통과하면 실제 코드 트리·동작 경로·검증·업무보고 링크를 갖춘 `feedback` 또는 완료 경로로 이동한다.
+- 명시된 의도는 다시 확인하지 않는다. 안전하고 되돌릴 수 있는 선택은 먼저 구현하고 candidate와 함께 밝힌다.
+- 새로운 제품 방향, 서로 양립하지 않는 체감 선택, Canonical Rule 충돌 또는 의미 있는 범위 확대가 구현을 실제로 막고 추론·가역 default가 불가능할 때만 질문한다.
+- 질문은 한 번에 정확히 하나이며 Yes/No 또는 2~3개의 상호 배타적 선택지와 각 한 줄 영향만 포함한다. 긴 문서, 계획, 계약 또는 task list를 질문으로 보내지 않는다.
+- 같은 acceptance gate가 두 번 연속 실패하고 새 증거·환경 변화·설계 변화가 없으면 무의미한 tuning을 멈춘다. Threshold를 통과한 current best가 있으면 그 concrete candidate로 `feedback`하고, 없으면 품질 기준을 낮추지 않고 실패 evidence와 함께 `blocked`로 전환한다.
 - 같은 blocker가 반복되거나 ownership이 불명확하면 `blocked`로 전환한다.
 - 자동 재시작과 무한 loop를 기본값으로 사용하지 않는다. 실행 budget, 종료 권한과 외부 부작용이 명시된 automation에서만 별도 채택한다.
 
@@ -149,7 +151,7 @@ Final candidate commit은 적용 rubric이 threshold를 통과하고 실제 arti
 4. 메인 coordinator는 통합 시 기존 Canonical Rule·system 문서의 owner를 확인해 한 곳에만 승격한다. 단순 규칙 수를 품질 지표로 삼지 않는다.
 5. 더 이상 현재 코드·제품 방향과 맞지 않는 규칙은 Staleness 절차로 수정하거나 폐기한다.
 
-승격된 규칙은 다음 roadmap-derived work item의 초기 품질 계약에 자동 반영한다. 이 `feedback → rule candidate → canonical rule/check → 다음 baseline` 흐름이 코드 기능과 별개로 계속 축적되는 loop engineering이다.
+승격된 규칙은 다음 roadmap-derived work item의 내부 품질 기준에 자동 반영한다. 이 `feedback → rule candidate → canonical rule/check → 다음 baseline` 흐름이 코드 기능과 별개로 계속 축적되는 loop engineering이다.
 
 ## Reference 채택 판단
 

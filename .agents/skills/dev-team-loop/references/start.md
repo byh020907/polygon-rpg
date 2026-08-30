@@ -21,14 +21,17 @@ After start, the main coordinator keeps running `roadmap gate → work item → 
 
 - Use the native agent wait mechanism for active root agents; a timeout is only a checkpoint.
 - Forward team-lead feedback to the same root agent with a follow-up task so its work-item context is preserved.
+- Do not pause for approval of internal plans or work-item prose. A genuinely blocking decision is one short Yes/No or 2–3-choice interview; reversible choices become implemented defaults and are disclosed with the candidate.
 - When a root agent completes, independently verify the frozen candidate, integrate from the main conversation, then reevaluate the roadmap before deriving another item.
 - Do not keep a background manager task, polling terminal or external Run alive.
 
 ## Main Reply
 
-Render only:
+For lifecycle-only start updates, render only:
 
 - current milestone;
 - active, resumed or newly derived work-item ID and title;
 - current lifecycle state and root-agent thread when started;
 - the stop condition when no item can start.
+
+For feedback or completion, use the concrete result handoff defined by Run mode instead of this abbreviated start update.

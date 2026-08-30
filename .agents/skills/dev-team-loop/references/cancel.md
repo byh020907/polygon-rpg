@@ -35,5 +35,5 @@ Do not rewrite or silently revert main. Register a new work item describing the 
 
 - Create a new work item and root agent.
 - Set `reopens` to the cancelled item ID.
-- Read the old decisions and cancellation reason before the new interview.
+- Read the old request, result/feedback and cancellation reason before implementing the new candidate.
 - Leave the original item `cancelled`.

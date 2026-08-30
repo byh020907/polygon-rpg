@@ -1,6 +1,6 @@
 # Polygon RPG Codex-Native Development Process
 
-이 문서는 사용자가 팀장으로 제품 방향과 우선순위를 결정하고, Codex 앱의 메인 대화와 subagent thread가 업무 등록·인터뷰·구현·피드백·통합을 지속하는 프로젝트 운영 계약이다.
+이 문서는 사용자가 팀장으로 제품 방향과 우선순위를 결정하고, Codex 앱의 메인 대화와 subagent thread가 업무 등록·구현·실체 기반 피드백·통합을 지속하는 프로젝트 운영 계약이다.
 
 Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당한다. 제품 방향과 milestone은 [`roadmap.md`](./roadmap.md)가, 각 work item의 품질 rubric과 개선 loop는 [`quality-loop.md`](./quality-loop.md)가 소유한다.
 
@@ -11,15 +11,15 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 ### 팀장 — 사용자
 
 - 핵심 재미, 제품 방향, 우선순위와 Reference를 결정한다.
-- 결과물을 직접 플레이하고 방향 피드백을 제공한다.
+- 구현된 결과의 코드 트리와 실제 플레이 artifact를 보고 방향 피드백을 제공한다.
 - 양립하지 않는 제품 방향의 최종 선택을 소유한다.
-- 파일 구조와 class granularity 같은 Engineering Decision을 반복 승인하지 않는다.
+- 이미 밝힌 의도, 계획 문서, 파일 구조와 class granularity 같은 Engineering Decision을 반복 승인하지 않는다.
 
 ### 메인 대화 — 팀장 Interface / Roadmap Coordinator
 
 - 팀장이 생각나는 업무를 연속해서 전달하는 단일 창구다.
 - Git work item 등록, queue, roadmap 파생, agent 배치, 검증, commit·push와 통합을 소유한다.
-- 제품 인터뷰와 구현은 하지 않고 work item의 root agent thread에 맡긴다.
+- 구현은 work item의 root agent thread에 맡긴다. 구현을 막는 제품 결정이 있을 때만 root agent의 짧은 선택형 질문 하나를 전달한다.
 - root agent의 요약만 받아 메인 context의 중간 로그 오염을 막는다.
 - main branch와 Git 이력을 변경하는 유일한 주체다.
 - 별도 background manager task나 외부 orchestration Run을 만들지 않는다.
@@ -27,11 +27,21 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 ### Work Item Root Agent — Vertical Slice Director
 
 - 하나의 work item에 하나만 존재하는 Lead Game Developer & QA Director다.
-- 인터뷰, Reference Brief, 실행·품질 계약, 구현, 평가, feedback 준비와 최종 handoff를 같은 subagent thread에서 유지한다.
+- 팀장의 명시적 의도를 구현 입력으로 받아 안전하고 되돌릴 수 있는 기본 후보를 먼저 구현한다.
+- Reference 판단, 실행·품질 계약과 task 분해는 내부 context로만 유지하고 팀장 승인 대상으로 만들지 않는다.
+- 구현, 평가, 실제 artifact 준비와 최종 handoff를 같은 subagent thread에서 유지한다.
 - 팀장 feedback은 메인 coordinator가 같은 agent에 follow-up task로 전달한다.
 - 할당 파일을 수정할 수 있지만 branch, worktree, stage, commit, push와 다른 agent의 변경은 건드리지 않는다.
 - 하위 agent 결과를 통합한 실제 플레이 artifact를 다시 평가하며 lane별 성공을 parent 품질로 대체하지 않는다.
 - 완료 또는 feedback 결과를 보낸 뒤 새 work item을 임의로 시작하지 않는다.
+
+## 구현 우선 원칙
+
+- 팀장이 명시한 의도는 구현 입력이며 재확인 요청이 아니다.
+- 기본 흐름은 `구현 → 구체 candidate 검증 → 실제 changed code tree·실행 결과·업무보고 공개 → 결과 기반 feedback`이다.
+- 계획, Reference Brief, 실행 계약, 품질 계약, task list와 work-item 문구는 내부 agent context다. 팀장에게 승인·확인을 요청하지 않고 Git에도 필요한 source/result 이외에는 최소화한다.
+- 현재 코드·roadmap·Reference에서 추론 가능한 선택과 안전하게 되돌릴 수 있는 선택은 먼저 구현하고 candidate handoff에서 선택과 영향을 밝힌다.
+- 구현을 진짜로 막고, 추론할 수도 되돌릴 수도 없는 결정만 한 번에 하나씩 질문한다. 질문은 Yes/No 또는 2~3개의 상호 배타적 선택지와 각 한 줄 영향만 제시하며 긴 문서를 질문으로 보내지 않는다.
 
 ### Supporting Agent / Independent Verifier
 
@@ -55,9 +65,9 @@ $dev-team-loop
 
 - 메인 대화 자체가 coordinator이므로 별도 manager task를 만들지 않는다.
 - Bare 호출은 다음 root agent를 시작·재개하고 stop condition까지 감독할 권한을 명시한다.
-- feedback 상태는 bare 호출로 해제하지 않는다. 팀장의 실제 feedback이 같은 work item을 대상으로 도착해야 기존 root agent를 재개한다.
+- feedback 상태는 bare 호출로 해제하지 않는다. 구현된 candidate를 본 팀장의 실제 feedback이 같은 work item을 대상으로 도착해야 기존 root agent를 재개한다.
 - 다음 미충족 gate를 소유한 open item이 없으면 coordinator가 roadmap에서 vertical work item 하나를 파생한다.
-- 팀장 feedback, 제품 결정, Canonical Conflict, blocker, pause 또는 승인된 다음 milestone 부재에서 멈춘다.
+- 구현된 candidate에 대한 팀장 feedback, 가역 default로 진행할 수 없는 제품 결정, Canonical Conflict, blocker, pause 또는 승인된 다음 milestone 부재에서 멈춘다.
 
 ## Work Item 등록
 
@@ -66,13 +76,13 @@ $dev-team-loop
 - 하나의 독립 개발 요청은 기본적으로 work item 하나다.
 - 여러 증상이나 세부 기능이 있어도 팀장이 명시적으로 분리하지 않으면 나누지 않는다.
 - status, priority, pause·cancel·reopen, merge·push, roadmap continue와 기존 ID 대상 추가 지시는 새 item이 아니다.
-- 메인 대화는 등록 전에 제품 인터뷰를 하지 않는다.
+- 메인 대화는 등록 전에 요청을 재확인하거나 계획 승인을 받지 않는다.
 
 ### Durable 등록
 
 ```text
 팀장 요청 또는 roadmap gate
-→ ID 할당과 work item 문서 생성
+→ ID 할당과 최소 queue/status work item 생성
 → 문서 하나짜리 scoped commit
 → origin/main push
 → root agent 시작 또는 queued 유지
@@ -80,14 +90,14 @@ $dev-team-loop
 
 - 위치: `docs/development/work-items/<id>-<slug>.md`
 - 기본 ID: `WI-YYYYMMDD-HHmmss`; Git과 live agent assignment를 확인해 같은 초 충돌에는 `-02`, `-03`을 붙인다.
-- 팀장 원문은 그대로 보존한다. Roadmap 파생은 milestone, gate와 현재 evidence를 사실대로 기록한다.
+- 팀장 원문은 그대로 보존한다. Roadmap 파생은 milestone, gate와 현재 evidence를 사실대로 기록한다. 사전 계획·승인 섹션은 만들지 않는다.
 - Runtime agent ID와 thread handle은 Git에 기록하지 않는다.
 
 ## Work Item 상태
 
 ```text
-inbox → queued → interviewing → ready → implementing
-→ feedback → integrating → done
+queued → implementing → feedback → integrating → done
+                  └──────────────→ integrating → done
 ```
 
 예외 상태는 `blocked`, `paused`, `cancelled`, `superseded`다.
@@ -96,6 +106,7 @@ inbox → queued → interviewing → ready → implementing
 - 진행 중 live state는 Codex subagent tree와 실제 filesystem/Git 상태가 소유한다.
 - `feedback`은 root agent thread와 변경을 보존하며, 팀장 feedback을 같은 agent에 전달해 재개한다.
 - Pause는 agent와 변경을 보존하고 새 write를 중단한다.
+- 과거 `inbox`·`interviewing`·`ready` item은 실제 agent/filesystem evidence에 따라 `queued` 또는 `implementing`으로 reconcile하고 새 item에는 사용하지 않는다.
 
 ## 우선순위와 실행 제한
 
@@ -105,7 +116,7 @@ inbox → queued → interviewing → ready → implementing
 2. 현재 플레이 수직 단위를 깨뜨리는 버그·회귀
 3. 현재 roadmap milestone의 핵심 경로
 4. 다른 이력의 선행 dependency
-5. 오래 대기한 ready item
+5. 오래 대기한 queued item
 
 - dependency가 끝나지 않은 item은 실행하지 않는다.
 - 공유 checkout에서는 write-heavy root item을 한 번에 하나만 실행한다.
@@ -113,36 +124,26 @@ inbox → queued → interviewing → ready → implementing
 - 여러 agent가 같은 public contract, canonical 문서, central `GameScene` hunk를 동시에 쓰지 않는다.
 - 별도 filesystem 격리가 실제로 필요하고 팀장이 별도 Codex task 생성을 명시한 경우에만 Codex-managed worktree task를 사용한다.
 
-## Playable Reference Loop
+## Candidate-First Playable Reference Loop
 
 ```text
 work item 등록
-→ root agent 인터뷰
-→ Reference Brief와 품질 계약
-→ baseline 평가
+→ root agent가 요청·roadmap·코드·Reference에서 내부 실행 기준 추론
+→ 안전하고 되돌릴 수 있는 기본 candidate 구현
 → 가장 큰 병목 하나 개선
 → 결정적 검사 + 실제 artifact 관찰
 → 같은 rubric 재평가
-→ feedback 또는 final handoff
 → 독립 검증
+→ 실제 코드 트리·플레이 경로·검증·업무보고 handoff
+→ concrete feedback 또는 자동 통합
 → coordinator commit·push·통합
 ```
 
 개발과 feedback의 최소 단위는 함수나 내부 시스템이 아니라 처음부터 끝까지 실행 가능한 사용자 시나리오다.
 
-### Reference Brief
+### 내부 Reference 판단
 
-```markdown
-## Reference Brief
-
-- 제품 Reference: 차용할 플레이 원칙
-- Engineering Reference: 확인한 구현·caller·검증 경로
-- 차용: Polygon RPG에 적용할 동작과 이유
-- 비차용: 원작 전용 콘텐츠·수치·구조와 제외 이유
-- 결과물: 이번 loop의 시작부터 끝까지 플레이 시나리오
-```
-
-Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sound와 UI를 복제하지 않는다.
+Root Director는 필요한 제품·Engineering Reference, 실제 source/caller/검증 경로와 `직접 재사용`·`수정`·`원칙만 차용`·`비차용` 판단을 agent thread에서 수행한다. 별도 Reference Brief 승인을 요청하지 않으며, 구현에서 확인된 채택 결과만 업무보고에 남긴다. Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sound와 UI를 복제하지 않는다.
 
 ### 구현과 평가
 
@@ -165,7 +166,15 @@ Reference의 캐릭터, 몬스터, 명칭, story, map, item, motion, sprite, sou
 - 새 기능과 제품 방향 변경
 - `review: team-lead` item
 
-Root Director가 로컬/모바일 플레이 경로, 현재 rubric, 남은 병목과 관찰할 지점을 메인 coordinator에 반환한다. Coordinator는 메인 대화에 간결히 보고하고 같은 root agent를 유지한다. 팀장 feedback이 오면 `follow-up`으로 같은 agent를 재개한다.
+Root Director는 다음 순서로 candidate를 반환한다.
+
+1. 실제 changed code tree
+2. 동작·플레이 경로와 팀장이 직접 볼 결과
+3. 실행한 검증, 독립 verifier 범위와 남은 위험
+4. 업무보고 링크. 별도 보고서가 없는 maintenance item은 work item의 `결과`를 링크한다.
+5. rubric과 남은 병목
+
+Coordinator는 이를 메인 대화에 간결히 보고하고 같은 root agent를 유지한다. `확인/승인해 달라`로 끝내지 않으며, 팀장이 concrete feedback을 보내면 `follow-up`으로 같은 agent를 재개한다.
 
 ### 자동 통합 가능
 
@@ -179,7 +188,7 @@ Coordinator는 마지막 writer 뒤 독립 검증, affected checks, staged diff�
 
 ### 미실행
 
-- `inbox` 또는 `queued`를 `cancelled`로 바꾸고 root agent를 시작하지 않는다.
+- `queued`를 `cancelled`로 바꾸고 root agent를 시작하지 않는다. 과거 `inbox` item도 같은 방식으로 처리한다.
 
 ### 실행 중
 
@@ -197,8 +206,8 @@ Coordinator는 마지막 writer 뒤 독립 검증, affected checks, staged diff�
 - 위치: `docs/development/reports/WI-YYYYMMDD-HHmmss-<slice-slug>.md`
 - 플레이 가능한 수직 단위나 의미 있는 milestone만 별도 보고서를 만든다.
 - 작은 bug·문서 정합·maintenance는 work item의 `결과` 절로 충분하다.
-- 보고서는 의도, 플레이 결과, 영향, 검증·feedback과 다음 loop를 기록한다.
-- 파일 목록, 함수별 변경과 긴 command output은 Git diff에 맡긴다.
+- 보고서는 실제 changed code tree, 의도, 플레이 결과, 영향, 검증·feedback과 다음 loop를 기록한다.
+- 함수별 diff와 긴 command output은 Git diff에 맡기되, 팀장이 구현 범위를 바로 파악할 수 있는 compact tree는 생략하지 않는다.
 
 ## Recovery
 
@@ -217,8 +226,8 @@ Git과 filesystem이 live agent 요약보다 우선한다. 같은 item을 주장
 
 - 등록: ID, 제목, priority와 queued/started 상태
 - 실행 시작: root agent task name
-- feedback 준비: 확인할 플레이 결과와 남은 병목
-- 완료: 결과 방향, 영향, quality threshold와 integration commit
+- feedback 준비: 실제 changed code tree, 플레이 경로, 검증, 업무보고 링크와 남은 병목
+- 완료: 실제 changed code tree, 결과 방향, 영향, 검증, 업무보고 링크, quality threshold와 integration commit
 - 취소·차단: 이유와 다음 행동
 
-세부 인터뷰, 구현 로그와 supporting-agent 원문은 root agent thread에 둔다.
+blocking 질문의 판단 근거, 구현 로그와 supporting-agent 원문은 root agent thread에 둔다.

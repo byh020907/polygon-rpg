@@ -79,7 +79,7 @@ World
 - 캐릭터 크기와 render order를 바꿔 앞·중간·뒤 lane을 표현하지 않는다.
 - 현재 `Depth Lane + visual scale transition` 구현은 migration source일 뿐 확장 대상이 아니다.
 
-Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인터뷰에서 확정한다.
+Portal 사용 입력은 M2의 가역적인 첫 candidate 기본값으로 구현하고 실제 왕복 artifact에서 조정한다.
 
 ## Reference Brief
 
@@ -165,7 +165,7 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 ### 결과물
 
 - 팀장 Interface인 메인 대화와 work item root agent를 분리한 기본 개발 흐름
-- Git 추적 work item, 전용 대화 인터뷰와 의도 기반 업무보고 계약
+- 최소 Git work item, 전용 구현 대화와 실체 기반 업무보고 계약
 - 공유 checkout의 write-heavy root item 1개와 최대 3개 supporting agent
 - `bugfix`·`maintenance`·`dedicated` scheduling lane과 Codex-native agent routing
 - 등록·관리·실행·취소 맥락을 자동 routing하는 repo-local `dev-team-loop` skill
@@ -176,12 +176,12 @@ Portal을 사용하는 정확한 입력은 Room/Portal 수직 단위 시작 인�
 
 ### 완료 gate
 
-- 새 요청 하나가 인터뷰 없이 work item 하나로 등록되는 규칙이 명확하다.
-- 인터뷰·구현·피드백이 전용 대화에 남고 메인 context에는 lifecycle 요약만 남는다.
+- 새 요청 하나가 재확인 없이 work item 하나로 등록되고 즉시 구현 입력이 되는 규칙이 명확하다.
+- 내부 판단·구현은 전용 대화에 남고 메인 context에는 lifecycle과 concrete candidate 요약만 남는다.
 - 취소·재개·통합과 root/supporting agent lifecycle이 모호하지 않다.
 - `AGENTS.md`는 32 KiB instruction budget 안에서 process와 skill을 찾을 수 있다.
 - Skill validation과 현실적인 mode routing 검증을 통과한다.
-- 새 구현 work item이 반복 프롬프트 없이 품질 계약, baseline, current best와 다음 병목을 기록한다.
+- 새 구현 work item이 반복 프롬프트 없이 내부 품질 기준, baseline, current best와 다음 병목을 유지하고 Git에는 실제 결과만 기록한다.
 - 다음 미충족 gate를 소유한 open item이 없으면 팀장 메시지 없이 roadmap에서 vertical work item 하나를 파생하고, feedback·blocker·제품 결정 gate까지 계속한다.
 - bare skill 호출이 work item으로 등록되지 않고 기존 state reconcile 뒤 roadmap loop를 시작·재개한다.
 
@@ -244,6 +244,12 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 - character visual scale lane 보간 제거
 - 최소 두 장비 profile의 공격속도 차이 체감
 
+### 첫 candidate 기본값
+
+- Portal 범위 안에서 `↑` 입력 edge를 사용한다. 범위 밖에서는 기존 Jump intent를 유지하고 전환 중에는 추가 입력을 소비만 하므로 현재 adapter 계약에 가장 작고 되돌리기 쉬운 변경이다.
+- 첫 두 장비는 `균형형`과 `중량형`으로 구현한다. 중량형은 공격 startup/recovery가 느린 대신 사거리·경직이 높도록 data profile로 분리해 팀장이 실제 전투에서 비교한 뒤 수치나 축을 피드백할 수 있게 한다.
+- 이 기본값은 구현 전 승인 gate가 아니다. 실제 장비 선택 → Portal 왕복 → 전투 candidate와 코드 트리를 먼저 제시한다.
+
 ### 완료 gate
 
 - 한 지역이 여러 독립 Room으로 구성되지만 camera 이동으로 공간 연결감이 난다.
@@ -305,11 +311,11 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 - 핵심 전투 gate 이전의 대량 Region·enemy·quest 제작
 - 사용자 요청 없는 영구 자동 test suite
 
-## 구현 직전 남은 인터뷰 gate
+## 이후 milestone의 candidate-first 기본값
 
-아래 결정만 해당 수직 단위 시작 시 결과와 영향 범위를 붙여 팀장에게 질문한다.
+남은 제품 선택도 구현 전 승인 gate로 두지 않는다.
 
-- M2: Portal 사용 입력과 첫 두 장비의 체감 축
-- M4: 재화 종류, skill level 상한과 save 범위
+- M2 Portal 입력과 장비 체감 축은 위의 첫 candidate 기본값으로 구현한 뒤 실제 왕복·전투 artifact에서 feedback을 받는다.
+- M4 첫 candidate는 단일 훈련 재화, 3단계 skill level, 장비·해금·skill level만 저장하는 local save를 data/schema 경계로 구현한다. 이름·상한·save 범위는 구현된 성장 loop와 code tree를 본 feedback으로 조정한다.
 
-그 밖의 module boundary, state ownership, frame data 형식, effect buffer와 camera 책임은 현재 코드와 Engineering Reference를 근거로 AI 개발 팀이 자율 결정하고 업무보고에 이유를 남긴다.
+이 기본값은 안전하고 국소적인 data/config 변경으로 되돌릴 수 있어 사전 질문하지 않는다. 새로운 선택이 실제 구현을 막고 현재 코드·roadmap·Reference에서 추론할 수 없으며 가역 candidate도 만들 수 없을 때만 Yes/No 또는 2~3개 선택지 중 하나를 묻는 짧은 질문 하나를 사용한다. Module boundary, state ownership, frame data 형식, effect buffer와 camera 책임은 AI 개발 팀이 자율 결정하고 구현 후 업무보고에 이유를 남긴다.
