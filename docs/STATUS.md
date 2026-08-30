@@ -4,11 +4,11 @@
 
 ## Current State
 
-- 상태: 한 loop 완전 작업 단위 · 통합 완료
+- 상태: Windows complete-work loop · 수동 2회 검증 완료 · 자동 시작 대기
 - 현재 active inbox entry: `IN-20260831-030641` · `new`
 - 현재 executor branch/worktree: 없음 · 다음 entry 미수락
-- Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 수동 검증 전
-- 기존 Codex app automation: `Polygon RPG file-memory loop` · `PAUSED`
+- Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 사용자가 시작하기 전
+- 기존 Codex app automation: `Polygon RPG file-memory loop` · 삭제 완료
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
 
@@ -50,10 +50,12 @@
 - 한 loop 완전 작업 단위 writer checkpoint: `679e1b0aeb58b4667db534f61a884c42a80a04c9` · `loop/completion.mjs`의 pure decision과 실제 Git/INBOX/lease inspector를 추가하고 outer loop의 exit-0 조건에 연결했다. 12개 pass/fail fixture, 실제 incomplete snapshot, PowerShell parser, `npm run check`, `git diff --check`를 통과했다. 화면 없는 운영 변경이라 visible PNG QA는 적용하지 않는다.
 - 한 loop 완전 작업 단위 clean final: `4b038df4b379c2ecdf3dce84b4d70d8492947638` · latest main checkpoint를 non-rewriting merge한 뒤 12개 completion state fixture, actual lifecycle failure boundary, PowerShell parser, branch-only owned path 5개, `npm run check`, `git diff --check`, clean local/remote branch를 재확인했다. 적용 품질 축은 모두 2 이상이며 화면 비적용이다.
 - 한 loop 완전 작업 단위 integration: `5d051662a3b4d017a1ac5810dfa23797eefae6f7` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-025240` done block만 제거했다. Outer supervisor는 이후 session마다 origin fetch, clean pushed main, pushed integrated executor final과 released lease를 모두 확인해야 성공한다.
+- Windows loop manual run 1: `logs/2026-08-31/20260831-041017-IN-20260831-005246/summary.json` · exit 0, `completed: true`, `f51b92c → 2ed33c9`, Core Principles final/merge/cleanup과 lease 해제를 한 fresh session에서 완료했다.
+- Windows loop manual run 2: `logs/2026-08-31/20260831-042700-IN-20260831-025240/summary.json` · exit 0, `completed: true`, `2ed33c9 → ee8897a`, durable completion postcondition의 final/merge/cleanup을 한 fresh session에서 완료했다. 최신 inspector는 clean pushed main, pushed/integrated executor ref, entry 부재와 lease 해제로 `complete: true`, failures 0개다.
 
 ## Next
 
-다음 fresh session은 `IN-20260831-030641`의 환경형 맵 포탈 시각 개선을 exact 원문과 world/rendering 계약에서 파생해, 구현·visible PNG QA·repair·통합·cleanup까지 한 loop에서 완결한다.
+`loop/control.ps1 start` 또는 `run-once`를 실행하면 다음 fresh session이 `IN-20260831-030641`의 환경형 맵 포탈 시각 개선을 exact 원문과 world/rendering 계약에서 파생해, 구현·visible PNG QA·repair·통합·cleanup까지 한 loop에서 완결한다. 검증 로그를 먼저 보여 주라는 요청에 따라 Task Scheduler는 아직 disabled다.
 
 ## Update Contract
 
