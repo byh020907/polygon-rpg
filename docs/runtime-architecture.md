@@ -23,7 +23,7 @@ GameApp Node
 ```
 
 - `GameApp`은 browser resource, input attach/detach, ResizeObserver, animation frame과 scene instance lifetime을 소유한다.
-- `GameScene`은 persistent Player, camera presentation, 120Hz fixed-step combat·world state, `FirstJourneyProgress`의 route/checkpoint/reward 진행과 단일 read-only RenderFrame을 소유한다.
+- `GameScene`은 persistent Player, camera presentation, 120Hz fixed-step combat·world state, `FirstJourneyProgress`와 `RegionExpansionProgress`의 route/checkpoint/reward 진행, 두 진행의 story flag 병합과 단일 read-only RenderFrame을 소유한다.
 - `GameStatus`는 GameScene 뒤의 같은 fixed traversal에서 player/world status 변화를 감지하고 Signal을 발행한다.
 - `Room`은 active Room snapshot과 entity subtree의 lifecycle을 소유하고 Portal completion fixed-step에 fresh Scene으로 교체된다.
 - `TrainingEncounter`는 active Room의 `combat-enemy` entity가 존재하는 동안만 attach된다. training/field/boss profile을 같은 `step(frame)`·contact·CombatEvent 계약으로 해석하며 enemy state, AI, physics, juggle, retaliation, 양방향 contact resolution과 encounter render snapshot을 소유한다.
@@ -78,7 +78,7 @@ GameScene ──RenderFrame Signal──→ GameApp ──same object──→ P
 ```
 
 - `MapRuntime`만 active Region/Room, Portal transition, spawn, collision/entity source와 world context를 쓴다.
-- `GameScene`은 player와 root combat result의 최종 gameplay writer이며 `FirstJourneyProgress`로 Field route, checkpoint, boss, reward와 shortcut 상태를 쓴다. `TrainingEncounter`는 enemy state의 유일한 writer이며 player state를 직접 수정하지 않는다.
+- `GameScene`은 player와 root combat result의 최종 gameplay writer이며 `FirstJourneyProgress`와 `RegionExpansionProgress`로 각 Region의 Field route, checkpoint, boss, reward와 shortcut 상태를 쓴다. `TrainingEncounter`는 enemy state의 유일한 writer이며 player state를 직접 수정하지 않는다.
 - GameScene은 연속 player snapshot을 direct `step()` command로 전달하고, encounter가 발행한 완료 결과 Signal을 동기적으로 적용한다. Enemy와 player가 서로의 mutable object를 공유하지 않는다.
 - Renderer는 RenderFrame을 읽기만 하고 physics, animation, combat event lifetime이나 Signal을 진행하지 않는다.
 - UI bridge는 status DTO를 표시만 하며 GameScene/MapRuntime field를 직접 수정하지 않는다.
@@ -110,4 +110,4 @@ GameScene ──RenderFrame Signal──→ GameApp ──same object──→ P
 - Producer Signal cleanup이 GameScene의 incoming connection도 해제하며 enemy contact와 presentation state는 다음 Room으로 누출되지 않는다.
 - Room 교체는 parent fixed update 안에서 완료되며 `SceneNode`가 traversal 시작 시 고정한 child snapshot 때문에 새 child는 다음 step부터 process한다.
 - `CombatEventBuffer`는 lifetime이 있는 presentation buffer로 root에 남고, encounter는 완료된 event descriptor만 Signal로 전달한다. Camera feedback도 root가 적용하며 renderer는 둘을 읽기만 한다.
-- Field/Boss encounter의 `encounterCompleted`는 Room이 GameScene에 전달한다. GameScene만 진행 상태와 map patch를 갱신하며 encounter subtree는 checkpoint, 보상 또는 Portal 활성 상태를 직접 쓰지 않는다.
+- Field/Boss encounter의 `encounterCompleted`는 Room이 GameScene에 전달한다. GameScene은 encounter profile이 소속된 진행 writer에 결과를 적용하고 두 진행의 story flag를 합쳐 map patch를 갱신한다. Encounter subtree는 checkpoint, 보상 또는 Portal 활성 상태를 직접 쓰지 않는다.

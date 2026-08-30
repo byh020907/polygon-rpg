@@ -76,7 +76,7 @@ index.html / src/ui/gameShell.js
 
 ## 문서 상태와 남은 위험
 
-- `docs/runtime-architecture.md`의 현재 Scene 설명은 `FirstJourneyProgress`만 언급해 새 `RegionExpansionProgress` 병합 경계가 빠진 `STALE` 상태다. 이 work item의 `owned_paths` 밖이므로 수정하지 않았으며 coordinator integration에서 실제 구현에 맞춘 문서 정합이 필요하다.
+- `docs/runtime-architecture.md`의 기존 Scene 설명에서 빠져 있던 `RegionExpansionProgress`와 두 진행의 story flag 병합 경계는 coordinator integration 기록에서 실제 구현에 맞게 정합했다.
 - shortcut의 영구성은 M3와 같은 현재 game session의 world state 계약이다. M4 save schema는 성장 상태만 저장하므로 메뉴 reset/reload 뒤 Region shortcut은 초기화된다.
 - 실제 Canvas에서는 새 Field 진입·Sweep 예고·점프 회피와 Polygon/Retro/resize를 확인했다. Boss 격파부터 shortcut 귀환까지는 production module을 사용한 120Hz 결정적 전체 경로로 확인했다.
 - `CONFLICT`, `ORPHANED`, 추가 `UNVERIFIED`: 발견하지 않았다.

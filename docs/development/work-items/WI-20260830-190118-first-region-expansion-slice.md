@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-190118
-status: ready-for-integration
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T19:01:18+09:00
@@ -55,6 +55,8 @@ owned_paths:
 
 적용 품질 축은 모두 2 이상이다. `npm run check`, `git diff --check`, 120Hz Map/전투/회귀 진단, 실제 Canvas Field·Sweep jump·Polygon/Retro·`900×600` resize·console 확인을 통과했다. 실제 Boss 격파 이후 보상·shortcut 완료 순서는 production module 기반 결정적 전체 경로로 검증했다. 사용자 요청 없는 영구 test/script/fixture는 추가하지 않았다.
 
+Standalone coordinator는 clean final `340c5a78a8dcbbbd621a7b310ed7cc9495b0da5d`의 registration ancestry·최신 main 부모·owned paths를 확인하고 fast-forward로 메인에 반영했다. `npm run check`, `git diff --check`, 학원촌 중앙 Portal → 유리바람 Field 진입, 새 생물 silhouette와 `JUMP OVER SWEEP` 안내, 같은 Field 상태의 Polygon/Retro 출력, `900×600` resize와 browser warning/error 부재를 독립 재검증했다. `docs/runtime-architecture.md`의 두 Region 진행 writer와 story flag 병합 경계도 실제 구현에 맞게 정합했다.
+
 업무보고: [`../reports/WI-20260830-190118-first-region-expansion-slice.md`](../reports/WI-20260830-190118-first-region-expansion-slice.md)
 
 ## 피드백
@@ -65,8 +67,17 @@ owned_paths:
 
 없음
 
+## 복구 기록
+
+- Feature checkpoint `49b39ab5b6cb0a0b9c71af9352c09120981f4955`와 non-rewriting merge checkpoint `b6cb0ae0b65c20fbbccdd4a84c04012e7124099f`를 보존했다.
+- Clean recovery final `340c5a78a8dcbbbd621a7b310ed7cc9495b0da5d`가 최신 main `1322baf25c68776b1136116c05735daf244e3594`와 위 checkpoint 이력을 모두 포함하고 source tree가 clean임을 확인했다.
+- `C:/Users/byh02/.codex/worktrees/4f55/polygon-rpg`는 변경 없는 최신 main이었고, `C:/Users/byh02/.codex/worktrees/7308/polygon-rpg`의 미커밋 문서 차이는 final commit에 포함되지 않은 상태로 보존했다. 다른 worktree를 수정하거나 정리하지 않았다.
+
 ## 연결
 
-업무보고: [`../reports/WI-20260830-190118-first-region-expansion-slice.md`](../reports/WI-20260830-190118-first-region-expansion-slice.md)
-
-Final worktree commit은 이 task의 완료 응답으로 전달하고 standalone coordinator가 main integration hash를 기록한다.
+- Roadmap: `M5 — Region 확장과 품질 반복`
+- Depends on: `WI-20260830-171256`
+- Report: `docs/development/reports/WI-20260830-190118-first-region-expansion-slice.md`
+- Final worktree commit: `340c5a78a8dcbbbd621a7b310ed7cc9495b0da5d`
+- Main integration commit: `340c5a78a8dcbbbd621a7b310ed7cc9495b0da5d` (fast-forward)
+- Main 독립 검증: registration ancestry·latest main parent·owned paths·`npm run check`·`git diff --check`·실제 유리바람 Field·Polygon/Retro·`900×600` resize·browser warning/error 부재 통과

@@ -1,6 +1,6 @@
 # Polygon RPG Development Roadmap
 
-- 상태: **M4 완료 / M5 대기**
+- 상태: **M0~M5 완료**
 - 기준 인터뷰: 2026-08-29
 - 소유자: Product Director(방향) / standalone coordinator tick(진행 상태)
 
@@ -158,7 +158,7 @@ Portal 사용 입력은 M2의 가역적인 첫 candidate 기본값으로 구현�
 | M2   | 학원촌 ↔ 훈련장 Room Portal | 장비를 선택하고 camera travel로 두 Room을 왕복해 훈련 전투를 반복 | 완료 |
 | M3   | 첫 Field·Dungeon·Boss loop  | 마을 준비부터 boss 보상과 shortcut 귀환까지 한 번에 플레이        | 완료 |
 | M4   | 장비·command 성장 loop      | 장비 교체와 기술 해금·level이 같은 command 전투의 선택지를 확장   | 완료 |
-| M5   | Region 확장과 품질 반복     | 새 마법 생물·지역마다 완전한 조우와 dungeon slice가 추가          | 대기 |
+| M5   | Region 확장과 품질 반복     | 새 마법 생물·지역마다 완전한 조우와 dungeon slice가 추가          | 완료 |
 
 ## M0 — AI 개발 loop와 roadmap
 
