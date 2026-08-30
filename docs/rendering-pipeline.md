@@ -119,6 +119,8 @@ Sword trail의 polygon은 gameplay-owned swept-contact geometry를 읽어 그린
 
 RenderFrame의 `combatMotion.frame`은 현재 60Hz authored frame index와 startup/active/recovery 경계를, `combatEvents`는 fixed-step이 확정한 guard·evade·hit·launch·punish·landing event의 남은 presentation lifetime을 제공한다. `GameScene`만 event를 발행·진행하고 같은 frame을 받는 Polygon/Retro renderer는 event를 재판정하거나 중복 소비하지 않는다.
 
+플레이어 피격 feedback은 `HIT` event가 확정한 immutable world contact position에 생성한다. 피격 뒤 이동하는 Player render position이나 Enemy 중심을 effect anchor로 다시 계산하지 않으므로 hit-stop·knockback·render interpolation 중에도 최초 weapon↔hurt 접촉 지점을 유지한다.
+
 ## Outline 불변식
 
 Outline은 처리 전 alpha를 재사용 가능한 source buffer에 복사하고 output ImageData에만 기록한다. 같은 pass에서 새로 생성한 outline pixel을 source로 읽지 않으므로 1px 또는 2px 설정 이상으로 재귀 확장되지 않는다.
