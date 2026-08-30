@@ -1,0 +1,129 @@
+# Autonomous Roadmap Loop Engineering References
+
+이 문서는 Polygon RPG의 standalone roadmap coordinator를 일반적인 controller·durable workflow 원칙과 정렬하는 Engineering Reference다. 새 Engineering Method가 아니며 외부 workflow engine을 도입하는 계약도 아니다.
+
+## 목표 상태와 관찰 상태
+
+```text
+Desired State
+  approved roadmap M0~M5 완료
+  open work item 없음
+  마지막 vertical slice 품질·검증 통과
+  clean main == origin/main
+
+Observed State
+  Git work item·roadmap
+  exact Codex task title/status/history
+  managed worktree·dirty paths
+  registration/final/integration commit graph
+  automation·lease
+
+Reconcile Tick
+  observe → diff → forward/recovery action 하나 → durable result → exit
+```
+
+충돌과 프로세스 재시작은 예외적인 loop 종료가 아니라 current state가 desired state와 다른 한 종류다. Coordinator는 명시적 pause 또는 완료 증명 전까지 같은 상태를 다시 관찰하고 안전한 다음 action을 수행한다.
+
+## 외부 공식 Reference
+
+### Kubernetes Controllers
+
+[Kubernetes Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)는 controller를 current state를 desired state에 가깝게 만드는 non-terminating control loop로 정의한다. Controller는 직접 작업하거나 다른 component에 작업을 요청하고, 완료 결과를 다시 shared state에 기록한다.
+
+채택:
+
+- roadmap과 work item을 desired state, task/worktree/commit을 observed state로 분리한다.
+- 한 tick의 성공을 “대화가 끝남”이 아니라 desired state와의 차이가 줄었는지로 판단한다.
+- Work item ID, exact title, owned paths와 commit ancestry를 ownership label처럼 사용한다.
+- Coordinator는 gameplay를 직접 구현하지 않아도 work-item task 생성·재개·통합을 통해 desired state를 실현한다.
+
+수정 채택:
+
+- Kubernetes API server 대신 Git main과 Codex task/worktree evidence가 durable shared state다.
+- Event stream 대신 10분 standalone scheduled tick으로 reconcile한다.
+
+### Temporal Durable Execution
+
+[Temporal Documentation](https://docs.temporal.io/)은 crash·network failure·infrastructure outage 뒤에도 durable execution history에서 작업을 이어가는 것을 핵심으로 설명한다.
+
+채택:
+
+- 이전 coordinator chat memory가 없어도 registration/final/integration commit과 work-item recovery record에서 재개한다.
+- Interrupted/idle task는 새 기능으로 넘어가지 않고 같은 task/worktree를 먼저 resume한다.
+- Task가 없어졌을 때도 clean checkpoint/final commit을 보존하고 그 증거에서 replacement recovery를 시작한다.
+
+비채택:
+
+- Temporal server, SDK, database와 deterministic workflow runtime은 현재 정적 ESM repository에 추가하지 않는다.
+
+### AWS Step Functions Retry And Catch
+
+[AWS Step Functions error handling](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html)은 예상 가능한 실패를 Retry하고, 반복 실패는 Catch를 통해 명시적인 recovery state로 전환한다.
+
+채택:
+
+- 같은 conflict를 매 tick 동일 문구로 보고하지 않는다.
+- 두 번 반복되면 다음 safe recovery action으로 승격하고, 세 번 반복되면 dedicated recovery item/task로 전환한다.
+- Title drift, interrupted task, archived task, base drift, missing task와 duplicate writer를 서로 다른 recovery class로 취급한다.
+
+수정 채택:
+
+- 별도 retry timer 대신 scheduled tick이 retry interval이다.
+- Error payload 대신 work item의 `복구 기록`에 action과 commit/worktree evidence를 남긴다.
+
+### OpenAI Scheduled Tasks And Worktrees
+
+[OpenAI Scheduled tasks](https://learn.chatgpt.com/docs/automations)는 standalone scheduled run이 매번 새 chat에서 시작하고 local Git project 또는 worktree에서 실행될 수 있다고 설명한다. [OpenAI Worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees)는 task별 변경 격리 경계를 제공한다.
+
+채택:
+
+- Coordinator context는 disposable하고 Git evidence만 durable하다.
+- 실제 개발은 one-work-item/one-managed-worktree task가 소유한다.
+- Scheduled run은 active task를 기다리지 않고 reconcile action 하나 뒤 종료한다.
+
+## Local Engineering Reference
+
+`C:/projects/baeseongjin`의 `coordinate-github-tasks`와 `github-task-flow`는 실제 worktree·branch·changed path·commit을 ownership 근거로 사용하고, 공유 hunk가 있을 때만 직렬화하며 다른 worktree를 추측 수정하지 않는다.
+
+채택:
+
+- Same repository라는 이유만으로 충돌로 보지 않고 실제 dirty path와 dependency commit을 확인한다.
+- Base drift는 history rewrite가 아니라 latest main을 반영한 뒤 영향 검증을 다시 수행한다.
+- Replacement와 duplicate reconciliation 전 원본 worktree/commit evidence를 보존한다.
+
+`C:/projects/ball-fight-simulator`는 gameplay idempotency와 checkpoint 검증 사례는 제공하지만 autonomous Git orchestration reference는 아니므로 이번 loop 구조에는 직접 적용하지 않는다.
+
+## Recovery State Table
+
+| Observed drift                         | Reconcile action                                 | 다음 tick의 기대 상태       |
+| -------------------------------------- | ------------------------------------------------ | --------------------------- |
+| Title null·축약·prompt-shaped          | Unique evidence 확인 후 exact title 복구         | Exact task 재발견           |
+| Task idle/interrupted, final 없음      | 같은 task에 missing gate와 evidence로 resume     | Implementing 또는 ready     |
+| Task archived                          | Unarchive, 다음 tick에 같은 task resume          | Recoverable task active     |
+| Final commit base drift                | 같은 task에 non-rewriting main merge·재검증 요청 | 새 clean final commit       |
+| Task 없음, clean final 있음            | Owned diff 검증 후 직접 통합                     | Done                        |
+| Task 없음, recoverable checkpoint 있음 | 같은 item의 replacement recovery task 하나       | Implementing                |
+| Duplicate, 한 commit이 엄격히 우세     | Authoritative 하나 보존, redundant archive       | Single writer               |
+| Divergent unique commits               | Dedicated recovery item/task에서 조정            | Single reconciled final     |
+| 사람 질문·외부 blocker                 | 새 dispatch만 보류, automation은 계속 관찰       | 답/외부 상태 변경 후 resume |
+| 모든 completion proof 통과             | 완료 commit·push 후 automation pause             | Roadmap complete            |
+
+## Completion Contract
+
+다음 조건을 한 fresh snapshot에서 모두 확인할 때만 현재 approved roadmap이 완료다.
+
+1. `docs/development/roadmap.md`의 M0~M5가 모두 `완료`다.
+2. Open lifecycle work item이 없다.
+3. 마지막 integrated vertical slice가 quality threshold와 실제 사용자 경로 검증을 통과했다.
+4. `main`이 clean하고 `origin/main`과 같다.
+5. Unreconciled owned commit, duplicate writer와 Canonical Conflict가 없다.
+
+완료 증거를 Git에 push하기 전에는 automation을 멈추지 않는다. 완료 후 새 팀장 요청이 등록되면 같은 automation을 재활성화하고 새 desired state를 소비한다.
+
+## 적용하지 않는 수렴 방식
+
+- force push, shared-history rewrite와 broad reset
+- task/worktree의 guessed deletion
+- 품질 threshold 하향 또는 실패를 완료로 재분류
+- 미확인 사용자 변경 overwrite
+- 외부 daemon, workflow database 또는 장기 실행 manager conversation

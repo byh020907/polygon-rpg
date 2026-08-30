@@ -40,6 +40,10 @@ owned_paths:
 
 취소·대체된 경우 task/worktree의 부분 상태, 마지막 commit과 영향을 기록한다.
 
+## 복구 기록
+
+Coordinator와 업무 task가 수행한 resume, title repair, base-drift repair, replacement와 duplicate reconciliation을 시간순으로 기록한다. 같은 실패를 반복 보고하지 말고 다음 recovery action을 선택할 근거만 남긴다.
+
 ## 연결
 
 최종 worktree commit, main integration commit과 업무보고를 기록한다. Work-item task는 final hash를 응답으로 반환하고, 다음 standalone coordinator tick이 통합 뒤 두 hash를 Git 문서에 기록한다.
@@ -58,6 +62,7 @@ owned_paths:
 ## Ownership
 
 - The team-lead main task creates or updates queue intent and returns. Stateless coordinator ticks dispatch, integrate, record results and update roadmap/main history.
+- Coordinator ticks may append durable recovery events and create one recovery item when repeated self-owned drift cannot be repaired in place.
 - The one user-owned work-item task owns body/result/report edits while active and creates its final scoped worktree commit.
 - The team lead gives candidate feedback directly in that task.
 - Exact sidebar titles, registration base, owned paths, worktree and commit evidence recover identity. Task links may stay in a compact status response, but ephemeral runtime handles are not Git source of truth.

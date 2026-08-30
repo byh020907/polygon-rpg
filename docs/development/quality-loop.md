@@ -45,7 +45,7 @@ Codex 프로젝트 대상 standalone recurring automation은 매 tick Git 상태
 
 - 승인된 roadmap의 현재 gate가 기본 work source다.
 - 한 번에 현재 vertical result 하나를 파생하고 main integration을 직렬화한다.
-- 이 구조는 승인된 roadmap 범위 안의 **bounded continuous improvement loop**다. 자동 검사로 정할 수 없는 관찰 질문 1~3개, 안전한 가역 default가 없는 비가역 blocking 제품 결정, Canonical Conflict, 외부 blocker, pause/cancel, 승인된 다음 milestone 부재 또는 roadmap 완료에서만 새 task 생성을 멈춘다.
+- 이 구조는 승인된 roadmap 범위 안의 **bounded continuous improvement loop**다. 관찰 질문, 비가역 제품 결정, Canonical Conflict와 외부 blocker는 새 vertical task 생성만 보류하며 recurring automation은 계속 관찰·복구한다. 명시적 pause 또는 durable roadmap 완료에서만 automation을 멈춘다.
 - task 완료, coordinator turn 종료, unchanged timeout, 한 기능의 main 통합과 이전 coordinator context 소실은 loop 종료 조건이 아니다.
 
 ## 내부 품질 기준

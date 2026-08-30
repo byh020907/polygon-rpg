@@ -54,10 +54,13 @@ Choose exactly one primary state:
 - `READY_FOR_INTEGRATION`: exact task is idle/completed, worktree is clean and a final commit plus `ready-for-integration` evidence exists.
 - `QUEUED_FOR_DISPATCH`: one queued item exists, registration is on main and no authoritative task exists yet.
 - `RECOVERABLE_IDENTITY_DRIFT`: no exact-title task exists, but exactly one prompt/worktree/registration/ownership-backed candidate satisfies every safe title-repair condition.
+- `RECOVERING`: the latest coordinator performed title repair, same-task resume/unarchive, base-drift repair, evidence-based replacement or recovery-item escalation and the next tick has a clear continuation.
+- `WAITING_HUMAN_OR_EXTERNAL`: a concrete question or external condition suspends new dispatch, but the automation remains active and continues observing.
 - `BLOCKED`: the exact task contains a concrete product question, external blocker or failed verification evidence.
 - `CONFLICT`: task title is missing/mismatched, duplicate writers/tasks exist, ownership overlaps, commits disagree, or main is dirty/diverged.
 - `AUTOMATION_DOWN`: automation is absent/paused, project binding is invalid, or recent scheduled runs stopped appearing.
 - `STALLED_SUSPECTED`: no definitive conflict exists, but at least three automation intervals passed without task updates, worktree changes, commit movement or a concrete blocker.
+- `ROADMAP_COMPLETE`: every approved milestone and work item is complete, final quality/main-origin proof passed and the automation is intentionally paused.
 
 Do not label a long implementation `STALLED_SUSPECTED` merely because coordinator runs keep exiting. A live task with fresh commentary, filesystem changes or commit progress is healthy.
 
@@ -72,6 +75,7 @@ Do not label a long implementation `STALLED_SUSPECTED` merely because coordinato
 - Automation runs every cadence but repeats the same no-mutation conflict.
 - Queued item has no task after two completed coordinator runs.
 - A recent coordinator title remains `실행중` after its turn is idle/interrupted, or its title result disagrees with the final turn evidence.
+- The same conflict appears in two runs without escalation, or three runs pass without a recovery item/task; this violates autonomous convergence.
 
 ## Team-Lead Report
 

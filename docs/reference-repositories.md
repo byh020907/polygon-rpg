@@ -110,6 +110,8 @@ Polygon RPG의 기반 시스템을 구현할 때 아래 두 로컬 저장소를 
 
 ### AI 개발 프로세스와 병렬 worktree
 
+Autonomous coordinator의 desired-state reconcile, durable recovery, retry escalation과 completion proof는 [`development/loop-engineering-references.md`](./development/loop-engineering-references.md)가 소유한다.
+
 먼저 다음을 확인한다.
 
 - `C:/projects/baeseongjin/docs/development-rules.md`의 효율 우선 실행, 병렬 ownership과 Git 운영

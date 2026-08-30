@@ -4,6 +4,8 @@
 
 Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당한다. 제품 방향과 milestone은 [`roadmap.md`](./roadmap.md)가, 각 work item의 품질 rubric과 개선 loop는 [`quality-loop.md`](./quality-loop.md)가 소유한다.
 
+Coordinator의 일반 loop engineering 근거와 채택 범위는 [`loop-engineering-references.md`](./loop-engineering-references.md)가 소유한다.
+
 프로젝트 개발 요청에는 기본적으로 [`.agents/skills/dev-team-loop/SKILL.md`](../../.agents/skills/dev-team-loop/SKILL.md)를 사용한다. 사용자가 `이번 건은 직접 처리`처럼 workflow 우회를 명시한 요청만 현재 task에서 일반 작업으로 처리한다.
 
 ## 공식 Codex 실행 근거
@@ -34,9 +36,10 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 ### Standalone Roadmap Coordinator Tick
 
 - 매 tick 독립된 실행 context에서 Git work item·roadmap·Codex task title/status·managed worktree·commit graph를 다시 읽는다.
-- repo-local lease로 writer를 직렬화하고, main HEAD drift·dirty main·중복 task·겹치는 ownership·상충 commit이 있으면 mutation 없이 종료한다.
+- repo-local lease로 writer를 직렬화하고, main HEAD drift·dirty main·중복 task·겹치는 ownership·상충 commit은 recovery ladder로 분류한다. 유일한 안전 action을 증명할 수 없을 때만 mutation 없이 다음 tick으로 넘긴다.
 - exact title이 없더라도 open item·original prompt의 ID/path·managed worktree·registration ancestry·owned paths가 후보 하나를 유일하게 증명하면 시스템 task-title tool로 exact `WI-... 제목`만 복구하고 종료한다. 후보가 둘 이상이거나 commit/ownership이 애매하면 수리하지 않는다.
 - ready item 하나의 독립 검증·main 통합·done 기록 또는 queued/roadmap item 하나의 등록·새 task 생성만 수행하고 종료한다.
+- recoverable drift가 있으면 같은 task의 title/resume/base repair, 증거 기반 replacement 또는 recovery item 생성 중 하나를 수행하고 종료한다. 같은 conflict 보고만 반복하지 않는다.
 - active task를 기다리거나 gameplay를 구현·tuning·대리 평가하지 않으며 feedback을 중계하지 않는다.
 - 이전 coordinator/main 대화, transient task ID, subagent ID와 working context를 source of truth로 사용하지 않는다.
 
@@ -80,8 +83,9 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 - coordinator tick은 장시간 wait하지 않고 active task가 있으면 상태만 남기고 종료한다.
 - 완료 task를 다른 work item에 재사용하지 않는다.
 - 다음 미충족 gate를 소유한 open item이 없으면 roadmap에서 vertical work item 하나를 파생한다.
-- bounded continuous improvement는 구체적 관찰 질문, 안전한 가역 default가 없는 비가역 제품 결정, Canonical Conflict, 외부 blocker, pause/cancel, 승인된 다음 milestone 부재 또는 roadmap 완료에서만 새 task 생성을 멈춘다.
+- 구체적 관찰 질문, 비가역 제품 결정, Canonical Conflict와 외부 blocker는 새 vertical dispatch만 보류한다. Automation은 계속 ACTIVE로 상태를 관찰하고 evidence가 바뀌면 같은 task를 재개한다.
 - 일반 task 완료, tick 종료, unchanged timeout, 한 기능 통합과 이전 대화 context 소실은 전체 loop 종료 조건이 아니다.
+- Automation은 명시적 팀장 pause 또는 모든 approved milestone·open item·quality·main/origin 조건을 증명한 roadmap 완료에서만 PAUSED된다.
 
 ### Standalone automation 계약
 
@@ -101,6 +105,14 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 - 기본 동작은 read-only이며 lease 획득, Git mutation, task rename/resume/message, integration과 wait/poll을 하지 않는다.
 - task title null·축약·prompt-shaped를 unique evidence로 자동 복구 가능한 경우와 실제 conflict로 구분하고, completed task와 stale Git status, final commit 미통합, 반복 conflict와 stale lease를 실제 증거로 구분한다.
 - 복구가 필요하면 원인과 다음 안전 조치만 보고하고, 사용자가 복구를 요청한 뒤 `$dev-team-loop`의 exact recovery로 분리한다.
+
+### 자동 복구와 수렴
+
+- Coordinator는 title drift → same-task resume/unarchive → base-drift merge 요청 → clean final commit 직접 통합 → 증거 기반 replacement → duplicate recovery item 순으로 안전한 다음 action 하나를 수행한다.
+- 동일 실패를 두 번 보고한 뒤에는 다음 safe recovery action으로 승격하고, 세 번 반복되면 별도 high-priority recovery item/task를 생성하거나 재개한다.
+- 사람 질문과 외부 blocker는 automation을 중지하지 않는다. 새 작업 생성만 보류하고 이후 tick이 같은 Git/task/worktree evidence를 다시 확인한다.
+- Force push, history rewrite, guessed worktree 삭제, 품질 threshold 하향과 미확인 사용자 변경 덮어쓰기는 자동 수렴 수단이 아니다.
+- 모든 M0~M5 상태가 완료이고 open item이 없으며 마지막 slice 검증, clean `main == origin/main`, canonical conflict 부재를 다시 확인한 뒤 완료 commit을 push하고 automation을 PAUSED한다.
 
 ## Work Item 등록과 task 생성
 

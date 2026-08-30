@@ -14,7 +14,7 @@
 
 ## Project Development Process
 
-제품 방향과 autonomous lifecycle은 [`docs/development/process.md`](./docs/development/process.md)가, work-item 품질 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 팀장 메인 task는 요구를 Git queue에 기록하고, 새 standalone coordinator tick이 Git·Codex task·worktree·commit 증거로 roadmap을 복구·소비한다. Bare `$dev-team-loop`는 같은 tick의 수동 복구 명령이며 `$dev-loop-status`는 mutation 없는 상태 진단이다. 이는 별도 Method가 아니며 work item의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
+Autonomous lifecycle은 [`process.md`](./docs/development/process.md)가, 품질 loop는 [`quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 메인은 Git queue, standalone tick은 roadmap 수렴을 담당한다. `$dev-team-loop`는 수동 tick, `$dev-loop-status`는 read-only 진단이다. 이는 별도 Method가 아니며 work-item Engineering Decision에만 Reference-Guided Engineering을 적용한다.
 
 ## Engineering References
 
@@ -58,19 +58,20 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 
 현재 작업과 직접 관련될 때만 읽는 중요 문맥이다. 선택한 문서는 일부만 추측해서 사용하지 말고 필요한 계약 전체를 확인한다.
 
-| 문서                               | 상태                        | 담당 영역                                                   | 로드 조건                                                             |
-| ---------------------------------- | --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
-| `README.md`                        | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                    |
-| `docs/development/process.md`      | Canonical Process           | Codex-native agent loop, 피드백과 업무보고                  | 모든 구현·통합·로드맵·업무보고 작업 시                                |
-| `docs/development/quality-loop.md` | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                    |
-| `docs/development/roadmap.md`      | Canonical Product Reference | 핵심 재미, Reference Brief, 플레이 가능한 수직 단위와 순서  | 새 작업 선택, 제품 방향, milestone과 우선순위 판단 시                 |
-| `docs/reference-repositories.md`   | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
-| `docs/rendering-pipeline.md`       | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시                 |
-| `docs/ui-architecture.md`          | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시     |
-| `docs/runtime-architecture.md`     | Canonical Reference         | Scene·Node tree lifecycle, Signal과 runtime composition     | App/Scene 조립, subsystem lifecycle와 system communication 작업 시    |
-| `docs/animation-system.md`         | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
-| `docs/input-system.md`             | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
-| `docs/world-map-system.md`         | Canonical Reference         | Region·Room·Portal, active snapshot과 상태 패치             | Room/Portal, map runtime, 공간 전환과 camera travel 작업 시           |
+| 문서                                              | 상태                        | 담당 영역                                                   | 로드 조건                                                             |
+| ------------------------------------------------- | --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| `README.md`                                       | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                    |
+| `docs/development/process.md`                     | Canonical Process           | Codex-native agent loop, 피드백과 업무보고                  | 모든 구현·통합·로드맵·업무보고 작업 시                                |
+| `docs/development/quality-loop.md`                | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                    |
+| `docs/development/loop-engineering-references.md` | Canonical Reference         | Reconcile·recovery·완료 증명                                | Coordinator·automation 작업 시                                        |
+| `docs/development/roadmap.md`                     | Canonical Product Reference | 핵심 재미, Reference Brief, 플레이 가능한 수직 단위와 순서  | 새 작업 선택, 제품 방향, milestone과 우선순위 판단 시                 |
+| `docs/reference-repositories.md`                  | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
+| `docs/rendering-pipeline.md`                      | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시                 |
+| `docs/ui-architecture.md`                         | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시     |
+| `docs/runtime-architecture.md`                    | Canonical Reference         | Scene·Node tree lifecycle, Signal과 runtime composition     | App/Scene 조립, subsystem lifecycle와 system communication 작업 시    |
+| `docs/animation-system.md`                        | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
+| `docs/input-system.md`                            | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
+| `docs/world-map-system.md`                        | Canonical Reference         | Region·Room·Portal, active snapshot과 상태 패치             | Room/Portal, map runtime, 공간 전환과 camera travel 작업 시           |
 
 새로운 공식 설계, 개발 규칙 또는 운영 문서를 만들면 같은 변경에서 이 표에 등록한다. 인덱스에 없는 문서를 암묵적인 공식 규칙으로 취급하지 않는다.
 
@@ -127,7 +128,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                                            | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                                    | 사용자 결정, `package.json`, 최종 diff     |
-| `PROCESS-DEV-TEAM-LOOP`   | 팀장 메인 task는 Git queue 접수·조회만 소유하고, 매번 새 standalone coordinator tick이 Git 증거를 복구해 통합 또는 다음 사용자 소유 worktree task 생성을 한 번 수행하고 종료한다.                 | `docs/development/process.md`, skill       |
+| `PROCESS-DEV-TEAM-LOOP`   | 팀장 메인은 Git queue만 소유하고, standalone coordinator가 매 tick 진행·복구 action 하나를 수행해 승인된 roadmap 완료를 증명할 때까지 자동 수렴한다.                                              | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work-item task의 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 직접 feedback을 끝까지 소유하고, task 내부 subagent 결과를 재평가해 반복 feedback을 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다.                 | `docs/development/process.md`              |
 | `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                                           | `docs/development/process.md`, skill       |
@@ -343,7 +344,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
 - 병렬 하위 lane이 있어도 사용자 소유 work-item task의 단일 Vertical Slice Director가 통합 artifact와 품질 판정을 끝까지 소유한다.
 - 팀장 메인 task는 새 요청·우선순위·pause·cancel·reopen을 Git queue에 기록하고 상태를 조회할 뿐, 구현·품질 tuning·feedback 중계·완료 대기·main integration을 소유하지 않는다.
-- standalone coordinator tick은 Git·Codex task·managed worktree·commit 증거만으로 한 번 reconcile하고, 통합 또는 다음 work-item task 생성 중 필요한 원자적 작업만 수행한 뒤 종료한다.
+- standalone coordinator tick은 Git·task·worktree·commit 증거로 진행 또는 복구 action 하나를 수행하며, 승인된 roadmap 완료를 증명하기 전에는 자동화를 멈추지 않는다.
 - Git work item은 기본적으로 별도 Codex-managed worktree task에서 실행하고, 그 task가 할당 파일·검증·업무보고와 final scoped commit을 소유한다. Push·merge·main roadmap 갱신은 하지 않는다.
 - Subagent는 work-item task 내부의 bounded exploration, 증명된 disjoint implementation 또는 independent verification에만 사용하며 parent task가 결과를 수집·통합한다.
 - 메인과 work-item task는 다른 task/worktree의 변경을 수정하거나 guessed cleanup하지 않는다.
