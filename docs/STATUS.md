@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 유저 피격 effect 접촉 위치 독립 검증 대기
-- 현재 active inbox entry: `IN-20260831-002426` (`verifying`)
-- 현재 executor branch/worktree: `codex/loop/in-20260831-002426` · checkpoint `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5`
+- 상태: 유저 피격 effect final 통합 대기
+- 현재 active inbox entry: `IN-20260831-002426` (`ready-for-integration`)
+- 현재 executor branch/worktree: `codex/loop/in-20260831-002426` · final `70d320127d5d5b48a80bb499fedf55d52829d21a`
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -30,10 +30,11 @@
 - File-memory loop replacement: 이 STATUS·DESIGN·INBOX·PROMPT와 legacy 제거를 도입한 main commit
 - 마지막 completion snapshot에서 M0~M5 완료, nonterminal input 없음, no executor ref, clean main/origin, no lease/conflict와 quality evidence를 확인했다.
 - Player hit effect writer checkpoint: `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5` · contact 좌표 결정적 검증, `npm run check`, `git diff --check`, 실제 훈련장 Retro Canvas와 console 확인 통과.
+- Player hit effect fresh final: `70d320127d5d5b48a80bb499fedf55d52829d21a` · latest main merge, owned diff, deterministic anchor/guard/evade/enemy-hit 격리, 훈련장 HP `43→36`, 유리바람 Field HP `100→85`, enemy HP `75→49`, Polygon/Retro shared state, `900×600` resize와 console 검증 통과.
 
 ## Next
 
-다음 fresh run은 `IN-20260831-002426` checkpoint를 latest main·owned paths와 정합한 뒤 훈련장·원정 실제 피격을 Polygon/Retro·resize에서 독립 검증한다. 적용 품질 축이 모두 2 이상이면 clean final을 push하고 `ready-for-integration`으로 전환하며, 실패하면 가장 큰 원인 하나만 correction checkpoint로 남긴다.
+다음 fresh run은 `IN-20260831-002426` final의 clean source, latest-main ancestry, owned paths와 품질 evidence를 재확인한 뒤 main에 non-rewriting merge하고 INBOX·STATUS를 `done`으로 정합한다. 그 run에서 다음 `new` entry를 accept/provision하지 않는다.
 
 ## Update Contract
 

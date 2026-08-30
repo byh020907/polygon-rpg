@@ -76,7 +76,7 @@
 
 ## IN-20260831-002426
 
-- status: verifying
+- status: ready-for-integration
 - received_at: 2026-08-31T00:24:26+09:00
 - priority: normal
 - source: team-lead-main
@@ -86,7 +86,7 @@
 - registration_base: c5536260668fa23a373a51736301f7596b7d660b
 - accepted_at: 2026-08-31T00:31:19+09:00
 - checkpoint_commit: d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5
-- final_commit: null
+- final_commit: 70d320127d5d5b48a80bb499fedf55d52829d21a
 - integration: null
 - owned_paths:
   - src/combat/CombatEvent.js
@@ -111,14 +111,14 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 팀장 관찰상 플레이어 피격 effect가 실제 피격 지점과 다른 곳에 나타난다.
-- 현재 최선: checkpoint `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5`가 enemy→player `HIT` event만 골라 ring·spark를 immutable `event.position`에 생성한다. Player knockback·render interpolation 뒤에도 접촉점 anchor가 움직이지 않으며 rendering/animation canonical 문서가 같은 계약을 기록한다.
-- 다음 병목: fresh verifier가 latest main ancestry와 branch-only owned diff를 확인하고, 훈련장·원정의 실제 피격을 Polygon/Retro·resize에서 독립 재현해 위치·console·guard/evade/적 피격 회귀를 판정한다.
-- 검증: `npm run check`, `git diff --check` 통과. 임시 DOM 없는 검증에서 contact `(321.25, 234.75)`와 ring centroid가 일치했고 Player를 `(80, -35)` 이동한 뒤에도 동일했다. checkpoint push 뒤 실제 훈련장 Canvas에서 적 공격으로 HP가 감소하는 순간 effect가 weapon↔Player 접촉점에 표시됐고 console warning/error가 없었다.
+- 현재 최선: final `70d320127d5d5b48a80bb499fedf55d52829d21a`가 latest main `df1f7e9958b056dd549cdf0b70af6b3a4cd9a280`을 비재작성 merge한 뒤, enemy→player `HIT` ring·spark를 immutable `event.position`에 고정한 candidate를 fresh run에서 독립 검증했다.
+- 다음 병목: integration run이 clean final·latest-main ancestry·owned diff와 기록된 품질 evidence를 재확인한 뒤 main에 non-rewriting merge하고 entry를 `done`으로 정합한다.
+- 검증: `npm run check`, `git diff --check`, clean local/remote branch, latest-main ancestry와 branch-only owned paths 통과. DOM 없는 검증에서 contact `(321.25, 234.75)`와 ring centroid가 Player를 `(80, -35)` 이동한 뒤에도 같았고 player-hit item 7개, guard/enemy-hit event 격리와 evade streak를 확인했다. 실제 훈련장 적 공격에서 HP `43→36`, 유리바람 Field에서 `100→85`가 되는 피격 frame의 weapon↔hurt contact feedback을 확인했고, 원정 적 강공격으로 enemy HP `75→49`가 되어 적 피격 회귀가 없었다. 같은 combat state를 Polygon/Retro render lab에서 비교하고 `900×600` resize 뒤 복원했으며 console warning/error가 없었다. 적용 품질 축은 모두 2 이상이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-Writer checkpoint `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5` push 완료. fresh 독립 검증 대기.
+Fresh verifier final `70d320127d5d5b48a80bb499fedf55d52829d21a` push 완료. 실제 훈련장·유리바람 Field 피격, Polygon/Retro shared state, resize, console과 회귀 검증을 통과해 main integration 대기.
 
 ## IN-20260831-003439
 
