@@ -14,7 +14,7 @@
 
 ## Project Development Process
 
-제품 방향, 플레이 피드백과 autonomous improvement lifecycle은 프로젝트 요구사항인 [`docs/development/process.md`](./docs/development/process.md)가, 각 work item의 페르소나·품질 rubric·평가 기반 개선 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. Bare `$dev-team-loop`가 approved roadmap loop의 canonical 시작·복구 명령이며, 사용자가 직접 처리를 명시한 요청만 이 흐름을 우회한다. 이 프로세스는 별도 Engineering Method가 아니며 각 loop 안의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
+제품 방향과 autonomous lifecycle은 [`docs/development/process.md`](./docs/development/process.md)가, work-item 품질 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 팀장 메인 task는 요구를 Git queue에 기록하고, 새 standalone coordinator tick이 Git·Codex task·worktree·commit 증거로 roadmap을 복구·소비한다. Bare `$dev-team-loop`는 같은 tick의 수동 복구 명령이다. 이는 별도 Method가 아니며 work item의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
 
 ## Engineering References
 
@@ -127,7 +127,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                                            | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                                    | 사용자 결정, `package.json`, 최종 diff     |
-| `PROCESS-DEV-TEAM-LOOP`   | 메인 task는 roadmap·queue·commit integration만 소유하고, 각 work item은 별도 사용자 소유 Codex task와 기본 managed worktree에서 구현·직접 feedback·final commit을 끝낸 뒤 새 task로 이어진다.     | `docs/development/process.md`, skill       |
+| `PROCESS-DEV-TEAM-LOOP`   | 팀장 메인 task는 Git queue 접수·조회만 소유하고, 매번 새 standalone coordinator tick이 Git 증거를 복구해 통합 또는 다음 사용자 소유 worktree task 생성을 한 번 수행하고 종료한다.                 | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work-item task의 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 직접 feedback을 끝까지 소유하고, task 내부 subagent 결과를 재평가해 반복 feedback을 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다.                 | `docs/development/process.md`              |
 | `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                                           | `docs/development/process.md`, skill       |
@@ -342,7 +342,8 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
 - 한 iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교한다.
 - 병렬 하위 lane이 있어도 사용자 소유 work-item task의 단일 Vertical Slice Director가 통합 artifact와 품질 판정을 끝까지 소유한다.
-- 메인 task는 roadmap·queue·compact task status·main commit integration과 push만 소유하며 제품 인터뷰·구현·품질 tuning·feedback 중계를 하지 않는다.
+- 팀장 메인 task는 새 요청·우선순위·pause·cancel·reopen을 Git queue에 기록하고 상태를 조회할 뿐, 구현·품질 tuning·feedback 중계·완료 대기·main integration을 소유하지 않는다.
+- standalone coordinator tick은 Git·Codex task·managed worktree·commit 증거만으로 한 번 reconcile하고, 통합 또는 다음 work-item task 생성 중 필요한 원자적 작업만 수행한 뒤 종료한다.
 - Git work item은 기본적으로 별도 Codex-managed worktree task에서 실행하고, 그 task가 할당 파일·검증·업무보고와 final scoped commit을 소유한다. Push·merge·main roadmap 갱신은 하지 않는다.
 - Subagent는 work-item task 내부의 bounded exploration, 증명된 disjoint implementation 또는 independent verification에만 사용하며 parent task가 결과를 수집·통합한다.
 - 메인과 work-item task는 다른 task/worktree의 변경을 수정하거나 guessed cleanup하지 않는다.

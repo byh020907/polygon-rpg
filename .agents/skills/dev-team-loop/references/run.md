@@ -5,10 +5,10 @@ One user-owned Codex task owns one work item from implementation through direct 
 ## Start
 
 1. Read the exact work-item document, roadmap milestone, project process, `docs/development/quality-loop.md` and relevant canonical system docs.
-2. Verify the assigned path ownership, worktree status and starting commit. Preserve unrelated or inherited changes.
+2. Verify the exact task title, `registration_base`, assigned `owned_paths`, worktree status and starting commit. Preserve unrelated or inherited changes.
 3. Confirm this is a Codex-managed worktree for a Git repository. If it is unexpectedly running in the shared local checkout, report `blocked: worktree-required` rather than becoming the main checkout writer.
 4. Treat explicit team-lead intent as implementation input. Do not ask for approval of a plan, Reference Brief, execution contract, quality contract, task list or work-item prose.
-5. Keep internal planning and implementation detail in this task. Do not send implementation or feedback through the main coordinator.
+5. Keep internal planning and implementation detail in this task. Do not send implementation or feedback through the team-lead main task or coordinator tick.
 
 ## Blocking Decision Interview
 
@@ -45,8 +45,8 @@ Never send a generic “의견을 기다립니다”, “확인해 주세요” 
 1. Set the work-item state to `ready-for-integration` and record actual result, accepted judgment when any, quality threshold and verification evidence.
 2. For a playable vertical slice or meaningful milestone, write one intent-first report under `docs/development/reports/`. Small maintenance items use the work-item result only.
 3. Run affected syntax/lint/format checks, `git diff --check`, the actual user path and independent verification appropriate to the change.
-4. Inspect and stage only item-owned paths. Create a scoped commit in this worktree with a concise Korean message. Do not push, merge, rebase, update main roadmap state or start another work item.
+4. Inspect and stage only `owned_paths`. Create a scoped commit in this worktree with a concise Korean message. Do not push, rewrite history, update main roadmap state or start another work item. When recovering base drift, merge current `origin/main` only when the item explicitly requires it and preserve the resulting parent evidence.
 5. Confirm the final commit includes the intended changed tree and that the worktree is clean.
 6. Finish with this exact team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash.
 
-The final hash is returned by this task, then verified and integrated by the main coordinator. It is not self-recorded inside the same commit.
+The final hash is returned by this task, then verified and integrated by a later standalone coordinator tick. It is not self-recorded inside the same commit.

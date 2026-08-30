@@ -16,6 +16,10 @@ reopens: null
 review: team-lead
 source: team-lead
 source_ref: null
+task_title: WI-YYYYMMDD-HHmmss — 제목
+registration_base: <full-main-commit>
+owned_paths:
+  - exact/path/or/directory/
 ---
 
 # 제목
@@ -38,7 +42,7 @@ source_ref: null
 
 ## 연결
 
-최종 worktree commit, main integration commit과 업무보고를 기록한다. Work-item task는 final hash를 응답으로 반환하고, main coordinator가 통합 뒤 두 hash를 Git 문서에 기록한다.
+최종 worktree commit, main integration commit과 업무보고를 기록한다. Work-item task는 final hash를 응답으로 반환하고, 다음 standalone coordinator tick이 통합 뒤 두 hash를 Git 문서에 기록한다.
 ```
 
 ## Allowed Values
@@ -49,11 +53,13 @@ source_ref: null
 - `review`: `team-lead`, `auto`
 - `source`: `team-lead`, `roadmap`, `feedback`, `quality-rule`
 
+`task_title` is the durable Codex task identity. `registration_base` pins the main commit from which the task was dispatched. `owned_paths` is the coordinator-verifiable write boundary; use the smallest practical explicit file or directory list and update it on main before scope expansion. Do not store transient task IDs.
+
 ## Ownership
 
-- Main coordinator creates the document, integrates the task commit, records integration results and updates roadmap/main history.
+- The team-lead main task creates or updates queue intent and returns. Stateless coordinator ticks dispatch, integrate, record results and update roadmap/main history.
 - The one user-owned work-item task owns body/result/report edits while active and creates its final scoped worktree commit.
 - The team lead gives candidate feedback directly in that task.
-- Task links stay in compact main context and exact sidebar titles; do not guess or persist ephemeral runtime handles as source of truth.
+- Exact sidebar titles, registration base, owned paths, worktree and commit evidence recover identity. Task links may stay in a compact status response, but ephemeral runtime handles are not Git source of truth.
 - Subagent IDs and internal task plans never enter Git.
 - Historical `inbox`, `interviewing` or `ready` items are reconciled to the current states from task/worktree/Git evidence; those states are not used for new items.

@@ -1,28 +1,22 @@
 # Start Or Continue Mode
 
-Use this mode only in the team-lead-facing main task when the team lead invokes bare `$dev-team-loop`, or explicitly starts, continues or resumes the approved roadmap.
+Bare `$dev-team-loop` and explicit start/continue/resume requests authorize exactly one manual stateless coordinator tick. They do not create a work item and do not turn the current conversation into a long-running supervisor.
 
-## Canonical Start
+## Manual Tick
 
-The bare invocation is an operation, not a work item. It authorizes the main coordinator to reconcile the queue, observe the current work-item task, integrate a completed commit and create the next approved work item in a new Codex task.
+1. Read `references/manage.md` and run its Acquire, Snapshot and One-Tick Decision Order once.
+2. Recover only from current Git, exact Codex task titles/status, managed worktrees and commit graph. Do not use prior main/coordinator memory.
+3. Integrate at most one ready item, or dispatch at most one queued/roadmap item, or report one active/conflict/stop state.
+4. Release the coordinator lease and return immediately. Do not wait for a work-item task after dispatch.
 
-1. Inspect Git work items, roadmap state, main checkout status and current Codex tasks.
-2. Match an open item to exactly one task by its stable `WI-... 제목` title and recorded main-context task link. If duplicate active tasks or conflicting integration evidence exist, stop with `task-conflict`.
-3. Reconcile current work before deriving anything. Observe an active task with the Codex task `wait`/`read` surface; do not use subagent status as its identity or reproduce internal logs.
-4. Treat a task as waiting for the team lead only when it provides concrete observable questions or a blocking choice. Report the exact items with its link; answers stay in that task. A generic feedback state is not a stop condition.
-5. If the task returned a final worktree commit, verify and integrate it using Manage mode, update Git/roadmap, then reevaluate the next gate.
-6. If no open item owns the next gate, register one item, persist its registration on main, then create a new user-owned Codex task using the project's Codex-managed worktree environment.
+The recurring project automation is the default continuation mechanism. Manual start is a recovery and immediate-tick surface, not an outer conversation loop.
 
-Never create a work item whose content is the skill invocation or “continue the roadmap.” Never substitute a root subagent for the user-owned work-item task.
+## Stop Conditions
 
-## Continued Operation
+Do not dispatch a new item when there is an authoritative implementing/feedback/blocked/paused item, a concrete observable question in its task, an irreversible product choice without a safe default, Canonical Conflict, external blocker, explicit pause/cancel, no approved next milestone or completed roadmap.
 
-- Use task status tools for bounded waits and compact reads; unchanged timeouts are checkpoints, not failures.
-- Main context retains only `ID`, `title`, `task link`, `status`, `stop condition` and `integration result`.
-- Do not ask implementation questions, inspect/tune the candidate on behalf of the Director or relay feedback between tasks.
-- After successful integration, derive the next approved gate and create it in a new Codex task. Never reuse a completed work-item task for a different item.
-- Stop at concrete observable questions or a blocking choice pending in the work-item task, canonical conflict, external blocker, pause or no approved next milestone.
+A task completion, tick response, unchanged timeout, successful integration or missing previous conversation context is not a stop condition. A later standalone tick continues from Git evidence.
 
-## Main Reply
+## Reply
 
-Lead with the actual feature and exact observable questions in plain Korean, then provide the clickable task link and what the answers change. Keep lifecycle status and internal IDs as supporting evidence. If no concrete question exists, do not say that feedback is pending; keep the task moving toward verification, final commit and integration readiness.
+Report in plain Korean: what is being built, which exact task can be opened and what is actually blocked. Include lifecycle IDs/hashes only as supporting evidence. Never copy implementation logs or relay feedback.

@@ -8,4 +8,4 @@
 - 보고서는 실제 변경 파일로 시작하고, 의도, 플레이 결과, 영향, 검증·팀장 의견과 다음 개선 단계를 쉬운 한국어로 기록한다.
 - 계획, Reference Brief, 실행·품질 계약과 task list의 승인 문서로 사용하지 않는다.
 - 작은 bug·문서 정합·maintenance는 work item의 `결과`가 업무보고이며 별도 보고서를 만들지 않는다.
-- Main coordinator는 보고서를 대리 작성하거나 main context에 복제하지 않고, final commit 검증·통합과 work-item 연결만 수행한다.
+- Team-lead main은 보고서를 대리 작성하거나 context에 복제하지 않는다. Stateless coordinator tick은 final commit 검증·통합과 work-item 연결만 수행하고, gameplay 품질을 대신 작성·평가하지 않는다.

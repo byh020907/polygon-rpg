@@ -9,7 +9,7 @@
 - 실제 changed tree와 플레이 artifact를 함께 최종 결과로 본다.
 - 구현, 실행, 관찰, 평가, 개선, 필요한 구체적 팀장 판단과 근거 기록을 같은 task/worktree에서 소유한다.
 - 반복 결함은 규칙 후보로 남기되 새로운 제품 결정을 자동 승격하지 않는다.
-- final scoped worktree commit을 만들고 main coordinator에게 hash를 반환한다.
+- final scoped worktree commit을 만들고 다음 standalone coordinator tick이 검증할 hash를 반환한다.
 
 팀장은 Product Director다. 자동 검사와 명시된 의도로 정할 수 없는 핵심 재미, 제품 우선순위, 양립하지 않는 방향과 체감 판단을 구현된 결과를 보고 해당 work-item task에서 직접 내린다.
 
@@ -17,34 +17,36 @@
 
 ```text
 Product Director — roadmap·방향·우선순위·필요한 구체적 관찰 판단
-→ Main Coordinator — queue·task 생성·compact 상태·commit integration·다음 gate
+→ Team-Lead Main — Git queue 접수·상태 조회 후 종료
+→ Standalone Coordinator Tick — Git 복구·task 생성 또는 commit integration 후 종료
 → Work-Item Task / Vertical Slice Director — 구현·artifact·품질 loop·final commit
    ↳ Subagent Worker — 고정된 bounded lane
    ↳ Independent Verifier — frozen candidate 읽기 전용 검증
-→ Main Coordinator — final commit 검증·통합·새 task
+→ 다음 Standalone Coordinator Tick — final commit 검증·통합
 ```
 
 - work item마다 authoritative Codex task와 Director는 하나다.
 - 작은 item은 Director 혼자 끝내고, 명확한 병렬 이점과 disjoint ownership이 있을 때만 task 내부 subagent를 사용한다.
 - Director는 모든 subagent 결과를 수집·통합한 실제 플레이 경로를 다시 실행하고 전체 rubric을 재평가한다.
 - Independent Verifier는 마지막 writer 변경 뒤 frozen candidate를 검사하고 수정은 Director가 수행한다.
-- Main Coordinator는 artifact를 대리 채점하거나 feedback을 중계하지 않는다. Task commit의 threshold, evidence와 integration 가능성만 gate한다.
+- Team-Lead Main과 Coordinator는 artifact를 대리 채점하거나 feedback을 중계하지 않는다. Coordinator tick은 task commit의 threshold, evidence와 integration 가능성만 gate한다.
 
 ## Roadmap-Driven Outer Loop
 
-Bare `$dev-team-loop`는 메인 coordinator가 현재 item을 reconcile하고, final commit을 통합한 뒤 다음 미충족 gate를 **새 Codex task**로 시작하게 한다.
+Codex 프로젝트 대상 standalone recurring automation은 매 tick Git 상태에서 current item을 복구한다. Bare `$dev-team-loop`는 같은 tick을 수동으로 한 번 실행한다.
 
 ```text
 현재 milestone·queue 평가
-→ work item 등록과 managed-worktree task 생성
+→ 한 tick에서 work item 등록과 managed-worktree task 생성 → 종료
 → task 내부 quality loop·필요한 관찰 질문·final commit
-→ main 검증·통합·roadmap 갱신
-→ 다음 gate를 새 task로 반복
+→ 다음 tick에서 검증·통합·roadmap 갱신 → 종료
+→ 다음 tick에서 다음 gate를 새 task로 반복
 ```
 
 - 승인된 roadmap의 현재 gate가 기본 work source다.
 - 한 번에 현재 vertical result 하나를 파생하고 main integration을 직렬화한다.
-- 자동 검사로 정할 수 없는 관찰 질문 1~3개, 비가역 blocking 제품 결정, Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서만 멈춘다.
+- 이 구조는 승인된 roadmap 범위 안의 **bounded continuous improvement loop**다. 자동 검사로 정할 수 없는 관찰 질문 1~3개, 안전한 가역 default가 없는 비가역 blocking 제품 결정, Canonical Conflict, 외부 blocker, pause/cancel, 승인된 다음 milestone 부재 또는 roadmap 완료에서만 새 task 생성을 멈춘다.
+- task 완료, coordinator turn 종료, unchanged timeout, 한 기능의 main 통합과 이전 coordinator context 소실은 loop 종료 조건이 아니다.
 
 ## 내부 품질 기준
 
@@ -101,7 +103,7 @@ baseline 실행·채점
 
 기능 경로와 결정적 검사가 통과한 뒤 tuning이 길거나 위험하면 Director는 current best의 변경 경계와 evidence를 task에 남긴다. Final worktree commit은 적용 rubric, 실제 artifact, affected checks와 독립 verification이 통과한 뒤 item-owned paths만 포함해 만든다.
 
-Task는 final hash를 응답으로 반환하고 push/merge하지 않는다. Main coordinator가 diff와 checks를 다시 확인해 main에 통합한다.
+Task는 final hash를 응답으로 반환하고 push/merge하지 않는다. 다음 standalone coordinator tick이 diff와 checks를 다시 확인해 main에 통합한다.
 
 ## 기록과 Context
 
@@ -112,7 +114,7 @@ Task는 final hash를 응답으로 반환하고 push/merge하지 않는다. Main
 - work-item task/worktree: 실행 중 계획, baseline, current best, artifact와 direct feedback
 - task-internal subagent: bounded intermediate evidence
 
-Main context에는 ID/title/task link/status/stop condition/integration result만 둔다. Quality detail은 work-item task와 Git result/report에 두되, 팀장에게 보이는 메인 보고에는 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 함께 제시한다.
+팀장 메인에는 Git queue에서 복구한 ID/title/task link/status/stop condition/integration result만 보여 준다. Quality detail은 work-item task와 Git result/report에 두되, 팀장에게 보이는 보고에는 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 함께 제시한다.
 
 ## 질문·중단·차단
 
@@ -121,7 +123,7 @@ Main context에는 ID/title/task link/status/stop condition/integration result�
 - 체감 판단이 꼭 필요하면 실행·플레이 경로, 볼 위치·조작 방법, 관찰 질문 1~3개와 답에 따라 바뀌는 내용을 한 메시지에 쓴다. 구체적 질문이 없으면 멈추지 않는다.
 - 메인은 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 보여 주고, 질문과 답은 해당 task에서 직접 진행한다. 상태 코드만 단독으로 표시하지 않는다.
 - 반복 blocker나 불명확한 ownership은 `blocked`로 전환한다.
-- 자동 무한 loop는 사용하지 않는다.
+- 승인된 roadmap 밖으로 범위를 자동 확장하거나 threshold를 낮추는 무한 loop는 사용하지 않는다. Bounded continuous loop는 위의 명시적 종료 조건까지 standalone tick으로 계속된다.
 
 ## Feedback을 규칙으로 승격
 
