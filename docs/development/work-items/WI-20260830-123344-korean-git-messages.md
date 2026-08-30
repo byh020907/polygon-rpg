@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-123344
-status: integrating
+status: done
 priority: normal
 lane: maintenance
 created_at: 2026-08-30T12:33:44+09:00
@@ -43,4 +43,4 @@ docs/development/
 
 ## 연결
 
-- 최종 commit: 통합 후 기록
+- 최종 commit: `469d02148656d888c2f9bce250e861995dc5b9bd`
