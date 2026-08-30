@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: Core Engineering Principles 전환 · 통합 준비
-- 현재 active inbox entry: `IN-20260831-005246` · `ready-for-integration`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-005246` · final `a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8`
+- 상태: Core Engineering Principles 전환 · 독립 재검증 준비
+- 현재 active inbox entry: `IN-20260831-005246` · `verifying`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-005246` · latest-main merge `90a24f1d41c566a899887d034c062b9d23600f4e`
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -39,10 +39,11 @@
 - Core Engineering Principles 전환 accept/provision: 현재 Reference-Guided 선택·mandatory local-first 규칙과 upstream 두 Method 원문을 대조하고, established Polygon RPG 계약과 historical evidence는 보존하면서 Core Engineering Principles를 유일한 Method로 정합하는 실행 계약을 수락했다.
 - Core Engineering Principles 전환 writer checkpoint: `f51dad89c0fc5f666649d4964b747cf61dece328` · Core 일곱 원칙의 canonical owner·runtime 적용 경계와 목적 단위 Git 규칙을 정합하고 fixed local-first를 historical evidence로 전환했다. `npm run check`, `git diff --check`, old 용어·Method source·local link·32 KiB budget 검사를 통과했다.
 - Core Engineering Principles 전환 fresh final: `a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8` · latest main merge와 owned 문서 6개, upstream Method HTTP 200·일곱 heading one-to-one 대응, local link, old mandatory 용어 부재, `AGENTS.md` 32,710-byte budget, main memory 일치, `npm run check`, `git diff --check`를 독립 확인했다. 문서-only 변경이며 적용 품질 축은 모두 2 이상이다.
+- Core Engineering Principles latest-main reconciliation: `90a24f1d41c566a899887d034c062b9d23600f4e` · current main `69d027a7f86d4fed58390202423b0cc15f282d1b`을 executor branch에 non-rewriting merge했다. 새 인터뷰 skill과 세 queued 원문을 보존했고 branch-only 변경은 기존 owned 문서 6개이며 `npm run check`, `git diff --check`를 통과했다.
 
 ## Next
 
-다음 fresh run은 `IN-20260831-005246` clean final의 latest-main ancestry·owned diff와 검증 evidence를 재확인하고 main에 non-rewriting 통합한다. 같은 tick에서 queued `IN-20260831-025240`을 accept/provision하지 않는다.
+다음 fresh run은 `IN-20260831-005246` merge 뒤 Core Method 일곱 원칙, owned diff, old mandatory Reference 용어 부재, local link·32 KiB budget과 main-owned memory를 독립 재검증한다. 모든 적용 축이 2 이상이면 새 clean final과 `ready-for-integration` evidence를 만들며 같은 tick에서 queued entry를 accept/provision하지 않는다.
 
 ## Update Contract
 

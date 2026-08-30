@@ -76,7 +76,7 @@
 
 ## IN-20260831-005246
 
-- status: ready-for-integration
+- status: verifying
 - received_at: 2026-08-31T00:52:46+09:00
 - priority: normal
 - source: team-lead-main
@@ -86,7 +86,7 @@
 - registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
 - accepted_at: 2026-08-31T02:32:37+09:00
 - checkpoint_commit: f51dad89c0fc5f666649d4964b747cf61dece328
-- final_commit: a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8
+- final_commit: null
 - integration: null
 - owned_paths:
   - AGENTS.md
@@ -112,14 +112,14 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 현재 `AGENTS.md`는 Reference-Guided Engineering을 유일한 Method로 선택하고 두 로컬 저장소의 mandatory local-first 조사, 별도 reference repository index와 전용 §8 policy를 요구한다. README·DESIGN·quality 문서에도 이 초기화 방식의 강제 규칙이 남아 있다.
-- 현재 최선: final `a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8`이 latest main을 포함하고 Core Engineering Principles를 유일한 Method로 선택한다. 순수 함수 → Is-A → Has-A → Can-Do, Node·Scene·Scene Tree·Signal의 개념/구현 분리, 예상 확장, 반복 ownership, 단일 문서 owner와 목적 단위 Git 기록을 canonical하게 정합하며 두 로컬 저장소는 historical evidence로만 남긴다.
-- 다음 병목: 다음 fresh run이 clean final·owned diff와 이 독립 검증 evidence를 재확인하고 main에 non-rewriting 통합한다.
-- 검증: upstream Core Method raw source HTTP 200과 일곱 heading의 one-to-one 규칙 대응을 독립 확인했다. latest main merge `3d1b91a0e864346e52b9e5dc38901805061d9ab5`, branch-only owned 문서 6개, main-owned INBOX·STATUS 일치, local Markdown link, old mandatory Reference 용어 부재와 `AGENTS.md` 32,710-byte budget을 확인했다. `npm run check`, `git diff --check`를 통과했고 final branch는 clean local/remote equality다. 문서 전환이므로 Canvas·gameplay 변경은 적용되지 않는다. 적용 품질 축은 모두 2 이상이다.
+- 현재 최선: latest-main reconciliation `90a24f1d41c566a899887d034c062b9d23600f4e`이 이전 final에 current main `69d027a7f86d4fed58390202423b0cc15f282d1b`을 non-rewriting merge했다. Core Engineering Principles 문서 변경과 main의 새 인터뷰 skill·세 queued 원문을 함께 보존하며 branch-only 변경은 기존 owned 문서 6개에 한정된다.
+- 다음 병목: 다음 fresh run이 merge 뒤 Core Method 일곱 원칙 정합, old mandatory Reference 용어 부재, local link·32 KiB budget과 main-owned memory 보존을 독립 재검증해 새 clean final을 만든다.
+- 검증: current `origin/main` ancestry, clean local/remote branch, branch-only owned 문서 6개, `npm run check`, `git diff --check`를 확인하고 reconciliation commit을 push했다. 최신 main이 이전 final 뒤 추가되어 이 tick에서는 final/integration하지 않고 `verifying`으로 되돌렸다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-Core Engineering Principles 일곱 규칙을 Polygon RPG의 단일 Engineering Method와 canonical owner 경계로 정합한 clean final을 독립 검증했다. Mandatory local-first 규칙은 제거하고 기존 두 저장소는 과거 결정의 evidence로만 보존했다.
+진행 전
 
 ## IN-20260831-025240
 
