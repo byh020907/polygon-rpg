@@ -34,7 +34,7 @@
 - 같은 entry를 처음부터 clean main integration까지 직접 완결한다.
 - 화면이 적용되는 작업은 실제 Chrome 창으로 PNG를 저장하고 이미지를 직접 읽은 뒤 같은 session에서 수정·재촬영한다.
 - 성공하면 entry가 live INBOX에서 사라진 상태로 종료한다. `blocked`가 아니면서 entry가 남아 있으면 outer loop가 실패로 판정한다.
-- Outer loop는 session 종료 뒤 origin을 다시 fetch하고 clean `main == origin/main`, executor local/remote final 일치와 main 포함, lease 해제를 검사한다. Entry 부재만으로는 성공하지 않으며 이 durable postcondition 중 하나라도 빠지면 abnormal failure로 재시작한다.
+- Outer loop는 session 종료 뒤 origin을 다시 fetch하고 partial merge 없는 clean `main == origin/main`, clean executor worktree, executor local/remote final 일치와 main 포함, lease 해제를 검사한다. Entry 부재만으로는 성공하지 않으며 이 durable postcondition 중 하나라도 빠지면 abnormal failure로 재시작한다.
 
 Subagent는 한 session 내부의 bounded helper일 뿐이며 parent session이 같은 executor branch에 통합하고 전체 결과를 검증한다.
 
@@ -113,7 +113,7 @@ Interruption은 다음 fresh session이 같은 entry evidence에서 복구한다
 - Latest main drift는 branch에 merge하고 affected checks와 PNG를 다시 확인한다.
 - Push 실패는 같은 hash를 재시도한다. Partial merge는 staged intent가 유일할 때만 완료하거나 안전하게 abort한다.
 - Integration 뒤 done block이 남았으면 다음 entry를 고르기 전에 exact cleanup을 끝낸다.
-- Entry가 사라졌어도 main dirty·origin 미동기화·executor ref 미푸시/미통합·lease 잔류 중 하나가 있으면 그 session은 incomplete로 실패시키고 다음 fresh session이 durable evidence에서 복구한다.
+- Entry가 사라졌어도 main dirty/partial merge·origin 미동기화·executor worktree dirty·ref 미푸시/미통합·lease 잔류 중 하나가 있으면 그 session은 incomplete로 실패시키고 다음 fresh session이 durable evidence에서 복구한다.
 - 같은 실패를 반복 보고하지 않고 다음 안전한 repair를 실행한다.
 
 Force push, shared-history rewrite, broad reset, guessed worktree cleanup, 품질 threshold 하향과 별도 queue/task 생성은 복구가 아니다.

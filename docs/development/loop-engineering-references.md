@@ -140,7 +140,7 @@ Outer loop는 단순히 queue가 잠시 비었다는 이유로 프로젝트를 �
 - Canonical Conflict와 concrete blocker 없음
 - Completion evidence가 STATUS/Git에 push됨
 
-Entry run의 더 좁은 성공 조건은 `loop/completion.mjs`가 판정한다. Live entry 부재, clean `main == origin/main`, deterministic executor local/remote ref 일치와 main ancestry, lease 해제가 같은 snapshot에서 모두 참이어야 한다. 이 조건은 문서상 권고가 아니라 outer supervisor가 nonzero recovery를 결정하는 executable postcondition이다.
+Entry run의 더 좁은 성공 조건은 `loop/completion.mjs`가 판정한다. Live entry 부재, partial merge 없는 clean `main == origin/main`, clean executor worktree, deterministic executor local/remote ref 일치와 main ancestry, lease 해제가 같은 snapshot에서 모두 참이어야 한다. 이 조건은 문서상 권고가 아니라 outer supervisor가 nonzero recovery를 결정하는 executable postcondition이다.
 
 Task Scheduler는 설치 직후 disabled다. `run-once` 두 회가 Codex fresh-session 실행, Git integration, log와 visible QA 경로를 검증한 뒤에만 `start`/`enable`한다.
 

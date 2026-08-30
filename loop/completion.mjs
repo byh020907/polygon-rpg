@@ -61,10 +61,23 @@ function readLeaseOwner(root) {
   return status.owner ?? null;
 }
 
+function findWorktree(root, branch) {
+  const ref = `refs/heads/${branch}`;
+  const output = git(['worktree', 'list', '--porcelain'], root);
+  for (const block of output.split(/\r?\n\r?\n/)) {
+    const lines = block.split(/\r?\n/);
+    if (lines.includes(`branch ${ref}`)) {
+      return lines.find((line) => line.startsWith('worktree '))?.slice('worktree '.length) ?? null;
+    }
+  }
+  return null;
+}
+
 export function evaluateCompletion(evidence) {
   const repositoryFailures = [];
   if (evidence.mainBranch !== 'main') repositoryFailures.push('main-branch-not-main');
   if (!evidence.mainClean) repositoryFailures.push('main-dirty');
+  if (evidence.mainMergeInProgress) repositoryFailures.push('main-merge-in-progress');
   if (!evidence.mainHead || evidence.mainHead !== evidence.originMain) {
     repositoryFailures.push('main-not-pushed');
   }
@@ -95,12 +108,14 @@ export function evaluateCompletion(evidence) {
     failures.push('executor-not-pushed');
   }
   if (!evidence.executorIntegrated) failures.push('executor-not-integrated');
+  if (!evidence.executorWorktreeClean) failures.push('executor-worktree-dirty');
 
   const executorDurable = Boolean(
     evidence.executorLocalHead &&
     evidence.executorRemoteHead &&
     evidence.executorLocalHead === evidence.executorRemoteHead &&
-    evidence.executorIntegrated,
+    evidence.executorIntegrated &&
+    evidence.executorWorktreeClean,
   );
 
   return Object.freeze({
@@ -122,6 +137,10 @@ export function inspectCompletion({ repo, entry }) {
   const mainHead = git(['rev-parse', 'HEAD'], root);
   const originMain = exactRefHash(root, 'refs/remotes/origin/main');
   const mainClean = git(['status', '--porcelain=v1'], root) === '';
+  const mainMergeInProgress =
+    git(['rev-parse', '--verify', '--quiet', 'MERGE_HEAD'], root, {
+      allowFailure: true,
+    }) !== null;
   const leaseOwner = readLeaseOwner(root);
   const entries = listEntries(readFileSync(join(root, 'docs', 'feedback', 'INBOX.md'), 'utf8'));
   const entryStatus = entries.find((candidate) => candidate.id === entry)?.status ?? null;
@@ -130,11 +149,16 @@ export function inspectCompletion({ repo, entry }) {
   let executorLocalHead = null;
   let executorRemoteHead = null;
   let executorIntegrated = null;
+  let executorWorktree = null;
+  let executorWorktreeClean = null;
   if (entry !== 'ROADMAP') {
     executorBranch = `codex/loop/${entry.toLowerCase()}`;
     executorLocalHead = exactRefHash(root, `refs/heads/${executorBranch}`);
     executorRemoteHead = exactRefHash(root, `refs/remotes/origin/${executorBranch}`);
     executorIntegrated = isAncestor(root, executorRemoteHead, mainHead);
+    executorWorktree = findWorktree(root, executorBranch);
+    executorWorktreeClean =
+      executorWorktree === null || git(['status', '--porcelain=v1'], executorWorktree) === '';
   }
 
   const evidence = Object.freeze({
@@ -144,11 +168,14 @@ export function inspectCompletion({ repo, entry }) {
     mainHead,
     originMain,
     mainClean,
+    mainMergeInProgress,
     leaseOwner,
     executorBranch,
     executorLocalHead,
     executorRemoteHead,
     executorIntegrated,
+    executorWorktree,
+    executorWorktreeClean,
   });
   return Object.freeze({ ...evidence, ...evaluateCompletion(evidence) });
 }

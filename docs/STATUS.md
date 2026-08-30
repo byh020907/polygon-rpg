@@ -51,7 +51,7 @@
 - 한 loop 완전 작업 단위 clean final: `4b038df4b379c2ecdf3dce84b4d70d8492947638` · latest main checkpoint를 non-rewriting merge한 뒤 12개 completion state fixture, actual lifecycle failure boundary, PowerShell parser, branch-only owned path 5개, `npm run check`, `git diff --check`, clean local/remote branch를 재확인했다. 적용 품질 축은 모두 2 이상이며 화면 비적용이다.
 - 한 loop 완전 작업 단위 integration: `5d051662a3b4d017a1ac5810dfa23797eefae6f7` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-025240` done block만 제거했다. Outer supervisor는 이후 session마다 origin fetch, clean pushed main, pushed integrated executor final과 released lease를 모두 확인해야 성공한다.
 - Windows loop manual run 1: `logs/2026-08-31/20260831-041017-IN-20260831-005246/summary.json` · exit 0, `completed: true`, `f51b92c → 2ed33c9`, Core Principles final/merge/cleanup과 lease 해제를 한 fresh session에서 완료했다.
-- Windows loop manual run 2: `logs/2026-08-31/20260831-042700-IN-20260831-025240/summary.json` · exit 0, `completed: true`, `2ed33c9 → ee8897a`, durable completion postcondition의 final/merge/cleanup을 한 fresh session에서 완료했다. 최신 inspector는 clean pushed main, pushed/integrated executor ref, entry 부재와 lease 해제로 `complete: true`, failures 0개다.
+- Windows loop manual run 2: `logs/2026-08-31/20260831-042700-IN-20260831-025240/summary.json` · exit 0, `completed: true`, `2ed33c9 → ee8897a`, durable completion postcondition의 final/merge/cleanup을 한 fresh session에서 완료했다. 최신 inspector는 partial merge 없는 clean pushed main, clean worktree, pushed/integrated executor ref, entry 부재와 lease 해제로 `complete: true`, failures 0개다.
 
 ## Next
 
