@@ -120,3 +120,45 @@
 ### 결과 — coordinator 소유
 
 진행 전
+
+## IN-20260831-025240
+
+- status: new
+- received_at: 2026-08-31T02:52:40+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: e3706a331f9f802a7a3072b0f79f0f5c66a08b87
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+내 루프를 잘못 이해한거같아, 한 루프가 항상 완전한 작업을 하는개념이야
+수정해줘
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
