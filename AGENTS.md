@@ -14,7 +14,7 @@
 
 ## Project Development Process
 
-제품 방향과 autonomous lifecycle은 [`docs/development/process.md`](./docs/development/process.md)가, work-item 품질 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 팀장 메인 task는 요구를 Git queue에 기록하고, 새 standalone coordinator tick이 Git·Codex task·worktree·commit 증거로 roadmap을 복구·소비한다. Bare `$dev-team-loop`는 같은 tick의 수동 복구 명령이다. 이는 별도 Method가 아니며 work item의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
+제품 방향과 autonomous lifecycle은 [`docs/development/process.md`](./docs/development/process.md)가, work-item 품질 loop는 [`docs/development/quality-loop.md`](./docs/development/quality-loop.md)가 소유한다. 팀장 메인 task는 요구를 Git queue에 기록하고, 새 standalone coordinator tick이 Git·Codex task·worktree·commit 증거로 roadmap을 복구·소비한다. Bare `$dev-team-loop`는 같은 tick의 수동 복구 명령이며 `$dev-loop-status`는 mutation 없는 상태 진단이다. 이는 별도 Method가 아니며 work item의 Engineering Decision에만 Reference-Guided Engineering을 적용한다.
 
 ## Engineering References
 

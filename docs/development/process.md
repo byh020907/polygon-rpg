@@ -91,6 +91,14 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 - heartbeat, 메인 대화 wakeup, 장기 wait, daemon, Orca manager와 외부 database를 기반으로 사용하지 않는다.
 - automation을 사용할 수 없는 환경에서는 구현됐다고 기록하지 않고, 수동 대체 명령은 bare `$dev-team-loop` 한 번뿐이다.
 
+### 읽기 전용 상태 점검
+
+진행이 멈춘 것처럼 보일 때는 [`.agents/skills/dev-loop-status/SKILL.md`](../../.agents/skills/dev-loop-status/SKILL.md)의 `$dev-loop-status`를 사용한다. 이 skill은 최근 coordinator run, open work item, exact task title, task 최신 상태, managed worktree, commit graph, automation과 lease를 한 번만 대조하고 `정상 진행`, `통합 대기`, `dispatch 대기`, `blocker`, `conflict`, `automation 중지`, `정체 의심` 중 하나로 판정한다.
+
+- 기본 동작은 read-only이며 lease 획득, Git mutation, task rename/resume/message, integration과 wait/poll을 하지 않는다.
+- task title null·축약·prompt-shaped, completed task와 stale Git status, final commit 미통합, 반복 conflict와 stale lease를 실제 증거로 구분한다.
+- 복구가 필요하면 원인과 다음 안전 조치만 보고하고, 사용자가 복구를 요청한 뒤 `$dev-team-loop`의 exact recovery로 분리한다.
+
 ## Work Item 등록과 task 생성
 
 ### 한 요청은 한 이력
