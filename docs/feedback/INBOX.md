@@ -76,7 +76,7 @@
 
 ## IN-20260831-025240
 
-- status: implementing
+- status: verifying
 - received_at: 2026-08-31T02:52:40+09:00
 - priority: normal
 - source: team-lead-main
@@ -85,10 +85,10 @@
 - executor_branch: codex/loop/in-20260831-025240
 - registration_base: e3706a331f9f802a7a3072b0f79f0f5c66a08b87
 - accepted_at: 2026-08-31T04:33:00+09:00
-- checkpoint_commit: null
+- checkpoint_commit: 679e1b0aeb58b4667db534f61a884c42a80a04c9
 - final_commit: null
 - integration: null
-- owned_paths: [loop/loop.ps1, loop/PROMPT.md, docs/development/process.md, docs/development/loop-engineering-references.md]
+- owned_paths: [loop/completion.mjs, loop/loop.ps1, loop/PROMPT.md, docs/development/process.md, docs/development/loop-engineering-references.md]
 
 ### 원문 — 불변
 
@@ -107,9 +107,9 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: current main은 phase별 정상 종료를 없애고 한 session complete-work prompt를 사용하지만 `loop/loop.ps1`의 성공 판정은 selected entry 부재만 확인해 clean/push/integration/lease durable proof를 강제하지 않는다.
-- 현재 최선: `f51b92c7095c111716378a4d86e97283e777cf46`이 Windows complete-work loop와 visible QA 경로를 도입했고 process·quality·skill은 entry 전체 완결을 명시한다.
-- 다음 병목: outer loop의 완료 postcondition을 Git ref·main cleanliness·lease evidence까지 확장하고 실제 fixture state로 pass/fail 경계를 검증한다.
-- 검증: 문서·실제 `loop.ps1` caller·Task Scheduler disabled 상태·clean `main == origin/main`·entry branch/lease 부재 기준선을 확인했다. 구현 검사는 아직 실행 전이다.
+- 현재 최선: writer checkpoint `679e1b0aeb58b4667db534f61a884c42a80a04c9`은 outer loop가 origin을 fetch한 뒤 live entry, main branch/clean/push, executor local/remote final과 main ancestry, lease를 한 snapshot에서 판정하고 failure evidence를 run summary에 남긴다.
+- 다음 병목: latest main을 executor final에 포함한 뒤 동일 fixture·parser·lint/format·owned diff를 최종 재검증하고 main 통합·exact cleanup을 완결한다.
+- 검증: completion pure decision의 정상·live entry·wrong branch·dirty/unpushed main·live lease·missing/unpushed/unmerged executor·blocked·ROADMAP 12개 fixture, actual implementing/lease-held snapshot의 실패 사유, PowerShell parser, `npm run check`, `git diff --check`가 통과했다. 운영 문서 변경이라 visible game screen은 적용되지 않는다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
