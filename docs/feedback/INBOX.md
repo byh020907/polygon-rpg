@@ -7,8 +7,8 @@
 - Team-lead main은 별도 키워드 없이 받은 일반적인 새 개발 명령 한 건을 `new` entry 하나로 append하고 commit/push한다.
 - 질문·상태 조회·기존 entry lifecycle·예시/가정·사전 인터뷰·현재 task 직접 처리 요청은 append하지 않는다.
 - `원문`은 공백·표현·언어·오탈자·Markdown을 포함해 바꾸거나 요약하지 않는다.
-- Coordinator는 원문 밖의 metadata, 실행 계약, 실행 상태, 결과와 연결만 갱신한다.
-- Executor branch는 이 파일과 `docs/STATUS.md`를 수정하지 않는다. Branch commit 뒤 coordinator가 main에서 두 파일을 갱신한다.
+- Complete-work session은 원문 밖의 metadata, 실행 계약, 실행 상태, 결과와 연결만 갱신한다.
+- Executor branch는 이 파일과 `docs/STATUS.md`를 수정하지 않는다. 같은 session이 branch evidence를 만든 뒤 main에서 두 파일을 갱신하고 entry 완료까지 계속한다.
 - Entry ID와 terminal status가 duplicate consumption을 막는다. 한 entry는 executor branch 하나에서 한 번만 실행한다.
 
 ## Entry Contract
@@ -16,7 +16,7 @@
 - ID: `IN-YYYYMMDD-HHmmss`; 같은 초 충돌은 `-02`, `-03`.
 - Status: `new`, `implementing`, `verifying`, `ready-for-integration`, `integrating`, `done`, `blocked`, `paused`, `cancelled`, `superseded`.
 - Priority: `urgent`, `high`, `normal`, `low`.
-- 새 entry의 derived title, executor branch, accepted time와 owned paths는 coordinator가 원문 밖에 채운다.
+- 새 entry의 derived title, executor branch, accepted time와 owned paths는 executor session이 원문 밖에 채운다.
 - 원문 정정은 새 entry를 append해 `supersedes`로 연결한다.
 - 동일한 `new` 원문은 명시적인 중복 등록 요청이 없으면 다시 append하지 않는다.
 - `implementing`부터 `integrating`까지 active entry는 기본적으로 하나다.

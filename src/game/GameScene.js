@@ -987,6 +987,29 @@ export class GameScene extends SceneNode {
     this.statusNode.publish({ force: true });
   }
 
+  setVisualQaLocation({ regionId, roomId, x }) {
+    const mapSnapshot = this.mapRuntime.setActiveLocation(regionId, roomId);
+    this.replaceRoomScene(mapSnapshot, { resetExisting: true });
+    const room = this.mapRuntime.getActiveRoom();
+    const minX = room.movementBounds?.minX ?? room.bounds.x;
+    const maxX = room.movementBounds?.maxX ?? room.bounds.x + room.bounds.width;
+    const requestedX = room.bounds.x + (x ?? 140);
+    this.position = {
+      x: Math.max(
+        minX + CHARACTER_BOUNDARY_HALF_WIDTH,
+        Math.min(maxX - CHARACTER_BOUNDARY_HALF_WIDTH, requestedX),
+      ),
+      y: room.groundY - CHARACTER_FOOT_OFFSET,
+    };
+    this.previousPosition = { ...this.position };
+    this.cameraPosition = { ...mapSnapshot.cameraPosition };
+    this.previousCameraPosition = { ...this.cameraPosition };
+    this.verticalVelocity = 0;
+    this.isGrounded = true;
+    this.statusNode.publish({ force: true });
+    return mapSnapshot;
+  }
+
   toggleTimePhase() {
     this.worldTimeHours = this.timePhase === 'night' ? 10 : 21;
     this.updateTimePhase();

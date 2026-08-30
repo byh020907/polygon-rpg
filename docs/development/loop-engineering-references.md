@@ -1,156 +1,153 @@
-# Autonomous Roadmap Loop Engineering References
+# File-Memory Loop Engineering References
 
-이 문서는 Polygon RPG의 standalone roadmap coordinator를 일반적인 controller·durable workflow 원칙과 정렬하는 Engineering Reference다. 새 Engineering Method가 아니며 외부 workflow engine을 도입하는 계약도 아니다.
+이 문서는 Polygon RPG complete-work loop의 설계 근거와 recovery matrix를 소유한다. 실제 실행 계약은 [`process.md`](./process.md), 품질 기준은 [`quality-loop.md`](./quality-loop.md), 환경값은 [`../../loop/env.ps1`](../../loop/env.ps1)이 canonical owner다.
 
-## 목표 상태와 관찰 상태
+## 채택한 controller model
 
 ```text
-Desired State
-  approved DESIGN milestone 완료
-  nonterminal INBOX entry 없음
-  마지막 vertical slice 품질·검증 통과
-  clean main == origin/main
-
-Observed State
-  DESIGN·STATUS·INBOX
-  executor branch·persistent worktree·dirty paths
-  registration/final/integration commit graph
-  automation·lease
-
-Reconcile Tick
-  observe → diff → forward/recovery action 하나 → durable result → exit
+Desired state
+  DESIGN · live INBOX · quality contract · clean origin/main
+Observed state
+  main · executor refs/worktrees · lease · run log · visual artifact
+Complete-Work Reconcile Session
+  recover → implement → check → visible QA → repair → final → integrate → cleanup
+Outer supervisor
+  Windows PowerShell loop + Task Scheduler abnormal-exit restart
 ```
 
-충돌과 프로세스 재시작은 예외적인 loop 종료가 아니라 current state가 desired state와 다른 한 종류다. Coordinator는 명시적 pause 또는 완료 증명 전까지 같은 상태를 다시 관찰하고 안전한 다음 action을 수행한다.
+이 구조는 long-running process의 desired/observed reconciliation, durable checkpoint, idempotent retry와 explicit termination을 게임 개발의 Git/file memory에 맞춰 사용한다.
 
-## 외부 공식 Reference
+### Kubernetes controller 원칙
 
-### Kubernetes Controllers
-
-[Kubernetes Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)는 controller를 current state를 desired state에 가깝게 만드는 non-terminating control loop로 정의한다. Controller는 직접 작업하거나 다른 component에 작업을 요청하고, 완료 결과를 다시 shared state에 기록한다.
+[Kubernetes controllers](https://kubernetes.io/docs/concepts/architecture/controller/)는 desired state를 observed state에 가깝게 만드는 non-terminating control loop를 설명한다.
 
 채택:
 
-- DESIGN과 INBOX를 desired state, STATUS와 executor branch/worktree/commit을 observed projection/evidence로 분리한다.
-- 한 tick의 성공을 “대화가 끝남”이 아니라 desired state와의 차이가 줄었는지로 판단한다.
-- Inbox entry ID, executor branch, owned paths와 commit ancestry를 ownership label처럼 사용한다.
-- Approval-free scheduled coordinator가 persistent worktree를 직접 개발·검증·통합해 desired state를 실현한다.
+- 성공 기준은 conversation 종료가 아니라 entry가 clean main에 통합되고 live queue에서 정리됐는지다.
+- 매 fresh session이 current Git/file evidence에서 재구성한다.
+- State marker와 checkpoint는 restart 후 idempotent recovery를 가능하게 한다.
 
-수정 채택:
+수정:
 
-- Kubernetes API server 대신 Git main, executor branch/worktree와 commit evidence가 durable shared state다.
-- Event stream 대신 10분 standalone scheduled tick으로 reconcile한다.
+- Event watch 대신 local outer process가 queue를 확인한다.
+- 하나의 successful reconcile session이 transition 하나가 아니라 **entry 하나 전체**를 완결한다.
 
-### Temporal Durable Execution
+### Durable execution 원칙
 
-[Temporal Documentation](https://docs.temporal.io/)은 crash·network failure·infrastructure outage 뒤에도 durable execution history에서 작업을 이어가는 것을 핵심으로 설명한다.
+[Temporal Durable Execution](https://docs.temporal.io/workflow-execution)는 failure 뒤 durable progress에서 resume하는 실행 모델을 설명한다.
 
 채택:
 
-- 이전 coordinator chat memory가 없어도 INBOX·STATUS와 registration/checkpoint/final/integration commit에서 재개한다.
-- Interrupted run은 새 기능으로 넘어가지 않고 같은 executor branch/worktree를 먼저 resume한다.
-- Worktree가 없어져도 local/remote executor branch의 clean checkpoint/final commit에서 같은 worktree를 재구성한다.
+- DESIGN, STATUS, INBOX, Git commit/ref/worktree와 artifact만 durable state다.
+- Checkpoint는 화면 QA 전과 correction마다 runnable current best를 보존한다.
+- 재시작은 session history가 아니라 commit graph와 file state에서 이어간다.
+
+수정:
+
+- 별도 workflow database 대신 Git과 Markdown을 사용한다.
+- Worktree가 사라져도 local/remote executor branch에서 재구성한다.
+
+### Erlang/OTP supervision 원칙
+
+[Erlang supervisor behavior](https://www.erlang.org/doc/system/sup_princ.html)는 child failure restart와 정상 종료를 구분한다.
+
+채택:
+
+- Codex nonzero exit 또는 미완료 entry는 abnormal failure다.
+- `STOP`, concrete external blocker와 verified completion의 exit 0은 정상 종료다.
+- Task Scheduler는 abnormal exit만 제한 횟수 재시작한다.
+- Loop task는 `MultipleInstances IgnoreNew`, process는 PID guard를 사용한다.
+
+수정:
+
+- Restart intensity는 `loop/env.ps1`의 count/delay가 소유한다.
+- 같은 failure를 반복할 때는 log와 durable evidence에서 다음 repair로 승격한다.
+
+### GitHub Actions concurrency 원칙
+
+[GitHub Actions concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)는 동일 key의 concurrency group에서 동시 실행을 제한한다.
+
+채택:
+
+- Repository main write는 하나의 renewable lease로 직렬화한다.
+- 동일 checkout의 outer runner는 PID guard와 Task Scheduler instance policy로 중복을 막는다.
+- 다른 entry의 branch/worktree를 수정하지 않는다.
+
+### OpenAI Codex non-interactive 실행
+
+[OpenAI Codex](https://github.com/openai/codex)의 `codex exec`은 script/CI용 non-interactive path다. 설치된 CLI help에서 `exec`, `--ephemeral`, `--json`, `--output-last-message`, `--cd`, `--model`, `--sandbox`를 검증했다.
+
+채택:
+
+- Entry마다 `codex exec --ephemeral`을 새로 실행한다.
+- `resume`, `fork`, `--continue`를 사용하지 않는다.
+- Explicit PATH와 executable absolute path를 제공한다.
+- `approval_policy="never"`를 executor process에 직접 준다.
+- JSONL event와 last message를 날짜별 run log에 보존한다.
 
 비채택:
 
-- Temporal server, SDK, database와 deterministic workflow runtime은 현재 정적 ESM repository에 추가하지 않는다.
+- Codex app scheduled conversation이 또 다른 task를 만들고 승인을 기다리는 coordinator 구조
+- 한 session이 checkpoint만 남기고 다음 scheduled conversation에 verifier/integration을 떠넘기는 구조
+- Prompt text로 execution permission을 우회하는 구조
 
-### AWS Step Functions Retry And Catch
+## 팀장 제공 fresh-session prompt 반영
 
-[AWS Step Functions error handling](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html)은 예상 가능한 실패를 Retry하고, 반복 실패는 Catch를 통해 명시적인 recovery state로 전환한다.
-
-채택:
-
-- 같은 conflict를 매 tick 동일 문구로 보고하지 않는다.
-- 두 번 반복되면 다음 safe recovery action으로 승격하고, 세 번 반복되면 dedicated recovery item/task로 전환한다.
-- Title drift, interrupted task, archived task, base drift, missing task와 duplicate writer를 서로 다른 recovery class로 취급한다.
-
-수정 채택:
-
-- 별도 retry timer 대신 scheduled tick이 retry interval이다.
-- Error payload 대신 inbox entry의 `실행 상태`에 recovery action과 commit/worktree evidence를 남긴다.
-
-### OpenAI Scheduled Tasks, Permissions And Worktrees
-
-[OpenAI Scheduled tasks](https://learn.chatgpt.com/docs/automations)는 standalone scheduled run이 매번 새 chat에서 무인 시작하고 local Git project 또는 worktree에서 실행될 수 있으며, 조직 정책이 허용하면 `approval_policy = "never"`를 사용한다고 설명한다. [OpenAI Worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees)는 변경 격리 경계를 제공한다.
-
-채택:
-
-- Coordinator context는 disposable하고 Git evidence만 durable하다.
-- Scheduled run 자신을 autonomous writer로 사용해 unattended permission 경계를 유지한다.
-- 실제 개발 identity는 one-INBOX-entry/one-executor-branch/persistent-worktree다.
-- 구현 checkpoint와 fresh-run verification을 서로 다른 run으로 분리해 writer와 verifier를 분리한다.
-- Scheduled run은 lifecycle transition 하나 뒤 종료한다.
-
-비채택:
-
-- Scheduled run이 `create_thread`로 별도 Codex-managed worktree task를 만들고 그 task의 승인을 기다리는 구조. 이 저장소의 2026-08-30 runtime evidence에서 child task는 `on-request`였고 prompt text로 권한 경계를 바꿀 수 없었다.
-- Computer Use로 permission approval UI를 대신 누르는 구조.
-
-### Fresh-Session File-Memory Loop Prompt
-
-팀장이 제공한 자율 loop 개선 prompt는 매 회차 새 headless session, 파일 기반 기억, 한 결과만 구현, 검사 뒤 recoverable commit, 실제 화면 확인, 회차 log, 명시적 stop과 반복 feedback의 규칙 승격을 강조한다.
+팀장 prompt의 핵심은 `새 headless session`, `파일 기반 기억`, `한 회차의 완전한 작업`, `검사 후 recoverable commit`, `실제 창 PNG 직접 판독`, `날짜별 log`, `STOP`, `명시적 environment`다.
 
 직접 채택:
 
-- Codex standalone automation의 각 run을 새 coordinator task/context로 사용하고 이전 run 대화를 잇지 않는다.
-- 한 tick은 state-changing action 하나만 수행한다.
-- gameplay candidate는 deterministic checks 뒤 visual QA 전에 executor branch checkpoint commit으로 보존하고 push한다.
-- 실제 Canvas artifact와 반복 failure evidence를 품질·규칙 승격 입력으로 사용한다.
+- `loop/loop.ps1`, `loop/PROMPT.md`, `loop/env.ps1`, `loop/STOP`, `logs/`
+- DESIGN/STATUS/INBOX 우선 읽기와 session 종료 전 STATUS 인수인계
+- 실제 visible Chrome capture 후 종료하는 `loop/visual-qa.ps1`
+- Windows Task Scheduler logon trigger와 control script
 
-Codex-native 수정 채택:
+저장소에 맞게 수정:
 
-- `docs/DESIGN.md`, `docs/STATUS.md`, `docs/feedback/INBOX.md`를 file memory로 직접 사용한다. DESIGN은 안정된 방향, STATUS는 재구성 가능한 현재 projection, INBOX는 메인 대화 원문과 lifecycle을 소유한다.
-- 팀장이 등록 요청한 원문은 INBOX에서 불변으로 보존하고 agent-derived title·실행 계약·결과는 raw block 밖에 둔다.
-- 날짜별 shell log 대신 Codex run task와 compact timestamp title, Git commit graph를 회차 기록으로 사용한다.
-- `STOP` file 대신 automation `PAUSED`, item `paused/cancelled` 상태를 사용한다.
-- shell `env` 대신 automation의 model, reasoning, cadence, project와 execution environment를 사용한다.
-- 별도 무한 headless process 안에서 Codex scheduler를 다시 실행하지 않는다. 승인된 finite roadmap 완료와 명시 pause가 outer-loop stop을 소유한다.
+- Shell은 host OS에 맞춰 PowerShell을 사용한다.
+- Executor는 Claude가 아니라 `codex exec`이다.
+- “하나만 만들기”는 entry 전체를 끝내는 동안 병목을 하나씩 수리한다는 inner-loop 규칙이다.
+- Checkpoint 뒤 visual QA, final, integration과 cleanup을 같은 session에서 계속한다.
+- Queue가 비면 `ROADMAP` session이 DESIGN의 남은 playable job 하나를 완결한다. 전체 완료 proof를 STATUS/Git에 남긴 뒤에만 정상 종료한다.
 
-## Local Engineering Reference
+## Recovery matrix
 
-`C:/projects/baeseongjin`의 `coordinate-github-tasks`와 `github-task-flow`는 실제 worktree·branch·changed path·commit을 ownership 근거로 사용하고, 공유 hunk가 있을 때만 직렬화하며 다른 worktree를 추측 수정하지 않는다.
+| Observed drift                             | 같은 fresh session의 reconcile action                      | 성공 상태                                |
+| ------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------- |
+| `new`, executor ref 없음                   | 계약 파생, branch/worktree 생성, 구현 계속                 | 같은 session에서 integrated/cleaned      |
+| Branch 있음, worktree 없음                 | 동일 branch로 재구성                                       | 구현/검증 계속                           |
+| Dirty owned paths                          | current best와 diff 확인 후 계속                           | checkpoint 갱신                          |
+| Unknown dirty paths                        | 보존하고 exact owner/conflict 기록                         | 안전한 resolution 또는 concrete block    |
+| Checkpoint만 있음                          | affected checks와 visible PNG를 새로 실행                  | final/integration 계속                   |
+| Final이 latest main 미포함                 | main을 branch에 non-rewriting merge, 재검증                | latest-main final                        |
+| Ready entry                                | final diff/check 재확인 후 main merge                      | integration commit                       |
+| Partial main merge                         | intent/staged paths가 유일하면 완료, 아니면 안전하게 abort | clean main                               |
+| Integration 뒤 done block 잔류             | exact parser로 block만 제거, actual hash 기록              | live queue cleanup                       |
+| Push 실패                                  | 같은 commit hash push 재시도                               | local==remote                            |
+| Codex crash/tool failure                   | nonzero exit; Task Scheduler restart                       | 새 ephemeral session이 evidence에서 복구 |
+| Concrete product/credential/external block | INBOX·STATUS에 exact blocker 기록                          | blocked 정상 종료                        |
+| STOP present                               | 현재 entry 완결 뒤 outer loop exit 0                       | task normal stop                         |
 
-채택:
+## Completion proof
 
-- Same repository라는 이유만으로 충돌로 보지 않고 실제 dirty path와 dependency commit을 확인한다.
-- Base drift는 history rewrite가 아니라 latest main을 반영한 뒤 영향 검증을 다시 수행한다.
-- Replacement와 duplicate reconciliation 전 원본 worktree/commit evidence를 보존한다.
+Outer loop는 단순히 queue가 잠시 비었다는 이유로 프로젝트를 완료 판정하지 않는다. 정상적인 roadmap completion에는 다음이 같은 fresh snapshot에서 모두 필요하다.
 
-`C:/projects/ball-fight-simulator`는 gameplay idempotency와 checkpoint 검증 사례는 제공하지만 autonomous Git orchestration reference는 아니므로 이번 loop 구조에는 직접 적용하지 않는다.
+- Approved DESIGN milestone과 quality proof 완료
+- Nonterminal live INBOX entry 없음
+- Unreconciled executor branch/worktree·partial merge·live lease 없음
+- Clean `main == origin/main`
+- Canonical Conflict와 concrete blocker 없음
+- Completion evidence가 STATUS/Git에 push됨
 
-## Recovery State Table
+Task Scheduler는 설치 직후 disabled다. `run-once` 두 회가 Codex fresh-session 실행, Git integration, log와 visible QA 경로를 검증한 뒤에만 `start`/`enable`한다.
 
-| Observed drift                        | Reconcile action                               | 다음 tick의 기대 상태       |
-| ------------------------------------- | ---------------------------------------------- | --------------------------- |
-| Executor branch 있음, worktree 없음   | 같은 branch에서 persistent worktree 재생성     | Implementing 또는 verifying |
-| Local branch 없음, remote branch 있음 | Remote tracking branch와 worktree 복구         | Recoverable writer          |
-| Run interrupted, dirty owned paths    | Checkpoint/current best 대조 후 같은 item 계속 | Implementing                |
-| Unknown dirty/overlapping paths       | 보존하고 exact conflict 기록                   | Conflict 또는 recovery item |
-| Final commit base drift               | Executor branch에 non-rewriting main merge     | Fresh verification          |
-| Clean final과 ready evidence 있음     | Owned diff 검증 후 main merge·done push        | Done                        |
-| Push 실패, local commit 있음          | 같은 hash push 재시도                          | Remote durable state        |
-| Main lifecycle가 branch보다 뒤짐      | Commit graph에서 idempotent 상태 정합          | Single authoritative phase  |
-| Integration merge 뒤 done block 잔존  | Exact block cleanup·STATUS merge hash commit   | 다음 live entry             |
-| 사람 질문·외부 blocker                | 새 dispatch만 보류, automation은 계속 관찰     | 답/외부 상태 변경 후 resume |
-| 모든 completion proof 통과            | 완료 commit·push 후 automation pause           | Roadmap complete            |
+## 관찰 가능한 evidence
 
-## Completion Contract
+- `logs/YYYY-MM-DD/<yyyyMMdd-HHmmss>-<IN-ID>/events.jsonl`
+- 같은 폴더의 `last-message.md`, `summary.json`
+- `artifacts/visual-qa/<run>-<IN-ID>/*.png`와 JSON metadata
+- INBOX lifecycle/current best/blocker, STATUS projection
+- Executor/local/remote ref, checkpoint/final/integration commit graph
+- Task Scheduler state/result, PID guard와 STOP presence
 
-다음 조건을 한 fresh snapshot에서 모두 확인할 때만 현재 approved roadmap이 완료다.
-
-1. `docs/DESIGN.md`의 approved milestone이 `docs/STATUS.md`에서 모두 완료다.
-2. Nonterminal inbox entry가 없다.
-3. 마지막 integrated vertical slice가 quality threshold와 실제 사용자 경로 검증을 통과했다.
-4. `main`이 clean하고 `origin/main`과 같다.
-5. Unreconciled executor commit, duplicate writer와 Canonical Conflict가 없다.
-
-완료 증거를 Git에 push하기 전에는 automation을 멈추지 않는다. 완료 후 새 팀장 요청이 등록되면 같은 automation을 재활성화하고 새 desired state를 소비한다.
-
-## 적용하지 않는 수렴 방식
-
-- force push, shared-history rewrite와 broad reset
-- executor branch/worktree의 guessed deletion
-- 품질 threshold 하향 또는 실패를 완료로 재분류
-- 미확인 사용자 변경 overwrite
-- 외부 daemon, workflow database 또는 장기 실행 manager conversation
+`$dev-loop-status`는 이 evidence를 read-only로 점검한다. 자동 repair는 다음 complete-work session이 소유한다.

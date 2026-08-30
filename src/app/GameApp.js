@@ -83,6 +83,7 @@ export class GameApp extends SceneNode {
     this.retroRenderer = new CanvasRetroRenderer(this.retroHost, this.camera);
 
     this.uiBridge = null;
+    this.manualMode = false;
     this.input = new GameInputController({
       isActive: () => this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU,
     });
@@ -107,9 +108,10 @@ export class GameApp extends SceneNode {
     this.uiBridge = assertUiBridge(uiBridge);
   }
 
-  start() {
+  start({ manual = false } = {}) {
     if (!this.uiBridge) throw new Error('GameApp.start() 전에 UI bridge를 연결해야 합니다.');
-    if (this.animationFrameId !== null) return;
+    if (this.isInsideTree) return;
+    this.manualMode = Boolean(manual);
     this.enterTree();
   }
 
@@ -130,13 +132,15 @@ export class GameApp extends SceneNode {
     this.uiBridge.setSaveStatus(
       this.progressionStorage ? '성장 자동 저장 준비' : '이 세션만 유지 · 저장 사용 불가',
     );
-    this.input.attach();
-    this.abortController = new AbortController();
-    this.attachEvents();
     this.resizeObserver.observe(this.gameHost.canvas);
     this.resizeObserver.observe(this.polygonHost.canvas);
     this.resizeObserver.observe(this.retroHost.canvas);
     this.resize();
+    if (this.manualMode) return;
+
+    this.input.attach();
+    this.abortController = new AbortController();
+    this.attachEvents();
     this.runner.reset(performance.now());
     this.animationFrameId = requestAnimationFrame((time) => this.loop(time));
   }
@@ -165,6 +169,44 @@ export class GameApp extends SceneNode {
     this.input.clear({ resetSequences: true });
     this.scene.reset();
     this.onScreenChanged();
+  }
+
+  runVisualQa({ start, frame, scenario }) {
+    if (!scenario || typeof scenario !== 'object') {
+      throw new TypeError('Visual QA scenario가 필요합니다.');
+    }
+    this.start({ manual: true });
+    this.scene.reset();
+    this.scene.setVisualQaLocation(scenario);
+
+    const inputSnapshot = this.createInputSnapshot();
+    const simulationSettings = Object.freeze({
+      animationSpeed: 1,
+      cameraFeedbackEnabled: true,
+    });
+    for (let index = 0; index < frame; index += 1) {
+      this.fixedProcess(1 / 120, {
+        inputSnapshot,
+        simulationSettings,
+        active: true,
+      });
+    }
+    const renderFrame = this.scene.createRenderFrame(0);
+    const result = Object.freeze({
+      ready: true,
+      start,
+      frame,
+      mapId: renderFrame.map.id,
+      regionId: renderFrame.map.activeRegionId,
+      roomId: renderFrame.map.activeRoomId,
+      itemCount: renderFrame.items.length,
+      viewport: Object.freeze({
+        width: this.gameHost.canvas.clientWidth,
+        height: this.gameHost.canvas.clientHeight,
+      }),
+    });
+    globalThis.__POLYGON_RPG_VISUAL_QA__ = result;
+    return result;
   }
 
   resetScene() {
@@ -309,7 +351,6 @@ export class GameApp extends SceneNode {
   }
 
   destroy() {
-    if (this.animationFrameId === null) return;
-    this.exitTree();
+    if (this.isInsideTree) this.exitTree();
   }
 }

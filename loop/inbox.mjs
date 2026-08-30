@@ -108,6 +108,56 @@ export function removeDoneEntry(source, entry) {
   };
 }
 
+function metadataValue(block, key) {
+  const metadataEndMatch = /\r?\n### /.exec(block);
+  const metadata = block.slice(0, metadataEndMatch?.index ?? block.length);
+  const match = new RegExp(`^- ${key}: (.+?)[ \\t]*\\r?$`, 'm').exec(metadata);
+  return match?.[1] ?? null;
+}
+
+export function listEntries(source) {
+  const headings = entryHeadings(source);
+  return headings.map((heading, index) => {
+    const end = headings[index + 1]?.start ?? source.length;
+    const block = source.slice(heading.start, end);
+    return Object.freeze({
+      id: heading.entry,
+      status: entryStatus(block),
+      priority: metadataValue(block, 'priority') ?? 'normal',
+      title: metadataValue(block, 'title'),
+      start: heading.start,
+      end,
+    });
+  });
+}
+
+function nextEntry(entries) {
+  const activeStatuses = new Set([
+    'implementing',
+    'verifying',
+    'ready-for-integration',
+    'integrating',
+  ]);
+  const active = entries.find((entry) => activeStatuses.has(entry.status));
+  if (active) return active;
+
+  const priorityRank = new Map([
+    ['urgent', 0],
+    ['high', 1],
+    ['normal', 2],
+    ['low', 3],
+  ]);
+  return (
+    entries
+      .filter((entry) => entry.status === 'new')
+      .sort(
+        (left, right) =>
+          (priorityRank.get(left.priority) ?? 2) - (priorityRank.get(right.priority) ?? 2) ||
+          left.id.localeCompare(right.id),
+      )[0] ?? null
+  );
+}
+
 function resolveContext(values) {
   const repo = resolve(values.get('repo') ?? process.cwd());
   const root = git(['rev-parse', '--show-toplevel'], repo);
@@ -133,6 +183,38 @@ function plan(values) {
   } catch (error) {
     fail(error.message, 2, { file, entry });
   }
+}
+
+function list(values) {
+  const { file } = resolveContextForList(values);
+  try {
+    const entries = listEntries(readFileSync(file, 'utf8'));
+    process.stdout.write(`${JSON.stringify({ ok: true, command: 'list', file, entries })}\n`);
+  } catch (error) {
+    fail(error.message, 2, { file });
+  }
+}
+
+function next(values) {
+  const { file } = resolveContextForList(values);
+  try {
+    const entries = listEntries(readFileSync(file, 'utf8'));
+    process.stdout.write(
+      `${JSON.stringify({ ok: true, command: 'next', file, entry: nextEntry(entries) })}\n`,
+    );
+  } catch (error) {
+    fail(error.message, 2, { file });
+  }
+}
+
+function resolveContextForList(values) {
+  const repo = resolve(values.get('repo') ?? process.cwd());
+  const root = git(['rev-parse', '--show-toplevel'], repo);
+  const customFile = values.get('file');
+  return {
+    root,
+    file: customFile ? resolve(customFile) : join(root, 'docs', 'feedback', 'INBOX.md'),
+  };
 }
 
 function removeDone(values) {
@@ -171,9 +253,11 @@ function removeDone(values) {
 
 function main() {
   const { command, values } = parseArgs(process.argv.slice(2));
-  if (command === 'plan') plan(values);
+  if (command === 'list') list(values);
+  else if (command === 'next') next(values);
+  else if (command === 'plan') plan(values);
   else if (command === 'remove-done') removeDone(values);
-  else fail('명령은 plan 또는 remove-done이어야 합니다.');
+  else fail('명령은 list, next, plan 또는 remove-done이어야 합니다.');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

@@ -73,6 +73,42 @@ Pixel Size, Posterization, Outline, Alpha Threshold, Pixel Snap, Animation Speed
 - `npm run format`: Prettier로 포맷
 - `npm run format:check`: 포맷 검사
 
+## 자동 개발 loop
+
+Windows outer loop는 INBOX entry마다 기억 없는 새 `codex exec --ephemeral` session을 열고 요청 하나를 구현·검사·visible PNG QA·수정·commit·main 통합·INBOX 정리까지 완결합니다. 실행 경로와 model은 [`loop/env.ps1`](./loop/env.ps1), session 계약은 [`loop/PROMPT.md`](./loop/PROMPT.md)에 있습니다.
+
+```powershell
+# 최초 등록: 로그인 trigger를 만들지만 아직 비활성 상태로 둠
+pwsh -NoProfile -File .\loop\control.ps1 install
+
+# 실제 entry 하나로 수동 검증
+pwsh -NoProfile -File .\loop\control.ps1 run-once
+
+# 자동 실행 시작 / 현재 entry 완료 후 정상 정지 / 상태 확인
+pwsh -NoProfile -File .\loop\control.ps1 start
+pwsh -NoProfile -File .\loop\control.ps1 stop
+pwsh -NoProfile -File .\loop\control.ps1 status
+
+# 로그인 자동 시작만 켜기/끄기
+pwsh -NoProfile -File .\loop\control.ps1 enable
+pwsh -NoProfile -File .\loop\control.ps1 disable
+```
+
+Task Scheduler 이름은 `PolygonRpgFileMemoryLoop`입니다. 로그인 시 시작하고 abnormal exit만 재시작합니다. INBOX가 비면 fresh `ROADMAP` session이 DESIGN의 다음 playable job을 완결하며, 전체 완료 proof를 STATUS/Git에 남긴 뒤에만 exit code 0으로 끝납니다. `loop/STOP`도 현재 entry 완료 뒤 정상 종료합니다. 날짜별 실행 evidence는 `logs/`, 화면 evidence는 `artifacts/visual-qa/`에 생성되며 둘 다 Git에는 넣지 않습니다.
+
+## Visible visual QA
+
+환경변수로 stable 시작 장면과 fixed frame을 정한 뒤 실제 Chrome 창을 띄워 PNG를 저장하고 닫습니다.
+
+```powershell
+$env:GAME_START = 'dungeon'
+$env:GAME_FRAME = '180'
+$env:VISUAL_QA_OUTPUT = 'C:\projects\polygon-rpg\artifacts\visual-qa\manual-dungeon-180'
+pwsh -NoProfile -File .\loop\visual-qa.ps1
+```
+
+`GAME_START`는 `academy`, `training`, `field`, `dungeon`, `boss`, `glasswind-field`, `glasswind-dungeon`, `glasswind-boss`를 지원합니다. 결과 폴더에는 viewport PNG와 start/room/frame/viewport/console 상태 JSON이 함께 저장됩니다.
+
 ## GitHub Pages 배포
 
 GitHub Pages가 `main` 브랜치의 루트(`/`)를 그대로 제공합니다. 별도 빌드나 배포용 GitHub Actions는 사용하지 않습니다.

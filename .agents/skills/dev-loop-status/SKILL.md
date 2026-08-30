@@ -1,6 +1,6 @@
 ---
 name: dev-loop-status
-description: Inspect Polygon RPG's file-memory development loop, raw Markdown inbox, STATUS, recent runs, executor branches/worktrees, checkpoints, lease, merge/push and DESIGN convergence. Read-only by default; use for loop health, stalled progress, permission or conflict diagnosis. Do not implement or mutate lifecycle state.
+description: Inspect Polygon RPG's Windows file-memory development loop, Task Scheduler, PID/STOP, raw Markdown inbox, STATUS, recent codex exec logs, visual artifacts, executor branches/worktrees, lease, merge/push and DESIGN convergence. Read-only by default; use for loop health, incomplete-session, stalled progress, permission or conflict diagnosis. Do not implement or mutate lifecycle state.
 ---
 
 # Dev Loop Status
@@ -15,12 +15,14 @@ Read completely:
 - [`docs/DESIGN.md`](../../../docs/DESIGN.md)
 - [`docs/STATUS.md`](../../../docs/STATUS.md)
 - [`docs/feedback/INBOX.md`](../../../docs/feedback/INBOX.md)
+- [`docs/development/process.md`](../../../docs/development/process.md)
+- [`loop/env.ps1`](../../../loop/env.ps1)
 - [`dev-team-loop` Manage mode](../dev-team-loop/references/manage.md)
 - [`dev-team-loop` Inbox schema](../dev-team-loop/references/inbox-schema.md)
 
 ## Read-Only Boundary
 
-Unless the user separately asks to repair/resume, do not acquire/release lease, edit files/automation/worktrees, create entries/branches/tasks, commit, merge, push, clean or wait. Finish the audit before routing an authorized repair through `$dev-team-loop`.
+Unless the user separately asks to repair/resume, do not acquire/release lease, edit files/task/worktrees, create entries/branches, commit, merge, push, clean or wait. Finish the audit before routing an authorized repair through `$dev-team-loop`.
 
 ## Evidence Snapshot
 
@@ -28,11 +30,13 @@ Collect one bounded snapshot without polling:
 
 1. Fetch origin; record local/remote main, clean/dirty state, recent lifecycle/integration commits and partial merge state.
 2. Parse every nonterminal `IN-*` entry. Verify raw blocks remain present, identify the one expected active entry and compare it with STATUS.
-3. View automation config and the five latest compact coordinator results.
-4. Inspect the active entry's local/remote executor ref, merge base, ahead/behind, branch-only commits and `loop/worktree.mjs status` output.
-5. Inspect worktree HEAD/dirty paths, checkpoint/final containment, latest-main ancestry and owned-path boundary.
-6. Read lease status without acquiring; report renewal age, TTL and expected HEAD.
-7. Check duplicate active entries/writers, STATUS drift, unknown dirty paths, partial push/merge, repeated recovery failures and permission evidence.
+3. Run `loop/control.ps1 status` read-only. Inspect Task Scheduler action/trigger/settings, enabled/state/result, explicit PATH configuration, `loop/runner.pid` owner and `loop/STOP` presence.
+4. Read the five latest `logs/YYYY-MM-DD/<run>-<IN-ID>/summary.json`, matching JSONL exit evidence and last message. Do not poll or wait.
+5. Inspect the active entry's local/remote executor ref, merge base, ahead/behind, branch-only commits and `loop/worktree.mjs status` output.
+6. Inspect worktree HEAD/dirty paths, checkpoint/final containment, latest-main ancestry and owned-path boundary.
+7. Read lease status without acquiring; report renewal age, TTL and expected HEAD.
+8. For visual work, verify the latest PNG/metadata exists and its start/room/frame/viewport/console evidence matches the entry. Read the PNG only when judging visual quality.
+9. Check duplicate writers, STATUS drift, unknown dirty paths, partial push/merge, repeated recovery failures and whether a successful session left its entry live without `blocked`.
 
 Conversation summaries are diagnostics only. INBOX entry, branch/worktree and commit graph are authoritative; STATUS must be reconstructable from them.
 
@@ -41,31 +45,32 @@ Conversation summaries are diagnostics only. INBOX entry, branch/worktree and co
 Choose exactly one:
 
 - `INBOX_PENDING`: at least one `new` entry exists and no active entry owns execution yet.
-- `HEALTHY_IMPLEMENTING`: one entry/branch is implementing with fresh checkpoint, owned dirty progress or live renewed lease.
-- `HEALTHY_VERIFYING`: candidate checkpoint exists and a fresh run is independently verifying it.
-- `READY_FOR_INTEGRATION`: clean final and main inbox `ready-for-integration` evidence satisfy latest-main ancestry.
+- `HEALTHY_RUNNING`: one Codex entry session owns a live lease/PID and Git/log evidence has moved within the expected duration.
+- `RECOVERY_PENDING`: a prior abnormal session left checkpoint, dirty owned progress, final, partial integration or cleanup evidence that the next fresh session can deterministically resume.
 - `RECOVERING`: latest run repaired a branch/worktree, phase, main drift or push with a clear continuation.
-- `WAITING_HUMAN_OR_EXTERNAL`: one concrete non-inferable question/credential/external condition is recorded and automation remains active.
-- `PERMISSION_BLOCKED`: scheduled run itself lacks permission for an in-scope operation.
+- `WAITING_HUMAN_OR_EXTERNAL`: one concrete non-inferable question/credential/external condition is recorded and the loop is normally stopped for that blocker.
+- `PERMISSION_BLOCKED`: `codex exec` lacks permission for an in-scope operation despite the configured unattended policy.
 - `CONFLICT`: duplicate writers, unknown paths, overlapping ownership, divergent commits, ambiguous merge or irreconcilable INBOX/STATUS state.
-- `AUTOMATION_DOWN`: nonterminal input exists while automation is missing/paused/invalid or scheduled runs stopped.
-- `STALLED_SUSPECTED`: three intervals passed without entry phase, branch/worktree, checkpoint, commit or lease movement and no real blocker.
-- `COMPLETION_PENDING`: DESIGN is complete and no nonterminal input exists, but automation/main/STATUS/completion evidence has not converged.
-- `DESIGN_COMPLETE`: approved DESIGN milestones, quality proof and clean main/origin converge, no nonterminal inbox/executor remains, and automation is intentionally paused.
+- `LOOP_DISABLED`: nonterminal input exists while Task Scheduler is missing/disabled or STOP is present outside intentional validation.
+- `INCOMPLETE_SESSION`: exit 0 left the selected entry live without a concrete `blocked` state, or a session stopped normally at checkpoint/verifying/ready.
+- `STALLED_SUSPECTED`: three configured restart/observation intervals passed without log, branch/worktree, commit or lease movement and no real blocker.
+- `COMPLETION_PENDING`: DESIGN is complete and no nonterminal input exists, but task/main/STATUS/completion evidence has not converged.
+- `DESIGN_COMPLETE`: approved DESIGN milestones, quality proof and clean main/origin converge, no nonterminal inbox/executor remains, and the Windows loop exited normally with completion proof.
 
 ## Drift Patterns
 
-- `new` entry with automation still paused after registration.
+- `new` entry with an expected-active Windows task disabled/stopped.
 - Active entry lacks its branch/worktree, or another active entry overlaps it.
 - Raw request was rewritten rather than metadata being updated.
 - Executor branch modified INBOX or STATUS.
-- Branch checkpoint/final is unpushed or main INBOX phase lags unexplained.
-- STATUS active entry/current best/next transition disagrees with INBOX and commit graph.
+- Branch checkpoint/final is unpushed or main INBOX marker lags unexplained.
+- STATUS active entry/current best disagrees with INBOX and commit graph.
 - Final lacks latest main or remains unmerged for two intervals.
 - Main contains final while entry is not done, or merge/push is partial.
 - Lease is older than TTL or repeated runs stay locked after expiry.
-- Run title remains `실행중`, or repeated conflict does not escalate.
-- DESIGN complete while automation stays active producing no-op runs.
+- Run summary is missing, exit/result contradicts remaining entry, or repeated failure does not escalate to repair.
+- Visible work has no matching PNG/metadata/direct-read evidence.
+- DESIGN complete while the outer loop stays active producing only idle/no-op runs.
 
 ## Team-Lead Report
 
@@ -75,7 +80,7 @@ Reply in plain Korean:
 2. 무엇을 볼 수 있는가 — INBOX entry, checkpoint/final or current artifact.
 3. 무엇이 실제로 막혀 있는가 — one cause or 없음.
 4. 판정 — one classification and reason.
-5. 근거 — compact main/INBOX/STATUS/branch/worktree/automation/lease facts.
-6. 다음 안전 조치 — one transition or none when complete.
+5. 근거 — compact main/INBOX/STATUS/branch/worktree/task/PID/STOP/log/artifact/lease facts.
+6. 다음 안전 조치 — next complete-work recovery or none when complete.
 
-Distinguish scheduler activity, Git progress and DESIGN convergence. Do not invent a task link.
+Distinguish Task Scheduler activity, one-session completion, Git progress and DESIGN convergence. Do not invent a task link.
