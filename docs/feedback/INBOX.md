@@ -73,3 +73,44 @@
 ## Entries
 
 <!-- 메인 대화에서 등록을 요청한 새 원문은 이 아래에 append한다. -->
+
+## IN-20260831-002426
+
+- status: new
+- received_at: 2026-08-31T00:24:26+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: c5536260668fa23a373a51736301f7596b7d660b
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+유저 피격시 이팩트가 엉뚱한곳에 나와 수정해  인박스 추가해'
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
