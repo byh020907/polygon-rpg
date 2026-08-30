@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-171256
-status: ready-for-integration
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T17:12:56+09:00
@@ -47,6 +47,7 @@ Roadmap M4의 다음 미충족 수직 단위다. M3 첫 원정 loop가 메인에
 - 적용 rubric은 기능 완결성·조작 명료성·타격감/Effect·Graphics·Reference 정합·회귀 안전성 모두 2다.
 - `npm run check`, `git diff --check`, progression/command/장비 결정적 진단, 실제 mobile Canvas의 Portal→훈련 처치→인장→귀환→중량형 구매→reload 복원, `900×600` resize와 browser warning/error 검사를 통과했다.
 - 마지막 writer 이후 독립 verifier가 소유 범위, 최소 저장 schema, Lv.0~3 route, 장비 trade-off, 보상 1회와 renderer read-only 경계를 재검증했고 actionable finding이 없었다.
+- standalone coordinator가 final worktree commit의 부모·소유 범위·clean 상태를 확인하고 메인에 cherry-pick했다. `npm run check`, `git diff --check`, 생산 progression/command 모듈의 인장 9개→중량형 구매·장착→Lv.3 수련·저장 복원과 27/36 frame 차이, 새 저장 상태의 `900×600` Canvas·모바일 성장 UI·browser warning/error 부재를 독립 재검증했다.
 - 사용자 요청 없는 영구 test/script/fixture는 추가하지 않았다.
 
 업무보고: [`WI-20260830-171256-equipment-command-growth-loop.md`](../reports/WI-20260830-171256-equipment-command-growth-loop.md)
@@ -64,4 +65,6 @@ Roadmap M4의 다음 미충족 수직 단위다. M3 첫 원정 loop가 메인에
 - Roadmap: `M4 — 장비·command 성장 loop`
 - Depends on: `WI-20260830-154954`
 - Report: `docs/development/reports/WI-20260830-171256-equipment-command-growth-loop.md`
-- Final worktree commit: standalone coordinator 확인 대기
+- Final worktree commit: `a224ff868553f6d9c05f99cbe5861e1944eb2b7a`
+- Main integration commit: `6ed49bcd720df0bb870e09807a6e2a2272e9718e` (cherry-pick)
+- Main 독립 검증: commit graph·owned paths·`npm run check`·`git diff --check`·progression/save/command 결정적 검사와 실제 `900×600` Canvas/mobile UI/browser warning·error 부재 통과
