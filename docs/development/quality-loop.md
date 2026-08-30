@@ -1,6 +1,6 @@
 # Polygon RPG Quality-Driven Development Loop
 
-이 문서는 standalone direct executor가 기능 완료에서 멈추지 않고 플레이 가능한 결과를 관찰·평가·개선하는 공통 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), 현재 상태는 [`../STATUS.md`](../STATUS.md), 원문 queue와 lifecycle은 [`../feedback/INBOX.md`](../feedback/INBOX.md), 실행 절차는 [`process.md`](./process.md)가 소유한다.
+이 문서는 standalone direct executor가 기능 완료에서 멈추지 않고 플레이 가능한 결과를 관찰·평가·개선하는 공통 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), 현재 상태는 [`../STATUS.md`](../STATUS.md), 원문 queue와 lifecycle은 [`../feedback/INBOX.md`](../feedback/INBOX.md), 실행 절차는 [`process.md`](./process.md)가 소유한다. Engineering Method와 구현 단위 규칙은 [`../../AGENTS.md`](../../AGENTS.md)가 소유하며 이 문서에서 다시 정의하지 않는다.
 
 ## Vertical Slice Director
 
@@ -40,7 +40,7 @@ Executor는 반복 승인 없이 다음을 main inbox entry의 `실행 상태`�
 - **기준선 / 현재 최선 / 다음 병목**
 - **정지 조건:** 통과, 구체적 Product Decision, 반복 실패 또는 외부 blocker
 
-새 Product Requirement가 아니라면 immutable inbox 원문, DESIGN, 현재 코드, canonical 문서와 verified Reference에서 추론한다. Code checkpoint는 executor branch에, phase/current best/next bottleneck은 main INBOX·STATUS에 commit하므로 다음 fresh run이 대화 memory 없이 이어간다.
+새 Product Requirement가 아니라면 immutable inbox 원문, DESIGN, 현재 코드, canonical 문서, Core Engineering Principles와 검색한 구체 Reference에서 추론한다. Code checkpoint는 executor branch에, phase/current best/next bottleneck은 main INBOX·STATUS에 commit하므로 다음 fresh run이 대화 memory 없이 이어간다.
 
 ## 공통 품질 Rubric
 
@@ -57,7 +57,7 @@ Executor는 반복 승인 없이 다음을 main inbox entry의 `실행 상태`�
 | 조작 명료성          | 입력, 판정과 화면 반응의 성공·실패를 구분할 수 있다.                                   |
 | 타격감·Effect        | 적중, guard, 회피, punish 등 핵심 사건을 즉시 인지할 수 있다.                          |
 | Graphics·시각 일관성 | silhouette, 대비, motion과 UI가 충돌하지 않고 Polygon/Retro가 같은 상태를 전달한다.    |
-| Reference 정합       | 차용한 원칙이 설명이 아니라 실제 플레이에 드러난다.                                    |
+| 설계·Method 정합     | 제품 의도와 적용한 Engineering 원칙이 설명뿐 아니라 실제 구조·플레이에 드러난다.       |
 | 회귀 안전성          | 결정적 검사, syntax/lint/format, `git diff --check`, console과 resize 경로가 통과한다. |
 
 제출 결과는 적용 축에 0 또는 1이 없어야 하고 기능 완결성과 회귀 안전성이 2 이상이어야 한다. 코드 실행과 화면 합격은 다른 증거이며 마지막 writer 뒤 fresh-run verification을 생략하지 않는다.
@@ -128,7 +128,7 @@ Main integration run은 final이 latest main을 포함하고 source worktree가 
 4. Integration run은 기존 canonical owner 한 곳에만 승격한다.
 5. 오래된 규칙은 Staleness 절차로 수정·폐기한다.
 
-## Reference 채택 판단
+## 품질 Loop 근거와 채택 범위
 
 [눈치게임즈의 자율 개발 사례](https://www.youtube.com/@nunchigames)와 팀장이 제공한 개선 prompt에서 `매 회차 새 context`, `한 결과에 집중`, `recoverable checkpoint`, `실행 artifact 직접 관찰`, `파일 기반 기억`, `반복 feedback 규칙화`를 수정 채택한다. Codex scheduler·Git queue/branch·run history가 이미 소유하는 기능을 shell daemon이나 범용 DESIGN/STATUS/INBOX로 중복하지 않는다.
 

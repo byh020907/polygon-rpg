@@ -2,7 +2,7 @@
 
 Canvas 2D와 브라우저 기본 JavaScript 모듈로 만드는 웹 2D 액션 RPG입니다.
 
-공용 기반과 엔진 구조를 구현할 때는 로컬 `ball-fight-simulator`와 `baeseongjin` 저장소를 1차 레퍼런스로 사용합니다. 적용 기준은 [`docs/reference-repositories.md`](./docs/reference-repositories.md)에 정리되어 있습니다.
+Engineering 결정은 [`AGENTS.md`](./AGENTS.md)가 선택한 [Core Engineering Principles](https://github.com/byh020907/ai-development-methods/blob/main/methods/core-engineering-principles/METHOD.md)를 따릅니다. 과거 결정에 사용한 근거와 현재 채택 범위는 필요할 때만 [`docs/reference-repositories.md`](./docs/reference-repositories.md)에서 확인합니다.
 
 ## 시작하기
 

@@ -4,27 +4,17 @@
 
 ## Engineering Method
 
-다음 Method를 읽고 따른다.
+다음 Method를 전체 읽고 따른다.
 
-- [Reference-Guided Engineering](https://github.com/byh020907/ai-development-methods/blob/main/methods/reference-guided-engineering/METHOD.md)
+- [Core Engineering Principles](https://github.com/byh020907/ai-development-methods/blob/main/methods/core-engineering-principles/METHOD.md)
 
-이 프로젝트가 명시적으로 선택한 Engineering Method는 **Reference-Guided Engineering** 하나뿐이다. 사용자가 다른 Method를 프로젝트에 명시적으로 추가하기 전에는 같은 저장소의 sibling Method를 탐색·읽기·적용하거나, 해당 Method의 실행 전략을 암묵적으로 결합하지 않는다.
+이 프로젝트가 명시적으로 선택한 Engineering Method는 **Core Engineering Principles** 하나뿐이다. 사용자가 다른 Method를 프로젝트에 명시적으로 추가하기 전에는 같은 저장소의 sibling Method를 탐색·읽기·적용하거나 실행 전략을 암묵적으로 결합하지 않는다.
 
-이 Method는 directory·module boundary, 책임 분리, abstraction depth, dependency direction, state ownership, lifecycle, naming, error handling, testing과 verification 같은 Engineering Decision에만 적용한다. Product Requirement, Domain Model, Gameplay Rule, 화면·asset·balance, iteration 횟수, autonomous improvement loop와 Reference 자동 승격은 이 Method가 결정하지 않는다.
+이 Method는 구현 단위, abstraction, dependency, state ownership, lifecycle, 예상 확장, 문서 owner와 Git 기록 같은 Engineering Decision에 적용한다. Product Requirement, Domain Model, Gameplay Rule, 화면·asset·balance, iteration 횟수와 autonomous improvement loop는 이 Method가 결정하지 않는다.
 
 ## Project Development Process
 
 File memory는 [`DESIGN`](./docs/DESIGN.md)·[`STATUS`](./docs/STATUS.md)·[`INBOX`](./docs/feedback/INBOX.md), lifecycle은 [`process`](./docs/development/process.md), 품질은 [`quality-loop`](./docs/development/quality-loop.md)가 소유한다. 메인은 원문 등록, fresh tick은 실행·복구·통합을 담당한다.
-
-## Engineering References
-
-공동 초기 Exemplars는 `C:/projects/ball-fight-simulator`와 `C:/projects/baeseongjin`이다. 구조를 복제하지 않고 [§8](#8-reference-guided-engineering-policy)에 따라 필요한 판단만 적용한다. 허용된 Engineering 선택지의 근거 우선순위는 다음과 같다.
-
-1. Explicit User Instruction
-2. Established and verified Current Repository conventions
-3. Engineering Reference Repositories
-4. Reference-Guided Engineering Method
-5. General Engineering Judgment
 
 ## 1. Instruction Precedence
 
@@ -48,7 +38,7 @@ File memory는 [`DESIGN`](./docs/DESIGN.md)·[`STATUS`](./docs/STATUS.md)·[`INB
 | 문서/근거                     | 상태               | 소유 계약                                   | 확인 시점                   |
 | ----------------------------- | ------------------ | ------------------------------------------- | --------------------------- |
 | `AGENTS.md`                   | Canonical          | 에이전트 행동, 문서 계층, 검증 및 정리 규칙 | 모든 작업 시작 시           |
-| Reference-Guided Engineering  | Canonical Method   | Engineering Decision의 초기화와 진화 방식   | Engineering 작업 시작 시    |
+| Core Engineering Principles   | Canonical Method   | 구현 단위·확장·소유권·문서·Git 판단         | Engineering 작업 시작 시    |
 | `package.json`                | Canonical Evidence | 실행 명령, 의존성, 런타임 전제              | 명령 실행·도구·환경 변경 전 |
 | `git status --short --branch` | Runtime Evidence   | 브랜치, 기존 변경, 작업 충돌 가능성         | 모든 작업 시작 및 종료 시   |
 
@@ -58,40 +48,40 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 
 현재 작업과 직접 관련될 때만 읽는 중요 문맥이다. 선택한 문서는 일부만 추측해서 사용하지 말고 필요한 계약 전체를 확인한다.
 
-| 문서                                              | 상태                        | 담당 영역                                                   | 로드 조건                                                             |
-| ------------------------------------------------- | --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
-| `README.md`                                       | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                    |
-| `docs/development/process.md`                     | Canonical Process           | Codex-native loop, 피드백과 완료 evidence                   | 모든 구현·통합·상태 갱신 시                                           |
-| `docs/development/quality-loop.md`                | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                    |
-| `docs/development/loop-engineering-references.md` | Canonical Reference         | Reconcile·recovery·완료 증명                                | Coordinator·automation 작업 시                                        |
-| `docs/DESIGN.md`                                  | Canonical Product Reference | 안정된 제품 방향·milestone·non-scope                        | 새 작업·제품 방향 판단 시                                             |
-| `docs/STATUS.md`                                  | Canonical Working Memory    | 현재 단계·current best·다음 병목                            | Loop 시작·종료 시                                                     |
-| `docs/feedback/INBOX.md`                          | Canonical Queue             | 등록 원문·lifecycle·실행 상태·결과                          | 등록·실행·복구·완료 시                                                |
-| `loop/PROMPT.md`                                  | Canonical Run Prompt        | Fresh run의 읽기·commit·QA 순서                             | Coordinator 실행 시                                                   |
-| `docs/reference-repositories.md`                  | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
-| `docs/rendering-pipeline.md`                      | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시                 |
-| `docs/ui-architecture.md`                         | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시     |
-| `docs/runtime-architecture.md`                    | Canonical Reference         | Scene·Node tree lifecycle, Signal과 runtime composition     | App/Scene 조립, subsystem lifecycle와 system communication 작업 시    |
-| `docs/animation-system.md`                        | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
-| `docs/input-system.md`                            | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
-| `docs/world-map-system.md`                        | Canonical Reference         | Region·Room·Portal, active snapshot과 상태 패치             | Room/Portal, map runtime, 공간 전환과 camera travel 작업 시           |
+| 문서                                              | 상태                        | 담당 영역                                                   | 로드 조건                                                          |
+| ------------------------------------------------- | --------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| `README.md`                                       | Active Reference            | 프로젝트 소개, 실행 방법, 공개 배포 방식                    | 실행·온보딩·배포·공개 계약 변경 시                                 |
+| `docs/development/process.md`                     | Canonical Process           | Codex-native loop, 피드백과 완료 evidence                   | 모든 구현·통합·상태 갱신 시                                        |
+| `docs/development/quality-loop.md`                | Canonical Process           | 개발 페르소나, 품질 rubric, 평가·개선과 규칙 승격           | 모든 구현·검증·플레이 피드백과 품질 tuning 작업 시                 |
+| `docs/development/loop-engineering-references.md` | Canonical Reference         | Reconcile·recovery·완료 증명                                | Coordinator·automation 작업 시                                     |
+| `docs/DESIGN.md`                                  | Canonical Product Reference | 안정된 제품 방향·milestone·non-scope                        | 새 작업·제품 방향 판단 시                                          |
+| `docs/STATUS.md`                                  | Canonical Working Memory    | 현재 단계·current best·다음 병목                            | Loop 시작·종료 시                                                  |
+| `docs/feedback/INBOX.md`                          | Canonical Queue             | 등록 원문·lifecycle·실행 상태·결과                          | 등록·실행·복구·완료 시                                             |
+| `loop/PROMPT.md`                                  | Canonical Run Prompt        | Fresh run의 읽기·commit·QA 순서                             | Coordinator 실행 시                                                |
+| `docs/reference-repositories.md`                  | Evidence Catalog            | 현재 계약을 만든 과거 Engineering 근거와 채택 범위          | 기존 결정의 출처·trade-off를 재검증할 때                           |
+| `docs/rendering-pipeline.md`                      | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시              |
+| `docs/ui-architecture.md`                         | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시  |
+| `docs/runtime-architecture.md`                    | Canonical Reference         | Scene·Node tree lifecycle, Signal과 runtime composition     | App/Scene 조립, subsystem lifecycle와 system communication 작업 시 |
+| `docs/animation-system.md`                        | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시 |
+| `docs/input-system.md`                            | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시   |
+| `docs/world-map-system.md`                        | Canonical Reference         | Region·Room·Portal, active snapshot과 상태 패치             | Room/Portal, map runtime, 공간 전환과 camera travel 작업 시        |
 
 새로운 공식 설계, 개발 규칙 또는 운영 문서를 만들면 같은 변경에서 이 표에 등록한다. 인덱스에 없는 문서를 암묵적인 공식 규칙으로 취급하지 않는다.
 
 ### Layer 3: Conditional Sub-Context (On-Demand Context)
 
-특정 영역을 실제로 수정하거나 Layer 2의 근거를 검증할 때만 읽는다. 작업과 무관한 디렉터리나 레퍼런스 저장소 전체를 선제적으로 로드하지 않는다.
+특정 영역을 실제로 수정하거나 Layer 2의 근거를 검증할 때만 읽는다. 작업과 무관한 디렉터리나 Reference 전체를 선제적으로 로드하지 않는다.
 
-| 작업 트리거        | On-Demand Context                                                                                                      |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| 물리·충돌          | 현재 물리 구현 또는 새 공용 물리 경계, `docs/reference-repositories.md`가 지정한 두 로컬 레퍼런스의 관련 코드와 caller |
-| fixed-step·입력    | 현재 loop/input 구현, Baeseongjin의 `FixedStepRunner`, `InputSampler`, 실제 조립 caller                                |
-| 모바일 입력        | `docs/input-system.md`, Keyboard/Mobile adapter, pointer lifecycle, Alpine control catalog와 GameApp caller            |
-| 전투 모션·관절     | `docs/animation-system.md`, 현재 command controller·target pose clip·IK solver와 GameScene 조립 caller                 |
-| Canvas·카메라·DPR  | 현재 Canvas 진입점과 스타일, 레퍼런스의 Canvas host 및 scene renderer                                                  |
-| 파티클·절차적 효과 | 현재 effect/event 경계, Baeseongjin particle 문서·preset 구현, Ball Fight Simulator effect 구현                        |
-| 정적 배포          | `index.html`, `.nojekyll`, `README.md`, GitHub Pages의 실제 source 상태                                                |
-| lint·format·npm    | `package.json`, lockfile, ESLint/Prettier 설정과 실제 실행 결과                                                        |
+| 작업 트리거        | On-Demand Context                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| 물리·충돌          | 현재 물리 구현·caller·검증 경로와 같은 책임의 구체적 Reference                                              |
+| fixed-step·입력    | 현재 loop/input 구현·실제 조립 caller와 같은 책임의 구체적 Reference                                        |
+| 모바일 입력        | `docs/input-system.md`, Keyboard/Mobile adapter, pointer lifecycle, Alpine control catalog와 GameApp caller |
+| 전투 모션·관절     | `docs/animation-system.md`, 현재 command controller·target pose clip·IK solver와 GameScene 조립 caller      |
+| Canvas·카메라·DPR  | 현재 Canvas 진입점·스타일·resize caller와 같은 책임의 구체적 Reference                                      |
+| 파티클·절차적 효과 | 현재 effect/event 경계와 같은 책임의 presentation·particle·procedural geometry Reference                    |
+| 정적 배포          | `index.html`, `.nojekyll`, `README.md`, GitHub Pages의 실제 source 상태                                     |
+| lint·format·npm    | `package.json`, lockfile, ESLint/Prettier 설정과 실제 실행 결과                                             |
 
 Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁게 읽는다. 한 링크에서 시작해 관련성 없이 참조를 연쇄적으로 모두 읽지 않는다.
 
@@ -118,28 +108,32 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 
 현재 저장소의 공식 프로젝트 계약은 다음과 같다.
 
-| Rule ID                   | Canonical Rule                                                                                                                                                                    | 검증 근거                                 |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                                                          | `package.json`, `index.html`              |
-| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                                                             | `README.md`, GitHub Pages source          |
-| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                                                               | `README.md`, Pages API 상태               |
-| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                                                           | `package.json`                            |
-| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                                                   | `docs/ui-architecture.md`, `index.html`   |
-| `METHOD-REFERENCE-GUIDED` | 명시적으로 선택된 유일한 Method인 Reference-Guided Engineering을 따른다.                                                                                                          | 이 파일의 Engineering Method 절           |
-| `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                                                              | `docs/reference-repositories.md`          |
-| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                              | `docs/rendering-pipeline.md`, 실제 caller |
-| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                   | 이 파일, 향후 effect 구현과 caller        |
-| `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`            |
-| `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff      |
-| `PROCESS-DEV-TEAM-LOOP`   | 메인은 등록 요청 원문을 INBOX에 그대로 append한다. Fresh tick은 transition 하나만 수행하고 통합 뒤 `done` block을 정리한다.                                                       | process, skill                            |
-| `PROCESS-QUALITY-LOOP`    | INBOX entry·executor branch가 Director 경계다. Writer checkpoint 뒤 fresh run이 artifact를 독립 검증하고 final/integration을 진행한다.                                            | `docs/development/quality-loop.md`, skill |
-| `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`             |
-| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                           | `docs/development/process.md`, skill      |
-| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                     | `docs/animation-system.md`, 실제 solver   |
-| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                             | `docs/input-system.md`, 실제 adapters     |
-| `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                       | `docs/DESIGN.md`, 사용자 결정             |
-| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                                                               | `docs/world-map-system.md`, 실제 runtime  |
-| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                                                              | `docs/world-map-system.md`, 실제 resolver |
+| Rule ID                   | Canonical Rule                                                                                                                                                                    | 검증 근거                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `ARCH-STATIC-ESM`         | Vanilla JavaScript ES Module을 사용한다.                                                                                                                                          | `package.json`, `index.html`               |
+| `DEPLOY-NO-BUILD`         | 별도 프로덕션 빌드 없이 정적 `index.html`을 배포한다.                                                                                                                             | `README.md`, GitHub Pages source           |
+| `DEPLOY-PAGES-MAIN`       | GitHub Pages는 `main /`을 사용한다.                                                                                                                                               | `README.md`, Pages API 상태                |
+| `DEPS-NO-RUNTIME`         | 외부 게임·렌더 엔진은 사용자 승인 없이 추가하지 않는다.                                                                                                                           | `package.json`                             |
+| `UI-ALPINE`               | DOM UI는 로컬 vendored Alpine.js와 선언형 binding으로 관리한다.                                                                                                                   | `docs/ui-architecture.md`, `index.html`    |
+| `METHOD-CORE-PRINCIPLES`  | 명시적으로 선택된 유일한 Method인 Core Engineering Principles를 따른다.                                                                                                           | 이 파일의 Engineering Method·§8            |
+| `ARCH-UNIT-ORDER`         | 새 구조는 순수 함수 → Is-A → Has-A → Can-Do 순으로 판별하고 어느 조건에도 맞지 않으면 현재 책임의 구체 구현으로 둔다.                                                             | Core Engineering Principles·§8             |
+| `ARCH-EXPECTED-EXTENSION` | 제품 계약과 확인된 변화 방향에서 예상되는 확장은 명시적 state·event·dependency 경계로 선제 구조화한다.                                                                            | Core Engineering Principles·§8             |
+| `ARCH-REPEAT-OWNERSHIP`   | 같은 상태·사건의 문제가 여러 곳에서 반복되면 각 증상 수정보다 소유권과 전달 구조를 먼저 재검토한다.                                                                               | Core Engineering Principles·§8             |
+| `DOC-SINGLE-OWNER`        | 각 개발 규칙·설계 결정·외부 동작은 현재 기준 문서 하나가 소유하고, 관련 변경은 같은 작업에서 owner와 인덱스를 정합한다.                                                           | Core Engineering Principles·이 문서 인덱스 |
+| `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                              | `docs/rendering-pipeline.md`, 실제 caller  |
+| `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
+| `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`             |
+| `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff       |
+| `PROCESS-DEV-TEAM-LOOP`   | 메인은 등록 요청 원문을 INBOX에 그대로 append한다. Fresh tick은 transition 하나만 수행하고 통합 뒤 `done` block을 정리한다.                                                       | process, skill                             |
+| `PROCESS-QUALITY-LOOP`    | INBOX entry·executor branch가 Director 경계다. Writer checkpoint 뒤 fresh run이 artifact를 독립 검증하고 final/integration을 진행한다.                                            | `docs/development/quality-loop.md`, skill  |
+| `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`              |
+| `GIT-PURPOSE-COMMITS`     | 큰 작업은 독립적으로 이해·검증·되돌릴 수 있는 목적 단위로 나누고 commit에는 변경 이유와 검증 근거를 남긴다.                                                                       | Core Engineering Principles·process        |
+| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                           | `docs/development/process.md`, skill       |
+| `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                     | `docs/animation-system.md`, 실제 solver    |
+| `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                             | `docs/input-system.md`, 실제 adapters      |
+| `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                       | `docs/DESIGN.md`, 사용자 결정              |
+| `MAP-GAMEPLAY-RENDER`     | 단순 gameplay surface와 생성·override된 render geometry를 분리한다.                                                                                                               | `docs/world-map-system.md`, 실제 runtime   |
+| `MAP-STATE-PATCHES`       | 낮밤·날씨·스토리는 base map 복제가 아닌 결정적 조건 패치로 해석한다.                                                                                                              | `docs/world-map-system.md`, 실제 resolver  |
 
 공식 규칙이 추가·변경·폐기되면 이 Registry와 담당 문서를 같은 변경에서 갱신한다. 같은 의미의 규칙을 여러 문서에 서로 다른 표현으로 복제하지 않는다.
 
@@ -318,24 +312,31 @@ Next Step:
 
 브랜치, HEAD 또는 핵심 설정이 바뀌면 이전 요약의 코드·설정 주장을 캐시처럼 신뢰하지 않고 다시 검증한다.
 
-## 8. Reference-Guided Engineering Policy
+## 8. Core Engineering Principles Policy
 
-공용 기반, 물리, Canvas 렌더링, 파티클, 게임 루프 또는 개발 환경 구현 전에는 `docs/reference-repositories.md`를 Layer 2로 로드한다.
+구체 구현 전 질문과 책임을 고정하고 current code·caller·검증 경로를 확인한 뒤 같은 책임의 Reference를 검색한다. 고정 저장소나 순서는 없으며 계약·trade-off·적용 여부를 근거에 남긴다. Canonical Rule과 충돌하면 **Conflict Resolution Control**을 적용한다.
 
-- 1차 로컬 레퍼런스는 `C:/projects/ball-fight-simulator`와 `C:/projects/baeseongjin`이다.
-- 먼저 현재 저장소에서 같은 책임의 established and verified convention이 있는지 확인한다. 현재 Domain에 더 적합하고 반복 사용되며 실제 검증된 local convention은 그 영역에서 초기 Reference보다 우선한다.
-- 새 기반을 추측으로 설계하기 전에 두 저장소의 실제 코드, caller, 개발 규칙과 검증 방식을 확인한다.
-- Reference의 구조적 외형보다 책임의 크기, abstraction 도입 이유, dependency와 state 흐름, resource lifecycle, error handling, testing style 및 trade-off를 분석한다.
-- 레퍼런스 코드를 무조건 복사하지 않는다. `직접 재사용`, `Polygon RPG에 맞게 수정`, `원칙만 차용`, `적용하지 않음` 중 하나로 판단한다.
-- 레퍼런스의 게임 전용 결합, 단위 의미, 성능 특성과 의존 방향을 확인한다.
-- Reference에 interface, layer, manager, singleton 또는 공통화가 있다는 이유만으로 도입하지 않는다. 현재 변경에서 책임 경계, 대체 가능성, dependency control 또는 testability의 구체적 이점이 확인될 때만 abstraction을 추가한다.
-- Reference와 Current Repository에서 합리적으로 추론 가능한 class granularity, module boundary, state management와 verification style을 반복적으로 사용자에게 질문하지 않는다. Product Requirement, 새로운 Domain Decision 또는 코드에서 추론할 수 없는 의도만 사용자 판단 대상으로 남긴다.
-- 레퍼런스와 이 저장소의 Canonical Rule이 충돌하면 **Conflict Resolution Control**을 적용한다.
-- 작업 결과에 어떤 레퍼런스를 어떻게 반영했는지 기록한다.
+### 구현 단위 선택
 
-변경 질문 고정 → 현재 구현·caller·test 확인 → 대응 Reference 조사 → 문제·제약·dependency/state trade-off 추론 → 채택 분류 → 최소 구현·검증 → 근거와 채택 이유 보고 순으로 수행한다.
+새 structure는 다음 순서로 판별한다.
 
-Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌리지 않는다. 일회성 편의나 검증되지 않은 차이도 established convention으로 승격하지 않는다. 이 저장소의 convention을 다른 프로젝트의 새로운 Engineering Reference로 promotion하는 결정은 사용자만 할 수 있으며, AI Agent는 Golden Reference를 자동 선택하거나 승격하지 않는다.
+1. **순수 함수:** 입력만으로 결정되고 state·I/O·lifecycle이 필요 없는가?
+2. **Is-A:** subtype이 base 계약을 예외 없이 만족하고 대체해도 의미가 같은가?
+3. **Has-A:** 독립 state·invariant·validation·lifecycle을 owner가 생성·사용·해제하는가?
+4. **Can-Do:** 서로 다른 identity의 독립 능력이며 concrete class·UI·global state·적용 순서와 무관한가?
+
+처음 만족하는 단위로 구현한다. 어디에도 맞지 않으면 현재 책임의 구체 구현으로 둔다. 새 class·component·mixin은 `X is a Y`, `X has a Y`, `X can do Y` 중 하나로 설명되어야 하며 두 문장이 같은 책임이면 ownership을 다시 나눈다.
+
+### Runtime 개념과 실제 구현
+
+Node·Scene·Scene Tree·Signal은 개념과 실제 구현을 구분한다. 적용 계약은 [`docs/runtime-architecture.md`](./docs/runtime-architecture.md)가 소유한다. Tree lifecycle이 필요한 책임만 Node로 구현하고 행동 시작은 command, 완료 사건 통지는 Signal로 둔다.
+
+### 확장·반복 문제·문서·Git
+
+- DESIGN·확인된 caller 변화에서 예상되는 확장은 명시적인 state·event·dependency boundary로 선제 구조화한다. 막연한 가능성만으로 범용 framework를 만들지 않는다.
+- 같은 상태·사건의 문제가 반복되면 증상보다 최종 writer, ownership과 전달 방향을 재검토한다.
+- 기존 문서 owner를 먼저 검색한다. 규칙·설계 결정·외부 동작은 한 owner에만 쓰고 다른 문서는 링크하며, 구현·owner·인덱스를 같은 작업에서 갱신한다.
+- 큰 작업은 독립적으로 이해·검증·되돌릴 목적 단위로 commit한다. 한 목적의 작은 변경은 함께 commit하고 이유와 검증 근거를 남긴다.
 
 ## 9. Implementation Guardrails
 

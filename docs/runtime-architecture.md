@@ -1,6 +1,12 @@
 # Scene · Node · Signal Runtime Architecture
 
-이 문서는 Polygon RPG의 Vanilla JavaScript ESM runtime에서 Scene, Node와 Signal이 소유하는 composition, lifecycle과 communication 계약을 정의한다. Godot Engine은 Engineering Reference이며 Godot runtime, editor API나 resource format을 의존성으로 사용하지 않는다.
+이 문서는 Polygon RPG의 Vanilla JavaScript ESM runtime에서 Scene, Node와 Signal이 소유하는 composition, lifecycle과 communication 계약을 정의한다. [`AGENTS.md`](../AGENTS.md)가 선택한 Core Engineering Principles의 개념 경계를 이 프로젝트의 실제 구현으로 좁혀 설명하며 Godot runtime, editor API나 resource format을 의존성으로 사용하지 않는다.
+
+## Method 개념과 프로젝트 구현
+
+Core Engineering Principles에서 Node는 게임을 구성하는 가장 작은 단위, Scene은 여러 Node의 구조, Scene Tree는 부모-자식 관계로 연결된 전체 게임 세계, Signal은 Node 간 통지를 위한 observer-style event 개념이다. 이 개념 구조가 모든 data나 helper를 class·Node로 만들라는 뜻은 아니다.
+
+Polygon RPG 구현은 tree 참여에 따른 lifecycle과 fixed processing이 필요한 책임만 `SceneNode`로 만든다. Reusable subtree 조립 단위는 Scene, 전체 active hierarchy는 Scene Tree, producer가 consumer를 소유하지 않는 완료 사건은 Signal로 구현한다. Immutable data, 수학 helper, command state machine과 renderer는 독립 lifecycle이 없으면 plain ESM object/class로 유지한다.
 
 ## 핵심 계약
 
@@ -10,7 +16,7 @@ Node = tree 참여 여부에 따라 lifecycle과 fixed processing이 활성화�
 Signal = producer가 consumer를 소유하지 않는, 이미 발생한 사건의 동기 통지
 ```
 
-Scene·Node·Signal은 이름을 붙이는 분류가 아니라 실제 ownership을 바꿀 때만 사용한다. immutable data, 수학 helper, command state machine과 renderer처럼 독립 lifecycle이 필요 없는 객체는 plain ESM object/class로 유지한다.
+Scene·Node·Signal은 이름을 붙이는 분류가 아니라 실제 ownership을 바꿀 때만 사용한다.
 
 ## 현재 Scene Tree
 
@@ -84,7 +90,7 @@ GameScene ──RenderFrame Signal──→ GameApp ──same object──→ P
 - UI bridge는 status DTO를 표시만 하며 GameScene/MapRuntime field를 직접 수정하지 않는다.
 - input adapter는 common intent snapshot만 만들고 Scene tree나 combat command 결과를 알지 않는다.
 
-## Godot Reference 채택 범위
+## 개념 Reference와 채택 범위
 
 수정 채용:
 
