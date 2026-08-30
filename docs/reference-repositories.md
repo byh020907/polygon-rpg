@@ -124,19 +124,19 @@ Autonomous coordinator의 desired-state reconcile, durable recovery, retry escal
 
 가져올 핵심 원칙:
 
-- Main context에는 요구사항·결정·lifecycle 요약만 유지하고 인터뷰·탐색·로그·구현은 work-item 대화로 격리한다.
-- 작은 반복 lane은 permanent worktree를 재사용하고 큰 기능은 chat 전용 managed worktree를 사용한다.
+- Main은 등록 요청 원문을 INBOX에 그대로 append하고, 탐색·구현은 entry 전용 persistent executor worktree로 격리한다.
+- 각 INBOX entry는 deterministic branch/worktree를 재사용하며 별도 managed chat을 writer로 만들지 않는다.
 - Read-heavy 조사·검증은 병렬화하고 write-heavy 작업은 disjoint hunk·public contract ownership이 증명될 때만 병렬화한다.
 - Skill은 `.agents/skills/`에 두고 하나의 좁은 workflow를 progressive disclosure로 routing한다.
 - `AGENTS.md`는 기본 32 KiB instruction budget을 고려해 문서 인덱스와 핵심 규칙만 유지한다.
-- Manager는 대화 기억이 아니라 Git work item, Orca orchestration과 실제 worktree 상태로 복구 가능해야 한다.
+- Coordinator는 대화 기억이 아니라 DESIGN·STATUS·INBOX, executor branch와 실제 worktree 상태로 복구 가능해야 한다.
 - Agent loop는 환경 증거, human feedback checkpoint와 명시적인 정지 조건을 가진다.
 
 적용하지 않음:
 
 - Baeseongjin의 Issue·PR·단일 Lore commit 전체 절차를 현재 Polygon RPG의 자동 기본값으로 복제하지 않는다.
 - 새 scheduler, queue database 또는 polling daemon을 만들지 않는다. Git과 Orca state로 실패가 확인될 때만 추가 자동화를 검토한다.
-- 같은 skill을 register·manage·run·cancel 네 개로 노출하지 않는다. 사용자는 `dev-team-loop` 하나만 사용하고 내부 mode가 현재 맥락을 해석한다.
+- Register·manage·cancel을 별도 skill로 노출하지 않는다. 사용자는 `dev-team-loop` 하나만 사용하고 내부 mode가 현재 맥락을 해석한다.
 
 ## 적용 절차
 

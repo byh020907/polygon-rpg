@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } 
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
-const LOCK_NAME = 'polygon-rpg-roadmap-coordinator.lock';
+const LOCK_NAME = 'polygon-rpg-file-loop.lock';
 const DEFAULT_LEASE_MINUTES = 30;
 
 function fail(message, code = 1, details = {}) {
@@ -47,9 +47,7 @@ function resolveContext(values) {
 function acquire(values) {
   const { root, lockPath } = resolveContext(values);
   const expectedHead = values.get('expected-head');
-  if (!expectedHead) {
-    fail('acquire에는 --expected-head가 필요합니다.');
-  }
+  if (!expectedHead) fail('acquire에는 --expected-head가 필요합니다.');
 
   const branch = git(['branch', '--show-current'], root);
   const actualHead = git(['rev-parse', 'HEAD'], root);
@@ -87,11 +85,8 @@ function acquire(values) {
       Number.isFinite(parsedOwnerLeaseMinutes) && parsedOwnerLeaseMinutes > 0
         ? parsedOwnerLeaseMinutes
         : leaseMinutes;
-    const ageMs = Date.now() - leaseReference;
-    if (ageMs < ownerLeaseMinutes * 60_000) {
-      fail('다른 coordinator tick이 lease를 보유하고 있습니다.', 2, {
-        owner,
-      });
+    if (Date.now() - leaseReference < ownerLeaseMinutes * 60_000) {
+      fail('다른 loop run이 lease를 보유하고 있습니다.', 2, { owner });
     }
 
     const stalePath = `${lockPath}.stale-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -133,9 +128,7 @@ function renew(values) {
   if (!token || owner?.token !== token) {
     fail('현재 lease token과 일치하지 않아 갱신하지 않습니다.', 4, { owner });
   }
-  if (!expectedHead) {
-    fail('renew에는 --expected-head가 필요합니다.');
-  }
+  if (!expectedHead) fail('renew에는 --expected-head가 필요합니다.');
 
   const branch = git(['branch', '--show-current'], root);
   const actualHead = git(['rev-parse', 'HEAD'], root);

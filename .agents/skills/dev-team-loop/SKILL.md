@@ -1,50 +1,42 @@
 ---
 name: dev-team-loop
-description: Run Polygon RPG's approval-free Git-state roadmap loop. Fresh scheduled or manual ticks directly continue one work item in its persistent executor branch/worktree, checkpoint, independently verify, merge and push, or recover/cancel it. A bare `$dev-team-loop` runs one reconcile transition. Do not use when the user explicitly asks to handle a feature directly in the current task.
+description: Run Polygon RPG's approval-free file-memory development loop from the canonical Markdown inbox. Fresh scheduled or manual ticks continue one IN entry in its persistent executor branch/worktree, checkpoint, independently verify, merge and push, or recover/cancel it. A bare `$dev-team-loop` runs one reconcile transition. Do not use when the user explicitly asks to handle a feature directly in the current task.
 ---
 
 # Dev Team Loop
 
-Use the repository's Git-state controller instead of a long-lived supervisor conversation or an approval-gated work-item task.
+Use [`docs/feedback/INBOX.md`](../../../docs/feedback/INBOX.md) as the only queue and lifecycle record for new development. Do not create parallel queue files or approval-gated implementation tasks.
 
 ## Required Context
 
-Read [`docs/development/process.md`](../../../docs/development/process.md), [`docs/development/quality-loop.md`](../../../docs/development/quality-loop.md) and the current milestone in [`docs/development/roadmap.md`](../../../docs/development/roadmap.md). Preserve `AGENTS.md`, explicit user scope and authorization boundaries.
+Read [`loop/PROMPT.md`](../../../loop/PROMPT.md), the inbox, [`docs/DESIGN.md`](../../../docs/DESIGN.md), [`docs/STATUS.md`](../../../docs/STATUS.md), [`docs/development/process.md`](../../../docs/development/process.md) and [`docs/development/quality-loop.md`](../../../docs/development/quality-loop.md). Preserve `AGENTS.md`, the immutable raw request and authorization boundaries.
 
-The team-lead main task is the queue/status surface. Each fresh standalone coordinator run is the autonomous writer: it continues the same durable executor branch/worktree, performs one lifecycle transition, checkpoints or finalizes it, and later merges/pushes it without requesting command or merge approval. Conversation memory is disposable.
+Each fresh coordinator run continues the same inbox entry and executor branch/worktree. Conversation memory is disposable; main inbox metadata and Git commits are durable.
 
 ## Select One Mode
 
 Choose the first matching mode.
 
-1. **Cancel/Reopen:** The user changes an exact work item's lifecycle. Read [`references/cancel.md`](references/cancel.md).
-2. **Coordinator Tick:** This is a scheduled run or an explicit one-tick reconcile request. Read [`references/manage.md`](references/manage.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
+1. **Cancel/Reopen:** The user changes an exact `IN-*` entry lifecycle. Read [`references/cancel.md`](references/cancel.md).
+2. **Coordinator Tick:** This is a scheduled run or explicit one-tick reconcile. Read [`references/manage.md`](references/manage.md) and [`references/inbox-schema.md`](references/inbox-schema.md).
 3. **Start/Continue:** This is bare `$dev-team-loop` or an explicit start/resume request. Read [`references/start.md`](references/start.md).
-4. **Register:** The team-lead main task receives a new request, priority change or pause instruction. Read [`references/register.md`](references/register.md) and [`references/work-item-schema.md`](references/work-item-schema.md).
-5. **Legacy Run Recovery:** A pre-migration Codex-managed task explicitly names an old open item. Read [`references/run.md`](references/run.md). Do not create this mode for new items.
+4. **Register:** The team-lead main task is asked to register a new request. Read [`references/register.md`](references/register.md) and [`references/inbox-schema.md`](references/inbox-schema.md).
 
-If ambiguous, inspect main work items, executor refs, `git worktree list --porcelain`, commit ancestry and lease. Do not create a second writer.
+If ambiguous, inspect inbox entries, executor refs, `git worktree list --porcelain`, commit ancestry and lease. Do not create a second writer or a parallel queue document.
 
 ## Shared Invariants
 
-- One independent team-lead request creates one work item unless the team lead explicitly splits it. Lifecycle and status requests do not.
-- The approved roadmap is the default work source. When no open item owns its next unmet gate, derive one non-duplicate vertical item.
-- New items use `executor: scheduled-coordinator` and deterministic `codex/roadmap/<lowercase-id>` branches. Do not call `create_thread`, fork, handoff or create a managed-worktree task for autonomous implementation.
-- Persistent worktree, local/remote executor branch and commits are durable state. Run titles and transient task IDs are diagnostic only.
-- Each tick acquires/renews/releases the repo lease and performs one lifecycle transition: provision, implement/checkpoint, fresh verification/finalize, integrate or recover.
-- A long tick renews its 30-minute lease at least every 10 minutes and before every mutation. Main drift or unknown paths stop mutation without deleting evidence.
-- The scheduled writer directly edits the executor worktree, runs the quality loop, commits Korean messages, pushes its branch, and later merges/pushes main. These normal operations do not require a separate approval question.
-- The fresh run after the last writer is the independent verifier. A writer run cannot mark its own new candidate ready and integrate it in the same tick.
-- Checkpoint commits preserve runnable current best; only a later fresh-run verified clean final is integration-ready.
-- Integration uses a non-rewriting merge commit that includes the final branch and `done`/roadmap records atomically. Never force push, rebase shared history or guess-delete worktrees.
-- Human input blocks only a concrete, non-inferable Product Decision, Canonical Conflict, credential or external system condition. Generic approval/feedback waiting is invalid.
-- Do not add permanent tests for one-off failures. Two confirmed mechanically measurable repetitions may justify the smallest durable check.
-- Do not stop automation until explicit pause or durable approved-roadmap completion proof.
+- One registration request appends one `IN-*` entry unless explicitly split. The `원문 — 불변` block is copied exactly, including wording and whitespace.
+- `docs/feedback/INBOX.md` owns status, execution contract, current best, blocker and result; `docs/STATUS.md` is its current-state projection.
+- The inbox is main-owned. Executor branches never edit it; after each branch checkpoint/final, the coordinator records that evidence on main in the same lifecycle transition.
+- New entries use deterministic `codex/loop/<lowercase-in-id>` branches. Do not call `create_thread`, fork or handoff.
+- Each tick acquires/renews/releases the lease and performs one transition: accept/provision, implement/checkpoint, fresh verification/finalize, integrate or recover.
+- Checkpoint writer and final verifier are different fresh runs. Only a fresh-run verified clean final may merge.
+- Normal edits, checks, Korean commits, executor branch pushes and non-rewriting main merge/push do not require approval.
+- Human input blocks only a concrete non-inferable Product Decision, Canonical Conflict, credential or external condition. Generic approval waiting is invalid.
+- Do not force push, rebase shared history, guess-delete worktrees or lower quality thresholds.
+- Keep automation active until explicit pause or completion proof including no nonterminal inbox entry.
 
 ## Team-Lead Wording
 
-Report `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 실제로 막힘` in plain Korean. Do not ask for approval of plans, edits, commands, commits, merges or pushes. A real human decision includes the implemented path, inspection method, 1–3 observable questions and what the answer changes.
-
-## Completion
-
-For a transition, report actual changed files/result, verification, executor checkpoint/final or integration hash, and the next durable phase. For status-only main replies, show the feature and real blocker without dumping internal logs.
+Report `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 실제로 막힘` in plain Korean. The raw request stays verbatim in Git; derived titles and summaries never replace it.

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 
-const ITEM_PATTERN = /^WI-\d{8}-\d{6}(?:-\d{2})?$/;
+const ENTRY_PATTERN = /^IN-\d{8}-\d{6}(?:-\d{2})?$/;
 
 function fail(message, code = 1, details = {}) {
   process.stdout.write(`${JSON.stringify({ ok: false, message, ...details })}\n`);
@@ -53,21 +53,21 @@ function parseWorktrees(output) {
 function context(values) {
   const repo = resolve(values.get('repo') ?? process.cwd());
   const root = git(['rev-parse', '--show-toplevel'], repo);
-  const item = values.get('item');
-  if (!ITEM_PATTERN.test(item ?? '')) {
-    fail('--item은 WI-YYYYMMDD-HHmmss 형식이어야 합니다.');
+  const entry = values.get('entry');
+  if (!ENTRY_PATTERN.test(entry ?? '')) {
+    fail('--entry는 IN-YYYYMMDD-HHmmss 형식이어야 합니다.');
   }
 
   const repoName = basename(root).replace(/[^a-zA-Z0-9._-]/g, '-');
-  const branch = values.get('branch') ?? `codex/roadmap/${item.toLowerCase()}`;
-  if (!branch.startsWith('codex/roadmap/')) {
-    fail('executor branch는 codex/roadmap/ 아래여야 합니다.', 1, { branch });
+  const branch = values.get('branch') ?? `codex/loop/${entry.toLowerCase()}`;
+  if (!branch.startsWith('codex/loop/')) {
+    fail('executor branch는 codex/loop/ 아래여야 합니다.', 1, { branch });
   }
   const worktreeRoot = resolve(
-    values.get('worktree-root') ?? join(homedir(), '.codex', 'roadmap-worktrees', repoName),
+    values.get('worktree-root') ?? join(homedir(), '.codex', 'loop-worktrees', repoName),
   );
-  const target = join(worktreeRoot, item);
-  return { root, item, branch, target };
+  const target = join(worktreeRoot, entry);
+  return { root, entry, branch, target };
 }
 
 function snapshot(root, branch, target) {
@@ -107,7 +107,7 @@ function snapshot(root, branch, target) {
 }
 
 function ensure(values) {
-  const { root, item, branch, target } = context(values);
+  const { root, entry, branch, target } = context(values);
   const base = values.get('base');
   if (!base) fail('ensure에는 --base가 필요합니다.');
   const baseCommit = git(['rev-parse', `${base}^{commit}`], root);
@@ -121,7 +121,7 @@ function ensure(values) {
   }
   if (before.worktree) {
     process.stdout.write(
-      `${JSON.stringify({ ok: true, command: 'ensure', item, reused: true, baseCommit, ...before })}\n`,
+      `${JSON.stringify({ ok: true, command: 'ensure', entry, reused: true, baseCommit, ...before })}\n`,
     );
     return;
   }
@@ -140,14 +140,14 @@ function ensure(values) {
 
   const after = snapshot(root, branch, target);
   process.stdout.write(
-    `${JSON.stringify({ ok: true, command: 'ensure', item, reused: false, baseCommit, ...after })}\n`,
+    `${JSON.stringify({ ok: true, command: 'ensure', entry, reused: false, baseCommit, ...after })}\n`,
   );
 }
 
 function status(values) {
-  const { root, item, branch, target } = context(values);
+  const { root, entry, branch, target } = context(values);
   process.stdout.write(
-    `${JSON.stringify({ ok: true, command: 'status', item, ...snapshot(root, branch, target) })}\n`,
+    `${JSON.stringify({ ok: true, command: 'status', entry, ...snapshot(root, branch, target) })}\n`,
   );
 }
 

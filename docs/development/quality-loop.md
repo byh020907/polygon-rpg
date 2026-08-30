@@ -1,10 +1,10 @@
 # Polygon RPG Quality-Driven Development Loop
 
-이 문서는 standalone direct executor가 기능 완료에서 멈추지 않고 플레이 가능한 결과를 관찰·평가·개선하는 공통 품질 계약이다. 제품 방향과 milestone은 [`roadmap.md`](./roadmap.md), queue·executor branch·integration lifecycle은 [`process.md`](./process.md)가 소유한다.
+이 문서는 standalone direct executor가 기능 완료에서 멈추지 않고 플레이 가능한 결과를 관찰·평가·개선하는 공통 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), 현재 상태는 [`../STATUS.md`](../STATUS.md), 원문 queue와 lifecycle은 [`../feedback/INBOX.md`](../feedback/INBOX.md), 실행 절차는 [`process.md`](./process.md)가 소유한다.
 
 ## Vertical Slice Director
 
-하나의 open work item과 하나의 executor branch가 하나의 **Lead Game Developer & QA Director** 경계다. 특정 대화가 owner가 아니다.
+하나의 nonterminal inbox entry와 하나의 executor branch가 하나의 **Lead Game Developer & QA Director** 경계다. 특정 대화가 owner가 아니다.
 
 - Fresh scheduled run은 같은 branch/worktree를 이어받아 한 iteration을 직접 구현하거나 검증한다.
 - 실제 changed tree와 플레이 artifact를 함께 결과로 본다.
@@ -18,20 +18,20 @@
 ## Outer Loop와 Inner Loop
 
 ```text
-Product Director → roadmap·방향·우선순위
+Product Director → DESIGN·방향·우선순위
 Team-Lead Main → Git queue 등록·status 후 종료
 Fresh Direct Executor → persistent worktree에서 구현·checkpoint·branch push
 다음 Fresh Executor → 독립 검사·실제 artifact·final commit
-다음 Fresh Executor → main merge·done/roadmap·push
+다음 Fresh Executor → main merge·INBOX done·STATUS/DESIGN·push
 ```
 
 작은 item은 한 구현 run과 한 검증 run으로 끝낼 수 있다. 명확한 병렬 이점이 있을 때만 한 run 내부 subagent를 쓰며, parent run이 결과를 같은 worktree에 통합하고 전체 rubric을 다시 평가한다. Subagent나 별도 task는 peer owner가 아니다.
 
-Run 종료, interruption, unchanged interval과 한 checkpoint는 loop 종료 조건이 아니다. 명시적 pause 또는 durable roadmap 완료에서만 automation을 멈춘다.
+Run 종료, interruption, unchanged interval과 한 checkpoint는 loop 종료 조건이 아니다. 명시적 pause 또는 durable DESIGN 완료에서만 automation을 멈춘다.
 
 ## 내부 품질 기준과 Git 기억
 
-Executor는 반복 승인 없이 다음을 work item의 `실행 상태`에 유지한다.
+Executor는 반복 승인 없이 다음을 main inbox entry의 `실행 상태`와 `docs/STATUS.md`에 유지한다.
 
 - **플레이 결과:** 시작부터 끝까지 실제로 경험할 시나리오
 - **적용 품질 축과 목표 수준**
@@ -40,7 +40,7 @@ Executor는 반복 승인 없이 다음을 work item의 `실행 상태`에 유�
 - **기준선 / 현재 최선 / 다음 병목**
 - **정지 조건:** 통과, 구체적 Product Decision, 반복 실패 또는 외부 blocker
 
-새 Product Requirement가 아니라면 명시적 의도, roadmap, 현재 코드, canonical 문서와 verified Reference에서 추론한다. Work item 실행 상태는 checkpoint와 같은 executor-branch commit에 들어가므로 다음 fresh run이 대화 memory 없이 이어간다.
+새 Product Requirement가 아니라면 immutable inbox 원문, DESIGN, 현재 코드, canonical 문서와 verified Reference에서 추론한다. Code checkpoint는 executor branch에, phase/current best/next bottleneck은 main INBOX·STATUS에 commit하므로 다음 fresh run이 대화 memory 없이 이어간다.
 
 ## 공통 품질 Rubric
 
@@ -84,7 +84,7 @@ baseline 실행·채점
 
 ### Checkpoint
 
-의도한 사용자 경로와 affected deterministic checks가 실행 가능한 시점에 item-owned current best를 commit하고 executor branch를 push한다. Checkpoint는 중단 복구점이며 final/integration 승인이 아니다. Branch item에는 baseline, current best, next bottleneck, checks와 phase를 함께 기록한다.
+의도한 사용자 경로와 affected deterministic checks가 실행 가능한 시점에 entry-owned current best를 commit하고 executor branch를 push한다. Checkpoint는 중단 복구점이며 final/integration 승인이 아니다. Push 뒤 main INBOX·STATUS에 baseline, current best, next bottleneck, checks와 phase를 기록한다. Executor branch는 두 memory file을 수정하지 않는다.
 
 ### Fresh Verification
 
@@ -96,34 +96,33 @@ baseline 실행·채점
 4. 실제 Canvas/mobile 사용자 경로, console, resize, 공유 state와 applicable Polygon/Retro 출력
 5. 동일 rubric의 모든 적용 축 2 이상
 
-실패하면 가장 큰 원인 하나를 수정한 correction checkpoint를 만들고 다음 fresh verifier에게 넘긴다. 통과하면 result/report와 `ready-for-integration`을 포함한 clean final commit을 push한다.
+실패하면 가장 큰 원인 하나를 수정한 correction checkpoint를 만들고 다음 fresh verifier에게 넘긴다. 통과하면 result evidence와 `ready-for-integration`을 main INBOX·STATUS에 기록하고 clean final commit을 push한다.
 
 ### Integration
 
-Main integration run은 final이 latest main을 포함하고 source worktree가 clean인지 확인한다. Main drift가 있으면 executor branch에 non-rewriting merge하고 다시 fresh verification으로 보낸다. 모든 gate가 통과하면 item 결과와 roadmap을 같은 Korean merge commit에 정합하고 main을 push한다. 일반 merge/push를 사람 승인 대기로 바꾸지 않는다.
+Main integration run은 final이 latest main을 포함하고 source worktree가 clean인지 확인한다. Main drift가 있으면 executor branch에 non-rewriting merge하고 다시 fresh verification으로 보낸다. 모든 gate가 통과하면 INBOX 결과, STATUS와 필요한 DESIGN/canonical 문서를 같은 Korean merge commit에 정합하고 main을 push한다. 일반 merge/push를 사람 승인 대기로 바꾸지 않는다.
 
 ## 팀장 판단
 
 - 명시 의도는 재확인하지 않고 가역 default를 먼저 구현한다.
 - 조작감·타격감·Effect·Graphics도 기존 의도와 rubric으로 판단할 수 있으면 final/integration까지 계속한다.
 - 구현을 실제로 막는 새 Product Decision, 양립 불가 방향, Canonical Conflict, credential/외부 system만 사람 판단 대상이다.
-- 판단이 필요하면 work item에 구현된 경로, 볼 위치·조작 방법, 관찰 질문 1~3개와 답에 따라 바뀌는 것을 기록하고 coordinator run을 `대기`로 끝낸다.
+- 판단이 필요하면 inbox entry에 구현된 경로, 볼 위치·조작 방법, 관찰 질문 1~3개와 답에 따라 바뀌는 것을 기록하고 coordinator run을 `대기`로 끝낸다.
 - 포괄적 `승인해 주세요`, `의견을 기다립니다`, plan/command/commit/merge 확인은 blocker가 아니다.
 
 ## 기록과 Context
 
-- roadmap: 제품 방향과 milestone gate
-- main work item: 요청 원문, durable queue/lifecycle와 final integration result
-- executor-branch work item: baseline, current best, next bottleneck, checkpoint/final과 verification evidence
+- `docs/DESIGN.md`: 제품 방향, non-scope와 quality contract
+- `docs/feedback/INBOX.md`: immutable 원문, durable queue/lifecycle, 실행 상태와 final result
+- `docs/STATUS.md`: 현재 active entry, current best, 다음 병목과 blocker projection
 - executor branch/worktree: 실제 changed tree와 recoverable commits
-- 업무보고: changed files, 의도, 플레이 결과, 영향, 검증과 다음 loop
 - coordinator run title/history: 회차 진단 기록, source of truth 아님
 
 팀장 메인에는 실제 기능, 현재 durable phase/result와 blocker만 쉬운 한국어로 보여 준다. Internal ID, branch와 hash는 보조 evidence다.
 
 ## Feedback을 규칙으로 승격
 
-1. 같은 원인의 결함이나 팀장 지적이 두 번 확인되면 work item의 규칙 후보에 기록한다. 고위험 결함은 한 번으로도 후보가 될 수 있다.
+1. 같은 원인의 결함이나 팀장 지적이 두 번 확인되면 inbox entry의 규칙 후보에 기록한다. 고위험 결함은 한 번으로도 후보가 될 수 있다.
 2. 실패 원인, 적용 범위, 오탐 비용과 검증 방법을 적는다.
 3. 기계적으로 측정 가능하면 가장 작은 canonical check를 추가한다.
 4. Integration run은 기존 canonical owner 한 곳에만 승격한다.

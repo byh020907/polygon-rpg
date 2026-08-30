@@ -6,13 +6,13 @@
 
 ```text
 Desired State
-  approved roadmap M0~M5 완료
-  open work item 없음
+  approved DESIGN milestone 완료
+  nonterminal INBOX entry 없음
   마지막 vertical slice 품질·검증 통과
   clean main == origin/main
 
 Observed State
-  Git work item·roadmap
+  DESIGN·STATUS·INBOX
   executor branch·persistent worktree·dirty paths
   registration/final/integration commit graph
   automation·lease
@@ -31,9 +31,9 @@ Reconcile Tick
 
 채택:
 
-- roadmap과 work item을 desired state, executor branch/worktree/commit을 observed state로 분리한다.
+- DESIGN과 INBOX를 desired state, STATUS와 executor branch/worktree/commit을 observed projection/evidence로 분리한다.
 - 한 tick의 성공을 “대화가 끝남”이 아니라 desired state와의 차이가 줄었는지로 판단한다.
-- Work item ID, executor branch, owned paths와 commit ancestry를 ownership label처럼 사용한다.
+- Inbox entry ID, executor branch, owned paths와 commit ancestry를 ownership label처럼 사용한다.
 - Approval-free scheduled coordinator가 persistent worktree를 직접 개발·검증·통합해 desired state를 실현한다.
 
 수정 채택:
@@ -47,7 +47,7 @@ Reconcile Tick
 
 채택:
 
-- 이전 coordinator chat memory가 없어도 registration/checkpoint/final/integration commit과 work-item recovery record에서 재개한다.
+- 이전 coordinator chat memory가 없어도 INBOX·STATUS와 registration/checkpoint/final/integration commit에서 재개한다.
 - Interrupted run은 새 기능으로 넘어가지 않고 같은 executor branch/worktree를 먼저 resume한다.
 - Worktree가 없어져도 local/remote executor branch의 clean checkpoint/final commit에서 같은 worktree를 재구성한다.
 
@@ -68,7 +68,7 @@ Reconcile Tick
 수정 채택:
 
 - 별도 retry timer 대신 scheduled tick이 retry interval이다.
-- Error payload 대신 work item의 `복구 기록`에 action과 commit/worktree evidence를 남긴다.
+- Error payload 대신 inbox entry의 `실행 상태`에 recovery action과 commit/worktree evidence를 남긴다.
 
 ### OpenAI Scheduled Tasks, Permissions And Worktrees
 
@@ -78,7 +78,7 @@ Reconcile Tick
 
 - Coordinator context는 disposable하고 Git evidence만 durable하다.
 - Scheduled run 자신을 autonomous writer로 사용해 unattended permission 경계를 유지한다.
-- 실제 개발 identity는 one-work-item/one-executor-branch/persistent-worktree다.
+- 실제 개발 identity는 one-INBOX-entry/one-executor-branch/persistent-worktree다.
 - 구현 checkpoint와 fresh-run verification을 서로 다른 run으로 분리해 writer와 verifier를 분리한다.
 - Scheduled run은 lifecycle transition 하나 뒤 종료한다.
 
@@ -100,7 +100,8 @@ Reconcile Tick
 
 Codex-native 수정 채택:
 
-- `DESIGN/STATUS/INBOX`를 새로 만들지 않고 roadmap·canonical docs/work items/reports가 같은 책임을 나눠 소유한다.
+- `docs/DESIGN.md`, `docs/STATUS.md`, `docs/feedback/INBOX.md`를 file memory로 직접 사용한다. DESIGN은 안정된 방향, STATUS는 재구성 가능한 현재 projection, INBOX는 메인 대화 원문과 lifecycle을 소유한다.
+- 팀장이 등록 요청한 원문은 INBOX에서 불변으로 보존하고 agent-derived title·실행 계약·결과는 raw block 밖에 둔다.
 - 날짜별 shell log 대신 Codex run task와 compact timestamp title, Git commit graph를 회차 기록으로 사용한다.
 - `STOP` file 대신 automation `PAUSED`, item `paused/cancelled` 상태를 사용한다.
 - shell `env` 대신 automation의 model, reasoning, cadence, project와 execution environment를 사용한다.
@@ -137,8 +138,8 @@ Codex-native 수정 채택:
 
 다음 조건을 한 fresh snapshot에서 모두 확인할 때만 현재 approved roadmap이 완료다.
 
-1. `docs/development/roadmap.md`의 M0~M5가 모두 `완료`다.
-2. Open lifecycle work item이 없다.
+1. `docs/DESIGN.md`의 approved milestone이 `docs/STATUS.md`에서 모두 완료다.
+2. Nonterminal inbox entry가 없다.
 3. 마지막 integrated vertical slice가 quality threshold와 실제 사용자 경로 검증을 통과했다.
 4. `main`이 clean하고 `origin/main`과 같다.
 5. Unreconciled executor commit, duplicate writer와 Canonical Conflict가 없다.

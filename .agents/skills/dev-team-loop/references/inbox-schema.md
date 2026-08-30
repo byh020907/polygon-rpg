@@ -1,0 +1,37 @@
+# Inbox Schema
+
+[`docs/feedback/INBOX.md`](../../../../docs/feedback/INBOX.md) is the canonical schema and live queue. Read it completely before registering or advancing an entry.
+
+## Identity And State
+
+- New IDs use `IN-YYYYMMDD-HHmmss` with the smallest collision suffix.
+- The immutable raw request is copied exactly from the team-lead main message.
+- The entry itself owns lifecycle, execution contract, current best, blocker, result and checkpoint/final/integration evidence.
+- New work has no parallel queue or per-entry task document.
+- One entry owns one deterministic `codex/loop/<lowercase-in-id>` branch and at most one persistent worktree writer.
+
+## Main-Only Inbox Rule
+
+Executor branches never edit `docs/feedback/INBOX.md` or `docs/STATUS.md`. After a branch checkpoint/final commit is pushed, the same coordinator transition updates both files on main and commits/pushes that state. This keeps new main-dialogue appends conflict-free and makes the main inbox authoritative.
+
+When a branch needs current process or code from main, merge latest `origin/main` without rewriting history. The old inbox snapshot carried by the branch remains untouched, so the merge takes the current main copy.
+
+## Raw Request Invariant
+
+- Do not summarize, translate, normalize whitespace, fix spelling or rewrite Markdown inside `원문 — 불변`.
+- Choose a Markdown fence longer than any backtick run in the request.
+- Lifecycle corrections change metadata only. A changed request is a new entry linked with `supersedes`.
+- Do not consume one `new` entry twice. Status plus executor branch/commit evidence is authoritative even if a transition was interrupted.
+
+## Coordinator-Derived Fields
+
+From the raw request, DESIGN, current repository and verified References, derive outside the raw block:
+
+- concise title;
+- executor branch and accepted timestamp;
+- exact owned paths;
+- goal, completion conditions, non-scope and quality axes;
+- baseline, current best, next bottleneck and validation;
+- checkpoint/final/integration evidence.
+
+These fields are execution decisions, not a rewritten request and not a plan-approval document.

@@ -1,23 +1,19 @@
 # Register Mode
 
-Use this mode in the team-lead-facing main task. It records desired state; the scheduled direct executor performs development later.
+Use this mode in the team-lead main task when the user explicitly asks to register a development request.
 
-## Classify
+## Append The Raw Request
 
-- One independent development request creates one work item unless explicitly split.
-- Priority, additional direction, pause, cancel, reopen, integration/push and status for an exact item update that item instead of creating a duplicate.
-- Bare start/continue and overall status are lifecycle operations, not feature items.
+1. Read the canonical [`docs/feedback/INBOX.md`](../../../../docs/feedback/INBOX.md).
+2. Preserve exactly the message text the user designated for registration. Do not summarize, translate, fix spelling, normalize whitespace or merge it with earlier prose unless the user included those messages in the request.
+3. Check existing `new` entries for an accidental exact duplicate. A repeated raw request is added again only when the user explicitly wants another execution.
+4. Allocate `IN-YYYYMMDD-HHmmss` in Asia/Seoul time with the smallest suffix collision.
+5. Append one entry with `status: new`, explicit priority when given, current main as `registration_base`, null executor/result fields and the immutable raw block. Use a Markdown fence longer than any backtick run in the raw text.
+6. Do not derive a title, completion contract or owned paths in the main task. The coordinator derives them outside the raw block when it accepts the entry.
+7. Commit/push only the inbox append with a Korean message.
+8. Reactivate the existing coordinator automation if paused, preserving its schedule, prompt, project, environment and model.
+9. Return the inbox ID and state. Do not implement, provision, wait or create another queue file/task.
 
-## Record And Return
-
-1. Preserve the complete original request or exact lifecycle command.
-2. Fetch/reconcile main items and executor branches enough to prevent duplicate registration.
-3. Allocate `WI-YYYYMMDD-HHmmss`, adding the smallest suffix on collision.
-4. Write the minimal item with `executor: scheduled-coordinator`, deterministic `executor_branch`, registration base, scoped owned paths, completion conditions and source.
-5. Commit/push the queue mutation from clean current main with a Korean message.
-6. If the coordinator was paused after roadmap completion, reactivate the same automation without changing its project, schedule, execution environment, model or prompt.
-7. Return with the feature, queued state and actual blocker. Do not wait for a run.
-
-Do not create/fork/handoff a Codex task, implementation worktree or subagent here. Provision belongs to the next coordinator tick. Do not implement, tune, integrate or ask for plan approval.
+Priority/lifecycle instructions for an existing `IN-*` entry update only its metadata and never rewrite its raw block.
 
 If main is dirty/diverged or another lease owns mutation, preserve all evidence and report the exact boundary. Do not guess-clean.
