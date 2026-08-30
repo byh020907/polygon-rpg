@@ -11,6 +11,7 @@ Do not create a new entry when the message is:
 - a question, explanation, review or loop/status check;
 - priority, pause, cancel, resume, reopen or feedback for an existing `IN-*` entry;
 - explicitly presented as an example, hypothetical, draft or wording demonstration;
+- an explicit request to interview, discuss or refine requirements before INBOX registration;
 - bare `$dev-team-loop`, which runs one manual transition;
 - explicitly requested to be handled directly in the current task.
 

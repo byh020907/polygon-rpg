@@ -5,7 +5,7 @@
 ## Ownership
 
 - Team-lead main은 별도 키워드 없이 받은 일반적인 새 개발 명령 한 건을 `new` entry 하나로 append하고 commit/push한다.
-- 질문·상태 조회·기존 entry lifecycle·예시/가정·현재 task 직접 처리 요청은 append하지 않는다.
+- 질문·상태 조회·기존 entry lifecycle·예시/가정·사전 인터뷰·현재 task 직접 처리 요청은 append하지 않는다.
 - `원문`은 공백·표현·언어·오탈자·Markdown을 포함해 바꾸거나 요약하지 않는다.
 - Coordinator는 원문 밖의 metadata, 실행 계약, 실행 상태, 결과와 연결만 갱신한다.
 - Executor branch는 이 파일과 `docs/STATUS.md`를 수정하지 않는다. Branch commit 뒤 coordinator가 main에서 두 파일을 갱신한다.
@@ -76,7 +76,7 @@
 
 ## IN-20260831-005246
 
-- status: verifying
+- status: ready-for-integration
 - received_at: 2026-08-31T00:52:46+09:00
 - priority: normal
 - source: team-lead-main
@@ -86,7 +86,7 @@
 - registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
 - accepted_at: 2026-08-31T02:32:37+09:00
 - checkpoint_commit: f51dad89c0fc5f666649d4964b747cf61dece328
-- final_commit: null
+- final_commit: a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8
 - integration: null
 - owned_paths:
   - AGENTS.md
@@ -112,14 +112,14 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 현재 `AGENTS.md`는 Reference-Guided Engineering을 유일한 Method로 선택하고 두 로컬 저장소의 mandatory local-first 조사, 별도 reference repository index와 전용 §8 policy를 요구한다. README·DESIGN·quality 문서에도 이 초기화 방식의 강제 규칙이 남아 있다.
-- 현재 최선: checkpoint `f51dad89c0fc5f666649d4964b747cf61dece328`이 Core Engineering Principles를 유일한 Method로 선택하고 순수 함수 → Is-A → Has-A → Can-Do, Node·Scene·Scene Tree·Signal의 개념/구현 분리, 예상 확장, 반복 ownership, 단일 문서 owner와 목적 단위 Git 기록을 canonical하게 정합한다. 고정 local-first 규칙은 제거했고 두 로컬 저장소는 historical evidence로만 남겼다.
-- 다음 병목: fresh run이 upstream Method 일곱 원칙과 checkpoint의 one-to-one 정합, latest-main ancestry·owned diff, old mandatory Reference 용어 부재, local link·32 KiB budget과 문서 owner 경계를 독립 검증한다.
-- 검증: `npm run check`, `git diff --check` 통과. 변경은 owned 문서 6개에 한정했고 `Reference-Guided`, `METHOD-REFERENCE-GUIDED`, `REF-LOCAL-FIRST`, `1차 레퍼런스`가 남지 않음을 확인했다. Core Method raw source HTTP 200과 heading, 변경 문서의 local Markdown link, 필수 canonical rule·구현 단위 용어, `AGENTS.md` 32,710-byte budget을 확인했다. Executor branch는 checkpoint push 뒤 clean local/remote equality다.
+- 현재 최선: final `a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8`이 latest main을 포함하고 Core Engineering Principles를 유일한 Method로 선택한다. 순수 함수 → Is-A → Has-A → Can-Do, Node·Scene·Scene Tree·Signal의 개념/구현 분리, 예상 확장, 반복 ownership, 단일 문서 owner와 목적 단위 Git 기록을 canonical하게 정합하며 두 로컬 저장소는 historical evidence로만 남긴다.
+- 다음 병목: 다음 fresh run이 clean final·owned diff와 이 독립 검증 evidence를 재확인하고 main에 non-rewriting 통합한다.
+- 검증: upstream Core Method raw source HTTP 200과 일곱 heading의 one-to-one 규칙 대응을 독립 확인했다. latest main merge `3d1b91a0e864346e52b9e5dc38901805061d9ab5`, branch-only owned 문서 6개, main-owned INBOX·STATUS 일치, local Markdown link, old mandatory Reference 용어 부재와 `AGENTS.md` 32,710-byte budget을 확인했다. `npm run check`, `git diff --check`를 통과했고 final branch는 clean local/remote equality다. 문서 전환이므로 Canvas·gameplay 변경은 적용되지 않는다. 적용 품질 축은 모두 2 이상이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-진행 전
+Core Engineering Principles 일곱 규칙을 Polygon RPG의 단일 Engineering Method와 canonical owner 경계로 정합한 clean final을 독립 검증했다. Mandatory local-first 규칙은 제거하고 기존 두 저장소는 과거 결정의 evidence로만 보존했다.
 
 ## IN-20260831-025240
 
@@ -142,6 +142,90 @@
 ```text
 내 루프를 잘못 이해한거같아, 한 루프가 항상 완전한 작업을 하는개념이야
 수정해줘
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
+
+## IN-20260831-030641
+
+- status: new
+- received_at: 2026-08-31T03:06:41+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: 868353b20e0bfb97d77c07133f0cb3ed0d030726
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+현재 기본적인 맵시스템은 완성되었는데, 맵 포탈을 더 자연스럽게 문이나 주변 환경에 맞는 형태로 모양을 개선할거야, 인터넷에 적절한 레퍼런스 참고해서 진행해, 그리고 크기도 유저 정도로 줄여야해
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
+
+## IN-20260831-030839
+
+- status: new
+- received_at: 2026-08-31T03:08:39+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: 8aa23206fb705807c52f841cc0dcd059ce546436
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+로드맵 1차 구현 완료 햇다햇는데 더 구체화하자
+현재 가장 안된 부분이 스토리 진행과
+실제 마을, 던전, 필드 등 맵 구현이야
 ```
 
 ### 실행 계약 — coordinator 소유

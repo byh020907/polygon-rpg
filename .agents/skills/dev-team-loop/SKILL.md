@@ -1,6 +1,6 @@
 ---
 name: dev-team-loop
-description: Register plain new Polygon RPG development requests from the team-lead main conversation verbatim into the Markdown inbox, then run the approval-free file-memory loop. Fresh ticks continue one IN entry in its executor worktree through checkpoint, independent verification, merge/push or recovery. No "register" keyword is required. Do not register questions, status/lifecycle requests, examples/hypotheticals, or work explicitly requested directly in the current task.
+description: Register plain new Polygon RPG development requests from the team-lead main conversation verbatim into the Markdown inbox, then run the approval-free file-memory loop. No "register" keyword is required. Do not register questions, status/lifecycle requests, examples/hypotheticals, interview-first requests owned by `$dev-inbox-interview`, or work explicitly requested directly in the current task.
 ---
 
 # Dev Team Loop
