@@ -30,7 +30,8 @@ If the role is ambiguous, inspect Git work items, Codex task titles/status and r
 - One independent team-lead development request creates one work item unless the team lead explicitly requests a split. Bare start/continue invocations and lifecycle operations do not.
 - The approved roadmap is the default work source. When no open item owns its next unmet gate, derive one non-duplicate vertical work item and create a new Codex task for it.
 - The team-lead main task only writes new requests and lifecycle commands to Git queue, reports compact state and manages the coordinator automation. It does not wait for completion, integrate, implement, tune quality or relay feedback.
-- Every coordinator tick starts from a fresh standalone context, acquires the repo-local lease, reconciles Git/task/worktree/commit evidence once, performs at most the needed integration or one dispatch, releases the lease and exits. Prior main/coordinator memory and transient IDs are never authoritative.
+- Every coordinator tick starts from a fresh standalone context, acquires the repo-local lease, reconciles Git/task/worktree/commit evidence once, performs one forward or recovery action, releases the lease and exits. Prior main/coordinator memory and transient IDs are never authoritative.
+- A coordinator may repair a malformed work-item task title only when one open item, one matching task/worktree, registration ancestry and owned paths prove a unique identity. Ambiguity remains `task-conflict`.
 - Each work item has exactly one user-owned Codex task and one Vertical Slice Director. The team lead opens that task directly to inspect code/artifacts and provide feedback there.
 - Explicit team-lead intent is implementation input, never a request for reconfirmation. Implement a safe reversible candidate first; ask one short blocking choice only inside the work-item task when necessary.
 - A Git work-item task uses a Codex-managed worktree by default. It owns its scoped files, verification, report and final worktree commit; it does not push, merge, consume another item or change main queue/roadmap state.
@@ -43,7 +44,7 @@ If the role is ambiguous, inspect Git work items, Codex task titles/status and r
 - No force push, shared-history rewrite, guessed cleanup or mutation of another task's worktree.
 - Do not submit a candidate with an applicable quality axis below the threshold in `docs/development/quality-loop.md`.
 - Subagent success is not work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
-- Stop roadmap derivation only for concrete observable questions pending in the work-item task, a genuinely blocking unresolved product decision, canonical conflict, blocker, pause/cancel or absence of an approved next milestone. A completed task, tick exit or lost coordinator context is not a loop stop.
+- Human questions, canonical conflicts and external blockers suspend new vertical dispatch but do not stop the recurring automation; later ticks keep observing and recover when evidence changes. Pause only on explicit team-lead pause or after durable roadmap-completion proof.
 
 ## Team-Lead Wording
 

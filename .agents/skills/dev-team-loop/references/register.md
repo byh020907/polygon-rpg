@@ -16,6 +16,8 @@ Use this mode only in the team-lead-facing main task. The main task is a Git que
 4. Commit and push only that queue mutation from clean, current main with a concise Korean message.
 5. Return immediately after reporting what was queued, which existing task can be opened and any real blocker.
 
+If the coordinator automation was paused because the previous approved roadmap completed, reactivate the same automation after the new queue commit is pushed. Preserve its schedule, project, execution environment, model and prompt.
+
 Do not create a work-item task, implement, integrate, wait/poll, tune quality or relay feedback in this main request. The next standalone coordinator tick rechecks Git and creates or resumes the authoritative task.
 
 If the main task cannot safely mutate because main is dirty, behind/ahead, or an ownership conflict exists, record nothing and report exact evidence. Do not guess-clean or move another task's worktree.

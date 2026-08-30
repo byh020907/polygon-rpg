@@ -36,12 +36,12 @@ Collect one bounded snapshot rather than polling:
 
 1. Fetch `origin/main`; record local/remote HEAD, clean/dirty state and recent integration/registration commits.
 2. Read open work-item frontmatter and the roadmap milestone table. Identify the single expected active vertical item.
-3. View the `polygon-rpg-roadmap-coordinator` automation and its local `automation.toml` when available. Check `ACTIVE/PAUSED`, cadence, project, local/worktree mode and the five most recent runs.
+3. View the `polygon-rpg-roadmap-coordinator` automation and its local `automation.toml` when available. Check `ACTIVE/PAUSED`, cadence, project, local/worktree mode and the five most recent runs. Discover new runs by the compact `C yyyyMMdd-HHmm · <item> · <result>` title as well as the legacy automation title; confirm automation ID/summary rather than relying on the prefix alone.
 4. List recent and, only when needed, archived Codex tasks. Match an item only by its exact `task_title`; a null, truncated, prompt-shaped or merely substring-matching title is not authoritative.
 5. Read at most the latest three turns of the expected task without copying raw logs. Record status, last update, concrete question/blocker and final commit evidence.
 6. Inspect its managed worktree: path, HEAD, clean/dirty paths, registration-base ancestry and whether its final commit is already contained in main.
 7. Read coordinator lease status without acquiring it. Report owner age and expected HEAD when present.
-8. Check duplicate exact-title tasks, overlapping open `owned_paths`, repeated coordinator conflict outcomes and task/work-item status drift.
+8. Check duplicate exact-title tasks, overlapping open `owned_paths`, repeated coordinator conflict outcomes and task/work-item status drift. When an exact title is missing, apply the Manage-mode uniqueness checks and distinguish auto-repairable identity drift from ambiguous conflict.
 
 Use task summaries only for discovery. Git documents, exact task identity, worktree state and commit graph decide the result.
 
@@ -53,10 +53,14 @@ Choose exactly one primary state:
 - `HEALTHY_IDLE`: no open item exists and the roadmap is complete or explicitly paused.
 - `READY_FOR_INTEGRATION`: exact task is idle/completed, worktree is clean and a final commit plus `ready-for-integration` evidence exists.
 - `QUEUED_FOR_DISPATCH`: one queued item exists, registration is on main and no authoritative task exists yet.
+- `RECOVERABLE_IDENTITY_DRIFT`: no exact-title task exists, but exactly one prompt/worktree/registration/ownership-backed candidate satisfies every safe title-repair condition.
+- `RECOVERING`: the latest coordinator performed title repair, same-task resume/unarchive, base-drift repair, evidence-based replacement or recovery-item escalation and the next tick has a clear continuation.
+- `WAITING_HUMAN_OR_EXTERNAL`: a concrete question or external condition suspends new dispatch, but the automation remains active and continues observing.
 - `BLOCKED`: the exact task contains a concrete product question, external blocker or failed verification evidence.
 - `CONFLICT`: task title is missing/mismatched, duplicate writers/tasks exist, ownership overlaps, commits disagree, or main is dirty/diverged.
 - `AUTOMATION_DOWN`: automation is absent/paused, project binding is invalid, or recent scheduled runs stopped appearing.
 - `STALLED_SUSPECTED`: no definitive conflict exists, but at least three automation intervals passed without task updates, worktree changes, commit movement or a concrete blocker.
+- `ROADMAP_COMPLETE`: every approved milestone and work item is complete, final quality/main-origin proof passed and the automation is intentionally paused.
 
 Do not label a long implementation `STALLED_SUSPECTED` merely because coordinator runs keep exiting. A live task with fresh commentary, filesystem changes or commit progress is healthy.
 
@@ -64,12 +68,14 @@ Do not label a long implementation `STALLED_SUSPECTED` merely because coordinato
 
 - Work item `queued` while an exact task is already active.
 - Work item `ready-for-integration` while the task is completed but coordinator repeatedly reports conflict.
-- Task title null/truncated/prompt-shaped instead of exact `WI-... 제목`.
+- Task title null/truncated/prompt-shaped instead of exact `WI-... 제목`; report `RECOVERABLE_IDENTITY_DRIFT` only when the unique-candidate proof passes, otherwise `CONFLICT`.
 - Final worktree commit exists but is absent from main after multiple coordinator intervals.
 - Main already contains the source commit while the work item is not `done`.
 - A live/stale lease blocks multiple scheduled runs.
 - Automation runs every cadence but repeats the same no-mutation conflict.
 - Queued item has no task after two completed coordinator runs.
+- A recent coordinator title remains `실행중` after its turn is idle/interrupted, or its title result disagrees with the final turn evidence.
+- The same conflict appears in two runs without escalation, or three runs pass without a recovery item/task; this violates autonomous convergence.
 
 ## Team-Lead Report
 

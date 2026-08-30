@@ -306,6 +306,13 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 - 각 Region은 대표 환경 변화, boss와 영구 shortcut을 가진다.
 - 조작감·타격감·effect·graphics gate가 약해지면 콘텐츠 추가를 멈추고 해당 slice를 다시 연다.
 
+### 현재 approved roadmap 완료 gate
+
+- `WI-20260830-190118 — 첫 확장 Region 수직 단위`가 새 Field·생물·Dungeon·Boss·영구 shortcut·귀환을 하나의 반복 가능한 플레이 경로로 통합한다.
+- M1~M4 전투, Portal, 원정, 성장/save 회귀와 모든 적용 품질 축 2 이상을 마지막 writer 이후 독립 검증한다.
+- 위 결과가 main에 통합되고 open work item과 unresolved canonical conflict가 없으면 현재 M0~M5 approved roadmap을 완료로 판정한다.
+- 추가 Region·생물·quest 확장은 새 팀장 요청 또는 새 approved roadmap의 범위이며, 현재 automation을 무한 콘텐츠 생성기로 사용하지 않는다.
+
 ## 확정 비범위
 
 - 자유로운 Z축·벨트스크롤 이동과 Depth Lane 확장

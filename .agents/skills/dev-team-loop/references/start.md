@@ -11,11 +11,11 @@ Bare `$dev-team-loop` and explicit start/continue/resume requests authorize exac
 
 The recurring project automation is the default continuation mechanism. Manual start is a recovery and immediate-tick surface, not an outer conversation loop.
 
-## Stop Conditions
+## Dispatch Suspension And Completion
 
-Do not dispatch a new item when there is an authoritative implementing/feedback/blocked/paused item, a concrete observable question in its task, an irreversible product choice without a safe default, Canonical Conflict, external blocker, explicit pause/cancel, no approved next milestone or completed roadmap.
+Do not dispatch a new vertical item when there is an authoritative implementing/feedback/blocked/paused item, a concrete observable question, an irreversible product choice without a safe default, Canonical Conflict or external blocker. The recurring automation remains active, observes the same evidence and performs safe recovery when possible.
 
-A task completion, tick response, unchanged timeout, successful integration or missing previous conversation context is not a stop condition. A later standalone tick continues from Git evidence.
+A task completion, tick response, unchanged timeout, successful integration or missing previous conversation context is not a loop stop. Pause the automation only for an explicit team-lead pause or after Manage mode's durable completion proof.
 
 ## Reply
 
