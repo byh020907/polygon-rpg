@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: Core Engineering Principles 전환 · 구현 준비
-- 현재 active inbox entry: `IN-20260831-005246` · `implementing`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-005246` · 이 수락 commit에서 persistent worktree provision
+- 상태: Core Engineering Principles 전환 · 독립 검증 준비
+- 현재 active inbox entry: `IN-20260831-005246` · `verifying`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-005246` · checkpoint `f51dad89c0fc5f666649d4964b747cf61dece328`
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -37,10 +37,11 @@
 - 완료 entry 자동 정리 fresh final: `c5daca93afba8b1efd9d7c6385da0b1a4c690486` · latest main ancestry와 owned diff, actual INBOX byte/copy, 4-backtick·tilde fence, duplicate/non-done 거부, live main expected-HEAD guard, atomic replacement와 임시 파일 정리, `npm run check`, `git diff --check`를 독립 확인했다. 적용 품질 축은 모두 2 이상이다.
 - 완료 entry 자동 정리 integration: `0f08c86b4ce195cc414887ffb8ca9f88d54d5d3c` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤, 같은 transition의 cleanup에서 live INBOX의 exact `IN-20260831-003439` block만 제거했다.
 - Core Engineering Principles 전환 accept/provision: 현재 Reference-Guided 선택·mandatory local-first 규칙과 upstream 두 Method 원문을 대조하고, established Polygon RPG 계약과 historical evidence는 보존하면서 Core Engineering Principles를 유일한 Method로 정합하는 실행 계약을 수락했다.
+- Core Engineering Principles 전환 writer checkpoint: `f51dad89c0fc5f666649d4964b747cf61dece328` · Core 일곱 원칙의 canonical owner·runtime 적용 경계와 목적 단위 Git 규칙을 정합하고 fixed local-first를 historical evidence로 전환했다. `npm run check`, `git diff --check`, old 용어·Method source·local link·32 KiB budget 검사를 통과했다.
 
 ## Next
 
-다음 fresh run은 `IN-20260831-005246` executor worktree에서 old Reference-Guided 강제 규칙을 제거하고 Core Engineering Principles의 canonical rule·routing·문서 owner를 한 runnable checkpoint로 구현한다. Writer run은 final 검증이나 integration까지 연쇄하지 않는다.
+다음 fresh run은 `IN-20260831-005246` checkpoint의 latest-main ancestry·owned diff와 upstream Core 일곱 원칙 정합을 독립 확인한다. Old mandatory Reference 용어, local link, 32 KiB budget, single-owner 경계를 재검증하고 모든 적용 축이 2 이상이면 clean final과 `ready-for-integration` evidence를 만든다.
 
 ## Update Contract
 

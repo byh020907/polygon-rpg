@@ -76,7 +76,7 @@
 
 ## IN-20260831-005246
 
-- status: implementing
+- status: verifying
 - received_at: 2026-08-31T00:52:46+09:00
 - priority: normal
 - source: team-lead-main
@@ -85,7 +85,7 @@
 - executor_branch: codex/loop/in-20260831-005246
 - registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
 - accepted_at: 2026-08-31T02:32:37+09:00
-- checkpoint_commit: null
+- checkpoint_commit: f51dad89c0fc5f666649d4964b747cf61dece328
 - final_commit: null
 - integration: null
 - owned_paths:
@@ -112,9 +112,9 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 현재 `AGENTS.md`는 Reference-Guided Engineering을 유일한 Method로 선택하고 두 로컬 저장소의 mandatory local-first 조사, 별도 reference repository index와 전용 §8 policy를 요구한다. README·DESIGN·quality 문서에도 이 초기화 방식의 강제 규칙이 남아 있다.
-- 현재 최선: Core Engineering Principles의 현재 upstream 원문과 단독 AGENTS 예제를 확인했고, 기존 Polygon RPG는 이미 Scene/Node/Signal lifecycle, 문서 index·canonical owner, 목적 단위 Korean Git 기록과 확장 가능한 event 경계를 갖추고 있어 Method를 교체하면서 established 계약을 보존할 수 있다.
-- 다음 병목: old Reference-Guided 규칙과 현재 프로젝트에 남겨야 할 검증 근거를 구분해, 중복 없이 Core Engineering Principles 일곱 규칙의 canonical owner와 검사 경로를 구현한다.
-- 검증: clean `main == origin/main` `d301219b50fa816a65ff25c7688451de4c302e2c`, no live lease와 해당 executor ref/worktree 부재를 확인했다. `ai-development-methods`의 Reference-Guided Engineering, Core Engineering Principles 전체 원문과 Core 단독 AGENTS 예제를 읽고 repository-wide Reference 규칙 위치를 검색했다. 명시 사용자 요청이 기존 Method 선택을 대체하므로 Canonical Conflict는 없다.
+- 현재 최선: checkpoint `f51dad89c0fc5f666649d4964b747cf61dece328`이 Core Engineering Principles를 유일한 Method로 선택하고 순수 함수 → Is-A → Has-A → Can-Do, Node·Scene·Scene Tree·Signal의 개념/구현 분리, 예상 확장, 반복 ownership, 단일 문서 owner와 목적 단위 Git 기록을 canonical하게 정합한다. 고정 local-first 규칙은 제거했고 두 로컬 저장소는 historical evidence로만 남겼다.
+- 다음 병목: fresh run이 upstream Method 일곱 원칙과 checkpoint의 one-to-one 정합, latest-main ancestry·owned diff, old mandatory Reference 용어 부재, local link·32 KiB budget과 문서 owner 경계를 독립 검증한다.
+- 검증: `npm run check`, `git diff --check` 통과. 변경은 owned 문서 6개에 한정했고 `Reference-Guided`, `METHOD-REFERENCE-GUIDED`, `REF-LOCAL-FIRST`, `1차 레퍼런스`가 남지 않음을 확인했다. Core Method raw source HTTP 200과 heading, 변경 문서의 local Markdown link, 필수 canonical rule·구현 단위 용어, `AGENTS.md` 32,710-byte budget을 확인했다. Executor branch는 checkpoint push 뒤 clean local/remote equality다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
