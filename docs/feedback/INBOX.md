@@ -74,53 +74,6 @@
 
 <!-- 메인 대화에서 등록을 요청한 새 원문은 이 아래에 append한다. -->
 
-## IN-20260831-005246
-
-- status: done
-- received_at: 2026-08-31T00:52:46+09:00
-- priority: normal
-- source: team-lead-main
-- title: Core Engineering Principles 전환
-- supersedes: null
-- executor_branch: codex/loop/in-20260831-005246
-- registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
-- accepted_at: 2026-08-31T02:32:37+09:00
-- checkpoint_commit: f51dad89c0fc5f666649d4964b747cf61dece328
-- final_commit: 2083fb803df4bc478262c84e746efd7650a6918e
-- integration: the merge commit that marks this entry done
-- owned_paths:
-  - AGENTS.md
-  - README.md
-  - docs/DESIGN.md
-  - docs/development/quality-loop.md
-  - docs/reference-repositories.md
-  - docs/runtime-architecture.md
-
-### 원문 — 불변
-
-```text
-현재 reference 관련 규칙을 초기구성 어느정도 완료되었으니까 빼고 대신 같은 레포의 principle 메서드규칙을 추가해줘
-```
-
-### 실행 계약 — coordinator 소유
-
-- 목표: 초기 Engineering 기준을 세우기 위해 선택했던 Reference-Guided Engineering과 두 로컬 exemplar의 mandatory local-first 규칙을 제거하고, 같은 Method 저장소의 Core Engineering Principles를 이 프로젝트의 유일한 Engineering Method로 채택한다. 기존에 검증된 Polygon RPG의 architecture·runtime·process 계약은 보존하면서 순수 함수 → Is-A → Has-A → Can-Do 판단, Node·Scene·Scene Tree·Signal의 개념 경계, 예상 확장 구조화, 반복 문제의 ownership 재검토, 단일 문서 owner와 목적 단위 Git 기록을 canonical 규칙으로 정합한다.
-- 완료 조건: `AGENTS.md`의 Method link·선택 선언·Canonical Rule Registry·context routing·implementation policy가 Core Engineering Principles 원문과 일치하고 `METHOD-REFERENCE-GUIDED`, `REF-LOCAL-FIRST`, Reference-Guided 전용 우선순위·정책과 mandatory local exemplar 경로가 제거된다. README·DESIGN·quality/runtime 문서와 reference repository 문서의 현재 역할을 교차 검증해 old Method 강제 규칙은 제거하거나 canonical owner로 통합하되, established project 계약과 현재 동작을 설명하는 근거는 잃지 않는다. Method source/link 무결성, 관련 용어 검색, `npm run check`, `git diff --check`를 통과한다.
-- 비범위: gameplay·rendering·input·world 동작 변경, 제품 경험 Reference와 autonomous loop의 출처/evidence를 단어가 같다는 이유만으로 삭제, 새 runtime dependency 도입, 기존 architecture를 새 Method 예시에 맞춰 불필요하게 재구현, 다른 sibling Method 병용.
-- 적용 품질 축: 기능 완결성, Method 원문 정합, 문서 단일 소유권, 회귀 안전성.
-
-### 실행 상태 — coordinator 소유
-
-- 기준선: 현재 `AGENTS.md`는 Reference-Guided Engineering을 유일한 Method로 선택하고 두 로컬 저장소의 mandatory local-first 조사, 별도 reference repository index와 전용 §8 policy를 요구한다. README·DESIGN·quality 문서에도 이 초기화 방식의 강제 규칙이 남아 있다.
-- 현재 최선: latest main `f51b92c7095c111716378a4d86e97283e777cf46`을 포함한 clean final `2083fb803df4bc478262c84e746efd7650a6918e`을 main에 non-rewriting merge해 complete-work lifecycle과 Core Engineering Principles 전환을 함께 보존했다.
-- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block을 정리하고 STATUS에 실제 merge hash를 기록한다.
-- 검증: upstream Core Engineering Principles HTTP 200과 일곱 heading one-to-one 대응, branch-only owned 문서 6개, old mandatory Method 용어 부재, local Markdown link 32개, `AGENTS.md` 32,711-byte budget, main-owned memory 동일성, `npm run check`, `git diff --check`, clean local/remote branch와 latest-main ancestry를 확인했다. 문서-only 변경이라 applicable screen이 없어 visible PNG QA는 적용하지 않았다. 기능 완결성·Method 원문 정합·문서 단일 소유권·회귀 안전성은 모두 2 이상이다.
-- 실제 blocker: 없음
-
-### 결과 — coordinator 소유
-
-Core Engineering Principles를 유일한 Engineering Method로 전환하고 두 로컬 exemplar를 mandatory 규칙이 아닌 historical evidence로 정리했다. 기존 architecture·runtime 계약과 최신 complete-work loop를 보존한 final `2083fb803df4bc478262c84e746efd7650a6918e`을 main에 non-rewriting merge했으며, 문서-only라 visible PNG QA는 적용 대상이 아니다.
-
 ## IN-20260831-025240
 
 - status: new
