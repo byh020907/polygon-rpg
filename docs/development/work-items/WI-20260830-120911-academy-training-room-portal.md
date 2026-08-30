@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-120911
-status: ready-for-integration
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T12:09:11+09:00
@@ -52,6 +52,8 @@ Deterministic Room/Portal/equipment/combat 진단, `npm run check`, `git diff --
 
 최신 `origin/main` `5d497b2`를 기존 `14fc3a6` history에 non-rewriting merge하고 새 task metadata와 process를 우선 적용했다. Merge 뒤 장비 선택 → Portal 왕복 → M1 사건 → 귀환, KO respawn, 동일 RenderFrame, repository check와 독립 검증을 다시 통과했다. 구체적인 사람 관찰 질문이 없어 메인 반영 준비 상태로 완료했다.
 
+Standalone coordinator가 source worktree의 clean 상태, registration base·parent graph·owned path diff를 독립 확인하고 source graph를 main에 fast-forward로 통합했다. `npm run check`, commit 범위 `git diff --check`, 양방향 Portal·active Room authority·장비 frame·Room Signal 재진입 결정적 진단과 실제 Canvas 학원촌→훈련장, Polygon/Retro, `844×390` 모바일 UI, resize·console 경로가 통과했다.
+
 ## 피드백
 
 해당 없음.
@@ -65,4 +67,6 @@ Deterministic Room/Portal/equipment/combat 진단, `npm run check`, `git diff --
 - Roadmap: `M2 — 학원촌 ↔ 훈련장 Room Portal`
 - Depends on: `WI-20260830-112538`
 - Recovery source commit: `14fc3a66a462d594b1ab3f703cf50faf164ab53e`
+- Source worktree commit: `a4bf49b0db74ca3102cbedba50d8ca88956b6b12`
+- Main integration commit: `a4bf49b0db74ca3102cbedba50d8ca88956b6b12` (fast-forward)
 - 업무보고: [`WI-20260830-120911-academy-training-room-portal.md`](../reports/WI-20260830-120911-academy-training-room-portal.md)
