@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 한 loop 완전 작업 단위 · integration cleanup 예정
-- 현재 active inbox entry: `IN-20260831-025240` · `done` block cleanup 예정
-- 현재 executor branch/worktree: `codex/loop/in-20260831-025240` · final `4b038df4b379c2ecdf3dce84b4d70d8492947638`
+- 상태: 한 loop 완전 작업 단위 · 통합 완료
+- 현재 active inbox entry: `IN-20260831-030641` · `new`
+- 현재 executor branch/worktree: 없음 · 다음 entry 미수락
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 수동 검증 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · `PAUSED`
 - Main: clean `main == origin/main`
@@ -49,10 +49,11 @@
 - 한 loop 완전 작업 단위 accept: current complete-work 문서·prompt·runner를 대조해, selected entry 부재만 확인하는 성공 판정이 main push·executor 통합·lease 해제 누락을 잡지 못하는 마지막 실행상 병목임을 확인했다. 이 entry는 gameplay 변경 없이 durable completion postcondition을 강제한다.
 - 한 loop 완전 작업 단위 writer checkpoint: `679e1b0aeb58b4667db534f61a884c42a80a04c9` · `loop/completion.mjs`의 pure decision과 실제 Git/INBOX/lease inspector를 추가하고 outer loop의 exit-0 조건에 연결했다. 12개 pass/fail fixture, 실제 incomplete snapshot, PowerShell parser, `npm run check`, `git diff --check`를 통과했다. 화면 없는 운영 변경이라 visible PNG QA는 적용하지 않는다.
 - 한 loop 완전 작업 단위 clean final: `4b038df4b379c2ecdf3dce84b4d70d8492947638` · latest main checkpoint를 non-rewriting merge한 뒤 12개 completion state fixture, actual lifecycle failure boundary, PowerShell parser, branch-only owned path 5개, `npm run check`, `git diff --check`, clean local/remote branch를 재확인했다. 적용 품질 축은 모두 2 이상이며 화면 비적용이다.
+- 한 loop 완전 작업 단위 integration: `5d051662a3b4d017a1ac5810dfa23797eefae6f7` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-025240` done block만 제거했다. Outer supervisor는 이후 session마다 origin fetch, clean pushed main, pushed integrated executor final과 released lease를 모두 확인해야 성공한다.
 
 ## Next
 
-현재 session은 final의 non-rewriting main merge를 terminal 원문·결과와 함께 보존한 뒤 exact `done` block cleanup, 실제 merge hash 기록, push와 lease 해제까지 완결한다.
+다음 fresh session은 `IN-20260831-030641`의 환경형 맵 포탈 시각 개선을 exact 원문과 world/rendering 계약에서 파생해, 구현·visible PNG QA·repair·통합·cleanup까지 한 loop에서 완결한다.
 
 ## Update Contract
 

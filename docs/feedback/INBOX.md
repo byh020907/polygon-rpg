@@ -74,48 +74,6 @@
 
 <!-- 메인 대화에서 등록을 요청한 새 원문은 이 아래에 append한다. -->
 
-## IN-20260831-025240
-
-- status: done
-- received_at: 2026-08-31T02:52:40+09:00
-- priority: normal
-- source: team-lead-main
-- title: 한 loop 완전 작업 단위 강제
-- supersedes: null
-- executor_branch: codex/loop/in-20260831-025240
-- registration_base: e3706a331f9f802a7a3072b0f79f0f5c66a08b87
-- accepted_at: 2026-08-31T04:33:00+09:00
-- checkpoint_commit: 679e1b0aeb58b4667db534f61a884c42a80a04c9
-- final_commit: 4b038df4b379c2ecdf3dce84b4d70d8492947638
-- integration: the merge commit that marks this entry done
-- owned_paths: [loop/completion.mjs, loop/loop.ps1, loop/PROMPT.md, docs/development/process.md, docs/development/loop-engineering-references.md]
-
-### 원문 — 불변
-
-```text
-내 루프를 잘못 이해한거같아, 한 루프가 항상 완전한 작업을 하는개념이야
-수정해줘
-```
-
-### 실행 계약 — coordinator 소유
-
-- 목표: fresh `codex exec` 한 번이 entry 전체 구현·검사·checkpoint·해당 시 visible PNG QA·final·main 통합·INBOX 정리·push·lease 해제까지 완결한 경우에만 loop 한 회차가 성공하도록 실행 종료 조건을 강제한다.
-- 완료 조건: 선택 entry가 live INBOX에서 사라졌을 뿐 아니라 main clean·`origin/main` 동기화, executor local/remote ref 일치와 main 포함, lease 해제까지 확인해야 성공하고 어느 하나라도 빠지면 nonzero recovery 대상으로 남는다. Prompt와 canonical process/reference가 같은 계약을 설명하며 affected deterministic check, `npm run check`, `git diff --check`가 통과한다.
-- 비범위: gameplay·화면·balance 변경, Task Scheduler 활성화, 다른 INBOX entry 구현, 기존 executor worktree 추측 정리.
-- 적용 품질 축: 기능 완결성, 설계·Method 정합, 회귀 안전성. 화면 출력이 없는 loop 운영 변경이므로 Graphics·타격감·조작 명료성과 visible PNG QA는 적용하지 않는다.
-
-### 실행 상태 — coordinator 소유
-
-- 기준선: current main은 phase별 정상 종료를 없애고 한 session complete-work prompt를 사용하지만 `loop/loop.ps1`의 성공 판정은 selected entry 부재만 확인해 clean/push/integration/lease durable proof를 강제하지 않는다.
-- 현재 최선: latest main `b8985a7bc8da8d9b690bda49cbfe4dff343bbaa1`을 포함한 clean final `4b038df4b379c2ecdf3dce84b4d70d8492947638`이 outer loop의 성공 조건을 live entry 부재, clean pushed main, pushed integrated executor final, released lease의 단일 executable postcondition으로 강제한다.
-- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block만 정리하고 STATUS에 실제 merge hash를 기록한다.
-- 검증: completion pure decision의 정상·live entry·wrong branch·dirty/unpushed main·live lease·missing/unpushed/unmerged executor·blocked·ROADMAP 12개 fixture, actual lifecycle snapshot의 단계별 실패 사유, PowerShell parser, branch-only owned path 5개, `npm run check`, `git diff --check`, clean local/remote executor final과 latest-main ancestry를 확인했다. 운영 문서·supervisor 변경이라 applicable game screen이 없어 visible PNG QA는 적용하지 않았다. 기능 완결성·설계/Method 정합·회귀 안전성은 모두 2 이상이다.
-- 실제 blocker: 없음
-
-### 결과 — coordinator 소유
-
-한 fresh `codex exec`이 entry를 live INBOX에서 지운 것만으로 성공하지 않도록 outer supervisor를 수정했다. 이제 main branch/clean/origin push, deterministic executor local/remote final 일치와 main 포함, lease 해제를 모두 만족해야 exit 0이 되며 빠진 증거는 run summary의 구체적 failure로 남아 다음 fresh session이 복구한다. Final은 `4b038df4b379c2ecdf3dce84b4d70d8492947638`이다.
-
 ## IN-20260831-030641
 
 - status: new
