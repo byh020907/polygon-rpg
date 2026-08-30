@@ -161,3 +161,44 @@ Writer checkpoint `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5` push 완료. fresh 
 ### 결과 — coordinator 소유
 
 진행 전
+
+## IN-20260831-005246
+
+- status: new
+- received_at: 2026-08-31T00:52:46+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+현재 reference 관련 규칙을 초기구성 어느정도 완료되었으니까 빼고 대신 같은 레포의 principle 메서드규칙을 추가해줘
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
