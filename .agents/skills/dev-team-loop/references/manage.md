@@ -17,6 +17,18 @@ One fresh standalone run performs one reconciliation tick and exits. The coordin
 
 Always release the exact token in a `finally`-style cleanup. A crash is recovered by the lease timeout; queue state never lives in the lock.
 
+## Coordinator Run Title
+
+Scheduled runs must distinguish themselves from work-item tasks without Computer Use.
+
+1. After reading required instructions and before repository reconciliation, obtain the current Asia/Seoul stamp as `yyyyMMdd-HHmm` and call the Codex task-title tool for the calling task, omitting `threadId`, with `C <stamp> · 실행중`.
+2. Keep the same stamp for the whole run. Before every normal exit, after releasing any acquired lease, rename the calling task to `C <stamp> · <item> · <result>`.
+3. Use the roadmap source such as `M4` as `<item>`; otherwise use `WI-<last-six-digits>`, or `-` when no item applies.
+4. Use exactly one short result: `진행확인`, `통합`, `업무생성`, `충돌`, `잠금중`, `중단` or `완료`.
+5. Keep the title under 40 characters. Never include prompts, paths, hashes or internal task IDs.
+
+Title-tool failure is non-blocking: report it and continue the coordinator decision. An unexpected interruption may leave `실행중`, which is intentional diagnostic evidence. Never rename a work-item task; its exact `WI-... 제목` remains the durable recovery key.
+
 ## Task Identity And Recovery
 
 1. Match each open item to at most one authoritative user-owned Codex task by exact title `WI-... 제목` and verify its project/worktree context.
@@ -35,6 +47,8 @@ After reconciliation, execute the first matching action and exit:
 4. **Queued item without task:** recheck exact task titles and main HEAD, ensure registration is already pushed, then create exactly one user-owned managed-worktree task and exit.
 5. **No active item:** select one highest-priority queue request or next unmet approved roadmap gate, register its minimal work item on main, commit/push, create exactly one new user-owned managed-worktree task, then exit.
 6. **Roadmap complete:** record/report completion and exit.
+
+Map the chosen action to the final run-title result: conflict/lifecycle stop=`충돌`; ready integration=`통합`; active item=`진행확인`; queued/new item dispatch=`업무생성`; live lease=`잠금중`; handled unexpected failure=`중단`; roadmap complete=`완료`.
 
 There is at most one default vertical work item in `implementing`, `feedback`, `ready-for-integration` or `integrating`. A normal task completion, coordinator response end, unchanged timeout or lost prior context is not a roadmap stop condition.
 

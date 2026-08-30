@@ -90,6 +90,8 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 - automation prompt는 `AGENTS.md`와 `dev-team-loop` Coordinator Tick/Manage mode를 읽고 one-tick decision order를 실행한 뒤 종료하도록 한다.
 - heartbeat, 메인 대화 wakeup, 장기 wait, daemon, Orca manager와 외부 database를 기반으로 사용하지 않는다.
 - automation을 사용할 수 없는 환경에서는 구현됐다고 기록하지 않고, 수동 대체 명령은 bare `$dev-team-loop` 한 번뿐이다.
+- 각 standalone run은 Computer Use 없이 Codex task-title tool로 자기 제목을 바꾼다. 시작은 `C yyyyMMdd-HHmm · 실행중`, 정상 종료는 `C yyyyMMdd-HHmm · <M/WI> · <결과>` 형식이며 결과는 `진행확인`, `통합`, `업무생성`, `충돌`, `잠금중`, `중단`, `완료` 중 하나다.
+- 예상하지 못한 interruption으로 `실행중`이 남으면 status audit의 진단 증거로 사용한다. Coordinator는 work-item task의 exact `WI-... 제목`을 변경하지 않는다.
 
 ### 읽기 전용 상태 점검
 

@@ -36,7 +36,7 @@ Collect one bounded snapshot rather than polling:
 
 1. Fetch `origin/main`; record local/remote HEAD, clean/dirty state and recent integration/registration commits.
 2. Read open work-item frontmatter and the roadmap milestone table. Identify the single expected active vertical item.
-3. View the `polygon-rpg-roadmap-coordinator` automation and its local `automation.toml` when available. Check `ACTIVE/PAUSED`, cadence, project, local/worktree mode and the five most recent runs.
+3. View the `polygon-rpg-roadmap-coordinator` automation and its local `automation.toml` when available. Check `ACTIVE/PAUSED`, cadence, project, local/worktree mode and the five most recent runs. Discover new runs by the compact `C yyyyMMdd-HHmm · <item> · <result>` title as well as the legacy automation title; confirm automation ID/summary rather than relying on the prefix alone.
 4. List recent and, only when needed, archived Codex tasks. Match an item only by its exact `task_title`; a null, truncated, prompt-shaped or merely substring-matching title is not authoritative.
 5. Read at most the latest three turns of the expected task without copying raw logs. Record status, last update, concrete question/blocker and final commit evidence.
 6. Inspect its managed worktree: path, HEAD, clean/dirty paths, registration-base ancestry and whether its final commit is already contained in main.
@@ -70,6 +70,7 @@ Do not label a long implementation `STALLED_SUSPECTED` merely because coordinato
 - A live/stale lease blocks multiple scheduled runs.
 - Automation runs every cadence but repeats the same no-mutation conflict.
 - Queued item has no task after two completed coordinator runs.
+- A recent coordinator title remains `실행중` after its turn is idle/interrupted, or its title result disagrees with the final turn evidence.
 
 ## Team-Lead Report
 
