@@ -609,27 +609,37 @@ dd {
   background: rgb(15 38 40 / 82%);
 }
 
-.equipment-select {
+.growth-panel {
   position: absolute;
   z-index: 4;
   top: clamp(48px, 5vw, 66px);
   right: clamp(10px, 1.5vw, 18px);
   display: grid;
-  gap: 6px;
-  width: min(250px, 29vw);
-  padding: 8px;
+  gap: 7px;
+  width: min(320px, 34vw);
+  max-height: calc(100% - 82px);
+  padding: 9px;
+  overflow: auto;
   border: 1px solid rgb(134 217 209 / 32%);
   border-radius: 3px;
   background: linear-gradient(145deg, rgb(5 13 17 / 88%), rgb(13 29 34 / 70%));
   box-shadow: 0 8px 28px rgb(0 0 0 / 32%);
 }
 
-.equipment-select header {
+.growth-panel header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.growth-panel header span {
   display: grid;
   gap: 2px;
 }
 
-.equipment-select header small {
+.growth-panel header small,
+.skill-growth small {
   color: #72a8a2;
   font:
     700 0.42rem ui-monospace,
@@ -639,7 +649,8 @@ dd {
   letter-spacing: 0.12em;
 }
 
-.equipment-select header strong {
+.growth-panel header strong,
+.skill-growth strong {
   color: #e7eee9;
   font:
     700 clamp(0.58rem, 0.75vw, 0.72rem) Georgia,
@@ -647,17 +658,67 @@ dd {
     serif;
 }
 
-.equipment-select > div {
+.growth-panel header em {
+  color: #6f8d87;
+  font:
+    600 0.38rem ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  font-style: normal;
+  text-align: right;
+}
+
+.skill-growth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid rgb(226 190 110 / 30%);
+  background: rgb(42 31 20 / 42%);
+}
+
+.skill-growth > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.skill-growth p,
+.skill-growth code {
+  margin: 0;
+  color: #9caea8;
+  font-size: 0.42rem;
+  line-height: 1.3;
+}
+
+.skill-growth code {
+  color: #d7b86f;
+  white-space: normal;
+}
+
+.skill-growth button {
+  min-height: 38px;
+  padding: 0 7px;
+  border: 1px solid #c39b50;
+  color: #19150e;
+  background: #dfbd6e;
+  font-size: 0.48rem;
+  font-weight: 850;
+}
+
+.equipment-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
 }
 
-.equipment-select button {
+.equipment-grid button {
   display: grid;
   gap: 2px;
-  min-height: 42px;
-  padding: 5px 6px;
+  min-height: 54px;
+  padding: 6px 7px;
   border: 1px solid rgb(139 159 153 / 28%);
   border-radius: 2px;
   color: #9faaa5;
@@ -665,21 +726,47 @@ dd {
   background: rgb(5 12 14 / 68%);
 }
 
-.equipment-select button strong {
+.equipment-grid button strong {
   font-size: 0.56rem;
 }
 
-.equipment-select button small {
+.equipment-grid button small {
   color: #788780;
   font-size: 0.42rem;
   line-height: 1.25;
 }
 
-.equipment-select button.is-selected {
+.equipment-grid button span {
+  color: #d8bc78;
+  font-size: 0.4rem;
+  font-weight: 800;
+}
+
+.equipment-grid button.is-selected {
   color: #f7fff9;
   border-color: #86d9d1;
   background: rgb(24 72 69 / 78%);
   box-shadow: inset 0 0 0 1px rgb(199 255 242 / 18%);
+}
+
+.equipment-grid button.is-locked {
+  border-color: rgb(199 154 82 / 35%);
+}
+
+.growth-panel button:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.35);
+  opacity: 0.55;
+}
+
+.growth-notice {
+  margin: 0;
+  color: #9fc6bc;
+  font:
+    600 0.42rem ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
 }
 
 .encounter-readout {
@@ -1172,15 +1259,21 @@ kbd {
     display: none;
   }
 
-  .equipment-select {
+  .growth-panel {
     top: 42px;
     right: 6px;
-    width: min(220px, 42vw);
+    width: min(250px, 44vw);
     padding: 5px;
   }
 
-  .equipment-select button {
+  .equipment-grid button {
     min-height: 36px;
+  }
+
+  .skill-growth p,
+  .growth-panel header em,
+  .growth-notice {
+    display: none;
   }
 }
 

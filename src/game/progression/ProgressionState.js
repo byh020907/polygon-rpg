@@ -1,0 +1,164 @@
+export const PROGRESSION_SCHEMA_VERSION = 1;
+
+export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
+  AWARDED: 'awarded',
+  PURCHASED: 'purchased',
+  EQUIPPED: 'equipped',
+  TRAINED: 'trained',
+  ALREADY_OWNED: 'already-owned',
+  ALREADY_EQUIPPED: 'already-equipped',
+  NOT_OWNED: 'not-owned',
+  INSUFFICIENT_FUNDS: 'insufficient-funds',
+  MAX_LEVEL: 'max-level',
+});
+
+function assertEquipmentId(equipmentId, label = '장비 ID') {
+  if (typeof equipmentId !== 'string' || equipmentId.trim().length === 0) {
+    throw new TypeError(`${label}은(는) 비어 있지 않은 문자열이어야 합니다.`);
+  }
+}
+
+function assertNonNegativeInteger(value, label) {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new RangeError(`${label}은(는) 0 이상의 안전한 정수여야 합니다.`);
+  }
+}
+
+function assertPositiveInteger(value, label) {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new RangeError(`${label}은(는) 1 이상의 안전한 정수여야 합니다.`);
+  }
+}
+
+function freezeSnapshot({
+  trainingMarks,
+  ownedEquipmentIds,
+  equippedEquipmentId,
+  combatSkillLevel,
+}) {
+  return Object.freeze({
+    version: PROGRESSION_SCHEMA_VERSION,
+    trainingMarks,
+    ownedEquipmentIds: Object.freeze([...ownedEquipmentIds]),
+    equippedEquipmentId,
+    combatSkillLevel,
+  });
+}
+
+export function createProgressionSnapshot(defaultEquipmentId) {
+  assertEquipmentId(defaultEquipmentId, '기본 장비 ID');
+  return freezeSnapshot({
+    trainingMarks: 0,
+    ownedEquipmentIds: [defaultEquipmentId],
+    equippedEquipmentId: defaultEquipmentId,
+    combatSkillLevel: 0,
+  });
+}
+
+export function assertProgressionSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== 'object') {
+    throw new TypeError('progression snapshot은 객체여야 합니다.');
+  }
+  if (snapshot.version !== PROGRESSION_SCHEMA_VERSION) {
+    throw new Error(`지원하지 않는 progression schema version입니다: ${snapshot.version}`);
+  }
+  assertNonNegativeInteger(snapshot.trainingMarks, '훈련 인장');
+  if (!Array.isArray(snapshot.ownedEquipmentIds) || snapshot.ownedEquipmentIds.length === 0) {
+    throw new TypeError('소유 장비 ID 목록에는 적어도 하나의 장비가 필요합니다.');
+  }
+  const ownedIds = new Set();
+  for (const equipmentId of snapshot.ownedEquipmentIds) {
+    assertEquipmentId(equipmentId, '소유 장비 ID');
+    if (ownedIds.has(equipmentId)) {
+      throw new Error(`소유 장비 ID가 중복됩니다: ${equipmentId}`);
+    }
+    ownedIds.add(equipmentId);
+  }
+  assertEquipmentId(snapshot.equippedEquipmentId, '착용 장비 ID');
+  if (!ownedIds.has(snapshot.equippedEquipmentId)) {
+    throw new Error(`착용 장비는 먼저 소유해야 합니다: ${snapshot.equippedEquipmentId}`);
+  }
+  if (
+    !Number.isInteger(snapshot.combatSkillLevel) ||
+    snapshot.combatSkillLevel < 0 ||
+    snapshot.combatSkillLevel > 3
+  ) {
+    throw new RangeError('combat skill level은 0..3 사이의 정수여야 합니다.');
+  }
+  return snapshot;
+}
+
+function createTransaction(changed, reason, snapshot) {
+  return Object.freeze({ changed, reason, snapshot: freezeSnapshot(snapshot) });
+}
+
+export function awardTrainingMarks(snapshot, amount) {
+  assertProgressionSnapshot(snapshot);
+  assertPositiveInteger(amount, '훈련 인장 획득량');
+  const trainingMarks = snapshot.trainingMarks + amount;
+  if (!Number.isSafeInteger(trainingMarks)) {
+    throw new RangeError('훈련 인장 보유량이 안전한 정수 범위를 넘습니다.');
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.AWARDED,
+    freezeSnapshot({ ...snapshot, trainingMarks }),
+  );
+}
+
+export function purchaseEquipment(snapshot, { profileId, cost } = {}) {
+  assertProgressionSnapshot(snapshot);
+  assertEquipmentId(profileId, '구매 장비 profile ID');
+  if (snapshot.ownedEquipmentIds.includes(profileId)) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_OWNED, snapshot);
+  }
+  assertNonNegativeInteger(cost, '장비 구매 비용');
+  if (snapshot.trainingMarks < cost) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_FUNDS, snapshot);
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.PURCHASED,
+    freezeSnapshot({
+      ...snapshot,
+      trainingMarks: snapshot.trainingMarks - cost,
+      ownedEquipmentIds: [...snapshot.ownedEquipmentIds, profileId],
+    }),
+  );
+}
+
+export function selectEquipment(snapshot, profileId) {
+  assertProgressionSnapshot(snapshot);
+  assertEquipmentId(profileId, '선택 장비 profile ID');
+  if (!snapshot.ownedEquipmentIds.includes(profileId)) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.NOT_OWNED, snapshot);
+  }
+  if (snapshot.equippedEquipmentId === profileId) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_EQUIPPED, snapshot);
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.EQUIPPED,
+    freezeSnapshot({ ...snapshot, equippedEquipmentId: profileId }),
+  );
+}
+
+export function trainCombatSkill(snapshot, cost) {
+  assertProgressionSnapshot(snapshot);
+  if (snapshot.combatSkillLevel >= 3) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.MAX_LEVEL, snapshot);
+  }
+  assertNonNegativeInteger(cost, 'combat skill 승급 비용');
+  if (snapshot.trainingMarks < cost) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_FUNDS, snapshot);
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.TRAINED,
+    freezeSnapshot({
+      ...snapshot,
+      trainingMarks: snapshot.trainingMarks - cost,
+      combatSkillLevel: snapshot.combatSkillLevel + 1,
+    }),
+  );
+}

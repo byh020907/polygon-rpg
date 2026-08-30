@@ -3,6 +3,8 @@ function freezeProfile(profile) {
     ...profile,
     combatTiming: Object.freeze({ ...profile.combatTiming }),
     attack: Object.freeze({ ...profile.attack }),
+    defense: Object.freeze({ ...profile.defense }),
+    guard: Object.freeze({ ...profile.guard }),
     presentation: Object.freeze({ ...profile.presentation }),
   });
 }
@@ -10,20 +12,26 @@ function freezeProfile(profile) {
 export const EQUIPMENT_PROFILES = Object.freeze([
   freezeProfile({
     id: 'balanced-sword',
-    label: '균형형 검·방패',
-    shortLabel: '균형형',
-    description: '빠른 준비와 표준 사거리',
-    combatTiming: { startupScale: 1, recoveryScale: 1 },
-    attack: { rangeScale: 1, hitstunScale: 1 },
-    presentation: { weaponLengthScale: 1 },
+    label: '속공형 기병검·방패',
+    shortLabel: '속공형',
+    description: '짧은 frame · 짧은 거리 · 낮은 경직',
+    purchaseCost: 0,
+    combatTiming: { startupScale: 0.82, recoveryScale: 0.84 },
+    attack: { damageScale: 0.9, rangeScale: 0.92, hitstunScale: 0.85, launchScale: 0.92 },
+    defense: { damageTakenScale: 1.08 },
+    guard: { impactScale: 1.08, blockstunScale: 1.08 },
+    presentation: { weaponLengthScale: 0.94 },
   }),
   freezeProfile({
     id: 'heavy-sword',
     label: '중량형 대검·방패',
     shortLabel: '중량형',
-    description: '느린 준비·회수, 긴 사거리·큰 경직',
+    description: '긴 frame · 긴 거리 · 높은 경직',
+    purchaseCost: 3,
     combatTiming: { startupScale: 1.22, recoveryScale: 1.28 },
-    attack: { rangeScale: 1.22, hitstunScale: 1.3 },
+    attack: { damageScale: 1.2, rangeScale: 1.22, hitstunScale: 1.3, launchScale: 1.18 },
+    defense: { damageTakenScale: 0.92 },
+    guard: { impactScale: 0.84, blockstunScale: 0.84 },
     presentation: { weaponLengthScale: 1.18 },
   }),
 ]);

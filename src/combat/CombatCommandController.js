@@ -31,6 +31,12 @@ const AIR_COMBO_MOTION_BY_STARTER = Object.freeze({
 const AIR_MOTION_IDS = Object.freeze(
   new Set(['airSlash', 'airHeavy', 'airReturn', 'airSpin', 'airCross']),
 );
+const DEFAULT_COMMAND_PROFILE = Object.freeze({
+  groundCombos: true,
+  airCombos: true,
+  loopCancel: true,
+  maxAirActions: Number.MAX_SAFE_INTEGER,
+});
 const COMBO_CONTINUATIONS = Object.freeze(
   new Set([
     ...Object.entries(COMBO_MOTION_BY_STARTER).flatMap(([starter, branches]) =>
@@ -110,6 +116,19 @@ function normalizeTimingProfile(timingProfile = {}) {
   return Object.freeze({ startupScale, recoveryScale });
 }
 
+function normalizeCommandProfile(commandProfile = {}) {
+  const maxAirActions = commandProfile.maxAirActions ?? DEFAULT_COMMAND_PROFILE.maxAirActions;
+  if (!Number.isSafeInteger(maxAirActions) || maxAirActions < 1) {
+    throw new RangeError('command profile maxAirActions는 1 이상의 정수여야 합니다.');
+  }
+  return Object.freeze({
+    groundCombos: commandProfile.groundCombos ?? DEFAULT_COMMAND_PROFILE.groundCombos,
+    airCombos: commandProfile.airCombos ?? DEFAULT_COMMAND_PROFILE.airCombos,
+    loopCancel: commandProfile.loopCancel ?? DEFAULT_COMMAND_PROFILE.loopCancel,
+    maxAirActions,
+  });
+}
+
 function scaleMotionPolicy(policy, timingProfile) {
   if (!policy.frame) return policy;
   const startupFrames = Math.max(
@@ -151,8 +170,9 @@ export function combatMotionFrameData(id, timingProfile = {}) {
 }
 
 export class CombatCommandController {
-  constructor({ timingProfile } = {}) {
+  constructor({ timingProfile, commandProfile } = {}) {
     this.timingProfile = normalizeTimingProfile(timingProfile);
+    this.commandProfile = normalizeCommandProfile(commandProfile);
     this.reset();
   }
 
@@ -160,6 +180,12 @@ export class CombatCommandController {
     if (this.active) throw new Error('전투 motion 중에는 장비 timing을 바꿀 수 없습니다.');
     this.timingProfile = normalizeTimingProfile(timingProfile);
     return this.timingProfile;
+  }
+
+  setCommandProfile(commandProfile) {
+    if (this.active) throw new Error('전투 motion 중에는 command profile을 바꿀 수 없습니다.');
+    this.commandProfile = normalizeCommandProfile(commandProfile);
+    return this.commandProfile;
   }
 
   getMotionFrameData(id) {
@@ -171,6 +197,7 @@ export class CombatCommandController {
     this.queuedMotion = null;
     this.sequence = 0;
     this.comboCycle = 0;
+    this.airActions = 0;
     this.heldPose = 'idle';
     this.continueNextStarterInCombo = false;
     this.previousInputs = Object.fromEntries(INPUT_NAMES.map((name) => [name, false]));
@@ -182,6 +209,7 @@ export class CombatCommandController {
     inputSnapshot,
     { acceptCommands = true, isAirborne = false, allowGuard = true } = {},
   ) {
+    if (!isAirborne) this.airActions = 0;
     const issuedMotion = acceptCommands
       ? this.readIssuedMotion(inputSnapshot, { isAirborne })
       : null;
@@ -206,7 +234,7 @@ export class CombatCommandController {
         this.active = null;
         this.queuedMotion = null;
         if (nextMotion) {
-          const continuesCombo = COMBO_CONTINUATIONS.has(`${transitionFrom.id}:${nextMotion}`);
+          const continuesCombo = this.continuesComboRoute(transitionFrom.id, nextMotion);
           this.start(nextMotion, transitionFrom, { continuesCombo });
         }
       }
@@ -237,12 +265,22 @@ export class CombatCommandController {
         !this.previousInputs[command.input];
       if (sequenceIssued || booleanEdgeIssued) {
         if (isAirborne) {
-          return (
-            AIR_COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input] ??
-            AIR_COMMAND_MOTIONS[command.input]
-          );
+          if (this.airActions >= this.commandProfile.maxAirActions) return null;
+          const branch = AIR_COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input];
+          if (branch && this.commandProfile.airCombos) return branch;
+          if (
+            !this.active ||
+            !AIR_MOTION_IDS.has(this.active.id) ||
+            this.commandProfile.loopCancel
+          ) {
+            return AIR_COMMAND_MOTIONS[command.input];
+          }
+          return null;
         }
-        return COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input] ?? command.motion;
+        const branch = COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input];
+        if (branch && this.commandProfile.groundCombos) return branch;
+        if (!this.active || this.commandProfile.loopCancel) return command.motion;
+        return null;
       }
     }
     return null;
@@ -256,6 +294,7 @@ export class CombatCommandController {
     }
     this.sequence += 1;
     if (!continuesCombo) this.comboCycle += 1;
+    if (AIR_MOTION_IDS.has(motionId)) this.airActions += 1;
     this.active = {
       id: motionId,
       elapsedSeconds: 0,
@@ -267,6 +306,13 @@ export class CombatCommandController {
         : null,
       transitionSeconds: transitionFrom ? (TRANSITION_SECONDS_BY_MOTION[motionId] ?? 0.05) : 0,
     };
+  }
+
+  continuesComboRoute(fromMotionId, toMotionId) {
+    if (COMBO_CONTINUATIONS.has(`${fromMotionId}:${toMotionId}`)) return true;
+    const loopsGround = !AIR_MOTION_IDS.has(fromMotionId) && !AIR_MOTION_IDS.has(toMotionId);
+    const loopsAir = AIR_MOTION_IDS.has(fromMotionId) && AIR_MOTION_IDS.has(toMotionId);
+    return this.commandProfile.loopCancel && (loopsGround || loopsAir);
   }
 
   cancelForJump({ preserveComboCycle = false } = {}) {
@@ -296,6 +342,7 @@ export class CombatCommandController {
         canJump: motionPolicy.canJump,
         sequence: this.sequence,
         comboCycle: this.comboCycle,
+        airActions: this.airActions,
         queuedMotion: null,
       });
     }
@@ -312,6 +359,7 @@ export class CombatCommandController {
       canJump: true,
       sequence: this.active.sequence,
       comboCycle: this.active.comboCycle,
+      airActions: this.airActions,
       queuedMotion: this.queuedMotion,
       transitionFrom: this.active.transitionFrom,
       transitionProgress: this.active.transitionFrom

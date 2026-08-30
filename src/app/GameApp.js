@@ -1,6 +1,11 @@
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { GAME_SCENE } from '../game/GameScene.js';
+import {
+  DEFAULT_EQUIPMENT_PROFILE_ID,
+  EQUIPMENT_PROFILES,
+} from '../game/equipment/EquipmentProfiles.js';
+import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -39,7 +44,8 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.setRenderStats !== 'function' ||
     typeof uiBridge.setGameStats !== 'function' ||
     typeof uiBridge.setPlayerStatus !== 'function' ||
-    typeof uiBridge.setWorldStatus !== 'function'
+    typeof uiBridge.setWorldStatus !== 'function' ||
+    typeof uiBridge.setSaveStatus !== 'function'
   ) {
     throw new TypeError(
       'GameApp UI bridge에는 snapshot, stats와 world status writer가 필요합니다.',
@@ -48,10 +54,24 @@ function assertUiBridge(uiBridge) {
   return uiBridge;
 }
 
+function createProgressionStorage() {
+  try {
+    return new ProgressionStorage(window.localStorage, 'polygon-rpg.progression.v1');
+  } catch {
+    return null;
+  }
+}
+
 export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas }) {
     super('GameApp');
-    this.scene = this.addChild(GAME_SCENE.instantiate());
+    this.progressionStorage = createProgressionStorage();
+    const equipmentIds = EQUIPMENT_PROFILES.map((profile) => profile.id);
+    const progressionSnapshot = this.progressionStorage?.load(
+      DEFAULT_EQUIPMENT_PROFILE_ID,
+      equipmentIds,
+    );
+    this.scene = this.addChild(GAME_SCENE.instantiate({ progressionSnapshot }));
     this.camera = new Camera2D();
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
@@ -103,6 +123,13 @@ export class GameApp extends SceneNode {
     this.connectTo(this.scene.renderFrameCreated, (renderFrame) => {
       this.renderFrame(renderFrame);
     });
+    this.connectTo(this.scene.progressionChanged, (snapshot) => {
+      const saved = this.progressionStorage?.save(snapshot) ?? false;
+      this.uiBridge.setSaveStatus(saved ? '성장 자동 저장됨' : '이 세션만 유지 · 저장 사용 불가');
+    });
+    this.uiBridge.setSaveStatus(
+      this.progressionStorage ? '성장 자동 저장 준비' : '이 세션만 유지 · 저장 사용 불가',
+    );
     this.input.attach();
     this.abortController = new AbortController();
     this.attachEvents();
@@ -160,6 +187,14 @@ export class GameApp extends SceneNode {
 
   selectEquipment(profileId) {
     return this.scene.selectEquipment(profileId);
+  }
+
+  purchaseEquipment(profileId) {
+    return this.scene.purchaseEquipment(profileId);
+  }
+
+  trainCombatSkill() {
+    return this.scene.trainCombatSkill();
   }
 
   resize() {

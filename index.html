@@ -146,7 +146,7 @@
           </div>
 
           <div class="hud-item-counter" aria-label="원정 준비 효과">
-            <b>◆</b><span x-text="wardLabel"></span>
+            <b>◆</b><span x-text="`훈련 인장 ${trainingMarks} · ${wardLabel}`"></span>
           </div>
           <div class="game-area-label">
             <small x-text="`AREA 01 · ${timeLabel}`"></small><strong x-text="areaName"></strong>
@@ -160,25 +160,62 @@
             MENU
           </button>
 
-          <section class="equipment-select" x-show="canSelectEquipment" aria-label="훈련 장비 선택">
+          <section
+            class="growth-panel"
+            x-show="canManageProgression"
+            aria-label="장비와 command 성장"
+          >
             <header>
-              <small>TRAINING LOADOUT</small>
-              <strong x-text="selectedEquipmentLabel"></strong>
+              <span>
+                <small>TRAINING GROWTH</small>
+                <strong x-text="`◆ ${trainingMarks} · ${selectedEquipmentLabel}`"></strong>
+              </span>
+              <em x-text="saveStatus"></em>
             </header>
-            <div>
+            <article class="skill-growth">
+              <div>
+                <small x-text="`COMMAND Lv.${combatSkillLevel}/${combatSkillMaxLevel}`"></small>
+                <strong x-text="combatSkillLabel"></strong>
+                <p x-text="combatSkillDescription"></p>
+                <code x-text="combatCommandGuide"></code>
+              </div>
+              <button
+                type="button"
+                x-bind:disabled="
+                  combatSkillLevel >= combatSkillMaxLevel || trainingMarks < combatSkillNextCost
+                "
+                @click="trainCombatSkill"
+                @touchend.prevent="trainCombatSkill"
+              >
+                <span
+                  x-text="
+                    combatSkillLevel >= combatSkillMaxLevel
+                      ? 'MAX'
+                      : `Lv.${combatSkillNextLevel} · ◆${combatSkillNextCost}`
+                  "
+                ></span>
+              </button>
+            </article>
+            <div class="equipment-grid">
               <template x-for="option in equipmentOptions" x-bind:key="option.id">
                 <button
                   type="button"
-                  x-bind:class="{ 'is-selected': selectedEquipmentId === option.id }"
-                  x-bind:aria-pressed="selectedEquipmentId === option.id"
-                  @click="selectEquipment(option.id)"
-                  @touchend.prevent="selectEquipment(option.id)"
+                  x-bind:class="{
+                    'is-selected': option.selected,
+                    'is-locked': !option.owned,
+                  }"
+                  x-bind:disabled="option.selected || (!option.owned && trainingMarks < option.purchaseCost)"
+                  x-bind:aria-pressed="option.selected"
+                  @click="chooseEquipment(option)"
+                  @touchend.prevent="chooseEquipment(option)"
                 >
                   <strong x-text="option.shortLabel"></strong>
                   <small x-text="option.description"></small>
+                  <span x-text="equipmentActionLabel(option)"></span>
                 </button>
               </template>
             </div>
+            <p class="growth-notice" x-text="progressionNotice" aria-live="polite"></p>
           </section>
 
           <section class="encounter-readout" x-show="encounterHint" aria-live="polite">
@@ -211,8 +248,7 @@
 
             <div class="mobile-action-pad" aria-label="전투 행동">
               <small class="mobile-combo-guide">
-                <span>지상 XX 찌르기 · XY 올려 · YX 회전</span>
-                <span>공중 XX 되베기 · XY 회전 · YX 교차</span>
+                <span x-text="combatCommandGuide"></span>
               </small>
               <template x-for="control in mobileActions" x-bind:key="control.id">
                 <button
@@ -241,8 +277,7 @@
             <span><kbd>←</kbd><kbd>→</kbd> 이동</span>
             <span><kbd>↑</kbd> 점프·Portal · <kbd>↓</kbd> 방어 · 이동+<kbd>↓</kbd> 구르기</span>
             <span><kbd>A</kbd> 기본 · <kbd>S</kbd> 강한 공격</span>
-            <span><kbd>AA</kbd> 찌르기 · <kbd>AS</kbd> 올려베기 · <kbd>SA</kbd> 회전</span>
-            <span>공중 <kbd>AA</kbd> 되베기 · <kbd>AS</kbd> 회전 · <kbd>SA</kbd> 교차</span>
+            <span x-text="combatCommandGuide"></span>
           </div>
           <p x-text="gameStats"></p>
         </footer>

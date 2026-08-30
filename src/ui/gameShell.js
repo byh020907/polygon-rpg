@@ -119,13 +119,31 @@ export function registerGameShell(Alpine, gameApp) {
     wardLabel: '수호 수액 미획득',
     timeLabel: '낮',
     canSelectEquipment: true,
+    canManageProgression: true,
     selectedEquipmentId: EQUIPMENT_PROFILES[0].id,
     selectedEquipmentLabel: EQUIPMENT_PROFILES[0].label,
     equipmentOptions: Object.freeze(
-      EQUIPMENT_PROFILES.map(({ id, shortLabel, description }) =>
-        Object.freeze({ id, shortLabel, description }),
+      EQUIPMENT_PROFILES.map(({ id, shortLabel, description, purchaseCost }, index) =>
+        Object.freeze({
+          id,
+          shortLabel,
+          description,
+          purchaseCost,
+          owned: index === 0,
+          selected: index === 0,
+        }),
       ),
     ),
+    trainingMarks: 0,
+    combatSkillLevel: 0,
+    combatSkillMaxLevel: 3,
+    combatSkillLabel: '기본 수련',
+    combatSkillDescription: '기본 공격과 한 번의 공중 행동을 사용합니다.',
+    combatSkillNextLevel: 1,
+    combatSkillNextCost: 1,
+    combatCommandGuide: 'A/S starter · 공중 starter 1회',
+    progressionNotice: '훈련 골렘 처치 시 인장 +3',
+    saveStatus: '성장 저장 준비 중',
     health: 100,
     maxHealth: 100,
     stamina: 100,
@@ -170,18 +188,32 @@ export function registerGameShell(Alpine, gameApp) {
           this.health = status.health;
           this.maxHealth = status.maxHealth;
           this.gold = status.gold;
+          this.trainingMarks = status.trainingMarks;
         },
         setWorldStatus: (status) => {
           this.areaName = status.areaName;
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
           this.canSelectEquipment = status.canSelectEquipment;
+          this.canManageProgression = status.canManageProgression;
           this.selectedEquipmentId = status.equipmentId;
           this.selectedEquipmentLabel = status.equipmentLabel;
+          this.equipmentOptions = status.equipmentOptions;
+          this.combatSkillLevel = status.combatSkill.level;
+          this.combatSkillMaxLevel = status.combatSkill.maxLevel;
+          this.combatSkillLabel = status.combatSkill.label;
+          this.combatSkillDescription = status.combatSkill.description;
+          this.combatSkillNextLevel = status.combatSkill.nextLevel;
+          this.combatSkillNextCost = status.combatSkill.nextCost;
+          this.combatCommandGuide = status.combatSkill.commandGuide;
+          this.progressionNotice = status.progressionNotice;
           this.journeyLabel = status.journeyLabel;
           this.encounterHint = status.encounterHint;
           this.encounterHealthLabel = status.encounterHealthLabel;
           this.wardLabel = status.wardLabel;
+        },
+        setSaveStatus: (status) => {
+          this.saveStatus = status;
         },
       });
       this.$nextTick(() => gameApp.start());
@@ -250,6 +282,21 @@ export function registerGameShell(Alpine, gameApp) {
 
     selectEquipment(profileId) {
       gameApp.selectEquipment(profileId);
+    },
+
+    chooseEquipment(option) {
+      if (option.owned) gameApp.selectEquipment(option.id);
+      else gameApp.purchaseEquipment(option.id);
+    },
+
+    trainCombatSkill() {
+      gameApp.trainCombatSkill();
+    },
+
+    equipmentActionLabel(option) {
+      if (option.selected) return '장착 중';
+      if (option.owned) return '장착';
+      return `구매 · ◆${option.purchaseCost}`;
     },
 
     destroy() {

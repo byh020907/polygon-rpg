@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-171256
-status: queued
+status: ready-for-integration
 priority: high
 lane: dedicated
 created_at: 2026-08-30T17:12:56+09:00
@@ -38,7 +38,18 @@ Roadmap M4의 다음 미충족 수직 단위다. M3 첫 원정 loop가 메인에
 
 ## 결과
 
-진행 중
+학원촌↔훈련장 왕복에 단일 훈련 재화, 중량형 구매·장착, 3단계 command 수련과 최소 local save를 연결했다.
+
+- 훈련 골렘 처치마다 인장 3개를 받고 학원촌 성장 panel에서 장비 구매 또는 command level에 사용한다.
+- Lv.0 starter에서 Lv.1 지상 branch, Lv.2 공중 2회·2타, Lv.3 공중 3회·3타·loop cancel로 같은 A/S·X/Y route가 확장된다.
+- 속공형은 27 frame·짧은 거리·낮은 경직, 중량형은 36 frame·긴 거리·높은 경직이며 공격·방어·launch·guard profile이 실제 판정에 적용된다.
+- local save는 schema v1의 인장·장비 소유/장착·command level만 저장하고 M3 원정 상태는 저장하지 않는다.
+- 적용 rubric은 기능 완결성·조작 명료성·타격감/Effect·Graphics·Reference 정합·회귀 안전성 모두 2다.
+- `npm run check`, `git diff --check`, progression/command/장비 결정적 진단, 실제 mobile Canvas의 Portal→훈련 처치→인장→귀환→중량형 구매→reload 복원, `900×600` resize와 browser warning/error 검사를 통과했다.
+- 마지막 writer 이후 독립 verifier가 소유 범위, 최소 저장 schema, Lv.0~3 route, 장비 trade-off, 보상 1회와 renderer read-only 경계를 재검증했고 actionable finding이 없었다.
+- 사용자 요청 없는 영구 test/script/fixture는 추가하지 않았다.
+
+업무보고: [`WI-20260830-171256-equipment-command-growth-loop.md`](../reports/WI-20260830-171256-equipment-command-growth-loop.md)
 
 ## 피드백
 
@@ -50,4 +61,7 @@ Roadmap M4의 다음 미충족 수직 단위다. M3 첫 원정 loop가 메인에
 
 ## 연결
 
-미연결
+- Roadmap: `M4 — 장비·command 성장 loop`
+- Depends on: `WI-20260830-154954`
+- Report: `docs/development/reports/WI-20260830-171256-equipment-command-growth-loop.md`
+- Final worktree commit: standalone coordinator 확인 대기
