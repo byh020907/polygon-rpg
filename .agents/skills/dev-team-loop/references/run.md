@@ -38,14 +38,18 @@ Enter this state only when human observation is genuinely required. `review: tea
 4. Otherwise send one plain-Korean message containing the implemented feature and play path; inspection location or controls; 1–3 observable questions; and one line explaining what the answers will change.
 5. Wait here for those answers. Apply them in this same task/worktree and repeat evaluation until accepted or blocked.
 
-Never send a generic “의견을 기다립니다”, “확인해 주세요” or equivalent. Do not create a final commit while concrete required judgment or implementation remains.
+Never send a generic “의견을 기다립니다”, “확인해 주세요” or equivalent. Do not create a final integration candidate while concrete required judgment or implementation remains.
+
+### Recoverable Candidate Before Visual Feedback
+
+When the intended playable path and affected deterministic checks pass, create a scoped local candidate checkpoint commit before opening the result for visual or team-lead inspection. This is required, not optional: it preserves the best runnable state if the task is interrupted during QA. The checkpoint is not `ready-for-integration`, must not be pushed or merged, and may be followed by correction commits. After visual inspection, feedback and independent verification, Finalize produces the clean final worktree commit that the coordinator may integrate.
 
 ## Finalize
 
 1. Set the work-item state to `ready-for-integration` and record actual result, accepted judgment when any, quality threshold and verification evidence.
 2. For a playable vertical slice or meaningful milestone, write one intent-first report under `docs/development/reports/`. Small maintenance items use the work-item result only.
 3. Run affected syntax/lint/format checks, `git diff --check`, the actual user path and independent verification appropriate to the change.
-4. Inspect and stage only `owned_paths`. Create a scoped commit in this worktree with a concise Korean message. Do not push, rewrite history, update main roadmap state or start another work item. When recovering base drift, merge current `origin/main` only when the item explicitly requires it and preserve the resulting parent evidence.
+4. Inspect and stage only `owned_paths`. If the verified tree is already the candidate checkpoint commit, confirm that hash; otherwise create the final correction commit with a concise Korean message. Do not push, rewrite history, update main roadmap state or start another work item. When recovering base drift, merge current `origin/main` only when the item explicitly requires it and preserve the resulting parent evidence.
 5. Confirm the final commit includes the intended changed tree and that the worktree is clean.
 6. Finish with this exact team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash.
 

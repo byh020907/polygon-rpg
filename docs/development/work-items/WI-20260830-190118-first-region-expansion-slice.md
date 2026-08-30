@@ -47,7 +47,7 @@ owned_paths:
 - 대표 환경 변화가 gameplay surface·portal·collision과 정합하고 Polygon/Retro 공유 상태에서 같은 진행과 판정을 보여 준다.
 - M1~M4의 guard·roll·punish·공중 연계, Room Portal, 첫 원정, 장비·command 성장과 save 경로를 훼손하지 않는다.
 - `docs/development/quality-loop.md`의 적용 축에 0 또는 1이 없고, 결정적 검사·실제 Canvas 경로·마지막 writer 이후 독립 검증을 통과한다.
-- 사용자가 요청하지 않은 영구 test·script·fixture를 추가하지 않는다.
+- 같은 원인의 결함·지적이 두 번 확인되어 기계적으로 측정 가능한 반복 방지 check 외에는 영구 test·script·fixture를 추가하지 않는다.
 
 ## 결과
 

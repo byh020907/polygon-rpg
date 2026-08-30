@@ -81,6 +81,25 @@ Reconcile Tick
 - 실제 개발은 one-work-item/one-managed-worktree task가 소유한다.
 - Scheduled run은 active task를 기다리지 않고 reconcile action 하나 뒤 종료한다.
 
+### Fresh-Session File-Memory Loop Prompt
+
+팀장이 제공한 자율 loop 개선 prompt는 매 회차 새 headless session, 파일 기반 기억, 한 결과만 구현, 검사 뒤 recoverable commit, 실제 화면 확인, 회차 log, 명시적 stop과 반복 feedback의 규칙 승격을 강조한다.
+
+직접 채택:
+
+- Codex standalone automation의 각 run을 새 coordinator task/context로 사용하고 이전 run 대화를 잇지 않는다.
+- 한 tick은 state-changing action 하나만 수행한다.
+- gameplay candidate는 deterministic checks 뒤 visual/team-lead QA 전에 local checkpoint commit으로 보존한다.
+- 실제 Canvas artifact와 반복 failure evidence를 품질·규칙 승격 입력으로 사용한다.
+
+Codex-native 수정 채택:
+
+- `DESIGN/STATUS/INBOX`를 새로 만들지 않고 roadmap·canonical docs/work items/reports가 같은 책임을 나눠 소유한다.
+- 날짜별 shell log 대신 Codex run task와 compact timestamp title, Git commit graph를 회차 기록으로 사용한다.
+- `STOP` file 대신 automation `PAUSED`, item `paused/cancelled` 상태를 사용한다.
+- shell `env` 대신 automation의 model, reasoning, cadence, project와 execution environment를 사용한다.
+- 별도 무한 headless process 안에서 Codex scheduler를 다시 실행하지 않는다. 승인된 finite roadmap 완료와 명시 pause가 outer-loop stop을 소유한다.
+
 ## Local Engineering Reference
 
 `C:/projects/baeseongjin`의 `coordinate-github-tasks`와 `github-task-flow`는 실제 worktree·branch·changed path·commit을 ownership 근거로 사용하고, 공유 hunk가 있을 때만 직렬화하며 다른 worktree를 추측 수정하지 않는다.

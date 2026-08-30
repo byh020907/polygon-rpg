@@ -101,7 +101,7 @@ baseline 실행·채점
 
 ## Current Best와 Final Commit
 
-기능 경로와 결정적 검사가 통과한 뒤 tuning이 길거나 위험하면 Director는 current best의 변경 경계와 evidence를 task에 남긴다. Final worktree commit은 적용 rubric, 실제 artifact, affected checks와 독립 verification이 통과한 뒤 item-owned paths만 포함해 만든다.
+기능 경로와 결정적 검사가 통과하면 Director는 current best의 변경 경계와 evidence를 task에 남기고, 실제 화면·팀장 관찰 전에 item-owned runnable candidate를 local checkpoint commit으로 보존한다. 이 checkpoint는 중단 복구점일 뿐 integration 승인이나 final quality 증거가 아니다. Final worktree commit은 적용 rubric, 실제 artifact, affected checks와 독립 verification이 통과한 뒤 item-owned paths만 포함해 확정한다.
 
 Task는 final hash를 응답으로 반환하고 push/merge하지 않는다. 다음 standalone coordinator tick이 diff와 checks를 다시 확인해 main에 통합한다.
 
@@ -129,12 +129,12 @@ Task는 final hash를 응답으로 반환하고 push/merge하지 않는다. 다�
 
 1. 같은 원인의 결함이나 팀장 지적이 두 번 확인되면 work item의 규칙 후보에 기록한다. 고위험 결함은 한 번으로도 후보가 될 수 있다.
 2. 실패 원인, 적용 범위, 오탐 비용과 검증 방법을 적는다.
-3. 영구 test·fixture·script는 `VERIFY-USER-OWNED-TESTS`에 따라 팀장 명시 요청이 있을 때만 추가한다.
+3. 같은 원인의 결함·지적이 두 번 확인되고 기계적으로 측정 가능하면, 이번 팀장 결정과 `VERIFY-USER-OWNED-TESTS`에 따라 가장 작은 영구 check를 추가한다. 반복 근거가 없는 추측성 test·fixture·script는 추가하지 않는다.
 4. Main coordinator는 통합 시 기존 canonical owner 한 곳에만 승격한다.
 5. 오래된 규칙은 Staleness 절차로 수정·폐기한다.
 
 ## Reference 채택 판단
 
-[눈치게임즈의 자율 개발 사례](https://www.youtube.com/@nunchigames)에서 `한 결과에 집중`, `실행 artifact 직접 관찰`, `scoped QA`, `파일 기반 기억`, `반복 feedback의 규칙화`를 Polygon RPG에 맞게 수정해 채택한다. 고정 지시 파일 수, 무한 재시작과 파괴적 rollback은 채택하지 않는다.
+[눈치게임즈의 자율 개발 사례](https://www.youtube.com/@nunchigames)와 팀장이 제공한 개선 prompt에서 `매 회차 새 context`, `한 결과에 집중`, `검사 뒤 시각 확인 전 recoverable checkpoint`, `실행 artifact 직접 관찰`, `scoped QA`, `파일 기반 기억`, `회차별 실행 기록`, `반복 feedback의 규칙화`를 Polygon RPG에 맞게 수정해 채택한다. Codex scheduler·task history·Git queue가 이미 소유하는 기능을 shell loop, 범용 DESIGN/STATUS/INBOX와 repository log로 중복하지 않으며, 무한 콘텐츠 생성과 파괴적 rollback은 채택하지 않는다.
 
 [OpenAI Docs의 scored improvement loop](https://learn.chatgpt.com/use-cases/iterate-on-difficult-problems) 원칙에 따라 deterministic check와 정성 rubric을 함께 사용하고 threshold와 artifact inspection을 명시한다.

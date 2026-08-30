@@ -320,7 +320,7 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 - 플레이어 직접 stat point 분배
 - 원작 asset·캐릭터·맵·수치 복제
 - 핵심 전투 gate 이전의 대량 Region·enemy·quest 제작
-- 사용자 요청 없는 영구 자동 test suite
+- 반복 근거 없는 영구 자동 test suite
 
 ## 이후 milestone의 candidate-first 기본값
 

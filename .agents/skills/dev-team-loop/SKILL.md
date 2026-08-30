@@ -39,11 +39,12 @@ If the role is ambiguous, inspect Git work items, Codex task titles/status and r
 - Subagents are optional bounded helpers inside a work-item task for exploration, proven disjoint implementation or independent verification. Their parent work-item task integrates and verifies their results.
 - Coordinator ticks own serialized registration/integration/result commits and pushes. Work-item tasks own only their final scoped worktree commit.
 - When an agent authors Git messages, follow the Korean message policy in `docs/development/process.md`.
-- Do not add permanent tests unless the user explicitly requests them. Remove temporary validation artifacts.
+- Do not add permanent tests for one-off failures. When the same cause is confirmed twice and is mechanically measurable, the canonical user-approved repeat-prevention rule requires the smallest durable check. Remove other temporary validation artifacts.
 - Do not copy Reference IP, assets, commands, maps, names, balance values or content.
 - No force push, shared-history rewrite, guessed cleanup or mutation of another task's worktree.
 - Do not submit a candidate with an applicable quality axis below the threshold in `docs/development/quality-loop.md`.
 - Subagent success is not work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
+- After deterministic checks pass, a work-item task checkpoints the runnable candidate before visual/team-lead inspection so an interrupted QA cycle does not erase the best state. Only the later visually verified clean final commit is integration-ready.
 - Human questions, canonical conflicts and external blockers suspend new vertical dispatch but do not stop the recurring automation; later ticks keep observing and recover when evidence changes. Pause only on explicit team-lead pause or after durable roadmap-completion proof.
 
 ## Team-Lead Wording

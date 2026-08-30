@@ -2,6 +2,53 @@
 
 One fresh standalone run performs one reconciliation tick and exits. The coordinator has no durable conversational memory: Git work items, roadmap, exact Codex task titles, managed worktrees and commit graph are authoritative.
 
+## 1. Acceptance Criterion
+
+한 tick은 fresh evidence에서 roadmap desired state와 observed Git/task/worktree state의 차이를 정확히 분류하고, 검사와 ownership이 증명된 안전한 forward 또는 recovery action 하나만 수행해 그 차이를 줄여야 한다. 필요한 검사를 통과하지 못하면 commit, integration 또는 dispatch하지 않는다.
+
+## 2. Read First
+
+이 순서와 범위로 읽는다. 이전 coordinator task의 대화나 summary는 읽을 문서가 아니다.
+
+1. `AGENTS.md`: 전체. precedence, Canonical Rule Registry와 verification pipeline.
+2. `.agents/skills/dev-team-loop/SKILL.md`: 전체. Coordinator Tick mode와 shared invariants.
+3. 이 문서와 `work-item-schema.md`: 전체.
+4. `docs/development/process.md`: 역할·one-tick lifecycle·Git 책임·상태·복구 계약.
+5. `docs/development/quality-loop.md`: integration 대상의 rubric, artifact, current best와 final commit 계약.
+6. `docs/development/roadmap.md`: milestone 표, 현재 미완료 milestone 전체와 approved completion gate.
+7. `docs/development/work-items/`: open lifecycle item의 frontmatter와 본문 전체. 완료 item은 ancestry·중복 판정에 필요한 범위만.
+8. integration/recovery일 때만 해당 report와 `loop-engineering-references.md` 전체.
+
+## 3. Rules And Reasons
+
+- 매 tick은 standalone scheduled run의 새 task/context다. 대화를 이어 쓰면 transient memory가 durable state로 오인되어 중복 dispatch와 잘못된 recovery가 생긴다.
+- 한 tick에서 state-changing action은 하나다. registration, dispatch와 integration을 연쇄하면 중간 실패 뒤 어느 evidence가 authoritative인지 모호해진다.
+- 기억은 Git roadmap·work item·report와 exact task/worktree/commit evidence에 둔다. task summary, transient ID와 coordinator 대화는 다음 run이 독립 검증할 수 없다.
+- mutation 전 repo lease와 exact main HEAD를 확인한다. scheduled run과 bare manual tick이 겹쳐도 writer가 하나여야 한다.
+- gameplay 구현·tuning·artifact 품질 판정은 work-item task가 소유한다. Coordinator가 대신 수정하면 one-item/one-director와 worktree 격리가 깨진다.
+- task 생성·조회·제목 복구는 Codex app task tool로만 수행한다. Git만 보고 task state를 추측하면 duplicate writer를 만들 수 있다.
+- force push, history rewrite, guessed cleanup, 다른 task worktree 수정과 미확인 사용자 변경 overwrite를 하지 않는다. 자동 복구는 evidence를 보존해야 다음 fresh run이 이어갈 수 있다.
+
+## 4. One-Tick Sequence
+
+`문서 읽기 → run title 기록 → fresh snapshot → lease → One-Tick Decision Order의 action 하나 → 실제 evidence 검사 → 필요한 commit/task/status 기록 → lease 해제 → final run title과 결과 보고`
+
+다음 action을 같은 tick에 미리 수행하지 않는다. Work-item task를 만들거나 재개한 뒤 wait/poll하지 않고, integration 뒤 다음 item을 dispatch하지 않는다.
+
+## 5. Commit Ordering
+
+- Coordinator-owned Git mutation은 exact diff, ownership과 affected checks가 통과한 즉시 scoped commit/push로 durable하게 만든 뒤 종료한다. 화면을 볼 gameplay 변경은 이 tick이 작성하지 않는다.
+- Work-item task는 deterministic checks가 통과하면 실제 화면·팀장 관찰 전에 recoverable candidate checkpoint commit을 만든다. 이 commit은 final quality approval이 아니며, visual QA와 독립 검증 뒤의 clean final commit만 integration 대상이다.
+- 회차가 중단됐는데 commit도 task/worktree evidence도 없으면 완료로 추측하지 않는다. 다음 tick은 남은 durable evidence만으로 recovery를 시작한다.
+
+## 6. Checks And QA
+
+- 최소 evidence: branch/HEAD, clean/dirty main, latest `origin/main`, open item identity, lease, relevant task/worktree와 commit ancestry.
+- Git mutation: affected syntax/lint/format, `git diff --check`, `owned_paths`와 parent graph를 검사한다.
+- 화면이 있는 결과를 통합할 때는 work-item task가 실제 Canvas/mobile artifact를 직접 읽었고 같은 state, console과 resize path를 확인했는지 검증한다. 코드가 실행되는 것과 화면이 합격인 것은 다른 증거다.
+- 같은 원인의 실패나 팀장 지적이 두 번 확인되면 work item에 rule candidate를 남긴다. 기계적으로 잴 수 있으면 이 반복 방지 계약을 사용자 승인으로 간주해 가장 작은 canonical check로 승격한다.
+- 정상 종료는 action, 검사, commit/task evidence와 다음 fresh tick이 읽을 durable state를 빠짐없이 남긴다.
+
 ## Acquire And Snapshot
 
 1. Fetch `origin/main` and inspect the main checkout, roadmap, work items, Codex task list/status, managed worktrees and commit graph.

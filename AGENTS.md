@@ -127,8 +127,8 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                                              | `docs/rendering-pipeline.md`, 실제 caller  |
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                                            | `docs/runtime-architecture.md`             |
-| `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                                    | 사용자 결정, `package.json`, 최종 diff     |
-| `PROCESS-DEV-TEAM-LOOP`   | 팀장 메인은 Git queue만 소유하고, standalone coordinator가 매 tick 진행·복구 action 하나를 수행해 승인된 roadmap 완료를 증명할 때까지 자동 수렴한다.                                              | `docs/development/process.md`, skill       |
+| `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                                              | 사용자 결정, quality loop, 최종 diff       |
+| `PROCESS-DEV-TEAM-LOOP`   | 메인은 Git queue만 소유한다. Fresh standalone tick은 file evidence로 action 하나만 수행하며 Codex run과 Git commit을 회차 기록으로 삼는다.                                                        | process, skill                             |
 | `PROCESS-QUALITY-LOOP`    | work-item task의 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 직접 feedback을 끝까지 소유하고, task 내부 subagent 결과를 재평가해 반복 feedback을 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다.                 | `docs/development/process.md`              |
 | `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                                           | `docs/development/process.md`, skill       |
@@ -185,7 +185,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 - 구현 변경은 관련된 가장 작은 검사부터 실행한다.
 - 최소 기준은 syntax/lint, format, `git diff --check`와 실제 사용자 경로다.
 - 수학·물리·시간 기반 동작은 DOM 없는 결정적 검증과 Canvas 실행 검증을 분리한다.
-- 사용자가 테스트 자산의 영구 추가를 명시적으로 요청하지 않았다면 검증용 test 파일, script와 fixture를 저장소에 남기지 않는다. 필요한 임시 검증 코드는 작업 완료 전에 제거한다.
+- 반복 근거가 없는 검증용 test 파일, script와 fixture를 저장소에 남기지 않는다. 같은 원인의 결함·지적이 두 번 확인되고 기계적으로 측정 가능하면 `VERIFY-USER-OWNED-TESTS`에 따라 가장 작은 영구 check로 승격하고, 그 외 임시 검증 코드는 작업 완료 전에 제거한다.
 - Renderer 변경은 console error 부재만으로 완료하지 않고 실제 Canvas 출력, resize와 동일 상태 공유를 확인한다.
 - 실행하지 않은 검사를 통과했다고 보고하지 않는다.
 
@@ -355,7 +355,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - 외부 런타임 라이브러리는 사용자 승인 없이 추가하지 않는다.
 - Browser Implicit Global을 사용하지 않고 DOM 요소를 명시적으로 조회한다.
 - 시간 기반 상태는 frame count가 아닌 명시적인 delta/fixed time으로 갱신한다.
-- 사용자가 요청하지 않은 테스트 자산을 영구 관리 포인트로 추가하지 않는다. 개발 중 만든 임시 검증 코드는 완료 전에 제거한다.
+- 같은 원인의 결함·지적이 두 번 확인된 기계적 반복 방지 check 외에는 테스트 자산을 영구 관리 포인트로 추가하지 않는다. 개발 중 만든 임시 검증 코드는 완료 전에 제거한다.
 - placeholder, 생략된 구현과 설명 없는 TODO를 완료 결과로 남기지 않는다.
 
 ## 10. Work Start and Completion Checklist
@@ -378,7 +378,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 - [ ] 실제 사용자 경로 또는 Canvas 검증
 - [ ] 품질 rubric 재평가와 현재 best·남은 병목 기록
 - [ ] 구현 수직 단위라면 의도 기반 업무보고 작성
-- [ ] 명시 요청 없이 만든 임시 test·script·fixture 제거
+- [ ] 반복 방지 승격 대상이 아닌 임시 test·script·fixture 제거
 - [ ] 문서 인덱스와 Canonical Rule 정합 확인
 - [ ] Orphaned/Stale/Conflict 상태 보고
 - [ ] 변경 파일, 이유, 검증 결과와 다음 단계 보고

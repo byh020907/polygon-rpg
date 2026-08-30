@@ -98,6 +98,22 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 - 각 standalone run은 Computer Use 없이 Codex task-title tool로 자기 제목을 바꾼다. 시작은 `C yyyyMMdd-HHmm · 실행중`, 정상 종료는 `C yyyyMMdd-HHmm · <M/WI> · <결과>` 형식이며 결과는 `진행확인`, `통합`, `업무생성`, `복구`, `충돌`, `잠금중`, `중단`, `완료` 중 하나다.
 - 예상하지 못한 interruption으로 `실행중`이 남으면 status audit의 진단 증거로 사용한다. Coordinator는 work-item task의 exact `WI-... 제목`을 변경하지 않는다.
 
+### 파일 기억과 Codex-native 제어 대응
+
+외부 daemon용 고정 파일 세트를 병렬로 만들지 않고 기존 canonical owner와 Codex 기능에 개념을 대응시킨다.
+
+| 자율 loop 개념        | Polygon RPG owner                                                                       | 이유                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 거의 변하지 않는 설계 | `docs/development/roadmap.md`와 canonical system docs                                   | 별도 `DESIGN.md`는 제품·시스템 결정을 중복시켜 stale source를 만든다.                            |
+| 현재 상태와 다음 일   | open `docs/development/work-items/`, roadmap milestone과 report                         | work-item status·commit·owned path를 함께 복구해야 실제 진행을 증명할 수 있다.                   |
+| 팀장 지시 inbox       | 팀장 메인 task가 원문을 보존한 Git work item                                            | free-form inbox와 실행 queue를 분리하면 같은 요청이 중복 등록될 수 있다.                         |
+| 회차 prompt           | standalone automation prompt + `dev-team-loop` Coordinator Tick/Manage mode             | automation에는 짧은 route를, repo file에는 versioned 상세 계약을 둔다.                           |
+| 날짜별 회차 log       | 매 run 새 Codex task, `C yyyyMMdd-HHmm · <item> · <result>` title과 Git commit evidence | Codex가 이미 run별 대화·tool output을 보존하므로 같은 transcript를 repository에 복제하지 않는다. |
+| STOP                  | automation `PAUSED`와 Git work-item `paused/cancelled`                                  | scheduler가 제공하는 상태를 사용하면 별도 STOP file과 상태가 어긋나지 않는다.                    |
+| env 설정              | automation의 model·reasoning·rrule·project·execution environment                        | Codex scheduler가 직접 소유하는 설정을 shell env에 복제하지 않는다.                              |
+
+Codex standalone scheduled run 자체가 회차마다 새 task/context이므로 별도 headless process를 중첩 실행하지 않는다. 한 회차 최대 범위는 turn 수가 아니라 `one state-changing action 후 종료`로 제한한다. Prompt·모델·주기를 바꾸면 변경 전 최근 두 run의 failure pattern을 읽고, 변경 후 첫 두 run의 title·final evidence를 비교해 반복 실패나 폭주가 없는지 확인한다.
+
 ### 읽기 전용 상태 점검
 
 진행이 멈춘 것처럼 보일 때는 [`.agents/skills/dev-loop-status/SKILL.md`](../../.agents/skills/dev-loop-status/SKILL.md)의 `$dev-loop-status`를 사용한다. 이 skill은 최근 coordinator run, open work item, exact task title, task 최신 상태, managed worktree, commit graph, automation과 lease를 한 번만 대조하고 `정상 진행`, `통합 대기`, `dispatch 대기`, `blocker`, `conflict`, `automation 중지`, `정체 의심` 중 하나로 판정한다.
@@ -236,7 +252,7 @@ work-item task 시작
 - 개발·feedback 최소 단위는 처음부터 끝까지 실행 가능한 사용자 시나리오다.
 - Renderer는 읽기 전용 RenderFrame만 소비하고 시간 기반 상태는 simulation에서 진행한다.
 - 수학·frame·판정 검증과 실제 Canvas/모바일 관찰을 분리한다.
-- 사용자 요청 없는 영구 test·fixture·script를 추가하지 않는다.
+- 같은 원인의 결함·지적이 두 번 확인되어 기계적으로 측정 가능한 반복 방지 check 외에는 영구 test·fixture·script를 추가하지 않는다.
 - 적용 품질 축에 0 또는 1이 남으면 feedback candidate나 final commit으로 제출하지 않는다.
 
 ## 팀장 의견과 자동 메인 반영
