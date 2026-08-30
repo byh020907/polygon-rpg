@@ -4,12 +4,12 @@
 
 ## Current State
 
-- 상태: Windows complete-work loop · 수동 2회 검증 준비
-- 현재 active inbox entry: `IN-20260831-005246` · `ready-for-integration`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-005246` · clean final `99ff67168bb9f955342d98778b2c04e492c9b215`
+- 상태: Core Engineering Principles 전환 · terminal merge 완료
+- 현재 active inbox entry: `IN-20260831-025240` · `new`
+- 현재 executor branch/worktree: 없음 · 다음 entry 미수락
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 수동 검증 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · `PAUSED`
-- Main: complete-work loop infrastructure 직접 반영 중
+- Main: terminal merge commit 작성 중
 - 실제 blocker: 없음
 
 ## Completed
@@ -42,12 +42,14 @@
 - Core Engineering Principles 전환 fresh final: `a2a3e4576f25c0e5bb210cc4e9ad5a13e0804bb8` · latest main merge와 owned 문서 6개, upstream Method HTTP 200·일곱 heading one-to-one 대응, local link, old mandatory 용어 부재, `AGENTS.md` 32,710-byte budget, main memory 일치, `npm run check`, `git diff --check`를 독립 확인했다. 문서-only 변경이며 적용 품질 축은 모두 2 이상이다.
 - Core Engineering Principles latest-main reconciliation: `90a24f1d41c566a899887d034c062b9d23600f4e` · current main `69d027a7f86d4fed58390202423b0cc15f282d1b`을 executor branch에 non-rewriting merge했다. 새 인터뷰 skill과 세 queued 원문을 보존했고 branch-only 변경은 기존 owned 문서 6개이며 `npm run check`, `git diff --check`를 통과했다.
 - Core Engineering Principles latest-main clean final: `99ff67168bb9f955342d98778b2c04e492c9b215` · current main `a31eae200ae892e14d7fef31d93554e484207e23`과 새 queued 원문을 포함했다. Upstream 일곱 원칙 one-to-one 대응, owned 문서 6개, old mandatory Reference 용어 부재, local link 30개, `AGENTS.md` 32,708-byte budget, main memory 동일성, `npm run check`, `git diff --check`를 독립 확인했고 적용 축은 모두 2 이상이다.
+- Core Engineering Principles complete-work final: `2083fb803df4bc478262c84e746efd7650a6918e` · latest main `f51b92c7095c111716378a4d86e97283e777cf46`의 한-session 완결 계약과 Core Principles 전환을 정합했다. Upstream Method HTTP 200·일곱 heading, owned 문서 6개, old mandatory Method 용어 부재, local link 32개, `AGENTS.md` 32,711-byte budget, main memory 동일성, `npm run check`, `git diff --check`를 확인했다. 문서-only라 visible PNG QA는 적용하지 않았고 적용 축은 모두 2 이상이다.
+- Core Engineering Principles terminal merge: final을 main에 non-rewriting merge하고 `IN-20260831-005246`의 `done` 원문·결과를 merge commit에 보존했다.
 - Complete-work loop preflight: `codex-cli 0.150.1`, absolute Codex/Node/Git/PowerShell/Chrome path, PowerShell parser, Task Scheduler disabled registration과 `MultipleInstances=IgnoreNew`, abnormal restart `3 × 1m`, unlimited execution time를 확인했다.
 - Visible QA preflight: 실제 visible Chrome에서 `GAME_START=dungeon`, `GAME_FRAME=180`, `1440×810` sealed-forest-dungeon PNG와 metadata를 생성하고 이미지를 직접 판독했다. Console error는 0개이며 browser/server가 종료됐다. Artifact는 `artifacts/visual-qa/manual-dungeon-180/`에 있다.
 
 ## Next
 
-Infrastructure commit/push 뒤 `loop/control.ps1 run-once`를 두 번 실행한다. 첫 fresh session은 `IN-20260831-005246`, 둘째는 complete-work 전환을 요청한 `IN-20260831-025240`을 각각 main integration과 exact cleanup까지 한 session에서 완결해야 한다. 두 summary와 Git evidence가 통과하기 전 Task Scheduler는 disabled로 유지한다.
+같은 integration transition에서 `IN-20260831-005246`의 exact `done` block만 제거하고 STATUS에 실제 merge hash를 기록해 두 commit을 함께 push한다. 다음 entry는 소비하지 않는다.
 
 ## Update Contract
 

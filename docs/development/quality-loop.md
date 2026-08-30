@@ -1,6 +1,6 @@
 # Polygon RPG Quality-Driven Development Loop
 
-이 문서는 complete-work Codex session이 기능 실행에서 멈추지 않고 플레이 가능한 결과를 직접 관찰·평가·수리하는 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), queue는 [`../feedback/INBOX.md`](../feedback/INBOX.md), 실행 절차는 [`process.md`](./process.md)가 소유한다.
+이 문서는 complete-work Codex session이 기능 실행에서 멈추지 않고 플레이 가능한 결과를 직접 관찰·평가·수리하는 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), queue는 [`../feedback/INBOX.md`](../feedback/INBOX.md), 실행 절차는 [`process.md`](./process.md)가 소유한다. Engineering Method와 구현 단위 규칙은 [`../../AGENTS.md`](../../AGENTS.md)가 소유하며 이 문서에서 다시 정의하지 않는다.
 
 ## 개발 Persona와 Director 경계
 
@@ -28,7 +28,7 @@ Executor는 entry의 원문, 실행 계약과 STATUS에 다음을 유지한다.
 - 기준선, current best와 다음 병목
 - 정확한 blocker 또는 completion evidence
 
-새 Product Requirement가 아니라면 DESIGN, immutable raw request, current code, canonical 문서와 verified reference에서 판단한다. 대화 memory는 근거가 아니다.
+새 Product Requirement가 아니라면 DESIGN, immutable raw request, current code, canonical 문서, Core Engineering Principles와 검색한 구체 Reference에서 판단한다. 대화 memory는 근거가 아니다.
 
 ## 공통 Rubric
 
@@ -45,7 +45,7 @@ Executor는 entry의 원문, 실행 계약과 STATUS에 다음을 유지한다.
 | 조작 명료성          | 입력, 판정, 성공·실패와 risk/reward를 즉시 구분할 수 있다.                                 |
 | 타격감·Effect        | 적중, guard, evade, punish 등 핵심 사건이 위치와 동작으로 명확하다.                        |
 | Graphics·시각 일관성 | Silhouette, 대비, motion과 UI가 충돌하지 않고 Polygon/Retro가 같은 상태를 전한다.          |
-| Reference 정합       | 차용한 원칙이 설명이 아니라 실제 플레이 결과에 드러난다.                                   |
+| 설계·Method 정합     | 제품 의도와 적용한 Engineering 원칙이 설명뿐 아니라 실제 구조·플레이에 드러난다.           |
 | 회귀 안전성          | Affected check, lint/format, `git diff --check`, console, fixed frame과 resize가 통과한다. |
 
 적용 축에 0 또는 1이 없어야 하며 기능 완결성과 회귀 안전성은 2 이상이어야 한다.

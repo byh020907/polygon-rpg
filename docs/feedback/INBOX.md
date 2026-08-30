@@ -76,7 +76,7 @@
 
 ## IN-20260831-005246
 
-- status: ready-for-integration
+- status: done
 - received_at: 2026-08-31T00:52:46+09:00
 - priority: normal
 - source: team-lead-main
@@ -86,8 +86,8 @@
 - registration_base: 8711bfb8ed2821de19370b4951b4e979e3e5c527
 - accepted_at: 2026-08-31T02:32:37+09:00
 - checkpoint_commit: f51dad89c0fc5f666649d4964b747cf61dece328
-- final_commit: 99ff67168bb9f955342d98778b2c04e492c9b215
-- integration: null
+- final_commit: 2083fb803df4bc478262c84e746efd7650a6918e
+- integration: the merge commit that marks this entry done
 - owned_paths:
   - AGENTS.md
   - README.md
@@ -112,14 +112,14 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 현재 `AGENTS.md`는 Reference-Guided Engineering을 유일한 Method로 선택하고 두 로컬 저장소의 mandatory local-first 조사, 별도 reference repository index와 전용 §8 policy를 요구한다. README·DESIGN·quality 문서에도 이 초기화 방식의 강제 규칙이 남아 있다.
-- 현재 최선: clean final `99ff67168bb9f955342d98778b2c04e492c9b215`이 latest main `a31eae200ae892e14d7fef31d93554e484207e23`과 새 queued 원문을 포함한다. Core Engineering Principles 전환은 owned 문서 6개에만 한정되고 main-owned INBOX·STATUS는 current main과 byte 동일하다.
-- 다음 병목: 다음 fresh run이 final diff와 latest-main ancestry를 재확인해 main에 통합하고 exact done block cleanup까지 같은 integration transition에서 완료한다. queued entry는 같은 tick에 accept/provision하지 않는다.
-- 검증: upstream Method HTTP 200과 일곱 heading one-to-one 대응, branch-only owned 문서 6개, old mandatory Reference 용어 부재, local Markdown link 30개, `AGENTS.md` 32,708-byte budget, main-owned memory 동일성, `npm run check`, `git diff --check`, clean local/remote branch를 독립 확인했다. 문서-only 변경이며 기능 완결성·Method 원문 정합·문서 단일 소유권·회귀 안전성은 모두 2 이상이다.
+- 현재 최선: latest main `f51b92c7095c111716378a4d86e97283e777cf46`을 포함한 clean final `2083fb803df4bc478262c84e746efd7650a6918e`을 main에 non-rewriting merge해 complete-work lifecycle과 Core Engineering Principles 전환을 함께 보존했다.
+- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block을 정리하고 STATUS에 실제 merge hash를 기록한다.
+- 검증: upstream Core Engineering Principles HTTP 200과 일곱 heading one-to-one 대응, branch-only owned 문서 6개, old mandatory Method 용어 부재, local Markdown link 32개, `AGENTS.md` 32,711-byte budget, main-owned memory 동일성, `npm run check`, `git diff --check`, clean local/remote branch와 latest-main ancestry를 확인했다. 문서-only 변경이라 applicable screen이 없어 visible PNG QA는 적용하지 않았다. 기능 완결성·Method 원문 정합·문서 단일 소유권·회귀 안전성은 모두 2 이상이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-Core Engineering Principles를 유일한 Engineering Method로 정합한 문서 final이 독립 검증을 통과했다. main integration 대기 중이다.
+Core Engineering Principles를 유일한 Engineering Method로 전환하고 두 로컬 exemplar를 mandatory 규칙이 아닌 historical evidence로 정리했다. 기존 architecture·runtime 계약과 최신 complete-work loop를 보존한 final `2083fb803df4bc478262c84e746efd7650a6918e`을 main에 non-rewriting merge했으며, 문서-only라 visible PNG QA는 적용 대상이 아니다.
 
 ## IN-20260831-025240
 
