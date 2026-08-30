@@ -89,4 +89,4 @@ docs/{world-map-system,runtime-architecture,rendering-pipeline,input-system,ui-a
 | Reference 정합       | 2    | Scene subtree, owner lifecycle, completed Signal이 실제 Room 교체에 반영 |
 | 회귀 안전성          | 2    | 결정적 진단, check/diff, Canvas/mobile/resize/console 통과               |
 
-남은 가장 큰 품질 병목은 0.32s camera travel의 감속과 균형형/중량형 trade-off 수치의 실제 플레이 체감이다. 결정적 오류가 아니므로 candidate를 보존하고 현재 artifact에 대한 팀장 feedback으로 다음 loop를 연다.
+0.32초 camera travel 감속과 균형형/중량형 수치는 이후 실제 플레이에서 구체적인 문제가 관찰될 때 조정한다. 이번 업무는 정해진 동작과 검증을 모두 통과했고 별도 사람 판단 질문 없이 메인 반영 준비를 마쳤다.
