@@ -4,7 +4,7 @@
 
 ## Current State
 
-- 상태: 완료 entry 자동 정리 · 통합 완료
+- 상태: Reference Method 규칙 전환 요청 · 수락 대기
 - 현재 active inbox entry: `IN-20260831-005246` · `new`
 - 현재 executor branch/worktree: 없음 · 다음 entry 미수락
 - Automation: `Polygon RPG file-memory loop` ACTIVE
@@ -31,7 +31,7 @@
 - 마지막 completion snapshot에서 M0~M5 완료, nonterminal input 없음, no executor ref, clean main/origin, no lease/conflict와 quality evidence를 확인했다.
 - Player hit effect writer checkpoint: `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5` · contact 좌표 결정적 검증, `npm run check`, `git diff --check`, 실제 훈련장 Retro Canvas와 console 확인 통과.
 - Player hit effect fresh final: `70d320127d5d5b48a80bb499fedf55d52829d21a` · latest main merge, owned diff, deterministic anchor/guard/evade/enemy-hit 격리, 훈련장 HP `43→36`, 유리바람 Field HP `100→85`, enemy HP `75→49`, Polygon/Retro shared state, `900×600` resize와 console 검증 통과.
-- Player hit effect integration: final의 clean source와 owned-path diff, `npm run check`, `git diff --check`, 기록된 실제 Canvas 품질 evidence를 재확인하고 main에 non-rewriting merge.
+- Player hit effect integration: `9c31550eed5881781eb45fe8e329d916fa161b5d` · final의 clean source와 owned-path diff, `npm run check`, `git diff --check`, 기록된 실제 Canvas 품질 evidence를 재확인하고 main에 non-rewriting merge했다. 남아 있던 terminal `done` block은 exact cleanup으로 복구했다.
 - 완료 entry 자동 정리 accept/provision: current process·quality·manage·schema와 lock/worktree helper를 대조하고, `done` block만 정리하되 nonterminal 원문과 Git 복구 evidence를 보존하는 실행 계약을 수락했다.
 - 완료 entry 자동 정리 writer checkpoint: `83bd913672a4b7efe2a78cd9456d7bcd57212869` · fence-aware exact block parser, `done` guard, main expected-HEAD guard와 atomic replacement를 구현했다. Actual INBOX copy와 4-backtick/tilde fixture에서 다른 nonterminal 원문 byte 보존, 비-done 거부, `npm run check`, `git diff --check`를 확인했다.
 - 완료 entry 자동 정리 fresh final: `c5daca93afba8b1efd9d7c6385da0b1a4c690486` · latest main ancestry와 owned diff, actual INBOX byte/copy, 4-backtick·tilde fence, duplicate/non-done 거부, live main expected-HEAD guard, atomic replacement와 임시 파일 정리, `npm run check`, `git diff --check`를 독립 확인했다. 적용 품질 축은 모두 2 이상이다.
@@ -39,7 +39,7 @@
 
 ## Next
 
-다음 fresh run은 live INBOX에 남은 legacy `done` entry `IN-20260831-002426`을 exact block cleanup으로 복구하고 STATUS에 그 integration evidence를 유지한다. 그 tick에서는 `IN-20260831-005246`을 accept/provision하지 않는다.
+다음 fresh run은 가장 오래된 `new` entry `IN-20260831-005246`을 accept/provision한다. 그 tick에서는 구현을 시작하지 않는다.
 
 ## Update Contract
 
