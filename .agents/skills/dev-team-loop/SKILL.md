@@ -32,6 +32,7 @@ If ambiguous, inspect inbox entries, executor refs, `git worktree list --porcela
 - New entries use deterministic `codex/loop/<lowercase-in-id>` branches. Do not call `create_thread`, fork or handoff.
 - Each tick acquires/renews/releases the lease and performs one transition: accept/provision, implement/checkpoint, fresh verification/finalize, integrate or recover.
 - Checkpoint writer and final verifier are different fresh runs. Only a fresh-run verified clean final may merge.
+- Integration은 merge commit에 `done` 원문·결과를 먼저 보존하고, 같은 transition의 cleanup commit에서 그 exact block만 live INBOX에서 제거한다.
 - Normal edits, checks, Korean commits, executor branch pushes and non-rewriting main merge/push do not require approval.
 - Human input blocks only a concrete non-inferable Product Decision, Canonical Conflict, credential or external condition. Generic approval waiting is invalid.
 - Do not force push, rebase shared history, guess-delete worktrees or lower quality thresholds.

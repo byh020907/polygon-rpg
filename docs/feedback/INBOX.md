@@ -122,7 +122,7 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 
 ## IN-20260831-003439
 
-- status: ready-for-integration
+- status: done
 - received_at: 2026-08-31T00:34:39+09:00
 - priority: normal
 - source: team-lead-main
@@ -133,7 +133,7 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 - accepted_at: 2026-08-31T01:30:57+09:00
 - checkpoint_commit: 83bd913672a4b7efe2a78cd9456d7bcd57212869
 - final_commit: c5daca93afba8b1efd9d7c6385da0b1a4c690486
-- integration: null
+- integration: the merge commit that marks this entry done
 - owned_paths:
   - AGENTS.md
   - loop/PROMPT.md
@@ -162,14 +162,14 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 현재 live INBOX는 integration이 끝난 `done` entry도 계속 보존해 새 entry와 함께 누적한다.
-- 현재 최선: final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`이 latest main을 non-rewriting merge한 뒤 exact `done` block cleanup을 독립 검증한 clean integration candidate다.
-- 다음 병목: 다음 fresh run이 final diff와 evidence를 재확인하고, terminal block을 보존하는 merge commit과 exact cleanup commit을 같은 integration transition으로 main에 push한다.
+- 현재 최선: final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`을 main에 non-rewriting merge해 terminal 원문·결과를 merge commit에 보존했다.
+- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block을 정리하고 STATUS에 실제 merge hash를 기록한다.
 - 검증: clean local/remote executor branch와 latest-main ancestry, branch-only owned paths를 확인했다. `npm run check`, branch/worktree `git diff --check`가 통과했다. 실제 current INBOX byte stream과 file copy에서 기존 `done` block만 제거되고 두 nonterminal 원문 byte가 그대로 유지됐다. 4-backtick 안의 3-backtick·가짜 `## IN-*`와 tilde fence는 entry 경계로 오인하지 않았고, 중복 entry와 `implementing` entry 삭제를 거부했다. CLI atomic replacement 뒤 임시 파일이 남지 않았으며 잘못된 live main expected HEAD에서는 exit 3으로 쓰기를 거부하고 INBOX hash를 보존했다. 기능 완결성·Reference 정합·회귀 안전성은 모두 2 이상이다. Baeseongjin의 worktree ownership은 원칙만 차용하고 branch 삭제 절차는 적용하지 않았다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-Final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`은 실제 INBOX copy, arbitrary fence, duplicate/non-done 거부, live main guard와 atomic cleanup을 독립 검증한 ready-for-integration candidate다.
+Final `c5daca93afba8b1efd9d7c6385da0b1a4c690486`을 main에 non-rewriting merge했다. 실제 INBOX copy, arbitrary fence, duplicate/non-done 거부, live main guard와 atomic cleanup 검증 evidence를 terminal 원문·결과와 함께 보존했다.
 
 ## IN-20260831-005246
 

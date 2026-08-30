@@ -74,8 +74,9 @@ The writer run never marks its own candidate final or integrates it.
 2. Require clean executor worktree, final/result evidence and all branch-only paths inside owned paths.
 3. On clean main at the lease HEAD, `git merge --no-ff --no-commit <executor_branch>`.
 4. Before commit, update the main inbox entry to `done`, record final/result and integration as `the merge commit that marks this entry done`; update STATUS, DESIGN and canonical docs as required.
-5. Run affected checks and `git diff --check`, create one Korean merge commit and normal-push main. Report the resulting hash without rewriting the commit to contain itself.
-6. Preserve executor evidence; do not auto-delete branches/worktrees.
+5. Run affected checks and `git diff --check`, then create one Korean merge commit. This commit durably preserves the terminal raw block and result without rewriting itself to contain its own hash.
+6. Renew the lease at the clean merge HEAD. Run `node loop/inbox.mjs remove-done --repo <repo> --entry <IN-ID> --expected-head <merge-head>`, put the actual merge hash in STATUS, and create one Korean cleanup commit. Normal-push both commits in this same integration transition.
+7. Preserve executor evidence; do not auto-delete branches/worktrees or continue to the next entry.
 
 ## Recovery And Stop Conditions
 
@@ -84,6 +85,7 @@ The writer run never marks its own candidate final or integrates it.
 - Main inbox phase behind branch evidence: commit graph wins and metadata is reconciled idempotently.
 - Push failure: preserve and retry the same hash.
 - Interrupted main merge: continue/abort only when intent and paths are unique.
+- `done` entry가 merge commit 뒤 live INBOX에 남아 있으면 같은 exact block cleanup과 STATUS hash 기록만 완료한다.
 - Same cause twice advances to the next safe repair; three repeats create a `blocked` recovery entry, not another queue system.
 
 Do not use force push, shared-history rewrite, broad reset, guessed cleanup, replacement tasks or approval UI clicks.

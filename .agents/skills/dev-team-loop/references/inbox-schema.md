@@ -6,7 +6,7 @@
 
 - New IDs use `IN-YYYYMMDD-HHmmss` with the smallest collision suffix.
 - The immutable raw request is copied exactly from the team-lead main message.
-- The entry itself owns lifecycle, execution contract, current best, blocker, result and checkpoint/final/integration evidence.
+- A live entry owns lifecycle, execution contract, current best, blocker, result and checkpoint/final evidence. Its terminal merge commit preserves the complete `done` block; after cleanup, STATUS and Git ancestry own the current integration projection.
 - New work has no parallel queue or per-entry task document.
 - One entry owns one deterministic `codex/loop/<lowercase-in-id>` branch and at most one persistent worktree writer.
 
@@ -15,6 +15,13 @@
 Executor branches never edit `docs/feedback/INBOX.md` or `docs/STATUS.md`. After a branch checkpoint/final commit is pushed, the same coordinator transition updates both files on main and commits/pushes that state. This keeps new main-dialogue appends conflict-free and makes the main inbox authoritative.
 
 When a branch needs current process or code from main, merge latest `origin/main` without rewriting history. The old inbox snapshot carried by the branch remains untouched, so the merge takes the current main copy.
+
+## Done Cleanup
+
+- Integration first creates a merge commit containing the exact raw block, terminal result and `status: done`.
+- At that clean merge HEAD, run `node loop/inbox.mjs remove-done --repo <repo> --entry <IN-ID> --expected-head <merge-head>` and commit the exact block removal plus STATUS's actual integration hash.
+- The helper recognizes entry headings only outside Markdown fences, requires exactly one matching block and exactly one metadata `status: done`, and preserves every byte outside the removed block.
+- A remaining `done` block means cleanup was interrupted and is recovered before any later entry. Never prune nonterminal, paused, blocked, cancelled or superseded entries.
 
 ## Raw Request Invariant
 

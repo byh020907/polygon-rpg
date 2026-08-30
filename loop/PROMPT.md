@@ -42,7 +42,8 @@ Accept/provision, implementation checkpoint, fresh verification/finalize, integr
 - Intended path와 affected deterministic checks가 통과하면 화면을 보기 **전에** runnable checkpoint를 executor branch에 commit/push한다.
 - 화면 관찰이나 run이 도중에 끊겨도 checkpoint가 current best를 보존해야 한다.
 - Visual/independent verification 뒤에만 clean final을 만든다.
-- Final integration은 main에서 `--no-ff --no-commit`으로 가져오고 INBOX `done`, STATUS와 필요한 canonical 문서를 같은 한국어 merge commit에 정합해 push한다.
+- Final integration은 main에서 `--no-ff --no-commit`으로 가져오고 INBOX `done`, STATUS와 필요한 canonical 문서를 같은 한국어 merge commit에 정합한다.
+- Merge commit hash를 확인한 뒤 `node loop/inbox.mjs remove-done --repo <repo> --entry <IN-ID> --expected-head <merge-head>`로 그 `done` block만 제거하고 STATUS에 실제 integration hash를 남기는 한국어 cleanup commit을 만든다. 두 commit을 같은 integration transition에서 normal push하며 다음 entry로 넘어가지 않는다.
 - Executor branch는 INBOX와 STATUS를 수정하지 않는다.
 
 ## ⑥ 검사와 QA
