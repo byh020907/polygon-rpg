@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: Core Engineering Principles 전환 · 통합 완료
-- 현재 active inbox entry: `IN-20260831-025240` · `implementing`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-025240` · provisioning 예정
+- 상태: 한 loop 완전 작업 단위 · verifying
+- 현재 active inbox entry: `IN-20260831-025240` · `verifying`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-025240` · checkpoint `679e1b0aeb58b4667db534f61a884c42a80a04c9`
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 수동 검증 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · `PAUSED`
 - Main: clean `main == origin/main`
@@ -47,10 +47,11 @@
 - Complete-work loop preflight: `codex-cli 0.150.1`, absolute Codex/Node/Git/PowerShell/Chrome path, PowerShell parser, Task Scheduler disabled registration과 `MultipleInstances=IgnoreNew`, abnormal restart `3 × 1m`, unlimited execution time를 확인했다.
 - Visible QA preflight: 실제 visible Chrome에서 `GAME_START=dungeon`, `GAME_FRAME=180`, `1440×810` sealed-forest-dungeon PNG와 metadata를 생성하고 이미지를 직접 판독했다. Console error는 0개이며 browser/server가 종료됐다. Artifact는 `artifacts/visual-qa/manual-dungeon-180/`에 있다.
 - 한 loop 완전 작업 단위 accept: current complete-work 문서·prompt·runner를 대조해, selected entry 부재만 확인하는 성공 판정이 main push·executor 통합·lease 해제 누락을 잡지 못하는 마지막 실행상 병목임을 확인했다. 이 entry는 gameplay 변경 없이 durable completion postcondition을 강제한다.
+- 한 loop 완전 작업 단위 writer checkpoint: `679e1b0aeb58b4667db534f61a884c42a80a04c9` · `loop/completion.mjs`의 pure decision과 실제 Git/INBOX/lease inspector를 추가하고 outer loop의 exit-0 조건에 연결했다. 12개 pass/fail fixture, 실제 incomplete snapshot, PowerShell parser, `npm run check`, `git diff --check`를 통과했다. 화면 없는 운영 변경이라 visible PNG QA는 적용하지 않는다.
 
 ## Next
 
-현재 session은 `IN-20260831-025240`에서 outer loop의 durable completion postcondition을 구현·검증하고 같은 session에서 final·main integration·exact cleanup까지 완결한다.
+현재 session은 checkpoint를 latest main에 정합해 최종 회귀 검사한 뒤 `IN-20260831-025240` final·main integration·exact cleanup까지 완결한다.
 
 ## Update Contract
 
