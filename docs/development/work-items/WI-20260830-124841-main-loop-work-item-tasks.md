@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-124841
-status: ready-for-integration
+status: done
 priority: high
 lane: maintenance
 created_at: 2026-08-30T12:48:41+09:00
@@ -73,5 +73,6 @@ docs/development/
 ## 연결
 
 - 업무보고: 이 문서의 `결과`
-- 최종 worktree commit: 이 task의 final 응답에서 반환
-- main integration commit: 통합 후 메인 coordinator가 기록
+- 최종 worktree commit: `2cd5f26f8fb307878991407996542b0a7699e590`
+- main integration commit: `2cd5f26f8fb307878991407996542b0a7699e590` (fast-forward)
+- main 독립 검증: commit scope·topology·링크·skill validator·`npm run check`·`git diff --check` 통과
