@@ -41,7 +41,7 @@ Collect one bounded snapshot rather than polling:
 5. Read at most the latest three turns of the expected task without copying raw logs. Record status, last update, concrete question/blocker and final commit evidence.
 6. Inspect its managed worktree: path, HEAD, clean/dirty paths, registration-base ancestry and whether its final commit is already contained in main.
 7. Read coordinator lease status without acquiring it. Report owner age and expected HEAD when present.
-8. Check duplicate exact-title tasks, overlapping open `owned_paths`, repeated coordinator conflict outcomes and task/work-item status drift.
+8. Check duplicate exact-title tasks, overlapping open `owned_paths`, repeated coordinator conflict outcomes and task/work-item status drift. When an exact title is missing, apply the Manage-mode uniqueness checks and distinguish auto-repairable identity drift from ambiguous conflict.
 
 Use task summaries only for discovery. Git documents, exact task identity, worktree state and commit graph decide the result.
 
@@ -53,6 +53,7 @@ Choose exactly one primary state:
 - `HEALTHY_IDLE`: no open item exists and the roadmap is complete or explicitly paused.
 - `READY_FOR_INTEGRATION`: exact task is idle/completed, worktree is clean and a final commit plus `ready-for-integration` evidence exists.
 - `QUEUED_FOR_DISPATCH`: one queued item exists, registration is on main and no authoritative task exists yet.
+- `RECOVERABLE_IDENTITY_DRIFT`: no exact-title task exists, but exactly one prompt/worktree/registration/ownership-backed candidate satisfies every safe title-repair condition.
 - `BLOCKED`: the exact task contains a concrete product question, external blocker or failed verification evidence.
 - `CONFLICT`: task title is missing/mismatched, duplicate writers/tasks exist, ownership overlaps, commits disagree, or main is dirty/diverged.
 - `AUTOMATION_DOWN`: automation is absent/paused, project binding is invalid, or recent scheduled runs stopped appearing.
@@ -64,7 +65,7 @@ Do not label a long implementation `STALLED_SUSPECTED` merely because coordinato
 
 - Work item `queued` while an exact task is already active.
 - Work item `ready-for-integration` while the task is completed but coordinator repeatedly reports conflict.
-- Task title null/truncated/prompt-shaped instead of exact `WI-... 제목`.
+- Task title null/truncated/prompt-shaped instead of exact `WI-... 제목`; report `RECOVERABLE_IDENTITY_DRIFT` only when the unique-candidate proof passes, otherwise `CONFLICT`.
 - Final worktree commit exists but is absent from main after multiple coordinator intervals.
 - Main already contains the source commit while the work item is not `done`.
 - A live/stale lease blocks multiple scheduled runs.

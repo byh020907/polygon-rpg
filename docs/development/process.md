@@ -35,6 +35,7 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 
 - 매 tick 독립된 실행 context에서 Git work item·roadmap·Codex task title/status·managed worktree·commit graph를 다시 읽는다.
 - repo-local lease로 writer를 직렬화하고, main HEAD drift·dirty main·중복 task·겹치는 ownership·상충 commit이 있으면 mutation 없이 종료한다.
+- exact title이 없더라도 open item·original prompt의 ID/path·managed worktree·registration ancestry·owned paths가 후보 하나를 유일하게 증명하면 시스템 task-title tool로 exact `WI-... 제목`만 복구하고 종료한다. 후보가 둘 이상이거나 commit/ownership이 애매하면 수리하지 않는다.
 - ready item 하나의 독립 검증·main 통합·done 기록 또는 queued/roadmap item 하나의 등록·새 task 생성만 수행하고 종료한다.
 - active task를 기다리거나 gameplay를 구현·tuning·대리 평가하지 않으며 feedback을 중계하지 않는다.
 - 이전 coordinator/main 대화, transient task ID, subagent ID와 working context를 source of truth로 사용하지 않는다.
@@ -90,7 +91,7 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 - automation prompt는 `AGENTS.md`와 `dev-team-loop` Coordinator Tick/Manage mode를 읽고 one-tick decision order를 실행한 뒤 종료하도록 한다.
 - heartbeat, 메인 대화 wakeup, 장기 wait, daemon, Orca manager와 외부 database를 기반으로 사용하지 않는다.
 - automation을 사용할 수 없는 환경에서는 구현됐다고 기록하지 않고, 수동 대체 명령은 bare `$dev-team-loop` 한 번뿐이다.
-- 각 standalone run은 Computer Use 없이 Codex task-title tool로 자기 제목을 바꾼다. 시작은 `C yyyyMMdd-HHmm · 실행중`, 정상 종료는 `C yyyyMMdd-HHmm · <M/WI> · <결과>` 형식이며 결과는 `진행확인`, `통합`, `업무생성`, `충돌`, `잠금중`, `중단`, `완료` 중 하나다.
+- 각 standalone run은 Computer Use 없이 Codex task-title tool로 자기 제목을 바꾼다. 시작은 `C yyyyMMdd-HHmm · 실행중`, 정상 종료는 `C yyyyMMdd-HHmm · <M/WI> · <결과>` 형식이며 결과는 `진행확인`, `통합`, `업무생성`, `복구`, `충돌`, `잠금중`, `중단`, `완료` 중 하나다.
 - 예상하지 못한 interruption으로 `실행중`이 남으면 status audit의 진단 증거로 사용한다. Coordinator는 work-item task의 exact `WI-... 제목`을 변경하지 않는다.
 
 ### 읽기 전용 상태 점검
@@ -98,7 +99,7 @@ work-item task → 구현·품질·직접 feedback·final commit → ready-for-i
 진행이 멈춘 것처럼 보일 때는 [`.agents/skills/dev-loop-status/SKILL.md`](../../.agents/skills/dev-loop-status/SKILL.md)의 `$dev-loop-status`를 사용한다. 이 skill은 최근 coordinator run, open work item, exact task title, task 최신 상태, managed worktree, commit graph, automation과 lease를 한 번만 대조하고 `정상 진행`, `통합 대기`, `dispatch 대기`, `blocker`, `conflict`, `automation 중지`, `정체 의심` 중 하나로 판정한다.
 
 - 기본 동작은 read-only이며 lease 획득, Git mutation, task rename/resume/message, integration과 wait/poll을 하지 않는다.
-- task title null·축약·prompt-shaped, completed task와 stale Git status, final commit 미통합, 반복 conflict와 stale lease를 실제 증거로 구분한다.
+- task title null·축약·prompt-shaped를 unique evidence로 자동 복구 가능한 경우와 실제 conflict로 구분하고, completed task와 stale Git status, final commit 미통합, 반복 conflict와 stale lease를 실제 증거로 구분한다.
 - 복구가 필요하면 원인과 다음 안전 조치만 보고하고, 사용자가 복구를 요청한 뒤 `$dev-team-loop`의 exact recovery로 분리한다.
 
 ## Work Item 등록과 task 생성
