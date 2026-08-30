@@ -78,6 +78,6 @@ index.html / src/style.css / src/ui/gameShell.js
 
 ## 문서 상태와 남은 위험
 
-- `STALE`: `docs/runtime-architecture.md`의 현재 Scene tree와 `docs/world-map-system.md`의 M2 수직 단위 설명은 M3의 progress/trigger와 Field·Dungeon·Boss Room을 아직 설명하지 않는다. 두 파일은 이 item의 `owned_paths` 밖이므로 수정하지 않았고, 후속 canonical 문서 정합 작업이 필요하다.
+- work-item task에서 발견한 `docs/runtime-architecture.md`와 `docs/world-map-system.md`의 M3 설명 누락은 standalone coordinator가 main 통합 기록과 함께 실제 Scene/Signal·progress/trigger/Room 계약으로 정합했다. 남은 `STALE` 상태는 없다.
 - `CONFLICT`, `ORPHANED`, `UNVERIFIED`: 발견하지 않았다.
 - Browser 자동 입력은 key hold 사이에 실제 시간이 계속 흐르므로 Boss 격파 후 보상/귀환까지 한 번에 캡처하지 못했다. 해당 완료 순서는 production module의 120Hz 결정적 경로로 검증했고, Canvas에서는 Boss 진입·패턴·checkpoint 재도전까지 확인했다.

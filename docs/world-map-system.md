@@ -79,13 +79,22 @@ Resolved Map = Base + Time/Weather + World/Region Story + Quest + Local Event
 
 패치는 stable object ID를 대상으로 `set-enabled`, `set-active-portal`, `set`, `override`만 사용한다. 같은 우선순위에서 같은 target/property를 두 번 쓰면 validator 오류다. 패치 적용 후에도 필수 Portal과 도달 경로가 남아야 한다.
 
-## M2 수직 단위
+## M2 기반
 
 - `academy-region/academy-plaza`: 장비 선택과 훈련장 입구가 있는 생활 Room
 - `academy-region/training-room`: M1 `TrainingEncounter` Scene을 소유하는 독립 전투 Room
 - `academy-training-portal`: 두 Room의 spawn을 양방향으로 연결
 - active Room만 collision/entity 판정에 참여
 - 장비 선택 → Portal 진입 → M1 전투 → Portal 귀환을 debug 조작 없이 반복
+
+## M3 Field · Dungeon · Boss 확장
+
+- `field-crossing`과 `field-canopy`는 일반 조우 보상 또는 전투 우회를 선택하는 두 Field 경로다.
+- `sealed-forest-dungeon`은 checkpoint trigger를 소유하며 활성화 전에는 Boss Portal이 꺼져 있다.
+- `sealed-forest-boss`는 M1과 같은 encounter 계약의 boss profile, 보상 trigger와 귀환 shortcut Portal을 소유한다.
+- `FirstJourneyProgress`가 route, checkpoint, boss 격파, 1회 보상과 귀환 상태를 쓰고 `MapRuntime`은 그 snapshot을 stable-ID patch로 해석한다.
+- checkpoint patch는 Boss Portal을, boss 격파 patch는 보상 trigger를, 보상 획득 patch는 shortcut Portal을 순서대로 활성화한다.
+- 일반 적과 Boss Room의 `combat-enemy`는 같은 Room-owned encounter Scene lifecycle을 사용하며, renderer는 resolved snapshot과 RenderFrame만 읽는다.
 
 ## Reference Adoption
 

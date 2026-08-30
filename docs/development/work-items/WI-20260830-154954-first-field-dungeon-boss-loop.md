@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-154954
-status: ready-for-integration
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T15:49:54+09:00
@@ -55,6 +55,7 @@ owned_paths:
 - 적용 rubric은 기능 완결성·조작 명료성·타격감/Effect·Graphics·Reference 정합·회귀 안전성 모두 2다.
 - `npm run check`, `git diff --check`, 120Hz 전체 경로/전투 진단, 실제 Canvas/mobile pointer 경로, `900×600` resize와 browser warning/error 검사를 통과했다.
 - 사용자 요청 없는 영구 test/script/fixture는 추가하지 않았다.
+- standalone coordinator가 final worktree commit의 범위·부모·clean 상태와 progression/encounter production module을 독립 검증하고 main에 fast-forward 반영했다. 학원촌 → Field 우회 → Dungeon checkpoint → Boss Room → checkpoint 복귀 Canvas 경로와 `900×600` 모바일 UI, browser warning/error 부재도 다시 확인했다.
 
 업무보고: [`WI-20260830-154954-first-field-dungeon-boss-loop.md`](../reports/WI-20260830-154954-first-field-dungeon-boss-loop.md)
 
@@ -71,3 +72,6 @@ owned_paths:
 - Roadmap: `M3 — 첫 Field·Dungeon·Boss loop`
 - Depends on: `WI-20260830-120911`
 - Report: `docs/development/reports/WI-20260830-154954-first-field-dungeon-boss-loop.md`
+- Final worktree commit: `7f80fd36be5c2822774d1a2bbab84cd7f13d7be4`
+- Main integration commit: `7f80fd36be5c2822774d1a2bbab84cd7f13d7be4` (fast-forward)
+- Main 독립 검증: owned path, commit graph, `npm run check`, `git diff --check`, progression/encounter 결정적 검사와 실제 Canvas/resize/console 경로 통과
