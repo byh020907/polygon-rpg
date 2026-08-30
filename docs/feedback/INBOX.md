@@ -119,3 +119,45 @@
 ### 결과 — coordinator 소유
 
 진행 전
+
+## IN-20260831-003439
+
+- status: new
+- received_at: 2026-08-31T00:34:39+09:00
+- priority: normal
+- source: team-lead-main
+- title: null
+- supersedes: null
+- executor_branch: null
+- registration_base: a2b926581d80f5b9fb1c842785f60a74000584e7
+- accepted_at: null
+- checkpoint_commit: null
+- final_commit: null
+- integration: null
+- owned_paths: []
+
+### 원문 — 불변
+
+```text
+인박스 정리도 포함되어있지? 완료후
+ㄴㄴ 이런게 워크트리로 반영할 대상이지
+```
+
+### 실행 계약 — coordinator 소유
+
+- 목표: 미정
+- 완료 조건: 미정
+- 비범위: 미정
+- 적용 품질 축: 미정
+
+### 실행 상태 — coordinator 소유
+
+- 기준선: 미정
+- 현재 최선: 미정
+- 다음 병목: 미정
+- 검증: 미정
+- 실제 blocker: 없음
+
+### 결과 — coordinator 소유
+
+진행 전
