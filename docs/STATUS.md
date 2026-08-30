@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 완료 entry 자동 정리 · 구현 준비
-- 현재 active inbox entry: `IN-20260831-003439` · `implementing`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-003439` · 이 수락 commit에서 persistent worktree provision
+- 상태: 완료 entry 자동 정리 · 독립 검증 준비
+- 현재 active inbox entry: `IN-20260831-003439` · `verifying`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-003439` · checkpoint `83bd913672a4b7efe2a78cd9456d7bcd57212869`
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -33,10 +33,11 @@
 - Player hit effect fresh final: `70d320127d5d5b48a80bb499fedf55d52829d21a` · latest main merge, owned diff, deterministic anchor/guard/evade/enemy-hit 격리, 훈련장 HP `43→36`, 유리바람 Field HP `100→85`, enemy HP `75→49`, Polygon/Retro shared state, `900×600` resize와 console 검증 통과.
 - Player hit effect integration: final의 clean source와 owned-path diff, `npm run check`, `git diff --check`, 기록된 실제 Canvas 품질 evidence를 재확인하고 main에 non-rewriting merge.
 - 완료 entry 자동 정리 accept/provision: current process·quality·manage·schema와 lock/worktree helper를 대조하고, `done` block만 정리하되 nonterminal 원문과 Git 복구 evidence를 보존하는 실행 계약을 수락했다.
+- 완료 entry 자동 정리 writer checkpoint: `83bd913672a4b7efe2a78cd9456d7bcd57212869` · fence-aware exact block parser, `done` guard, main expected-HEAD guard와 atomic replacement를 구현했다. Actual INBOX copy와 4-backtick/tilde fixture에서 다른 nonterminal 원문 byte 보존, 비-done 거부, `npm run check`, `git diff --check`를 확인했다.
 
 ## Next
 
-다음 fresh run은 `IN-20260831-003439` executor worktree에서 완료 entry cleanup의 deterministic block 선택·integration caller를 한 runnable checkpoint로 구현한다. Writer run은 final 검증이나 integration까지 연쇄하지 않는다.
+다음 fresh run은 `IN-20260831-003439` checkpoint의 latest-main ancestry·owned diff를 확인하고 actual INBOX copy, arbitrary fence, duplicate/non-done 거부, live main guard와 atomic cleanup을 독립 검증한다. 모든 적용 품질 축이 2 이상이면 clean final과 `ready-for-integration` evidence를 만든다.
 
 ## Update Contract
 
