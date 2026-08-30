@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-112538
-status: integrating
+status: done
 priority: high
 lane: dedicated
 created_at: 2026-08-30T11:25:38+09:00
@@ -26,7 +26,7 @@ source_ref: WI-20260830-014120
 
 결정적 검사에서 실제 Portal 왕복에 따른 fresh attach → detach/dispose, GameScene exit/re-entry Signal 3개 재연결, Light guard, Heavy evade, `A → S` rising launch, enemy contact와 player KO → HP/위치 reset을 확인했다. 실제 Browser에서는 모바일 control UI의 pointer hold로 광장 Portal → training Room, enemy contact와 player KO/reset, Render Lab의 Polygon/Retro 동일 encounter와 resize(`558×314 → 380×213`)를 확인했고 console warning/error는 없었다. 물리 모바일 viewport/coarse-pointer device는 별도로 재확인하지 않았다.
 
-독립 verifier가 기능 2, 구조 명료성 3, lifecycle 안전성 3, Signal 결합도 3, Godot Reference 정합 2, 회귀 안전성 2로 PASS했고 actionable finding은 없었다. `review: auto` candidate는 `integrating` 상태다.
+독립 verifier가 기능 2, 구조 명료성 3, lifecycle 안전성 3, Signal 결합도 3, Godot Reference 정합 2, 회귀 안전성 2로 PASS했고 actionable finding은 없었다. `review: auto` candidate를 main에 통합했다.
 
 업무보고: `docs/development/reports/WI-20260830-112538-training-encounter-node-migration.md`
 
@@ -41,6 +41,6 @@ source_ref: WI-20260830-014120
 ## 연결
 
 - Depends on: `WI-20260830-014120`
-- Root agent: `/root/wi_20260830_112538`
+- Integration commit: `7b314f7cbc1f990631b0d94fed057bbd1239c425`
 - 업무보고: `docs/development/reports/WI-20260830-112538-training-encounter-node-migration.md`
 - Independent verifier: PASS, actionable finding 없음
