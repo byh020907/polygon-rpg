@@ -314,6 +314,14 @@ M1의 Vertical Slice Director가 먼저 `CombatFrame`, `CombatEvent`, RenderFram
 - 위 결과가 main에 통합되고 open work item과 unresolved canonical conflict가 없으면 현재 M0~M5 approved roadmap을 완료로 판정한다.
 - 추가 Region·생물·quest 확장은 새 팀장 요청 또는 새 approved roadmap의 범위이며, 현재 automation을 무한 콘텐츠 생성기로 사용하지 않는다.
 
+### 현재 approved roadmap 완료 증거
+
+- 완료 판정 snapshot: `2026-08-30T22:30:41+09:00`, clean `main == origin/main == 96b42fb4a72d271d46f9b36dae8a453760deebde`.
+- M0~M5가 모두 완료이고 open lifecycle work item이 없다. 마지막 수직 단위 `WI-20260830-190118`은 `done`이며 결과와 품질 증거가 업무보고에 연결되어 있다.
+- M5 final `340c5a78a8dcbbbd621a7b310ed7cc9495b0da5d`와 main integration `931ffa883dd03762a3b000a0b331802fba262927` 뒤 gameplay tree는 바뀌지 않았다. 현재 snapshot에서 `npm run check`, `git diff --check`, final ancestry와 마지막 실제 Canvas·Polygon/Retro·resize·console 증거를 다시 대조해 통과했다.
+- `codex/roadmap/*` local·remote executor ref나 등록된 persistent executor worktree가 없다. 남은 legacy detached worktree는 모두 clean이고 branch writer가 아니며, M4 patch-equivalent 결과와 이미 통합된 M5 gameplay의 보존 증거다.
+- Unreconciled executor writer와 Canonical Conflict가 없으므로 이 증거를 push한 뒤 `polygon-rpg-roadmap-coordinator`를 pause한다. 새 approved roadmap 또는 팀장 요청이 등록되면 같은 automation을 다시 활성화한다.
+
 ## 확정 비범위
 
 - 자유로운 Z축·벨트스크롤 이동과 Depth Lane 확장
