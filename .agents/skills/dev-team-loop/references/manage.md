@@ -27,7 +27,7 @@ Each open work item has one durable ID and at most one authoritative user-owned 
 
 1. Reconcile current item once.
 2. Observe its task with compact wait/read calls.
-3. If it needs feedback or a blocking choice, expose only its link/status/stop condition so the team lead can answer there.
+3. Stop for team-lead input only when the task supplies concrete observable questions or a blocking choice. Show the exact items, what the answers change and the task link; answers stay there.
 4. If it returns a final commit, verify and integrate it before starting dependent work.
 5. Reevaluate roadmap/queue and create the next item in a new task.
 
@@ -44,7 +44,7 @@ The default roadmap loop has one current vertical work-item task and serializes 
 7. Review rule candidates and promote only repeated or high-impact evidence to one canonical owner.
 8. Reevaluate the roadmap and create the next work item in a new Codex task.
 
-Do not integrate an item waiting for direct team-lead feedback, a blocking choice, failed threshold or unresolved conflict.
+Do not integrate an item waiting for concrete required judgment, a blocking choice, failed threshold or unresolved conflict. A generic feedback state must return to the work-item task for verification and finalization instead of stopping main.
 
 ## Pause, Cancel And Recovery
 
@@ -56,4 +56,4 @@ Do not integrate an item waiting for direct team-lead feedback, a blocking choic
 
 Keep only: work-item ID, title, task link, status, stop condition and integration result. Implementation details, product interview, quality tuning, changed tree, artifact evidence and feedback stay in the user-owned work-item task.
 
-This is the internal memory shape, not the reply template. Team-lead-facing updates follow the canonical plain-Korean rule and lead with the actual feature: what is being made, what can be seen and what is blocked. Translate integration to `메인 반영`, feedback to `구현 결과에 대한 의견`, and omit internal role names. Add IDs, hashes and links only where they help the team lead act or verify.
+This is the internal memory shape, not the reply template. Team-lead-facing updates lead with the actual feature and exact observable questions, followed by what the answers change and the task link. Do not report feedback waiting without concrete questions. Add IDs, hashes and lifecycle states only where they help the team lead act or verify.

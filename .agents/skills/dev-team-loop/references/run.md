@@ -30,19 +30,19 @@ One user-owned Codex task owns one work item from implementation through direct 
 
 ## Direct Feedback
 
-For product feel, visuals, new features or `review: team-lead`:
+Enter this state only when human observation is genuinely required. `review: team-lead` does not justify a generic wait.
 
 1. Prepare the best available local/mobile playable path in this worktree.
 2. Update the work-item result and any intent-first report with actual candidate evidence.
-3. Present 실제 변경 파일, 새 동작 또는 플레이 결과, 검증 범위, 업무 결과 링크, 품질 수준과 남은 문제 in plain Korean. Apply the canonical team-lead wording rule; do not expose internal terms without explanation.
-4. Wait here for team-lead feedback. The team lead opens this sidebar task and replies directly; the main coordinator does not relay it.
-5. Apply feedback in this same task/worktree and repeat evaluation until accepted or blocked.
+3. If requirements and verification can decide the result, skip `feedback` and continue to Finalize.
+4. Otherwise send one plain-Korean message containing the implemented feature and play path; inspection location or controls; 1–3 observable questions; and one line explaining what the answers will change.
+5. Wait here for those answers. Apply them in this same task/worktree and repeat evaluation until accepted or blocked.
 
-Do not create a final commit while required feedback or implementation remains.
+Never send a generic “의견을 기다립니다”, “확인해 주세요” or equivalent. Do not create a final commit while concrete required judgment or implementation remains.
 
 ## Finalize
 
-1. Set the work-item state to `ready-for-integration` and record actual result, accepted feedback, quality threshold and verification evidence.
+1. Set the work-item state to `ready-for-integration` and record actual result, accepted judgment when any, quality threshold and verification evidence.
 2. For a playable vertical slice or meaningful milestone, write one intent-first report under `docs/development/reports/`. Small maintenance items use the work-item result only.
 3. Run affected syntax/lint/format checks, `git diff --check`, the actual user path and independent verification appropriate to the change.
 4. Inspect and stage only item-owned paths. Create a scoped commit in this worktree with a concise Korean message. Do not push, merge, rebase, update main roadmap state or start another work item.

@@ -42,12 +42,12 @@ If the role is ambiguous, inspect Git work items, Codex task titles/status and r
 - No force push, shared-history rewrite, guessed cleanup or mutation of another task's worktree.
 - Do not submit a candidate with an applicable quality axis below the threshold in `docs/development/quality-loop.md`.
 - Subagent success is not work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
-- Stop roadmap derivation at direct team-lead feedback still pending in the work-item task, a genuinely blocking unresolved product decision, canonical conflict, blocker, pause or absence of an approved next milestone.
+- Stop roadmap derivation only for concrete observable questions pending in the work-item task, a genuinely blocking unresolved product decision, canonical conflict, blocker, pause or absence of an approved next milestone.
 
 ## Team-Lead Wording
 
-Apply [`docs/development/process.md`](../../../docs/development/process.md#팀장-안내-문장-기준) to every team-lead-facing main update and work-item reply. Lead with the actual feature name and plain Korean; keep internal IDs and English terms only as one-time supporting details when accuracy needs them. Never open with a glossary. A status update should naturally cover what is being made, what the team lead can see and what is blocked, omitting empty parts. Answer a question's meaning in the first sentence.
+Apply [`docs/development/process.md`](../../../docs/development/process.md#팀장-안내-문장-기준) to every team-lead-facing reply. Never use a generic request for feedback or confirmation. If human judgment is unnecessary, continue through verification, final commit and integration readiness. If it is necessary, one message must state the implemented feature and play path, where/how to inspect it, 1–3 observable questions and one line describing what the answers change. Main may summarize those exact questions with the task link; answers stay in the work-item task.
 
 ## Completion
 
-In a work-item task, use this team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash. In the main task, translate its compact internal state into plain Korean in this order: 무엇을 만들고 있음; 무엇을 볼 수 있음; 무엇이 막힘. IDs, links and integration hashes remain supporting evidence, not the lead sentence.
+In a work-item task, use this team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash. In the main task, lead with the actual feature and exact observable question before internal state, then add the task link. If there is no concrete question, do not report feedback waiting.

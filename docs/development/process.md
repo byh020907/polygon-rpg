@@ -19,7 +19,7 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 
 - 핵심 재미, 제품 방향, 우선순위와 Reference를 결정한다.
 - 사이드바의 work-item task를 직접 열어 실제 코드 트리, 실행 artifact와 검증을 본다.
-- 구현된 candidate에 대한 feedback과 blocking 제품 선택을 해당 task에 직접 남긴다.
+- 구현된 기능의 구체적 관찰 질문과 blocking 제품 선택에 해당 task에서 직접 답한다.
 - 이미 밝힌 의도, 계획 문서와 코드에서 추론 가능한 Engineering Decision을 반복 승인하지 않는다.
 
 ### 메인 task — Roadmap / Queue / Integration Coordinator
@@ -50,11 +50,11 @@ Reference-Guided Engineering은 각 loop 안의 Engineering Decision을 담당�
 ## 구현 우선과 짧은 선택 인터뷰
 
 - 명시된 의도는 구현 입력이며 재확인 요청이 아니다.
-- 기본 흐름은 `구현 → concrete candidate 검증 → task에서 실제 tree·동작·검증·업무보고 공개 → 팀장의 직접 feedback`이다.
+- 기본 흐름은 `구현 → 현재 결과 검증 → 실제 tree·동작·검증 공개 → 필요한 경우에만 팀장 판단 → final commit`이다.
 - 계획, Reference Brief, 실행·품질 계약과 task list는 work-item task의 내부 context다.
 - 현재 코드·roadmap·Reference에서 추론 가능하거나 안전하게 되돌릴 수 있는 선택은 먼저 구현한다.
 - 구현을 실제로 막고 추론·가역 default가 불가능한 결정만 work-item task에서 한 번에 하나씩 묻는다. 질문은 Yes/No 또는 2~3개의 상호 배타적 선택지와 각 한 줄 영향만 제시한다.
-- 메인 task는 이 질문이나 답을 대신 만들거나 전달하지 않는다. `stop condition: work-item-input`과 task link만 남긴다.
+- 메인 task는 질문이나 답을 대신 만들지 않는다. 구체적 판단 항목과 task link만 요약하고 답은 해당 task에서 받는다.
 
 ## Canonical 시작과 roadmap loop
 
@@ -70,7 +70,7 @@ $dev-team-loop
 → 다음 gate를 반드시 새 Codex task로 시작
 ```
 
-- feedback 또는 blocking 선택 대기 중이면 메인은 task link와 stop condition만 보고하고 멈춘다.
+- 구체적 관찰 질문이나 blocking 선택이 남았을 때만 메인은 항목·task link를 보고하고 멈춘다.
 - 완료 task를 다른 work item에 재사용하지 않는다.
 - 다음 미충족 gate를 소유한 open item이 없으면 roadmap에서 vertical work item 하나를 파생한다.
 - Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서도 멈춘다.
@@ -132,13 +132,17 @@ $dev-team-loop
 - 처음부터 내부 용어 목록을 팀장에게 보여 주지 않는다. 현재 상황에 필요한 뜻만 문장 안에서 자연스럽게 설명한다.
 - 질문을 받으면 첫 문장으로 그 뜻을 답하고, 뒤에 필요한 상태나 선택지를 붙인다.
 - 진행 보고는 `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 막힘` 순서로 짧고 구체적으로 쓴다. 해당 내용이 없으면 억지로 항목을 만들지 않는다.
+- `의견을 기다립니다`, `확인해 주세요`, `피드백이 필요합니다`처럼 판단 대상을 알 수 없는 문장을 단독으로 쓰지 않는다.
+- 사람의 판단이 필요하지 않으면 `feedback` 상태로 멈추지 않고 검증·final commit·메인 반영 준비까지 진행한다.
+- 사람의 판단이 꼭 필요하면 한 메시지에 `구현된 기능과 실행·플레이 경로`, `볼 위치 또는 조작 방법`, `관찰 가능한 질문 1~3개`, `답에 따라 바뀌는 것 한 줄`을 모두 쓴다.
+- 메인은 task link와 정확한 판단 항목을 요약할 수 있지만 질문과 답은 해당 업무 담당 대화에 둔다. 구체적 항목이 없으면 `의견 대기`라고 보고하지 않는다.
 
 다음 치환은 팀장에게 보이는 문장을 작성할 때 쓰는 내부 기준이며, 이 표 자체를 먼저 노출하지 않는다.
 
 | 내부 표현                | 팀장에게 보이는 표현                                                                    |
 | ------------------------ | --------------------------------------------------------------------------------------- |
 | `M2` 같은 milestone ID   | `학원촌과 훈련장을 오가는 기능`처럼 실제 기능명. 필요하면 처음 한 번만 `(M2)`를 붙인다. |
-| `feedback`               | `구현 결과에 대한 의견`                                                                 |
+| `feedback`               | 구체적 관찰 질문이 있을 때만 실제 기능명과 함께 설명하고, 없으면 대기하지 않는다.       |
 | `candidate`              | `현재 구현 결과`                                                                        |
 | `gate`                   | `완료 조건`                                                                             |
 | `artifact`               | 문맥에 따라 `실행 화면` 또는 `플레이 결과`                                              |
@@ -158,7 +162,7 @@ queued → implementing → feedback → ready-for-integration → integrating �
 
 - Git 문서는 durable queue/result source다.
 - 진행 중 live state는 Codex task와 managed worktree가 소유한다.
-- `feedback`은 같은 task/worktree를 보존하고 팀장의 직접 답을 기다린다.
+- `feedback`은 자동 검증으로 정할 수 없는 구체적 관찰 질문이 있을 때만 같은 task/worktree에서 답을 기다린다.
 - `ready-for-integration`은 task가 threshold·검증·final commit을 끝냈지만 main에 아직 통합되지 않은 상태다.
 - `integrating`과 `done`은 메인 coordinator가 commit evidence로 확정한다.
 
@@ -169,7 +173,7 @@ queued → implementing → feedback → ready-for-integration → integrating �
 - 기본 roadmap loop는 현재 vertical work-item task 하나를 완료·통합한 뒤 다음 task를 만든다.
 - worktree 격리는 shared-checkout writer 제한을 대체하지만 dependency와 integration-order 검증을 없애지 않는다.
 - 메인은 `wait`/`read` 계열의 compact task 상태만 사용하고 raw log를 polling하거나 main context에 복제하지 않는다.
-- feedback/attention 상태에서는 task link와 stop condition을 제시하고 팀장이 그 task를 직접 연다.
+- 사람의 판단이 필요한 상태에서는 task link와 구체적 관찰 질문을 제시하고 팀장이 그 task를 직접 연다.
 - 완료 task의 final hash가 없거나 dirty tree가 남으면 통합하지 않는다.
 
 ## Candidate-First Quality Loop
@@ -182,7 +186,7 @@ work-item task 시작
 → 결정적 검사 + 실제 artifact 관찰
 → 같은 rubric 재평가
 → task-internal 독립 검증
-→ task에서 팀장 direct feedback
+→ 필요할 때만 task에서 구체적 관찰 질문
 → result/report와 final worktree commit
 → main 검증·통합
 ```
@@ -195,9 +199,11 @@ work-item task 시작
 
 ## 팀장 의견과 자동 메인 반영
 
-조작감·타격감·Graphics·Effect, 새 기능·제품 방향 또는 `review: team-lead` item은 업무 담당 대화에서 팀장의 직접 의견을 받는다. 팀장에게는 실제 변경 파일, 플레이 경로, 검증, 업무 결과 링크, 품질 수준과 남은 문제를 쉬운 한국어로 보여 준다.
+검사와 기존 요구사항만으로 결론을 낼 수 있으면 팀장 답을 기다리지 않고 검증·final commit·메인 반영 준비까지 진행한다. `review: team-lead`는 포괄적인 의견 대기를 허용하는 상태가 아니다.
 
-명확한 작은 버그, 문서 정합과 외부 동작을 바꾸지 않는 안전한 내부 수정은 `review: auto`로 task가 검증·commit까지 완료할 수 있다. 제품 결과가 달라지면 task가 `review: team-lead`로 승격하고 직접 feedback을 기다린다.
+조작감·타격감·Graphics·Effect나 양립할 수 없는 제품 방향처럼 사람의 관찰이 꼭 필요할 때만 업무 담당 대화에서 판단을 요청한다. 요청은 실제 기능과 실행·플레이 경로, 팀장이 볼 위치나 조작 방법, 관찰 가능한 질문 1~3개, 답에 따라 바뀌는 것 한 줄을 포함한다.
+
+메인은 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 요약할 수 있다. 질문과 답변은 해당 업무 담당 대화에서 직접 진행하며, 구체적 항목이 없으면 `의견 대기`라고 보고하지 않는다.
 
 메인은 두 경우 모두 final worktree commit을 독립적으로 확인한 뒤에만 통합한다.
 
@@ -263,6 +269,6 @@ Changed tree, artifact, 구현 로그, 품질 tuning, blocking 질문의 내용�
 
 1. `무엇을 만들고 있음`: 실제 기능명과 현재 단계
 2. `무엇을 볼 수 있음`: 열어 볼 업무 대화나 이미 메인에 반영된 결과
-3. `무엇이 막힘`: 팀장 의견, 선택 또는 외부 문제를 기다리는 경우에만 설명
+3. `무엇이 막힘`: 팀장이 판단할 관찰 질문, 선택 또는 외부 문제를 구체적으로 설명
 
 업무 ID, 대화 링크와 메인 반영 commit은 필요한 문장 뒤에 정확성 보조 정보로 붙인다.

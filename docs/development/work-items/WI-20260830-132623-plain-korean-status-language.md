@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-132623
-status: done
+status: ready-for-integration
 priority: normal
 lane: maintenance
 created_at: 2026-08-30T13:26:23+09:00
@@ -27,20 +27,32 @@ source_ref: null
 - 업무보고 안내도 실제 변경 파일과 쉬운 한국어로 시작하도록 정리했다.
 - 게임 실행 코드와 gameplay/runtime source는 변경하지 않았다.
 
+추가 수정으로 포괄적인 `의견 대기`를 금지하고, 사람의 판단이 필요하지 않으면 검증·최종 commit·메인 반영 준비까지 자동 진행하도록 했다. 판단이 꼭 필요할 때는 구현 기능과 실행 경로, 볼 위치·조작 방법, 관찰 질문 1~3개와 답에 따라 바뀌는 내용을 한 메시지에 쓰도록 메인·업무 담당 대화 계약을 맞췄다. 품질 문서도 같은 기준으로 고쳐 제품 체감이나 새 기능이라는 이유만으로 무조건 멈추던 충돌을 제거했다.
+
 적용 품질 수준은 기능 완결성 2/3, 회귀 안전성 2/3이다. 조작·타격·화면 품질은 문서 정합 업무라 적용하지 않았다.
 
 검증:
 
-- `npm run lint`
-- `npm run format:check`
+- 현재 worktree를 main 완료 기록 `3236327a24eff2a39120a52a2dfa2bd11775e9a6`으로 fast-forward 동기화
+- `npm run check`
 - `skill-creator/scripts/quick_validate.py .agents/skills/dev-team-loop`
-- 변경 문서의 로컬 링크와 기준 절 제목 확인
+- `AGENTS.md` UTF-8 크기 `31,963 bytes`와 32 KiB 제한 여유 `805 bytes` 확인
+- 쉬운 한국어·개발 절차·품질 문서·메인·업무 담당 대화의 구체적 판단 항목 계약 확인
+- 적용 품질 축 2점 이상, 실제 실행 화면 확인과 독립 검증 기준이 유지되는지 확인
 - `git diff --check`
 
 최종 commit은 이 업무 담당 대화의 완료 답변으로 전달한다.
 
+## 피드백
+
+> 뭔 의견을 기다리는건지 모르겟는데 이런걸 애초에 고쳐달라고 한건데 아까 프롬프트 수정에서
+
+- 이전 결함: `feedback`을 `구현 결과에 대한 의견`으로 바꿨지만, 무엇을 판단해야 하는지 밝히지 않았다.
+- 반영 결과: 구체적 관찰 질문이 없으면 멈추지 않고, 필요한 경우에만 실행 경로·확인 방법·질문·변경 영향을 함께 제시하도록 수정했다.
+
 ## 연결
 
-- 최종 worktree commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191`
-- main integration commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191` (fast-forward)
-- 메인 확인: 쉬운 한국어 규칙·최상위 규칙 보존·파일 크기·전체 검사 통과
+- 이전 최종 worktree commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191`
+- 이전 main integration commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191` (fast-forward)
+- 추가 수정 최종 commit: 이 업무 담당 대화의 완료 답변으로 전달
+- 추가 수정 main integration commit: 메인 반영 후 기록

@@ -130,7 +130,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `PROCESS-DEV-TEAM-LOOP`   | 메인 task는 roadmap·queue·commit integration만 소유하고, 각 work item은 별도 사용자 소유 Codex task와 기본 managed worktree에서 구현·직접 feedback·final commit을 끝낸 뒤 새 task로 이어진다.     | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work-item task의 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 직접 feedback을 끝까지 소유하고, task 내부 subagent 결과를 재평가해 반복 feedback을 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다.                 | `docs/development/process.md`              |
-| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능명·쉬운 한국어를 먼저 쓰고, 필요한 내부 ID·영문은 괄호에 한 번만 보조한다.                                                                                                        | `docs/development/process.md`, skill       |
+| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                                           | `docs/development/process.md`, skill       |
 | `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                                     | `docs/animation-system.md`, 실제 solver    |
 | `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                                             | `docs/input-system.md`, 실제 adapters      |
 | `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                                       | `docs/development/roadmap.md`, 사용자 결정 |
@@ -336,7 +336,7 @@ Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌
 ## 9. Implementation Guardrails
 
 - 기존 동작과 사용자의 변경을 보존한다.
-- 팀장에게는 기능명·쉬운 한국어를 먼저 쓰고 질문의 뜻부터 답한다. 진행 보고는 `만드는 것 → 볼 수 있는 것 → 막힌 것` 순서로 짧게 쓴다.
+- 팀장에게는 기능·관찰 질문을 쉬운 한국어로 먼저 쓴다. 판단이 필요할 때만 확인 위치·방법·질문·변경 영향을 함께 밝힌다.
 - 작은 실행 가능 수직 단위로 구현하고 각 단계에서 브라우저 실행 상태를 유지한다.
 - 기능 목록이 아니라 처음부터 끝까지 플레이 가능한 사용자 시나리오를 하나의 개발·피드백 단위로 사용한다.
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.

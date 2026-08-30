@@ -7,16 +7,16 @@
 각 사용자 소유 work-item task는 하나의 **Lead Game Developer & QA Director**다.
 
 - 실제 changed tree와 플레이 artifact를 함께 최종 결과로 본다.
-- 구현, 실행, 관찰, 평가, 개선, 직접 팀장 feedback과 근거 기록을 같은 task/worktree에서 소유한다.
+- 구현, 실행, 관찰, 평가, 개선, 필요한 구체적 팀장 판단과 근거 기록을 같은 task/worktree에서 소유한다.
 - 반복 결함은 규칙 후보로 남기되 새로운 제품 결정을 자동 승격하지 않는다.
 - final scoped worktree commit을 만들고 main coordinator에게 hash를 반환한다.
 
-팀장은 Product Director다. 핵심 재미, 제품 우선순위, 양립하지 않는 방향과 최종 체감 판단을 구현된 candidate를 보고 해당 work-item task에서 직접 내린다.
+팀장은 Product Director다. 자동 검사와 명시된 의도로 정할 수 없는 핵심 재미, 제품 우선순위, 양립하지 않는 방향과 체감 판단을 구현된 결과를 보고 해당 work-item task에서 직접 내린다.
 
 ## Outer Loop와 Inner Loop
 
 ```text
-Product Director — roadmap·방향·우선순위·work-item task direct feedback
+Product Director — roadmap·방향·우선순위·필요한 구체적 관찰 판단
 → Main Coordinator — queue·task 생성·compact 상태·commit integration·다음 gate
 → Work-Item Task / Vertical Slice Director — 구현·artifact·품질 loop·final commit
    ↳ Subagent Worker — 고정된 bounded lane
@@ -37,14 +37,14 @@ Bare `$dev-team-loop`는 메인 coordinator가 현재 item을 reconcile하고, f
 ```text
 현재 milestone·queue 평가
 → work item 등록과 managed-worktree task 생성
-→ task 내부 quality loop·direct feedback·final commit
+→ task 내부 quality loop·필요한 관찰 질문·final commit
 → main 검증·통합·roadmap 갱신
 → 다음 gate를 새 task로 반복
 ```
 
 - 승인된 roadmap의 현재 gate가 기본 work source다.
 - 한 번에 현재 vertical result 하나를 파생하고 main integration을 직렬화한다.
-- 구현된 candidate의 direct feedback, 비가역 blocking 제품 결정, Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서 멈춘다.
+- 자동 검사로 정할 수 없는 관찰 질문 1~3개, 비가역 blocking 제품 결정, Canonical Conflict, 외부 blocker, pause 또는 승인된 다음 milestone 부재에서만 멈춘다.
 
 ## 내부 품질 기준
 
@@ -76,7 +76,9 @@ Director는 반복 승인 없이 다음을 task 내부 실행 기준으로 정�
 | Reference 정합       | 차용한 원칙이 설명이 아니라 실제 플레이에 드러난다.                                    |
 | 회귀 안전성          | 결정적 검사, syntax/lint/format, `git diff --check`, console과 resize 경로가 통과한다. |
 
-Feedback candidate는 적용 축에 0 또는 1이 없어야 하며 기능 완결성과 회귀 안전성이 2 이상이어야 한다. 조작감·타격감·Effect·Graphics 또는 새로운 제품 방향은 2 이상이어도 task에서 팀장 feedback을 직접 받기 전 final commit을 만들지 않는다.
+제출 결과는 적용 축에 0 또는 1이 없어야 하며 기능 완결성과 회귀 안전성이 2 이상이어야 한다. 실제 실행 화면 확인과 마지막 writer 변경 뒤의 독립 검증도 생략하지 않는다.
+
+조작감·타격감·Effect·Graphics 또는 새 제품 방향이어도 자동 검사와 기존 명시 의도로 판단할 수 있고 구체적인 사람 판단 질문이 없으면 final commit과 메인 반영 준비까지 진행한다. 팀장이 직접 봐야 하는 관찰 질문이 1~3개 있을 때만 실행·플레이 경로, 볼 위치·조작 방법, 질문과 답에 따라 바뀌는 내용을 한 메시지에 제시하고 final commit을 보류한다.
 
 ## 평가 기반 개선 Loop
 
@@ -93,7 +95,7 @@ baseline 실행·채점
 - 코드 실행 여부를 시각·플레이 품질의 대체 증거로 사용하지 않는다.
 - 한 iteration에서 가장 큰 병목 하나를 다룬다.
 - 악화되면 검증된 이전 current best를 기준선으로 사용한다.
-- 같은 gate가 새 증거·설계 변화 없이 두 번 실패하면 threshold를 낮추지 않는다. Passing best가 있으면 direct feedback, 없으면 failed evidence와 함께 `blocked`다.
+- 같은 gate가 새 증거·설계 변화 없이 두 번 실패하면 threshold를 낮추지 않는다. Passing best에 구체적인 사람 판단 질문이 있으면 해당 항목을 제시하고, 없으면 best를 기준으로 계속 진행한다. Passing best가 없으면 failed evidence와 함께 `blocked`다.
 
 ## Current Best와 Final Commit
 
@@ -110,13 +112,14 @@ Task는 final hash를 응답으로 반환하고 push/merge하지 않는다. Main
 - work-item task/worktree: 실행 중 계획, baseline, current best, artifact와 direct feedback
 - task-internal subagent: bounded intermediate evidence
 
-Main context에는 ID/title/task link/status/stop condition/integration result만 둔다. Quality detail은 work-item task와 Git result/report에 둔다.
+Main context에는 ID/title/task link/status/stop condition/integration result만 둔다. Quality detail은 work-item task와 Git result/report에 두되, 팀장에게 보이는 메인 보고에는 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 함께 제시한다.
 
 ## 질문·중단·차단
 
 - 명시 의도는 재확인하지 않고 가역 default를 먼저 구현한다.
 - 구현을 실제로 막는 새 제품 방향·양립 불가 선택·Canonical Conflict에서만 work-item task가 짧은 Yes/No 또는 2–3 choice 질문 하나를 한다.
-- 팀장은 그 task에서 직접 답하고 메인은 `work-item-input` stop condition만 표시한다.
+- 체감 판단이 꼭 필요하면 실행·플레이 경로, 볼 위치·조작 방법, 관찰 질문 1~3개와 답에 따라 바뀌는 내용을 한 메시지에 쓴다. 구체적 질문이 없으면 멈추지 않는다.
+- 메인은 업무 대화 링크와 정확한 판단 항목을 쉬운 한국어로 보여 주고, 질문과 답은 해당 task에서 직접 진행한다. 상태 코드만 단독으로 표시하지 않는다.
 - 반복 blocker나 불명확한 ownership은 `blocked`로 전환한다.
 - 자동 무한 loop는 사용하지 않는다.
 
