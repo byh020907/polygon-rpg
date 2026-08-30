@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 유저 피격 effect 위치 수정 진행 중
-- 현재 active inbox entry: `IN-20260831-002426` (`implementing`)
-- 현재 executor branch/worktree: `codex/loop/in-20260831-002426` provision 대상
+- 상태: 유저 피격 effect 접촉 위치 독립 검증 대기
+- 현재 active inbox entry: `IN-20260831-002426` (`verifying`)
+- 현재 executor branch/worktree: `codex/loop/in-20260831-002426` · checkpoint `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5`
 - Automation: `Polygon RPG file-memory loop` ACTIVE
 - Main: clean `main == origin/main`
 - 실제 blocker: 없음
@@ -29,10 +29,11 @@
 - Roadmap completion proof: `bf1d0db5f56202c16f661997dc77437cf8f7e312`
 - File-memory loop replacement: 이 STATUS·DESIGN·INBOX·PROMPT와 legacy 제거를 도입한 main commit
 - 마지막 completion snapshot에서 M0~M5 완료, nonterminal input 없음, no executor ref, clean main/origin, no lease/conflict와 quality evidence를 확인했다.
+- Player hit effect writer checkpoint: `d35827623ef8c3b7a60dd7d57a86a3e3d274f6e5` · contact 좌표 결정적 검증, `npm run check`, `git diff --check`, 실제 훈련장 Retro Canvas와 console 확인 통과.
 
 ## Next
 
-다음 fresh run은 `IN-20260831-002426` executor worktree에서 실제 플레이어 피격 effect 위치를 재현하고, real contact world 좌표와 effect anchor의 어긋남 하나를 수정해 runnable checkpoint를 branch에 commit/push한다.
+다음 fresh run은 `IN-20260831-002426` checkpoint를 latest main·owned paths와 정합한 뒤 훈련장·원정 실제 피격을 Polygon/Retro·resize에서 독립 검증한다. 적용 품질 축이 모두 2 이상이면 clean final을 push하고 `ready-for-integration`으로 전환하며, 실패하면 가장 큰 원인 하나만 correction checkpoint로 남긴다.
 
 ## Update Contract
 
