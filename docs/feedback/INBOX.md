@@ -122,7 +122,7 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 
 ## IN-20260831-003439
 
-- status: implementing
+- status: verifying
 - received_at: 2026-08-31T00:34:39+09:00
 - priority: normal
 - source: team-lead-main
@@ -131,7 +131,7 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 - executor_branch: codex/loop/in-20260831-003439
 - registration_base: a2b926581d80f5b9fb1c842785f60a74000584e7
 - accepted_at: 2026-08-31T01:30:57+09:00
-- checkpoint_commit: null
+- checkpoint_commit: 83bd913672a4b7efe2a78cd9456d7bcd57212869
 - final_commit: null
 - integration: null
 - owned_paths:
@@ -162,9 +162,9 @@ Final `70d320127d5d5b48a80bb499fedf55d52829d21a`을 main에 non-rewriting merge�
 ### 실행 상태 — coordinator 소유
 
 - 기준선: 현재 live INBOX는 integration이 끝난 `done` entry도 계속 보존해 새 entry와 함께 누적한다.
-- 현재 최선: 원문·lifecycle·result는 main Git history와 executor commit graph에 이미 durable하게 남고, main-only INBOX 규칙과 deterministic worktree helper가 process 변경을 격리할 기반을 제공한다.
-- 다음 병목: arbitrary Markdown fence를 가진 entry 중 지정한 `done` block만 안전하게 찾고 제거하는 deterministic cleanup 계약과 integration caller를 구현한다.
-- 검증: clean `main == origin/main` `9c31550eed5881781eb45fe8e329d916fa161b5d`, no live lease, 해당 executor ref/worktree 부재를 확인했다. Current process·quality·manage·schema와 `loop/lock.mjs`, `loop/worktree.mjs`를 교차 확인했다. Baeseongjin의 worktree ownership은 원칙만 차용하고 branch 삭제 절차는 적용하지 않는다.
+- 현재 최선: checkpoint `83bd913672a4b7efe2a78cd9456d7bcd57212869`이 Markdown fence 밖의 exact entry heading과 metadata의 단일 `status: done`을 확인해 다른 byte를 바꾸지 않고 atomic replacement로 block을 제거한다. Integration은 terminal 원문·결과를 merge commit에 먼저 보존하고 actual hash를 STATUS에 기록하는 cleanup commit까지 같은 transition에서 push한다.
+- 다음 병목: fresh run이 latest main ancestry와 owned diff를 독립 확인하고, 실제 INBOX copy·arbitrary backtick/tilde fence·중복/비-done 거부·main expected-HEAD guard·atomic 임시 파일 정리를 다시 검증한다.
+- 검증: `npm run check`, `git diff --check` 통과. 실제 current INBOX의 in-memory copy에서 기존 `done` block만 제거되고 두 nonterminal 원문 byte가 유지됨을 확인했다. 4-backtick 안의 3-backtick과 가짜 `## IN-*`, tilde fence를 포함한 file fixture에서 CLI cleanup과 nonterminal byte 보존을 확인했고 `implementing` entry 삭제는 거부됐다. Executor branch는 checkpoint push 뒤 clean local/remote equality다. Baeseongjin의 worktree ownership은 원칙만 차용하고 branch 삭제 절차는 적용하지 않았다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
