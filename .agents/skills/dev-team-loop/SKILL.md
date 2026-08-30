@@ -44,6 +44,10 @@ If the role is ambiguous, inspect Git work items, Codex task titles/status and r
 - Subagent success is not work-item success. The Director must integrate all lanes, rerun the end-to-end path and pass independent verification.
 - Stop roadmap derivation at direct team-lead feedback still pending in the work-item task, a genuinely blocking unresolved product decision, canonical conflict, blocker, pause or absence of an approved next milestone.
 
+## Team-Lead Wording
+
+Apply [`docs/development/process.md`](../../../docs/development/process.md#팀장-안내-문장-기준) to every team-lead-facing main update and work-item reply. Lead with the actual feature name and plain Korean; keep internal IDs and English terms only as one-time supporting details when accuracy needs them. Never open with a glossary. A status update should naturally cover what is being made, what the team lead can see and what is blocked, omitting empty parts. Answer a question's meaning in the first sentence.
+
 ## Completion
 
-In a work-item task, lead with the actual changed tree, behavior/play path, verification and work-report/work-item link, then the final worktree commit hash. In the main task, keep only the work-item ID, title, task link, status, stop condition and integration result before starting the next item in a new Codex task.
+In a work-item task, use this team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash. In the main task, translate its compact internal state into plain Korean in this order: 무엇을 만들고 있음; 무엇을 볼 수 있음; 무엇이 막힘. IDs, links and integration hashes remain supporting evidence, not the lead sentence.

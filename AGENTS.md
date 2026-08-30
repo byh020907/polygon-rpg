@@ -18,14 +18,7 @@
 
 ## Engineering References
 
-다음 두 로컬 저장소를 공동 초기 **Engineering Exemplars**로 사용한다.
-
-- `C:/projects/ball-fight-simulator`
-- `C:/projects/baeseongjin`
-
-Reference의 directory tree나 class 이름을 template처럼 복제하지 않는다. 실제 코드, caller, test와 문서에서 선택의 맥락과 해결하려는 문제를 추론하고 Polygon RPG의 요구사항에 맞게 적용한다. Reference의 기능, Domain Model, Gameplay Rule, 화면, asset, balance, project-specific workaround와 불필요한 abstraction은 기본적으로 계승하지 않는다.
-
-Engineering Decision의 근거 우선순위는 다음과 같다. 이 순위는 아래의 전체 Instruction Precedence를 대체하지 않고, 허용된 Engineering 선택지 사이에서 증거를 평가할 때 적용한다.
+공동 초기 Exemplars는 `C:/projects/ball-fight-simulator`와 `C:/projects/baeseongjin`이다. 구조를 복제하지 않고 [§8](#8-reference-guided-engineering-policy)에 따라 필요한 판단만 적용한다. 허용된 Engineering 선택지의 근거 우선순위는 다음과 같다.
 
 1. Explicit User Instruction
 2. Established and verified Current Repository conventions
@@ -137,6 +130,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `PROCESS-DEV-TEAM-LOOP`   | 메인 task는 roadmap·queue·commit integration만 소유하고, 각 work item은 별도 사용자 소유 Codex task와 기본 managed worktree에서 구현·직접 feedback·final commit을 끝낸 뒤 새 task로 이어진다.     | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work-item task의 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 직접 feedback을 끝까지 소유하고, task 내부 subagent 결과를 재평가해 반복 feedback을 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다.                 | `docs/development/process.md`              |
+| `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능명·쉬운 한국어를 먼저 쓰고, 필요한 내부 ID·영문은 괄호에 한 번만 보조한다.                                                                                                        | `docs/development/process.md`, skill       |
 | `ANIM-TARGET-IK`          | 전투 모션은 관절 회전 keyframe이 아니라 Effector Target Pose와 IK로 계산한다.                                                                                                                     | `docs/animation-system.md`, 실제 solver    |
 | `INPUT-ADAPTERS`          | 키보드와 모바일 입력은 adapter에서 공통 intent snapshot으로 통합한다.                                                                                                                             | `docs/input-system.md`, 실제 adapters      |
 | `MAP-ROOM-PORTAL-TARGET`  | 월드는 Region 안의 독립 Room/Chunk를 Portal로 연결하고 카메라 이동으로 깊이감을 표현한다. 현재 Depth Lane runtime은 확장하지 않고 교체한다.                                                       | `docs/development/roadmap.md`, 사용자 결정 |
@@ -335,23 +329,14 @@ Next Step:
 - 레퍼런스와 이 저장소의 Canonical Rule이 충돌하면 **Conflict Resolution Control**을 적용한다.
 - 작업 결과에 어떤 레퍼런스를 어떻게 반영했는지 기록한다.
 
-### Reference-Guided Workflow
-
-Engineering 변경은 필요한 범위에서 다음 순서를 따른다.
-
-1. 현재 변경의 Engineering 질문과 책임 경계를 한 문장으로 고정한다.
-2. Current Repository의 관련 구현, caller, test와 문서에서 established convention을 확인한다.
-3. `docs/reference-repositories.md`가 지정한 두 Reference의 대응 구현, caller, test와 문서만 선택적으로 읽는다.
-4. 각 선택이 해결하는 문제, 제약, dependency/state ownership과 trade-off를 추론한다.
-5. `직접 재사용`, `Polygon RPG에 맞게 수정`, `원칙만 차용`, `적용하지 않음`으로 채택 결정을 분류한다.
-6. 현재 Domain에 필요한 최소 구조를 구현하고 변경 위험에 비례해 검증한다.
-7. 결과 보고에 사용한 Reference evidence, 채택·비채택 이유와 Current Repository에서의 검증 결과를 남긴다.
+변경 질문 고정 → 현재 구현·caller·test 확인 → 대응 Reference 조사 → 문제·제약·dependency/state trade-off 추론 → 채택 분류 → 최소 구현·검증 → 근거와 채택 이유 보고 순으로 수행한다.
 
 Reference와 다른 현재 구조를 단지 차이가 있다는 이유로 되돌리지 않는다. 일회성 편의나 검증되지 않은 차이도 established convention으로 승격하지 않는다. 이 저장소의 convention을 다른 프로젝트의 새로운 Engineering Reference로 promotion하는 결정은 사용자만 할 수 있으며, AI Agent는 Golden Reference를 자동 선택하거나 승격하지 않는다.
 
 ## 9. Implementation Guardrails
 
 - 기존 동작과 사용자의 변경을 보존한다.
+- 팀장에게는 기능명·쉬운 한국어를 먼저 쓰고 질문의 뜻부터 답한다. 진행 보고는 `만드는 것 → 볼 수 있는 것 → 막힌 것` 순서로 짧게 쓴다.
 - 작은 실행 가능 수직 단위로 구현하고 각 단계에서 브라우저 실행 상태를 유지한다.
 - 기능 목록이 아니라 처음부터 끝까지 플레이 가능한 사용자 시나리오를 하나의 개발·피드백 단위로 사용한다.
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.

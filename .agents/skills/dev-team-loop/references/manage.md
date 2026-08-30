@@ -55,3 +55,5 @@ Do not integrate an item waiting for direct team-lead feedback, a blocking choic
 ## Main Context Contract
 
 Keep only: work-item ID, title, task link, status, stop condition and integration result. Implementation details, product interview, quality tuning, changed tree, artifact evidence and feedback stay in the user-owned work-item task.
+
+This is the internal memory shape, not the reply template. Team-lead-facing updates follow the canonical plain-Korean rule and lead with the actual feature: what is being made, what can be seen and what is blocked. Translate integration to `메인 반영`, feedback to `구현 결과에 대한 의견`, and omit internal role names. Add IDs, hashes and links only where they help the team lead act or verify.

@@ -11,6 +11,8 @@ Cancellation is terminal for one exact work item. Reopening creates a new item a
 5. Mark the main work-item document `cancelled` with that evidence and a Korean scoped commit; push main.
 6. Do not cherry-pick partial implementation. Do not manually delete the managed worktree. Archive the task only after durable cancellation evidence exists and continued recovery is unnecessary.
 
+Report the outcome to the team lead in plain Korean: what work stopped, what remains visible or recoverable and whether anything is blocked. Keep the item ID, last commit and folder terminology as supporting evidence only when needed.
+
 If the task cannot be reached, preserve its worktree and record `blocked` until ownership is proven. Never guess-clean a worktree.
 
 ## Work-Item Task

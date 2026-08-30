@@ -34,7 +34,7 @@ For product feel, visuals, new features or `review: team-lead`:
 
 1. Prepare the best available local/mobile playable path in this worktree.
 2. Update the work-item result and any intent-first report with actual candidate evidence.
-3. Present the actual changed tree, behavior/play path, verification boundary, report/work-item link, rubric level and remaining bottleneck in this task.
+3. Present 실제 변경 파일, 새 동작 또는 플레이 결과, 검증 범위, 업무 결과 링크, 품질 수준과 남은 문제 in plain Korean. Apply the canonical team-lead wording rule; do not expose internal terms without explanation.
 4. Wait here for team-lead feedback. The team lead opens this sidebar task and replies directly; the main coordinator does not relay it.
 5. Apply feedback in this same task/worktree and repeat evaluation until accepted or blocked.
 
@@ -47,6 +47,6 @@ Do not create a final commit while required feedback or implementation remains.
 3. Run affected syntax/lint/format checks, `git diff --check`, the actual user path and independent verification appropriate to the change.
 4. Inspect and stage only item-owned paths. Create a scoped commit in this worktree with a concise Korean message. Do not push, merge, rebase, update main roadmap state or start another work item.
 5. Confirm the final commit includes the intended changed tree and that the worktree is clean.
-6. Finish with this exact evidence order: actual changed tree; behavior/play path; verification; report/work-item link; final worktree commit hash.
+6. Finish with this exact team-lead-facing order: 실제 변경 파일; 새 동작 또는 플레이 결과; 검증; 업무 결과 링크; final commit hash.
 
 The final hash is returned by this task, then verified and integrated by the main coordinator. It is not self-recorded inside the same commit.

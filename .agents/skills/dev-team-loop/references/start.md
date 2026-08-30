@@ -25,4 +25,4 @@ Never create a work item whose content is the skill invocation or “continue th
 
 ## Main Reply
 
-Render only the current work-item ID/title, clickable task link, lifecycle status, stop condition and integration result. Do not copy the work-item task's changed tree, tuning logs or interview into main context; the team lead reviews those in the task itself.
+Translate the compact internal state into plain Korean in this order: `무엇을 만들고 있음`, `무엇을 볼 수 있음`, `무엇이 막힘`. Use the actual feature name before any milestone ID, describe feedback as `구현 결과에 대한 의견`, and describe integration as `메인 반영`. Keep the work-item ID, clickable task link, lifecycle status, stop condition and integration result only as supporting evidence. Do not copy the work-item task's changed tree, tuning logs or interview into main context; the team lead reviews those in the task itself.

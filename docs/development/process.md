@@ -123,6 +123,30 @@ $dev-team-loop
 - 코드 식별자, 경로, 명령, work-item ID, branch, hash와 외부 issue 제목은 정확성을 위해 원문을 보존할 수 있다.
 - 과거 이력을 이 규칙만으로 rewrite하거나 amend하지 않는다.
 
+## 팀장 안내 문장 기준
+
+메인 대화의 진행 보고와 각 업무 대화의 팀장-facing 답변에는 `COMM-TEAMLEAD-PLAIN-KO`를 적용한다. 내부 Git 문서와 agent 간 기술 계약은 정확성을 위해 기존 전문 용어와 상태값을 유지할 수 있다.
+
+- 실제 기능명과 쉬운 한국어를 먼저 쓴다. `M2 feedback`처럼 내부 ID와 영어 용어만 조합하지 않는다.
+- 내부 ID, commit hash, 파일 경로와 명령은 정확성에 필요할 때만 한국어 설명 뒤의 보조 정보로 둔다. 같은 내부 용어를 반복해서 덧붙이지 않는다.
+- 처음부터 내부 용어 목록을 팀장에게 보여 주지 않는다. 현재 상황에 필요한 뜻만 문장 안에서 자연스럽게 설명한다.
+- 질문을 받으면 첫 문장으로 그 뜻을 답하고, 뒤에 필요한 상태나 선택지를 붙인다.
+- 진행 보고는 `무엇을 만들고 있음 → 무엇을 볼 수 있음 → 무엇이 막힘` 순서로 짧고 구체적으로 쓴다. 해당 내용이 없으면 억지로 항목을 만들지 않는다.
+
+다음 치환은 팀장에게 보이는 문장을 작성할 때 쓰는 내부 기준이며, 이 표 자체를 먼저 노출하지 않는다.
+
+| 내부 표현                | 팀장에게 보이는 표현                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| `M2` 같은 milestone ID   | `학원촌과 훈련장을 오가는 기능`처럼 실제 기능명. 필요하면 처음 한 번만 `(M2)`를 붙인다. |
+| `feedback`               | `구현 결과에 대한 의견`                                                                 |
+| `candidate`              | `현재 구현 결과`                                                                        |
+| `gate`                   | `완료 조건`                                                                             |
+| `artifact`               | 문맥에 따라 `실행 화면` 또는 `플레이 결과`                                              |
+| `integration`            | `메인 반영`                                                                             |
+| `work item`              | `업무`                                                                                  |
+| `root agent`, `Director` | `업무 담당 대화` 또는 문맥상 생략                                                       |
+| `managed worktree`       | 팀장에게 폴더 경로를 설명해야 할 때만 `격리된 작업 폴더`                                |
+
 ## Work Item 상태
 
 ```text
@@ -169,23 +193,23 @@ work-item task 시작
 - 사용자 요청 없는 영구 test·fixture·script를 추가하지 않는다.
 - 적용 품질 축에 0 또는 1이 남으면 feedback candidate나 final commit으로 제출하지 않는다.
 
-## Direct Feedback와 자동 통합
+## 팀장 의견과 자동 메인 반영
 
-조작감·타격감·Graphics·Effect, 새 기능·제품 방향 또는 `review: team-lead` item은 work-item task에서 팀장의 직접 feedback을 거친다. Task는 actual changed tree, 플레이 경로, 검증, report/work-item link, rubric과 남은 병목을 보여준다.
+조작감·타격감·Graphics·Effect, 새 기능·제품 방향 또는 `review: team-lead` item은 업무 담당 대화에서 팀장의 직접 의견을 받는다. 팀장에게는 실제 변경 파일, 플레이 경로, 검증, 업무 결과 링크, 품질 수준과 남은 문제를 쉬운 한국어로 보여 준다.
 
 명확한 작은 버그, 문서 정합과 외부 동작을 바꾸지 않는 안전한 내부 수정은 `review: auto`로 task가 검증·commit까지 완료할 수 있다. 제품 결과가 달라지면 task가 `review: team-lead`로 승격하고 직접 feedback을 기다린다.
 
 메인은 두 경우 모두 final worktree commit을 독립적으로 확인한 뒤에만 통합한다.
 
-## 완료 handoff와 업무보고
+## 완료 결과 전달과 업무보고
 
-Work-item task의 final 응답 순서는 다음과 같다.
+업무 담당 대화의 최종 답변 순서는 다음과 같다.
 
-1. actual changed tree
-2. 동작·플레이 경로
-3. 실행한 검증과 독립 확인 경계
-4. 업무보고 또는 work-item 결과 링크
-5. final worktree commit hash
+1. 실제 변경 파일
+2. 새 동작 또는 볼 수 있는 플레이 결과
+3. 실행한 검증과 확인하지 못한 범위
+4. 업무보고 또는 업무 결과 링크
+5. 최종 commit hash
 
 - 플레이 가능한 수직 단위나 의미 있는 milestone은 `docs/development/reports/WI-...-<slug>.md`를 만든다.
 - 작은 bug·문서 정합·maintenance는 work item의 `결과`가 업무보고다.
@@ -222,7 +246,7 @@ Work-item task의 final 응답 순서는 다음과 같다.
 
 같은 task/worktree를 우선 복구한다. 원본이 존재하거나 writer가 남아 있으면 replacement task를 만들지 않는다. 원본 소실과 writer 부재가 증명된 경우에만 같은 ID의 recovery task를 만들고 work item에 사건을 기록한다.
 
-## 메인 context 계약
+## 메인 내부 상태 계약
 
 메인에는 다음만 남긴다.
 
@@ -234,3 +258,11 @@ Work-item task의 final 응답 순서는 다음과 같다.
 - `integration result`
 
 Changed tree, artifact, 구현 로그, 품질 tuning, blocking 질문의 내용과 팀장 feedback은 work-item task에 둔다.
+
+위 키는 내부 상태 계약이다. 팀장에게 메인 진행 상황을 보여 줄 때는 ID나 상태값만 나열하지 않고 다음 순서로 자연스럽게 번역한다.
+
+1. `무엇을 만들고 있음`: 실제 기능명과 현재 단계
+2. `무엇을 볼 수 있음`: 열어 볼 업무 대화나 이미 메인에 반영된 결과
+3. `무엇이 막힘`: 팀장 의견, 선택 또는 외부 문제를 기다리는 경우에만 설명
+
+업무 ID, 대화 링크와 메인 반영 commit은 필요한 문장 뒤에 정확성 보조 정보로 붙인다.

@@ -30,4 +30,4 @@ Include:
 
 ## Main Lifecycle Update
 
-Return only the work-item ID/title, task link, queued/started status, stop condition and integration result if any. Do not copy internal planning or candidate evidence into main. Registration is followed by compact task observation until a defined stop condition.
+Keep only the work-item ID/title, task link, queued/started status, stop condition and integration result internally. For the team lead, say in plain Korean what feature is being made, which task can be opened and whether anything is blocked. Put the ID and link after that explanation when useful. Do not copy internal planning or candidate evidence into main. Registration is followed by compact task observation until a defined stop condition.
