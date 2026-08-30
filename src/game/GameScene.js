@@ -747,6 +747,56 @@ function createRetaliationAuraItems(position, seconds, idPrefix, renderOrder) {
   ];
 }
 
+function createPlayerHitFeedbackItems(event, renderOrder) {
+  if (!event?.position || event.target !== 'player') return [];
+  const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
+  const opacity = 1 - progress;
+  const center = event.position;
+  const strength = Math.max(0.8, event.strength);
+  const radius = lerp(7 + strength * 2, 20 + strength * 5, smoothStep(progress));
+  const direction = event.direction || 1;
+  const sparkAngles = [-1.05, -0.62, -0.2, 0.2, 0.62, 1.05];
+  const items = [
+    Object.freeze({
+      ...polygon(
+        'player-hit-ring',
+        regularPolygon(radius, radius, 10, Math.PI / 10),
+        center,
+        '#fff0d2',
+        { stroke: '#e05252', lineWidth: 2.5, opacity: opacity * 0.64 },
+      ),
+      renderOrder,
+      order: 120,
+    }),
+  ];
+  items.push(
+    ...sparkAngles.map((angle, index) => {
+      const sparkAngle = direction < 0 ? Math.PI - angle : angle;
+      const inner = lerp(3, 9, progress);
+      const outer = lerp(12 + strength * 2, 28 + strength * 5, progress);
+      return Object.freeze({
+        ...limbSegment(
+          `player-hit-spark-${index}`,
+          {
+            x: center.x + Math.cos(sparkAngle) * inner,
+            y: center.y + Math.sin(sparkAngle) * inner,
+          },
+          {
+            x: center.x + Math.cos(sparkAngle) * outer,
+            y: center.y + Math.sin(sparkAngle) * outer,
+          },
+          3.5,
+          index % 2 === 0 ? '#fff0d2' : '#f06a5f',
+          { opacity },
+        ),
+        renderOrder,
+        order: 121 + index,
+      });
+    }),
+  );
+  return items;
+}
+
 function createEvadeFeedbackItems(position, event, renderOrder) {
   if (!event) return [];
   const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
@@ -814,9 +864,9 @@ function createPunishFeedbackItems(position, event, renderOrder) {
   });
 }
 
-function latestCombatEvent(events, type) {
+function latestCombatEvent(events, type, predicate = () => true) {
   for (let index = events.length - 1; index >= 0; index -= 1) {
-    if (events[index].type === type) return events[index];
+    if (events[index].type === type && predicate(events[index])) return events[index];
   }
   return null;
 }
@@ -2039,8 +2089,17 @@ export class GameScene extends SceneNode {
       characterRenderOrder - 0.005,
     );
     const combatEvents = this.combatEvents.snapshot();
+    const playerHitEvent = latestCombatEvent(
+      combatEvents,
+      COMBAT_EVENT_TYPE.HIT,
+      (event) => event.target === 'player',
+    );
     const evadeEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.EVADE);
     const punishEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.PUNISH);
+    const playerHitFeedbackItems = createPlayerHitFeedbackItems(
+      playerHitEvent,
+      characterRenderOrder + 0.03,
+    );
     const evadeFeedbackItems = createEvadeFeedbackItems(
       renderPosition,
       evadeEvent,
@@ -2061,6 +2120,7 @@ export class GameScene extends SceneNode {
         ...characterItems,
         ...playerRetaliationItems,
         ...blockImpactItems,
+        ...playerHitFeedbackItems,
         ...evadeFeedbackItems,
         ...punishFeedbackItems,
       ]
