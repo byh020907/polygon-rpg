@@ -6,7 +6,6 @@ import {
   CombatCommandController,
 } from '../combat/CombatCommandController.js';
 import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
-import { SpinContactConstraint } from '../combat/SpinContactConstraint.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
 import { SceneNode } from '../core/SceneNode.js';
@@ -15,135 +14,16 @@ import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
+import { TRAINING_ENCOUNTER_SCENE } from './training/TrainingEncounterNode.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
 const GRAVITY = 1180;
 const ROLL_DURATION_SECONDS = combatFramesToSeconds(25);
 const ROLL_SPEED = 320;
-const COMBAT_ENEMY_RESET_SECONDS = combatFramesToSeconds(60);
-const MAX_JUGGLE_HITS = 6;
-const MAX_JUGGLE_SECONDS = 3.2;
 const LANDING_RECOVERY_SECONDS = combatFramesToSeconds(8);
-const JUGGLE_GRAVITY_STEP = 0.3;
 
-function enemyAttackProfile({
-  windupFrames,
-  attackFrames,
-  recoveryFrames,
-  contactStartFrame,
-  contactEndFrame,
-  blockstunFrames = 0,
-  ...profile
-}) {
-  if (
-    contactStartFrame < 0 ||
-    contactEndFrame > attackFrames ||
-    contactEndFrame < contactStartFrame
-  ) {
-    throw new RangeError('Enemy contact frame window가 attackFrames 범위를 벗어났습니다.');
-  }
-  return Object.freeze({
-    ...profile,
-    frame: Object.freeze({
-      rate: 60,
-      windupFrames,
-      attackFrames,
-      recoveryFrames,
-      contactStartFrame,
-      contactEndFrame,
-      blockstunFrames,
-    }),
-    windupSeconds: combatFramesToSeconds(windupFrames),
-    attackSeconds: combatFramesToSeconds(attackFrames),
-    recoverySeconds: combatFramesToSeconds(recoveryFrames),
-    contactStart: contactStartFrame / attackFrames,
-    contactEnd: contactEndFrame / attackFrames,
-    blockstunSeconds: combatFramesToSeconds(blockstunFrames),
-  });
-}
-
-const ENEMY_ATTACK_PROFILES = Object.freeze({
-  light: enemyAttackProfile({
-    windupFrames: 14,
-    attackFrames: 10,
-    recoveryFrames: 14,
-    contactStartFrame: 3,
-    contactEndFrame: 8,
-    blockstunFrames: 7,
-    desiredRange: 46,
-    attackRange: 52,
-    verticalRange: 68,
-    contactStart: 0.34,
-    contactEnd: 0.76,
-    damage: 8,
-    guardable: true,
-    knockbackVelocity: 110,
-    knockbackDecayRate: 0.0067,
-    blockStrength: 0.55,
-    weaponLength: 96,
-  }),
-  heavy: enemyAttackProfile({
-    windupFrames: 30,
-    attackFrames: 16,
-    recoveryFrames: 35,
-    contactStartFrame: 8,
-    contactEndFrame: 14,
-    desiredRange: 54,
-    attackRange: 60,
-    verticalRange: 68,
-    contactStart: 0.48,
-    contactEnd: 0.84,
-    damage: 20,
-    guardable: false,
-    knockbackVelocity: 220,
-    knockbackDecayRate: 0.015,
-    blockstunFrames: 0,
-    blockStrength: 1,
-    weaponLength: 110,
-  }),
-  antiAir: enemyAttackProfile({
-    windupFrames: 19,
-    attackFrames: 12,
-    recoveryFrames: 28,
-    contactStartFrame: 5,
-    contactEndFrame: 10,
-    desiredRange: 52,
-    attackRange: 58,
-    verticalRange: 150,
-    contactStart: 0.4,
-    contactEnd: 0.78,
-    damage: 14,
-    guardable: false,
-    knockbackVelocity: 155,
-    knockbackDecayRate: 0.01,
-    weaponLength: 230,
-  }),
-});
-
-function sampleEnemyCombatFrame(enemy) {
-  if (!enemy || !['windup', 'attack', 'recovery'].includes(enemy.aiState)) return null;
-  const profile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
-  const durationFrames =
-    enemy.aiState === 'windup'
-      ? profile.frame.windupFrames
-      : enemy.aiState === 'attack'
-        ? profile.frame.attackFrames
-        : Math.max(1, Math.round(enemy.recoveryDurationSeconds * 60));
-  const durationSeconds = combatFramesToSeconds(durationFrames);
-  const progress = Math.max(0, Math.min(1, 1 - enemy.aiSeconds / durationSeconds));
-  return Object.freeze({
-    rate: 60,
-    phase: enemy.aiState,
-    index: Math.min(durationFrames - 1, Math.max(0, Math.floor(progress * durationFrames + 1e-7))),
-    duration: durationFrames,
-    authored: profile.frame,
-  });
-}
-const ENEMY_HIT_REACTION_RECOVERY_SECONDS = combatFramesToSeconds(11);
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
-const COMBAT_ENEMY_PRESENTATION_SCALE = 0.48;
-const PLAYER_COMBAT_HURT_MARGIN = 28;
 function attackHitProfile(motionId, { startFrame, endFrame, hitPulseFrames, ...profile }) {
   const motionFrame = combatMotionFrameData(motionId);
   if (!motionFrame) throw new Error(`${motionId}에는 CombatFrame data가 필요합니다.`);
@@ -275,31 +155,6 @@ const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
   'sword-blade': 20,
   'sword-shine': 21,
 });
-const COMBAT_ENEMY_NON_HURT_ITEM_IDS = Object.freeze(
-  new Set([
-    'combat-enemy-shadow',
-    'combat-enemy-impact-ring',
-    'combat-enemy-impact-crack',
-    'combat-enemy-retaliation-aura',
-    'combat-enemy-core-glow',
-    'combat-enemy-weapon',
-    'combat-enemy-weapon-glow',
-    'combat-enemy-anti-air-trail',
-    'combat-enemy-health-back',
-    'combat-enemy-health-fill',
-  ]),
-);
-const PLAYER_NON_HURT_ITEM_IDS = Object.freeze(
-  new Set([
-    'shadow',
-    'cape',
-    'scarf-tail',
-    'sword-trail',
-    'sword-hilt',
-    'sword-blade',
-    'sword-shine',
-  ]),
-);
 const SCALED_HEX_COLOR_CACHE = new Map();
 const MAX_SCALED_HEX_COLOR_CACHE_ENTRIES = 512;
 
@@ -337,107 +192,6 @@ function scaleHexColor(color, scale) {
   return result;
 }
 
-function pointToSegmentDistance(pointValue, start, end) {
-  const deltaX = end.x - start.x;
-  const deltaY = end.y - start.y;
-  const lengthSquared = deltaX * deltaX + deltaY * deltaY;
-  const amount =
-    lengthSquared === 0
-      ? 0
-      : Math.max(
-          0,
-          Math.min(
-            1,
-            ((pointValue.x - start.x) * deltaX + (pointValue.y - start.y) * deltaY) / lengthSquared,
-          ),
-        );
-  return Math.hypot(
-    pointValue.x - (start.x + deltaX * amount),
-    pointValue.y - (start.y + deltaY * amount),
-  );
-}
-
-function pointInPolygon(pointValue, polygonPoints) {
-  let inside = false;
-  for (
-    let index = 0, previous = polygonPoints.length - 1;
-    index < polygonPoints.length;
-    previous = index, index += 1
-  ) {
-    const currentPoint = polygonPoints[index];
-    const previousPoint = polygonPoints[previous];
-    const crosses =
-      currentPoint.y > pointValue.y !== previousPoint.y > pointValue.y &&
-      pointValue.x <
-        ((previousPoint.x - currentPoint.x) * (pointValue.y - currentPoint.y)) /
-          (previousPoint.y - currentPoint.y) +
-          currentPoint.x;
-    if (crosses) inside = !inside;
-  }
-  return inside;
-}
-
-function segmentsIntersect(firstStart, firstEnd, secondStart, secondEnd) {
-  const cross = (origin, left, right) =>
-    (left.x - origin.x) * (right.y - origin.y) - (left.y - origin.y) * (right.x - origin.x);
-  const firstSideA = cross(firstStart, firstEnd, secondStart);
-  const firstSideB = cross(firstStart, firstEnd, secondEnd);
-  const secondSideA = cross(secondStart, secondEnd, firstStart);
-  const secondSideB = cross(secondStart, secondEnd, firstEnd);
-  const crossesProperly = firstSideA * firstSideB < 0 && secondSideA * secondSideB < 0;
-  if (crossesProperly) return true;
-  const onSegment = (start, end, pointValue) =>
-    pointValue.x >= Math.min(start.x, end.x) - 0.0001 &&
-    pointValue.x <= Math.max(start.x, end.x) + 0.0001 &&
-    pointValue.y >= Math.min(start.y, end.y) - 0.0001 &&
-    pointValue.y <= Math.max(start.y, end.y) + 0.0001;
-  return (
-    (Math.abs(firstSideA) <= 0.0001 && onSegment(firstStart, firstEnd, secondStart)) ||
-    (Math.abs(firstSideB) <= 0.0001 && onSegment(firstStart, firstEnd, secondEnd)) ||
-    (Math.abs(secondSideA) <= 0.0001 && onSegment(secondStart, secondEnd, firstStart)) ||
-    (Math.abs(secondSideB) <= 0.0001 && onSegment(secondStart, secondEnd, firstEnd))
-  );
-}
-
-function polygonDistance(leftPoints, rightPoints) {
-  if (
-    leftPoints.some((pointValue) => pointInPolygon(pointValue, rightPoints)) ||
-    rightPoints.some((pointValue) => pointInPolygon(pointValue, leftPoints))
-  )
-    return 0;
-  for (let leftIndex = 0; leftIndex < leftPoints.length; leftIndex += 1) {
-    const leftStart = leftPoints[leftIndex];
-    const leftEnd = leftPoints[(leftIndex + 1) % leftPoints.length];
-    for (let rightIndex = 0; rightIndex < rightPoints.length; rightIndex += 1) {
-      if (
-        segmentsIntersect(
-          leftStart,
-          leftEnd,
-          rightPoints[rightIndex],
-          rightPoints[(rightIndex + 1) % rightPoints.length],
-        )
-      )
-        return 0;
-    }
-  }
-  let minimum = Infinity;
-  for (let leftIndex = 0; leftIndex < leftPoints.length; leftIndex += 1) {
-    const leftStart = leftPoints[leftIndex];
-    const leftEnd = leftPoints[(leftIndex + 1) % leftPoints.length];
-    for (const rightPoint of rightPoints) {
-      minimum = Math.min(minimum, pointToSegmentDistance(rightPoint, leftStart, leftEnd));
-    }
-  }
-  for (let rightIndex = 0; rightIndex < rightPoints.length; rightIndex += 1) {
-    const rightStart = rightPoints[rightIndex];
-    const rightEnd = rightPoints[(rightIndex + 1) % rightPoints.length];
-    for (const leftPoint of leftPoints) {
-      minimum = Math.min(minimum, pointToSegmentDistance(leftPoint, rightStart, rightEnd));
-    }
-  }
-  return minimum;
-}
-
 function convexHull(points) {
   const unique = [
     ...new Map(
@@ -460,35 +214,6 @@ function convexHull(points) {
     upper.push(pointValue);
   }
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
-}
-
-function sampleCombatEnemyWeaponLength(enemy) {
-  const attackProfile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
-  if (enemy.attackKind !== 'antiAir') return attackProfile.weaponLength;
-  if (enemy.aiState === 'hitstun') return enemy.hitReactionWeaponLength;
-  if (enemy.aiState === 'windup') {
-    const windupProgress = 1 - enemy.aiSeconds / attackProfile.windupSeconds;
-    return lerp(
-      ENEMY_ATTACK_PROFILES.light.weaponLength,
-      attackProfile.weaponLength,
-      smoothStep(windupProgress),
-    );
-  }
-  if (enemy.aiState === 'attack') return attackProfile.weaponLength;
-  if (enemy.aiState === 'recovery') {
-    const recoveryProgress =
-      enemy.recoveryDurationSeconds > 0 ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds : 1;
-    const startLength =
-      enemy.recoverySource === 'hitReaction'
-        ? enemy.hitReactionWeaponLength
-        : attackProfile.weaponLength;
-    return lerp(
-      startLength,
-      ENEMY_ATTACK_PROFILES.light.weaponLength,
-      smoothStep(recoveryProgress),
-    );
-  }
-  return ENEMY_ATTACK_PROFILES.light.weaponLength;
 }
 
 function lanePresentation(lane) {
@@ -566,15 +291,6 @@ function regularPolygon(radiusX, radiusY, sides, angleOffset = 0) {
     const angle = angleOffset + (index / sides) * Math.PI * 2;
     return { x: Math.cos(angle) * radiusX, y: Math.sin(angle) * radiusY };
   });
-}
-
-function rectangle(x, y, width, height) {
-  return [
-    { x, y },
-    { x: x + width, y },
-    { x: x + width, y: y + height },
-    { x, y: y + height },
-  ];
 }
 
 function createCharacterItems(position, facing, targetPose, bonePose, renderScale, renderOrder) {
@@ -1042,256 +758,6 @@ function latestCombatEvent(events, type) {
   return null;
 }
 
-function createCombatEnemyItems(enemy, renderOrder) {
-  if (!enemy) return [];
-  const { x, y } = enemy.position;
-  const flash = enemy.hitFlashSeconds > 0;
-  const bodyFill = flash
-    ? '#f4e3ce'
-    : enemy.aiState === 'windup'
-      ? '#e28b45'
-      : enemy.aiState === 'guard'
-        ? '#4f7f9d'
-        : '#a74651';
-  const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
-  const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
-  const presentationScale = COMBAT_ENEMY_PRESENTATION_SCALE;
-  const attackProfile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
-  const attackDuration = attackProfile.attackSeconds;
-  const attackProgress = enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackDuration : 0;
-  const recoveryDuration = enemy.recoveryDurationSeconds;
-  const recoveryProgress =
-    enemy.aiState === 'recovery' && recoveryDuration > 0
-      ? 1 - enemy.aiSeconds / recoveryDuration
-      : 0;
-  const weaponLength = sampleCombatEnemyWeaponLength(enemy);
-  const weaponAngle =
-    enemy.aiState === 'hitstun'
-      ? enemy.hitReactionWeaponAngle
-      : enemy.aiState === 'windup'
-        ? enemy.attackKind === 'heavy'
-          ? -1.8
-          : enemy.attackKind === 'antiAir'
-            ? 0.1
-            : -1.2
-        : enemy.aiState === 'attack'
-          ? enemy.attackKind === 'antiAir'
-            ? 0.1 - attackProgress * 3
-            : enemy.attackKind === 'heavy'
-              ? -1.8 + attackProgress * 2.4
-              : -1.2 + attackProgress * 1.8
-          : enemy.aiState === 'recovery'
-            ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
-            : -0.65;
-  const renderFacing = ['windup', 'attack', 'recovery'].includes(enemy.aiState)
-    ? enemy.attackFacing
-    : enemy.facing;
-  const poseRotation =
-    enemy.aiState === 'recovery'
-      ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
-      : enemy.rotation +
-        (enemy.aiState === 'windup'
-          ? -0.14
-          : enemy.aiState === 'attack'
-            ? -0.14 + attackProgress * 0.42
-            : 0);
-  const weaponHand = { x: x + 8, y: y - 56 };
-  const weaponShoulder = { x: x - 8, y: y - 59 };
-  const weaponElbow = {
-    x: lerp(weaponShoulder.x, weaponHand.x, 0.5) + Math.sin(weaponAngle) * 8,
-    y: lerp(weaponShoulder.y, weaponHand.y, 0.5) - Math.cos(weaponAngle) * 8,
-  };
-  const antiAirGlowOpacity =
-    enemy.attackKind === 'antiAir'
-      ? Math.max(
-          0,
-          Math.min(0.42, ((weaponLength - ENEMY_ATTACK_PROFILES.light.weaponLength) / 134) * 0.42),
-        )
-      : 0;
-  const items = [
-    polygon(
-      'combat-enemy-shadow',
-      regularPolygon(25, 7, 10),
-      { x, y: enemy.groundY + 2 },
-      '#05070b',
-      { opacity: 0.52 },
-    ),
-    ...(enemy.groundImpactSeconds > 0
-      ? [
-          polygon(
-            'combat-enemy-impact-ring',
-            regularPolygon(70, 14, 16),
-            { x, y: enemy.groundY + 2 },
-            '#bdeee2',
-            { opacity: enemy.groundImpactSeconds / 0.22 },
-          ),
-          polygon(
-            'combat-enemy-impact-crack',
-            [
-              { x: -78, y: 0 },
-              { x: -25, y: -7 },
-              { x: 0, y: 2 },
-              { x: 30, y: -6 },
-              { x: 82, y: 0 },
-              { x: 28, y: 6 },
-              { x: 0, y: 3 },
-              { x: -24, y: 5 },
-            ],
-            { x, y: enemy.groundY + 1 },
-            '#76cbbf',
-            { opacity: enemy.groundImpactSeconds / 0.22 },
-          ),
-        ]
-      : []),
-    ...(enemy.retaliationInvulnerableSeconds > 0
-      ? [
-          polygon(
-            'combat-enemy-retaliation-aura',
-            regularPolygon(33, 42, 12, Math.PI / 12),
-            { x, y: y - 44 },
-            '#76eadc',
-            { stroke: '#effffb', lineWidth: 2, opacity: 0.14 },
-          ),
-        ]
-      : []),
-    limbSegment('combat-enemy-back-leg', { x: x - 7, y: y - 29 }, { x: x - 9, y }, 8, '#552c3a', {
-      stroke: '#251824',
-      lineWidth: 1.5,
-    }),
-    limbSegment('combat-enemy-front-leg', { x: x + 7, y: y - 29 }, { x: x + 10, y }, 8, '#783342', {
-      stroke: '#251824',
-      lineWidth: 1.5,
-    }),
-    polygon(
-      'combat-enemy-body',
-      [
-        { x: -17, y: -36 },
-        { x: 16, y: -38 },
-        { x: 21, y: 8 },
-        { x: 11, y: 29 },
-        { x: -13, y: 28 },
-        { x: -21, y: 6 },
-      ],
-      { x, y: y - 31 },
-      bodyFill,
-      { stroke: '#321c29', lineWidth: 2 },
-    ),
-    polygon('combat-enemy-head', regularPolygon(15, 18, 8), { x, y: y - 79 }, '#c77865', {
-      stroke: '#321c29',
-      lineWidth: 2,
-    }),
-    polygon(
-      'combat-enemy-core-glow',
-      regularPolygon(20, 20, 10, Math.PI / 10),
-      { x, y: y - 42 },
-      '#46bfb5',
-      { opacity: flash ? 0.5 : 0.22 },
-    ),
-    polygon(
-      'combat-enemy-core',
-      regularPolygon(15, 15, 6, Math.PI / 6),
-      { x, y: y - 42 },
-      flash ? '#ffffff' : '#56e0cf',
-      { stroke: '#5d342e', lineWidth: 1.5 },
-    ),
-    polygon(
-      'combat-enemy-weapon',
-      [
-        { x: 0, y: -3 },
-        { x: weaponLength - 16, y: -3 },
-        { x: weaponLength, y: 0 },
-        { x: weaponLength - 16, y: 4 },
-        { x: 0, y: 4 },
-      ],
-      { ...weaponHand, rotation: weaponAngle },
-      '#dce5e6',
-      { stroke: '#37434b', lineWidth: 2 },
-    ),
-    ...(antiAirGlowOpacity > 0
-      ? [
-          polygon(
-            'combat-enemy-weapon-glow',
-            [
-              { x: 0, y: -7 },
-              { x: weaponLength - 12, y: -7 },
-              { x: weaponLength + 5, y: 0 },
-              { x: weaponLength - 12, y: 8 },
-              { x: 0, y: 8 },
-            ],
-            { ...weaponHand, rotation: weaponAngle },
-            '#7ee8ef',
-            { opacity: antiAirGlowOpacity },
-          ),
-          ...(enemy.aiState === 'attack'
-            ? [
-                polygon(
-                  'combat-enemy-anti-air-trail',
-                  arcRibbonPoints(weaponHand, weaponAngle - 0.48, weaponAngle, 68, weaponLength, 8),
-                  { x: 0, y: 0 },
-                  '#91f1ed',
-                  { opacity: antiAirGlowOpacity * 0.72 },
-                ),
-              ]
-            : []),
-        ]
-      : []),
-    limbSegment('combat-enemy-upper-weapon-arm', weaponShoulder, weaponElbow, 11, '#9c514d', {
-      stroke: '#321c29',
-      lineWidth: 2,
-    }),
-    limbSegment('combat-enemy-lower-weapon-arm', weaponElbow, weaponHand, 10, '#bd6c5f', {
-      stroke: '#321c29',
-      lineWidth: 2,
-    }),
-    polygon('combat-enemy-health-back', rectangle(-34, -3, 68, 6), { x, y: y - 112 }, '#201822', {
-      stroke: '#09070b',
-      lineWidth: 1,
-    }),
-    polygon(
-      'combat-enemy-health-fill',
-      rectangle(-32, -1, 64 * healthRatio, 2),
-      { x, y: y - 112 },
-      healthRatio > 0.3 ? '#df6571' : '#f0c96b',
-    ),
-  ];
-
-  return items.map((item, index) =>
-    Object.freeze({
-      ...item,
-      opacity: (item.opacity ?? 1) * opacity,
-      lineWidth: (item.lineWidth ?? 1) * presentationScale,
-      points: Object.freeze(
-        item.points.map((point) => {
-          const rotatesWithBody =
-            item.id !== 'combat-enemy-shadow' && !item.id.startsWith('combat-enemy-health');
-          const centerY = y - 50;
-          const relativeX = point.x - x;
-          const relativeY = point.y - centerY;
-          const rotatedX = rotatesWithBody
-            ? x + relativeX * Math.cos(poseRotation) - relativeY * Math.sin(poseRotation)
-            : point.x;
-          const rotatedY = rotatesWithBody
-            ? centerY + relativeX * Math.sin(poseRotation) + relativeY * Math.cos(poseRotation)
-            : point.y;
-          const facedX = renderFacing < 0 ? x * 2 - rotatedX : rotatedX;
-          const embeddedOffset =
-            enemy.groundBounceDelaySeconds > 0 &&
-            item.id !== 'combat-enemy-shadow' &&
-            !item.id.startsWith('combat-enemy-health')
-              ? 8
-              : 0;
-          return Object.freeze({
-            x: x + (facedX - x) * presentationScale,
-            y: y + (rotatedY - y) * presentationScale + embeddedOffset,
-          });
-        }),
-      ),
-      renderOrder,
-      order: item.order ?? index,
-    }),
-  );
-}
-
 function timePhaseForHour(hour) {
   return hour >= 6 && hour < 18 ? 'day' : 'night';
 }
@@ -1306,14 +772,12 @@ export class GameScene extends SceneNode {
     this.combatCommands = new CombatCommandController();
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
-    this.spinContactConstraint = new SpinContactConstraint({
-      hitPulses: ATTACK_HIT_PROFILES.spin.hitPulses,
-      contactSpacings: ATTACK_HIT_PROFILES.spin.contactSpacings,
-    });
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: { timePhase: 'day', weather: 'clear', storyFlags: {} },
     });
     this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
+    this.trainingEncounterNode = null;
+    this.trainingEncounterConnections = [];
     this.statusNode = this.addChild(new GameStatusNode(this));
     this.playerStatusChanged = this.statusNode.playerStatusChanged;
     this.worldStatusChanged = this.statusNode.worldStatusChanged;
@@ -1323,6 +787,11 @@ export class GameScene extends SceneNode {
   onPhysicsProcess(deltaSeconds, context = {}) {
     if (context.active === false) return;
     this.update(deltaSeconds, context.inputSnapshot ?? {}, context.simulationSettings ?? {});
+  }
+
+  onEnterTree() {
+    if (this.trainingEncounterNode)
+      this.connectTrainingEncounterSignals(this.trainingEncounterNode);
   }
 
   reset() {
@@ -1368,14 +837,8 @@ export class GameScene extends SceneNode {
     this.playerKnockbackVelocityX = 0;
     this.playerKnockbackDecayRate = 0.02;
     this.airHeavyConnectedSequence = 0;
-    this.slamAttackerBouncePending = false;
-    this.combatEnemy = null;
-    this.lastHitMotionSequence = '';
-    this.lastVisualContact = null;
-    this.combatContactSeconds = 0;
     this.playerWeaponContactHistory = [];
     this.playerWeaponContactGeometry = null;
-    this.confirmedComboCycle = 0;
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
     this.laneTransitionPresentation = null;
@@ -1384,8 +847,7 @@ export class GameScene extends SceneNode {
     this.combatCommands.reset();
     this.combatCameraFeedback.reset();
     this.combatEvents.reset();
-    this.spinContactConstraint.reset();
-    this.syncCombatEnemy();
+    this.syncTrainingEncounter({ resetExisting: true });
     this.statusNode.publish({ force: true });
   }
 
@@ -1491,7 +953,7 @@ export class GameScene extends SceneNode {
     this.position = { ...completion.position };
     this.characterLanePresentation = { ...presentation.to };
     this.laneTransitionPresentation = null;
-    this.syncCombatEnemy();
+    this.syncTrainingEncounter();
     return true;
   }
 
@@ -1525,451 +987,103 @@ export class GameScene extends SceneNode {
     return true;
   }
 
-  syncCombatEnemy() {
-    this.slamAttackerBouncePending = false;
-    this.spinContactConstraint.reset();
+  syncTrainingEncounter({ resetExisting = false } = {}) {
     const snapshot = this.mapRuntime.getResolvedSnapshot();
     const entity = snapshot.entities.find((candidate) => candidate.kind === 'combat-test-mob');
+    const activeEncounter = this.trainingEncounterNode;
+
     if (!entity) {
-      this.combatEnemy = null;
-      this.lastHitMotionSequence = '';
-      return;
+      if (activeEncounter) {
+        if (activeEncounter.parent === this) this.removeChild(activeEncounter);
+        activeEncounter.dispose();
+        this.trainingEncounterNode = null;
+      }
+      return null;
     }
 
-    const maxHealth = Number.isFinite(entity.maxHealth) ? Math.max(1, entity.maxHealth) : 100;
-    this.combatEnemy = {
-      id: entity.id,
-      position: {
-        x: entity.position?.x ?? 680,
-        y: entity.position?.y ?? snapshot.lane.groundY,
-      },
+    if (activeEncounter?.entity.id === entity.id) {
+      if (resetExisting) activeEncounter.reset();
+      return activeEncounter;
+    }
+
+    if (activeEncounter) {
+      if (activeEncounter.parent === this) this.removeChild(activeEncounter);
+      activeEncounter.dispose();
+    }
+
+    const encounter = TRAINING_ENCOUNTER_SCENE.instantiate({
+      entity,
       groundY: snapshot.lane.groundY,
-      velocityX: 0,
-      velocityY: 0,
-      rotation: 0,
-      angularVelocity: 0,
-      health: maxHealth,
-      maxHealth,
-      hitFlashSeconds: 0,
-      resetSeconds: 0,
-      juggleHits: 0,
-      juggleSeconds: 0,
-      juggleFloatSeconds: 0,
-      juggleGravityScale: 1,
-      juggleLocked: false,
-      groundBouncePending: false,
-      groundBounceDelaySeconds: 0,
-      groundImpactSeconds: 0,
-      aiState: 'idle',
-      aiSeconds: 0.45,
-      patternIndex: -1,
-      attackConnected: false,
-      hitstunSeconds: 0,
-      attackKind: 'light',
-      facing: -1,
-      attackFacing: -1,
-      recoveryStartAngle: -0.65,
-      recoveryBodyStartRotation: 0,
-      recoveryDurationSeconds: 0.24,
-      recoverySource: 'attack',
-      recoveryAdvanceDeferred: false,
-      recoveryCompletionPending: false,
-      retaliationInvulnerableSeconds: 0,
-      comboCycleHitPending: false,
-      lastReceivedComboCycle: 0,
-      retaliationProtectedComboCycle: 0,
-      retaliationCycleClaimed: false,
-      hitReactionWeaponAngle: -0.65,
-      hitReactionWeaponLength: ENEMY_ATTACK_PROFILES.light.weaponLength,
-    };
-    this.lastHitMotionSequence = '';
-  }
-
-  startCombatEnemyRecovery({
-    source,
-    durationSeconds,
-    weaponStartAngle,
-    bodyStartRotation,
-    deferAdvance = false,
-  }) {
-    const enemy = this.combatEnemy;
-    if (!enemy) return;
-    enemy.aiState = 'recovery';
-    enemy.aiSeconds = durationSeconds;
-    enemy.recoverySource = source;
-    enemy.recoveryDurationSeconds = durationSeconds;
-    enemy.recoveryStartAngle = weaponStartAngle;
-    enemy.recoveryBodyStartRotation = bodyStartRotation;
-    enemy.recoveryAdvanceDeferred = deferAdvance;
-    enemy.recoveryCompletionPending = false;
-  }
-
-  updateCombatEnemy(deltaSeconds) {
-    const enemy = this.combatEnemy;
-    if (!enemy) return;
-
-    enemy.hitFlashSeconds = Math.max(0, enemy.hitFlashSeconds - deltaSeconds);
-    if (enemy.position.y >= enemy.groundY) {
-      enemy.retaliationInvulnerableSeconds = Math.max(
-        0,
-        enemy.retaliationInvulnerableSeconds - deltaSeconds,
-      );
-    }
-    const previousHitstun = enemy.hitstunSeconds;
-    enemy.hitstunSeconds = Math.max(0, enemy.hitstunSeconds - deltaSeconds);
-    if (previousHitstun > 0 && enemy.hitstunSeconds === 0) {
-      this.startCombatEnemyRecovery({
-        source: 'hitReaction',
-        durationSeconds: ENEMY_HIT_REACTION_RECOVERY_SECONDS,
-        weaponStartAngle: enemy.hitReactionWeaponAngle,
-        bodyStartRotation: enemy.rotation,
-        deferAdvance: true,
-      });
-    }
-    enemy.groundImpactSeconds = Math.max(0, enemy.groundImpactSeconds - deltaSeconds);
-    if (enemy.health <= 0) {
-      enemy.resetSeconds = Math.max(0, enemy.resetSeconds - deltaSeconds);
-      if (enemy.resetSeconds <= 0) this.syncCombatEnemy();
-      return;
-    }
-
-    if (enemy.groundBounceDelaySeconds > 0) {
-      enemy.groundBounceDelaySeconds = Math.max(0, enemy.groundBounceDelaySeconds - deltaSeconds);
-      enemy.position.y = enemy.groundY;
-      enemy.velocityY = 0;
-      if (enemy.groundBounceDelaySeconds === 0) {
-        enemy.velocityY = -360;
-        enemy.juggleLocked = false;
-        enemy.juggleFloatSeconds = 0.07;
-        if (this.slamAttackerBouncePending) {
-          this.slamAttackerBouncePending = false;
-          this.position.y = enemy.groundY - CHARACTER_FOOT_OFFSET;
-          this.verticalVelocity = -360;
-          this.isGrounded = false;
-          this.airComboFloatSeconds = 0.07;
-          this.airComboGravityScale = enemy.juggleGravityScale;
-        }
-      }
-      return;
-    }
-    const enemyAirborne = enemy.position.y < enemy.groundY;
-    if (enemyAirborne) {
-      enemy.juggleSeconds += deltaSeconds;
-      if (enemy.juggleSeconds >= MAX_JUGGLE_SECONDS) {
-        enemy.juggleLocked = true;
-        enemy.juggleFloatSeconds = 0;
-        enemy.velocityY = Math.max(enemy.velocityY, 220);
-      }
-    }
-    enemy.juggleFloatSeconds = Math.max(0, enemy.juggleFloatSeconds - deltaSeconds);
-    const gravityMultiplier =
-      enemy.juggleFloatSeconds > 0 ? 0.08 : enemy.juggleLocked ? 2.8 : enemy.juggleGravityScale;
-    enemy.velocityY += GRAVITY * gravityMultiplier * deltaSeconds;
-    enemy.position.x += enemy.velocityX * deltaSeconds;
-    enemy.position.y += enemy.velocityY * deltaSeconds;
-    enemy.velocityX *= Math.pow(0.08, deltaSeconds);
-    enemy.rotation += enemy.angularVelocity * deltaSeconds;
-    enemy.angularVelocity *= Math.pow(0.06, deltaSeconds);
-    if (enemy.position.y >= enemy.groundY) {
-      enemy.position.y = enemy.groundY;
-      enemy.velocityY = 0;
-      if (enemy.groundBouncePending && enemy.juggleHits < MAX_JUGGLE_HITS) {
-        enemy.groundBouncePending = false;
-        enemy.groundBounceDelaySeconds = 0.07;
-        enemy.groundImpactSeconds = 0.22;
-        enemy.rotation = this.facing * 0.42;
-        return;
-      }
-      enemy.juggleHits = 0;
-      enemy.juggleSeconds = 0;
-      enemy.juggleFloatSeconds = 0;
-      enemy.juggleGravityScale = 1;
-      enemy.juggleLocked = false;
-      enemy.rotation = 0;
-      enemy.angularVelocity = 0;
-    }
-    enemy.position.x = Math.max(48, Math.min(912, enemy.position.x));
-    enemy.rotation = Math.max(-0.32, Math.min(0.32, enemy.velocityX / 420));
-  }
-
-  updateCombatEnemyCombat(deltaSeconds) {
-    const enemy = this.combatEnemy;
-    if (
-      !enemy ||
-      enemy.health <= 0 ||
-      enemy.position.y < enemy.groundY ||
-      enemy.juggleLocked ||
-      enemy.hitstunSeconds > 0
-    )
-      return;
-    const distance = this.position.x - enemy.position.x;
-    const absoluteDistance = Math.abs(distance);
-    if (enemy.aiState === 'recovery' && enemy.recoveryAdvanceDeferred) {
-      enemy.recoveryAdvanceDeferred = false;
-      return;
-    }
-    enemy.aiSeconds = Math.max(0, enemy.aiSeconds - deltaSeconds);
-    if (distance !== 0) enemy.facing = Math.sign(distance);
-
-    if (enemy.aiState === 'approach') {
-      enemy.attackKind = !this.isGrounded
-        ? 'antiAir'
-        : enemy.patternIndex % 2 === 0
-          ? 'light'
-          : 'heavy';
-      const attackProfile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
-      const desiredRange = attackProfile.desiredRange;
-      if (absoluteDistance <= desiredRange) {
-        enemy.aiState = 'windup';
-        enemy.attackFacing = enemy.facing;
-        enemy.aiSeconds = attackProfile.windupSeconds;
-        enemy.attackConnected = false;
-      } else {
-        enemy.position.x += Math.sign(distance) * 78 * deltaSeconds;
-      }
-      return;
-    }
-    if (enemy.aiState === 'windup' && enemy.aiSeconds === 0) {
-      enemy.aiState = 'attack';
-      enemy.aiSeconds = ENEMY_ATTACK_PROFILES[enemy.attackKind].attackSeconds;
-      return;
-    }
-    if (enemy.aiState === 'attack') {
-      const attackProfile = ENEMY_ATTACK_PROFILES[enemy.attackKind];
-      const attackDuration = attackProfile.attackSeconds;
-      const attackProgress = 1 - enemy.aiSeconds / attackDuration;
-      const verticalDistance = Math.abs(
-        enemy.position.y - (this.position.y + CHARACTER_FOOT_OFFSET),
-      );
-      const attackRange = attackProfile.attackRange;
-      const visualBroadRange = Math.max(
-        attackRange + 4,
-        attackProfile.weaponLength * COMBAT_ENEMY_PRESENTATION_SCALE + PLAYER_COMBAT_HURT_MARGIN,
-      );
-      const verticalRange = attackProfile.verticalRange;
-      const contactStart = attackProfile.contactStart;
-      const contactEnd = attackProfile.contactEnd;
-      const forwardDistance = distance * enemy.attackFacing;
-      if (
-        !enemy.attackConnected &&
-        attackProgress >= contactStart &&
-        attackProgress <= contactEnd &&
-        forwardDistance >= 0 &&
-        forwardDistance <= visualBroadRange &&
-        verticalDistance <= verticalRange + 4 &&
-        (enemy.attackKind !== 'antiAir' || verticalDistance >= 25)
-      ) {
-        const enemyInFront = -distance * this.facing > 0;
-        const guarding =
-          attackProfile.guardable &&
-          this.isGrounded &&
-          enemyInFront &&
-          this.combatCommands.snapshot().id === 'guard';
-        const visualContact = this.sampleEnemyVisualWeaponContact({ preferShield: guarding });
-        if (!visualContact.contact) return;
-        enemy.attackConnected = true;
-        this.lastVisualContact = Object.freeze({
-          attacker: 'enemy',
-          attackKind: enemy.attackKind,
-          ...visualContact,
-          simulationGap: visualContact.gap,
-        });
-        this.combatContactSeconds = 0.18;
-        const rollProgress = this.rollState
-          ? this.rollState.elapsedSeconds / this.rollState.durationSeconds
-          : null;
-        const rollInvulnerable =
-          rollProgress !== null && rollProgress >= 0.12 && rollProgress <= 0.62;
-        if (rollInvulnerable) {
-          this.combatEvents.emit(COMBAT_EVENT_TYPE.EVADE, {
-            actor: 'player',
-            target: 'enemy',
-            attackId: enemy.attackKind,
-            position: this.position,
-            direction: this.rollState?.direction ?? this.facing,
-            strength: enemy.attackKind === 'heavy' ? 1.4 : 1,
-            durationSeconds: 0.16,
-          });
-          this.combatCameraFeedback.trigger({
-            direction: this.rollState?.direction ?? this.facing,
-            strength: 0.65,
-            durationSeconds: 0.065,
-          });
-        } else if (this.playerInvulnerableSeconds <= 0) {
-          if (guarding) {
-            this.combatEvents.emit(COMBAT_EVENT_TYPE.GUARD, {
-              actor: 'player',
-              target: 'enemy',
-              attackId: enemy.attackKind,
-              position: visualContact.position,
-              direction: Math.sign(distance) || 1,
-              strength: 1 + attackProfile.blockStrength,
-            });
-            enemy.velocityX = -Math.sign(distance) * 90;
-            this.playerBlockImpactSeconds = 0.14;
-            this.playerBlockImpactStrength = attackProfile.blockStrength;
-            this.playerBlockstunSeconds = Math.max(
-              this.playerBlockstunSeconds,
-              attackProfile.blockstunSeconds,
-            );
-            this.playerBlockstunDurationSeconds = attackProfile.blockstunSeconds;
-            this.hitStopSeconds = Math.max(this.hitStopSeconds, 0.04);
-            this.combatCameraFeedback.trigger({
-              direction: Math.sign(distance) || 1,
-              strength: 1 + attackProfile.blockStrength * 1.5,
-              durationSeconds: 0.08,
-            });
-          } else {
-            this.combatEvents.emit(COMBAT_EVENT_TYPE.HIT, {
-              actor: 'enemy',
-              target: 'player',
-              attackId: enemy.attackKind,
-              position: visualContact.position,
-              direction: Math.sign(distance) || 1,
-              strength: 1 + attackProfile.damage * 0.08,
-            });
-            this.playerHealth = Math.max(0, this.playerHealth - attackProfile.damage);
-            this.pendingPlayerKnockbackX = Math.sign(distance) * attackProfile.knockbackVelocity;
-            this.pendingPlayerKnockbackDecayRate = attackProfile.knockbackDecayRate;
-            this.playerHitstunSeconds = 0.22;
-            this.playerRetaliationPending = this.playerHealth > 0;
-            this.playerInvulnerableSeconds = 0.38;
-            this.hitStopSeconds = Math.max(
-              this.hitStopSeconds,
-              enemy.attackKind === 'heavy' ? 0.05 : 0.035,
-            );
-            this.combatCommands.cancelForJump();
-            this.rollState = null;
-            this.combatCameraFeedback.trigger({
-              direction: Math.sign(distance) || 1,
-              strength: 1.6 + attackProfile.damage * 0.12,
-              durationSeconds: enemy.attackKind === 'heavy' ? 0.12 : 0.09,
-            });
-            if (this.playerHealth === 0) this.playerKoSeconds = 1;
-          }
-        }
-      }
-      if (enemy.aiSeconds === 0) {
-        this.startCombatEnemyRecovery({
-          source: 'attack',
-          durationSeconds: attackProfile.recoverySeconds,
-          weaponStartAngle: enemy.attackKind === 'antiAir' ? -2.9 : 0.6,
-          bodyStartRotation: enemy.rotation + 0.28,
-        });
-      }
-      return;
-    }
-    if (enemy.aiState === 'guard' || enemy.aiState === 'evade' || enemy.aiState === 'recovery') {
-      if (enemy.aiState === 'evade') enemy.position.x -= Math.sign(distance) * 110 * deltaSeconds;
-      if (enemy.aiSeconds > 0) return;
-      if (enemy.aiState === 'recovery' && !enemy.recoveryCompletionPending) {
-        enemy.recoveryCompletionPending = true;
-        return;
-      }
-      enemy.aiState = 'idle';
-      enemy.aiSeconds = 0.3;
-      return;
-    }
-    if (enemy.aiSeconds > 0) return;
-    enemy.patternIndex += 1;
-    const playerMotion = this.combatCommands.snapshot().id;
-    if (enemy.retaliationInvulnerableSeconds > 0) {
-      enemy.aiState = 'approach';
-    } else if (!['idle', 'guard'].includes(playerMotion) && absoluteDistance < 130) {
-      enemy.aiState = enemy.patternIndex % 3 === 0 ? 'evade' : 'guard';
-      enemy.aiSeconds = enemy.aiState === 'guard' ? 0.45 : 0.28;
-    } else {
-      enemy.aiState = 'approach';
-    }
-  }
-
-  updateSpinContactConstraint(combatState, deltaSeconds) {
-    const enemy = this.combatEnemy;
-    if (!enemy || enemy.health <= 0) {
-      this.spinContactConstraint.reset();
-      return;
-    }
-    if (combatState.id === 'spin' && this.confirmedComboCycle !== combatState.comboCycle) {
-      this.spinContactConstraint.reset();
-      return;
-    }
-    const result = this.spinContactConstraint.update({
-      motionState: combatState,
-      actorX: this.position.x,
-      targetX: enemy.position.x,
-      facing: this.facing,
-      deltaSeconds,
+      spinContact: {
+        hitPulses: ATTACK_HIT_PROFILES.spin.hitPulses,
+        contactSpacings: ATTACK_HIT_PROFILES.spin.contactSpacings,
+      },
     });
-    enemy.position.x = result.targetX;
-    if (result.active) enemy.velocityX = 0;
-    else if (result.releaseVelocityX !== 0) enemy.velocityX = result.releaseVelocityX;
+    this.trainingEncounterNode = encounter;
+    this.connectTrainingEncounterSignals(encounter);
+    this.addChild(encounter);
+    return encounter;
   }
 
-  finishCombatEnemyComboCycle(combatState) {
-    const enemy = this.combatEnemy;
-    const cycleChanged = combatState.comboCycle !== enemy?.lastReceivedComboCycle;
-    if (
-      !enemy ||
-      !enemy.comboCycleHitPending ||
-      enemy.health <= 0 ||
-      (!cycleChanged && combatState.id !== 'idle')
-    ) {
-      return false;
-    }
-    enemy.comboCycleHitPending = false;
-    enemy.retaliationInvulnerableSeconds = 0.55;
-    enemy.retaliationProtectedComboCycle = cycleChanged ? combatState.comboCycle : 0;
-    enemy.retaliationCycleClaimed = cycleChanged;
-    enemy.hitstunSeconds = 0;
-    this.startCombatEnemyRecovery({
-      source: 'retaliation',
-      durationSeconds: 0.08,
-      weaponStartAngle: enemy.hitReactionWeaponAngle,
-      bodyStartRotation: enemy.rotation,
-    });
-    return true;
-  }
-
-  updateCombatEnemyRetaliationProtection(combatState) {
-    const enemy = this.combatEnemy;
-    if (!enemy) return;
-    if (
-      enemy.retaliationProtectedComboCycle !== 0 &&
-      combatState.id !== 'idle' &&
-      combatState.comboCycle !== enemy.retaliationProtectedComboCycle
-    ) {
-      enemy.retaliationProtectedComboCycle = 0;
-    }
-    if (
-      enemy.retaliationInvulnerableSeconds > 0 &&
-      enemy.retaliationProtectedComboCycle === 0 &&
-      !enemy.retaliationCycleClaimed &&
-      combatState.id !== 'idle'
-    ) {
-      enemy.retaliationProtectedComboCycle = combatState.comboCycle;
-      enemy.retaliationCycleClaimed = true;
-    }
-    if (enemy.retaliationInvulnerableSeconds === 0 && enemy.retaliationProtectedComboCycle === 0)
-      enemy.retaliationCycleClaimed = false;
-  }
-
-  sampleVisualWeaponContact(combatState) {
-    const enemy = this.combatEnemy;
-    if (!enemy) return Object.freeze({ contact: false, gap: Infinity });
-    if (this.playerWeaponContactGeometry?.sequence !== combatState.sequence) {
-      this.updatePlayerWeaponContactGeometry(combatState);
-    }
-    const geometry = this.playerWeaponContactGeometry;
-    const weaponItems = geometry
-      ? [
-          { id: 'sword-blade', points: geometry.bladePoints },
-          { id: 'sword-trail', points: geometry.sweepPoints },
-        ]
-      : [];
-    const hurtItems = createCombatEnemyItems(enemy, 0).filter(
-      (item) => !COMBAT_ENEMY_NON_HURT_ITEM_IDS.has(item.id),
+  connectTrainingEncounterSignals(encounter) {
+    this.trainingEncounterConnections = this.trainingEncounterConnections.filter(
+      (connection) => connection.connected,
     );
-    return this.findClosestVisualContact(weaponItems, hurtItems);
+    if (this.trainingEncounterConnections.length > 0) return;
+    this.trainingEncounterConnections = [
+      this.connectTo(encounter.playerResultResolved, (result) =>
+        this.applyTrainingEncounterPlayerResult(result),
+      ),
+      this.connectTo(encounter.combatEventOccurred, ({ type, payload }) =>
+        this.combatEvents.emit(type, payload),
+      ),
+      this.connectTo(encounter.cameraFeedbackOccurred, (feedback) =>
+        this.combatCameraFeedback.trigger(feedback),
+      ),
+    ];
+  }
+
+  applyTrainingEncounterPlayerResult(result) {
+    if (result.kind === 'guard') {
+      this.playerBlockImpactSeconds = result.blockImpactSeconds;
+      this.playerBlockImpactStrength = result.blockImpactStrength;
+      this.playerBlockstunSeconds = Math.max(this.playerBlockstunSeconds, result.blockstunSeconds);
+      this.playerBlockstunDurationSeconds = result.blockstunSeconds;
+      this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds);
+      return;
+    }
+
+    if (result.kind === 'hit') {
+      this.playerHealth = Math.max(0, this.playerHealth - result.damage);
+      this.pendingPlayerKnockbackX = result.knockbackVelocityX;
+      this.pendingPlayerKnockbackDecayRate = result.knockbackDecayRate;
+      this.playerHitstunSeconds = result.hitstunSeconds;
+      this.playerRetaliationPending = this.playerHealth > 0;
+      this.playerInvulnerableSeconds = result.invulnerableSeconds;
+      this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds);
+      this.combatCommands.cancelForJump();
+      this.rollState = null;
+      if (this.playerHealth === 0) this.playerKoSeconds = 1;
+    } else {
+      this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds ?? 0);
+    }
+
+    const motion = result.playerMotion;
+    if (!motion) return;
+    if (Number.isFinite(motion.positionXDelta)) this.position.x += motion.positionXDelta;
+    if (Number.isFinite(motion.positionY)) this.position.y = motion.positionY;
+    if (Number.isFinite(motion.verticalVelocity)) this.verticalVelocity = motion.verticalVelocity;
+    if (typeof motion.isGrounded === 'boolean') this.isGrounded = motion.isGrounded;
+    if (Number.isFinite(motion.airComboFloatSeconds)) {
+      this.airComboFloatSeconds = motion.airComboFloatSeconds;
+    }
+    if (Number.isFinite(motion.airComboGravityScale)) {
+      this.airComboGravityScale = motion.airComboGravityScale;
+    }
+    if (Number.isFinite(motion.airComboFacing)) this.airComboFacing = motion.airComboFacing;
+    if (Number.isSafeInteger(motion.airHeavyConnectedSequence)) {
+      this.airHeavyConnectedSequence = motion.airHeavyConnectedSequence;
+    }
   }
 
   updatePlayerWeaponContactGeometry(combatState) {
@@ -2038,241 +1152,36 @@ export class GameScene extends SceneNode {
     );
   }
 
-  sampleEnemyVisualWeaponContact({ preferShield = false } = {}) {
-    const enemy = this.combatEnemy;
-    if (!enemy) return Object.freeze({ contact: false, gap: Infinity });
-    const weaponItems = createCombatEnemyItems(enemy, 0).filter(
-      (item) => item.id === 'combat-enemy-weapon',
-    );
-    const playerItems = this.createPlayerCombatPresentationItems(this.combatCommands.snapshot());
-    if (preferShield) {
-      const shieldContact = this.findClosestVisualContact(
-        weaponItems,
-        playerItems.filter((item) => ['shield', 'shield-mark'].includes(item.id)),
-        5,
-      );
-      if (shieldContact.contact) return shieldContact;
-    }
-    const hurtItems = playerItems.filter((item) => !PLAYER_NON_HURT_ITEM_IDS.has(item.id));
-    return this.findClosestVisualContact(weaponItems, hurtItems);
-  }
-
-  findClosestVisualContact(weaponItems, hurtItems, maximumGap = 4) {
-    let closest = Object.freeze({ contact: false, gap: Infinity });
-    for (const weaponItem of weaponItems) {
-      for (const hurtItem of hurtItems) {
-        const gap = polygonDistance(weaponItem.points, hurtItem.points);
-        if (gap < closest.gap) {
-          closest = Object.freeze({
-            contact: gap <= maximumGap,
-            gap,
-            weaponItemId: weaponItem.id,
-            hurtItemId: hurtItem.id,
-          });
-        }
-      }
-    }
-    return closest;
-  }
-
-  resolveCombatEnemyHit(combatState) {
-    const enemy = this.combatEnemy;
-    const profile = ATTACK_HIT_PROFILES[combatState.id];
-    if (
-      !enemy ||
-      enemy.health <= 0 ||
-      this.playerHealth <= 0 ||
-      this.playerHitstunSeconds > 0 ||
-      this.playerBlockstunSeconds > 0 ||
-      enemy.retaliationInvulnerableSeconds > 0 ||
-      enemy.retaliationProtectedComboCycle === combatState.comboCycle ||
-      !profile ||
-      (enemy.juggleLocked && enemy.position.y < enemy.groundY) ||
-      combatState.progress < profile.start ||
-      combatState.progress > profile.end
-    ) {
-      return false;
-    }
-
-    const deltaX = enemy.position.x - this.position.x;
-    const playerFootY = this.position.y + CHARACTER_FOOT_OFFSET;
-    const forwardDistance = deltaX * this.facing;
-    if (
-      forwardDistance < -18 ||
-      forwardDistance > profile.range + 4 ||
-      Math.abs(enemy.position.y - playerFootY) > 116
-    ) {
-      return false;
-    }
-    const visualContact = this.sampleVisualWeaponContact(combatState);
-    if (!visualContact.contact) return false;
-
-    const pulseIndex = profile.hitPulses
-      ? profile.hitPulses.reduce(
-          (latest, pulse, index) => (combatState.progress >= pulse ? index : latest),
-          -1,
-        )
-      : 0;
-    if (pulseIndex < 0) return false;
-    const hitKey = `${combatState.sequence}:${pulseIndex}`;
-    if (hitKey === this.lastHitMotionSequence) return false;
-    this.lastHitMotionSequence = hitKey;
-    this.lastVisualContact = Object.freeze({
-      attacker: 'player',
-      sequence: combatState.sequence,
-      pulseIndex,
-      ...visualContact,
-      simulationGap: visualContact.gap,
+  createTrainingEncounterFrame(combatState, attackProfile) {
+    const playerItems = this.createPlayerCombatPresentationItems(combatState);
+    const contactGeometry = this.playerWeaponContactGeometry;
+    const playerWeaponItems = contactGeometry
+      ? Object.freeze([
+          Object.freeze({ id: 'sword-blade', points: contactGeometry.bladePoints }),
+          Object.freeze({ id: 'sword-trail', points: contactGeometry.sweepPoints }),
+        ])
+      : Object.freeze([]);
+    const rollProgress = this.rollState
+      ? this.rollState.elapsedSeconds / this.rollState.durationSeconds
+      : null;
+    return Object.freeze({
+      combatState,
+      attackProfile,
+      playerItems: Object.freeze(playerItems),
+      playerWeaponItems,
+      player: Object.freeze({
+        position: Object.freeze({ ...this.position }),
+        facing: this.facing,
+        isGrounded: this.isGrounded,
+        health: this.playerHealth,
+        hitstunSeconds: this.playerHitstunSeconds,
+        blockstunSeconds: this.playerBlockstunSeconds,
+        invulnerableSeconds: this.playerInvulnerableSeconds,
+        rollProgress,
+        rollDirection: this.rollState?.direction ?? null,
+        airComboFacing: this.airComboFacing,
+      }),
     });
-    this.combatContactSeconds = 0.18;
-    if (enemy.aiState === 'evade') return false;
-    if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY) {
-      this.combatEvents.emit(COMBAT_EVENT_TYPE.GUARD, {
-        actor: 'enemy',
-        target: 'player',
-        attackId: combatState.id,
-        position: visualContact.position,
-        direction: this.facing,
-        strength: 0.8,
-      });
-      enemy.hitFlashSeconds = 0.08;
-      this.startCombatEnemyRecovery({
-        source: 'guard',
-        durationSeconds: 0.24,
-        weaponStartAngle: -0.65,
-        bodyStartRotation: enemy.rotation,
-      });
-      return true;
-    }
-    const enemyAirborne = enemy.position.y < enemy.groundY;
-    const backPunish =
-      enemy.aiState === 'recovery' &&
-      enemy.recoverySource === 'attack' &&
-      (this.position.x - enemy.position.x) * enemy.attackFacing < 0;
-    const finalPulse = !profile.hitPulses || pulseIndex === profile.hitPulses.length - 1;
-    const juggleRole =
-      profile.juggleRole ?? (enemyAirborne ? 'sustain' : finalPulse ? 'launcher' : null);
-    const damageScale = enemyAirborne ? Math.max(0.4, 1 - enemy.juggleHits * 0.1) : 1;
-    const damage = Math.max(1, Math.round(profile.damage * damageScale));
-    this.combatEvents.emit(
-      backPunish
-        ? COMBAT_EVENT_TYPE.PUNISH
-        : juggleRole === 'launcher'
-          ? COMBAT_EVENT_TYPE.LAUNCH
-          : COMBAT_EVENT_TYPE.HIT,
-      {
-        actor: 'player',
-        target: 'enemy',
-        attackId: combatState.id,
-        position: visualContact.position,
-        direction: this.facing,
-        outcome: backPunish ? 'back-punish' : undefined,
-        strength: 1 + Math.min(2.5, damage * 0.08) + (backPunish ? 0.5 : 0),
-      },
-    );
-    enemy.health = Math.max(0, enemy.health - damage);
-    this.confirmedComboCycle = combatState.comboCycle;
-    enemy.comboCycleHitPending = enemy.health > 0;
-    enemy.lastReceivedComboCycle = combatState.comboCycle;
-    enemy.hitstunSeconds = Math.max(enemy.hitstunSeconds, 0.16 + damage * 0.008);
-    enemy.hitReactionWeaponLength = sampleCombatEnemyWeaponLength(enemy);
-    enemy.hitReactionWeaponAngle =
-      profile.damage >= 22 ? 0.35 : profile.launchY < -300 ? -1.1 : 0.2;
-    enemy.rotation = this.facing * 0.18;
-    enemy.aiState = 'hitstun';
-    enemy.aiSeconds = 0;
-    enemy.attackConnected = false;
-    const chainConfirmed = Boolean(combatState.queuedMotion);
-    const spinPulseHolding = Boolean(profile.hitPulses) && !finalPulse;
-    const hitVelocityX = this.facing * (chainConfirmed ? 18 : profile.damage * 8 + 45);
-    enemy.velocityX = spinPulseHolding ? 0 : hitVelocityX;
-    if (combatState.id === 'spin' && finalPulse) {
-      this.spinContactConstraint.queueRelease({ velocityX: hitVelocityX });
-      enemy.velocityX = 0;
-    }
-    if (chainConfirmed && !combatState.id.startsWith('air')) {
-      const forwardGap = (enemy.position.x - this.position.x) * this.facing;
-      if (forwardGap > 42) this.position.x += this.facing * Math.min(22, forwardGap - 42);
-    }
-    enemy.angularVelocity =
-      this.facing *
-      (combatState.sequence % 2 === 0 ? -2.8 : 2.8) *
-      (juggleRole === 'finisher' ? 1.4 : 1);
-    enemy.hitFlashSeconds = 0.12;
-    this.combatCameraFeedback.trigger({
-      direction: this.facing,
-      strength:
-        1.2 +
-        Math.min(3.3, damage * 0.12) +
-        (juggleRole === 'finisher' ? 0.5 : 0) +
-        (backPunish ? 0.5 : 0),
-      durationSeconds: profile.damage >= 20 || juggleRole === 'finisher' ? 0.12 : 0.085,
-    });
-    this.hitStopSeconds = Math.max(
-      this.hitStopSeconds,
-      profile.damage >= 20 || juggleRole === 'finisher' ? 0.05 : 0.035,
-    );
-    if (juggleRole === 'finisher') {
-      enemy.juggleHits = Math.max(1, enemy.juggleHits + 1);
-      enemy.juggleLocked = true;
-      enemy.juggleFloatSeconds = 0;
-      enemy.juggleGravityScale = 2.8;
-      enemy.velocityY = Math.max(profile.launchY, 220);
-      enemy.groundBouncePending = profile.groundBounce === true;
-      if (profile.groundBounce === true && combatState.id.startsWith('air')) {
-        enemy.position.x = this.position.x + this.facing * 30;
-        if (enemy.position.y < enemy.groundY) enemy.position.y += 15;
-        this.airComboFacing = this.facing;
-        this.airHeavyConnectedSequence = combatState.sequence;
-        this.verticalVelocity = enemy.velocityY;
-        this.airComboFloatSeconds = 0;
-        this.airComboGravityScale = 1;
-        this.slamAttackerBouncePending = true;
-      } else if (combatState.id.startsWith('air')) {
-        this.airComboFloatSeconds = 0;
-        this.airComboGravityScale = 1;
-      }
-    } else if (juggleRole) {
-      const nextJuggleHits = enemyAirborne ? enemy.juggleHits + 1 : 1;
-      enemy.juggleHits = nextJuggleHits;
-      enemy.juggleSeconds = enemyAirborne ? enemy.juggleSeconds : 0;
-      enemy.juggleGravityScale = 1 + nextJuggleHits * JUGGLE_GRAVITY_STEP;
-      if (nextJuggleHits >= MAX_JUGGLE_HITS) {
-        enemy.juggleLocked = true;
-        enemy.juggleFloatSeconds = 0;
-        enemy.juggleGravityScale = 2.8;
-        enemy.velocityY = Math.max(enemy.velocityY, 220);
-        if (combatState.id.startsWith('air')) {
-          this.airComboFloatSeconds = 0;
-          this.airComboGravityScale = 1;
-        }
-      } else {
-        const relaunchSpeed = Math.max(
-          90,
-          (profile.relaunchSpeed ?? Math.abs(profile.launchY)) - (nextJuggleHits - 1) * 24,
-        );
-        enemy.velocityY = -relaunchSpeed;
-        enemy.juggleFloatSeconds = Math.max(
-          0.06,
-          (profile.floatSeconds ?? 0.11) - (nextJuggleHits - 1) * 0.012,
-        );
-        if (combatState.id.startsWith('air')) {
-          if (this.airComboFacing === 0) this.airComboFacing = this.facing;
-          this.verticalVelocity = enemy.velocityY;
-          this.airComboFloatSeconds = enemy.juggleFloatSeconds;
-          this.airComboGravityScale = enemy.juggleGravityScale;
-          const comboFacing = this.airComboFacing || this.facing;
-          const forwardGap = (enemy.position.x - this.position.x) * comboFacing;
-          if (forwardGap > 44) {
-            this.position.x += comboFacing * Math.min(32, forwardGap - 44);
-          }
-        }
-      }
-    } else {
-      enemy.velocityY = profile.hitPulses && finalPulse ? -260 : profile.launchY;
-    }
-    if (enemy.health <= 0) enemy.resetSeconds = COMBAT_ENEMY_RESET_SECONDS;
-    return true;
   }
 
   update(deltaSeconds, inputSnapshot, simulationSettings = {}) {
@@ -2285,7 +1194,6 @@ export class GameScene extends SceneNode {
     this.previousCharacterLanePresentation = { ...this.characterLanePresentation };
     this.combatCameraFeedback.update(deltaSeconds);
     this.combatEvents.update(deltaSeconds);
-    this.combatContactSeconds = Math.max(0, this.combatContactSeconds - deltaSeconds);
     if (this.hitStopSeconds > 0) {
       this.hitStopSeconds = Math.max(0, this.hitStopSeconds - deltaSeconds);
       if (this.hitStopSeconds === 0 && this.pendingPlayerKnockbackX !== 0) {
@@ -2328,7 +1236,7 @@ export class GameScene extends SceneNode {
       this.playerRetaliationPending = false;
       this.playerRetaliationSeconds = 0;
       this.isGrounded = true;
-      this.syncCombatEnemy();
+      this.syncTrainingEncounter({ resetExisting: true });
     }
     this.landingRecoverySeconds = Math.max(0, this.landingRecoverySeconds - deltaSeconds);
     const wasGrounded = this.isGrounded;
@@ -2408,25 +1316,26 @@ export class GameScene extends SceneNode {
       if (Math.abs(this.playerKnockbackVelocityX) < PLAYER_KNOCKBACK_STOP_SPEED) {
         this.playerKnockbackVelocityX = 0;
       }
-      if (this.isGrounded && this.combatEnemy && !['idle', 'guard'].includes(combatState.id)) {
-        const previousForwardGap = (this.combatEnemy.position.x - movementStartX) * this.facing;
-        const forwardGap = (this.combatEnemy.position.x - this.position.x) * this.facing;
+      const encounterBeforeStep = this.trainingEncounterNode?.getGameplaySnapshot() ?? null;
+      if (this.isGrounded && encounterBeforeStep && !['idle', 'guard'].includes(combatState.id)) {
+        const previousForwardGap = (encounterBeforeStep.position.x - movementStartX) * this.facing;
+        const forwardGap = (encounterBeforeStep.position.x - this.position.x) * this.facing;
         if (previousForwardGap >= 0 && forwardGap < 12) {
-          this.position.x = this.combatEnemy.position.x - this.facing * 12;
+          this.position.x = encounterBeforeStep.position.x - this.facing * 12;
         }
       }
       if (
         combatState.id.startsWith('air') &&
-        this.combatEnemy &&
-        this.combatEnemy.position.y < this.combatEnemy.groundY &&
-        !this.combatEnemy.juggleLocked
+        encounterBeforeStep &&
+        encounterBeforeStep.position.y < encounterBeforeStep.groundY &&
+        !encounterBeforeStep.juggleLocked
       ) {
         const comboFacing = this.airComboFacing || this.facing;
-        const targetGap = (this.combatEnemy.position.x - this.position.x) * comboFacing;
+        const targetGap = (encounterBeforeStep.position.x - this.position.x) * comboFacing;
         const maximumComboGap = combatState.id === 'airReturn' ? 22 : 44;
         const comboPullSpeed = combatState.id === 'airReturn' ? 420 : 300;
         if (targetGap >= 0 && targetGap < 18) {
-          this.position.x = this.combatEnemy.position.x - comboFacing * 18;
+          this.position.x = encounterBeforeStep.position.x - comboFacing * 18;
         } else if (targetGap > maximumComboGap) {
           this.position.x +=
             comboFacing * Math.min(comboPullSpeed * deltaSeconds, targetGap - maximumComboGap);
@@ -2434,12 +1343,10 @@ export class GameScene extends SceneNode {
       }
     }
     this.updatePlayerWeaponContactGeometry(combatState);
-    this.updateCombatEnemy(deltaSeconds);
-    this.updateSpinContactConstraint(combatState, deltaSeconds);
-    this.updateCombatEnemyCombat(deltaSeconds);
-    this.finishCombatEnemyComboCycle(combatState);
-    this.updateCombatEnemyRetaliationProtection(combatState);
-    this.resolveCombatEnemyHit(combatState);
+    this.trainingEncounterNode?.step(
+      deltaSeconds,
+      this.createTrainingEncounterFrame(combatState, activeAttackProfile),
+    );
 
     if (isTransitioning) {
       this.updateLaneTransition(deltaSeconds);
@@ -2462,12 +1369,14 @@ export class GameScene extends SceneNode {
       return;
     }
 
+    const encounterAfterStep = this.trainingEncounterNode?.getGameplaySnapshot() ?? null;
     if (
-      this.combatEnemy &&
-      (this.slamAttackerBouncePending || this.combatEnemy.groundBounceDelaySeconds > 0)
+      encounterAfterStep &&
+      (encounterAfterStep.slamAttackerBouncePending ||
+        encounterAfterStep.groundBounceDelaySeconds > 0)
     ) {
       const comboFacing = this.airComboFacing || this.facing;
-      this.position.x = this.combatEnemy.position.x - comboFacing * 30;
+      this.position.x = encounterAfterStep.position.x - comboFacing * 30;
       this.facing = comboFacing;
     }
     const activeLane = this.mapRuntime.getActiveLane();
@@ -2482,7 +1391,10 @@ export class GameScene extends SceneNode {
       this.verticalVelocity = 0;
       this.airComboFloatSeconds = 0;
       this.airComboGravityScale = 1;
-      if (!this.slamAttackerBouncePending && !(this.combatEnemy?.groundBounceDelaySeconds > 0)) {
+      if (
+        !encounterAfterStep?.slamAttackerBouncePending &&
+        !(encounterAfterStep?.groundBounceDelaySeconds > 0)
+      ) {
         this.airComboFacing = 0;
       }
       this.isGrounded = true;
@@ -2644,19 +1556,18 @@ export class GameScene extends SceneNode {
       evadeEvent,
       characterRenderOrder + 0.02,
     );
+    const encounterRender = this.trainingEncounterNode?.createRenderSnapshot(
+      activeLane.renderOrder + 0.45,
+    ) ?? { enemy: null, items: [], contact: null };
     const punishFeedbackItems = createPunishFeedbackItems(
-      this.combatEnemy?.position,
+      encounterRender.enemy?.position,
       punishEvent,
       activeLane.renderOrder + 0.48,
-    );
-    const combatEnemyItems = createCombatEnemyItems(
-      this.combatEnemy,
-      activeLane.renderOrder + 0.45,
     );
     const items = Object.freeze(
       [
         ...mapSnapshot.renderItems,
-        ...combatEnemyItems,
+        ...encounterRender.items,
         ...characterItems,
         ...playerRetaliationItems,
         ...blockImpactItems,
@@ -2712,13 +1623,7 @@ export class GameScene extends SceneNode {
         frame: combatState.frame ?? null,
       }),
       combatEvents,
-      combatContact:
-        this.combatContactSeconds > 0 && this.lastVisualContact
-          ? Object.freeze({
-              ...this.lastVisualContact,
-              remainingSeconds: this.combatContactSeconds,
-            })
-          : null,
+      combatContact: encounterRender.contact,
       player: Object.freeze({
         position: renderPosition,
         isGrounded: this.isGrounded,
@@ -2745,23 +1650,7 @@ export class GameScene extends SceneNode {
             })
           : null,
       }),
-      combatEnemy: this.combatEnemy
-        ? Object.freeze({
-            id: this.combatEnemy.id,
-            position: Object.freeze({ ...this.combatEnemy.position }),
-            health: this.combatEnemy.health,
-            maxHealth: this.combatEnemy.maxHealth,
-            airborne: this.combatEnemy.position.y < this.combatEnemy.groundY,
-            juggleHits: this.combatEnemy.juggleHits,
-            juggleLimit: MAX_JUGGLE_HITS,
-            juggleLocked: this.combatEnemy.juggleLocked,
-            retaliationSeconds: this.combatEnemy.retaliationInvulnerableSeconds,
-            attack: Object.freeze({
-              kind: this.combatEnemy.attackKind,
-              frame: sampleEnemyCombatFrame(this.combatEnemy),
-            }),
-          })
-        : null,
+      combatEnemy: encounterRender.enemy,
       items,
     });
     this.renderFrameCreated.emit(renderFrame);

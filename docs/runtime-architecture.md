@@ -17,12 +17,14 @@ Scene·Node·Signal은 이름을 붙이는 분류가 아니라 실제 ownership�
 ```text
 GameApp Node
 └─ GameScene Scene instance / root Node
-   └─ GameStatus Node
+   ├─ GameStatus Node
+   └─ TrainingEncounter Scene instance / root Node (active Room에 entity가 있을 때만)
 ```
 
 - `GameApp`은 browser resource, input attach/detach, ResizeObserver, animation frame과 scene instance lifetime을 소유한다.
 - `GameScene`은 120Hz fixed-step에서 combat·world state를 갱신하고 단일 read-only RenderFrame을 조립한다.
 - `GameStatus`는 GameScene 뒤의 같은 fixed traversal에서 player/world status 변화를 감지하고 Signal을 발행한다.
+- `TrainingEncounter`는 active Room의 enemy entity가 존재하는 동안만 attach되며 enemy state, AI, physics, juggle, retaliation, 양방향 contact resolution과 encounter render snapshot을 소유한다.
 - Alpine UI bridge와 renderer는 Scene 내부 child나 mutable field를 탐색하지 않고 root command와 Signal만 사용한다.
 
 Scene instance의 child는 구현 세부다. 외부 assembler는 root가 명시적으로 공개한 command와 Signal만 사용한다. Sibling dependency가 필요하면 공통 ancestor가 생성자 주입과 Signal connection을 조립한다.
@@ -51,12 +53,13 @@ GameApp의 start/destroy는 Node enter/exit와 같은 경계다. browser listene
 
 Signal은 상태가 바뀐 뒤의 notification이다. 행동을 시작하는 intent에는 root의 명시적 method를 사용한다.
 
-| 종류                | 현재 예                                                              | 계약                                                                     |
-| ------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Command             | `enterGame()`, `reset()`, `toggleTimePhase()`, `createRenderFrame()` | caller가 행동 시작을 요청하고 callee가 ownership 안에서 수행             |
-| Signal              | `playerStatusChanged`, `worldStatusChanged`, `renderFrameCreated`    | producer가 완료된 결과를 동기적으로 알리고 consumer를 직접 참조하지 않음 |
-| Pull snapshot       | input snapshot, UI render settings, immutable RenderFrame            | 연속 상태 또는 한 frame의 전체 read model                                |
-| Presentation buffer | `CombatEventBuffer`                                                  | lifetime이 있는 bounded render data이며 publish/subscribe Signal이 아님  |
+| 종류                | 현재 예                                                                 | 계약                                                                                     |
+| ------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Command             | `enterGame()`, `reset()`, `toggleTimePhase()`, `createRenderFrame()`    | caller가 행동 시작을 요청하고 callee가 ownership 안에서 수행                             |
+| Signal              | `playerStatusChanged`, `worldStatusChanged`, `renderFrameCreated`       | producer가 완료된 결과를 동기적으로 알리고 consumer를 직접 참조하지 않음                 |
+| Encounter Signal    | `playerResultResolved`, `combatEventOccurred`, `cameraFeedbackOccurred` | encounter가 이미 판정한 결과를 알리고 GameScene root가 player·presentation writer로 적용 |
+| Pull snapshot       | input snapshot, UI render settings, immutable RenderFrame               | 연속 상태 또는 한 frame의 전체 read model                                                |
+| Presentation buffer | `CombatEventBuffer`                                                     | lifetime이 있는 bounded render data이며 publish/subscribe Signal이 아님                  |
 
 Signal dispatch는 emit 시작 시 listener snapshot을 사용한다. Connection disconnect는 멱등적이며 receiver Node의 exit/dispose와 producer Node의 owned Signal cleanup 양쪽에서 해제된다. Signal callback에서 같은 tree를 즉시 dispose하거나 재배치하지 않는다.
 
@@ -73,7 +76,8 @@ GameScene ──RenderFrame Signal──→ GameApp ──same object──→ P
 ```
 
 - `MapRuntime`만 active location, transition과 world context를 쓴다.
-- `GameScene`은 현재 player, training encounter와 combat result의 최종 gameplay writer다. 이를 renderer나 UI로 이동하지 않는다.
+- `GameScene`은 player와 root combat result의 최종 gameplay writer다. `TrainingEncounter`는 enemy state의 유일한 writer이며 player state를 직접 수정하지 않는다.
+- GameScene은 연속 player snapshot을 direct `step()` command로 전달하고, encounter가 발행한 완료 결과 Signal을 동기적으로 적용한다. Enemy와 player가 서로의 mutable object를 공유하지 않는다.
 - Renderer는 RenderFrame을 읽기만 하고 physics, animation, combat event lifetime이나 Signal을 진행하지 않는다.
 - UI bridge는 status DTO를 표시만 하며 GameScene/MapRuntime field를 직접 수정하지 않는다.
 - input adapter는 common intent snapshot만 만들고 Scene tree나 combat command 결과를 알지 않는다.
@@ -97,14 +101,10 @@ GameScene ──RenderFrame Signal──→ GameApp ──same object──→ P
 
 근거: [Godot 핵심 개념](https://docs.godotengine.org/en/stable/getting_started/introduction/key_concepts_overview.html), [Scene organization](https://docs.godotengine.org/en/stable/tutorials/best_practices/scene_organization.html), [Node lifecycle](https://docs.godotengine.org/en/stable/classes/class_node.html), [Signals](https://docs.godotengine.org/en/stable/getting_started/step_by_step/signals.html).
 
-## 다음 Migration 경계
+## Training Encounter lifecycle
 
-다음 구조 병목은 `GameScene` 안의 training enemy state·AI·physics·contact resolution이다. 이를 옮길 때는 이름만 Node인 wrapper가 아니라 다음 ownership을 함께 이동한다.
-
-- active Room entity에 따른 `TrainingEncounter` scene attach/detach
-- enemy state, AI, physics, juggle와 retaliation의 단일 Node writer
-- player writer에 대한 hit/guard/motion result Signal
-- root가 연결하는 combat event와 camera feedback notification
-- Node exit 시 모든 connection과 encounter presentation state cleanup
-
-Player state와 enemy state를 서로 직접 쓰는 기존 코드를 남긴 채 class 이름만 분리하지 않는다.
+- `MapRuntime`이 active location을 확정하면 GameScene이 resolved Room entity를 읽어 fresh `TrainingEncounter` Scene을 attach한다.
+- Portal completion으로 active Room에서 entity가 사라지면 child를 exit/dispose한다. Producer Signal cleanup이 GameScene의 incoming connection도 해제하며 enemy contact와 render presentation state는 다음 Room으로 누출되지 않는다.
+- 같은 GameApp instance가 exit 후 재진입하면 GameScene이 기존 encounter Signal을 다시 연결한다. Browser listener와 마찬가지로 이전 connection을 재사용하지 않는다.
+- Room 전환은 parent fixed update 안에서 완료되며 `SceneNode`가 traversal 시작 시 고정한 child snapshot 때문에 제거된 child를 같은 step에 다시 process하지 않는다.
+- `CombatEventBuffer`는 lifetime이 있는 presentation buffer로 root에 남고, encounter는 완료된 event descriptor만 Signal로 전달한다. Camera feedback도 root가 적용하며 renderer는 둘을 읽기만 한다.
