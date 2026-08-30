@@ -1,5 +1,6 @@
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
-import { GameScene } from '../game/GameScene.js';
+import { SceneNode } from '../core/SceneNode.js';
+import { GAME_SCENE } from '../game/GameScene.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -47,9 +48,10 @@ function assertUiBridge(uiBridge) {
   return uiBridge;
 }
 
-export class GameApp {
+export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas }) {
-    this.scene = new GameScene();
+    super('GameApp');
+    this.scene = this.addChild(GAME_SCENE.instantiate());
     this.camera = new Camera2D();
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
@@ -65,11 +67,10 @@ export class GameApp {
       isActive: () => this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU,
     });
     this.animationFrameId = null;
-    this.abortController = new AbortController();
+    this.abortController = null;
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.frameSamples = { count: 0, startTime: performance.now(), fps: 0 };
     this.latestRenderStats = { logicalWidth: 1, logicalHeight: 1 };
-    this.latestWorldStatusKey = '';
     this.reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? {
       matches: false,
     };
@@ -84,14 +85,26 @@ export class GameApp {
 
   connectUi(uiBridge) {
     this.uiBridge = assertUiBridge(uiBridge);
-    this.syncWorldStatus();
   }
 
   start() {
     if (!this.uiBridge) throw new Error('GameApp.start() 전에 UI bridge를 연결해야 합니다.');
     if (this.animationFrameId !== null) return;
+    this.enterTree();
+  }
 
+  onEnterTree() {
+    this.connectTo(this.scene.worldStatusChanged, (status) => {
+      this.uiBridge.setWorldStatus(status);
+    });
+    this.connectTo(this.scene.playerStatusChanged, (status) => {
+      this.uiBridge.setPlayerStatus(status);
+    });
+    this.connectTo(this.scene.renderFrameCreated, (renderFrame) => {
+      this.renderFrame(renderFrame);
+    });
     this.input.attach();
+    this.abortController = new AbortController();
     this.attachEvents();
     this.resizeObserver.observe(this.gameHost.canvas);
     this.resizeObserver.observe(this.polygonHost.canvas);
@@ -99,6 +112,15 @@ export class GameApp {
     this.resize();
     this.runner.reset(performance.now());
     this.animationFrameId = requestAnimationFrame((time) => this.loop(time));
+  }
+
+  onExitTree() {
+    if (this.animationFrameId !== null) cancelAnimationFrame(this.animationFrameId);
+    this.animationFrameId = null;
+    this.input.detach();
+    this.abortController?.abort();
+    this.abortController = null;
+    this.resizeObserver.disconnect();
   }
 
   attachEvents() {
@@ -115,14 +137,12 @@ export class GameApp {
   enterGame() {
     this.input.clear({ resetSequences: true });
     this.scene.reset();
-    this.syncWorldStatus();
     this.onScreenChanged();
   }
 
   resetScene() {
     this.input.clear({ resetSequences: true });
     this.scene.reset();
-    this.syncWorldStatus();
     this.runner.reset(performance.now());
   }
 
@@ -136,16 +156,6 @@ export class GameApp {
 
   toggleWorldTime() {
     this.scene.toggleTimePhase();
-    this.syncWorldStatus();
-  }
-
-  syncWorldStatus() {
-    if (!this.uiBridge) return;
-    const status = this.scene.getWorldStatus();
-    const statusKey = JSON.stringify(status);
-    if (statusKey === this.latestWorldStatusKey) return;
-    this.latestWorldStatusKey = statusKey;
-    this.uiBridge.setWorldStatus(status);
   }
 
   resize() {
@@ -180,19 +190,20 @@ export class GameApp {
       uiState.screen === GAME_SCREEN.GAME ||
       (uiState.screen === GAME_SCREEN.RENDER_LAB && uiState.isPlaying);
     if (!active) return;
-    this.scene.update(deltaSeconds, inputSnapshot, this.createSimulationSettings(uiState));
-    this.syncWorldStatus();
+    this.fixedProcess(deltaSeconds, {
+      inputSnapshot,
+      simulationSettings: this.createSimulationSettings(uiState),
+    });
   }
 
   render(interpolationAlpha) {
     const uiState = this.uiBridge.snapshot();
     if (uiState.screen === GAME_SCREEN.MENU) return;
-    this.uiBridge.setPlayerStatus({
-      health: this.scene.playerHealth,
-      maxHealth: this.scene.playerMaxHealth,
-    });
+    this.scene.createRenderFrame(interpolationAlpha);
+  }
 
-    const renderFrame = this.scene.createRenderFrame(interpolationAlpha);
+  renderFrame(renderFrame) {
+    const uiState = this.uiBridge.snapshot();
     if (uiState.screen === GAME_SCREEN.GAME) {
       this.latestRenderStats = this.gameRenderer.render(renderFrame, GAME_RENDER_SETTINGS);
       return;
@@ -247,10 +258,6 @@ export class GameApp {
 
     if (uiState.screen === GAME_SCREEN.GAME) {
       this.uiBridge.setGameStats(commonStats);
-      this.uiBridge.setPlayerStatus({
-        health: this.scene.playerHealth,
-        maxHealth: this.scene.playerMaxHealth,
-      });
     } else {
       this.uiBridge.setRenderStats(commonStats);
     }
@@ -263,10 +270,7 @@ export class GameApp {
   }
 
   destroy() {
-    if (this.animationFrameId !== null) cancelAnimationFrame(this.animationFrameId);
-    this.animationFrameId = null;
-    this.input.detach();
-    this.abortController.abort();
-    this.resizeObserver.disconnect();
+    if (this.animationFrameId === null) return;
+    this.exitTree();
   }
 }

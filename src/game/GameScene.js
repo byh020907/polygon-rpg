@@ -9,6 +9,10 @@ import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { SpinContactConstraint } from '../combat/SpinContactConstraint.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
+import { SceneNode } from '../core/SceneNode.js';
+import { Scene } from '../core/Scene.js';
+import { Signal } from '../core/Signal.js';
+import { GameStatusNode } from './GameStatusNode.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
 
@@ -1296,8 +1300,9 @@ function invertedDirection(direction) {
   return direction === 'back' ? 'front' : 'back';
 }
 
-export class GameScene {
+export class GameScene extends SceneNode {
   constructor({ mapDefinition = ACADEMY_VILLAGE_MAP } = {}) {
+    super('GameScene');
     this.combatCommands = new CombatCommandController();
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
@@ -1308,7 +1313,16 @@ export class GameScene {
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: { timePhase: 'day', weather: 'clear', storyFlags: {} },
     });
+    this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
+    this.statusNode = this.addChild(new GameStatusNode(this));
+    this.playerStatusChanged = this.statusNode.playerStatusChanged;
+    this.worldStatusChanged = this.statusNode.worldStatusChanged;
     this.reset();
+  }
+
+  onPhysicsProcess(deltaSeconds, context = {}) {
+    if (context.active === false) return;
+    this.update(deltaSeconds, context.inputSnapshot ?? {}, context.simulationSettings ?? {});
   }
 
   reset() {
@@ -1372,12 +1386,15 @@ export class GameScene {
     this.combatEvents.reset();
     this.spinContactConstraint.reset();
     this.syncCombatEnemy();
+    this.statusNode.publish({ force: true });
   }
 
   toggleTimePhase() {
     this.worldTimeHours = this.timePhase === 'night' ? 10 : 21;
     this.updateTimePhase();
-    return this.getWorldStatus();
+    const status = this.getWorldStatus();
+    this.statusNode.publish({ force: true });
+    return status;
   }
 
   updateTimePhase() {
@@ -2505,6 +2522,13 @@ export class GameScene {
     });
   }
 
+  getPlayerStatus() {
+    return Object.freeze({
+      health: this.playerHealth,
+      maxHealth: this.playerMaxHealth,
+    });
+  }
+
   createRenderFrame(interpolationAlpha) {
     const renderPosition = Object.freeze({
       x: lerp(this.previousPosition.x, this.position.x, interpolationAlpha),
@@ -2654,7 +2678,7 @@ export class GameScene {
       height: map.worldSize.height,
     };
 
-    return Object.freeze({
+    const renderFrame = Object.freeze({
       worldSize: map.worldSize,
       groundY: map.groundY,
       gridSize: map.gridSize,
@@ -2740,5 +2764,9 @@ export class GameScene {
         : null,
       items,
     });
+    this.renderFrameCreated.emit(renderFrame);
+    return renderFrame;
   }
 }
+
+export const GAME_SCENE = new Scene((options) => new GameScene(options));

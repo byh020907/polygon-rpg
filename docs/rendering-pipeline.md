@@ -9,9 +9,13 @@
 ```text
 FixedStepRunner
     ↓
-GameScene.update()
+GameApp Node.fixedProcess()
+    ↓
+GameScene Node.onPhysicsProcess()
     ↓
 GameScene.createRenderFrame()
+    ↓ renderFrameCreated Signal
+GameApp
     ↓
     ├─ CanvasPolygonRenderer
     └─ CanvasRetroRenderer
@@ -88,7 +92,11 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 | `src/combat/CombatCommandController.js`     | gameplay motion 정책, command edge, phase, sequence와 입력 buffer          |
 | `src/combat/CombatCameraFeedback.js`        | combat event 강도에서 bounded directional camera offset 계산               |
 | `src/combat/SpinContactConstraint.js`       | Spin pulse spacing, pull 상한과 종료 release를 계산하는 순수 constraint    |
-| `src/game/GameScene.js`                     | float 기반 장면 상태와 Polygon item으로 구성한 단일 RenderFrame            |
+| `src/core/Scene.js`                         | fresh root Node를 만드는 재사용 가능한 Scene composition                   |
+| `src/core/SceneNode.js`                     | tree hierarchy, enter/ready/fixed-process/exit와 connection lifecycle      |
+| `src/core/Signal.js`                        | 동기 사건 통지, 멱등 disconnect와 producer cleanup                         |
+| `src/game/GameScene.js`                     | Scene root, float 기반 gameplay state와 Polygon item 단일 RenderFrame      |
+| `src/game/GameStatusNode.js`                | player/world status 변화 감지와 lifecycle-owned Signal                     |
 | `src/rendering/Camera2D.js`                 | World Space를 Screen Space로 투영                                          |
 | `src/rendering/CanvasHost.js`               | 고정 Render Viewport, CSS 크기, DPR, backing 예산과 presentation rectangle |
 | `src/rendering/ScenePainter.js`             | 전달받은 frame geometry만 Canvas path로 rasterize                          |
@@ -97,7 +105,9 @@ Pixel Snap은 world, scene 또는 animation 좌표를 수정하지 않는다. `s
 | `src/rendering/RetroPostProcessor.js`       | threshold, posterization과 outline ImageData 처리                          |
 | `src/app/GameApp.js`                        | 입력·Simulation Settings·세 Canvas 조립, RenderFrame 1회 생성              |
 
-DOM 화면과 renderer control 상태는 `src/ui/gameShell.js`의 Alpine 컴포넌트가 소유하며, GameApp은 UI bridge의 읽기 전용 snapshot만 소비한다.
+DOM 화면과 renderer control 상태는 `src/ui/gameShell.js`의 Alpine 컴포넌트가 소유한다. GameApp은 UI bridge의 읽기 전용 snapshot만 소비하고, GameScene의 `playerStatusChanged`와 `worldStatusChanged` Signal 결과를 bridge writer에 전달한다.
+
+`createRenderFrame()`은 frame 생성을 시작하는 동기 command고 `renderFrameCreated`는 생성이 끝났다는 notification이다. GameApp이 이 Signal에 연결해 renderer를 선택하므로 GameScene은 Canvas renderer를 참조하지 않는다. 두 renderer에는 매 render pass에서 같은 immutable 객체 하나만 전달한다.
 
 `showMesh` debug overlay도 RenderFrame의 opacity를 존중한다. opacity 0 item은 raster와 mesh를 모두 생략하고, 보이는 item의 mesh alpha는 item opacity에 비례한다. World-space Shoelace area가 `0.0001` 이하이면 authored 구조 오류인 `degenerateItemIds`, source는 유효하지만 pixel-snap 이후 projected area가 사라지면 renderer 한정 `rasterCollapseItemIds`로 분리한다. Polygon/Retro renderer는 두 진단을 render stats로 반환하고 `GameApp`은 구조 오류만 renderer 간 union해 `INVALID GEOMETRY` ID를, Retro raster collapse는 변동 가능한 개수만 별도 표시한다. 유효하지 않은 opacity는 Canvas가 이전 `globalAlpha`를 암묵적으로 유지하게 두지 않고 1로 정규화한다.
 

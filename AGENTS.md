@@ -74,6 +74,7 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 | `docs/reference-repositories.md`   | Canonical Reference         | 로컬 레퍼런스 저장소와 영역별 참고 경로                     | 공용 기반, 물리, 게임 루프, Canvas, 파티클, 렌더링, 개발 환경 작업 시 |
 | `docs/rendering-pipeline.md`       | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시                 |
 | `docs/ui-architecture.md`          | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시     |
+| `docs/runtime-architecture.md`     | Canonical Reference         | Scene·Node tree lifecycle, Signal과 runtime composition     | App/Scene 조립, subsystem lifecycle와 system communication 작업 시    |
 | `docs/animation-system.md`         | Canonical Reference         | Target Pose, IK solver, combat command와 motion clip        | Skeleton, 관절, 전투 모션, 입력 command와 procedural trail 작업 시    |
 | `docs/input-system.md`             | Canonical Reference         | Keyboard/Mobile adapter, pointer lifecycle과 input sequence | 키보드, 터치 UI, 멀티터치, command 입력 및 모바일 layout 작업 시      |
 | `docs/world-map-system.md`         | Migration Reference (STALE) | 현재 Depth Lane prototype과 상태 패치                       | Room/Portal migration에서 현재 구현과 제거 범위를 확인할 때           |
@@ -131,6 +132,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `REF-LOCAL-FIRST`         | 기반 시스템은 `ball-fight-simulator`와 `baeseongjin`을 1차 로컬 레퍼런스로 조사한다.                                                                                                      | `docs/reference-repositories.md`           |
 | `ARCH-RENDER-READONLY`    | Renderer는 물리·게임 상태를 변경하지 않고 읽기 전용 결과만 소비한다.                                                                                                                      | `docs/rendering-pipeline.md`, 실제 caller  |
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                           | 이 파일, 향후 effect 구현과 caller         |
+| `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                                    | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 테스트 파일·script·fixture는 사용자가 명시적으로 요청한 경우에만 저장소에 영구 추가한다. 개발 중 임시 검증 코드는 허용하되 완료 전에 제거한다.                                            | 사용자 결정, `package.json`, 최종 diff     |
 | `PROCESS-DEV-TEAM-LOOP`   | 메인 coordinator는 승인된 roadmap의 다음 미충족 gate를 지속 파생·소비하고, work item마다 하나의 Codex root agent를 재사용하며 구현·검증·feedback·통합을 반복한다.                         | `docs/development/process.md`, skill       |
 | `PROCESS-QUALITY-LOOP`    | work item마다 단일 Vertical Slice Director가 통합 artifact의 rubric·개선 loop·팀장 feedback을 끝까지 소유하고, 하위 lane 결과를 재평가하며 반복 feedback을 검증된 규칙 후보로 자산화한다. | `docs/development/quality-loop.md`, skill  |

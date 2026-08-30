@@ -10,7 +10,8 @@
 index.html
     ↓
 src/main.js
-    ├─ GameApp 생성
+    ├─ GameApp root Node 생성
+    │  └─ GameScene Scene instance 조립
     ├─ Alpine.data("gameShell") 등록
     └─ Alpine.start()
 ```
@@ -44,14 +45,15 @@ Alpine gameShell
     ├─ startGame() ──────→ GameApp.enterGame()
     ├─ screen change ────→ GameApp.onScreenChanged()
     ├─ runtime stats ←──── GameApp stats writer
-    └─ world status ←───── GameApp world status writer
+    ├─ player status ←──── GameScene Signal → GameApp writer
+    └─ world status ←───── GameScene Signal → GameApp writer
 ```
 
 Bridge snapshot은 화면 상태와 Render Lab 설정만 가진 평평한 읽기 전용 DTO다. 물리, 캐릭터 위치와 전투 상태는 UI snapshot에 넣지 않는다.
 
 Render Lab의 Animation Speed는 UI bridge snapshot에 존재하지만 `GameApp`이 별도 frozen Simulation Settings DTO로 분류한다. Keyboard/Mobile Gameplay Input Snapshot과 합치지 않는다.
 
-지역명, 목표와 시간대는 GameScene이 소유한 읽기 전용 world status를 GameApp writer가 Alpine에 전달한다. Alpine은 이 값을 표시만 하며 map runtime을 직접 수정하지 않는다. Render Lab의 낮/밤 전환은 GameApp 공개 intent를 거쳐 GameScene world time을 변경한다.
+지역명, 목표와 시간대는 GameScene이 소유한 읽기 전용 world status를 `GameStatus` child Node가 변화 시에만 Signal로 발행하고 GameApp writer가 Alpine에 전달한다. Player HP도 같은 경계를 사용하므로 GameApp과 Alpine이 GameScene field를 직접 읽지 않는다. Alpine은 값을 표시만 하며 map runtime을 직접 수정하지 않는다. Render Lab의 낮/밤 전환은 GameApp 공개 intent를 거쳐 GameScene world time을 변경한다.
 
 ## In-Game HUD
 
@@ -83,6 +85,8 @@ Alpine `gameShell`은 하나의 control catalog에서 모바일 방향 pad와 ac
 - `menu → render-lab`: 현재 GameScene을 유지하고 Polygon/Retro 비교 Canvas를 활성화한다.
 - `game/render-lab → menu`: 입력을 비우고 simulation 진행을 멈춘다.
 - `page destroy`: animation frame, input listener와 ResizeObserver를 해제한다.
+
+GameApp은 runtime scene tree의 root Node다. `start()`는 tree enter, `destroy()`는 children-first tree exit를 요청한다. GameScene status/render Signal connection, browser listener, input adapter와 ResizeObserver는 이 lifecycle에서 함께 연결·정리된다. 세부 순서와 Signal 규칙은 [`runtime-architecture.md`](./runtime-architecture.md)가 소유한다.
 
 ## Reference Adoption
 
