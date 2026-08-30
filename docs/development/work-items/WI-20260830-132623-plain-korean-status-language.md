@@ -1,6 +1,6 @@
 ---
 id: WI-20260830-132623
-status: ready-for-integration
+status: done
 priority: normal
 lane: maintenance
 created_at: 2026-08-30T13:26:23+09:00
@@ -54,5 +54,6 @@ source_ref: null
 
 - 이전 최종 worktree commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191`
 - 이전 main integration commit: `2ccb562f4636d9c32d1590d86c269c0eb21f5191` (fast-forward)
-- 추가 수정 최종 commit: 이 업무 담당 대화의 완료 답변으로 전달
-- 추가 수정 main integration commit: 메인 반영 후 기록
+- 추가 수정 최종 commit: `3fda3698953d6b00a6bbafc2f421827de2322474`
+- 추가 수정 main integration commit: `3fda3698953d6b00a6bbafc2f421827de2322474` (fast-forward)
+- 메인 확인: 구체적 판단 조건·품질 기준 정합·전체 검사 통과
