@@ -57,11 +57,12 @@
 - 환경형 사람 크기 Portal correction checkpoint: `1857977405f8b3f86046fd55c938a16a7252d4f9` · 첫 visible PNG에서 문틀이 플레이어보다 크고 외곽 accent가 공통 ring처럼 보이는 결함을 직접 판독해, 개구부 `21~26 × 43~45`, 문틀 `44~49 × 52~54`, 환경 재료 외곽선과 얇은 내부 경로색으로 수리했다.
 - 환경형 사람 크기 Portal clean final: `31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44` · latest main을 non-rewriting merge한 뒤 36개 ID·치수, 8개 patch, academy→training 전환, `npm run check`, `git diff --check`를 통과했다. Visible Chrome frame 180의 supported 여덟 Room을 직접 판독했고 `artifacts/visual-qa/IN-20260831-030641/latest-<screen>-180/`의 capture는 `1440×810`, console error 0개, merge 전 합격 PNG와 byte-identical이다. 적용 품질 축은 모두 2 이상이다.
 - 환경형 사람 크기 Portal integration: `d2a05e95b370c88b0b5db9017dbba41de6ca443a` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-030641` done block만 제거했다.
-- Direct INBOX lane: explicit-only `$dev-inbox-direct`, lease-guarded `claim-direct`, `direct-*` lifecycle과 background wait sentinel을 추가했다. Direct claim은 구현 전에 main에 push되고 current conversation이 진행 보고·구현·QA·통합을 소유하며, background `$dev-team-loop`와 ROADMAP selection은 claim 완료 또는 authorized recovery까지 대기한다.
+- Direct INBOX lane: explicit-only `$dev-inbox-direct`, lease-guarded `claim-direct`, `direct-*` lifecycle과 background wait sentinel을 추가했다. Direct claim은 구현 전에 main에 push되고 current conversation이 진행 보고·구현·QA·통합을 소유하며, background outer loop와 ROADMAP selection은 claim 완료 또는 authorized recovery까지 대기한다.
+- Canonical prompt mode boundary: `loop/PROMPT.md`가 interview, intake, lifecycle, background, roadmap, direct, control, status와 recovery의 실제 절차를 모두 소유한다. `$dev-inbox-interview`, `$dev-inbox-add`, `$dev-inbox-direct`, `$dev-team-loop`, `$dev-loop-status`, `$dev-loop-recover`는 mode trigger만 맡고 skill-local 실행 reference는 제거했다.
 
 ## Next
 
-다음 대상은 `IN-20260831-030839`의 story 진행과 실제 마을·Field·Dungeon 구체화다. `$dev-team-loop`는 background fresh session으로, explicit `$dev-inbox-direct`는 현재 대화에서 먼저 `direct-*` claim한 뒤 진행 상황을 보이며 완결한다.
+다음 대상은 `IN-20260831-030839`의 story 진행과 실제 마을·Field·Dungeon 구체화다. `$dev-team-loop 켜`는 background supervisor를 시작하고 즉시 반환하며, explicit `$dev-inbox-direct`는 현재 대화에서 먼저 `direct-*` claim한 뒤 진행 상황을 보이며 완결한다.
 
 ## Update Contract
 

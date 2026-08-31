@@ -1,0 +1,7 @@
+interface:
+  display_name: 'INBOX Add'
+  short_description: 'Register a new request without running the loop'
+  default_prompt: 'Use $dev-inbox-add to register this Polygon RPG request verbatim in the INBOX.'
+
+policy:
+  allow_implicit_invocation: true

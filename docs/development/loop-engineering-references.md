@@ -154,4 +154,4 @@ Task Scheduler는 설치 직후 disabled다. `run-once` 두 회가 Codex fresh-s
 - Executor/local/remote ref, checkpoint/final/integration commit graph
 - Task Scheduler state/result, PID guard와 STOP presence
 
-`$dev-loop-status`는 이 evidence를 read-only로 점검한다. 자동 repair는 다음 complete-work session이 소유한다.
+`$dev-loop-status`는 canonical prompt의 `STATUS` mode로 이 evidence를 read-only 점검한다. Supervisor가 멈춘 경우 `$dev-loop-recover`가 `RECOVER` mode로 안전한 재기동만 수행하고, 실제 repair와 수렴은 다음 fresh complete-work session이 소유한다.

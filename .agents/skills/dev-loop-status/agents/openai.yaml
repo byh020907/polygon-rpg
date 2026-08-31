@@ -1,0 +1,7 @@
+interface:
+  display_name: 'Development Loop Status'
+  short_description: 'Read-only health check for the Polygon RPG loop'
+  default_prompt: 'Use $dev-loop-status to audit the Polygon RPG development loop without changing it.'
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+interface:
+  display_name: 'Development Loop Control'
+  short_description: 'Turn the Polygon RPG background loop on or off'
+  default_prompt: 'Use $dev-team-loop to show the Polygon RPG loop controller status.'
+
+policy:
+  allow_implicit_invocation: true

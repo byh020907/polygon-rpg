@@ -57,8 +57,12 @@ switch ($Action) {
     Write-Host "Loop 시작: $taskName"
   }
   'stop' {
+    $task = Get-LoopTask
+    if ($task) {
+      Disable-ScheduledTask -TaskName $taskName | Out-Null
+    }
     New-Item -ItemType File -Path $stopPath -Force | Out-Null
-    Write-Host 'STOP 기록 완료 · 현재 entry가 끝나면 정상 종료합니다.'
+    Write-Host 'Loop 자동 시작 비활성화 · STOP 기록 완료 · 현재 entry가 끝나면 정상 종료합니다.'
   }
   'status' {
     $task = Get-LoopTask
@@ -81,7 +85,9 @@ switch ($Action) {
     Write-Host "Loop 자동 시작 활성화: $taskName"
   }
   'disable' {
-    Disable-ScheduledTask -TaskName $taskName | Out-Null
+    if (Get-LoopTask) {
+      Disable-ScheduledTask -TaskName $taskName | Out-Null
+    }
     Write-Host "Loop 자동 시작 비활성화: $taskName"
   }
   'run-once' {

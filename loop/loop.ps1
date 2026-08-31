@@ -89,19 +89,14 @@ try {
     $startHead = & $script:LoopConfig.GitPath -C $repoRoot rev-parse HEAD
 
     $prompt = if ($isRoadmapRun) { @"
-You are the sole writer for one complete Polygon RPG DESIGN convergence job.
+Operation mode: ROADMAP_CONVERGE
 
-Read AGENTS.md, loop/PROMPT.md, docs/DESIGN.md, docs/STATUS.md and docs/feedback/INBOX.md completely. There is no live inbox entry, so inspect approved DESIGN and current code/evidence. If any approved milestone or next vertical slice remains incomplete, choose exactly one whole playable job and complete it end to end in this fresh session: deterministic branch/worktree, implementation, affected checks, checkpoint, visible-window PNG QA where applicable, direct image reading, same-session repairs, clean final, non-rewriting main merge, STATUS evidence and push. Do not stop at planning or checkpoint.
-
-If and only if all approved DESIGN milestones and quality proof are complete, main equals origin/main, and no nonterminal inbox/executor/conflict remains, record an exact line '- Loop completion: VERIFIED' in docs/STATUS.md with the proof, commit with subject '루프 전체 완료 증명', push it, then exit normally. A queue-empty snapshot alone is not completion. If a human Product Decision or external credential truly blocks convergence, record an exact line '- Loop blocker: <concrete cause>' in STATUS. Otherwise a session that neither advances main nor writes verified completion is incomplete.
+Read loop/PROMPT.md completely and execute only its ROADMAP_CONVERGE mode. This is a fresh, memoryless Codex session. The canonical prompt owns the full procedure and completion gate; do not substitute a skill workflow or stop at a checkpoint.
 "@ } else { @"
-You are the sole writer for Polygon RPG file-memory loop entry $entryId.
+Operation mode: BACKGROUND_ENTRY
+Entry: $entryId
 
-Read AGENTS.md, loop/PROMPT.md, docs/DESIGN.md, docs/STATUS.md, docs/feedback/INBOX.md and the exact entry completely. This is a fresh session. Do not resume, fork or rely on another conversation.
-
-Complete this one entry end to end in this session: recover or create its executor worktree, implement the whole requested result, run affected deterministic checks, checkpoint before visual inspection, run visible-window PNG QA with loop/visual-qa.ps1 for every applicable screen, read the PNG directly, repair and repeat until the quality contract passes, create the clean final, merge non-rewriting into main, record STATUS, remove the done INBOX block, push all durable commits, and release the lease. Do not stop after planning, provisioning, one improvement, checkpoint, verification, or ready-for-integration.
-
-If a human Product Decision or external credential truly blocks completion, record the exact blocker in INBOX and STATUS and exit normally. Otherwise this session is incomplete until $entryId is absent from the live INBOX.
+Read loop/PROMPT.md completely and execute only its BACKGROUND_ENTRY mode for the exact entry above. This is a fresh, memoryless Codex session. The canonical prompt owns the full procedure and completion gate; do not substitute a skill workflow or stop at a checkpoint.
 "@ }
 
     $codexArguments = @(

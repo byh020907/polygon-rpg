@@ -1,0 +1,7 @@
+interface:
+  display_name: 'INBOX Interview'
+  short_description: 'Refine a request before registering it'
+  default_prompt: 'Use $dev-inbox-interview to refine this Polygon RPG request before adding it to the INBOX.'
+
+policy:
+  allow_implicit_invocation: true

@@ -75,7 +75,7 @@ Pixel Size, Posterization, Outline, Alpha Threshold, Pixel Snap, Animation Speed
 
 ## 자동 개발 loop
 
-Windows outer loop는 INBOX entry마다 기억 없는 새 `codex exec --ephemeral` session을 열고 요청 하나를 구현·검사·visible PNG QA·수정·commit·main 통합·INBOX 정리까지 완결합니다. 실행 경로와 model은 [`loop/env.ps1`](./loop/env.ps1), session 계약은 [`loop/PROMPT.md`](./loop/PROMPT.md)에 있습니다.
+Windows outer loop는 INBOX entry마다 기억 없는 새 `codex exec --ephemeral` session을 열고 요청 하나를 구현·검사·visible PNG QA·수정·commit·main 통합·INBOX 정리까지 완결합니다. 실행 경로와 model은 [`loop/env.ps1`](./loop/env.ps1), 등록·실행·상태·복구·제어의 모든 실제 절차는 [`loop/PROMPT.md`](./loop/PROMPT.md)에 있습니다. `.agents/skills/dev-*`는 이 prompt의 mode를 선택하는 trigger만 맡습니다.
 
 ```powershell
 # 최초 등록: 로그인 trigger를 만들지만 아직 비활성 상태로 둠
@@ -84,7 +84,7 @@ pwsh -NoProfile -File .\loop\control.ps1 install
 # 실제 entry 하나로 수동 검증
 pwsh -NoProfile -File .\loop\control.ps1 run-once
 
-# 자동 실행 시작 / 현재 entry 완료 후 정상 정지 / 상태 확인
+# 자동 실행 시작 / 다음 trigger 차단 + 현재 entry 완료 후 정상 정지 / 상태 확인
 pwsh -NoProfile -File .\loop\control.ps1 start
 pwsh -NoProfile -File .\loop\control.ps1 stop
 pwsh -NoProfile -File .\loop\control.ps1 status
@@ -94,9 +94,18 @@ pwsh -NoProfile -File .\loop\control.ps1 enable
 pwsh -NoProfile -File .\loop\control.ps1 disable
 ```
 
-Task Scheduler 이름은 `PolygonRpgFileMemoryLoop`입니다. 로그인 시 시작하고 abnormal exit만 재시작합니다. INBOX가 비면 fresh `ROADMAP` session이 DESIGN의 다음 playable job을 완결하며, 전체 완료 proof를 STATUS/Git에 남긴 뒤에만 exit code 0으로 끝납니다. `loop/STOP`도 현재 entry 완료 뒤 정상 종료합니다. 날짜별 실행 evidence는 `logs/`, 화면 evidence는 `artifacts/visual-qa/`에 생성되며 둘 다 Git에는 넣지 않습니다.
+Task Scheduler 이름은 `PolygonRpgFileMemoryLoop`입니다. 로그인 시 시작하고 abnormal exit만 재시작합니다. `stop`은 task를 disable한 뒤 `loop/STOP`을 기록하므로 새 trigger는 생기지 않고 실행 중 entry만 완결 후 정상 종료합니다. INBOX가 비면 fresh `ROADMAP_CONVERGE` session이 DESIGN의 다음 playable job을 완결하며, 전체 완료 proof를 STATUS/Git에 남긴 뒤에만 exit code 0으로 끝납니다. 날짜별 실행 evidence는 `logs/`, 화면 evidence는 `artifacts/visual-qa/`에 생성되며 둘 다 Git에는 넣지 않습니다.
 
-진행 과정을 현재 대화에서 보며 항목 하나를 직접 처리하려면 `$dev-inbox-direct`를 명시적으로 호출합니다. 이 lane은 구현 전에 entry를 `direct-*`로 claim·push하므로 background loop가 그 항목이나 다음 항목을 선점하지 않습니다. `$dev-team-loop`는 background fresh-session 실행, `$dev-loop-status`는 read-only 진단을 유지합니다.
+일반 새 개발 명령은 `$dev-inbox-add`가 원문을 INBOX에 등록하고 즉시 반환합니다. 진행 과정을 현재 대화에서 보며 기존 항목 하나를 직접 처리하려면 `$dev-inbox-direct`를 명시적으로 호출합니다. 이 lane은 구현 전에 entry를 `direct-*`로 claim·push하므로 background loop가 다른 일을 선점하지 않습니다.
+
+Loop skill의 역할은 다음처럼 분리됩니다.
+
+- `$dev-team-loop 켜|꺼|상태`: background Task Scheduler 제어만 수행합니다. Bare invocation은 안전하게 `상태`입니다.
+- `$dev-loop-status`: mutation 없는 상세 상태 점검입니다.
+- `$dev-loop-recover`: 비정상 정지·stale supervisor를 안전하게 수리하거나 재기동하고 즉시 반환합니다.
+- `$dev-inbox-direct`: 기존 INBOX entry 하나를 현재 대화에서 완결합니다.
+- `$dev-inbox-add`: 새 요청의 원문 등록만 수행합니다.
+- `$dev-inbox-interview`: 등록 전 질문과 최종 원문 승인을 진행하며 승인 전에는 mutation하지 않습니다.
 
 ## Visible visual QA
 

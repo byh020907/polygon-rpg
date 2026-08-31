@@ -14,7 +14,7 @@
 
 ## Project Development Process
 
-File memory는 [`DESIGN`](./docs/DESIGN.md)·[`STATUS`](./docs/STATUS.md)·[`INBOX`](./docs/feedback/INBOX.md), lifecycle은 [`process`](./docs/development/process.md), 품질은 [`quality-loop`](./docs/development/quality-loop.md)가 소유한다. 메인은 원문을 등록하고 fresh Codex session은 entry 하나를 완결한다.
+File memory는 [`DESIGN`](./docs/DESIGN.md)·[`STATUS`](./docs/STATUS.md)·[`INBOX`](./docs/feedback/INBOX.md), lifecycle은 [`process`](./docs/development/process.md), 품질은 [`quality-loop`](./docs/development/quality-loop.md)가 소유한다. [`loop/PROMPT.md`](./loop/PROMPT.md)는 모든 운영 절차의 단일 원본이고 skill은 mode trigger만 맡는다.
 
 ## 1. Instruction Precedence
 
@@ -57,7 +57,7 @@ Layer 1을 읽은 뒤 현재 작업의 목표, 허용 변경 범위, 완료 조�
 | `docs/DESIGN.md`                                  | Canonical Product Reference | 안정된 제품 방향·milestone·non-scope                        | 새 작업·제품 방향 판단 시                                          |
 | `docs/STATUS.md`                                  | Canonical Working Memory    | 현재 단계·current best·다음 병목                            | Loop 시작·종료 시                                                  |
 | `docs/feedback/INBOX.md`                          | Canonical Queue             | 등록 원문·lifecycle·실행 상태·결과                          | 등록·실행·복구·완료 시                                             |
-| `loop/PROMPT.md`                                  | Canonical Run Prompt        | Fresh session의 읽기·commit·QA·통합 순서                    | Executor 실행 시                                                   |
+| `loop/PROMPT.md`                                  | Canonical Operation Prompt  | 등록·실행·상태·복구·제어의 단일 절차 원본                   | Loop 관련 operation 실행 시                                        |
 | `docs/reference-repositories.md`                  | Evidence Catalog            | 현재 계약을 만든 과거 Engineering 근거와 채택 범위          | 기존 결정의 출처·trade-off를 재검증할 때                           |
 | `docs/rendering-pipeline.md`                      | Canonical Reference         | 공유 RenderFrame과 Polygon/Retro 렌더 파이프라인            | 렌더러, 카메라, 좌표계, 후처리, 관련 Debug UI 작업 시              |
 | `docs/ui-architecture.md`                         | Canonical Reference         | Alpine.js 화면 상태, UI bridge와 App lifecycle              | 메인 메뉴, HUD, 화면 전환, UI control 및 Alpine bootstrap 작업 시  |
@@ -124,7 +124,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff       |
-| `PROCESS-DEV-TEAM-LOOP`   | 메인은 원문을 INBOX에 append한다. Background fresh session과 explicit `direct-*` lane은 각 entry 하나를 완결하며 서로의 소유 항목을 소비하지 않는다.                              | process, skills                            |
+| `PROCESS-DEV-TEAM-LOOP`   | Skill은 canonical prompt mode만 trigger한다. Background와 explicit direct lane은 entry 하나를 완결하며 `$dev-team-loop`는 on/off/status 제어만 맡는다.                            | prompt, process, skills                    |
 | `PROCESS-QUALITY-LOOP`    | INBOX entry·branch가 Director 경계다. Checkpoint는 visible PNG QA와 same-session repair 전의 복구 evidence다.                                                                     | quality loop, skill                        |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`              |
 | `GIT-PURPOSE-COMMITS`     | 큰 작업은 독립적으로 이해·검증·되돌릴 수 있는 목적 단위로 나누고 commit에는 변경 이유와 검증 근거를 남긴다.                                                                       | Core Engineering Principles·process        |
