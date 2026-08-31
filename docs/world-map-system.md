@@ -69,6 +69,14 @@ GameScene의 Player와 camera presentation state는 Room Scene 교체 밖에 존
 
 Gameplay surface는 충돌·이동을 위한 단순 geometry다. Render geometry의 풀, 돌, 건물, 전경과 장식은 gameplay collider를 자동 생성하지 않는다. Renderer는 resolved map snapshot과 RenderFrame을 읽기만 하며 map state, collision, entity AI 또는 effect lifetime을 변경하지 않는다.
 
+### Portal presentation
+
+- Portal의 gameplay anchor·interaction radius·spawn은 presentation geometry와 분리한다.
+- 보이는 Portal은 공통 차원문 ring이 아니라 현재 Room의 재료와 silhouette를 따르는 문·뿌리 arch·석문·결정 틈으로 표현한다.
+- 약 `32×45` World unit인 플레이어를 기준으로 내부 개구부는 폭 `24~30`, 높이 `49~53`, 외곽 문틀은 폭 `51~58`, 높이 `61~65`를 사용한다. 환경 장식이 문틀 밖으로 커져도 개구부는 이 사람 크기 기준을 유지한다.
+- 경로 accent는 외곽선에서만 구분하고 내부는 Room의 어두운 공간색을 사용해 Polygon/Retro 모두에서 문으로 읽히게 한다.
+- Map definition은 stable `<id>-outer`·`<id>-inner` render item을 소유하고 상태 patch는 기존 ID를 그대로 켜고 끈다. Renderer는 style이나 Portal 의미를 해석하지 않는다.
+
 ## 월드 상태 패치
 
 하나의 base map에 시간·날씨·story·quest·local event 패치를 결정적으로 적용한다.
@@ -100,4 +108,8 @@ Resolved Map = Base + Time/Weather + World/Region Story + Quest + Local Event
 
 - Godot: persistent Player와 교체 가능한 Room subtree 분리, parent-owned lifecycle, direct command와 completed Signal 분리를 Polygon RPG에 맞게 수정 채택
 - Baeseongjin: frozen input sequence, pure camera target·delta smoothing, authority snapshot 후 presentation 갱신 원칙만 채택
+- [Unravel 환경 설계](https://www.ea.com/games/unravel/news/unravel-game-environments): location마다 다른 환경 이야기를 갖게 하는 원칙을 Portal의 biome별 재료·silhouette에 차용
+- [Far Cry 5 환경 탐색 설계](https://news.ubisoft.com/en-us/article/16TjVZmAtD85EWcvHtxHXL/far-cry-5-creating-curiosity-in-a-familiar-world): 실제 세계에서 이미 아는 길·출입구 언어로 이동 방향을 유도하는 원칙을 차용
+- [Hollow Knight 공식 환경 화면](https://www.hollowknight.com/): 각 지역의 고유하고 어두운 환경 detail과 강한 개구부 silhouette 원칙만 차용
+- [UK Approved Document M 출입문 치수](https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/506503/BR_PDF_AD_M1_2015_with_2016_amendments_V3.pdf): 사람 대비 문 폭·높이 비례만 참고하고 건축 규격 자체는 gameplay에 적용하지 않음
 - 비채택: Godot API/Resource 복제, autoload/global bus, Baeseongjin manager·Quadtree·authority 계층, Depth Lane visual scale transition

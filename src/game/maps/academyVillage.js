@@ -1,4 +1,5 @@
 import { defineMap } from '../map/MapDefinition.js';
+import { createPortalRenderItems } from './PortalRenderItems.js';
 import {
   ACADEMY_FIELD_PORTAL_ITEMS,
   FIRST_JOURNEY_PATCHES,
@@ -327,17 +328,9 @@ const frontLayerItems = [
     order: 8,
     enabled: false,
   }),
-  renderItem('test-portal-outer', regularPolygon(104, 377, 42, 55, 14), '#273650', {
-    stroke: '#86d9d1',
-    lineWidth: 3,
-    opacity: 0.92,
+  ...createPortalRenderItems('test-portal', 104, 432, '#86d9d1', {
+    style: 'academy',
     order: 9,
-  }),
-  renderItem('test-portal-inner', regularPolygon(104, 380, 29, 43, 14), '#111329', {
-    stroke: '#c7fff2',
-    lineWidth: 1.5,
-    opacity: 0.96,
-    order: 10,
   }),
   ...ACADEMY_FIELD_PORTAL_ITEMS,
 ];
@@ -372,15 +365,9 @@ const combatDungeonItems = [
     lineWidth: 1.5,
     order: 2,
   }),
-  renderItem('dungeon-exit-outer', regularPolygon(104, 365, 42, 55, 14), '#273650', {
-    stroke: '#86d9d1',
-    lineWidth: 3,
+  ...createPortalRenderItems('dungeon-exit', 104, 420, '#86d9d1', {
+    style: 'sealed',
     order: 7,
-  }),
-  renderItem('dungeon-exit-inner', regularPolygon(104, 368, 29, 43, 14), '#111329', {
-    stroke: '#c7fff2',
-    lineWidth: 1.5,
-    order: 8,
   }),
   renderItem('training-rune-left', regularPolygon(360, 395, 24, 9, 6), '#5fb8ad', {
     opacity: 0.5,

@@ -1,3 +1,5 @@
+import { createPortalRenderItems } from './PortalRenderItems.js';
+
 function rectangle(x, y, width, height) {
   return [
     { x, y },
@@ -28,26 +30,6 @@ function renderItem(id, points, fill, options = {}) {
   };
 }
 
-function portalItems(id, x, groundY, color, { enabled = true } = {}) {
-  const centerY = groundY - 52;
-  return [
-    renderItem(`${id}-outer`, regularPolygon(x, centerY, 42, 52, 12, Math.PI / 12), '#101827', {
-      stroke: color,
-      lineWidth: 3,
-      opacity: 0.95,
-      order: 42,
-      enabled,
-    }),
-    renderItem(`${id}-inner`, regularPolygon(x, centerY + 1, 28, 39, 12, Math.PI / 12), '#050913', {
-      stroke: '#eaffff',
-      lineWidth: 1.5,
-      opacity: 0.96,
-      order: 43,
-      enabled,
-    }),
-  ];
-}
-
 function shard(id, x, y, scale, color, options = {}) {
   return renderItem(
     id,
@@ -67,7 +49,9 @@ const dungeonGroundY = 424;
 const bossGroundY = 426;
 
 export const ACADEMY_GLASSWIND_PORTAL_ITEMS = Object.freeze(
-  portalItems('academy-glasswind-gate', 710, 432, '#78e2ec'),
+  createPortalRenderItems('academy-glasswind-gate', 710, 432, '#78e2ec', {
+    style: 'academy',
+  }),
 );
 
 const fieldRoom = {
@@ -153,8 +137,13 @@ const fieldRoom = {
       '#72e5ee',
       { stroke: '#f1ffff', lineWidth: 2, opacity: 0.24, order: 18 },
     ),
-    ...portalItems('glasswind-return-gate', 80, fieldGroundY, '#78e2ec'),
-    ...portalItems('glasswind-dungeon-gate', 930, fieldGroundY, '#9fe8bc', { enabled: false }),
+    ...createPortalRenderItems('glasswind-return-gate', 80, fieldGroundY, '#78e2ec', {
+      style: 'glasswind',
+    }),
+    ...createPortalRenderItems('glasswind-dungeon-gate', 930, fieldGroundY, '#9fe8bc', {
+      style: 'glasswind',
+      enabled: false,
+    }),
     shard('glasswind-field-shard-a', 290, 354, 30, '#58b7c5', { order: 5 }),
     shard('glasswind-field-shard-b', 520, 370, 22, '#6ec8cf', { order: 6 }),
   ],
@@ -205,8 +194,13 @@ const dungeonRoom = {
       lineWidth: 2,
       order: 0,
     }),
-    ...portalItems('glasswind-observatory-return', 80, dungeonGroundY, '#9fe8bc'),
-    ...portalItems('glasswind-boss-gate', 930, dungeonGroundY, '#d890e8', { enabled: false }),
+    ...createPortalRenderItems('glasswind-observatory-return', 80, dungeonGroundY, '#9fe8bc', {
+      style: 'observatory',
+    }),
+    ...createPortalRenderItems('glasswind-boss-gate', 930, dungeonGroundY, '#d890e8', {
+      style: 'observatory',
+      enabled: false,
+    }),
     renderItem(
       'glasswind-anchor-dormant',
       regularPolygon(610, dungeonGroundY - 50, 26, 48, 10, Math.PI / 10),
@@ -280,8 +274,13 @@ const bossRoom = {
       '#b872b8',
       { opacity: 0.32, order: 2 },
     ),
-    ...portalItems('glasswind-boss-return', 80, bossGroundY, '#d890e8'),
-    ...portalItems('glasswind-shortcut-gate', 930, bossGroundY, '#f3cf78', { enabled: false }),
+    ...createPortalRenderItems('glasswind-boss-return', 80, bossGroundY, '#d890e8', {
+      style: 'storm',
+    }),
+    ...createPortalRenderItems('glasswind-shortcut-gate', 930, bossGroundY, '#f3cf78', {
+      style: 'storm',
+      enabled: false,
+    }),
     renderItem(
       'glasswind-reward-prism',
       regularPolygon(810, bossGroundY - 58, 34, 58, 10, Math.PI / 10),
