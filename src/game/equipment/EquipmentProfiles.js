@@ -45,3 +45,9 @@ export function getEquipmentProfile(profileId) {
   if (!profile) throw new Error(`알 수 없는 장비 profile입니다: ${profileId}`);
   return profile;
 }
+
+export const EQUIPMENT_CATALOG = Object.freeze({
+  defaultProfileId: DEFAULT_EQUIPMENT_PROFILE_ID,
+  profiles: EQUIPMENT_PROFILES,
+  getProfile: getEquipmentProfile,
+});

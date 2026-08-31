@@ -78,3 +78,11 @@ export function getCombatSkillTrainingMarkRequirement(level) {
   }
   return COMBAT_SKILL_TRAINING_MARK_REQUIREMENTS[level];
 }
+
+export const COMBAT_PROGRESSION_PROFILE = Object.freeze({
+  trainingClearReward: TRAINING_CLEAR_REWARD,
+  maxSkillLevel: COMBAT_SKILL_LEVEL_PROFILES.length - 1,
+  getSkillLevelProfile: getCombatSkillLevelProfile,
+  getSkillUpgradeCost: getCombatSkillUpgradeCost,
+  getSkillTrainingMarkRequirement: getCombatSkillTrainingMarkRequirement,
+});

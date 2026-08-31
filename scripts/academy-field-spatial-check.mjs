@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 
-import { GameScene } from '../src/game/GameScene.js';
 import { MapRuntime } from '../src/game/map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
 const EMPTY_INPUT = Object.freeze({
@@ -313,7 +313,7 @@ function assertPatchAndRouteMatrix() {
 }
 
 function assertPlayerTraversalAndCameraTravel() {
-  const scene = new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
   const progression = scene.getProgressionSnapshot();
   scene.restoreProgression(
     Object.freeze({

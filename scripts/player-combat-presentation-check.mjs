@@ -8,8 +8,8 @@ import {
   CHARACTER_RENDER_SCALE,
   createPlayerCombatPresentation,
 } from '../src/game/PlayerCombatPresentation.js';
-import { GameScene } from '../src/game/GameScene.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
@@ -99,7 +99,7 @@ function digestItems(items) {
 }
 
 function assertPublicParity(scenarioId, expected, setScenario) {
-  const scene = new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
   scene.enterTree();
   try {
     scene.setVisualQaLocation({

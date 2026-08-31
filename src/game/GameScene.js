@@ -16,20 +16,9 @@ import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
-import {
-  DEFAULT_EQUIPMENT_PROFILE_ID,
-  EQUIPMENT_PROFILES,
-  getEquipmentProfile,
-} from './equipment/EquipmentProfiles.js';
 import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
 import { RegionExpansionProgress } from './encounter/RegionExpansionProgress.js';
 import { MapRuntime } from './map/MapRuntime.js';
-import {
-  TRAINING_CLEAR_REWARD,
-  getCombatSkillLevelProfile,
-  getCombatSkillTrainingMarkRequirement,
-  getCombatSkillUpgradeCost,
-} from './progression/ProgressionProfiles.js';
 import {
   PROGRESSION_TRANSACTION_REASON,
   assertProgressionSnapshot,
@@ -230,15 +219,50 @@ function timePhaseForHour(hour) {
   return hour >= 6 && hour < 18 ? 'day' : 'night';
 }
 
+function assertEquipmentCatalog(catalog) {
+  if (
+    !catalog ||
+    typeof catalog.defaultProfileId !== 'string' ||
+    !Array.isArray(catalog.profiles) ||
+    typeof catalog.getProfile !== 'function'
+  ) {
+    throw new TypeError('GameScene에는 authored equipment catalog 주입이 필요합니다.');
+  }
+  return catalog;
+}
+
+function assertCombatProgressionProfile(profile) {
+  if (
+    !profile ||
+    !Number.isInteger(profile.trainingClearReward) ||
+    !Number.isInteger(profile.maxSkillLevel) ||
+    typeof profile.getSkillLevelProfile !== 'function' ||
+    typeof profile.getSkillUpgradeCost !== 'function' ||
+    typeof profile.getSkillTrainingMarkRequirement !== 'function'
+  ) {
+    throw new TypeError('GameScene에는 authored combat progression profile 주입이 필요합니다.');
+  }
+  return profile;
+}
+
 export class GameScene extends SceneNode {
-  constructor({ mapDefinition, progressionSnapshot = null } = {}) {
+  constructor({
+    mapDefinition,
+    equipmentCatalog,
+    combatProgressionProfile,
+    progressionSnapshot = null,
+  } = {}) {
     super('GameScene');
     if (!mapDefinition)
       throw new TypeError('GameScene에는 authored mapDefinition 주입이 필요합니다.');
+    this.equipmentCatalog = assertEquipmentCatalog(equipmentCatalog);
+    this.combatProgressionProfile = assertCombatProgressionProfile(combatProgressionProfile);
     const initialProgression =
-      progressionSnapshot ?? createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+      progressionSnapshot ?? createProgressionSnapshot(this.equipmentCatalog.defaultProfileId);
     this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
-    this.equipmentProfile = getEquipmentProfile(this.progressionSnapshot.equippedEquipmentId);
+    this.equipmentProfile = this.equipmentCatalog.getProfile(
+      this.progressionSnapshot.equippedEquipmentId,
+    );
     const skillProfile = this.getCombatSkillProfile();
     this.combatCommands = new CombatCommandController({
       timingProfile: this.equipmentProfile.combatTiming,
@@ -273,7 +297,9 @@ export class GameScene extends SceneNode {
   }
 
   getCombatSkillProfile() {
-    return getCombatSkillLevelProfile(this.progressionSnapshot.combatSkillLevel);
+    return this.combatProgressionProfile.getSkillLevelProfile(
+      this.progressionSnapshot.combatSkillLevel,
+    );
   }
 
   getProgressionSnapshot() {
@@ -283,7 +309,7 @@ export class GameScene extends SceneNode {
   restoreProgression(snapshot) {
     assertProgressionSnapshot(snapshot);
     const nextSnapshot = mergeProgressionSnapshot(snapshot);
-    const nextEquipment = getEquipmentProfile(nextSnapshot.equippedEquipmentId);
+    const nextEquipment = this.equipmentCatalog.getProfile(nextSnapshot.equippedEquipmentId);
     const nextJourney = new FirstJourneyProgress(nextSnapshot.firstJourney);
     const nextRegionExpansion = new RegionExpansionProgress(nextSnapshot.regionExpansion);
 
@@ -360,7 +386,9 @@ export class GameScene extends SceneNode {
     this.portalTransitionPresentation = null;
     this.cameraPosition = { ...mapSnapshot.cameraPosition };
     this.previousCameraPosition = { ...this.cameraPosition };
-    this.equipmentProfile = getEquipmentProfile(this.progressionSnapshot.equippedEquipmentId);
+    this.equipmentProfile = this.equipmentCatalog.getProfile(
+      this.progressionSnapshot.equippedEquipmentId,
+    );
     this.combatCommands.reset();
     this.combatCommands.setTimingProfile(this.equipmentProfile.combatTiming);
     this.combatCommands.setCommandProfile(this.getCombatSkillProfile());
@@ -813,8 +841,10 @@ export class GameScene extends SceneNode {
   commitProgression(transaction, { equipmentChanged = false, skillChanged = false } = {}) {
     if (!transaction.changed) return transaction;
     const nextSnapshot = transaction.snapshot;
-    const nextEquipment = getEquipmentProfile(nextSnapshot.equippedEquipmentId);
-    const nextSkill = getCombatSkillLevelProfile(nextSnapshot.combatSkillLevel);
+    const nextEquipment = this.equipmentCatalog.getProfile(nextSnapshot.equippedEquipmentId);
+    const nextSkill = this.combatProgressionProfile.getSkillLevelProfile(
+      nextSnapshot.combatSkillLevel,
+    );
     if (equipmentChanged) this.combatCommands.setTimingProfile(nextEquipment.combatTiming);
     if (skillChanged) this.combatCommands.setCommandProfile(nextSkill);
     this.progressionSnapshot = nextSnapshot;
@@ -836,7 +866,7 @@ export class GameScene extends SceneNode {
 
   selectEquipment(profileId) {
     if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
-    const profile = getEquipmentProfile(profileId);
+    const profile = this.equipmentCatalog.getProfile(profileId);
     const transaction = selectProgressionEquipment(this.progressionSnapshot, profile.id);
     if (!transaction.changed) return transaction;
     this.progressionNotice = `${profile.shortLabel} 장착 · frame/거리/경직 profile 변경`;
@@ -845,7 +875,7 @@ export class GameScene extends SceneNode {
 
   purchaseEquipment(profileId) {
     if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
-    const profile = getEquipmentProfile(profileId);
+    const profile = this.equipmentCatalog.getProfile(profileId);
     const purchase = purchaseProgressionEquipment(this.progressionSnapshot, {
       profileId: profile.id,
       goldCost: profile.goldCost,
@@ -874,15 +904,16 @@ export class GameScene extends SceneNode {
   trainCombatSkill() {
     if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
     const currentLevel = this.progressionSnapshot.combatSkillLevel;
-    if (currentLevel >= 3) {
+    if (currentLevel >= this.combatProgressionProfile.maxSkillLevel) {
       const transaction = trainProgressionCombatSkill(this.progressionSnapshot);
       this.progressionNotice = 'Command 수련은 이미 최고 단계입니다.';
       this.statusNode.publish({ force: true });
       return transaction;
     }
     const targetLevel = currentLevel + 1;
-    const goldCost = getCombatSkillUpgradeCost(targetLevel);
-    const trainingMarkRequirement = getCombatSkillTrainingMarkRequirement(targetLevel);
+    const goldCost = this.combatProgressionProfile.getSkillUpgradeCost(targetLevel);
+    const trainingMarkRequirement =
+      this.combatProgressionProfile.getSkillTrainingMarkRequirement(targetLevel);
     const transaction = trainProgressionCombatSkill(this.progressionSnapshot, {
       goldCost,
       trainingMarkRequirement,
@@ -895,7 +926,7 @@ export class GameScene extends SceneNode {
       this.statusNode.publish({ force: true });
       return transaction;
     }
-    const skill = getCombatSkillLevelProfile(targetLevel);
+    const skill = this.combatProgressionProfile.getSkillLevelProfile(targetLevel);
     this.progressionNotice = `Command Lv.${targetLevel} · ${skill.label} 해금`;
     return this.commitProgression(transaction, { skillChanged: true });
   }
@@ -996,13 +1027,14 @@ export class GameScene extends SceneNode {
 
   resolveJourneyEncounter(result) {
     if (result.profileId === 'training') {
-      const transaction = awardTrainingMarks(this.progressionSnapshot, TRAINING_CLEAR_REWARD);
-      this.progressionNotice = `훈련 골렘 격파 · 인장 +${TRAINING_CLEAR_REWARD}`;
+      const reward = this.combatProgressionProfile.trainingClearReward;
+      const transaction = awardTrainingMarks(this.progressionSnapshot, reward);
+      this.progressionNotice = `훈련 골렘 격파 · 인장 +${reward}`;
       this.commitProgression(transaction);
       return Object.freeze({
         changed: true,
         kind: 'training-cleared',
-        reward: TRAINING_CLEAR_REWARD,
+        reward,
         snapshot: transaction.snapshot,
       });
     }
@@ -1542,8 +1574,8 @@ export class GameScene extends SceneNode {
       returned: '유리바람 원정 완료',
     };
     const progressionComplete =
-      progression.combatSkillLevel === 3 &&
-      progression.ownedEquipmentIds.length === EQUIPMENT_PROFILES.length;
+      progression.combatSkillLevel === this.combatProgressionProfile.maxSkillLevel &&
+      progression.ownedEquipmentIds.length === this.equipmentCatalog.profiles.length;
     const story = resolveFirstJourneyStory({
       equipment: {
         id: this.equipmentProfile.id,
@@ -1559,7 +1591,7 @@ export class GameScene extends SceneNode {
     let encounterHint = '';
 
     if (roomId === 'training-room') {
-      objective = `훈련 골렘을 처치해 인장 +${TRAINING_CLEAR_REWARD}. 귀환 후 같은 A/S command route를 성장시키세요.`;
+      objective = `훈련 골렘을 처치해 인장 +${this.combatProgressionProfile.trainingClearReward}. 귀환 후 같은 A/S command route를 성장시키세요.`;
       encounterHint = `${this.progressionNotice} · 현재 인장 ${progression.trainingMarks}`;
     }
     if (roomId === 'field-crossing') {
@@ -1653,13 +1685,18 @@ export class GameScene extends SceneNode {
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
 
-    const nextSkillLevel = Math.min(3, progression.combatSkillLevel + 1);
+    const nextSkillLevel = Math.min(
+      this.combatProgressionProfile.maxSkillLevel,
+      progression.combatSkillLevel + 1,
+    );
     const nextSkillCost =
-      progression.combatSkillLevel >= 3 ? null : getCombatSkillUpgradeCost(nextSkillLevel);
-    const nextSkillTrainingMarkRequirement =
-      progression.combatSkillLevel >= 3
+      progression.combatSkillLevel >= this.combatProgressionProfile.maxSkillLevel
         ? null
-        : getCombatSkillTrainingMarkRequirement(nextSkillLevel);
+        : this.combatProgressionProfile.getSkillUpgradeCost(nextSkillLevel);
+    const nextSkillTrainingMarkRequirement =
+      progression.combatSkillLevel >= this.combatProgressionProfile.maxSkillLevel
+        ? null
+        : this.combatProgressionProfile.getSkillTrainingMarkRequirement(nextSkillLevel);
     const availableGold = getAvailableGold(progression);
     const commandGuide = skill.loopCancel
       ? '지상 AA/AS/SA · 공중 AA/AS/SA · finisher→starter loop cancel'
@@ -1703,7 +1740,7 @@ export class GameScene extends SceneNode {
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
       equipmentOptions: Object.freeze(
-        EQUIPMENT_PROFILES.map((profile) => {
+        this.equipmentCatalog.profiles.map((profile) => {
           const owned = progression.ownedEquipmentIds.includes(profile.id);
           const selected = progression.equippedEquipmentId === profile.id;
           const affordable =

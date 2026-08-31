@@ -48,6 +48,13 @@ export class MobileInputAdapter {
     }
 
     eventTarget.defaultView?.addEventListener('blur', () => this.clear(), { signal });
+    eventTarget.addEventListener(
+      'visibilitychange',
+      () => {
+        if (eventTarget.hidden) this.clear();
+      },
+      { signal },
+    );
   }
 
   detach() {

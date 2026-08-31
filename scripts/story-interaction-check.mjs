@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 
-import { GameScene } from '../src/game/GameScene.js';
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
 import {
   FIRST_JOURNEY_CHECKPOINT_ID,
@@ -11,6 +10,7 @@ import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
 const EMPTY_INPUT = Object.freeze({
@@ -30,7 +30,7 @@ function input(overrides = {}) {
 }
 
 function createAcademyScene(x) {
-  const scene = new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
   scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x });
   return scene;
 }
@@ -44,7 +44,7 @@ function createJourneyProgression(firstJourney) {
 }
 
 function createJourneyScene({ roomId, x, firstJourney }) {
-  const scene = new GameScene({
+  const scene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: createJourneyProgression(firstJourney),
   });

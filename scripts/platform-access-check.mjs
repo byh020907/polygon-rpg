@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { GAME_SCREEN } from '../src/app/GameApp.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
+import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 import {
   createDocumentFocusPort,
   ScreenFocusOwner,
@@ -146,11 +147,44 @@ function verifyReducedMotionVisualQaRequest() {
   assert.equal(request.renderer, 'polygon');
 }
 
+function verifyMobileVisibilityCleanup() {
+  const documentListeners = new Map();
+  const windowListeners = new Map();
+  const documentTarget = {
+    hidden: false,
+    defaultView: {
+      addEventListener(eventName, listener) {
+        windowListeners.set(eventName, listener);
+      },
+    },
+    addEventListener(eventName, listener) {
+      documentListeners.set(eventName, listener);
+    },
+  };
+  const adapter = new MobileInputAdapter();
+  adapter.attach(documentTarget);
+
+  adapter.press('left', 11);
+  documentTarget.hidden = true;
+  documentListeners.get('visibilitychange')();
+  assert.equal(
+    adapter.snapshot().left,
+    false,
+    'background 전환은 held mobile input을 풀어야 한다.',
+  );
+
+  adapter.press('right', 12);
+  windowListeners.get('blur')();
+  assert.equal(adapter.snapshot().right, false, 'window blur도 held mobile input을 풀어야 한다.');
+  adapter.detach();
+}
+
 verifyScreenFocusTransitions();
 verifyFocusPortAndNoFocusSteal();
 verifySemanticStatusAndFocusTargets();
 verifyInteractiveControlKeyboardBoundary();
 verifyReducedMotionVisualQaRequest();
+verifyMobileVisibilityCleanup();
 
 console.log(
   JSON.stringify(
@@ -167,6 +201,7 @@ console.log(
         'canvas-independent-area-objective-player-combat-status',
         'reduced-motion-presentation-policy',
         'reduced-motion-in-app-visual-qa-request',
+        'mobile-visibility-and-window-blur-cleanup',
       ],
     },
     null,

@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
-import { GameScene } from '../src/game/GameScene.js';
 import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
   getEquipmentProfile,
@@ -21,6 +20,7 @@ import {
   trainCombatSkill,
 } from '../src/game/progression/ProgressionState.js';
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const HEAVY_PROFILE_ID = 'heavy-sword';
 
@@ -164,13 +164,13 @@ function verifyChoiceTransactions() {
 }
 
 function verifyRuntimeTradeoffsAndStatus() {
-  const scene = new GameScene({
+  const scene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: returnedFirstJourneyProgression(),
   });
   const balancedAttack = scene.getAttackHitProfile('slash');
   const balancedFrames = scene.combatCommands.getMotionFrameData('slash').durationFrames;
-  const balancedGuardScene = new GameScene({
+  const balancedGuardScene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: returnedFirstJourneyProgression(),
   });
@@ -220,7 +220,7 @@ function verifyRuntimeTradeoffsAndStatus() {
     '중량형 방패는 동일 guard contact의 blockstun을 줄여야 한다.',
   );
 
-  const skillScene = new GameScene({
+  const skillScene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: returnedFirstJourneyProgression(),
   });
@@ -251,7 +251,7 @@ class MemoryStorage {
 }
 
 function verifyPersistenceAndFailure() {
-  const scene = new GameScene({
+  const scene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: returnedFirstJourneyProgression(),
   });
@@ -268,7 +268,7 @@ function verifyPersistenceAndFailure() {
   assert.equal(loaded.snapshot.equippedEquipmentId, HEAVY_PROFILE_ID);
   assert.equal(getAvailableGold(loaded.snapshot), 0);
 
-  const restoredScene = new GameScene({
+  const restoredScene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: loaded.snapshot,
   });
@@ -309,10 +309,29 @@ function verifyUiBoundaryAndInputParity() {
   assert.match(html, /@touchend\.prevent="trainCombatSkill"/);
 }
 
+function verifyAuthoredContentInjectionBoundary() {
+  const gameSceneSource = readFileSync(
+    new URL('../src/game/GameScene.js', import.meta.url),
+    'utf8',
+  );
+  assert.doesNotMatch(
+    gameSceneSource,
+    /from ['"].*\/(?:equipment\/EquipmentProfiles|progression\/ProgressionProfiles)\.js['"];/,
+    'GameScene은 concrete equipment/progression authored content를 import하면 안 된다.',
+  );
+  assert.match(gameSceneSource, /assertEquipmentCatalog\(equipmentCatalog\)/);
+  assert.match(gameSceneSource, /assertCombatProgressionProfile\(combatProgressionProfile\)/);
+
+  const gameAppSource = readFileSync(new URL('../src/app/GameApp.js', import.meta.url), 'utf8');
+  assert.match(gameAppSource, /equipmentCatalog: EQUIPMENT_CATALOG/);
+  assert.match(gameAppSource, /combatProgressionProfile: COMBAT_PROGRESSION_PROFILE/);
+}
+
 verifyChoiceTransactions();
 verifyRuntimeTradeoffsAndStatus();
 verifyPersistenceAndFailure();
 verifyUiBoundaryAndInputParity();
+verifyAuthoredContentInjectionBoundary();
 
 console.log(
   JSON.stringify(
@@ -326,6 +345,7 @@ console.log(
         'idempotence-and-wallet-order',
         'persistence-round-trip-and-write-failure',
         'ui-boundary-and-click-touch-parity',
+        'authored-content-composition-injection-boundary',
       ],
     },
     null,

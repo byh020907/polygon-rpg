@@ -6,12 +6,12 @@ import {
 } from '../src/combat/CombatCommandController.js';
 import { COMBAT_EVENT_TYPE } from '../src/combat/CombatEvent.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
-import { GameScene } from '../src/game/GameScene.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
 const EMPTY_INPUT = Object.freeze({
@@ -60,7 +60,7 @@ function createEncounter() {
 }
 
 function createGameScene() {
-  return new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  return createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
 }
 
 function contactPlayerFrame(encounter, { combatState, attackProfile }) {

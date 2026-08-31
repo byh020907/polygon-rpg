@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 
-import { GameScene } from '../src/game/GameScene.js';
 import {
   REGION_EXPANSION_CHECKPOINT_ID,
   RegionExpansionProgress,
 } from '../src/game/encounter/RegionExpansionProgress.js';
 import { MapRuntime } from '../src/game/map/MapRuntime.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
 const EMPTY_INPUT = Object.freeze({
@@ -132,7 +132,7 @@ function assertProgressionIdAndPlayerTraversal() {
   assert.equal(first.snapshot.checkpointId, REGION_EXPANSION_CHECKPOINT_ID);
   assert.equal(progress.activateCheckpoint(REGION_EXPANSION_CHECKPOINT_ID).changed, false);
 
-  const scene = new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
   scene.setVisualQaLocation({
     regionId: 'glasswind-region',
     roomId: 'glasswind-observatory',

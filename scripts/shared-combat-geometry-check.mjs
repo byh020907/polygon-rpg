@@ -10,10 +10,10 @@ import {
   sampleTrainingEnemyCombatGeometry,
   sampleTrainingEnemyWeaponLength,
 } from '../src/combat/SharedCombatGeometry.js';
-import { GameScene } from '../src/game/GameScene.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
+import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 function playerGeometry({ facing = 1, weaponLengthScale = 1 } = {}) {
   const motionState = Object.freeze({
@@ -153,7 +153,7 @@ assert.equal(edgeCrossing.gap, 0);
 assert.ok(Math.abs(edgeCrossing.position.x) <= 1 && Math.abs(edgeCrossing.position.y) <= 1);
 assert.ok(Object.isFrozen(edgeCrossing.position));
 
-const scene = new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
 const renderFrame = scene.createRenderFrame(0);
 const renderedBlade = renderFrame.items.find(({ id }) => id === 'sword-blade');
 const sceneGeometry = scene.samplePlayerCombatGeometry(scene.combatCommands.snapshot());

@@ -1,11 +1,9 @@
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { GameScene } from '../game/GameScene.js';
-import {
-  DEFAULT_EQUIPMENT_PROFILE_ID,
-  EQUIPMENT_PROFILES,
-} from '../game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
+import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
 import { GameInputController } from '../input/GameInputController.js';
@@ -77,8 +75,8 @@ function createProgressionStorage() {
 export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas }) {
     super('GameApp');
-    const equipmentIds = EQUIPMENT_PROFILES.map((profile) => profile.id);
-    const freshProgression = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+    const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
+    const freshProgression = createProgressionSnapshot(EQUIPMENT_CATALOG.defaultProfileId);
     this.visualQaRequest = readVisualQaRequest();
     this.isVisualQa = Boolean(this.visualQaRequest);
     this.progressionStorage = null;
@@ -93,7 +91,7 @@ export class GameApp extends SceneNode {
       if (storageResult.ok) {
         this.progressionStorage = storageResult.storage;
         this.progressionLoadResult = this.progressionStorage.load(
-          DEFAULT_EQUIPMENT_PROFILE_ID,
+          EQUIPMENT_CATALOG.defaultProfileId,
           equipmentIds,
         );
       } else {
@@ -107,7 +105,12 @@ export class GameApp extends SceneNode {
       ? this.progressionLoadResult.snapshot
       : freshProgression;
     this.scene = this.addChild(
-      new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP, progressionSnapshot }),
+      new GameScene({
+        mapDefinition: ACADEMY_VILLAGE_MAP,
+        equipmentCatalog: EQUIPMENT_CATALOG,
+        combatProgressionProfile: COMBAT_PROGRESSION_PROFILE,
+        progressionSnapshot,
+      }),
     );
     this.camera = new Camera2D();
 
@@ -249,7 +252,7 @@ export class GameApp extends SceneNode {
   }
 
   resetSavedProgress() {
-    const freshProgression = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+    const freshProgression = createProgressionSnapshot(EQUIPMENT_CATALOG.defaultProfileId);
     if (this.isVisualQa || !this.progressionStorage) {
       const result = Object.freeze({
         ok: false,
