@@ -5,11 +5,11 @@ import {
   DEFAULT_COMBAT_STAMINA_PROFILE,
 } from '../src/combat/CombatCommandController.js';
 import { COMBAT_EVENT_TYPE } from '../src/combat/CombatEvent.js';
+import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import { GameScene } from '../src/game/GameScene.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
-import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 
@@ -64,11 +64,23 @@ function createGameScene() {
 }
 
 function contactPlayerFrame(encounter, { combatState, attackProfile }) {
+  const enemyGeometry = sampleTrainingEnemyCombatGeometry(
+    encounter.enemy,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+  );
+  const contactWeapon = Object.freeze({
+    part: 'weapon',
+    points: enemyGeometry.hurt[0].points,
+  });
   return Object.freeze({
     combatState,
     attackProfile,
-    playerItems: Object.freeze([]),
-    playerWeaponItems: Object.freeze(createTrainingEnemyItems(encounter.enemy, 0)),
+    playerGeometry: Object.freeze({
+      weapon: contactWeapon,
+      sweep: contactWeapon,
+      shield: null,
+      hurt: Object.freeze([]),
+    }),
     player: Object.freeze({
       position: Object.freeze({ x: 600, y: 338 }),
       facing: 1,
@@ -221,12 +233,18 @@ function verifyStrongTransitions() {
   const enemyEvents = [];
   enemyStrong.playerResultResolved.connect((result) => enemyResults.push(result));
   enemyStrong.combatEventOccurred.connect((event) => enemyEvents.push(event));
-  const weaponItems = createTrainingEnemyItems(enemyStrong.enemy, 0).filter(
-    (item) => item.id === 'combat-enemy-weapon',
+  const enemyStrongGeometry = sampleTrainingEnemyCombatGeometry(
+    enemyStrong.enemy,
+    TRAINING_ENEMY_ATTACK_PROFILES,
   );
   const enemyStrongFrame = Object.freeze({
     combatState: Object.freeze({ id: 'guard' }),
-    playerItems: Object.freeze(weaponItems.map((item) => Object.freeze({ ...item, id: 'shield' }))),
+    playerGeometry: Object.freeze({
+      weapon: null,
+      sweep: null,
+      shield: enemyStrongGeometry.weapon,
+      hurt: Object.freeze([enemyStrongGeometry.weapon]),
+    }),
     player: Object.freeze({
       position: Object.freeze({ x: 600, y: 338 }),
       facing: 1,

@@ -1,4 +1,8 @@
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
+import {
+  sampleTrainingEnemyCombatGeometry,
+  sampleTrainingEnemyWeaponLength,
+} from '../../combat/SharedCombatGeometry.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from './TrainingEnemyAttackProfiles.js';
 
 export const TRAINING_ENEMY_PRESENTATION_SCALE = 0.48;
@@ -88,35 +92,6 @@ function rectangle(x, y, width, height) {
   ];
 }
 
-export function sampleTrainingEnemyWeaponLength(enemy) {
-  const attackProfile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
-  if (enemy.attackKind !== 'antiAir') return attackProfile.weaponLength;
-  if (enemy.aiState === 'hitstun') return enemy.hitReactionWeaponLength;
-  if (enemy.aiState === 'windup') {
-    const windupProgress = 1 - enemy.aiSeconds / attackProfile.windupSeconds;
-    return lerp(
-      TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength,
-      attackProfile.weaponLength,
-      smoothStep(windupProgress),
-    );
-  }
-  if (enemy.aiState === 'attack') return attackProfile.weaponLength;
-  if (enemy.aiState === 'recovery') {
-    const recoveryProgress =
-      enemy.recoveryDurationSeconds > 0 ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds : 1;
-    const startLength =
-      enemy.recoverySource === 'hitReaction'
-        ? enemy.hitReactionWeaponLength
-        : attackProfile.weaponLength;
-    return lerp(
-      startLength,
-      TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength,
-      smoothStep(recoveryProgress),
-    );
-  }
-  return TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength;
-}
-
 export function sampleTrainingEnemyCombatFrame(enemy) {
   if (!enemy || !['windup', 'attack', 'recovery'].includes(enemy.aiState)) return null;
   const profile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
@@ -137,8 +112,10 @@ export function sampleTrainingEnemyCombatFrame(enemy) {
   });
 }
 
-export function createTrainingEnemyItems(enemy, renderOrder) {
+export function createTrainingEnemyItems(enemy, renderOrder, combatGeometry = null) {
   if (!enemy) return [];
+  const resolvedCombatGeometry =
+    combatGeometry ?? sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
   const { x, y } = enemy.position;
   const flash = enemy.hitFlashSeconds > 0;
   const glasswind = enemy.species === 'glasswind';
@@ -168,7 +145,7 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
     enemy.aiState === 'recovery' && enemy.recoveryDurationSeconds > 0
       ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds
       : 0;
-  const weaponLength = sampleTrainingEnemyWeaponLength(enemy);
+  const weaponLength = sampleTrainingEnemyWeaponLength(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
   const weaponAngle =
     enemy.aiState === 'hitstun'
       ? enemy.hitReactionWeaponAngle
@@ -568,39 +545,50 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
     );
   }
 
-  return items.map((item, index) =>
-    Object.freeze({
+  return items.map((item, index) => {
+    const geometryPoints =
+      item.id === 'combat-enemy-weapon'
+        ? resolvedCombatGeometry.weapon.points
+        : item.id === 'combat-enemy-body'
+          ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'body')?.points
+          : item.id === 'combat-enemy-head'
+            ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'head')
+                ?.points
+            : null;
+    return Object.freeze({
       ...item,
       opacity: (item.opacity ?? 1) * opacity,
       lineWidth: (item.lineWidth ?? 1) * presentationScale,
-      points: Object.freeze(
-        item.points.map((point) => {
-          const rotatesWithBody =
-            item.id !== 'combat-enemy-shadow' && !item.id.startsWith('combat-enemy-health');
-          const centerY = y - 50;
-          const relativeX = point.x - x;
-          const relativeY = point.y - centerY;
-          const rotatedX = rotatesWithBody
-            ? x + relativeX * Math.cos(poseRotation) - relativeY * Math.sin(poseRotation)
-            : point.x;
-          const rotatedY = rotatesWithBody
-            ? centerY + relativeX * Math.sin(poseRotation) + relativeY * Math.cos(poseRotation)
-            : point.y;
-          const facedX = renderFacing < 0 ? x * 2 - rotatedX : rotatedX;
-          const embeddedOffset =
-            enemy.groundBounceDelaySeconds > 0 &&
-            item.id !== 'combat-enemy-shadow' &&
-            !item.id.startsWith('combat-enemy-health')
-              ? 8
-              : 0;
-          return Object.freeze({
-            x: x + (facedX - x) * presentationScale,
-            y: y + (rotatedY - y) * presentationScale + embeddedOffset,
-          });
-        }),
-      ),
+      points: geometryPoints
+        ? Object.freeze(geometryPoints)
+        : Object.freeze(
+            item.points.map((point) => {
+              const rotatesWithBody =
+                item.id !== 'combat-enemy-shadow' && !item.id.startsWith('combat-enemy-health');
+              const centerY = y - 50;
+              const relativeX = point.x - x;
+              const relativeY = point.y - centerY;
+              const rotatedX = rotatesWithBody
+                ? x + relativeX * Math.cos(poseRotation) - relativeY * Math.sin(poseRotation)
+                : point.x;
+              const rotatedY = rotatesWithBody
+                ? centerY + relativeX * Math.sin(poseRotation) + relativeY * Math.cos(poseRotation)
+                : point.y;
+              const facedX = renderFacing < 0 ? x * 2 - rotatedX : rotatedX;
+              const embeddedOffset =
+                enemy.groundBounceDelaySeconds > 0 &&
+                item.id !== 'combat-enemy-shadow' &&
+                !item.id.startsWith('combat-enemy-health')
+                  ? 8
+                  : 0;
+              return Object.freeze({
+                x: x + (facedX - x) * presentationScale,
+                y: y + (rotatedY - y) * presentationScale + embeddedOffset,
+              });
+            }),
+          ),
       renderOrder,
       order: item.order ?? index,
-    }),
-  );
+    });
+  });
 }

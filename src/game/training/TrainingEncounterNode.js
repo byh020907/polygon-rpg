@@ -2,16 +2,16 @@ import { SpinContactConstraint } from '../../combat/SpinContactConstraint.js';
 import { COMBAT_EVENT_TYPE } from '../../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
 import { resolveRecoveryPunish } from '../../combat/RecoveryPunish.js';
+import {
+  closestCombatContact,
+  sampleTrainingEnemyCombatGeometry,
+  sampleTrainingEnemyWeaponLength,
+} from '../../combat/SharedCombatGeometry.js';
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
 import { getEncounterProfile, selectEncounterAttack } from '../encounter/EncounterProfiles.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from './TrainingEnemyAttackProfiles.js';
-import {
-  createTrainingEnemyItems,
-  sampleTrainingEnemyCombatFrame,
-  sampleTrainingEnemyWeaponLength,
-} from './TrainingEncounterPresentation.js';
 
 const GRAVITY = 1180;
 const RESET_SECONDS = combatFramesToSeconds(60);
@@ -20,168 +20,6 @@ const MAX_JUGGLE_HITS = 6;
 const MAX_JUGGLE_SECONDS = 3.2;
 const JUGGLE_GRAVITY_STEP = 0.3;
 const PLAYER_HURT_MARGIN = 28;
-const ENEMY_NON_HURT_ITEM_IDS = new Set([
-  'combat-enemy-shadow',
-  'combat-enemy-impact-ring',
-  'combat-enemy-impact-crack',
-  'combat-enemy-retaliation-aura',
-  'combat-enemy-core-glow',
-  'combat-enemy-weapon',
-  'combat-enemy-weapon-glow',
-  'combat-enemy-anti-air-trail',
-  'combat-enemy-health-back',
-  'combat-enemy-health-fill',
-  'combat-enemy-heavy-warning',
-  'combat-enemy-punish-window',
-  'combat-enemy-sweep-warning',
-  'combat-enemy-sweep-trail',
-  'combat-enemy-glasswind-wing-back',
-  'combat-enemy-glasswind-wing-front',
-  'combat-enemy-training-waist-cloth',
-  'combat-enemy-training-shoulder-plate',
-  'combat-enemy-training-mask',
-  'combat-enemy-training-gauntlet',
-  'combat-enemy-training-back-boot',
-  'combat-enemy-training-front-boot',
-]);
-const PLAYER_NON_HURT_ITEM_IDS = new Set([
-  'shadow',
-  'cape',
-  'scarf-tail',
-  'sword-trail',
-  'sword-hilt',
-  'sword-blade',
-  'sword-shine',
-  'hair-back',
-  'hair-fringe',
-  'uniform-coat-tail',
-  'uniform-front-panel',
-  'shield-pauldron',
-  'sword-pauldron',
-  'shield-glove',
-  'sword-glove',
-  'back-boot',
-  'front-boot',
-]);
-
-function pointToSegmentDistance(pointValue, start, end) {
-  const deltaX = end.x - start.x;
-  const deltaY = end.y - start.y;
-  const lengthSquared = deltaX * deltaX + deltaY * deltaY;
-  const amount =
-    lengthSquared === 0
-      ? 0
-      : Math.max(
-          0,
-          Math.min(
-            1,
-            ((pointValue.x - start.x) * deltaX + (pointValue.y - start.y) * deltaY) / lengthSquared,
-          ),
-        );
-  return Math.hypot(
-    pointValue.x - (start.x + deltaX * amount),
-    pointValue.y - (start.y + deltaY * amount),
-  );
-}
-
-function pointInPolygon(pointValue, polygonPoints) {
-  let inside = false;
-  for (
-    let index = 0, previous = polygonPoints.length - 1;
-    index < polygonPoints.length;
-    previous = index, index += 1
-  ) {
-    const currentPoint = polygonPoints[index];
-    const previousPoint = polygonPoints[previous];
-    const crosses =
-      currentPoint.y > pointValue.y !== previousPoint.y > pointValue.y &&
-      pointValue.x <
-        ((previousPoint.x - currentPoint.x) * (pointValue.y - currentPoint.y)) /
-          (previousPoint.y - currentPoint.y) +
-          currentPoint.x;
-    if (crosses) inside = !inside;
-  }
-  return inside;
-}
-
-function segmentsIntersect(firstStart, firstEnd, secondStart, secondEnd) {
-  const cross = (origin, left, right) =>
-    (left.x - origin.x) * (right.y - origin.y) - (left.y - origin.y) * (right.x - origin.x);
-  const firstSideA = cross(firstStart, firstEnd, secondStart);
-  const firstSideB = cross(firstStart, firstEnd, secondEnd);
-  const secondSideA = cross(secondStart, secondEnd, firstStart);
-  const secondSideB = cross(secondStart, secondEnd, firstEnd);
-  const crossesProperly = firstSideA * firstSideB < 0 && secondSideA * secondSideB < 0;
-  if (crossesProperly) return true;
-  const onSegment = (start, end, pointValue) =>
-    pointValue.x >= Math.min(start.x, end.x) - 0.0001 &&
-    pointValue.x <= Math.max(start.x, end.x) + 0.0001 &&
-    pointValue.y >= Math.min(start.y, end.y) - 0.0001 &&
-    pointValue.y <= Math.max(start.y, end.y) + 0.0001;
-  return (
-    (Math.abs(firstSideA) <= 0.0001 && onSegment(firstStart, firstEnd, secondStart)) ||
-    (Math.abs(firstSideB) <= 0.0001 && onSegment(firstStart, firstEnd, secondEnd)) ||
-    (Math.abs(secondSideA) <= 0.0001 && onSegment(secondStart, secondEnd, firstStart)) ||
-    (Math.abs(secondSideB) <= 0.0001 && onSegment(secondStart, secondEnd, firstEnd))
-  );
-}
-
-function polygonDistance(leftPoints, rightPoints) {
-  if (
-    leftPoints.some((pointValue) => pointInPolygon(pointValue, rightPoints)) ||
-    rightPoints.some((pointValue) => pointInPolygon(pointValue, leftPoints))
-  )
-    return 0;
-  for (let leftIndex = 0; leftIndex < leftPoints.length; leftIndex += 1) {
-    const leftStart = leftPoints[leftIndex];
-    const leftEnd = leftPoints[(leftIndex + 1) % leftPoints.length];
-    for (let rightIndex = 0; rightIndex < rightPoints.length; rightIndex += 1) {
-      if (
-        segmentsIntersect(
-          leftStart,
-          leftEnd,
-          rightPoints[rightIndex],
-          rightPoints[(rightIndex + 1) % rightPoints.length],
-        )
-      )
-        return 0;
-    }
-  }
-  let minimum = Infinity;
-  for (let leftIndex = 0; leftIndex < leftPoints.length; leftIndex += 1) {
-    const leftStart = leftPoints[leftIndex];
-    const leftEnd = leftPoints[(leftIndex + 1) % leftPoints.length];
-    for (const rightPoint of rightPoints) {
-      minimum = Math.min(minimum, pointToSegmentDistance(rightPoint, leftStart, leftEnd));
-    }
-  }
-  for (let rightIndex = 0; rightIndex < rightPoints.length; rightIndex += 1) {
-    const rightStart = rightPoints[rightIndex];
-    const rightEnd = rightPoints[(rightIndex + 1) % rightPoints.length];
-    for (const leftPoint of leftPoints) {
-      minimum = Math.min(minimum, pointToSegmentDistance(leftPoint, rightStart, rightEnd));
-    }
-  }
-  return minimum;
-}
-
-function closestContact(weaponItems, hurtItems, maximumGap = 4) {
-  let closest = Object.freeze({ contact: false, gap: Infinity });
-  for (const weaponItem of weaponItems) {
-    for (const hurtItem of hurtItems) {
-      const gap = polygonDistance(weaponItem.points, hurtItem.points);
-      if (gap < closest.gap) {
-        closest = Object.freeze({
-          contact: gap <= maximumGap,
-          gap,
-          weaponItemId: weaponItem.id,
-          hurtItemId: hurtItem.id,
-        });
-      }
-    }
-  }
-  return closest;
-}
 
 function freezePosition(position) {
   return Object.freeze({ x: position.x, y: position.y });
@@ -325,7 +163,18 @@ export class TrainingEncounterNode extends SceneNode {
 
   createRenderSnapshot(renderOrder) {
     const enemy = this.enemy;
-    if (!enemy) return Object.freeze({ enemy: null, items: Object.freeze([]), contact: null });
+    if (!enemy)
+      return Object.freeze({
+        enemy: null,
+        presentationState: null,
+        geometry: null,
+        renderOrder,
+        contact: null,
+      });
+    const presentationState = Object.freeze({
+      ...enemy,
+      position: freezePosition(enemy.position),
+    });
     return Object.freeze({
       enemy: Object.freeze({
         id: enemy.id,
@@ -343,11 +192,16 @@ export class TrainingEncounterNode extends SceneNode {
         punishWindowOpen: enemy.punishWindowOpen,
         attack: Object.freeze({
           kind: enemy.attackKind,
-          frame: sampleTrainingEnemyCombatFrame(enemy),
+          frame: null,
         }),
         lastCommandTransition: enemy.lastCommandTransition,
       }),
-      items: Object.freeze(createTrainingEnemyItems(enemy, renderOrder)),
+      presentationState,
+      geometry: sampleTrainingEnemyCombatGeometry(
+        presentationState,
+        TRAINING_ENEMY_ATTACK_PROFILES,
+      ),
+      renderOrder,
       contact:
         this.contactSeconds > 0 && this.lastVisualContact
           ? Object.freeze({ ...this.lastVisualContact, remainingSeconds: this.contactSeconds })
@@ -623,21 +477,19 @@ export class TrainingEncounterNode extends SceneNode {
     const guardHeld = player.isGrounded && enemyInFront && frame.combatState.id === 'guard';
     const guarding = profile.guardable && guardHeld;
     const guardBreak = profile.guardBreak === true && guardHeld;
-    const weaponItems = createTrainingEnemyItems(enemy, 0).filter(
-      (item) => item.id === 'combat-enemy-weapon',
-    );
+    const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
     let visualContact = Object.freeze({ contact: false, gap: Infinity });
     if (guarding || guardBreak) {
-      visualContact = closestContact(
-        weaponItems,
-        frame.playerItems.filter((item) => ['shield', 'shield-mark'].includes(item.id)),
-        5,
+      visualContact = closestCombatContact(
+        [enemyGeometry.weapon],
+        frame.playerGeometry?.shield ? [frame.playerGeometry.shield] : [],
+        { maximumGap: 5 },
       );
     }
     if (!visualContact.contact) {
-      visualContact = closestContact(
-        weaponItems,
-        frame.playerItems.filter((item) => !PLAYER_NON_HURT_ITEM_IDS.has(item.id)),
+      visualContact = closestCombatContact(
+        [enemyGeometry.weapon],
+        frame.playerGeometry?.hurt ?? [],
       );
     }
     if (!visualContact.contact) return true;
@@ -837,10 +689,11 @@ export class TrainingEncounterNode extends SceneNode {
       Math.abs(enemy.position.y - (player.position.y + 82)) > 116
     )
       return false;
-    const hurtItems = createTrainingEnemyItems(enemy, 0).filter(
-      (item) => !ENEMY_NON_HURT_ITEM_IDS.has(item.id),
-    );
-    const visualContact = closestContact(frame.playerWeaponItems, hurtItems);
+    const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
+    const playerWeapons = frame.playerGeometry
+      ? [frame.playerGeometry.weapon, frame.playerGeometry.sweep].filter(Boolean)
+      : [];
+    const visualContact = closestCombatContact(playerWeapons, enemyGeometry.hurt);
     if (!visualContact.contact) return false;
     const pulseIndex = profile.hitPulses
       ? profile.hitPulses.reduce(
@@ -974,7 +827,10 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.hitstunSeconds,
       (0.16 + damage * 0.008) * (profile.hitstunScale ?? 1),
     );
-    enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(enemy);
+    enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(
+      enemy,
+      TRAINING_ENEMY_ATTACK_PROFILES,
+    );
     enemy.hitReactionWeaponAngle =
       profile.damage >= 22 ? 0.35 : profile.launchY < -300 ? -1.1 : 0.2;
     if (interruptsStrongStartup) {

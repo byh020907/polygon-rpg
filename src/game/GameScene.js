@@ -8,6 +8,10 @@ import {
 import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
+import {
+  createSweptWeaponGeometry,
+  samplePlayerCombatGeometry,
+} from '../combat/SharedCombatGeometry.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
@@ -39,6 +43,10 @@ import {
 import { ROOM_SCENE } from './room/RoomNode.js';
 import { resolveFirstJourneyStory } from './story/FirstJourneyStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
+import {
+  createTrainingEnemyItems,
+  sampleTrainingEnemyCombatFrame,
+} from './training/TrainingEncounterPresentation.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -224,30 +232,6 @@ function scaleHexColor(color, scale) {
   return result;
 }
 
-function convexHull(points) {
-  const unique = [
-    ...new Map(
-      points.map((pointValue) => [`${pointValue.x}:${pointValue.y}`, pointValue]),
-    ).values(),
-  ];
-  if (unique.length <= 3) return unique;
-  unique.sort((left, right) => left.x - right.x || left.y - right.y);
-  const cross = (origin, left, right) =>
-    (left.x - origin.x) * (right.y - origin.y) - (left.y - origin.y) * (right.x - origin.x);
-  const lower = [];
-  for (const pointValue of unique) {
-    while (lower.length >= 2 && cross(lower.at(-2), lower.at(-1), pointValue) <= 0) lower.pop();
-    lower.push(pointValue);
-  }
-  const upper = [];
-  for (let index = unique.length - 1; index >= 0; index -= 1) {
-    const pointValue = unique[index];
-    while (upper.length >= 2 && cross(upper.at(-2), upper.at(-1), pointValue) <= 0) upper.pop();
-    upper.push(pointValue);
-  }
-  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
-}
-
 function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, skillProfile) {
   const baseProfile = BASE_ATTACK_HIT_PROFILES[motionId];
   if (!baseProfile || !motionFrame) return null;
@@ -363,6 +347,7 @@ function createCharacterItems(
   renderScale,
   renderOrder,
   weaponLengthScale = 1,
+  combatGeometry = null,
 ) {
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
@@ -823,6 +808,12 @@ function createCharacterItems(
     const depthBias = depthGroup === 'sword' ? bonePose.depthPhase : -bonePose.depthPhase;
     const depthColorScale = 1 - Math.max(0, -depthBias) * 0.16;
     const baseOrder = CHARACTER_DEPTH_ITEM_ORDERS[item.id] ?? item.order ?? index;
+    const geometryPoints =
+      item.id === 'sword-blade'
+        ? combatGeometry?.weapon?.points
+        : item.id === 'shield'
+          ? combatGeometry?.shield?.points
+          : null;
     return Object.freeze({
       ...item,
       renderOrder,
@@ -830,23 +821,26 @@ function createCharacterItems(
       opacity: item.opacity * depthOpacity,
       fill: depthGroup ? scaleHexColor(item.fill, depthColorScale) : item.fill,
       lineWidth: item.lineWidth * renderScale,
-      points: Object.freeze(
-        item.points.map((point) => {
-          const footY = position.y + CHARACTER_FOOT_OFFSET;
-          const relativeX =
-            (point.x - position.x) * (item.id === 'shadow' ? 1 : bonePose.bodyScaleX);
-          const relativeY = (point.y - footY) * (item.id === 'shadow' ? 1 : targetPose.bodyScaleY);
-          const lean = item.id === 'shadow' ? 0 : targetPose.bodyLean + bonePose.bodyLean;
-          const posedX = position.x + relativeX * Math.cos(lean) - relativeY * Math.sin(lean);
-          const posedY = footY + relativeX * Math.sin(lean) + relativeY * Math.cos(lean);
-          const scaledX = position.x + (posedX - position.x) * renderScale;
-          const scaledY = footY + (posedY - footY) * renderScale;
-          return Object.freeze({
-            x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
-            y: scaledY,
-          });
-        }),
-      ),
+      points: geometryPoints
+        ? Object.freeze(geometryPoints)
+        : Object.freeze(
+            item.points.map((point) => {
+              const footY = position.y + CHARACTER_FOOT_OFFSET;
+              const relativeX =
+                (point.x - position.x) * (item.id === 'shadow' ? 1 : bonePose.bodyScaleX);
+              const relativeY =
+                (point.y - footY) * (item.id === 'shadow' ? 1 : targetPose.bodyScaleY);
+              const lean = item.id === 'shadow' ? 0 : targetPose.bodyLean + bonePose.bodyLean;
+              const posedX = position.x + relativeX * Math.cos(lean) - relativeY * Math.sin(lean);
+              const posedY = footY + relativeX * Math.sin(lean) + relativeY * Math.cos(lean);
+              const scaledX = position.x + (posedX - position.x) * renderScale;
+              const scaledY = footY + (posedY - footY) * renderScale;
+              return Object.freeze({
+                x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
+                y: scaledY,
+              });
+            }),
+          ),
     });
   });
 }
@@ -1158,7 +1152,7 @@ export class GameScene extends SceneNode {
     this.playerKnockbackDecayRate = 0.02;
     this.airHeavyConnectedSequence = 0;
     this.playerWeaponContactHistory = [];
-    this.playerWeaponContactGeometry = null;
+    this.playerCombatGeometry = null;
     this.progressionNotice = `훈련 인장은 학습 조건, 원정 Gold는 장비·command 성장 비용입니다.`;
     this.storyInteractionOwner.reset();
     this.lastJumpSequence = 0;
@@ -1976,33 +1970,10 @@ export class GameScene extends SceneNode {
     }
   }
 
-  updatePlayerWeaponContactGeometry(combatState) {
-    if (!this.getAttackHitProfile(combatState.id)) {
-      this.playerWeaponContactHistory = [];
-      this.playerWeaponContactGeometry = null;
-      return null;
-    }
-    const blade = this.createPlayerCombatPresentationItems(combatState).find(
-      (item) => item.id === 'sword-blade',
-    );
-    if (!blade) return null;
-    if (this.playerWeaponContactGeometry?.comboCycle !== combatState.comboCycle) {
-      this.playerWeaponContactHistory = [];
-    }
-    this.playerWeaponContactHistory.push(blade.points);
-    if (this.playerWeaponContactHistory.length > 3) this.playerWeaponContactHistory.shift();
-    const sweepPoints = convexHull(this.playerWeaponContactHistory.flat());
-    this.playerWeaponContactGeometry = Object.freeze({
-      sequence: combatState.sequence,
-      comboCycle: combatState.comboCycle,
-      position: Object.freeze({ ...this.position }),
-      bladePoints: Object.freeze([...blade.points]),
-      sweepPoints: Object.freeze(sweepPoints),
-    });
-    return this.playerWeaponContactGeometry;
-  }
-
-  createPlayerCombatPresentationItems(combatState) {
+  samplePlayerCombatGeometry(
+    combatState,
+    { position = this.position, animationTime = this.animationTime } = {},
+  ) {
     const poseCombatState =
       this.playerBlockstunSeconds > 0
         ? Object.freeze({
@@ -2015,7 +1986,7 @@ export class GameScene extends SceneNode {
         : combatState;
     const targetPose = sampleCombatTargetPose(poseCombatState);
     const bonePose = sampleCharacterBonePose({
-      animationTime: this.animationTime,
+      animationTime,
       movementIntent: this.movementIntent,
       isGrounded: this.isGrounded,
       verticalVelocity: this.verticalVelocity,
@@ -2032,34 +2003,54 @@ export class GameScene extends SceneNode {
         : null,
       motionState: poseCombatState,
     });
-    return createCharacterItems(
-      this.position,
-      this.facing,
+    return samplePlayerCombatGeometry({
+      position,
+      facing: this.facing,
       targetPose,
       bonePose,
-      CHARACTER_RENDER_SCALE,
-      0,
-      this.equipmentProfile.presentation.weaponLengthScale,
-    );
+      renderScale: CHARACTER_RENDER_SCALE,
+      weaponLengthScale: this.equipmentProfile.presentation.weaponLengthScale,
+    });
+  }
+
+  updatePlayerCombatGeometry(combatState) {
+    const geometry = this.samplePlayerCombatGeometry(combatState);
+    if (!this.getAttackHitProfile(combatState.id)) {
+      this.playerWeaponContactHistory = [];
+      this.playerCombatGeometry = Object.freeze({
+        ...geometry,
+        sequence: combatState.sequence,
+        comboCycle: combatState.comboCycle,
+        sweep: null,
+      });
+      return this.playerCombatGeometry;
+    }
+    if (this.playerCombatGeometry?.comboCycle !== combatState.comboCycle) {
+      this.playerWeaponContactHistory = [];
+    }
+    const swept = createSweptWeaponGeometry({
+      current: geometry.weapon,
+      history: this.playerWeaponContactHistory,
+    });
+    this.playerWeaponContactHistory = [...swept.history];
+    this.playerCombatGeometry = Object.freeze({
+      ...geometry,
+      sequence: combatState.sequence,
+      comboCycle: combatState.comboCycle,
+      sweep: swept.swept,
+    });
+    return this.playerCombatGeometry;
   }
 
   createTrainingEncounterFrame(combatState, attackProfile) {
-    const playerItems = this.createPlayerCombatPresentationItems(combatState);
-    const contactGeometry = this.playerWeaponContactGeometry;
-    const playerWeaponItems = contactGeometry
-      ? Object.freeze([
-          Object.freeze({ id: 'sword-blade', points: contactGeometry.bladePoints }),
-          Object.freeze({ id: 'sword-trail', points: contactGeometry.sweepPoints }),
-        ])
-      : Object.freeze([]);
+    const playerGeometry = this.playerCombatGeometry;
     const rollProgress = this.rollState
       ? this.rollState.elapsedSeconds / this.rollState.durationSeconds
       : null;
     return Object.freeze({
       combatState,
       attackProfile,
-      playerItems: Object.freeze(playerItems),
-      playerWeaponItems,
+      playerGeometry,
       player: Object.freeze({
         position: Object.freeze({ ...this.position }),
         facing: this.facing,
@@ -2236,7 +2227,7 @@ export class GameScene extends SceneNode {
         }
       }
     }
-    this.updatePlayerWeaponContactGeometry(combatState);
+    this.updatePlayerCombatGeometry(combatState);
     this.roomSceneNode?.stepEncounter(
       deltaSeconds,
       this.createTrainingEncounterFrame(combatState, activeAttackProfile),
@@ -2621,6 +2612,10 @@ export class GameScene extends SceneNode {
     const activeRoom = mapSnapshot.room;
     const characterRenderScale = CHARACTER_RENDER_SCALE;
     const characterRenderOrder = activeRoom.renderOrder + 0.5;
+    const renderCombatGeometry = this.samplePlayerCombatGeometry(combatState, {
+      position: renderPosition,
+      animationTime: renderAnimationTime,
+    });
     const sampledCharacterItems = createCharacterItems(
       renderPosition,
       this.facing,
@@ -2629,15 +2624,16 @@ export class GameScene extends SceneNode {
       characterRenderScale,
       characterRenderOrder,
       this.equipmentProfile.presentation.weaponLengthScale,
+      renderCombatGeometry,
     );
     const contactGeometry =
-      this.playerWeaponContactGeometry?.sequence === combatState.sequence
-        ? this.playerWeaponContactGeometry
+      this.playerCombatGeometry?.sequence === combatState.sequence
+        ? this.playerCombatGeometry
         : null;
     const contactOffset = contactGeometry
       ? {
-          x: renderPosition.x - contactGeometry.position.x,
-          y: renderPosition.y - contactGeometry.position.y,
+          x: renderPosition.x - contactGeometry.origin.x,
+          y: renderPosition.y - contactGeometry.origin.y,
         }
       : { x: 0, y: 0 };
     const contactProfile = this.getAttackHitProfile(combatState.id);
@@ -2647,12 +2643,12 @@ export class GameScene extends SceneNode {
       combatState.progress >= contactProfile.start &&
       combatState.progress <= contactProfile.end;
     const characterItems = sampledCharacterItems.map((item) =>
-      item.id === 'sword-trail' && contactGeometry
+      item.id === 'sword-trail' && contactGeometry?.sweep
         ? Object.freeze({
             ...item,
             opacity: Math.max(item.opacity, contactSweepVisible ? 0.25 : 0),
             points: Object.freeze(
-              contactGeometry.sweepPoints.map((pointValue) =>
+              contactGeometry.sweep.points.map((pointValue) =>
                 Object.freeze({
                   x: pointValue.x + contactOffset.x,
                   y: pointValue.y + contactOffset.y,
@@ -2716,7 +2712,23 @@ export class GameScene extends SceneNode {
     );
     const encounterRender = this.roomSceneNode?.createEncounterRenderSnapshot(
       activeRoom.renderOrder + 0.45,
-    ) ?? { enemy: null, items: [], contact: null };
+    ) ?? { enemy: null, presentationState: null, geometry: null, contact: null };
+    const encounterItems = encounterRender.presentationState
+      ? createTrainingEnemyItems(
+          encounterRender.presentationState,
+          activeRoom.renderOrder + 0.45,
+          encounterRender.geometry,
+        )
+      : [];
+    const combatEnemy = encounterRender.enemy
+      ? Object.freeze({
+          ...encounterRender.enemy,
+          attack: Object.freeze({
+            ...encounterRender.enemy.attack,
+            frame: sampleTrainingEnemyCombatFrame(encounterRender.presentationState),
+          }),
+        })
+      : null;
     const punishFeedbackItems = createPunishFeedbackItems(
       punishEvent,
       activeRoom.renderOrder + 0.49,
@@ -2724,7 +2736,7 @@ export class GameScene extends SceneNode {
     const items = Object.freeze(
       [
         ...mapSnapshot.renderItems,
-        ...encounterRender.items,
+        ...encounterItems,
         ...characterItems,
         ...playerRetaliationItems,
         ...blockImpactItems,
@@ -2825,7 +2837,7 @@ export class GameScene extends SceneNode {
             })
           : null,
       }),
-      combatEnemy: encounterRender.enemy,
+      combatEnemy,
       items,
     });
     this.renderFrameCreated.emit(renderFrame);
