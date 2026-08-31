@@ -886,6 +886,60 @@ dd {
   white-space: nowrap;
 }
 
+.dialogue-bubble {
+  position: absolute;
+  z-index: 6;
+  right: 50%;
+  bottom: clamp(66px, 11%, 92px);
+  display: grid;
+  gap: 6px;
+  width: min(520px, calc(100% - 32px));
+  padding: 12px 16px;
+  color: #eef5ef;
+  border: 1px solid rgb(116 222 210 / 58%);
+  border-radius: 12px 12px 12px 3px;
+  background: linear-gradient(145deg, rgb(7 20 24 / 96%), rgb(14 35 38 / 90%));
+  box-shadow: 0 12px 34px rgb(0 0 0 / 46%);
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.45;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+  transform: translateX(50%);
+}
+
+.dialogue-bubble header,
+.dialogue-bubble footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialogue-bubble header small,
+.dialogue-bubble footer {
+  color: #74ded2;
+  font:
+    800 0.55rem ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.dialogue-bubble header strong {
+  color: #f3d49a;
+  font-size: clamp(0.78rem, 1.2vw, 1rem);
+}
+
+.dialogue-bubble p {
+  margin: 0;
+  font-size: clamp(0.72rem, 1.1vw, 0.94rem);
+}
+
+.dialogue-bubble footer strong {
+  color: #eef5ef;
+}
+
 .mobile-controls {
   position: absolute;
   z-index: 5;
@@ -1368,6 +1422,12 @@ kbd {
   .story-briefing div strong {
     white-space: normal;
   }
+
+  .dialogue-bubble {
+    bottom: max(70px, 20vh);
+    width: min(48vw, 440px);
+    padding: 7px 10px;
+  }
 }
 
 @media (pointer: coarse) and (orientation: portrait),
@@ -1538,6 +1598,11 @@ kbd {
     bottom: 8px;
     left: 8px;
     width: auto;
+  }
+
+  .dialogue-bubble {
+    bottom: 70px;
+    width: calc(100% - 24px);
   }
 
   .control-hints {

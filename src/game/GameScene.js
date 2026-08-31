@@ -9,7 +9,6 @@ import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
 import { SceneNode } from '../core/SceneNode.js';
-import { Scene } from '../core/Scene.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import {
@@ -20,7 +19,6 @@ import {
 import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
 import { RegionExpansionProgress } from './encounter/RegionExpansionProgress.js';
 import { MapRuntime } from './map/MapRuntime.js';
-import { ACADEMY_VILLAGE_MAP } from './maps/academyVillage.js';
 import {
   TRAINING_CLEAR_REWARD,
   getCombatSkillLevelProfile,
@@ -37,6 +35,7 @@ import {
 } from './progression/ProgressionState.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
 import { resolveFirstJourneyStory } from './story/FirstJourneyStory.js';
+import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -1035,8 +1034,10 @@ function timePhaseForHour(hour) {
 }
 
 export class GameScene extends SceneNode {
-  constructor({ mapDefinition = ACADEMY_VILLAGE_MAP, progressionSnapshot = null } = {}) {
+  constructor({ mapDefinition, progressionSnapshot = null } = {}) {
     super('GameScene');
+    if (!mapDefinition)
+      throw new TypeError('GameScene에는 authored mapDefinition 주입이 필요합니다.');
     const initialProgression =
       progressionSnapshot ?? createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
     this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
@@ -1052,6 +1053,7 @@ export class GameScene extends SceneNode {
     this.regionExpansionProgress = new RegionExpansionProgress(
       this.progressionSnapshot.regionExpansion,
     );
+    this.storyInteractionOwner = new StoryInteractionOwner();
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: {
         timePhase: 'day',
@@ -1155,6 +1157,7 @@ export class GameScene extends SceneNode {
     this.playerWeaponContactHistory = [];
     this.playerWeaponContactGeometry = null;
     this.progressionNotice = `성장 상태 유지 · 훈련 골렘 처치 시 인장 +${TRAINING_CLEAR_REWARD}`;
+    this.storyInteractionOwner.reset();
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
     this.portalTransitionPresentation = null;
@@ -1515,6 +1518,14 @@ export class GameScene extends SceneNode {
     return portal ? this.beginPortalTransition(portal) : false;
   }
 
+  getStoryInteractionContext() {
+    const mapSnapshot = this.mapRuntime.getResolvedSnapshot();
+    return Object.freeze({
+      entities: mapSnapshot.entities,
+      playerPosition: Object.freeze({ ...this.position }),
+    });
+  }
+
   updatePortalTransition(deltaSeconds) {
     const presentation = this.portalTransitionPresentation;
     if (!presentation) return false;
@@ -1548,6 +1559,7 @@ export class GameScene extends SceneNode {
     this.position = { ...completion.position };
     this.cameraPosition = { ...presentation.destinationCameraPosition };
     this.portalTransitionPresentation = null;
+    this.storyInteractionOwner.reset();
     this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
     const journeyTransition = this.journeyProgress.recordPortal(completion.portalId);
     const regionExpansionTransition = this.regionExpansionProgress.recordPortal(
@@ -2088,7 +2100,11 @@ export class GameScene extends SceneNode {
       : Number.isSafeInteger(jumpSequence)
         ? jumpSequence > this.lastJumpSequence
         : jumpPressed && !this.jumpWasPressed;
-    const portalStarted = jumpIssued && this.tryPortalTransition();
+    const dialogueResult = jumpIssued
+      ? this.storyInteractionOwner.handleJump(this.getStoryInteractionContext())
+      : null;
+    const dialogueConsumed = dialogueResult?.consumed === true;
+    const portalStarted = jumpIssued && !dialogueConsumed && this.tryPortalTransition();
     if (this.mapRuntime.getTransition() === null && guardEdge) this.tryStartRoll(horizontal);
     const isTransitioning = this.mapRuntime.getTransition() !== null;
     const isRolling = this.rollState !== null;
@@ -2097,6 +2113,7 @@ export class GameScene extends SceneNode {
       !isTransitioning &&
       !isRolling &&
       !portalStarted &&
+      !dialogueConsumed &&
       jumpIssued &&
       this.isGrounded &&
       currentCombatState.canJump
@@ -2191,7 +2208,7 @@ export class GameScene extends SceneNode {
       const activeRoom = this.mapRuntime.getActiveRoom();
       const movementBounds = activeRoom.movementBounds ?? {
         minX: CHARACTER_BOUNDARY_HALF_WIDTH,
-        maxX: ACADEMY_VILLAGE_MAP.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
+        maxX: this.mapRuntime.definition.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
       };
       this.position.x = Math.max(
         movementBounds.minX,
@@ -2248,7 +2265,7 @@ export class GameScene extends SceneNode {
 
     const movementBounds = activeRoom.movementBounds ?? {
       minX: CHARACTER_BOUNDARY_HALF_WIDTH,
-      maxX: ACADEMY_VILLAGE_MAP.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
+      maxX: this.mapRuntime.definition.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
     };
     this.position.x = Math.max(movementBounds.minX, Math.min(movementBounds.maxX, this.position.x));
     this.updateCameraFollow(deltaSeconds);
@@ -2296,6 +2313,7 @@ export class GameScene extends SceneNode {
       regionExpansion,
       activeRoomId: roomId,
     });
+    const dialogue = this.storyInteractionOwner.snapshot(this.getStoryInteractionContext());
     let objective = story.nextObjective;
     let encounterHint = '';
 
@@ -2408,6 +2426,7 @@ export class GameScene extends SceneNode {
     return Object.freeze({
       areaName: `${map.name} · ${room.label}`,
       story,
+      dialogue,
       objective,
       encounterHint,
       encounterHealthLabel:
@@ -2735,5 +2754,3 @@ export class GameScene extends SceneNode {
     return renderFrame;
   }
 }
-
-export const GAME_SCENE = new Scene((options) => new GameScene(options));

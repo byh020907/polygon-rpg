@@ -72,6 +72,16 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 
 const VISUAL_QA_SCENARIOS = Object.freeze({
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
+  'academy-dialogue': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 420,
+    dialogueScenarioId: 'mentor-sera-interaction',
+    expectation: Object.freeze({
+      expectedDialogueTarget: 'mentor-sera-interaction',
+      expectedDialogueSpeaker: '세라 교관',
+    }),
+  }),
   training: Object.freeze({ regionId: 'academy-region', roomId: 'training-room', x: 360 }),
   field: Object.freeze({ regionId: 'academy-region', roomId: 'field-crossing', x: 420 }),
   dungeon: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-dungeon', x: 420 }),

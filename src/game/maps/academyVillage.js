@@ -314,6 +314,14 @@ const frontLayerItems = [
     '#8d4c50',
     { stroke: '#482f35', lineWidth: 2, order: 5 },
   ),
+  renderItem('shop-story-sign', rectangle(813, 349, 31, 18), '#d7b567', {
+    stroke: '#493d2e',
+    lineWidth: 1.5,
+    order: 6,
+    label: '장비 공방 안내판',
+    role: 'academy-facility-landmark',
+    presentationOnly: true,
+  }),
   renderItem('shop-window-night', rectangle(793, 365, 61, 31), '#f2ca72', {
     stroke: '#5d452f',
     lineWidth: 1.5,
@@ -522,7 +530,30 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
               renderOrder: 30,
             }),
           ],
-          entities: [],
+          entities: [
+            {
+              id: 'mentor-sera-interaction',
+              kind: 'story-interaction',
+              position: { x: 488, y: 350 },
+              interactionRange: 112,
+              speaker: '세라 교관',
+              lines: [
+                '마법이 없어도 발과 방패, 검을 내는 순간은 네가 고를 수 있어.',
+                '황금 문 너머 실습림에서 Guard와 Roll의 차이를 증명해 봐.',
+              ],
+            },
+            {
+              id: 'academy-workshop-sign-interaction',
+              kind: 'story-interaction',
+              position: { x: 829, y: 358 },
+              interactionRange: 56,
+              speaker: '장비 공방 안내판',
+              lines: [
+                '장비는 공격 거리와 빈틈, Guard 성질을 함께 바꿉니다.',
+                '원정 보상을 가져오면 같은 command를 다른 방식으로 확장할 수 있습니다.',
+              ],
+            },
+          ],
           triggers: [],
           portals: [
             'academy-training-portal',

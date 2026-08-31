@@ -116,6 +116,18 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     storyBeatId: 'academy-briefing',
     storyTitle: '세라 교관의 출정 수업',
     storyBriefing: '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다.',
+    dialogue: Object.freeze({
+      active: false,
+      available: false,
+      interactionId: null,
+      speaker: '',
+      line: '',
+      lineIndex: -1,
+      lineCount: 0,
+      canAdvance: false,
+      canClose: false,
+      prompt: '',
+    }),
     objective: '장비를 고른 뒤 오른쪽 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
     journeyLabel: '학원촌 준비',
     encounterHint: '',
@@ -156,7 +168,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     maxMental: 100,
     gold: 0,
     mobileDirections: Object.freeze([
-      Object.freeze({ id: 'jump', label: '↑', hint: '점프·Portal', slot: 'up' }),
+      Object.freeze({ id: 'jump', label: '↑', hint: '점프·대화·Portal', slot: 'up' }),
       Object.freeze({ id: 'left', label: '←', hint: '이동', slot: 'left' }),
       Object.freeze({ id: 'guard', label: '↓', hint: '방어·회피', slot: 'down' }),
       Object.freeze({ id: 'right', label: '→', hint: '이동', slot: 'right' }),
@@ -201,6 +213,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.storyBeatId = status.story.beatId;
           this.storyTitle = status.story.title;
           this.storyBriefing = status.story.briefing;
+          this.dialogue = status.dialogue;
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
           this.canSelectEquipment = status.canSelectEquipment;

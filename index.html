@@ -254,6 +254,30 @@
             </div>
           </section>
 
+          <section
+            class="dialogue-bubble"
+            x-show="dialogue.available"
+            x-bind:data-dialogue-active="dialogue.active"
+            x-bind:data-dialogue-target="dialogue.interactionId"
+            aria-labelledby="dialogue-speaker"
+            aria-describedby="dialogue-line dialogue-prompt"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <header>
+              <small x-text="dialogue.active ? 'DIALOGUE' : 'INTERACT'"></small>
+              <strong id="dialogue-speaker" x-text="dialogue.speaker"></strong>
+            </header>
+            <p id="dialogue-line" x-show="dialogue.active" x-text="dialogue.line"></p>
+            <footer>
+              <span
+                x-show="dialogue.active"
+                x-text="`${dialogue.lineIndex + 1}/${dialogue.lineCount}`"
+              ></span>
+              <strong id="dialogue-prompt" x-text="dialogue.prompt"></strong>
+            </footer>
+          </section>
+
           <section class="mobile-controls" aria-label="모바일 게임 조작">
             <div class="mobile-direction-pad" aria-label="이동과 자세">
               <template x-for="control in mobileDirections" x-bind:key="control.id">
@@ -300,7 +324,9 @@
         <footer class="game-footer">
           <div class="control-hints">
             <span><kbd>←</kbd><kbd>→</kbd> 이동</span>
-            <span><kbd>↑</kbd> 점프·Portal · <kbd>↓</kbd> 방어 · 이동+<kbd>↓</kbd> 구르기</span>
+            <span
+              ><kbd>↑</kbd> 점프·대화·Portal · <kbd>↓</kbd> 방어 · 이동+<kbd>↓</kbd> 구르기</span
+            >
             <span><kbd>A</kbd> 기본 · <kbd>S</kbd> 강한 공격</span>
             <span x-text="combatCommandGuide"></span>
           </div>

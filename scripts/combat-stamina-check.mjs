@@ -6,6 +6,7 @@ import {
 } from '../src/combat/CombatCommandController.js';
 import { COMBAT_EVENT_TYPE } from '../src/combat/CombatEvent.js';
 import { GameScene } from '../src/game/GameScene.js';
+import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
@@ -56,6 +57,10 @@ function createEncounter() {
     movementBounds: { minX: 0, maxX: 960 },
     spinContact: { hitPulses: [0.3, 0.5, 0.7], contactSpacings: [23, 17, 5] },
   });
+}
+
+function createGameScene() {
+  return new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
 }
 
 function contactPlayerFrame(encounter, { combatState, attackProfile }) {
@@ -266,20 +271,20 @@ function verifyStrongTransitions() {
 }
 
 function verifyGameSceneStaminaBoundary() {
-  const rollScene = new GameScene();
+  const rollScene = createGameScene();
   assert.equal(rollScene.tryStartRoll(1), true);
   assert.equal(rollScene.getPlayerStatus().stamina, 82);
   assert.equal(rollScene.tryStartRoll(1), false);
   assert.equal(rollScene.getPlayerStatus().stamina, 82, 'active roll은 비용을 재차감하지 않는다.');
 
-  const exhaustedRollScene = new GameScene();
+  const exhaustedRollScene = createGameScene();
   for (let index = 0; index < 4; index += 1) {
     exhaustedRollScene.combatCommands.trySpendAction('strongAttack');
   }
   assert.equal(exhaustedRollScene.tryStartRoll(1), false);
   assert.equal(exhaustedRollScene.rollState, null);
 
-  const guardScene = new GameScene();
+  const guardScene = createGameScene();
   guardScene.combatCommands.update(0, input({ guard: true }));
   guardScene.applyTrainingEncounterPlayerResult({
     kind: 'guard',
@@ -291,7 +296,7 @@ function verifyGameSceneStaminaBoundary() {
   assert.equal(guardScene.getPlayerStatus().stamina, 60);
   assert.equal(guardScene.getPlayerStatus().lastCommandTransition.kind, 'guard-contact');
 
-  const breakScene = new GameScene();
+  const breakScene = createGameScene();
   breakScene.combatCommands.update(0, input({ guard: true }));
   breakScene.applyTrainingEncounterPlayerResult({
     kind: 'guard-break',

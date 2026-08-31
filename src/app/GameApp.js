@@ -1,12 +1,13 @@
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
-import { GAME_SCENE } from '../game/GameScene.js';
+import { GameScene } from '../game/GameScene.js';
 import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
   EQUIPMENT_PROFILES,
 } from '../game/equipment/EquipmentProfiles.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
+import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -105,7 +106,9 @@ export class GameApp extends SceneNode {
     const progressionSnapshot = this.progressionLoadResult.ok
       ? this.progressionLoadResult.snapshot
       : freshProgression;
-    this.scene = this.addChild(GAME_SCENE.instantiate({ progressionSnapshot }));
+    this.scene = this.addChild(
+      new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP, progressionSnapshot }),
+    );
     this.camera = new Camera2D();
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
@@ -304,6 +307,17 @@ export class GameApp extends SceneNode {
         active: true,
       });
     }
+    if (scenario.dialogueScenarioId) {
+      this.fixedProcess(1 / 120, {
+        inputSnapshot: Object.freeze({
+          ...inputSnapshot,
+          jump: true,
+          jumpSequence: (inputSnapshot.jumpSequence ?? 0) + 1,
+        }),
+        simulationSettings,
+        active: true,
+      });
+    }
     if (scenario.combatScenarioId)
       this.scene.setVisualQaCombatScenario(scenario.combatScenarioId, phase);
     if (scenario.poseScenarioId) this.scene.setVisualQaPoseScenario(scenario.poseScenarioId);
@@ -316,6 +330,9 @@ export class GameApp extends SceneNode {
     const expectedRetaliation = scenario.expectation?.expectedRetaliation;
     const expectedAnchor = scenario.expectation?.expectedAnchor;
     const expectedStamina = scenario.expectation?.expectedStamina;
+    const dialogue = this.scene.getWorldStatus().dialogue;
+    const expectedDialogueTarget = scenario.expectation?.expectedDialogueTarget;
+    const expectedDialogueSpeaker = scenario.expectation?.expectedDialogueSpeaker;
     const expectedCombatEvent = renderFrame.combatEvents.find(
       (event) => event.type === expectedEvent,
     );
@@ -383,6 +400,12 @@ export class GameApp extends SceneNode {
       anchorMatches,
       staminaMatches:
         expectedStamina === undefined || renderFrame.player.stamina === expectedStamina,
+      dialogueMatches:
+        !expectedDialogueTarget ||
+        (dialogue.active === true &&
+          dialogue.interactionId === expectedDialogueTarget &&
+          dialogue.speaker === expectedDialogueSpeaker &&
+          renderFrame.player.isGrounded === true),
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -393,7 +416,8 @@ export class GameApp extends SceneNode {
         assertionEvidence.contactPresent &&
         assertionEvidence.retaliationPresent &&
         assertionEvidence.anchorMatches &&
-        assertionEvidence.staminaMatches,
+        assertionEvidence.staminaMatches &&
+        assertionEvidence.dialogueMatches,
     });
     if (!assertion.passed) {
       throw new Error(`Visual QA scenario assertion failed: ${start}`);
@@ -412,6 +436,7 @@ export class GameApp extends SceneNode {
       combatMotion: renderFrame.combatMotion,
       combatEvents: renderFrame.combatEvents,
       combatContact: renderFrame.combatContact,
+      dialogue,
       player: renderFrame.player,
       combatEnemy: renderFrame.combatEnemy,
       keyItems: Object.freeze(
