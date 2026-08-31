@@ -63,9 +63,10 @@ Mutation 또는 전체 상태 판정 전에 다음을 완전히 읽는다.
 10. Latest main을 branch에 non-rewriting merge하고 owned diff와 회귀를 재검증한 뒤 exact candidate final을 commit·push한다.
 11. Codex-native subagent를 turn history 상속 없이 fresh context로 생성해 이 파일의 `VERIFIER` mode, exact entry ID, candidate full hash, base hash, completion contract, owned paths, 검사 명령과 artifact 경로를 전달한다. Parent는 verifier가 끝날 때까지 기다린다.
 12. Verifier가 `FAIL`이면 merge하지 않는다. Findings를 developer가 수리하고 새 candidate를 push한 뒤 **새 fresh verifier subagent**로 다시 검증한다. `PASS` 뒤 candidate hash가 바뀌면 verdict는 무효이며 다시 검증한다.
-13. Exact candidate에 대한 `PASS`가 있을 때만 main에서 `--no-ff --no-commit`으로 합치고 verifier verdict·candidate hash·terminal raw/result와 STATUS를 merge commit에 보존해 push한다.
-14. 실제 merge hash를 얻은 뒤 `node loop/inbox.mjs remove-done`으로 exact `done` block만 제거하고 STATUS hash를 기록한 cleanup commit을 push한다.
-15. Origin을 다시 fetch한다. Partial merge 없는 clean `main == origin/main`, clean executor worktree, local/remote final 일치, final의 main 포함, entry 부재와 lease 해제를 `loop/completion.mjs`로 확인한다.
+13. Exact candidate에 대한 `PASS`가 있으면 parent가 main INBOX metadata의 `verifier_candidate`, `verifier_verdict`, `verifier_checked_at`, `verifier_evidence`와 STATUS에 verdict를 기록하고 `ready-for-integration` 또는 `direct-verifying` commit을 push한다. 이 main-only evidence commit은 executor candidate를 바꾸지 않는다.
+14. Durable verdict의 candidate hash와 executor HEAD가 여전히 같을 때만 main에서 `--no-ff --no-commit`으로 합치고 verifier verdict·candidate hash·terminal raw/result와 STATUS를 merge commit에 보존해 push한다.
+15. 실제 merge hash를 얻은 뒤 `node loop/inbox.mjs remove-done`으로 exact `done` block만 제거하고 STATUS hash를 기록한 cleanup commit을 push한다.
+16. Origin을 다시 fetch한다. Partial merge 없는 clean `main == origin/main`, clean executor worktree, local/remote final 일치, final의 main 포함, entry 부재와 lease 해제를 `loop/completion.mjs`로 확인한다.
 
 `direct-*` claim이 있으면 아무 background/ROADMAP 일도 선택하지 않고 outer loop에 대기 상태를 반환한다. `loop/STOP`은 현재 entry가 완결된 뒤 outer loop가 처리한다.
 
@@ -73,7 +74,7 @@ Mutation 또는 전체 상태 판정 전에 다음을 완전히 읽는다.
 
 Queue가 비었다는 이유만으로 멈추지 않는다. DESIGN, STATUS, 실제 code/artifact를 대조해 승인된 milestone이나 playable vertical slice가 남았으면 가장 우선인 **완전한 job 하나**를 선택한다. DESIGN/STATUS 근거로 exact goal, completion, non-scope, quality axes와 base를 고정하고 `work_kind: ROADMAP_JOB`으로 식별한다. Developer implementation·checks·visible QA·candidate commit 뒤 `VERIFIER`에 이 contract와 exact candidate hash를 넘기며, FAIL repair와 새 verifier PASS를 거쳐야 push/integration한다. ROADMAP에는 INBOX lifecycle과 done cleanup만 적용하지 않는다.
 
-승인된 DESIGN milestone과 quality proof가 모두 완료되고, nonterminal inbox/executor/conflict가 없으며 clean `main == origin/main`이면 STATUS에 정확한 `- Loop completion: VERIFIED`와 증거를 기록한 **local completion candidate commit**을 만든다. `work_kind: ROADMAP_COMPLETION`, DESIGN/STATUS completion contract, base와 candidate hash로 fresh verifier PASS를 받은 뒤에만 `루프 전체 완료 증명` commit을 push하고 정상 종료한다. FAIL이면 correction commit과 새 verifier가 필요하다. 사람 또는 외부 조건이 실제로 막으면 `- Loop blocker: <구체 원인>`을 기록한다. 그 외 main 진전도 verified completion도 없는 run은 실패다.
+승인된 DESIGN milestone과 quality proof가 모두 완료되고, nonterminal inbox/executor/conflict가 없으며 clean `main == origin/main`이면 STATUS에 완료 증거를 기록한 **local completion candidate commit**을 만든다. `work_kind: ROADMAP_COMPLETION`, DESIGN/STATUS completion contract, base와 candidate hash로 fresh verifier PASS를 받은 뒤, candidate hash와 verdict를 담은 main-only evidence commit에 정확한 `- Loop completion: VERIFIED`와 subject `루프 전체 완료 증명`을 기록해 push하고 정상 종료한다. FAIL이면 correction candidate와 새 verifier가 필요하다. 사람 또는 외부 조건이 실제로 막으면 `- Loop blocker: <구체 원인>`을 기록한다. 그 외 main 진전도 verified completion도 없는 run은 실패다.
 
 ## `DIRECT` — 현재 대화가 entry 하나 소유
 
@@ -204,6 +205,7 @@ Mutation, lease acquire/release, task/worktree edit, entry/branch 생성, commit
 - Disabled task 또는 STOP 때문에 nonterminal work가 멈춤: explicit recovery invocation을 resume 의사로 보고 `start`.
 - PID file이 있으나 해당 PID/process가 없을 때만 stale PID를 제거하고 `start`한다. Live PID는 건드리지 않는다.
 - Abnormal exit 뒤 branch/checkpoint/final/partial cleanup evidence가 안전하게 남아 있으면 outer loop를 `start`해 다음 fresh session이 `BACKGROUND_ENTRY` recovery를 수행하게 한다.
+- `ready-for-integration` 또는 partial merge 복구는 durable `verifier_verdict: PASS`의 candidate가 executor HEAD와 정확히 같을 때만 계속한다. Evidence가 없거나 hash가 다르면 partial merge를 안전하게 abort하고 새 fresh verifier를 호출한다.
 - Live lease는 빼앗지 않는다. TTL이 지난 lease는 executor의 `lock.mjs acquire` stale takeover 규칙이 보존·교체하게 한다.
 - `direct-*` claim은 background에 넘기거나 `new`로 되돌리지 않는다. `DIRECT_RECOVERY_PENDING`과 `$dev-inbox-direct` resume을 보고한다.
 - Unknown dirty path, duplicate writer, divergent main, ambiguous partial merge, Canonical Conflict는 추측 수리하지 않고 exact evidence와 `CONFLICT`를 보고한다.

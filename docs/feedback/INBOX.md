@@ -17,6 +17,7 @@
 - Status: background lane의 `new`, `implementing`, `verifying`, `ready-for-integration`, `integrating`; current-conversation lane의 `direct-implementing`, `direct-verifying`, `direct-integrating`; terminal/control의 `done`, `blocked`, `paused`, `cancelled`, `superseded`.
 - Priority: `urgent`, `high`, `normal`, `low`.
 - 새 entry의 derived title, executor branch, accepted time와 owned paths는 executor session이 원문 밖에 채운다.
+- Verifier PASS는 `verifier_candidate`, `verifier_verdict`, `verifier_checked_at`, `verifier_evidence`에 exact candidate와 함께 보존하며 hash가 바뀌면 무효다.
 - 원문 정정은 새 entry를 append해 `supersedes`로 연결한다.
 - 동일한 `new` 원문은 명시적인 중복 등록 요청이 없으면 다시 append하지 않는다.
 - Background active 또는 `direct-*` claim은 합쳐서 하나만 존재한다. Direct claim이 있으면 background selector는 다른 `new` entry나 ROADMAP을 소비하지 않는다.
@@ -43,6 +44,10 @@
 - direct_claim_base: null
 - checkpoint_commit: null
 - final_commit: null
+- verifier_candidate: null
+- verifier_verdict: null
+- verifier_checked_at: null
+- verifier_evidence: null
 - integration: null
 - owned_paths: []
 
@@ -91,6 +96,10 @@
 - accepted_at: null
 - checkpoint_commit: null
 - final_commit: null
+- verifier_candidate: null
+- verifier_verdict: null
+- verifier_checked_at: null
+- verifier_evidence: null
 - integration: null
 - owned_paths: []
 
@@ -134,6 +143,10 @@
 - accepted_at: null
 - checkpoint_commit: null
 - final_commit: null
+- verifier_candidate: null
+- verifier_verdict: null
+- verifier_checked_at: null
+- verifier_evidence: null
 - integration: null
 - owned_paths: []
 

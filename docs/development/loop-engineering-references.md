@@ -114,23 +114,23 @@ Outer supervisor
 
 ## Recovery matrix
 
-| Observed drift                             | 같은 fresh session의 reconcile action                      | 성공 상태                                |
-| ------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------- |
-| `new`, executor ref 없음                   | 계약 파생, branch/worktree 생성, 구현 계속                 | 같은 session에서 integrated/cleaned      |
-| `direct-*` claim 존재                      | background selection 중지, explicit direct owner만 resume  | current conversation 또는 durable wait   |
-| Branch 있음, worktree 없음                 | 동일 branch로 재구성                                       | 구현/검증 계속                           |
-| Dirty owned paths                          | current best와 diff 확인 후 계속                           | checkpoint 갱신                          |
-| Unknown dirty paths                        | 보존하고 exact owner/conflict 기록                         | 안전한 resolution 또는 concrete block    |
-| Checkpoint만 있음                          | affected checks와 visible PNG를 새로 실행                  | final/integration 계속                   |
-| Final이 latest main 미포함                 | main을 branch에 non-rewriting merge, 재검증                | latest-main final                        |
-| Ready entry                                | final diff/check 재확인 후 main merge                      | integration commit                       |
-| Partial main merge                         | intent/staged paths가 유일하면 완료, 아니면 안전하게 abort | clean main                               |
-| Integration 뒤 done block 잔류             | exact parser로 block만 제거, actual hash 기록              | live queue cleanup                       |
-| Entry 부재지만 durable postcondition 미달  | origin 재조회, main/ref/lease의 빠진 증거부터 복구         | clean pushed integrated final·no lease   |
-| Push 실패                                  | 같은 commit hash push 재시도                               | local==remote                            |
-| Codex crash/tool failure                   | nonzero exit; Task Scheduler restart                       | 새 ephemeral session이 evidence에서 복구 |
-| Concrete product/credential/external block | INBOX·STATUS에 exact blocker 기록                          | blocked 정상 종료                        |
-| STOP present                               | 현재 entry 완결 뒤 outer loop exit 0                       | task normal stop                         |
+| Observed drift                             | 같은 fresh session의 reconcile action                                | 성공 상태                                |
+| ------------------------------------------ | -------------------------------------------------------------------- | ---------------------------------------- |
+| `new`, executor ref 없음                   | 계약 파생, branch/worktree 생성, 구현 계속                           | 같은 session에서 integrated/cleaned      |
+| `direct-*` claim 존재                      | background selection 중지, explicit direct owner만 resume            | current conversation 또는 durable wait   |
+| Branch 있음, worktree 없음                 | 동일 branch로 재구성                                                 | 구현/검증 계속                           |
+| Dirty owned paths                          | current best와 diff 확인 후 계속                                     | checkpoint 갱신                          |
+| Unknown dirty paths                        | 보존하고 exact owner/conflict 기록                                   | 안전한 resolution 또는 concrete block    |
+| Checkpoint만 있음                          | affected checks와 visible PNG를 새로 실행                            | final/integration 계속                   |
+| Final이 latest main 미포함                 | main을 branch에 non-rewriting merge, 재검증                          | latest-main final                        |
+| Ready entry                                | durable verifier PASS와 candidate HEAD 일치 확인, 없으면 새 verifier | verified integration commit              |
+| Partial main merge                         | matching PASS면 완료, 없거나 hash가 다르면 abort·재검증              | clean verified main                      |
+| Integration 뒤 done block 잔류             | exact parser로 block만 제거, actual hash 기록                        | live queue cleanup                       |
+| Entry 부재지만 durable postcondition 미달  | origin 재조회, main/ref/lease의 빠진 증거부터 복구                   | clean pushed integrated final·no lease   |
+| Push 실패                                  | 같은 commit hash push 재시도                                         | local==remote                            |
+| Codex crash/tool failure                   | nonzero exit; Task Scheduler restart                                 | 새 ephemeral session이 evidence에서 복구 |
+| Concrete product/credential/external block | INBOX·STATUS에 exact blocker 기록                                    | blocked 정상 종료                        |
+| STOP present                               | 현재 entry 완결 뒤 outer loop exit 0                                 | task normal stop                         |
 
 ## Completion proof
 
