@@ -321,10 +321,54 @@ function verifyAuthoredContentInjectionBoundary() {
   );
   assert.match(gameSceneSource, /assertEquipmentCatalog\(equipmentCatalog\)/);
   assert.match(gameSceneSource, /assertCombatProgressionProfile\(combatProgressionProfile\)/);
+  assert.match(gameSceneSource, /assertEncounterFactory\(encounterFactory\)/);
+  assert.match(gameSceneSource, /assertEncounterAttackProfiles\(encounterAttackProfiles\)/);
+
+  const encounterSource = readFileSync(
+    new URL('../src/game/training/TrainingEncounterNode.js', import.meta.url),
+    'utf8',
+  );
+  const presentationSource = readFileSync(
+    new URL('../src/game/training/TrainingEncounterPresentation.js', import.meta.url),
+    'utf8',
+  );
+  const roomSource = readFileSync(new URL('../src/game/room/RoomNode.js', import.meta.url), 'utf8');
+  const forbiddenEncounterProfileImport =
+    /from ['"].*(?:EncounterProfiles|TrainingEnemyAttackProfiles)\.js['"];?/;
+  assert.match(
+    "import { profile } from './TrainingEnemyAttackProfiles.js';",
+    forbiddenEncounterProfileImport,
+    'direct sibling attack profile import fixture를 regression이 잡아야 한다.',
+  );
+  assert.match(
+    "import { profile } from '../encounter/EncounterProfiles.js';",
+    forbiddenEncounterProfileImport,
+    'parent-path encounter profile import fixture를 regression이 잡아야 한다.',
+  );
+  assert.doesNotMatch(
+    encounterSource,
+    forbiddenEncounterProfileImport,
+    'Encounter domain은 concrete authored profile을 import하면 안 된다.',
+  );
+  assert.doesNotMatch(
+    presentationSource,
+    /from ['"].*\/TrainingEnemyAttackProfiles\.js['"];?/,
+    'Encounter presentation은 concrete authored attack profile을 import하면 안 된다.',
+  );
+  assert.doesNotMatch(
+    roomSource,
+    /from ['"].*\/training\/TrainingEncounterNode\.js['"];?/,
+    'Room domain은 concrete encounter Scene을 import하면 안 된다.',
+  );
+  assert.match(roomSource, /encounterFactory\(\{/);
 
   const gameAppSource = readFileSync(new URL('../src/app/GameApp.js', import.meta.url), 'utf8');
   assert.match(gameAppSource, /equipmentCatalog: EQUIPMENT_CATALOG/);
   assert.match(gameAppSource, /combatProgressionProfile: COMBAT_PROGRESSION_PROFILE/);
+  assert.match(gameAppSource, /encounterProfiles: ENCOUNTER_PROFILES/);
+  assert.match(gameAppSource, /attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES/);
+  assert.match(gameAppSource, /encounterFactory: createTrainingEncounter/);
+  assert.match(gameAppSource, /encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES/);
 }
 
 verifyChoiceTransactions();

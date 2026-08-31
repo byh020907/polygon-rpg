@@ -171,8 +171,6 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     maxStamina: 100,
     staminaExhausted: false,
     lastCommandTransition: null,
-    mental: 65,
-    maxMental: 100,
     gold: 0,
     mobileDirections: Object.freeze([
       Object.freeze({ id: 'jump', label: '↑', hint: '점프·대화·Portal', slot: 'up' }),
@@ -300,10 +298,6 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         : '현재 조우 없음';
       const staminaState = this.staminaExhausted ? ' · 스태미나 소진' : '';
       return `전투: ${transition ? `${transition} · ` : ''}${encounter}${staminaState}`;
-    },
-
-    get mentalPercent() {
-      return `${Math.max(0, Math.min(100, (this.mental / this.maxMental) * 100))}%`;
     },
 
     startGame() {

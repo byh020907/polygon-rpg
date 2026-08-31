@@ -245,11 +245,27 @@ function assertCombatProgressionProfile(profile) {
   return profile;
 }
 
+function assertEncounterFactory(factory) {
+  if (typeof factory !== 'function') {
+    throw new TypeError('GameScene에는 composition-owned encounter factory 주입이 필요합니다.');
+  }
+  return factory;
+}
+
+function assertEncounterAttackProfiles(profiles) {
+  if (!profiles || typeof profiles !== 'object' || !profiles.light) {
+    throw new TypeError('GameScene에는 authored encounter attack profile 주입이 필요합니다.');
+  }
+  return profiles;
+}
+
 export class GameScene extends SceneNode {
   constructor({
     mapDefinition,
     equipmentCatalog,
     combatProgressionProfile,
+    encounterFactory,
+    encounterAttackProfiles,
     progressionSnapshot = null,
   } = {}) {
     super('GameScene');
@@ -257,6 +273,8 @@ export class GameScene extends SceneNode {
       throw new TypeError('GameScene에는 authored mapDefinition 주입이 필요합니다.');
     this.equipmentCatalog = assertEquipmentCatalog(equipmentCatalog);
     this.combatProgressionProfile = assertCombatProgressionProfile(combatProgressionProfile);
+    this.encounterFactory = assertEncounterFactory(encounterFactory);
+    this.encounterAttackProfiles = assertEncounterAttackProfiles(encounterAttackProfiles);
     const initialProgression =
       progressionSnapshot ?? createProgressionSnapshot(this.equipmentCatalog.defaultProfileId);
     this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
@@ -1033,6 +1051,7 @@ export class GameScene extends SceneNode {
     const spinProfile = this.getAttackHitProfile('spin');
     const roomScene = ROOM_SCENE.instantiate({
       snapshot,
+      encounterFactory: this.encounterFactory,
       spinContact: {
         hitPulses: spinProfile.hitPulses,
         contactSpacings: spinProfile.contactSpacings,
@@ -1965,6 +1984,7 @@ export class GameScene extends SceneNode {
       ? createTrainingEnemyItems(
           encounterRender.presentationState,
           activeRoom.renderOrder + 0.45,
+          this.encounterAttackProfiles,
           encounterRender.geometry,
         )
       : [];
@@ -1973,7 +1993,10 @@ export class GameScene extends SceneNode {
           ...encounterRender.enemy,
           attack: Object.freeze({
             ...encounterRender.enemy.attack,
-            frame: sampleTrainingEnemyCombatFrame(encounterRender.presentationState),
+            frame: sampleTrainingEnemyCombatFrame(
+              encounterRender.presentationState,
+              this.encounterAttackProfiles,
+            ),
           }),
         })
       : null;

@@ -3,9 +3,17 @@ import {
   sampleTrainingEnemyCombatGeometry,
   sampleTrainingEnemyWeaponLength,
 } from '../../combat/SharedCombatGeometry.js';
-import { TRAINING_ENEMY_ATTACK_PROFILES } from './TrainingEnemyAttackProfiles.js';
 
 export const TRAINING_ENEMY_PRESENTATION_SCALE = 0.48;
+
+function assertAttackProfiles(profiles) {
+  if (!profiles || typeof profiles !== 'object' || !profiles.light) {
+    throw new TypeError(
+      'Training encounter presentation에는 authored attack profile 주입이 필요합니다.',
+    );
+  }
+  return profiles;
+}
 
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
@@ -92,9 +100,10 @@ function rectangle(x, y, width, height) {
   ];
 }
 
-export function sampleTrainingEnemyCombatFrame(enemy) {
+export function sampleTrainingEnemyCombatFrame(enemy, attackProfiles) {
   if (!enemy || !['windup', 'attack', 'recovery'].includes(enemy.aiState)) return null;
-  const profile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
+  const profiles = assertAttackProfiles(attackProfiles);
+  const profile = profiles[enemy.attackKind];
   const durationFrames =
     enemy.aiState === 'windup'
       ? profile.frame.windupFrames
@@ -112,10 +121,16 @@ export function sampleTrainingEnemyCombatFrame(enemy) {
   });
 }
 
-export function createTrainingEnemyItems(enemy, renderOrder, combatGeometry = null) {
+export function createTrainingEnemyItems(
+  enemy,
+  renderOrder,
+  attackProfiles,
+  combatGeometry = null,
+) {
   if (!enemy) return [];
+  const profiles = assertAttackProfiles(attackProfiles);
   const resolvedCombatGeometry =
-    combatGeometry ?? sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
+    combatGeometry ?? sampleTrainingEnemyCombatGeometry(enemy, profiles);
   const { x, y } = enemy.position;
   const flash = enemy.hitFlashSeconds > 0;
   const glasswind = enemy.species === 'glasswind';
@@ -138,14 +153,14 @@ export function createTrainingEnemyItems(enemy, renderOrder, combatGeometry = nu
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
   const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
   const presentationScale = enemy.presentationScale ?? TRAINING_ENEMY_PRESENTATION_SCALE;
-  const attackProfile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
+  const attackProfile = profiles[enemy.attackKind];
   const attackProgress =
     enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackProfile.attackSeconds : 0;
   const recoveryProgress =
     enemy.aiState === 'recovery' && enemy.recoveryDurationSeconds > 0
       ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds
       : 0;
-  const weaponLength = sampleTrainingEnemyWeaponLength(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
+  const weaponLength = sampleTrainingEnemyWeaponLength(enemy, profiles);
   const weaponAngle =
     enemy.aiState === 'hitstun'
       ? enemy.hitReactionWeaponAngle
@@ -188,13 +203,7 @@ export function createTrainingEnemyItems(enemy, renderOrder, combatGeometry = nu
   };
   const antiAirGlowOpacity =
     enemy.attackKind === 'antiAir'
-      ? Math.max(
-          0,
-          Math.min(
-            0.42,
-            ((weaponLength - TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength) / 134) * 0.42,
-          ),
-        )
+      ? Math.max(0, Math.min(0.42, ((weaponLength - profiles.light.weaponLength) / 134) * 0.42))
       : 0;
   const items = [
     polygon(

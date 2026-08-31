@@ -6,6 +6,7 @@ import {
 } from '../src/combat/CombatCommandController.js';
 import { COMBAT_EVENT_TYPE } from '../src/combat/CombatEvent.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
+import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
@@ -56,6 +57,8 @@ function createEncounter() {
     groundY: 420,
     movementBounds: { minX: 0, maxX: 960 },
     spinContact: { hitPulses: [0.3, 0.5, 0.7], contactSpacings: [23, 17, 5] },
+    encounterProfiles: ENCOUNTER_PROFILES,
+    attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
   });
 }
 

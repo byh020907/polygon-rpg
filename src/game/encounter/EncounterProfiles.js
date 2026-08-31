@@ -66,16 +66,4 @@ const ENCOUNTER_PROFILES = Object.freeze({
   }),
 });
 
-export function getEncounterProfile(profileId = 'training') {
-  const profile = ENCOUNTER_PROFILES[profileId];
-  if (!profile) throw new Error(`알 수 없는 encounter profile입니다: ${profileId}`);
-  return profile;
-}
-
-export function selectEncounterAttack(profile, patternIndex, healthRatio = 1) {
-  const phaseIndex = healthRatio <= 0.5 && profile.attackPatterns.length > 1 ? 1 : 0;
-  const pattern = profile.attackPatterns[phaseIndex];
-  return pattern[Math.max(0, patternIndex) % pattern.length];
-}
-
 export { ENCOUNTER_PROFILES };

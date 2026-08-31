@@ -93,16 +93,19 @@ for (const attackKind of ['light', 'heavy', 'antiAir', 'sweep']) {
   );
   assert.ok(geometry.weapon.points.length >= 5);
   assert.equal(geometry.hurt.length, 2);
-  const renderedWeapon = createTrainingEnemyItems(enemy, 0, geometry).find(
-    ({ id }) => id === 'combat-enemy-weapon',
-  );
+  const renderedWeapon = createTrainingEnemyItems(
+    enemy,
+    0,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+    geometry,
+  ).find(({ id }) => id === 'combat-enemy-weapon');
   assert.deepEqual(
     renderedWeapon.points,
     geometry.weapon.points,
     `${attackKind} renderer와 gameplay는 같은 weapon polygon을 읽어야 한다.`,
   );
 }
-assert.deepEqual(createTrainingEnemyItems(null, 0), []);
+assert.deepEqual(createTrainingEnemyItems(null, 0, TRAINING_ENEMY_ATTACK_PROFILES), []);
 
 const square = (part, x) =>
   Object.freeze({

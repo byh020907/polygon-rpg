@@ -489,10 +489,6 @@ dd {
   background: linear-gradient(90deg, #9ca7a1, #eff1e9);
 }
 
-.vital-track--mental i {
-  background: linear-gradient(90deg, #6b526c, #bc84a2);
-}
-
 .hud-money {
   display: flex;
   gap: 7px;

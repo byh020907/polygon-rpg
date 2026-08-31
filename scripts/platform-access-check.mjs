@@ -78,6 +78,7 @@ function verifyFocusPortAndNoFocusSteal() {
 function verifySemanticStatusAndFocusTargets() {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  const shell = readFileSync(new URL('../src/ui/gameShell.js', import.meta.url), 'utf8');
 
   for (const targetId of Object.values(SCREEN_FOCUS_TARGET)) {
     assert.match(html, new RegExp(`id=["']${targetId}["']`), `${targetId} target이 필요하다.`);
@@ -96,6 +97,9 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /x-bind:data-camera-feedback-enabled="String\(!reducedMotion\)"/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /\.game-semantic-status|\.visually-hidden/);
+  assert.doesNotMatch(html, /MENTAL|정신력|vital-track--mental/);
+  assert.doesNotMatch(shell, /\bmental(?:Percent)?\b|maxMental/);
+  assert.doesNotMatch(css, /vital-track--mental/);
 }
 
 function verifyInteractiveControlKeyboardBoundary() {

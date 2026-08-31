@@ -10,8 +10,6 @@ import {
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
-import { getEncounterProfile, selectEncounterAttack } from '../encounter/EncounterProfiles.js';
-import { TRAINING_ENEMY_ATTACK_PROFILES } from './TrainingEnemyAttackProfiles.js';
 
 const GRAVITY = 1180;
 const RESET_SECONDS = combatFramesToSeconds(60);
@@ -25,8 +23,36 @@ function freezePosition(position) {
   return Object.freeze({ x: position.x, y: position.y });
 }
 
+function assertEncounterProfiles(profiles) {
+  if (!profiles || typeof profiles !== 'object') {
+    throw new TypeError(
+      'TrainingEncounter Scene에는 authored encounter profile 주입이 필요합니다.',
+    );
+  }
+  return profiles;
+}
+
+function assertAttackProfiles(profiles) {
+  if (!profiles || typeof profiles !== 'object' || !profiles.light) {
+    throw new TypeError('TrainingEncounter Scene에는 authored attack profile 주입이 필요합니다.');
+  }
+  return profiles;
+}
+
+function resolveEncounterProfile(profiles, profileId = 'training') {
+  const profile = profiles[profileId];
+  if (!profile) throw new Error(`알 수 없는 encounter profile입니다: ${profileId}`);
+  return profile;
+}
+
+function selectEncounterAttack(profile, patternIndex, healthRatio = 1) {
+  const phaseIndex = healthRatio <= 0.5 && profile.attackPatterns.length > 1 ? 1 : 0;
+  const pattern = profile.attackPatterns[phaseIndex];
+  return pattern[Math.max(0, patternIndex) % pattern.length];
+}
+
 export class TrainingEncounterNode extends SceneNode {
-  constructor({ entity, groundY, movementBounds, spinContact }) {
+  constructor({ entity, groundY, movementBounds, spinContact, encounterProfiles, attackProfiles }) {
     super('TrainingEncounter');
     if (!entity || !['combat-test-mob', 'combat-enemy'].includes(entity.kind)) {
       throw new TypeError('Encounter Scene에는 지원하는 combat enemy entity가 필요합니다.');
@@ -45,7 +71,12 @@ export class TrainingEncounterNode extends SceneNode {
       throw new TypeError('TrainingEncounter Scene에는 spin contact frame data가 필요합니다.');
     }
 
-    const encounterProfile = getEncounterProfile(entity.encounterProfileId ?? 'training');
+    this.encounterProfiles = assertEncounterProfiles(encounterProfiles);
+    this.attackProfiles = assertAttackProfiles(attackProfiles);
+    const encounterProfile = resolveEncounterProfile(
+      this.encounterProfiles,
+      entity.encounterProfileId ?? 'training',
+    );
     this.entity = Object.freeze({
       id: entity.id,
       position: freezePosition(entity.position ?? { x: 680, y: groundY }),
@@ -114,7 +145,7 @@ export class TrainingEncounterNode extends SceneNode {
       retaliationProtectedComboCycle: 0,
       retaliationCycleClaimed: false,
       hitReactionWeaponAngle: -0.65,
-      hitReactionWeaponLength: TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength,
+      hitReactionWeaponLength: this.attackProfiles.light.weaponLength,
       punishWindowOpen: false,
       punishComboCycle: 0,
       lastCommandTransition: null,
@@ -197,10 +228,7 @@ export class TrainingEncounterNode extends SceneNode {
         lastCommandTransition: enemy.lastCommandTransition,
       }),
       presentationState,
-      geometry: sampleTrainingEnemyCombatGeometry(
-        presentationState,
-        TRAINING_ENEMY_ATTACK_PROFILES,
-      ),
+      geometry: sampleTrainingEnemyCombatGeometry(presentationState, this.attackProfiles),
       renderOrder,
       contact:
         this.contactSeconds > 0 && this.lastVisualContact
@@ -396,7 +424,7 @@ export class TrainingEncounterNode extends SceneNode {
             enemy.patternIndex,
             enemy.health / enemy.maxHealth,
           );
-      const profile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
+      const profile = this.attackProfiles[enemy.attackKind];
       if (absoluteDistance <= profile.desiredRange) {
         enemy.aiState = 'windup';
         enemy.attackFacing = enemy.facing;
@@ -410,14 +438,14 @@ export class TrainingEncounterNode extends SceneNode {
     }
     if (enemy.aiState === 'windup' && enemy.aiSeconds === 0) {
       enemy.aiState = 'attack';
-      enemy.aiSeconds = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind].attackSeconds;
+      enemy.aiSeconds = this.attackProfiles[enemy.attackKind].attackSeconds;
       return;
     }
     if (enemy.aiState === 'attack') {
       const deferRecovery = this.resolveEnemyAttack(frame, distance);
       if (deferRecovery) return;
       if (enemy.aiSeconds === 0) {
-        const profile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
+        const profile = this.attackProfiles[enemy.attackKind];
         this.startRecovery({
           source: 'attack',
           durationSeconds: profile.recoverySeconds,
@@ -455,7 +483,7 @@ export class TrainingEncounterNode extends SceneNode {
   resolveEnemyAttack(frame, distance) {
     const enemy = this.enemy;
     const player = frame.player;
-    const profile = TRAINING_ENEMY_ATTACK_PROFILES[enemy.attackKind];
+    const profile = this.attackProfiles[enemy.attackKind];
     const attackProgress = 1 - enemy.aiSeconds / profile.attackSeconds;
     const verticalDistance = Math.abs(enemy.position.y - (player.position.y + 82));
     const visualBroadRange = Math.max(
@@ -477,7 +505,7 @@ export class TrainingEncounterNode extends SceneNode {
     const guardHeld = player.isGrounded && enemyInFront && frame.combatState.id === 'guard';
     const guarding = profile.guardable && guardHeld;
     const guardBreak = profile.guardBreak === true && guardHeld;
-    const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
+    const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, this.attackProfiles);
     let visualContact = Object.freeze({ contact: false, gap: Infinity });
     if (guarding || guardBreak) {
       visualContact = closestCombatContact(
@@ -688,7 +716,7 @@ export class TrainingEncounterNode extends SceneNode {
       Math.abs(enemy.position.y - (player.position.y + 82)) > 116
     )
       return false;
-    const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
+    const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, this.attackProfiles);
     const playerWeapons = frame.playerGeometry
       ? [frame.playerGeometry.weapon, frame.playerGeometry.sweep].filter(Boolean)
       : [];
@@ -826,10 +854,7 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.hitstunSeconds,
       (0.16 + damage * 0.008) * (profile.hitstunScale ?? 1),
     );
-    enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(
-      enemy,
-      TRAINING_ENEMY_ATTACK_PROFILES,
-    );
+    enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(enemy, this.attackProfiles);
     enemy.hitReactionWeaponAngle =
       profile.damage >= 22 ? 0.35 : profile.launchY < -300 ? -1.1 : 0.2;
     if (interruptsStrongStartup) {

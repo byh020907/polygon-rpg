@@ -1,10 +1,9 @@
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
-import { TRAINING_ENCOUNTER_SCENE } from '../training/TrainingEncounterNode.js';
 
 export class RoomNode extends SceneNode {
-  constructor({ snapshot, spinContact }) {
+  constructor({ snapshot, spinContact, encounterFactory }) {
     super(`Room:${snapshot?.active?.roomId ?? 'unknown'}`);
     if (!snapshot?.room || !snapshot?.active) {
       throw new TypeError('Room Scene에는 resolved Room snapshot이 필요합니다.');
@@ -21,8 +20,11 @@ export class RoomNode extends SceneNode {
       ['combat-test-mob', 'combat-enemy'].includes(candidate.kind),
     );
     if (!entity) return;
+    if (typeof encounterFactory !== 'function') {
+      throw new TypeError('Combat Room에는 composition-owned encounter factory 주입이 필요합니다.');
+    }
     this.encounter = this.addChild(
-      TRAINING_ENCOUNTER_SCENE.instantiate({
+      encounterFactory({
         entity,
         groundY: snapshot.room.groundY,
         movementBounds: snapshot.room.movementBounds,

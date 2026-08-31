@@ -2,10 +2,13 @@ import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { GameScene } from '../game/GameScene.js';
 import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
+import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
+import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode.js';
+import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -72,6 +75,14 @@ function createProgressionStorage() {
   }
 }
 
+function createTrainingEncounter(options) {
+  return TRAINING_ENCOUNTER_SCENE.instantiate({
+    ...options,
+    encounterProfiles: ENCOUNTER_PROFILES,
+    attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
+  });
+}
+
 export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas }) {
     super('GameApp');
@@ -109,6 +120,8 @@ export class GameApp extends SceneNode {
         mapDefinition: ACADEMY_VILLAGE_MAP,
         equipmentCatalog: EQUIPMENT_CATALOG,
         combatProgressionProfile: COMBAT_PROGRESSION_PROFILE,
+        encounterFactory: createTrainingEncounter,
+        encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
         progressionSnapshot,
       }),
     );
