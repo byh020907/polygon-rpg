@@ -30,6 +30,7 @@ Collect one bounded snapshot without polling:
 
 1. Fetch origin; record local/remote main, clean/dirty state, recent lifecycle/integration commits and partial merge state.
 2. Parse every nonterminal `IN-*` entry. Verify raw blocks remain present, identify the one expected active entry and compare it with STATUS.
+   For `direct-*`, also report `execution_mode`, claim time/base/owner and whether the current evidence is progressing or awaiting explicit resume.
 3. Run `loop/control.ps1 status` read-only. Inspect Task Scheduler action/trigger/settings, enabled/state/result, explicit PATH configuration, `loop/runner.pid` owner and `loop/STOP` presence.
 4. Read the five latest `logs/YYYY-MM-DD/<run>-<IN-ID>/summary.json`, matching JSONL exit evidence and last message. Do not poll or wait.
 5. Inspect the active entry's local/remote executor ref, merge base, ahead/behind, branch-only commits and `loop/worktree.mjs status` output.
@@ -46,6 +47,8 @@ Choose exactly one:
 
 - `INBOX_PENDING`: at least one `new` entry exists and no active entry owns execution yet.
 - `HEALTHY_RUNNING`: one Codex entry session owns a live lease/PID and Git/log evidence has moved within the expected duration.
+- `DIRECT_RUNNING`: one `direct-*` entry owns a live lease and its current-conversation branch/worktree evidence is moving.
+- `DIRECT_RECOVERY_PENDING`: a `direct-*` claim is durable but has no live lease; background waiting is correct and an explicit `$dev-inbox-direct` resume or authorized recovery is needed.
 - `RECOVERY_PENDING`: a prior abnormal session left checkpoint, dirty owned progress, final, partial integration or cleanup evidence that the next fresh session can deterministically resume.
 - `RECOVERING`: latest run repaired a branch/worktree, phase, main drift or push with a clear continuation.
 - `WAITING_HUMAN_OR_EXTERNAL`: one concrete non-inferable question/credential/external condition is recorded and the loop is normally stopped for that blocker.
@@ -61,6 +64,7 @@ Choose exactly one:
 
 - `new` entry with an expected-active Windows task disabled/stopped.
 - Active entry lacks its branch/worktree, or another active entry overlaps it.
+- Background run selected any work while a `direct-*` claim exists.
 - Raw request was rewritten rather than metadata being updated.
 - Executor branch modified INBOX or STATUS.
 - Branch checkpoint/final is unpushed or main INBOX marker lags unexplained.

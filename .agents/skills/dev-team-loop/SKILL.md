@@ -30,6 +30,7 @@ If ambiguous, inspect inbox entries, executor refs, `git worktree list --porcela
 - `docs/feedback/INBOX.md` owns status, execution contract, current best, blocker and result; `docs/STATUS.md` is its current-state projection.
 - The inbox is main-owned. Executor branches never edit it; the complete-work session records branch evidence on main while continuing to completion.
 - New entries use deterministic `codex/loop/<lowercase-in-id>` branches. Do not call `create_thread`, fork or handoff.
+- A `direct-*` claim belongs to `$dev-inbox-direct`. Background runs and this skill's Start mode must not consume that item, another `new` item or ROADMAP until the claim completes or authorized recovery changes it.
 - Each run acquires/renews/releases the lease and continues through provision, implementation, checkpoint, visible QA, final, integration and cleanup without normal phase exits.
 - Checkpoint is interruption recovery evidence, not a completed run.
 - Integration은 merge commit에 `done` 원문·결과를 먼저 보존하고, 같은 transition의 cleanup commit에서 그 exact block만 live INBOX에서 제거한다.

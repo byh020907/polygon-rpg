@@ -14,12 +14,12 @@
 ## Entry Contract
 
 - ID: `IN-YYYYMMDD-HHmmss`; 같은 초 충돌은 `-02`, `-03`.
-- Status: `new`, `implementing`, `verifying`, `ready-for-integration`, `integrating`, `done`, `blocked`, `paused`, `cancelled`, `superseded`.
+- Status: background lane의 `new`, `implementing`, `verifying`, `ready-for-integration`, `integrating`; current-conversation lane의 `direct-implementing`, `direct-verifying`, `direct-integrating`; terminal/control의 `done`, `blocked`, `paused`, `cancelled`, `superseded`.
 - Priority: `urgent`, `high`, `normal`, `low`.
 - 새 entry의 derived title, executor branch, accepted time와 owned paths는 executor session이 원문 밖에 채운다.
 - 원문 정정은 새 entry를 append해 `supersedes`로 연결한다.
 - 동일한 `new` 원문은 명시적인 중복 등록 요청이 없으면 다시 append하지 않는다.
-- `implementing`부터 `integrating`까지 active entry는 기본적으로 하나다.
+- Background active 또는 `direct-*` claim은 합쳐서 하나만 존재한다. Direct claim이 있으면 background selector는 다른 `new` entry나 ROADMAP을 소비하지 않는다.
 
 ## Entry Shape
 
@@ -37,6 +37,10 @@
 - executor_branch: null
 - registration_base: <full-main-before-append>
 - accepted_at: null
+- execution_mode: null
+- direct_claimed_at: null
+- direct_claimed_by: null
+- direct_claim_base: null
 - checkpoint_commit: null
 - final_commit: null
 - integration: null

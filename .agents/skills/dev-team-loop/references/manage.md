@@ -8,6 +8,7 @@ One fresh `codex exec` session owns one INBOX entry from current evidence to cle
 2. Fetch origin and inspect main, executor refs/worktree, commit ancestry and `loop/lock.mjs status` before broad context loading.
 3. Acquire the exact clean main HEAD lease. Renew before mutations and at least every 10 minutes; release in `finally`.
 4. Recover any existing branch, dirty owned paths, checkpoint, final, partial main merge or leftover done block before new implementation.
+5. If INBOX contains a `direct-*` claim, leave all entries untouched and let the outer loop idle. Direct ownership is not a stale background phase.
 
 ## Complete One Entry
 

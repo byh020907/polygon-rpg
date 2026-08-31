@@ -14,7 +14,7 @@
 
 ## Completed
 
-- M0: Windows outer loop가 entry마다 fresh `codex exec --ephemeral`을 열고 같은 session에서 checkpoint·visible PNG QA·repair·final·automatic merge/push·cleanup을 완결하는 Git/file-memory loop.
+- M0: Windows outer loop의 unattended fresh session과 explicit current-conversation direct claim이 서로의 lane을 침범하지 않고 entry 하나를 checkpoint·visible QA·repair·merge·cleanup까지 완결하는 Git/file-memory loop.
 - M1: Guard → roll 배후 → launcher → 공중 combo → landing 훈련 전투.
 - M2: 학원촌 장비 선택 → 훈련장 Room Portal 왕복 → camera travel → 전투 반복.
 - M3: 학원촌 준비 → Field/Dungeon/Boss → 보상 → shortcut 귀환.
@@ -57,10 +57,11 @@
 - 환경형 사람 크기 Portal correction checkpoint: `1857977405f8b3f86046fd55c938a16a7252d4f9` · 첫 visible PNG에서 문틀이 플레이어보다 크고 외곽 accent가 공통 ring처럼 보이는 결함을 직접 판독해, 개구부 `21~26 × 43~45`, 문틀 `44~49 × 52~54`, 환경 재료 외곽선과 얇은 내부 경로색으로 수리했다.
 - 환경형 사람 크기 Portal clean final: `31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44` · latest main을 non-rewriting merge한 뒤 36개 ID·치수, 8개 patch, academy→training 전환, `npm run check`, `git diff --check`를 통과했다. Visible Chrome frame 180의 supported 여덟 Room을 직접 판독했고 `artifacts/visual-qa/IN-20260831-030641/latest-<screen>-180/`의 capture는 `1440×810`, console error 0개, merge 전 합격 PNG와 byte-identical이다. 적용 품질 축은 모두 2 이상이다.
 - 환경형 사람 크기 Portal integration: `d2a05e95b370c88b0b5db9017dbba41de6ca443a` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-030641` done block만 제거했다.
+- Direct INBOX lane: explicit-only `$dev-inbox-direct`, lease-guarded `claim-direct`, `direct-*` lifecycle과 background wait sentinel을 추가했다. Direct claim은 구현 전에 main에 push되고 current conversation이 진행 보고·구현·QA·통합을 소유하며, background `$dev-team-loop`와 ROADMAP selection은 claim 완료 또는 authorized recovery까지 대기한다.
 
 ## Next
 
-다음 fresh session은 `IN-20260831-030839`의 story 진행과 실제 마을·Field·Dungeon 구체화를 exact 원문과 DESIGN·world-map 계약에서 파생해 완결한다. 현재 session은 다음 entry를 구현하지 않는다.
+다음 대상은 `IN-20260831-030839`의 story 진행과 실제 마을·Field·Dungeon 구체화다. `$dev-team-loop`는 background fresh session으로, explicit `$dev-inbox-direct`는 현재 대화에서 먼저 `direct-*` claim한 뒤 진행 상황을 보이며 완결한다.
 
 ## Update Contract
 

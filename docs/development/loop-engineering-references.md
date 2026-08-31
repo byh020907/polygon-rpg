@@ -8,7 +8,7 @@
 Desired state
   DESIGN · live INBOX · quality contract · clean origin/main
 Observed state
-  main · executor refs/worktrees · lease · run log · visual artifact
+  main · background/direct claim · executor refs/worktrees · lease · run log · visual artifact
 Complete-Work Reconcile Session
   recover → implement → check → visible QA → repair → final → integrate → cleanup
 Outer supervisor
@@ -115,6 +115,7 @@ Outer supervisor
 | Observed drift                             | 같은 fresh session의 reconcile action                      | 성공 상태                                |
 | ------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------- |
 | `new`, executor ref 없음                   | 계약 파생, branch/worktree 생성, 구현 계속                 | 같은 session에서 integrated/cleaned      |
+| `direct-*` claim 존재                      | background selection 중지, explicit direct owner만 resume  | current conversation 또는 durable wait   |
 | Branch 있음, worktree 없음                 | 동일 branch로 재구성                                       | 구현/검증 계속                           |
 | Dirty owned paths                          | current best와 diff 확인 후 계속                           | checkpoint 갱신                          |
 | Unknown dirty paths                        | 보존하고 exact owner/conflict 기록                         | 안전한 resolution 또는 concrete block    |

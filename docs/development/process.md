@@ -38,6 +38,14 @@
 
 Subagent는 한 session 내부의 bounded helper일 뿐이며 parent session이 같은 executor branch에 통합하고 전체 결과를 검증한다.
 
+### Direct Conversation Executor
+
+- 사용자가 `$dev-inbox-direct` 또는 현재 대화에서 INBOX 항목을 직접 진행하라고 명시할 때만 사용한다.
+- 구현 전 clean-main lease를 획득하고 `loop/inbox.mjs claim-direct`로 exact `new` entry를 `direct-implementing`으로 commit/push한다.
+- `direct-*` claim이 있으면 background selector는 다른 entry와 ROADMAP을 시작하지 않고 대기한다.
+- 현재 대화가 implementation, visible QA, repair, final, main integration과 cleanup을 직접 소유하며 `codex exec`이나 Windows loop에 다시 전달하지 않는다.
+- 중단되면 direct status와 branch/worktree evidence를 보존한다. 다음 explicit direct invocation이 resume하며 background loop가 ownership을 추측하지 않는다.
+
 ## Durable 구조
 
 ```text
@@ -78,6 +86,8 @@ new → implementing → verifying → ready-for-integration → integrating →
 
 한 session은 필요하면 이 marker를 모두 갱신하지만 marker마다 종료하지 않는다.
 
+Direct lane은 `new → direct-implementing → direct-verifying → direct-integrating → done → cleanup`을 사용하며 같은 completion gate를 통과한다.
+
 1. **Accept / recover:** 실행 계약과 owned paths를 파생하고 deterministic branch/worktree를 만들거나 복구한다.
 2. **Implement:** 처음부터 끝까지 실행 가능한 사용자 결과를 구현한다. 가장 큰 품질 병목을 해결하되 entry의 완료 조건 전체를 끝낸다.
 3. **Checkpoint:** Affected deterministic checks 뒤 runnable current best를 branch에 commit/push한다. 화면 확인 전 중단 복구점이다.
@@ -115,6 +125,7 @@ Interruption은 다음 fresh session이 같은 entry evidence에서 복구한다
 - Integration 뒤 done block이 남았으면 다음 entry를 고르기 전에 exact cleanup을 끝낸다.
 - Entry가 사라졌어도 main dirty/partial merge·origin 미동기화·executor worktree dirty·ref 미푸시/미통합·lease 잔류 중 하나가 있으면 그 session은 incomplete로 실패시키고 다음 fresh session이 durable evidence에서 복구한다.
 - 같은 실패를 반복 보고하지 않고 다음 안전한 repair를 실행한다.
+- Direct claim이 있으면 background loop는 idle하고 explicit direct resume 또는 authorized recovery를 기다린다.
 
 Force push, shared-history rewrite, broad reset, guessed worktree cleanup, 품질 threshold 하향과 별도 queue/task 생성은 복구가 아니다.
 

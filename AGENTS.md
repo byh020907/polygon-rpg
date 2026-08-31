@@ -124,7 +124,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-EFFECT-SEPARATION`  | 파티클과 시각 효과는 게임 판정 객체와 분리한다.                                                                                                                                   | 이 파일, 향후 effect 구현과 caller         |
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff       |
-| `PROCESS-DEV-TEAM-LOOP`   | 메인은 원문을 INBOX에 append한다. 각 fresh Codex session은 entry 하나를 복구·구현·검사·시각 QA·통합·정리까지 완결한다.                                                            | process, skill                             |
+| `PROCESS-DEV-TEAM-LOOP`   | 메인은 원문을 INBOX에 append한다. Background fresh session과 explicit `direct-*` lane은 각 entry 하나를 완결하며 서로의 소유 항목을 소비하지 않는다.                              | process, skills                            |
 | `PROCESS-QUALITY-LOOP`    | INBOX entry·branch가 Director 경계다. Checkpoint는 visible PNG QA와 same-session repair 전의 복구 evidence다.                                                                     | quality loop, skill                        |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`              |
 | `GIT-PURPOSE-COMMITS`     | 큰 작업은 독립적으로 이해·검증·되돌릴 수 있는 목적 단위로 나누고 commit에는 변경 이유와 검증 근거를 남긴다.                                                                       | Core Engineering Principles·process        |
@@ -347,7 +347,7 @@ Node·Scene·Scene Tree·Signal의 적용 계약은 [`docs/runtime-architecture.
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
 - 한 inner iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교하되, 같은 session에서 entry 전체 합격까지 반복한다.
 - INBOX entry·executor branch 하나가 통합 artifact와 품질 판정을 소유한다.
-- 메인은 새 개발 명령을 INBOX에 그대로 기록한다. 질문·상태·lifecycle·예시·사전 인터뷰·직접 처리는 등록하지 않는다.
+- 메인은 새 명령을 INBOX에 기록하되 질문·상태·예시·인터뷰·직접 실행은 등록하지 않는다.
 - Outer PowerShell loop는 entry마다 새 `codex exec --ephemeral` session을 열고 session은 clean integration까지 수행한다.
 - Entry는 `codex/loop/<IN-ID>` worktree에서 실행한다. `resume`, `fork`, `--continue`를 쓰지 않는다.
 - Checkpoint는 same-session visual QA 전 복구점이다. 정상 session은 checkpoint·verifying·ready에서 끝나지 않는다.

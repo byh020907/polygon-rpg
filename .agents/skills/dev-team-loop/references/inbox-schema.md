@@ -9,6 +9,7 @@
 - A live entry owns lifecycle, execution contract, current best, blocker, result and checkpoint/final evidence. Its terminal merge commit preserves the complete `done` block; after cleanup, STATUS and Git ancestry own the current integration projection.
 - New work has no parallel queue or per-entry task document.
 - One entry owns one deterministic `codex/loop/<lowercase-in-id>` branch and at most one persistent worktree writer.
+- `direct-implementing`, `direct-verifying` and `direct-integrating` reserve the repository's execution lane for `$dev-inbox-direct`; background selection returns no work while one exists.
 
 ## Main-Only Inbox Rule
 

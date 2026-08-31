@@ -21,7 +21,15 @@ function Get-LoopEntry {
   if ($LASTEXITCODE -ne 0) {
     throw 'INBOX next entry 조회가 실패했습니다.'
   }
-  $next = ($json | ConvertFrom-Json).entry
+  $selection = $json | ConvertFrom-Json
+  if ($null -ne $selection.directClaim) {
+    return [pscustomobject]@{
+      id = 'DIRECT-CLAIM'
+      status = $selection.directClaim.status
+      claimedEntry = $selection.directClaim.id
+    }
+  }
+  $next = $selection.entry
   if ($null -eq $next) {
     return [pscustomobject]@{ id = 'ROADMAP'; status = 'converging' }
   }
@@ -64,6 +72,12 @@ try {
 
     $nextEntry = Get-LoopEntry
     $entryId = $nextEntry.id
+    if ($entryId -eq 'DIRECT-CLAIM') {
+      Write-Host "Direct lane이 $($nextEntry.claimedEntry)을 소유해 background loop가 대기합니다."
+      if ($Once) { exit 0 }
+      Start-Sleep -Seconds $script:LoopConfig.IdleSeconds
+      continue
+    }
     $isRoadmapRun = $entryId -eq 'ROADMAP'
     $runStartedAt = Get-Date
     $runStamp = $runStartedAt.ToString('yyyyMMdd-HHmmss')

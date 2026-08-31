@@ -96,6 +96,8 @@ pwsh -NoProfile -File .\loop\control.ps1 disable
 
 Task Scheduler 이름은 `PolygonRpgFileMemoryLoop`입니다. 로그인 시 시작하고 abnormal exit만 재시작합니다. INBOX가 비면 fresh `ROADMAP` session이 DESIGN의 다음 playable job을 완결하며, 전체 완료 proof를 STATUS/Git에 남긴 뒤에만 exit code 0으로 끝납니다. `loop/STOP`도 현재 entry 완료 뒤 정상 종료합니다. 날짜별 실행 evidence는 `logs/`, 화면 evidence는 `artifacts/visual-qa/`에 생성되며 둘 다 Git에는 넣지 않습니다.
 
+진행 과정을 현재 대화에서 보며 항목 하나를 직접 처리하려면 `$dev-inbox-direct`를 명시적으로 호출합니다. 이 lane은 구현 전에 entry를 `direct-*`로 claim·push하므로 background loop가 그 항목이나 다음 항목을 선점하지 않습니다. `$dev-team-loop`는 background fresh-session 실행, `$dev-loop-status`는 read-only 진단을 유지합니다.
+
 ## Visible visual QA
 
 환경변수로 stable 시작 장면과 fixed frame을 정한 뒤 실제 Chrome 창을 띄워 PNG를 저장하고 닫습니다.

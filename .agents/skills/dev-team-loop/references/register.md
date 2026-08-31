@@ -14,6 +14,7 @@ Do not create a new entry when the message is:
 - an explicit request to interview, discuss or refine requirements before INBOX registration;
 - bare `$dev-team-loop`, which runs one complete entry session;
 - explicitly requested to be handled directly in the current task.
+- an explicit `$dev-inbox-direct` invocation or direct-lane claim/resume request.
 
 When a message mixes a real registration request with a question, register only if the user clearly identifies which exact text is the request. Otherwise answer the question without guessing a raw block.
 
