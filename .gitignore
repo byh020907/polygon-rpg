@@ -4,8 +4,6 @@ dist/
 coverage/
 artifacts/
 logs/
-loop/STOP
-loop/runner.pid
 
 .env
 .env.*

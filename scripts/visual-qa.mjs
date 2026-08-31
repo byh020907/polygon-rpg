@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { createStaticServer } from '../scripts/serve.mjs';
+import { createStaticServer } from './serve.mjs';
 
 function parseArgs(argv) {
   const values = new Map();
@@ -146,7 +146,14 @@ async function waitForQa(client, timeoutMilliseconds = 30_000) {
 async function run() {
   const values = parseArgs(process.argv.slice(2));
   const repo = resolve(values.get('repo') ?? process.cwd());
-  const browserPath = resolve(values.get('browser'));
+  const browserValue = values.get('browser') ?? process.env.BROWSER_PATH;
+  if (!browserValue) {
+    throw new Error('Visual QA에는 --browser <path> 또는 BROWSER_PATH가 필요합니다.');
+  }
+  const browserPath = resolve(browserValue);
+  if (!existsSync(browserPath)) {
+    throw new Error(`Visual QA browser를 찾을 수 없습니다: ${browserPath}`);
+  }
   const start = values.get('start') ?? 'academy';
   const frame = Number(values.get('frame') ?? 0);
   const outputDirectory = resolve(values.get('output') ?? join(repo, 'artifacts', 'visual-qa'));

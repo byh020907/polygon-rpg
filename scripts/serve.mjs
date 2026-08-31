@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const defaultRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const defaultHost = '127.0.0.1';
 const defaultPort = 5173;
-const publicFiles = new Set(['/index.html', '/.nojekyll']);
+const publicFiles = new Set(['/index.html', '/PRODUCT_GOAL.html', '/.nojekyll']);
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],

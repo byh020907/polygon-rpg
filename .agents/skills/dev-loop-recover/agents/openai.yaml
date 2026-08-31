@@ -1,7 +1,0 @@
-interface:
-  display_name: 'Loop Recover'
-  short_description: 'Recover and restart the background loop safely'
-  default_prompt: 'Use $dev-loop-recover to inspect and safely resume the Polygon RPG background loop.'
-
-policy:
-  allow_implicit_invocation: true

@@ -1,7 +1,0 @@
-interface:
-  display_name: 'Direct INBOX Work'
-  short_description: 'Claim and complete one INBOX item in this task'
-  default_prompt: 'Use $dev-inbox-direct to claim and complete one Polygon RPG INBOX item while showing progress here.'
-
-policy:
-  allow_implicit_invocation: false
