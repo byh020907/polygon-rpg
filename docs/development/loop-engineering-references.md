@@ -124,6 +124,7 @@ Outer supervisor
 | Checkpoint만 있음                          | affected checks와 visible PNG를 새로 실행                            | final/integration 계속                   |
 | Final이 latest main 미포함                 | main을 branch에 non-rewriting merge, 재검증                          | latest-main final                        |
 | Ready entry                                | durable verifier PASS와 candidate HEAD 일치 확인, 없으면 새 verifier | verified integration commit              |
+| Ready ROADMAP job                          | STATUS PASS와 candidate ref HEAD 일치 확인                           | verified roadmap integration             |
 | Partial main merge                         | matching PASS면 완료, 없거나 hash가 다르면 abort·재검증              | clean verified main                      |
 | Integration 뒤 done block 잔류             | exact parser로 block만 제거, actual hash 기록                        | live queue cleanup                       |
 | Entry 부재지만 durable postcondition 미달  | origin 재조회, main/ref/lease의 빠진 증거부터 복구                   | clean pushed integrated final·no lease   |

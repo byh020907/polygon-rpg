@@ -72,7 +72,7 @@ Mutation 또는 전체 상태 판정 전에 다음을 완전히 읽는다.
 
 ## `ROADMAP_CONVERGE` — queue 이후 수렴
 
-Queue가 비었다는 이유만으로 멈추지 않는다. DESIGN, STATUS, 실제 code/artifact를 대조해 승인된 milestone이나 playable vertical slice가 남았으면 가장 우선인 **완전한 job 하나**를 선택한다. DESIGN/STATUS 근거로 exact goal, completion, non-scope, quality axes와 base를 고정하고 `work_kind: ROADMAP_JOB`으로 식별한다. Developer implementation·checks·visible QA·candidate commit 뒤 `VERIFIER`에 이 contract와 exact candidate hash를 넘기며, FAIL repair와 새 verifier PASS를 거쳐야 push/integration한다. ROADMAP에는 INBOX lifecycle과 done cleanup만 적용하지 않는다.
+Queue가 비었다는 이유만으로 멈추지 않는다. DESIGN, STATUS, 실제 code/artifact를 대조해 승인된 milestone이나 playable vertical slice가 남았으면 가장 우선인 **완전한 job 하나**를 선택한다. DESIGN/STATUS 근거로 exact goal, completion, non-scope, quality axes와 base를 고정하고 `work_kind: ROADMAP_JOB`으로 식별한다. Developer implementation·checks·visible QA·candidate commit 뒤 `VERIFIER`에 이 contract와 exact candidate hash를 넘긴다. PASS 후 STATUS에 `Roadmap verifier work`, `ref`, `candidate`, `verdict`, `checked at`, `evidence`를 기록한 main-only commit을 만든다. Durable candidate가 검증 대상 ref HEAD와 일치할 때만 push/integration하며 FAIL repair나 hash 변경 뒤에는 새 verifier가 필요하다. ROADMAP에는 INBOX lifecycle과 done cleanup만 적용하지 않는다.
 
 승인된 DESIGN milestone과 quality proof가 모두 완료되고, nonterminal inbox/executor/conflict가 없으며 clean `main == origin/main`이면 STATUS에 완료 증거를 기록한 **local completion candidate commit**을 만든다. `work_kind: ROADMAP_COMPLETION`, DESIGN/STATUS completion contract, base와 candidate hash로 fresh verifier PASS를 받은 뒤, candidate hash와 verdict를 담은 main-only evidence commit에 정확한 `- Loop completion: VERIFIED`와 subject `루프 전체 완료 증명`을 기록해 push하고 정상 종료한다. FAIL이면 correction candidate와 새 verifier가 필요하다. 사람 또는 외부 조건이 실제로 막으면 `- Loop blocker: <구체 원인>`을 기록한다. 그 외 main 진전도 verified completion도 없는 run은 실패다.
 
@@ -205,7 +205,7 @@ Mutation, lease acquire/release, task/worktree edit, entry/branch 생성, commit
 - Disabled task 또는 STOP 때문에 nonterminal work가 멈춤: explicit recovery invocation을 resume 의사로 보고 `start`.
 - PID file이 있으나 해당 PID/process가 없을 때만 stale PID를 제거하고 `start`한다. Live PID는 건드리지 않는다.
 - Abnormal exit 뒤 branch/checkpoint/final/partial cleanup evidence가 안전하게 남아 있으면 outer loop를 `start`해 다음 fresh session이 `BACKGROUND_ENTRY` recovery를 수행하게 한다.
-- `ready-for-integration` 또는 partial merge 복구는 durable `verifier_verdict: PASS`의 candidate가 executor HEAD와 정확히 같을 때만 계속한다. Evidence가 없거나 hash가 다르면 partial merge를 안전하게 abort하고 새 fresh verifier를 호출한다.
+- Entry의 `ready-for-integration` 또는 partial merge 복구는 durable `verifier_verdict: PASS`의 candidate가 executor HEAD와 정확히 같을 때만 계속한다. `ROADMAP_JOB`은 STATUS의 `Roadmap verifier verdict: PASS`와 candidate가 검증 대상 ref HEAD에 일치해야 한다. Evidence가 없거나 hash가 다르면 partial merge를 안전하게 abort하고 새 fresh verifier를 호출한다.
 - Live lease는 빼앗지 않는다. TTL이 지난 lease는 executor의 `lock.mjs acquire` stale takeover 규칙이 보존·교체하게 한다.
 - `direct-*` claim은 background에 넘기거나 `new`로 되돌리지 않는다. `DIRECT_RECOVERY_PENDING`과 `$dev-inbox-direct` resume을 보고한다.
 - Unknown dirty path, duplicate writer, divergent main, ambiguous partial merge, Canonical Conflict는 추측 수리하지 않고 exact evidence와 `CONFLICT`를 보고한다.

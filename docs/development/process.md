@@ -100,6 +100,8 @@ Background lifecycle은 `new → implementing → verifying → ready-for-integr
 
 Ready/integrating recovery는 main INBOX에 보존된 verifier PASS candidate가 executor HEAD와 정확히 같을 때만 유효하다. Verdict가 없거나 hash가 달라지면 새 verifier가 필요하다.
 
+INBOX entry가 없는 ROADMAP job은 같은 verifier identity·candidate·PASS·time·evidence를 STATUS의 main-only commit에 보존하고 candidate ref HEAD에 동일한 recovery gate를 적용한다.
+
 Main mutation은 renewable lease와 expected HEAD를 사용한다. Unknown dirty paths, duplicate writers, divergent commits와 ambiguous partial merge는 보존하고 `CONFLICT`로 분류한다. Stale lease takeover, worktree 복구, done cleanup과 completion 판정은 repository helper가 결정적으로 수행한다.
 
 Background abnormal exit는 Task Scheduler restart가 새 memoryless session을 열어 durable evidence에서 복구한다. Supervisor 자체가 멈추면 `$dev-loop-recover`가 canonical `RECOVER` mode로 안전한 상태만 수리하거나 재기동하고 즉시 반환한다. `direct-*` claim은 background로 넘기지 않는다.
