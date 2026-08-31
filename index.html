@@ -38,6 +38,7 @@
 
             <div class="menu-actions">
               <button
+                id="menu-start-control"
                 class="menu-button menu-button--primary"
                 type="button"
                 @click="startGame"
@@ -47,6 +48,7 @@
                 <small>ACADEMY VILLAGE</small>
               </button>
               <button
+                id="menu-mobile-start-control"
                 class="menu-button"
                 type="button"
                 @click="startMobileGame"
@@ -56,6 +58,7 @@
                 <small>ORCA REMOTE CONTROLS</small>
               </button>
               <button
+                id="menu-render-lab-control"
                 class="menu-button"
                 type="button"
                 @click="openRenderLab"
@@ -109,9 +112,16 @@
         class="game-screen"
         x-show="screen === 'game'"
         x-bind:class="{ 'game-screen--mobile-controls': forceMobileControls }"
+        x-bind:data-reduced-motion="reducedMotion"
+        x-bind:data-camera-feedback-enabled="String(!reducedMotion)"
+        aria-labelledby="game-status-title"
       >
         <div class="game-viewport">
-          <canvas id="game-canvas" aria-label="Polygon RPG 첫 번째 맵"></canvas>
+          <canvas
+            id="game-canvas"
+            aria-label="Polygon RPG 게임 화면"
+            aria-describedby="game-status-surface"
+          ></canvas>
 
           <div class="game-hud-overlay" aria-label="캐릭터 상태">
             <div class="vital-row">
@@ -121,7 +131,7 @@
                 role="meter"
                 aria-label="체력"
                 aria-valuemin="0"
-                aria-valuemax="100"
+                x-bind:aria-valuemax="maxHealth"
                 x-bind:aria-valuenow="health"
               >
                 <i x-bind:style="`width: ${healthPercent}`"></i>
@@ -163,13 +173,37 @@
             <small x-text="`REGION · ${timeLabel}`"></small><strong x-text="areaName"></strong>
           </div>
           <button
+            id="game-menu-control"
             class="game-menu-button"
             type="button"
+            aria-label="메인 메뉴로 돌아가기"
             @click="showMenu"
             @touchend.prevent="showMenu"
           >
             MENU
           </button>
+
+          <section
+            id="game-status-surface"
+            class="visually-hidden game-semantic-status"
+            role="region"
+            tabindex="-1"
+            aria-labelledby="game-status-title"
+          >
+            <h2 id="game-status-title">Canvas 대체 현재 게임 상태</h2>
+            <p x-text="`지역: ${areaName} · ${timeLabel}`"></p>
+            <p x-text="`목표: ${objective}`"></p>
+            <p x-text="`진행: ${journeyLabel}`"></p>
+            <p
+              x-text="`Player: 체력 ${health}/${maxHealth} · 스태미나 ${Math.floor(stamina)}/${maxStamina} · ${gold} Gold`"
+            ></p>
+            <p
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              x-text="combatStatusAnnouncement"
+            ></p>
+          </section>
 
           <section
             class="growth-panel"
@@ -328,11 +362,15 @@
         </footer>
       </section>
 
-      <section class="lab-screen" x-show="screen === 'render-lab'">
+      <section
+        class="lab-screen"
+        x-show="screen === 'render-lab'"
+        aria-labelledby="render-lab-title"
+      >
         <header class="lab-hero">
           <div>
             <p class="eyebrow">CANVAS 2D RENDER LAB</p>
-            <h1>Vector Mesh → Retro Pixel</h1>
+            <h1 id="render-lab-title" tabindex="-1">Vector Mesh → Retro Pixel</h1>
             <p class="hero-copy">
               하나의 float 기반 RenderFrame을 두 렌더러가 공유합니다. 픽셀 처리는 오른쪽 최종
               출력에만 적용됩니다.
@@ -340,6 +378,7 @@
           </div>
           <div class="hero-actions">
             <button
+              id="render-lab-playback-control"
               class="primary-button"
               type="button"
               @click="togglePlayback"

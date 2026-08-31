@@ -1,4 +1,9 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
+import {
+  createDocumentFocusPort,
+  ScreenFocusOwner,
+  SCREEN_FOCUS_TARGET,
+} from './ScreenFocusOwner.js';
 
 function formatRuntimeStats({
   fps,
@@ -94,10 +99,19 @@ function createMobileViewportController(browserDocument, browserScreen) {
 
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
+  const initialScreen = visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU;
+  const screenFocusOwner = new ScreenFocusOwner({
+    initialScreen,
+    focusPort: createDocumentFocusPort(globalThis.document),
+  });
+  const applyFocusAfterPaint = (focusRequest) => {
+    globalThis.requestAnimationFrame(() => screenFocusOwner.apply(focusRequest));
+  };
 
   Alpine.data('gameShell', () => ({
-    screen: visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU,
+    screen: initialScreen,
     visualQa: Boolean(visualQaRequest),
+    reducedMotion: gameApp.prefersReducedMotion(),
     forceMobileControls: false,
     isPlaying: true,
     pixelSize: 6,
@@ -155,6 +169,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     maxHealth: 100,
     stamina: 100,
     maxStamina: 100,
+    staminaExhausted: false,
+    lastCommandTransition: null,
     mental: 65,
     maxMental: 100,
     gold: 0,
@@ -174,6 +190,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         snapshot: () =>
           Object.freeze({
             screen: this.screen,
+            reducedMotion: this.reducedMotion,
             isPlaying: this.isPlaying,
             pixelSize: Number(this.pixelSize),
             posterizationLevels: Number(this.posterizationLevels),
@@ -196,6 +213,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.maxHealth = status.maxHealth;
           this.stamina = status.stamina;
           this.maxStamina = status.maxStamina;
+          this.staminaExhausted = status.staminaExhausted;
+          this.lastCommandTransition = status.lastCommandTransition;
           this.gold = status.gold;
           this.trainingMarks = status.trainingMarks;
         },
@@ -267,6 +286,22 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       return `${Math.floor(this.stamina)}/${this.maxStamina}`;
     },
 
+    get combatStatusAnnouncement() {
+      const transitionLabels = Object.freeze({
+        'guard-contact': '방어 성공',
+        'guard-broken': 'Player 방어 파괴',
+        'guard-break': '상대 방어 파괴',
+        'strong-startup-interrupted': '강한 공격 준비 취소',
+        'action-rejected': '스태미나 부족으로 행동 불가',
+      });
+      const transition = transitionLabels[this.lastCommandTransition?.kind];
+      const encounter = this.encounterHint
+        ? `${this.encounterHint} ${this.encounterHealthLabel}`.trim()
+        : '현재 조우 없음';
+      const staminaState = this.staminaExhausted ? ' · 스태미나 소진' : '';
+      return `전투: ${transition ? `${transition} · ` : ''}${encounter}${staminaState}`;
+    },
+
     get mentalPercent() {
       return `${Math.max(0, Math.min(100, (this.mental / this.maxMental) * 100))}%`;
     },
@@ -274,19 +309,25 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     startGame() {
       mobileViewport.leaveLandscape();
       this.forceMobileControls = false;
-      this.launchGame();
+      this.launchGame(SCREEN_FOCUS_TARGET.MENU_START);
     },
 
     startMobileGame() {
       void mobileViewport.enterLandscape();
       this.forceMobileControls = true;
-      this.launchGame();
+      this.launchGame(SCREEN_FOCUS_TARGET.MENU_MOBILE_START);
     },
 
-    launchGame() {
-      this.screen = GAME_SCREEN.GAME;
+    launchGame(menuReturnTarget) {
+      const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.GAME, {
+        menuReturnTarget,
+      });
+      this.screen = focusRequest.screen;
       this.isPlaying = true;
-      this.$nextTick(() => gameApp.enterGame());
+      this.$nextTick(() => {
+        gameApp.enterGame();
+        applyFocusAfterPaint(focusRequest);
+      });
     },
 
     resetSavedProgress() {
@@ -295,17 +336,25 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     openRenderLab() {
       mobileViewport.leaveLandscape();
-      this.screen = GAME_SCREEN.RENDER_LAB;
+      const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.RENDER_LAB, {
+        menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_RENDER_LAB,
+      });
+      this.screen = focusRequest.screen;
       this.isPlaying = true;
-      this.$nextTick(() => gameApp.onScreenChanged());
+      this.$nextTick(() => {
+        gameApp.onScreenChanged();
+        applyFocusAfterPaint(focusRequest);
+      });
     },
 
     showMenu() {
       mobileViewport.leaveLandscape();
-      this.screen = GAME_SCREEN.MENU;
+      const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.MENU);
+      this.screen = focusRequest.screen;
       this.isPlaying = false;
       this.forceMobileControls = false;
       gameApp.onScreenChanged();
+      this.$nextTick(() => applyFocusAfterPaint(focusRequest));
     },
 
     togglePlayback() {

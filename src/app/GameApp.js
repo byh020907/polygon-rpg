@@ -312,10 +312,9 @@ export class GameApp extends SceneNode {
     this.resize();
 
     const inputSnapshot = this.createInputSnapshot();
-    const simulationSettings = Object.freeze({
-      animationSpeed: 1,
-      cameraFeedbackEnabled: true,
-    });
+    const simulationSettings = this.createSimulationSettings(
+      Object.freeze({ screen: GAME_SCREEN.GAME, animationSpeed: 1 }),
+    );
     for (let index = 0; index < frame; index += 1) {
       this.fixedProcess(1 / 120, {
         inputSnapshot,
@@ -464,6 +463,8 @@ export class GameApp extends SceneNode {
       frame,
       renderer,
       phase,
+      reducedMotion: this.prefersReducedMotion(),
+      cameraFeedbackEnabled: simulationSettings.cameraFeedbackEnabled,
       mapId: renderFrame.map.id,
       regionId: renderFrame.map.activeRegionId,
       roomId: renderFrame.map.activeRoomId,
@@ -549,8 +550,12 @@ export class GameApp extends SceneNode {
   createSimulationSettings(uiState) {
     return Object.freeze({
       animationSpeed: uiState.screen === GAME_SCREEN.RENDER_LAB ? uiState.animationSpeed : 1,
-      cameraFeedbackEnabled: !this.reducedMotionQuery.matches,
+      cameraFeedbackEnabled: !this.prefersReducedMotion(),
     });
+  }
+
+  prefersReducedMotion() {
+    return Boolean(this.visualQaRequest?.reducedMotion || this.reducedMotionQuery.matches);
   }
 
   pressMobileAction(actionId, pointerId) {

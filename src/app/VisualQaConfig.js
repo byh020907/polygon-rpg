@@ -384,6 +384,7 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
     frame: parseFrame(parameters.get('gameFrame') ?? '0'),
     renderer,
     phase,
+    reducedMotion: parameters.get('reducedMotion') === '1',
     scenario: Object.freeze({ ...scenario, expectation }),
   });
 }

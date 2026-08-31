@@ -9,6 +9,10 @@ function createSequences() {
   return Object.fromEntries(SEQUENCED_INPUT_ACTIONS.map((actionId) => [actionId, 0]));
 }
 
+function isInteractiveTarget(target) {
+  return Boolean(target?.closest?.('input, select, textarea, [contenteditable="true"]'));
+}
+
 export class KeyboardInputAdapter {
   constructor({
     target = globalThis.window,
@@ -24,7 +28,7 @@ export class KeyboardInputAdapter {
 
     this.onKeyDown = (event) => {
       const actionId = KEYBOARD_ACTION_BY_CODE[event.code];
-      if (!actionId || !this.isActive()) return;
+      if (!actionId || !this.isActive() || isInteractiveTarget(event.target)) return;
       event.preventDefault?.();
       if (!this.heldActions.has(actionId) && SEQUENCED_INPUT_ACTIONS.includes(actionId)) {
         this.sequences[actionId] += 1;
