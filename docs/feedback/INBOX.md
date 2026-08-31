@@ -76,7 +76,7 @@
 
 ## IN-20260831-030641
 
-- status: implementing
+- status: verifying
 - received_at: 2026-08-31T03:06:41+09:00
 - priority: normal
 - source: team-lead-main
@@ -85,7 +85,7 @@
 - executor_branch: codex/loop/in-20260831-030641
 - registration_base: 868353b20e0bfb97d77c07133f0cb3ed0d030726
 - accepted_at: 2026-08-31T09:47:44+09:00
-- checkpoint_commit: null
+- checkpoint_commit: 427efb90f58edaeee2e2eb089a9c1b6ac946c4ff
 - final_commit: null
 - integration: null
 - owned_paths: [src/game/maps/PortalRenderItems.js, src/game/maps/academyVillage.js, src/game/maps/firstJourney.js, src/game/maps/glasswindRegion.js, docs/world-map-system.md]
@@ -106,9 +106,9 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: firstJourney·glasswind·academy의 Portal은 환경과 무관한 동일 타원 링이고 외곽이 약 `78~84 × 102~110` World unit이라 약 `32 × 45`인 플레이어보다 두 배 이상 크다.
-- 현재 최선: Room/Portal gameplay와 render item 분리, stable item ID patch, Polygon/Retro shared RenderFrame은 이미 동작하므로 presentation geometry만 교체할 수 있다.
-- 다음 병목: 반복된 Portal geometry의 단일 pure owner를 만들고 각 Room biome에 맞는 문틀·개구부를 배정한 뒤 여덟 supported screen을 같은 fixed frame에서 판독한다.
-- 검증: current main·origin, target branch/worktree 부재와 lease를 확인했다. Core Engineering Principles, world-map/rendering 계약, 실제 map definitions·patch caller를 대조했고 EA Unravel 환경 설계·Ubisoft real-world navigation/scale·Hollow Knight 공식 환경 화면과 영국 출입문 비례 자료는 원칙만 차용한다. 구현 검사는 아직 실행 전이다.
+- 현재 최선: `427efb90f58edaeee2e2eb089a9c1b6ac946c4ff`이 36개 stable Portal render item을 학원 문·숲 뿌리 arch·봉인 석문·유리바람 결정 틈으로 교체했고 개구부 `24~30 × 49~53`, 문틀 `51~58 × 61~65`를 강제한다.
+- 다음 병목: academy/training/field/dungeon/boss/glasswind 3개 Room의 fixed-frame PNG를 직접 판독하고 가장 큰 시각 결함을 수리한다.
+- 검증: 36개 item ID uniqueness·치수, 8개 조건부 item patch 활성화, academy→training Portal lookup/transition/snapshot, `npm run check`, `git diff --check` 통과. 초기 smoke 명령은 존재하지 않는 `updatePortalTransition` API를 호출해 실패했고 실제 `advanceTransition` caller로 고쳐 재실행했다. visible PNG는 checkpoint 뒤 실행 예정이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유

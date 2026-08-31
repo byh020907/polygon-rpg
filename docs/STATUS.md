@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: 환경형 사람 크기 Portal 시각 개선 · 구현 중
-- 현재 active inbox entry: `IN-20260831-030641` · `implementing`
-- 현재 executor branch/worktree: `codex/loop/in-20260831-030641` · provisioning 예정
+- 상태: 환경형 사람 크기 Portal 시각 개선 · visible QA 중
+- 현재 active inbox entry: `IN-20260831-030641` · `verifying`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-030641` · checkpoint `427efb90f58edaeee2e2eb089a9c1b6ac946c4ff`
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 사용자가 시작하기 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · 삭제 완료
 - Main: clean `main == origin/main`
@@ -53,6 +53,7 @@
 - Windows loop manual run 1: `logs/2026-08-31/20260831-041017-IN-20260831-005246/summary.json` · exit 0, `completed: true`, `f51b92c → 2ed33c9`, Core Principles final/merge/cleanup과 lease 해제를 한 fresh session에서 완료했다.
 - Windows loop manual run 2: `logs/2026-08-31/20260831-042700-IN-20260831-025240/summary.json` · exit 0, `completed: true`, `2ed33c9 → ee8897a`, durable completion postcondition의 final/merge/cleanup을 한 fresh session에서 완료했다. 최신 inspector는 partial merge 없는 clean pushed main, clean worktree, pushed/integrated executor ref, entry 부재와 lease 해제로 `complete: true`, failures 0개다.
 - 환경형 사람 크기 Portal accept: current Portal ring은 약 `78~84 × 102~110` World unit으로 약 `32 × 45` 플레이어보다 두 배 이상 크고 환경별 형태가 없다. Gameplay Portal 계약은 보존하면서 반복 geometry를 pure presentation owner로 모으고 학원 건축·숲 뿌리·봉인 석문·유리바람 결정 문법으로 교체하는 실행 계약을 수락했다.
+- 환경형 사람 크기 Portal writer checkpoint: `427efb90f58edaeee2e2eb089a9c1b6ac946c4ff` · 36개 stable item ID와 기존 patch를 보존하고 개구부 `24~30 × 49~53`, 문틀 `51~58 × 61~65`의 여섯 환경 style을 구현했다. 치수·ID·8개 patch·실제 academy→training transition, `npm run check`, `git diff --check`를 통과했다.
 
 ## Next
 
