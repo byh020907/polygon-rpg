@@ -76,19 +76,19 @@
 
 ## IN-20260831-030641
 
-- status: new
+- status: implementing
 - received_at: 2026-08-31T03:06:41+09:00
 - priority: normal
 - source: team-lead-main
-- title: null
+- title: 환경형 사람 크기 Portal 시각 개선
 - supersedes: null
-- executor_branch: null
+- executor_branch: codex/loop/in-20260831-030641
 - registration_base: 868353b20e0bfb97d77c07133f0cb3ed0d030726
-- accepted_at: null
+- accepted_at: 2026-08-31T09:47:44+09:00
 - checkpoint_commit: null
 - final_commit: null
 - integration: null
-- owned_paths: []
+- owned_paths: [src/game/maps/PortalRenderItems.js, src/game/maps/academyVillage.js, src/game/maps/firstJourney.js, src/game/maps/glasswindRegion.js, docs/world-map-system.md]
 
 ### 원문 — 불변
 
@@ -98,17 +98,17 @@
 
 ### 실행 계약 — coordinator 소유
 
-- 목표: 미정
-- 완료 조건: 미정
-- 비범위: 미정
-- 적용 품질 축: 미정
+- 목표: 환경과 무관한 대형 타원 Portal 링을 학원 건축·숲 뿌리·봉인 석문·유리바람 결정 구조에 맞는 사람 크기 출입구로 교체하고, 같은 portal 상태를 Polygon/Retro에서 읽기 쉽게 유지한다.
+- 완료 조건: academy/training/first-journey/glasswind의 모든 Portal render item이 약 45 World unit인 플레이어와 비슷한 높이의 환경형 문틀·개구부를 사용하고 기존 stable ID·활성 patch·Portal 판정·전환은 보존한다. 모든 지원 Room 화면의 fixed-frame visible PNG에서 silhouette·환경 결합·clipping·Polygon/Retro 정합과 console error 0개를 확인하며 affected 결정적 검사, `npm run check`, `git diff --check`가 통과한다.
+- 비범위: Portal gameplay anchor/radius/spawn/transition, collider, 플레이어 크기, camera/world scale, combat·balance, 외부 asset·runtime dependency, 다른 INBOX entry 구현.
+- 적용 품질 축: 기능 완결성, 조작 명료성, Graphics·시각 일관성, 설계·Method 정합, 회귀 안전성. 전투 판정·타격감/Effect는 변경하지 않는다.
 
 ### 실행 상태 — coordinator 소유
 
-- 기준선: 미정
-- 현재 최선: 미정
-- 다음 병목: 미정
-- 검증: 미정
+- 기준선: firstJourney·glasswind·academy의 Portal은 환경과 무관한 동일 타원 링이고 외곽이 약 `78~84 × 102~110` World unit이라 약 `32 × 45`인 플레이어보다 두 배 이상 크다.
+- 현재 최선: Room/Portal gameplay와 render item 분리, stable item ID patch, Polygon/Retro shared RenderFrame은 이미 동작하므로 presentation geometry만 교체할 수 있다.
+- 다음 병목: 반복된 Portal geometry의 단일 pure owner를 만들고 각 Room biome에 맞는 문틀·개구부를 배정한 뒤 여덟 supported screen을 같은 fixed frame에서 판독한다.
+- 검증: current main·origin, target branch/worktree 부재와 lease를 확인했다. Core Engineering Principles, world-map/rendering 계약, 실제 map definitions·patch caller를 대조했고 EA Unravel 환경 설계·Ubisoft real-world navigation/scale·Hollow Knight 공식 환경 화면과 영국 출입문 비례 자료는 원칙만 차용한다. 구현 검사는 아직 실행 전이다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유

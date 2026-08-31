@@ -4,9 +4,9 @@
 
 ## Current State
 
-- 상태: Windows complete-work loop · 수동 2회 검증 완료 · 자동 시작 대기
-- 현재 active inbox entry: `IN-20260831-030641` · `new`
-- 현재 executor branch/worktree: 없음 · 다음 entry 미수락
+- 상태: 환경형 사람 크기 Portal 시각 개선 · 구현 중
+- 현재 active inbox entry: `IN-20260831-030641` · `implementing`
+- 현재 executor branch/worktree: `codex/loop/in-20260831-030641` · provisioning 예정
 - Windows Task Scheduler: `PolygonRpgFileMemoryLoop` 등록됨 · `Disabled` · 사용자가 시작하기 전
 - 기존 Codex app automation: `Polygon RPG file-memory loop` · 삭제 완료
 - Main: clean `main == origin/main`
@@ -52,10 +52,11 @@
 - 한 loop 완전 작업 단위 integration: `5d051662a3b4d017a1ac5810dfa23797eefae6f7` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-025240` done block만 제거했다. Outer supervisor는 이후 session마다 origin fetch, clean pushed main, pushed integrated executor final과 released lease를 모두 확인해야 성공한다.
 - Windows loop manual run 1: `logs/2026-08-31/20260831-041017-IN-20260831-005246/summary.json` · exit 0, `completed: true`, `f51b92c → 2ed33c9`, Core Principles final/merge/cleanup과 lease 해제를 한 fresh session에서 완료했다.
 - Windows loop manual run 2: `logs/2026-08-31/20260831-042700-IN-20260831-025240/summary.json` · exit 0, `completed: true`, `2ed33c9 → ee8897a`, durable completion postcondition의 final/merge/cleanup을 한 fresh session에서 완료했다. 최신 inspector는 partial merge 없는 clean pushed main, clean worktree, pushed/integrated executor ref, entry 부재와 lease 해제로 `complete: true`, failures 0개다.
+- 환경형 사람 크기 Portal accept: current Portal ring은 약 `78~84 × 102~110` World unit으로 약 `32 × 45` 플레이어보다 두 배 이상 크고 환경별 형태가 없다. Gameplay Portal 계약은 보존하면서 반복 geometry를 pure presentation owner로 모으고 학원 건축·숲 뿌리·봉인 석문·유리바람 결정 문법으로 교체하는 실행 계약을 수락했다.
 
 ## Next
 
-`loop/control.ps1 start` 또는 `run-once`를 실행하면 다음 fresh session이 `IN-20260831-030641`의 환경형 맵 포탈 시각 개선을 exact 원문과 world/rendering 계약에서 파생해, 구현·visible PNG QA·repair·통합·cleanup까지 한 loop에서 완결한다. 검증 로그를 먼저 보여 주라는 요청에 따라 Task Scheduler는 아직 disabled다.
+현재 session은 `IN-20260831-030641`의 환경형 사람 크기 Portal을 구현하고 supported Room 전체의 visible PNG QA·repair·final·main integration·exact cleanup까지 완결한다. 다음 entry는 이 session에서 구현하지 않는다.
 
 ## Update Contract
 
