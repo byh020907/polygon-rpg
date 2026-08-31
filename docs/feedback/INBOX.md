@@ -74,47 +74,6 @@
 
 <!-- 메인 대화에서 등록을 요청한 새 원문은 이 아래에 append한다. -->
 
-## IN-20260831-030641
-
-- status: done
-- received_at: 2026-08-31T03:06:41+09:00
-- priority: normal
-- source: team-lead-main
-- title: 환경형 사람 크기 Portal 시각 개선
-- supersedes: null
-- executor_branch: codex/loop/in-20260831-030641
-- registration_base: 868353b20e0bfb97d77c07133f0cb3ed0d030726
-- accepted_at: 2026-08-31T09:47:44+09:00
-- checkpoint_commit: 1857977405f8b3f86046fd55c938a16a7252d4f9
-- final_commit: 31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44
-- integration: the merge commit that marks this entry done
-- owned_paths: [src/game/maps/PortalRenderItems.js, src/game/maps/academyVillage.js, src/game/maps/firstJourney.js, src/game/maps/glasswindRegion.js, docs/world-map-system.md]
-
-### 원문 — 불변
-
-```text
-현재 기본적인 맵시스템은 완성되었는데, 맵 포탈을 더 자연스럽게 문이나 주변 환경에 맞는 형태로 모양을 개선할거야, 인터넷에 적절한 레퍼런스 참고해서 진행해, 그리고 크기도 유저 정도로 줄여야해
-```
-
-### 실행 계약 — coordinator 소유
-
-- 목표: 환경과 무관한 대형 타원 Portal 링을 학원 건축·숲 뿌리·봉인 석문·유리바람 결정 구조에 맞는 사람 크기 출입구로 교체하고, 같은 portal 상태를 Polygon/Retro에서 읽기 쉽게 유지한다.
-- 완료 조건: academy/training/first-journey/glasswind의 모든 Portal render item이 약 45 World unit인 플레이어와 비슷한 높이의 환경형 문틀·개구부를 사용하고 기존 stable ID·활성 patch·Portal 판정·전환은 보존한다. 모든 지원 Room 화면의 fixed-frame visible PNG에서 silhouette·환경 결합·clipping·Polygon/Retro 정합과 console error 0개를 확인하며 affected 결정적 검사, `npm run check`, `git diff --check`가 통과한다.
-- 비범위: Portal gameplay anchor/radius/spawn/transition, collider, 플레이어 크기, camera/world scale, combat·balance, 외부 asset·runtime dependency, 다른 INBOX entry 구현.
-- 적용 품질 축: 기능 완결성, 조작 명료성, Graphics·시각 일관성, 설계·Method 정합, 회귀 안전성. 전투 판정·타격감/Effect는 변경하지 않는다.
-
-### 실행 상태 — coordinator 소유
-
-- 기준선: firstJourney·glasswind·academy의 Portal은 환경과 무관한 동일 타원 링이고 외곽이 약 `78~84 × 102~110` World unit이라 약 `32 × 45`인 플레이어보다 두 배 이상 크다.
-- 현재 최선: clean final `31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44`이 36개 stable Portal render item을 학원 석문·숲 뿌리 arch·봉인 석문·유리바람 결정 틈·관측소 hatch·폭풍 제단으로 교체했다. 개구부 `21~26 × 43~45`, 문틀 `44~49 × 52~54`는 플레이어와 같은 높이이고 환경 재료 외곽선과 얇은 내부 경로색을 분리한다.
-- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block만 정리하고 STATUS에 실제 merge hash를 기록한다.
-- 검증: 36개 item ID uniqueness·치수, 8개 조건부 item patch 활성화, academy→training Portal lookup/transition/snapshot, `npm run check`, `git diff --check` 통과. 첫 PNG pass에서 문틀이 플레이어보다 크고 accent가 공통 ring처럼 보인 결함을 직접 판독해 `1857977405f8b3f86046fd55c938a16a7252d4f9`로 수리했다. Visible Chrome frame 180의 `academy`, `training`, `field`, `dungeon`, `boss`, `glasswind-field`, `glasswind-dungeon`, `glasswind-boss` PNG를 직접 읽어 사람 크기, 환경별 silhouette, 좌우 clipping 없음과 같은 RenderFrame 상태를 확인했다. Latest-main merge 뒤 `artifacts/visual-qa/IN-20260831-030641/latest-<screen>-180/`로 여덟 화면을 재촬영했고 이전 합격 PNG와 SHA-256이 각각 동일하며 capture `1440×810`, console error 0개다. 기능 완결성·조작 명료성·Graphics·설계/Method 정합·회귀 안전성은 모두 2 이상이다. 초기 smoke 명령의 잘못된 API 이름은 실제 `advanceTransition` caller로 고쳐 재실행했다.
-- 실제 blocker: 없음
-
-### 결과 — coordinator 소유
-
-대형 공통 타원 ring을 제거하고 모든 Portal을 현재 Room의 재료와 형태를 따르는 사람 크기 출입구로 교체했다. Pure `PortalRenderItems` owner가 환경 style과 stable ID를 만들며 gameplay anchor·radius·spawn·transition, collider와 balance는 바꾸지 않았다. Final은 `31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44`이다.
-
 ## IN-20260831-030839
 
 - status: new
