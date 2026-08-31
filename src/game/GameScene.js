@@ -1211,8 +1211,8 @@ export class GameScene extends SceneNode {
       facing: this.facing,
       targetPose: pose.targetPose,
       bonePose: pose.bonePose,
-      renderScale: CHARACTER_RENDER_SCALE,
-      weaponLengthScale: this.equipmentProfile.presentation.weaponLengthScale,
+      geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+      weaponLengthScale: this.equipmentProfile.geometry.weaponLengthScale,
     });
   }
 
@@ -1828,8 +1828,8 @@ export class GameScene extends SceneNode {
       facing: this.facing,
       targetPose: pose.targetPose,
       bonePose: pose.bonePose,
-      renderScale: characterRenderScale,
-      weaponLengthScale: this.equipmentProfile.presentation.weaponLengthScale,
+      geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+      weaponLengthScale: this.equipmentProfile.geometry.weaponLengthScale,
     });
     const playerPresentation = createPlayerCombatPresentation(
       Object.freeze({
@@ -1840,7 +1840,7 @@ export class GameScene extends SceneNode {
         combatGeometry: renderCombatGeometry,
         renderScale: characterRenderScale,
         renderOrder: characterRenderOrder,
-        weaponLengthScale: this.equipmentProfile.presentation.weaponLengthScale,
+        weaponLengthScale: this.equipmentProfile.geometry.weaponLengthScale,
         contactGeometry,
         contactProfile: this.getAttackHitProfile(combatState.id),
         contactProgress: combatState.progress,

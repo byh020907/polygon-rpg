@@ -5,7 +5,7 @@ function freezeProfile(profile) {
     attack: Object.freeze({ ...profile.attack }),
     defense: Object.freeze({ ...profile.defense }),
     guard: Object.freeze({ ...profile.guard }),
-    presentation: Object.freeze({ ...profile.presentation }),
+    geometry: Object.freeze({ ...profile.geometry }),
   });
 }
 
@@ -21,7 +21,7 @@ export const EQUIPMENT_PROFILES = Object.freeze([
     attack: { damageScale: 0.9, rangeScale: 0.92, hitstunScale: 0.85, launchScale: 0.92 },
     defense: { damageTakenScale: 1.08 },
     guard: { impactScale: 1.08, blockstunScale: 1.08 },
-    presentation: { weaponLengthScale: 0.94 },
+    geometry: { weaponLengthScale: 0.94 },
   }),
   freezeProfile({
     id: 'heavy-sword',
@@ -34,7 +34,7 @@ export const EQUIPMENT_PROFILES = Object.freeze([
     attack: { damageScale: 1.2, rangeScale: 1.22, hitstunScale: 1.3, launchScale: 1.18 },
     defense: { damageTakenScale: 0.92 },
     guard: { impactScale: 0.84, blockstunScale: 0.84 },
-    presentation: { weaponLengthScale: 1.18 },
+    geometry: { weaponLengthScale: 1.18 },
   }),
 ]);
 

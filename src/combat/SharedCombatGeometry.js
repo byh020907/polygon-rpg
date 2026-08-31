@@ -46,7 +46,7 @@ function limbPolygon(start, end, width) {
   ];
 }
 
-function posePlayerPoints(points, { position, facing, targetPose, bonePose, renderScale }) {
+function posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale }) {
   const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
   const lean = targetPose.bodyLean + bonePose.bodyLean;
   const cosine = Math.cos(lean);
@@ -56,8 +56,8 @@ function posePlayerPoints(points, { position, facing, targetPose, bonePose, rend
     const relativeY = (point.y - footY) * targetPose.bodyScaleY;
     const posedX = position.x + relativeX * cosine - relativeY * sine;
     const posedY = footY + relativeX * sine + relativeY * cosine;
-    const scaledX = position.x + (posedX - position.x) * renderScale;
-    const scaledY = footY + (posedY - footY) * renderScale;
+    const scaledX = position.x + (posedX - position.x) * geometryScale;
+    const scaledY = footY + (posedY - footY) * geometryScale;
     return {
       x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
       y: scaledY,
@@ -70,7 +70,7 @@ export function samplePlayerCombatGeometry({
   facing,
   targetPose,
   bonePose,
-  renderScale,
+  geometryScale,
   weaponLengthScale = 1,
 }) {
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
@@ -143,7 +143,7 @@ export function samplePlayerCombatGeometry({
     { part: 'shield-forearm', points: limbPolygon(leftArm.elbow, leftArm.hand, 8) },
   ];
   const pose = (points) =>
-    posePlayerPoints(points, { position, facing, targetPose, bonePose, renderScale });
+    posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale });
   return Object.freeze({
     actor: 'player',
     origin: freezePoint(position),
@@ -445,7 +445,7 @@ function closestPolygonPair(left, right) {
   return closest;
 }
 
-export function closestCombatContact(weapons, hurts, { maximumGap = 4 } = {}) {
+export function closestCombatContact(weapons, hurts) {
   let closest = null;
   for (const weapon of weapons) {
     for (const hurt of hurts) {
@@ -468,14 +468,17 @@ export function closestCombatContact(weapons, hurts, { maximumGap = 4 } = {}) {
       position: null,
     });
   }
+  const contact = closest.gap === 0;
   return Object.freeze({
-    contact: closest.gap <= maximumGap,
+    contact,
     gap: closest.gap,
-    weaponPart: closest.weaponPart,
-    hurtPart: closest.hurtPart,
-    position: freezePoint({
-      x: (closest.left.x + closest.right.x) / 2,
-      y: (closest.left.y + closest.right.y) / 2,
-    }),
+    weaponPart: contact ? closest.weaponPart : null,
+    hurtPart: contact ? closest.hurtPart : null,
+    position: contact
+      ? freezePoint({
+          x: (closest.left.x + closest.right.x) / 2,
+          y: (closest.left.y + closest.right.y) / 2,
+        })
+      : null,
   });
 }

@@ -42,7 +42,7 @@ function playerGeometry({ facing = 1, weaponLengthScale = 1 } = {}) {
     facing,
     targetPose,
     bonePose,
-    renderScale: 0.72,
+    geometryScale: 0.72,
     weaponLengthScale,
   });
 }
@@ -123,12 +123,11 @@ assert.equal(Math.min(...sweep.swept.points.map(({ x }) => x)), 10);
 assert.equal(Math.max(...sweep.swept.points.map(({ x }) => x)), 40);
 
 const separated = closestCombatContact([square('weapon', 0)], [square('torso', 14)]);
-assert.equal(separated.contact, true);
+assert.equal(separated.contact, false);
 assert.equal(separated.gap, 4);
-assert.deepEqual(separated.position, { x: 12, y: 0 });
-assert.equal(separated.weaponPart, 'weapon');
-assert.equal(separated.hurtPart, 'torso');
-assert.ok(Object.isFrozen(separated.position));
+assert.equal(separated.position, null);
+assert.equal(separated.weaponPart, null);
+assert.equal(separated.hurtPart, null);
 
 const crossingWeapon = Object.freeze({
   part: 'weapon',
@@ -152,6 +151,7 @@ const edgeCrossing = closestCombatContact([crossingWeapon], [crossingHurt]);
 assert.equal(edgeCrossing.contact, true);
 assert.equal(edgeCrossing.gap, 0);
 assert.ok(Math.abs(edgeCrossing.position.x) <= 1 && Math.abs(edgeCrossing.position.y) <= 1);
+assert.ok(Object.isFrozen(edgeCrossing.position));
 
 const scene = new GameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
 const renderFrame = scene.createRenderFrame(0);

@@ -155,7 +155,7 @@ const fixedCombatGeometry = samplePlayerCombatGeometry({
   facing: 1,
   targetPose: fixedPose.targetPose,
   bonePose: fixedPose.bonePose,
-  renderScale: CHARACTER_RENDER_SCALE,
+  geometryScale: CHARACTER_RENDER_SCALE,
   weaponLengthScale: 1,
 });
 const fixedOutput = createPlayerCombatPresentation(
@@ -235,6 +235,11 @@ assert.doesNotMatch(
   gameSceneSource,
   /CombatPoseLibrary|CharacterBonePoseLibrary|TwoBoneIKSolver|samplePlayerPresentationPose/,
   'GameScene must not import or own pose/IK projection',
+);
+assert.doesNotMatch(
+  gameSceneSource,
+  /equipmentProfile\.presentation/,
+  'gameplay contact must read neutral equipment geometry rather than presentation policy',
 );
 assert.doesNotMatch(
   gameSceneSource,

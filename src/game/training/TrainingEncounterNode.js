@@ -483,7 +483,6 @@ export class TrainingEncounterNode extends SceneNode {
       visualContact = closestCombatContact(
         [enemyGeometry.weapon],
         frame.playerGeometry?.shield ? [frame.playerGeometry.shield] : [],
-        { maximumGap: 5 },
       );
     }
     if (!visualContact.contact) {
