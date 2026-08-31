@@ -1209,6 +1209,225 @@ export class GameScene extends SceneNode {
     return mapSnapshot;
   }
 
+  setVisualQaCombatScenario(scenarioId, phase = 'active') {
+    const encounter = this.roomSceneNode?.encounter;
+    if (!encounter?.enemy)
+      throw new Error('Combat Visual QA에는 active training encounter가 필요합니다.');
+    const enemy = encounter.enemy;
+    const groundY = this.mapRuntime.getActiveRoom().groundY;
+    const playerX = this.position.x;
+    this.position = { x: playerX, y: groundY - CHARACTER_FOOT_OFFSET };
+    this.previousPosition = { ...this.position };
+    this.facing = 1;
+    this.isGrounded = true;
+    this.verticalVelocity = 0;
+    this.rollState = null;
+    this.landingRecoverySeconds = 0;
+    this.playerBlockImpactSeconds = 0;
+    this.playerBlockImpactStrength = 0;
+    this.playerHitstunSeconds = 0;
+    this.playerRetaliationSeconds = 0;
+    this.combatEvents.reset();
+    this.combatCommands.reset();
+    enemy.position = { x: playerX + 85, y: groundY };
+    enemy.velocityX = 0;
+    enemy.velocityY = 0;
+    enemy.rotation = 0;
+    enemy.aiState = 'idle';
+    enemy.aiSeconds = 0;
+    enemy.attackKind = 'light';
+    enemy.hitstunSeconds = 0;
+    enemy.punishWindowOpen = false;
+    enemy.retaliationInvulnerableSeconds = 0;
+    encounter.lastVisualContact = Object.freeze({
+      attacker: 'player',
+      sequence: 1,
+      pulseIndex: 0,
+      contact: true,
+      gap: 0,
+      simulationGap: 0,
+      weaponItemId: 'sword-blade',
+      hurtItemId: 'combat-enemy-training-mask',
+      position: Object.freeze({ x: playerX + 62, y: groundY - 72 }),
+    });
+    encounter.contactSeconds =
+      phase === 'active' &&
+      ['combat-hit', 'combat-block', 'combat-evade', 'combat-punish', 'combat-launch'].includes(
+        scenarioId,
+      )
+        ? 0.18
+        : 0;
+
+    if (
+      ![
+        'combat-hit',
+        'combat-block',
+        'combat-evade',
+        'combat-punish',
+        'combat-launch',
+        'combat-landing',
+        'combat-retaliation',
+      ].includes(scenarioId)
+    ) {
+      throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
+    }
+    if (!['start', 'active', 'end'].includes(phase)) {
+      throw new Error(`지원하지 않는 Combat Visual QA phase입니다: ${phase}`);
+    }
+    if (phase === 'end') return;
+
+    const active = phase === 'active';
+
+    const emit = (type, payload = {}) =>
+      this.combatEvents.emit(type, {
+        actor: 'player',
+        target: 'enemy',
+        position: encounter.lastVisualContact.position,
+        direction: 1,
+        strength: 1.2,
+        ...payload,
+      });
+    const startMotion = (motionId, elapsedSeconds) => {
+      this.combatCommands.start(motionId);
+      this.combatCommands.active.elapsedSeconds = elapsedSeconds;
+    };
+
+    switch (scenarioId) {
+      case 'combat-hit':
+        startMotion('slash', active ? 0.25 : 0.04);
+        if (active) {
+          enemy.aiState = 'hitstun';
+          enemy.hitstunSeconds = 0.18;
+          enemy.hitFlashSeconds = 0.12;
+          emit(COMBAT_EVENT_TYPE.HIT);
+        }
+        break;
+      case 'combat-block':
+        this.combatCommands.update(0, { guard: true });
+        this.playerBlockImpactSeconds = active ? 0.14 : 0;
+        this.playerBlockImpactStrength = active ? 1 : 0;
+        encounter.lastVisualContact = Object.freeze({
+          ...encounter.lastVisualContact,
+          attacker: 'enemy',
+          weaponItemId: 'combat-enemy-weapon',
+          hurtItemId: 'shield',
+          position: Object.freeze({ x: playerX + 25, y: groundY - 70 }),
+        });
+        if (active) emit(COMBAT_EVENT_TYPE.GUARD);
+        break;
+      case 'combat-evade':
+        this.rollState = {
+          direction: 1,
+          elapsedSeconds: ROLL_DURATION_SECONDS * (active ? 0.5 : 0.08),
+          durationSeconds: ROLL_DURATION_SECONDS,
+        };
+        encounter.lastVisualContact = Object.freeze({
+          ...encounter.lastVisualContact,
+          attacker: 'enemy',
+          weaponItemId: 'combat-enemy-weapon',
+          hurtItemId: 'uniform-front-panel',
+          position: Object.freeze({ x: playerX + 20, y: groundY - 68 }),
+        });
+        if (active) emit(COMBAT_EVENT_TYPE.EVADE, { position: this.position });
+        break;
+      case 'combat-punish':
+        startMotion('heavy', active ? 0.38 : 0.05);
+        enemy.aiState = 'recovery';
+        enemy.aiSeconds = 0.18;
+        enemy.recoveryDurationSeconds = 0.3;
+        enemy.recoverySource = 'attack';
+        enemy.punishWindowOpen = true;
+        if (active) emit(COMBAT_EVENT_TYPE.PUNISH, { outcome: 'back-punish' });
+        break;
+      case 'combat-launch':
+        startMotion('rising', active ? 0.3 : 0.05);
+        if (active) {
+          enemy.position = { x: playerX + 85, y: groundY - 88 };
+          enemy.velocityY = -240;
+          enemy.juggleHits = 1;
+          enemy.aiState = 'hitstun';
+          enemy.hitstunSeconds = 0.2;
+          emit(COMBAT_EVENT_TYPE.LAUNCH);
+        }
+        break;
+      case 'combat-landing':
+        this.landingRecoverySeconds = active ? LANDING_RECOVERY_SECONDS : 0;
+        if (!active) {
+          this.isGrounded = false;
+          this.position = { x: this.position.x, y: this.position.y - 18 };
+          this.previousPosition = { ...this.position };
+          this.verticalVelocity = 90;
+        } else {
+          emit(COMBAT_EVENT_TYPE.LANDING, {
+            target: 'player',
+            position: { x: this.position.x, y: groundY },
+            strength: 0.6,
+            durationSeconds: LANDING_RECOVERY_SECONDS,
+          });
+        }
+        break;
+      case 'combat-retaliation':
+        startMotion('slash', active ? 0.25 : 0.04);
+        enemy.retaliationInvulnerableSeconds = active ? 0.55 : 0;
+        enemy.aiState = 'recovery';
+        enemy.aiSeconds = 0.08;
+        enemy.recoveryDurationSeconds = 0.08;
+        enemy.recoverySource = 'retaliation';
+        break;
+      default:
+        throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
+    }
+  }
+
+  setVisualQaPoseScenario(scenarioId) {
+    const groundY = this.mapRuntime.getActiveRoom().groundY;
+    this.position = { x: this.position.x, y: groundY - CHARACTER_FOOT_OFFSET };
+    this.previousPosition = { ...this.position };
+    this.facing = 1;
+    this.isGrounded = true;
+    this.verticalVelocity = 0;
+    this.movementIntent = 0;
+    this.rollState = null;
+    this.landingRecoverySeconds = 0;
+    this.playerHitstunSeconds = 0;
+    this.combatCommands.reset();
+
+    switch (scenarioId) {
+      case 'pose-idle':
+        break;
+      case 'pose-move':
+        this.movementIntent = 1;
+        break;
+      case 'pose-guard':
+        this.combatCommands.update(0, { guard: true });
+        break;
+      case 'pose-roll':
+        this.rollState = {
+          direction: 1,
+          elapsedSeconds: ROLL_DURATION_SECONDS * 0.5,
+          durationSeconds: ROLL_DURATION_SECONDS,
+        };
+        break;
+      case 'pose-ground-attack':
+        this.combatCommands.start('slash');
+        this.combatCommands.active.elapsedSeconds = 0.2;
+        break;
+      case 'pose-air-attack':
+        this.isGrounded = false;
+        this.position = { x: this.position.x, y: this.position.y - 75 };
+        this.previousPosition = { ...this.position };
+        this.verticalVelocity = -65;
+        this.combatCommands.start('airSlash');
+        this.combatCommands.active.elapsedSeconds = 0.16;
+        break;
+      case 'pose-hit':
+        this.playerHitstunSeconds = 0.18;
+        break;
+      default:
+        throw new Error(`지원하지 않는 pose Visual QA scenario입니다: ${scenarioId}`);
+    }
+  }
+
   toggleTimePhase() {
     this.worldTimeHours = this.timePhase === 'night' ? 10 : 21;
     this.updateTimePhase();

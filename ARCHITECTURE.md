@@ -70,7 +70,9 @@ Mobile ───────┘                              │
 - Map runtime만 active Region/Room, available Portal, spawn, collision/entity source와 pending transition을 쓴다.
 - Active Room subtree가 Room-local entity lifecycle을, Encounter owner가 enemy/AI/juggle state를 쓴다. Encounter는 Player mutable state를 직접 소유하지 않고 완료 result를 root에 전달한다.
 - Combat command owner가 startup/active/recovery, buffer, cancel과 combo cycle을 결정한다. Animation module은 normalized motion state를 읽을 뿐 command timing을 바꾸지 않는다.
+- Combat command owner가 stamina 잔량·회복과 action별 비용을 결정하며 guard contact result가 큰 stamina drain을 한 번만 적용한다. Strong startup의 guard-break와 피격 interrupt도 같은 command transition에서 기록한다.
 - Shared Combat Geometry는 gameplay와 RenderFrame builder가 함께 읽는 neutral contract다. Gameplay가 renderer/presentation module을 import해 판정을 계산하거나 renderer가 별도 contact geometry를 만들지 않는다.
+- Story interaction owner가 현재 대화 speaker·line·advance 가능 여부와 story transition을 쓰고 UI는 immutable dialogue DTO만 표시한다. 같은 jump action의 이동 또는 대화 진행 우선순위는 game domain이 현재 interaction context에서 한 번 결정한다.
 - Progression owner가 route, checkpoint, boss, reward, equipment와 unlock transition을 쓴다. Storage adapter는 versioned snapshot을 검증·직렬화할 뿐 rule을 결정하지 않는다.
 - UI는 status DTO를 표시하고 public command만 호출한다. Renderer는 RenderFrame을 읽기만 한다.
 
@@ -123,6 +125,7 @@ Immutable status + RenderFrame
 - Keyboard와 mobile adapter는 device event를 common action ID와 frozen sequence로 변환한다.
 - Pointer ID별 held state, capture, cancel, blur/visibility cleanup은 adapter가 소유하고 release는 idempotent다.
 - Map context와 command priority는 game domain이 결정하며 adapter가 Portal이나 combat state를 알지 않는다.
+- Jump action이 현재 상호작용을 시작하거나 대화를 진행한 fixed-step에는 같은 sequence로 Player jump를 시작하지 않는다.
 - UI screen state와 presentation settings는 gameplay input snapshot에 섞지 않는다.
 - UI는 declarative binding과 accessible text/name을 사용하고 implicit browser globals나 element-name globals에 의존하지 않는다.
 - Mobile/desktop은 같은 gameplay simulation과 world framing을 공유하고 layout만 presentation adapter가 조정한다.

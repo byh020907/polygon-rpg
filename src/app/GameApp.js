@@ -78,7 +78,8 @@ export class GameApp extends SceneNode {
     super('GameApp');
     const equipmentIds = EQUIPMENT_PROFILES.map((profile) => profile.id);
     const freshProgression = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
-    this.isVisualQa = Boolean(readVisualQaRequest());
+    this.visualQaRequest = readVisualQaRequest();
+    this.isVisualQa = Boolean(this.visualQaRequest);
     this.progressionStorage = null;
     if (this.isVisualQa) {
       this.progressionLoadResult = Object.freeze({
@@ -112,6 +113,7 @@ export class GameApp extends SceneNode {
     this.retroHost = new CanvasHost(assertCanvas(retroCanvas, 'Retro Canvas'));
 
     this.gameRenderer = new CanvasRetroRenderer(this.gameHost, this.camera);
+    this.visualQaPolygonRenderer = new CanvasPolygonRenderer(this.gameHost, this.camera);
     this.polygonRenderer = new CanvasPolygonRenderer(this.polygonHost, this.camera);
     this.retroRenderer = new CanvasRetroRenderer(this.retroHost, this.camera);
 
@@ -281,13 +283,14 @@ export class GameApp extends SceneNode {
     return Object.freeze({ ok: true, kind: 'reset', snapshot: freshProgression });
   }
 
-  runVisualQa({ start, frame, scenario }) {
+  runVisualQa({ start, frame, renderer, phase, scenario }) {
     if (!scenario || typeof scenario !== 'object') {
       throw new TypeError('Visual QA scenario가 필요합니다.');
     }
     this.start({ manual: true });
     this.scene.reset();
     this.scene.setVisualQaLocation(scenario);
+    this.resize();
 
     const inputSnapshot = this.createInputSnapshot();
     const simulationSettings = Object.freeze({
@@ -301,21 +304,120 @@ export class GameApp extends SceneNode {
         active: true,
       });
     }
+    if (scenario.combatScenarioId)
+      this.scene.setVisualQaCombatScenario(scenario.combatScenarioId, phase);
+    if (scenario.poseScenarioId) this.scene.setVisualQaPoseScenario(scenario.poseScenarioId);
     const renderFrame = this.scene.createRenderFrame(0);
+    const itemIds = renderFrame.items.map((item) => item.id);
+    const expectedEvent = scenario.expectation?.expectedEvent;
+    const expectedMotion = scenario.expectation?.expectedMotion;
+    const expectedItem = scenario.expectation?.expectedItem;
+    const expectedContact = scenario.expectation?.expectedContact;
+    const expectedRetaliation = scenario.expectation?.expectedRetaliation;
+    const expectedAnchor = scenario.expectation?.expectedAnchor;
+    const expectedCombatEvent = renderFrame.combatEvents.find(
+      (event) => event.type === expectedEvent,
+    );
+    const expectedRenderItem = renderFrame.items.find((item) => item.id === expectedItem);
+    const anchorMatches = (() => {
+      if (!expectedAnchor) return true;
+      if (expectedAnchor === 'event-contact') {
+        return Boolean(
+          expectedCombatEvent &&
+          renderFrame.combatContact &&
+          expectedCombatEvent.position.x === renderFrame.combatContact.position.x &&
+          expectedCombatEvent.position.y === renderFrame.combatContact.position.y,
+        );
+      }
+      if (expectedAnchor === 'landing-ground') {
+        if (!expectedCombatEvent || !expectedRenderItem?.points?.length) return false;
+        const xs = expectedRenderItem.points.map((point) => point.x);
+        const groundY = Math.max(...expectedRenderItem.points.map((point) => point.y));
+        return (
+          expectedCombatEvent.position.x >= Math.min(...xs) - 4 &&
+          expectedCombatEvent.position.x <= Math.max(...xs) + 4 &&
+          Math.abs(expectedCombatEvent.position.y - groundY) <= 4
+        );
+      }
+      return false;
+    })();
+    const assertionEvidence = {
+      expectedEvent,
+      expectedMotion,
+      expectedItem,
+      expectedAnchor,
+      eventPresent:
+        expectedEvent === null
+          ? renderFrame.combatEvents.length === 0
+          : !expectedEvent ||
+            renderFrame.combatEvents.some((event) => event.type === expectedEvent),
+      motionPresent: !expectedMotion || renderFrame.combatMotion.id === expectedMotion,
+      itemPresent: !expectedItem || itemIds.includes(expectedItem),
+      contactPresent:
+        expectedContact === false
+          ? renderFrame.combatContact === null
+          : expectedContact === true
+            ? renderFrame.combatContact !== null
+            : true,
+      retaliationPresent:
+        expectedRetaliation === true
+          ? (renderFrame.combatEnemy?.retaliationSeconds ?? 0) > 0
+          : true,
+      anchorMatches,
+    };
+    const assertion = Object.freeze({
+      ...assertionEvidence,
+      passed:
+        assertionEvidence.eventPresent &&
+        assertionEvidence.motionPresent &&
+        assertionEvidence.itemPresent &&
+        assertionEvidence.contactPresent &&
+        assertionEvidence.retaliationPresent &&
+        assertionEvidence.anchorMatches,
+    });
+    if (!assertion.passed) {
+      throw new Error(`Visual QA scenario assertion failed: ${start}`);
+    }
     const result = Object.freeze({
       ready: true,
       start,
       frame,
+      renderer,
+      phase,
       mapId: renderFrame.map.id,
       regionId: renderFrame.map.activeRegionId,
       roomId: renderFrame.map.activeRoomId,
       itemCount: renderFrame.items.length,
+      assertion,
+      combatMotion: renderFrame.combatMotion,
+      combatEvents: renderFrame.combatEvents,
+      combatContact: renderFrame.combatContact,
+      player: renderFrame.player,
+      combatEnemy: renderFrame.combatEnemy,
+      keyItems: Object.freeze(
+        renderFrame.items
+          .filter((item) =>
+            [
+              'hair-fringe',
+              'uniform-front-panel',
+              'shield',
+              'sword-blade',
+              'front-boot',
+              'combat-enemy-training-mask',
+              expectedItem,
+            ].includes(item.id),
+          )
+          .map((item) => Object.freeze({ id: item.id, points: item.points })),
+      ),
       viewport: Object.freeze({
         width: this.gameHost.canvas.clientWidth,
         height: this.gameHost.canvas.clientHeight,
+        backingWidth: this.gameHost.viewport.backingWidth,
+        backingHeight: this.gameHost.viewport.backingHeight,
       }),
     });
     globalThis.__POLYGON_RPG_VISUAL_QA__ = result;
+    globalThis.__POLYGON_RPG_VISUAL_QA_RENDER__ = () => this.renderFrame(renderFrame);
     return result;
   }
 
@@ -395,6 +497,14 @@ export class GameApp extends SceneNode {
 
   renderFrame(renderFrame) {
     const uiState = this.uiBridge.snapshot();
+    if (this.isVisualQa) {
+      const renderer =
+        this.visualQaRequest.renderer === 'polygon'
+          ? this.visualQaPolygonRenderer
+          : this.gameRenderer;
+      this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      return;
+    }
     if (uiState.screen === GAME_SCREEN.GAME) {
       this.latestRenderStats = this.gameRenderer.render(renderFrame, GAME_RENDER_SETTINGS);
       return;

@@ -156,6 +156,14 @@ async function run() {
   }
   const start = values.get('start') ?? 'academy';
   const frame = Number(values.get('frame') ?? 0);
+  const renderer = values.get('renderer') ?? 'retro';
+  const phase = values.get('phase') ?? 'active';
+  if (!['polygon', 'retro'].includes(renderer)) {
+    throw new Error(`renderer는 polygon 또는 retro여야 합니다: ${renderer}`);
+  }
+  if (!['start', 'active', 'end'].includes(phase)) {
+    throw new Error(`phase는 start, active 또는 end여야 합니다: ${phase}`);
+  }
   const outputDirectory = resolve(values.get('output') ?? join(repo, 'artifacts', 'visual-qa'));
   const width = positiveInteger(values.get('width') ?? 1440, 'width');
   const height = positiveInteger(values.get('height') ?? 810, 'height');
@@ -168,13 +176,13 @@ async function run() {
   let failure = null;
 
   mkdirSync(outputDirectory, { recursive: true });
-  const screenshotPath = join(outputDirectory, `${start}-frame-${frame}.png`);
-  const metadataPath = join(outputDirectory, `${start}-frame-${frame}.json`);
+  const screenshotPath = join(outputDirectory, `${start}-${phase}-${renderer}-frame-${frame}.png`);
+  const metadataPath = join(outputDirectory, `${start}-${phase}-${renderer}-frame-${frame}.json`);
 
   try {
     const port = await listen(server);
     const pageOrigin = `http://127.0.0.1:${port}`;
-    const pageUrl = `${pageOrigin}/?visualQa=1&gameStart=${encodeURIComponent(start)}&gameFrame=${frame}`;
+    const pageUrl = `${pageOrigin}/?visualQa=1&gameStart=${encodeURIComponent(start)}&gameFrame=${frame}&visualQaRenderer=${renderer}&visualQaPhase=${phase}`;
     browser = spawn(
       browserPath,
       [
@@ -201,12 +209,32 @@ async function run() {
       deviceScaleFactor: 1,
       mobile: false,
     });
+    await client.send('Page.reload', { ignoreCache: true });
 
     const qa = await waitForQa(client);
+    await client.send('Runtime.evaluate', {
+      expression: 'globalThis.__POLYGON_RPG_VISUAL_QA_RENDER__?.()',
+      awaitPromise: true,
+    });
+    const canvasBounds = (
+      await client.send('Runtime.evaluate', {
+        expression: `(() => {
+          const bounds = document.querySelector('#game-canvas')?.getBoundingClientRect();
+          return bounds
+            ? { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+            : null;
+        })()`,
+        returnByValue: true,
+      })
+    ).result?.value;
+    if (!(canvasBounds?.width > 0 && canvasBounds?.height > 0)) {
+      throw new Error('Visual QA game canvas bounds를 확인하지 못했습니다.');
+    }
     const screenshot = await client.send('Page.captureScreenshot', {
       format: 'png',
       fromSurface: true,
       captureBeyondViewport: false,
+      clip: { ...canvasBounds, scale: 1 },
     });
     writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
 
@@ -223,7 +251,7 @@ async function run() {
       pageUrl,
       screenshotPath,
       qa,
-      viewport: { width, height },
+      viewport: { width, height, canvas: canvasBounds },
       consoleErrors,
     };
     writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);

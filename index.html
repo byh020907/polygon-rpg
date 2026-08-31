@@ -237,6 +237,7 @@
 
           <section
             class="story-briefing"
+            x-show="!visualQa"
             x-bind:data-story-beat="storyBeatId"
             aria-labelledby="story-briefing-title"
             aria-describedby="story-briefing-detail story-current-objective"
@@ -290,7 +291,7 @@
             </div>
           </section>
 
-          <div class="mobile-landscape-hint" role="status">
+          <div class="mobile-landscape-hint" role="status" x-show="!visualQa">
             <strong>↻ 가로 화면 권장</strong>
             <span>기기를 옆으로 돌리면 전투 조작이 표시됩니다.</span>
           </div>

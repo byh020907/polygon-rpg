@@ -288,6 +288,39 @@
         th {
           background: #fff;
         }
+        .note {
+          color: var(--ink);
+          background: #fff;
+          border-color: var(--line);
+        }
+        .table-wrap {
+          overflow: visible;
+        }
+        table {
+          min-width: 0;
+          table-layout: fixed;
+          font-size: 0.82rem;
+        }
+        th,
+        td {
+          padding: 9px;
+          overflow-wrap: anywhere;
+        }
+        th:nth-child(1),
+        td:nth-child(1) {
+          width: 20%;
+        }
+        th:nth-child(2),
+        td:nth-child(2) {
+          width: 50%;
+        }
+        th:nth-child(3),
+        td:nth-child(3) {
+          width: 30%;
+        }
+        footer {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -362,6 +395,14 @@
                   recovery와 counter 위험을 만든다.
                 </li>
                 <li>
+                  Basic/Strong 공격, guard와 roll은 stamina를 소비하고, guard로 공격을 막으면
+                  stamina가 크게 줄어 같은 action을 계속 난사할 수 없다.
+                </li>
+                <li>
+                  Strong 공격은 느리고 읽을 수 있는 준비 동작 뒤 guard를 깨지만, 준비 중 상대의
+                  공격에 맞으면 Player와 적 모두 취소된다.
+                </li>
+                <li>
                   입력 buffer와 cancel은 관대하지만 whiff, 잘못된 방향과 늦은 대응의 결과는
                   일관된다.
                 </li>
@@ -403,6 +444,11 @@
                 <li>
                   첫 원정은 준비, 이야기 사건, 이동, route 선택, checkpoint, Boss, 보상과 shortcut
                   귀환을 debug 조작 없이 끝까지 진행한다.
+                </li>
+                <li>
+                  이야기는 고정 설명문만 띄우지 않고 인물·대상과의 상호작용에서 이름이 붙은 말풍선
+                  대화로 진행되며, 대화 중 같은 jump 입력은 다음 대사를 진행하고 jump를 발생시키지
+                  않는다.
                 </li>
                 <li>
                   현재 목표와 이야기 변화는 인물 반응, 환경 상태, HUD와 이용 가능한 길에 일관되게
@@ -616,7 +662,8 @@
                   <th scope="row">PG-COMBAT-CONTROL</th>
                   <td>
                     Guard → roll 배후 → launcher → 공중 연계 → landing을 반복하며 whiff와 난사의
-                    recovery risk를 확인한다.
+                    recovery·stamina risk를 확인하고, 느린 Strong으로 guard를 깨거나 준비 중
+                    피격으로 취소되는 결과를 확인한다.
                   </td>
                   <td>결정적 combat trace와 실제 training 플레이</td>
                 </tr>
@@ -631,7 +678,7 @@
                   <th scope="row">PG-WORLD-JOURNEY</th>
                   <td>
                     마을 준비부터 Field·Dungeon·Boss·보상·shortcut 귀환과 새 목표까지 debug 조작
-                    없이 완료한다.
+                    없이 완료하며, 인물 대화를 jump 입력으로 진행하는 동안 Player는 jump하지 않는다.
                   </td>
                   <td>연속 플레이 trace, story/world status와 Room transition</td>
                 </tr>

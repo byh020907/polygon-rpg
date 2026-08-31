@@ -62,10 +62,10 @@ Visual QA는 특정 Agent나 scheduler 없이 Node.js와 설치된 Chromium brow
 
 ```powershell
 $env:BROWSER_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-npm run visual:qa -- --repo . --start dungeon --frame 180 --output artifacts/visual-qa/manual-dungeon --width 1440 --height 810
+npm run visual:qa -- --repo . --start combat-hit --phase active --renderer retro --frame 180 --output artifacts/visual-qa/combat-hit --width 1440 --height 810
 ```
 
-지원하는 stable start는 `academy`, `training`, `field`, `dungeon`, `boss`, `glasswind-field`, `glasswind-dungeon`, `glasswind-boss`입니다. 결과를 직접 열어 화면 의도, clipping, Polygon/Retro parity와 console error를 확인합니다.
+지원하는 stable start는 `academy`, `training`, `field`, `dungeon`, `boss`, `glasswind-field`, `glasswind-dungeon`, `glasswind-boss`와 `combat-hit`, `combat-block`, `combat-evade`, `combat-punish`, `combat-launch`, `combat-landing`, `combat-retaliation`, `pose-idle`, `pose-move`, `pose-guard`, `pose-roll`, `pose-ground-attack`, `pose-air-attack`, `pose-hit`입니다. `--phase start|active|end`는 combat scenario의 원인·결과·정리 frame을 고정하며 생략 시 `active`입니다. `--renderer polygon|retro`로 같은 immutable RenderFrame의 투영을 선택하며 생략 시 기존 Retro capture를 유지합니다. Combat scenario는 event·pose·effect assertion과 player/enemy/contact metadata를 함께 남깁니다. 결과를 직접 열어 화면 의도, clipping, Polygon/Retro parity와 console error를 확인합니다.
 
 ## GitHub Pages
 

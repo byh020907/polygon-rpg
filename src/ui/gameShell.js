@@ -98,6 +98,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
   Alpine.data('gameShell', () => ({
     screen: visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU,
+    visualQa: Boolean(visualQaRequest),
     forceMobileControls: false,
     isPlaying: true,
     pixelSize: 6,
