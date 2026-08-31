@@ -434,7 +434,7 @@ dd {
 
 .vital-row {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-columns: 72px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
   min-height: 7px;
@@ -447,6 +447,11 @@ dd {
   font-weight: 900;
   line-height: 1;
   text-shadow: 1px 1px 0 #000;
+}
+
+.vital-row > span b {
+  color: #b8e6d8;
+  font-size: 0.82em;
 }
 
 .vital-track {

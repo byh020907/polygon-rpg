@@ -1,5 +1,6 @@
 export const COMBAT_EVENT_TYPE = Object.freeze({
   GUARD: 'guard',
+  GUARD_BREAK: 'guard-break',
   EVADE: 'evade',
   HIT: 'hit',
   LAUNCH: 'launch',

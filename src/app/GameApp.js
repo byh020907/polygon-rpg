@@ -315,6 +315,7 @@ export class GameApp extends SceneNode {
     const expectedContact = scenario.expectation?.expectedContact;
     const expectedRetaliation = scenario.expectation?.expectedRetaliation;
     const expectedAnchor = scenario.expectation?.expectedAnchor;
+    const expectedStamina = scenario.expectation?.expectedStamina;
     const expectedCombatEvent = renderFrame.combatEvents.find(
       (event) => event.type === expectedEvent,
     );
@@ -380,6 +381,8 @@ export class GameApp extends SceneNode {
           ? (renderFrame.combatEnemy?.retaliationSeconds ?? 0) > 0
           : true,
       anchorMatches,
+      staminaMatches:
+        expectedStamina === undefined || renderFrame.player.stamina === expectedStamina,
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -389,7 +392,8 @@ export class GameApp extends SceneNode {
         assertionEvidence.itemPresent &&
         assertionEvidence.contactPresent &&
         assertionEvidence.retaliationPresent &&
-        assertionEvidence.anchorMatches,
+        assertionEvidence.anchorMatches &&
+        assertionEvidence.staminaMatches,
     });
     if (!assertion.passed) {
       throw new Error(`Visual QA scenario assertion failed: ${start}`);

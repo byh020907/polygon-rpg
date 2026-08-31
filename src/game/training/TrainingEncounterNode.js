@@ -6,11 +6,11 @@ import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
 import { getEncounterProfile, selectEncounterAttack } from '../encounter/EncounterProfiles.js';
+import { TRAINING_ENEMY_ATTACK_PROFILES } from './TrainingEnemyAttackProfiles.js';
 import {
   createTrainingEnemyItems,
   sampleTrainingEnemyCombatFrame,
   sampleTrainingEnemyWeaponLength,
-  TRAINING_ENEMY_ATTACK_PROFILES,
 } from './TrainingEncounterPresentation.js';
 
 const GRAVITY = 1180;
@@ -279,6 +279,7 @@ export class TrainingEncounterNode extends SceneNode {
       hitReactionWeaponLength: TRAINING_ENEMY_ATTACK_PROFILES.light.weaponLength,
       punishWindowOpen: false,
       punishComboCycle: 0,
+      lastCommandTransition: null,
     };
     this.completionEmitted = false;
     this.lastHitMotionSequence = '';
@@ -318,6 +319,7 @@ export class TrainingEncounterNode extends SceneNode {
       juggleLocked: enemy.juggleLocked,
       groundBounceDelaySeconds: enemy.groundBounceDelaySeconds,
       slamAttackerBouncePending: this.slamAttackerBouncePending,
+      lastCommandTransition: enemy.lastCommandTransition,
     });
   }
 
@@ -343,6 +345,7 @@ export class TrainingEncounterNode extends SceneNode {
           kind: enemy.attackKind,
           frame: sampleTrainingEnemyCombatFrame(enemy),
         }),
+        lastCommandTransition: enemy.lastCommandTransition,
       }),
       items: Object.freeze(createTrainingEnemyItems(enemy, renderOrder)),
       contact:
@@ -617,13 +620,14 @@ export class TrainingEncounterNode extends SceneNode {
     )
       return false;
     const enemyInFront = -distance * player.facing > 0;
-    const guarding =
-      profile.guardable && player.isGrounded && enemyInFront && frame.combatState.id === 'guard';
+    const guardHeld = player.isGrounded && enemyInFront && frame.combatState.id === 'guard';
+    const guarding = profile.guardable && guardHeld;
+    const guardBreak = profile.guardBreak === true && guardHeld;
     const weaponItems = createTrainingEnemyItems(enemy, 0).filter(
       (item) => item.id === 'combat-enemy-weapon',
     );
     let visualContact = Object.freeze({ contact: false, gap: Infinity });
-    if (guarding) {
+    if (guarding || guardBreak) {
       visualContact = closestContact(
         weaponItems,
         frame.playerItems.filter((item) => ['shield', 'shield-mark'].includes(item.id)),
@@ -671,6 +675,39 @@ export class TrainingEncounterNode extends SceneNode {
       return false;
     }
     if (player.invulnerableSeconds > 0) return false;
+    if (guardBreak) {
+      enemy.lastCommandTransition = Object.freeze({
+        kind: 'guard-break',
+        attackKind: enemy.attackKind,
+        phase: 'active',
+        target: 'player',
+      });
+      this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD_BREAK, {
+        actor: 'player',
+        target: 'enemy',
+        attackId: enemy.attackKind,
+        position: visualContact.position,
+        direction: Math.sign(distance) || 1,
+        strength: 2,
+      });
+      this.playerResultResolved.emit(
+        Object.freeze({
+          kind: 'guard-break',
+          blockImpactSeconds: 0.22,
+          blockImpactStrength: 1.35,
+          blockstunSeconds: combatFramesToSeconds(28),
+          hitStopSeconds: 0.055,
+        }),
+      );
+      this.cameraFeedbackOccurred.emit(
+        Object.freeze({
+          direction: Math.sign(distance) || 1,
+          strength: 2.4,
+          durationSeconds: 0.12,
+        }),
+      );
+      return false;
+    }
     if (guarding) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'player',
@@ -833,7 +870,34 @@ export class TrainingEncounterNode extends SceneNode {
       enemyPositionX: enemy.position.x,
       attackFacing: enemy.attackFacing,
     });
-    if (this.entity.encounterProfile.guardOutsidePunish && !recoveryPunish.accepted) {
+    const interruptsStrongStartup = enemy.aiState === 'windup' && enemy.attackKind === 'heavy';
+    const breaksEnemyGuard =
+      profile.guardBreak === true &&
+      !interruptsStrongStartup &&
+      ((this.entity.encounterProfile.guardOutsidePunish && !recoveryPunish.accepted) ||
+        (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY));
+    if (breaksEnemyGuard) {
+      enemy.lastCommandTransition = Object.freeze({
+        kind: 'guard-break',
+        attackKind: combatState.id,
+        phase: combatState.phase,
+        target: 'enemy',
+      });
+      this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD_BREAK, {
+        actor: 'enemy',
+        target: 'player',
+        attackId: combatState.id,
+        position: visualContact.position,
+        direction: player.facing,
+        strength: 1.8,
+      });
+    }
+    if (
+      this.entity.encounterProfile.guardOutsidePunish &&
+      !recoveryPunish.accepted &&
+      !profile.guardBreak &&
+      !interruptsStrongStartup
+    ) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'enemy',
         target: 'player',
@@ -848,7 +912,7 @@ export class TrainingEncounterNode extends SceneNode {
       );
       return true;
     }
-    if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY) {
+    if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY && !profile.guardBreak) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'enemy',
         target: 'player',
@@ -913,6 +977,14 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(enemy);
     enemy.hitReactionWeaponAngle =
       profile.damage >= 22 ? 0.35 : profile.launchY < -300 ? -1.1 : 0.2;
+    if (interruptsStrongStartup) {
+      enemy.lastCommandTransition = Object.freeze({
+        kind: 'strong-startup-interrupted',
+        attackKind: enemy.attackKind,
+        phase: 'windup',
+        reason: 'hit',
+      });
+    }
     enemy.rotation = player.facing * 0.18;
     enemy.aiState = 'hitstun';
     enemy.aiSeconds = 0;

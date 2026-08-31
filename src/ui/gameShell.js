@@ -191,6 +191,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         setPlayerStatus: (status) => {
           this.health = status.health;
           this.maxHealth = status.maxHealth;
+          this.stamina = status.stamina;
+          this.maxStamina = status.maxStamina;
           this.gold = status.gold;
           this.trainingMarks = status.trainingMarks;
         },
@@ -251,6 +253,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     get staminaPercent() {
       return `${Math.max(0, Math.min(100, (this.stamina / this.maxStamina) * 100))}%`;
+    },
+
+    get staminaLabel() {
+      return `${Math.floor(this.stamina)}/${this.maxStamina}`;
     },
 
     get mentalPercent() {

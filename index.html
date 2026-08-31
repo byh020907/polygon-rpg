@@ -128,13 +128,13 @@
               </div>
             </div>
             <div class="vital-row">
-              <span>STAMINA</span>
+              <span>STAMINA <b x-text="staminaLabel"></b></span>
               <div
                 class="vital-track vital-track--stamina"
                 role="meter"
                 aria-label="스태미나"
                 aria-valuemin="0"
-                aria-valuemax="100"
+                x-bind:aria-valuemax="maxStamina"
                 x-bind:aria-valuenow="stamina"
               >
                 <i x-bind:style="`width: ${staminaPercent}`"></i>

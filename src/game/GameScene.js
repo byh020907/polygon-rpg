@@ -82,6 +82,7 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     damage: 22,
     range: 68,
     launchY: -150,
+    guardBreak: true,
   }),
   thrust: attackHitProfile('thrust', {
     startFrame: 10,
@@ -99,6 +100,7 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     juggleRole: 'launcher',
     relaunchSpeed: 310,
     floatSeconds: 0.16,
+    guardBreak: true,
   }),
   spin: attackHitProfile('spin', {
     startFrame: 12,
@@ -129,6 +131,7 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     launchY: 300,
     juggleRole: 'finisher',
     groundBounce: true,
+    guardBreak: true,
   }),
   airReturn: attackHitProfile('airReturn', {
     startFrame: 8,
@@ -149,6 +152,7 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     juggleRole: 'sustain',
     relaunchSpeed: 250,
     floatSeconds: 0.17,
+    guardBreak: true,
   }),
   airCross: attackHitProfile('airCross', {
     startFrame: 11,
@@ -1247,6 +1251,8 @@ export class GameScene extends SceneNode {
         'combat-launch',
         'combat-landing',
         'combat-retaliation',
+        'combat-strong-windup',
+        'combat-guard-break',
       ].includes(scenarioId)
     ) {
       throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
@@ -1354,9 +1360,40 @@ export class GameScene extends SceneNode {
         enemy.recoveryDurationSeconds = 0.08;
         enemy.recoverySource = 'retaliation';
         break;
+      case 'combat-strong-windup':
+        enemy.aiState = 'windup';
+        enemy.attackKind = 'heavy';
+        enemy.attackFacing = -1;
+        enemy.aiSeconds = active ? combatFramesToSeconds(8) : combatFramesToSeconds(28);
+        break;
+      case 'combat-guard-break':
+        if (active) {
+          encounter.lastVisualContact = Object.freeze({
+            ...encounter.lastVisualContact,
+            attacker: 'enemy',
+            weaponItemId: 'combat-enemy-weapon',
+            hurtItemId: 'shield',
+            position: Object.freeze({ x: playerX + 25, y: groundY - 70 }),
+          });
+          encounter.contactSeconds = 0.18;
+          this.combatCommands.update(0, { guard: true });
+          this.combatCommands.applyGuardContact({ guardBreak: true });
+          this.playerBlockImpactSeconds = 0.22;
+          this.playerBlockImpactStrength = 1.35;
+          this.playerBlockstunSeconds = combatFramesToSeconds(28);
+          this.playerBlockstunDurationSeconds = this.playerBlockstunSeconds;
+          emit(COMBAT_EVENT_TYPE.GUARD_BREAK, {
+            actor: 'player',
+            target: 'enemy',
+            position: encounter.lastVisualContact.position,
+            strength: 2,
+          });
+        }
+        break;
       default:
         throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
     }
+    this.statusNode.publish({ force: true });
   }
 
   setVisualQaPoseScenario(scenarioId) {
@@ -1628,6 +1665,8 @@ export class GameScene extends SceneNode {
       return false;
     }
 
+    if (!this.combatCommands.trySpendAction('roll')) return false;
+
     this.rollState = {
       direction: Math.sign(direction),
       elapsedSeconds: 0,
@@ -1829,14 +1868,22 @@ export class GameScene extends SceneNode {
   }
 
   applyTrainingEncounterPlayerResult(result) {
-    if (result.kind === 'guard') {
+    if (result.kind === 'guard' || result.kind === 'guard-break') {
+      const staminaResult = this.combatCommands.applyGuardContact({
+        guardBreak: result.kind === 'guard-break',
+      });
       this.playerBlockImpactSeconds = result.blockImpactSeconds;
       this.playerBlockImpactStrength =
         result.blockImpactStrength * this.equipmentProfile.guard.impactScale;
-      const blockstunSeconds = result.blockstunSeconds * this.equipmentProfile.guard.blockstunScale;
+      const authoredBlockstunSeconds =
+        result.blockstunSeconds * this.equipmentProfile.guard.blockstunScale;
+      const blockstunSeconds = staminaResult.broken
+        ? Math.max(authoredBlockstunSeconds, combatFramesToSeconds(28))
+        : authoredBlockstunSeconds;
       this.playerBlockstunSeconds = Math.max(this.playerBlockstunSeconds, blockstunSeconds);
       this.playerBlockstunDurationSeconds = blockstunSeconds;
       this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds);
+      if (staminaResult.broken) this.rollState = null;
       return;
     }
 
@@ -1852,7 +1899,7 @@ export class GameScene extends SceneNode {
       this.playerRetaliationPending = this.playerHealth > 0;
       this.playerInvulnerableSeconds = result.invulnerableSeconds;
       this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds);
-      this.combatCommands.cancelForJump();
+      this.combatCommands.interruptForHit();
       this.rollState = null;
       if (this.playerHealth === 0) this.playerKoSeconds = 1;
     } else {
@@ -2064,6 +2111,7 @@ export class GameScene extends SceneNode {
       acceptCommands: !isTransitioning && !isRolling && !controlsLocked,
       isAirborne: !this.isGrounded,
       allowGuard: this.isGrounded,
+      staminaDeltaSeconds: deltaSeconds,
     });
     const activeAttackProfile = this.getAttackHitProfile(combatState.id);
     if (activeAttackProfile) {
@@ -2418,9 +2466,15 @@ export class GameScene extends SceneNode {
   }
 
   getPlayerStatus() {
+    const combatStatus = this.combatCommands.snapshot();
     return Object.freeze({
       health: this.playerHealth,
       maxHealth: this.playerMaxHealth,
+      stamina: combatStatus.stamina,
+      maxStamina: combatStatus.maxStamina,
+      staminaExhausted: combatStatus.exhausted,
+      lastStaminaAction: combatStatus.lastStaminaAction,
+      lastCommandTransition: combatStatus.lastCommandTransition,
       gold: this.journeyProgress.snapshot().gold + this.regionExpansionProgress.snapshot().gold,
       trainingMarks: this.progressionSnapshot.trainingMarks,
     });
@@ -2513,11 +2567,13 @@ export class GameScene extends SceneNode {
         : item,
     );
     const combatEvents = this.combatEvents.snapshot();
-    const playerGuardEvent = latestCombatEvent(
-      combatEvents,
-      COMBAT_EVENT_TYPE.GUARD,
-      (event) => event.actor === 'player',
-    );
+    const playerGuardEvent =
+      latestCombatEvent(
+        combatEvents,
+        COMBAT_EVENT_TYPE.GUARD_BREAK,
+        (event) => event.actor === 'player',
+      ) ??
+      latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.GUARD, (event) => event.actor === 'player');
     const blockImpactItems = createBlockImpactItems(
       playerGuardEvent,
       this.facing,
@@ -2646,6 +2702,11 @@ export class GameScene extends SceneNode {
         isGrounded: this.isGrounded,
         health: this.playerHealth,
         maxHealth: this.playerMaxHealth,
+        stamina: combatState.stamina,
+        maxStamina: combatState.maxStamina,
+        staminaExhausted: combatState.exhausted,
+        lastStaminaAction: combatState.lastStaminaAction,
+        lastCommandTransition: combatState.lastCommandTransition,
         hitstunSeconds: this.playerHitstunSeconds,
         retaliationSeconds: this.playerRetaliationSeconds,
         roomId: mapSnapshot.active.roomId,

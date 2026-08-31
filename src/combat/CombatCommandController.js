@@ -5,6 +5,21 @@ const COMMAND_INPUTS = Object.freeze([
   Object.freeze({ input: 'basicAttack', motion: 'slash' }),
 ]);
 
+const STRONG_MOTION_IDS = Object.freeze(new Set(['heavy', 'rising', 'airHeavy', 'airSpin']));
+
+export const DEFAULT_COMBAT_STAMINA_PROFILE = Object.freeze({
+  maximum: 100,
+  recoveryPerSecond: 24,
+  recoveryDelaySeconds: 0.45,
+  costs: Object.freeze({
+    basicAttack: 12,
+    strongAttack: 24,
+    guard: 6,
+    roll: 18,
+    block: 34,
+  }),
+});
+
 const INPUT_NAMES = Object.freeze(COMMAND_INPUTS.map(({ input }) => input));
 const COMBO_MOTION_BY_STARTER = Object.freeze({
   slash: Object.freeze({
@@ -129,6 +144,37 @@ function normalizeCommandProfile(commandProfile = {}) {
   });
 }
 
+function normalizeStaminaProfile(staminaProfile = {}) {
+  const costs = Object.freeze({
+    ...DEFAULT_COMBAT_STAMINA_PROFILE.costs,
+    ...(staminaProfile.costs ?? {}),
+  });
+  const normalized = {
+    maximum: staminaProfile.maximum ?? DEFAULT_COMBAT_STAMINA_PROFILE.maximum,
+    recoveryPerSecond:
+      staminaProfile.recoveryPerSecond ?? DEFAULT_COMBAT_STAMINA_PROFILE.recoveryPerSecond,
+    recoveryDelaySeconds:
+      staminaProfile.recoveryDelaySeconds ?? DEFAULT_COMBAT_STAMINA_PROFILE.recoveryDelaySeconds,
+    costs,
+  };
+  for (const [key, value] of Object.entries(normalized)) {
+    if (key === 'costs') continue;
+    if (!Number.isFinite(value) || value < 0 || (key === 'maximum' && value <= 0)) {
+      throw new RangeError(`combat stamina ${key} 값이 올바르지 않습니다.`);
+    }
+  }
+  for (const [action, cost] of Object.entries(costs)) {
+    if (!Number.isFinite(cost) || cost < 0 || cost > normalized.maximum) {
+      throw new RangeError(`combat stamina ${action} 비용이 올바르지 않습니다.`);
+    }
+  }
+  return Object.freeze(normalized);
+}
+
+export function isStrongCombatMotion(motionId) {
+  return STRONG_MOTION_IDS.has(motionId);
+}
+
 function scaleMotionPolicy(policy, timingProfile) {
   if (!policy.frame) return policy;
   const startupFrames = Math.max(
@@ -170,9 +216,10 @@ export function combatMotionFrameData(id, timingProfile = {}) {
 }
 
 export class CombatCommandController {
-  constructor({ timingProfile, commandProfile } = {}) {
+  constructor({ timingProfile, commandProfile, staminaProfile } = {}) {
     this.timingProfile = normalizeTimingProfile(timingProfile);
     this.commandProfile = normalizeCommandProfile(commandProfile);
+    this.staminaProfile = normalizeStaminaProfile(staminaProfile);
     this.reset();
   }
 
@@ -188,6 +235,13 @@ export class CombatCommandController {
     return this.commandProfile;
   }
 
+  setStaminaProfile(staminaProfile) {
+    if (this.active) throw new Error('전투 motion 중에는 stamina profile을 바꿀 수 없습니다.');
+    this.staminaProfile = normalizeStaminaProfile(staminaProfile);
+    this.stamina = Math.min(this.stamina, this.staminaProfile.maximum);
+    return this.staminaProfile;
+  }
+
   getMotionFrameData(id) {
     return combatMotionPolicy(id, this.timingProfile).frame ?? null;
   }
@@ -199,7 +253,12 @@ export class CombatCommandController {
     this.comboCycle = 0;
     this.airActions = 0;
     this.heldPose = 'idle';
+    this.stamina = this.staminaProfile.maximum;
+    this.staminaRecoveryDelaySeconds = 0;
+    this.lastStaminaAction = null;
+    this.lastCommandTransition = null;
     this.continueNextStarterInCombo = false;
+    this.previousGuardInput = false;
     this.previousInputs = Object.fromEntries(INPUT_NAMES.map((name) => [name, false]));
     this.previousSequences = Object.fromEntries(INPUT_NAMES.map((name) => [name, 0]));
   }
@@ -207,20 +266,28 @@ export class CombatCommandController {
   update(
     deltaSeconds,
     inputSnapshot,
-    { acceptCommands = true, isAirborne = false, allowGuard = true } = {},
+    {
+      acceptCommands = true,
+      isAirborne = false,
+      allowGuard = true,
+      staminaDeltaSeconds = deltaSeconds,
+    } = {},
   ) {
     if (!isAirborne) this.airActions = 0;
-    const issuedMotion = acceptCommands
+    this.advanceStamina(staminaDeltaSeconds, {
+      canRecover: !this.active && this.heldPose !== 'guard' && !inputSnapshot.guard,
+    });
+    const issuedCommand = acceptCommands
       ? this.readIssuedMotion(inputSnapshot, { isAirborne })
       : null;
     if (this.active) {
       this.active.elapsedSeconds += deltaSeconds;
-      if (issuedMotion && isAirborne && !AIR_MOTION_IDS.has(this.active.id)) {
+      if (issuedCommand && isAirborne && !AIR_MOTION_IDS.has(this.active.id)) {
         this.active = null;
         this.queuedMotion = null;
-        this.start(issuedMotion);
-      } else if (issuedMotion) {
-        this.queuedMotion = issuedMotion;
+        this.startIssuedCommand(issuedCommand);
+      } else if (issuedCommand) {
+        this.queuedMotion = issuedCommand;
       }
       const chainStartSeconds = combatFramesToSeconds(
         combatMotionPolicy(this.active.id, this.timingProfile).frame.chainStartFrame,
@@ -230,22 +297,34 @@ export class CombatCommandController {
         this.active.elapsedSeconds >= this.active.durationSeconds
       ) {
         const transitionFrom = this.snapshot();
-        const nextMotion = this.queuedMotion;
+        const nextCommand = this.queuedMotion;
         this.active = null;
         this.queuedMotion = null;
-        if (nextMotion) {
-          const continuesCombo = this.continuesComboRoute(transitionFrom.id, nextMotion);
-          this.start(nextMotion, transitionFrom, { continuesCombo });
+        if (nextCommand) {
+          const continuesCombo = this.continuesComboRoute(transitionFrom.id, nextCommand.motionId);
+          this.startIssuedCommand(nextCommand, transitionFrom, { continuesCombo });
         }
       }
-    } else if (issuedMotion) {
-      this.start(issuedMotion, null, {
+    } else if (issuedCommand) {
+      this.startIssuedCommand(issuedCommand, null, {
         continuesCombo: this.continueNextStarterInCombo,
       });
       this.continueNextStarterInCombo = false;
     }
 
-    this.heldPose = acceptCommands && allowGuard && inputSnapshot.guard ? 'guard' : 'idle';
+    const wantsGuard = acceptCommands && allowGuard && !this.active && Boolean(inputSnapshot.guard);
+    if (wantsGuard && this.heldPose === 'guard') {
+      this.heldPose = 'guard';
+    } else if (
+      wantsGuard &&
+      !this.previousGuardInput &&
+      this.trySpendStamina('guard', { transitionKind: 'guard-started' })
+    ) {
+      this.heldPose = 'guard';
+    } else {
+      this.heldPose = 'idle';
+    }
+    this.previousGuardInput = Boolean(inputSnapshot.guard);
     for (const inputName of INPUT_NAMES) {
       this.previousInputs[inputName] = Boolean(inputSnapshot[inputName]);
       const sequence = inputSnapshot[`${inputName}Sequence`];
@@ -264,26 +343,134 @@ export class CombatCommandController {
         inputSnapshot[command.input] &&
         !this.previousInputs[command.input];
       if (sequenceIssued || booleanEdgeIssued) {
+        if (!this.canAfford(command.input)) {
+          this.recordRejectedAction(command.input);
+          return null;
+        }
         if (isAirborne) {
           if (this.airActions >= this.commandProfile.maxAirActions) return null;
           const branch = AIR_COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input];
-          if (branch && this.commandProfile.airCombos) return branch;
+          if (branch && this.commandProfile.airCombos) {
+            return Object.freeze({ motionId: branch, action: command.input });
+          }
           if (
             !this.active ||
             !AIR_MOTION_IDS.has(this.active.id) ||
             this.commandProfile.loopCancel
           ) {
-            return AIR_COMMAND_MOTIONS[command.input];
+            return Object.freeze({
+              motionId: AIR_COMMAND_MOTIONS[command.input],
+              action: command.input,
+            });
           }
           return null;
         }
         const branch = COMBO_MOTION_BY_STARTER[this.active?.id]?.[command.input];
-        if (branch && this.commandProfile.groundCombos) return branch;
-        if (!this.active || this.commandProfile.loopCancel) return command.motion;
+        if (branch && this.commandProfile.groundCombos) {
+          return Object.freeze({ motionId: branch, action: command.input });
+        }
+        if (!this.active || this.commandProfile.loopCancel) {
+          return Object.freeze({ motionId: command.motion, action: command.input });
+        }
         return null;
       }
     }
     return null;
+  }
+
+  canAfford(action) {
+    const cost = this.staminaProfile.costs[action];
+    if (!Number.isFinite(cost)) throw new Error(`알 수 없는 stamina action입니다: ${action}`);
+    return this.stamina + Number.EPSILON >= cost;
+  }
+
+  advanceStamina(deltaSeconds, { canRecover = true } = {}) {
+    if (!Number.isFinite(deltaSeconds) || deltaSeconds < 0) {
+      throw new RangeError('combat stamina deltaSeconds는 0 이상의 유한한 숫자여야 합니다.');
+    }
+    this.staminaRecoveryDelaySeconds = Math.max(0, this.staminaRecoveryDelaySeconds - deltaSeconds);
+    if (!canRecover || this.staminaRecoveryDelaySeconds > 0) return this.stamina;
+    this.stamina = Math.min(
+      this.staminaProfile.maximum,
+      this.stamina + this.staminaProfile.recoveryPerSecond * deltaSeconds,
+    );
+    return this.stamina;
+  }
+
+  recordRejectedAction(action) {
+    this.lastStaminaAction = Object.freeze({
+      action,
+      accepted: false,
+      reason: 'exhausted',
+      cost: this.staminaProfile.costs[action],
+      before: this.stamina,
+      after: this.stamina,
+    });
+    this.lastCommandTransition = Object.freeze({
+      kind: 'action-rejected',
+      action,
+      reason: 'exhausted',
+    });
+    return false;
+  }
+
+  trySpendStamina(action, { transitionKind = 'action-started' } = {}) {
+    const cost = this.staminaProfile.costs[action];
+    if (!Number.isFinite(cost)) throw new Error(`알 수 없는 stamina action입니다: ${action}`);
+    if (!this.canAfford(action)) return this.recordRejectedAction(action);
+    const before = this.stamina;
+    this.stamina = Math.max(0, this.stamina - cost);
+    this.staminaRecoveryDelaySeconds = this.staminaProfile.recoveryDelaySeconds;
+    this.lastStaminaAction = Object.freeze({
+      action,
+      accepted: true,
+      reason: null,
+      cost,
+      before,
+      after: this.stamina,
+    });
+    this.lastCommandTransition = Object.freeze({
+      kind: transitionKind,
+      action,
+      staminaBefore: before,
+      staminaAfter: this.stamina,
+    });
+    return true;
+  }
+
+  trySpendAction(action) {
+    return this.trySpendStamina(action);
+  }
+
+  applyGuardContact({ guardBreak = false } = {}) {
+    const before = this.stamina;
+    const requestedDrain = guardBreak ? before : this.staminaProfile.costs.block;
+    const drain = Math.min(before, requestedDrain);
+    this.stamina = Math.max(0, before - drain);
+    this.staminaRecoveryDelaySeconds = this.staminaProfile.recoveryDelaySeconds;
+    const broken = guardBreak || this.stamina === 0;
+    if (broken) this.heldPose = 'idle';
+    this.lastStaminaAction = Object.freeze({
+      action: 'block',
+      accepted: true,
+      reason: broken ? 'guard-broken' : null,
+      cost: drain,
+      before,
+      after: this.stamina,
+    });
+    this.lastCommandTransition = Object.freeze({
+      kind: broken ? 'guard-broken' : 'guard-contact',
+      action: 'guard',
+      staminaBefore: before,
+      staminaAfter: this.stamina,
+    });
+    return Object.freeze({ broken, drain, stamina: this.stamina });
+  }
+
+  startIssuedCommand(command, transitionFrom = null, options = {}) {
+    if (!this.trySpendStamina(command.action)) return false;
+    this.start(command.motionId, transitionFrom, options);
+    return true;
   }
 
   start(motionId, transitionFrom = null, { continuesCombo = false } = {}) {
@@ -306,6 +493,15 @@ export class CombatCommandController {
         : null,
       transitionSeconds: transitionFrom ? (TRANSITION_SECONDS_BY_MOTION[motionId] ?? 0.05) : 0,
     };
+    this.lastCommandTransition = Object.freeze({
+      kind: 'motion-started',
+      action: isStrongCombatMotion(motionId) ? 'strongAttack' : 'basicAttack',
+      motionId,
+      sequence: this.sequence,
+      phase: 'startup',
+      staminaBefore: this.lastStaminaAction?.before ?? this.stamina,
+      staminaAfter: this.stamina,
+    });
   }
 
   continuesComboRoute(fromMotionId, toMotionId) {
@@ -326,9 +522,27 @@ export class CombatCommandController {
     return true;
   }
 
+  interruptForHit() {
+    if (!this.active) return Object.freeze({ interrupted: false, strongStartup: false });
+    const interrupted = this.snapshot();
+    const strongStartup = isStrongCombatMotion(interrupted.id) && interrupted.phase === 'windup';
+    this.active = null;
+    this.queuedMotion = null;
+    this.continueNextStarterInCombo = false;
+    this.lastCommandTransition = Object.freeze({
+      kind: strongStartup ? 'strong-startup-interrupted' : 'motion-interrupted',
+      action: isStrongCombatMotion(interrupted.id) ? 'strongAttack' : 'basicAttack',
+      motionId: interrupted.id,
+      sequence: interrupted.sequence,
+      phase: interrupted.phase,
+      reason: 'hit',
+    });
+    return Object.freeze({ interrupted: true, strongStartup, motionId: interrupted.id });
+  }
+
   cancelAirMotionForLanding() {
     const activeWasAirborne = AIR_MOTION_IDS.has(this.active?.id);
-    const queuedWasAirborne = AIR_MOTION_IDS.has(this.queuedMotion);
+    const queuedWasAirborne = AIR_MOTION_IDS.has(this.queuedMotion?.motionId);
     if (activeWasAirborne) this.active = null;
     if (queuedWasAirborne) this.queuedMotion = null;
     this.continueNextStarterInCombo = false;
@@ -341,6 +555,14 @@ export class CombatCommandController {
   }
 
   snapshot() {
+    const staminaStatus = {
+      stamina: this.stamina,
+      maxStamina: this.staminaProfile.maximum,
+      exhausted: this.stamina < Math.min(...Object.values(this.staminaProfile.costs)),
+      staminaRecoveryDelaySeconds: this.staminaRecoveryDelaySeconds,
+      lastStaminaAction: this.lastStaminaAction,
+      lastCommandTransition: this.lastCommandTransition,
+    };
     if (!this.active) {
       const motionPolicy = combatMotionPolicy(this.heldPose, this.timingProfile);
       return Object.freeze({
@@ -354,6 +576,7 @@ export class CombatCommandController {
         comboCycle: this.comboCycle,
         airActions: this.airActions,
         queuedMotion: null,
+        ...staminaStatus,
       });
     }
 
@@ -370,11 +593,12 @@ export class CombatCommandController {
       sequence: this.active.sequence,
       comboCycle: this.active.comboCycle,
       airActions: this.airActions,
-      queuedMotion: this.queuedMotion,
+      queuedMotion: this.queuedMotion?.motionId ?? null,
       transitionFrom: this.active.transitionFrom,
       transitionProgress: this.active.transitionFrom
         ? Math.min(1, this.active.elapsedSeconds / this.active.transitionSeconds)
         : 1,
+      ...staminaStatus,
     });
   }
 }

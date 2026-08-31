@@ -44,6 +44,20 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
     expectedRetaliation: true,
     expectedContact: false,
   }),
+  'combat-strong-windup': Object.freeze({
+    expectedEvent: null,
+    expectedMotion: 'idle',
+    expectedItem: 'combat-enemy-heavy-warning',
+    expectedContact: false,
+  }),
+  'combat-guard-break': Object.freeze({
+    expectedEvent: 'guard-break',
+    expectedMotion: 'idle',
+    expectedItem: 'player-block-ring',
+    expectedContact: true,
+    expectedAnchor: 'event-contact',
+    expectedStamina: 0,
+  }),
 });
 
 const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
@@ -151,6 +165,7 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
         expectedContact:
           phase === 'active' ? scenario.expectation.expectedContact !== false : false,
         expectedAnchor: phase === 'active' ? scenario.expectation.expectedAnchor : null,
+        expectedStamina: phase === 'active' ? scenario.expectation.expectedStamina : undefined,
       })
     : scenario.expectation;
 
