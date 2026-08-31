@@ -73,8 +73,8 @@ Gameplay surface는 충돌·이동을 위한 단순 geometry다. Render geometry
 
 - Portal의 gameplay anchor·interaction radius·spawn은 presentation geometry와 분리한다.
 - 보이는 Portal은 공통 차원문 ring이 아니라 현재 Room의 재료와 silhouette를 따르는 문·뿌리 arch·석문·결정 틈으로 표현한다.
-- 약 `32×45` World unit인 플레이어를 기준으로 내부 개구부는 폭 `24~30`, 높이 `49~53`, 외곽 문틀은 폭 `51~58`, 높이 `61~65`를 사용한다. 환경 장식이 문틀 밖으로 커져도 개구부는 이 사람 크기 기준을 유지한다.
-- 경로 accent는 외곽선에서만 구분하고 내부는 Room의 어두운 공간색을 사용해 Polygon/Retro 모두에서 문으로 읽히게 한다.
+- 약 `32×45` World unit인 플레이어를 기준으로 내부 개구부는 폭 `21~26`, 높이 `43~45`, 외곽 문틀은 폭 `44~49`, 높이 `52~54`를 사용한다. 환경 장식이 문틀 밖으로 커져도 개구부는 이 사람 크기 기준을 유지한다.
+- 외곽선은 Room 재료의 어두운 색으로 연결하고 경로 accent는 내부 개구부에만 얇게 사용한다. 내부 면은 Room의 어두운 공간색을 유지해 Polygon/Retro 모두에서 실제 문으로 읽히게 한다.
 - Map definition은 stable `<id>-outer`·`<id>-inner` render item을 소유하고 상태 patch는 기존 ID를 그대로 켜고 끈다. Renderer는 style이나 Portal 의미를 해석하지 않는다.
 
 ## 월드 상태 패치
