@@ -71,9 +71,9 @@ Mutation 또는 전체 상태 판정 전에 다음을 완전히 읽는다.
 
 ## `ROADMAP_CONVERGE` — queue 이후 수렴
 
-Queue가 비었다는 이유만으로 멈추지 않는다. DESIGN, STATUS, 실제 code/artifact를 대조해 승인된 milestone이나 playable vertical slice가 남았으면 가장 우선인 **완전한 job 하나**를 선택해 `BACKGROUND_ENTRY`와 동일한 구현·검사·visible QA·commit·main integration gate로 완결한다.
+Queue가 비었다는 이유만으로 멈추지 않는다. DESIGN, STATUS, 실제 code/artifact를 대조해 승인된 milestone이나 playable vertical slice가 남았으면 가장 우선인 **완전한 job 하나**를 선택한다. DESIGN/STATUS 근거로 exact goal, completion, non-scope, quality axes와 base를 고정하고 `work_kind: ROADMAP_JOB`으로 식별한다. Developer implementation·checks·visible QA·candidate commit 뒤 `VERIFIER`에 이 contract와 exact candidate hash를 넘기며, FAIL repair와 새 verifier PASS를 거쳐야 push/integration한다. ROADMAP에는 INBOX lifecycle과 done cleanup만 적용하지 않는다.
 
-승인된 DESIGN milestone과 quality proof가 모두 완료되고, nonterminal inbox/executor/conflict가 없으며 clean `main == origin/main`일 때만 STATUS에 정확한 `- Loop completion: VERIFIED`와 증거를 기록하고 `루프 전체 완료 증명` commit을 push한 뒤 정상 종료한다. 사람 또는 외부 조건이 실제로 막으면 `- Loop blocker: <구체 원인>`을 기록한다. 그 외 main 진전도 완료 증명도 없는 run은 실패다.
+승인된 DESIGN milestone과 quality proof가 모두 완료되고, nonterminal inbox/executor/conflict가 없으며 clean `main == origin/main`이면 STATUS에 정확한 `- Loop completion: VERIFIED`와 증거를 기록한 **local completion candidate commit**을 만든다. `work_kind: ROADMAP_COMPLETION`, DESIGN/STATUS completion contract, base와 candidate hash로 fresh verifier PASS를 받은 뒤에만 `루프 전체 완료 증명` commit을 push하고 정상 종료한다. FAIL이면 correction commit과 새 verifier가 필요하다. 사람 또는 외부 조건이 실제로 막으면 `- Loop blocker: <구체 원인>`을 기록한다. 그 외 main 진전도 verified completion도 없는 run은 실패다.
 
 ## `DIRECT` — 현재 대화가 entry 하나 소유
 
@@ -95,7 +95,10 @@ Verifier는 developer parent와 같은 outer run 안에서 동작하지만 turn 
 
 Parent handoff에는 다음만 포함한다.
 
-- Exact entry ID, immutable raw request와 completion/non-scope/quality contract.
+- `work_kind`: `ENTRY`, `ROADMAP_JOB` 또는 `ROADMAP_COMPLETION`.
+- `ENTRY`면 exact entry ID, immutable raw request와 completion/non-scope/quality contract.
+- `ROADMAP_JOB`이면 DESIGN/STATUS에서 고정한 exact goal, completion, non-scope와 quality contract.
+- `ROADMAP_COMPLETION`이면 approved milestone, quality proof, nonterminal work·conflict 부재와 repository convergence contract.
 - Candidate full commit hash, 비교 base와 owned paths.
 - Affected check 명령과 developer가 만든 visual artifact/metadata 경로.
 - 검증에 필요한 canonical 문서 경로.
@@ -104,7 +107,7 @@ Parent handoff에는 다음만 포함한다.
 
 ### 독립 검증 순서
 
-1. `AGENTS.md`, DESIGN, current main의 exact INBOX entry, quality contract와 관련 canonical 문서를 직접 읽는다.
+1. `AGENTS.md`, DESIGN, STATUS, quality contract와 관련 canonical 문서를 직접 읽는다. `ENTRY`일 때만 current main의 exact INBOX entry와 immutable raw request를 추가 확인한다.
 2. Base부터 candidate까지 owned diff, caller, state/dependency direction과 non-scope 침범을 검사한다.
 3. 전달받은 검사 결과를 신뢰하지 않고 affected deterministic checks, `npm run check`, `git diff --check`를 직접 다시 실행한다.
 4. 화면 작업은 candidate용 stable scene PNG와 metadata를 직접 읽는다. Artifact가 exact candidate를 증명하지 못하거나 coverage가 부족하면 verifier 전용 경로로 `loop/visual-qa.ps1`을 다시 실행하고 PNG를 직접 판독한다.
@@ -116,6 +119,7 @@ Verifier는 ignored verifier artifact 외의 tracked file edit, commit, merge, p
 
 ```text
 VERDICT: PASS | FAIL
+WORK_KIND: ENTRY | ROADMAP_JOB | ROADMAP_COMPLETION
 CANDIDATE: <full hash>
 FINDINGS:
 - [P1|P2|P3] <finding or 없음>
