@@ -1,5 +1,7 @@
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 
+export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.265;
+
 const PLAYER_FOOT_OFFSET = 68;
 const PLAYER_IK_SOLVER = new TwoBoneIKSolver();
 
