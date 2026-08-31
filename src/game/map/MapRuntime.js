@@ -171,6 +171,26 @@ export class MapRuntime {
     return worldRoom(room);
   }
 
+  getTriggerLocation(qualifiedId) {
+    if (typeof qualifiedId !== 'string' || qualifiedId.trim().length === 0) return null;
+    const map = this.getResolvedMap();
+    for (const region of map.regions) {
+      for (const room of region.rooms) {
+        const trigger = room.triggers.find(
+          (candidate) => candidate.qualifiedId === qualifiedId && candidate.enabled !== false,
+        );
+        if (!trigger?.position) continue;
+        const worldTrigger = withWorldCoordinates(trigger, roomOffset(room));
+        return Object.freeze({
+          regionId: region.id,
+          roomId: room.id,
+          position: worldTrigger.position,
+        });
+      }
+    }
+    return null;
+  }
+
   getPortals({ includeDisabled = false } = {}) {
     const map = this.getResolvedMap();
     const portalIds = new Set(this.getActiveRoom().portals);

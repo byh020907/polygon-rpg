@@ -1552,14 +1552,7 @@ export class GameScene extends SceneNode {
       if (distance > radius) continue;
 
       if (trigger.kind === 'checkpoint') {
-        const result = this.journeyProgress.activateCheckpoint({
-          regionId: snapshot.active.regionId,
-          roomId: snapshot.active.roomId,
-          position: {
-            x: trigger.position.x,
-            y: trigger.position.y - CHARACTER_FOOT_OFFSET,
-          },
-        });
+        const result = this.journeyProgress.activateCheckpoint(trigger.qualifiedId);
         if (!result.changed) continue;
         this.playerHealth = this.playerMaxHealth;
         this.syncJourneyWorldContext();
@@ -1576,14 +1569,7 @@ export class GameScene extends SceneNode {
       }
 
       if (trigger.kind === 'glasswind-checkpoint') {
-        const result = this.regionExpansionProgress.activateCheckpoint({
-          regionId: snapshot.active.regionId,
-          roomId: snapshot.active.roomId,
-          position: {
-            x: trigger.position.x,
-            y: trigger.position.y - CHARACTER_FOOT_OFFSET,
-          },
-        });
+        const result = this.regionExpansionProgress.activateCheckpoint(trigger.qualifiedId);
         if (!result.changed) continue;
         this.playerHealth = this.playerMaxHealth;
         this.syncJourneyWorldContext();
@@ -1605,18 +1591,22 @@ export class GameScene extends SceneNode {
     const journey = this.journeyProgress.snapshot();
     const regionExpansion = this.regionExpansionProgress.snapshot();
     const activeRegionId = this.mapRuntime.getActiveLocation().regionId;
-    const checkpoint =
+    const checkpointId =
       activeRegionId === 'glasswind-region'
         ? regionExpansion.checkpointActivated
-          ? regionExpansion.checkpoint
+          ? regionExpansion.checkpointId
           : null
         : journey.checkpointActivated
-          ? journey.checkpoint
+          ? journey.checkpointId
           : null;
+    const checkpoint = this.mapRuntime.getTriggerLocation(checkpointId);
     if (checkpoint) {
       const mapSnapshot = this.mapRuntime.setActiveLocation(checkpoint.regionId, checkpoint.roomId);
       this.replaceRoomScene(mapSnapshot);
-      this.position = { ...checkpoint.position };
+      this.position = {
+        x: checkpoint.position.x,
+        y: checkpoint.position.y - CHARACTER_FOOT_OFFSET,
+      };
       this.cameraPosition = { ...mapSnapshot.cameraPosition };
     } else {
       const activeRoom = this.mapRuntime.getActiveRoom();

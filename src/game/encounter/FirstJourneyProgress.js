@@ -13,6 +13,9 @@ export const JOURNEY_ROUTE = Object.freeze({
   BYPASS: 'bypass',
 });
 
+export const FIRST_JOURNEY_CHECKPOINT_ID =
+  'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint';
+
 const JOURNEY_PHASES = new Set(Object.values(JOURNEY_PHASE));
 const JOURNEY_ROUTES = new Set(Object.values(JOURNEY_ROUTE));
 
@@ -26,30 +29,12 @@ function assertNonNegativeInteger(value, label) {
   }
 }
 
-function copyCheckpoint(checkpoint) {
-  if (checkpoint === null) return null;
-  if (!checkpoint || typeof checkpoint !== 'object' || Array.isArray(checkpoint)) {
-    throw new TypeError('첫 원정 checkpoint는 객체 또는 null이어야 합니다.');
+function validateCheckpointId(checkpointId) {
+  if (checkpointId === null) return null;
+  if (checkpointId !== FIRST_JOURNEY_CHECKPOINT_ID) {
+    throw new Error(`지원하지 않는 첫 원정 checkpoint ID입니다: ${checkpointId}`);
   }
-  for (const key of ['regionId', 'roomId']) {
-    if (typeof checkpoint[key] !== 'string' || checkpoint[key].trim().length === 0) {
-      throw new TypeError(`첫 원정 checkpoint ${key}는 비어 있지 않은 문자열이어야 합니다.`);
-    }
-  }
-  if (
-    !checkpoint.position ||
-    typeof checkpoint.position !== 'object' ||
-    Array.isArray(checkpoint.position) ||
-    !Number.isFinite(checkpoint.position.x) ||
-    !Number.isFinite(checkpoint.position.y)
-  ) {
-    throw new TypeError('첫 원정 checkpoint position에는 유한한 x/y가 필요합니다.');
-  }
-  return Object.freeze({
-    regionId: checkpoint.regionId,
-    roomId: checkpoint.roomId,
-    position: Object.freeze({ x: checkpoint.position.x, y: checkpoint.position.y }),
-  });
+  return checkpointId;
 }
 
 export function createFirstJourneyProgressSnapshot() {
@@ -58,7 +43,7 @@ export function createFirstJourneyProgressSnapshot() {
     routeChoice: null,
     fieldGuardianDefeated: false,
     dungeonGuardianDefeated: false,
-    checkpoint: null,
+    checkpointId: null,
     bossDefeated: false,
     bossRewardClaimed: false,
     returnedWithReward: false,
@@ -76,7 +61,7 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
   if (snapshot.routeChoice !== null && !JOURNEY_ROUTES.has(snapshot.routeChoice)) {
     throw new RangeError(`지원하지 않는 첫 원정 route입니다: ${snapshot.routeChoice}`);
   }
-  const checkpoint = copyCheckpoint(snapshot.checkpoint);
+  const checkpointId = validateCheckpointId(snapshot.checkpointId);
   assertBoolean(snapshot.fieldGuardianDefeated, 'Field guardian 격파 상태');
   assertBoolean(snapshot.dungeonGuardianDefeated, 'Dungeon guardian 격파 상태');
   assertBoolean(snapshot.bossDefeated, '첫 원정 Boss 격파 상태');
@@ -95,8 +80,11 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
   if (snapshot.phase === JOURNEY_PHASE.REWARD && !snapshot.bossDefeated) {
     throw new Error('첫 원정 reward phase에는 Boss 격파가 필요합니다.');
   }
-  if (snapshot.phase === JOURNEY_PHASE.CHECKPOINT && checkpoint === null) {
+  if (snapshot.phase === JOURNEY_PHASE.CHECKPOINT && checkpointId === null) {
     throw new Error('첫 원정 checkpoint phase에는 checkpoint 위치가 필요합니다.');
+  }
+  if (checkpointId !== null && !snapshot.dungeonGuardianDefeated) {
+    throw new Error('첫 원정 checkpoint에는 Dungeon guardian 격파가 필요합니다.');
   }
 
   return Object.freeze({
@@ -104,7 +92,7 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
     routeChoice: snapshot.routeChoice,
     fieldGuardianDefeated: snapshot.fieldGuardianDefeated,
     dungeonGuardianDefeated: snapshot.dungeonGuardianDefeated,
-    checkpoint,
+    checkpointId,
     bossDefeated: snapshot.bossDefeated,
     bossRewardClaimed: snapshot.bossRewardClaimed,
     returnedWithReward: snapshot.returnedWithReward,
@@ -114,7 +102,7 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
 
 function freezeSnapshot(state) {
   const canonical = toFirstJourneyProgressSnapshot(state);
-  const checkpointActivated = canonical.checkpoint !== null;
+  const checkpointActivated = canonical.checkpointId !== null;
   const fieldWardActive = canonical.fieldGuardianDefeated;
   return Object.freeze({
     ...canonical,
@@ -230,11 +218,11 @@ export class FirstJourneyProgress {
     return Object.freeze({ changed: false, kind: 'already-resolved', snapshot: this.snapshot() });
   }
 
-  activateCheckpoint(checkpoint) {
-    if (this.state.checkpoint !== null) {
+  activateCheckpoint(checkpointId) {
+    if (this.state.checkpointId !== null) {
       return Object.freeze({ changed: false, snapshot: this.snapshot() });
     }
-    this.state.checkpoint = copyCheckpoint(checkpoint);
+    this.state.checkpointId = validateCheckpointId(checkpointId);
     this.state.phase = JOURNEY_PHASE.CHECKPOINT;
     return Object.freeze({ changed: true, snapshot: this.snapshot() });
   }

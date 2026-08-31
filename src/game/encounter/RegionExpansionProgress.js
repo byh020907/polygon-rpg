@@ -10,6 +10,9 @@ export const REGION_EXPANSION_PHASE = Object.freeze({
 
 const REGION_EXPANSION_PHASES = new Set(Object.values(REGION_EXPANSION_PHASE));
 
+export const REGION_EXPANSION_CHECKPOINT_ID =
+  'academy-village:glasswind-region:glasswind-observatory:glasswind-checkpoint';
+
 function assertBoolean(value, label) {
   if (typeof value !== 'boolean') throw new TypeError(`${label}은(는) boolean이어야 합니다.`);
 }
@@ -20,37 +23,19 @@ function assertNonNegativeInteger(value, label) {
   }
 }
 
-function copyCheckpoint(checkpoint) {
-  if (checkpoint === null) return null;
-  if (!checkpoint || typeof checkpoint !== 'object' || Array.isArray(checkpoint)) {
-    throw new TypeError('Glasswind checkpoint는 객체 또는 null이어야 합니다.');
+function validateCheckpointId(checkpointId) {
+  if (checkpointId === null) return null;
+  if (checkpointId !== REGION_EXPANSION_CHECKPOINT_ID) {
+    throw new Error(`지원하지 않는 Glasswind checkpoint ID입니다: ${checkpointId}`);
   }
-  for (const key of ['regionId', 'roomId']) {
-    if (typeof checkpoint[key] !== 'string' || checkpoint[key].trim().length === 0) {
-      throw new TypeError(`Glasswind checkpoint ${key}는 비어 있지 않은 문자열이어야 합니다.`);
-    }
-  }
-  if (
-    !checkpoint.position ||
-    typeof checkpoint.position !== 'object' ||
-    Array.isArray(checkpoint.position) ||
-    !Number.isFinite(checkpoint.position.x) ||
-    !Number.isFinite(checkpoint.position.y)
-  ) {
-    throw new TypeError('Glasswind checkpoint position에는 유한한 x/y가 필요합니다.');
-  }
-  return Object.freeze({
-    regionId: checkpoint.regionId,
-    roomId: checkpoint.roomId,
-    position: Object.freeze({ x: checkpoint.position.x, y: checkpoint.position.y }),
-  });
+  return checkpointId;
 }
 
 export function createRegionExpansionProgressSnapshot() {
   return Object.freeze({
     phase: REGION_EXPANSION_PHASE.PREPARE,
     glasswindHunterDefeated: false,
-    checkpoint: null,
+    checkpointId: null,
     bossDefeated: false,
     bossRewardClaimed: false,
     returnedWithReward: false,
@@ -65,7 +50,7 @@ export function toRegionExpansionProgressSnapshot(snapshot) {
   if (!REGION_EXPANSION_PHASES.has(snapshot.phase)) {
     throw new RangeError(`지원하지 않는 Glasswind phase입니다: ${snapshot.phase}`);
   }
-  const checkpoint = copyCheckpoint(snapshot.checkpoint);
+  const checkpointId = validateCheckpointId(snapshot.checkpointId);
   assertBoolean(snapshot.glasswindHunterDefeated, 'Glasswind hunter 격파 상태');
   assertBoolean(snapshot.bossDefeated, 'Glasswind Boss 격파 상태');
   assertBoolean(snapshot.bossRewardClaimed, 'Glasswind Boss 보상 상태');
@@ -83,14 +68,14 @@ export function toRegionExpansionProgressSnapshot(snapshot) {
   if (snapshot.phase === REGION_EXPANSION_PHASE.REWARD && !snapshot.bossDefeated) {
     throw new Error('Glasswind reward phase에는 Boss 격파가 필요합니다.');
   }
-  if (snapshot.phase === REGION_EXPANSION_PHASE.CHECKPOINT && checkpoint === null) {
+  if (snapshot.phase === REGION_EXPANSION_PHASE.CHECKPOINT && checkpointId === null) {
     throw new Error('Glasswind checkpoint phase에는 checkpoint 위치가 필요합니다.');
   }
 
   return Object.freeze({
     phase: snapshot.phase,
     glasswindHunterDefeated: snapshot.glasswindHunterDefeated,
-    checkpoint,
+    checkpointId,
     bossDefeated: snapshot.bossDefeated,
     bossRewardClaimed: snapshot.bossRewardClaimed,
     returnedWithReward: snapshot.returnedWithReward,
@@ -100,7 +85,7 @@ export function toRegionExpansionProgressSnapshot(snapshot) {
 
 function freezeSnapshot(state) {
   const canonical = toRegionExpansionProgressSnapshot(state);
-  const checkpointActivated = canonical.checkpoint !== null;
+  const checkpointActivated = canonical.checkpointId !== null;
   const glasswindBridgeStable = canonical.glasswindHunterDefeated;
   return Object.freeze({
     ...canonical,
@@ -192,11 +177,11 @@ export class RegionExpansionProgress {
     return Object.freeze({ changed: false, kind: 'already-resolved', snapshot: this.snapshot() });
   }
 
-  activateCheckpoint(checkpoint) {
-    if (this.state.checkpoint !== null) {
+  activateCheckpoint(checkpointId) {
+    if (this.state.checkpointId !== null) {
       return Object.freeze({ changed: false, snapshot: this.snapshot() });
     }
-    this.state.checkpoint = copyCheckpoint(checkpoint);
+    this.state.checkpointId = validateCheckpointId(checkpointId);
     this.state.phase = REGION_EXPANSION_PHASE.CHECKPOINT;
     return Object.freeze({ changed: true, snapshot: this.snapshot() });
   }
