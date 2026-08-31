@@ -322,11 +322,27 @@ export class GameApp extends SceneNode {
     const anchorMatches = (() => {
       if (!expectedAnchor) return true;
       if (expectedAnchor === 'event-contact') {
-        return Boolean(
-          expectedCombatEvent &&
-          renderFrame.combatContact &&
+        if (
+          !expectedCombatEvent ||
+          !renderFrame.combatContact ||
+          !expectedRenderItem?.points?.length
+        )
+          return false;
+        const eventMatchesContact =
           expectedCombatEvent.position.x === renderFrame.combatContact.position.x &&
-          expectedCombatEvent.position.y === renderFrame.combatContact.position.y,
+          expectedCombatEvent.position.y === renderFrame.combatContact.position.y;
+        const effectCenter = expectedRenderItem.points.reduce(
+          (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }),
+          { x: 0, y: 0 },
+        );
+        effectCenter.x /= expectedRenderItem.points.length;
+        effectCenter.y /= expectedRenderItem.points.length;
+        return (
+          eventMatchesContact &&
+          Math.hypot(
+            effectCenter.x - expectedCombatEvent.position.x,
+            effectCenter.y - expectedCombatEvent.position.y,
+          ) <= 16
         );
       }
       if (expectedAnchor === 'landing-ground') {

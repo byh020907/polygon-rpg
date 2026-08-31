@@ -845,31 +845,11 @@ function createCharacterItems(
   });
 }
 
-function createBlockImpactItems(
-  characterItems,
-  facing,
-  impactSeconds,
-  impactStrength,
-  renderOrder,
-) {
-  if (impactSeconds <= 0) return [];
-  const shield = characterItems.find((item) => item.id === 'shield');
-  if (!shield) return [];
+function createBlockImpactItems(event, facing, impactSeconds, impactStrength, renderOrder) {
+  if (impactSeconds <= 0 || !event?.position) return [];
   const progress = 1 - impactSeconds / 0.14;
   const opacity = Math.max(0, 1 - progress);
-  const shieldBounds = shield.points.reduce(
-    (bounds, point) => ({
-      minX: Math.min(bounds.minX, point.x),
-      maxX: Math.max(bounds.maxX, point.x),
-      minY: Math.min(bounds.minY, point.y),
-      maxY: Math.max(bounds.maxY, point.y),
-    }),
-    { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
-  );
-  const center = {
-    x: facing >= 0 ? shieldBounds.maxX : shieldBounds.minX,
-    y: (shieldBounds.minY + shieldBounds.maxY) / 2,
-  };
+  const center = event.position;
   const radius = lerp(7 + impactStrength * 3, 18 + impactStrength * 10, smoothStep(progress));
   const sparkAngles = impactStrength > 0.9 ? [-0.9, -0.45, 0, 0.45, 0.9] : [-0.7, 0, 0.7];
   const items = [
@@ -922,8 +902,8 @@ function createRetaliationAuraItems(position, seconds, idPrefix, renderOrder) {
   ];
 }
 
-function createPlayerHitFeedbackItems(event, renderOrder) {
-  if (!event?.position || event.target !== 'player') return [];
+function createHitFeedbackItems(event, target, idPrefix, renderOrder) {
+  if (!event?.position || event.target !== target) return [];
   const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
   const opacity = 1 - progress;
   const center = event.position;
@@ -934,7 +914,7 @@ function createPlayerHitFeedbackItems(event, renderOrder) {
   const items = [
     Object.freeze({
       ...polygon(
-        'player-hit-ring',
+        `${idPrefix}-hit-ring`,
         regularPolygon(radius, radius, 10, Math.PI / 10),
         center,
         '#fff0d2',
@@ -951,7 +931,7 @@ function createPlayerHitFeedbackItems(event, renderOrder) {
       const outer = lerp(12 + strength * 2, 28 + strength * 5, progress);
       return Object.freeze({
         ...limbSegment(
-          `player-hit-spark-${index}`,
+          `${idPrefix}-hit-spark-${index}`,
           {
             x: center.x + Math.cos(sparkAngle) * inner,
             y: center.y + Math.sin(sparkAngle) * inner,
@@ -1009,11 +989,11 @@ function createEvadeFeedbackItems(position, event, renderOrder) {
   return items;
 }
 
-function createPunishFeedbackItems(position, event, renderOrder) {
-  if (!event || !position) return [];
+function createPunishFeedbackItems(event, renderOrder) {
+  if (!event?.position) return [];
   const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
   const opacity = 1 - progress;
-  const center = { x: position.x, y: position.y - 36 };
+  const center = event.position;
   return Array.from({ length: 6 }, (_, index) => {
     const angle = (index / 6) * Math.PI * 2;
     const inner = lerp(8, 24, progress);
@@ -2532,8 +2512,14 @@ export class GameScene extends SceneNode {
           })
         : item,
     );
+    const combatEvents = this.combatEvents.snapshot();
+    const playerGuardEvent = latestCombatEvent(
+      combatEvents,
+      COMBAT_EVENT_TYPE.GUARD,
+      (event) => event.actor === 'player',
+    );
     const blockImpactItems = createBlockImpactItems(
-      characterItems,
+      playerGuardEvent,
       this.facing,
       this.playerBlockImpactSeconds,
       this.playerBlockImpactStrength,
@@ -2545,7 +2531,6 @@ export class GameScene extends SceneNode {
       'player',
       characterRenderOrder - 0.005,
     );
-    const combatEvents = this.combatEvents.snapshot();
     const playerHitEvent = latestCombatEvent(
       combatEvents,
       COMBAT_EVENT_TYPE.HIT,
@@ -2553,9 +2538,24 @@ export class GameScene extends SceneNode {
     );
     const evadeEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.EVADE);
     const punishEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.PUNISH);
-    const playerHitFeedbackItems = createPlayerHitFeedbackItems(
+    const enemyHitEvent =
+      latestCombatEvent(
+        combatEvents,
+        COMBAT_EVENT_TYPE.LAUNCH,
+        (event) => event.target === 'enemy',
+      ) ??
+      latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.HIT, (event) => event.target === 'enemy');
+    const playerHitFeedbackItems = createHitFeedbackItems(
       playerHitEvent,
+      'player',
+      'player',
       characterRenderOrder + 0.03,
+    );
+    const enemyHitFeedbackItems = createHitFeedbackItems(
+      enemyHitEvent,
+      'enemy',
+      'combat-enemy',
+      activeRoom.renderOrder + 0.48,
     );
     const evadeFeedbackItems = createEvadeFeedbackItems(
       renderPosition,
@@ -2566,9 +2566,8 @@ export class GameScene extends SceneNode {
       activeRoom.renderOrder + 0.45,
     ) ?? { enemy: null, items: [], contact: null };
     const punishFeedbackItems = createPunishFeedbackItems(
-      encounterRender.enemy?.position,
       punishEvent,
-      activeRoom.renderOrder + 0.48,
+      activeRoom.renderOrder + 0.49,
     );
     const items = Object.freeze(
       [
@@ -2578,6 +2577,7 @@ export class GameScene extends SceneNode {
         ...playerRetaliationItems,
         ...blockImpactItems,
         ...playerHitFeedbackItems,
+        ...enemyHitFeedbackItems,
         ...evadeFeedbackItems,
         ...punishFeedbackItems,
       ]

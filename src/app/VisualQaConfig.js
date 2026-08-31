@@ -4,7 +4,7 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
   'combat-hit': Object.freeze({
     expectedEvent: 'hit',
     expectedMotion: 'slash',
-    expectedItem: 'combat-enemy-training-mask',
+    expectedItem: 'combat-enemy-hit-ring',
     expectedAnchor: 'event-contact',
   }),
   'combat-block': Object.freeze({
@@ -27,7 +27,7 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
   'combat-launch': Object.freeze({
     expectedEvent: 'launch',
     expectedMotion: 'rising',
-    expectedItem: 'combat-enemy-training-mask',
+    expectedItem: 'combat-enemy-hit-ring',
     expectedAnchor: 'event-contact',
   }),
   'combat-landing': Object.freeze({
