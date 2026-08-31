@@ -76,7 +76,7 @@
 
 ## IN-20260831-030641
 
-- status: verifying
+- status: done
 - received_at: 2026-08-31T03:06:41+09:00
 - priority: normal
 - source: team-lead-main
@@ -85,9 +85,9 @@
 - executor_branch: codex/loop/in-20260831-030641
 - registration_base: 868353b20e0bfb97d77c07133f0cb3ed0d030726
 - accepted_at: 2026-08-31T09:47:44+09:00
-- checkpoint_commit: 427efb90f58edaeee2e2eb089a9c1b6ac946c4ff
-- final_commit: null
-- integration: null
+- checkpoint_commit: 1857977405f8b3f86046fd55c938a16a7252d4f9
+- final_commit: 31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44
+- integration: the merge commit that marks this entry done
 - owned_paths: [src/game/maps/PortalRenderItems.js, src/game/maps/academyVillage.js, src/game/maps/firstJourney.js, src/game/maps/glasswindRegion.js, docs/world-map-system.md]
 
 ### 원문 — 불변
@@ -106,14 +106,14 @@
 ### 실행 상태 — coordinator 소유
 
 - 기준선: firstJourney·glasswind·academy의 Portal은 환경과 무관한 동일 타원 링이고 외곽이 약 `78~84 × 102~110` World unit이라 약 `32 × 45`인 플레이어보다 두 배 이상 크다.
-- 현재 최선: `427efb90f58edaeee2e2eb089a9c1b6ac946c4ff`이 36개 stable Portal render item을 학원 문·숲 뿌리 arch·봉인 석문·유리바람 결정 틈으로 교체했고 개구부 `24~30 × 49~53`, 문틀 `51~58 × 61~65`를 강제한다.
-- 다음 병목: academy/training/field/dungeon/boss/glasswind 3개 Room의 fixed-frame PNG를 직접 판독하고 가장 큰 시각 결함을 수리한다.
-- 검증: 36개 item ID uniqueness·치수, 8개 조건부 item patch 활성화, academy→training Portal lookup/transition/snapshot, `npm run check`, `git diff --check` 통과. 초기 smoke 명령은 존재하지 않는 `updatePortalTransition` API를 호출해 실패했고 실제 `advanceTransition` caller로 고쳐 재실행했다. visible PNG는 checkpoint 뒤 실행 예정이다.
+- 현재 최선: clean final `31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44`이 36개 stable Portal render item을 학원 석문·숲 뿌리 arch·봉인 석문·유리바람 결정 틈·관측소 hatch·폭풍 제단으로 교체했다. 개구부 `21~26 × 43~45`, 문틀 `44~49 × 52~54`는 플레이어와 같은 높이이고 환경 재료 외곽선과 얇은 내부 경로색을 분리한다.
+- 다음 병목: 없음. 같은 integration transition에서 이 exact `done` block만 정리하고 STATUS에 실제 merge hash를 기록한다.
+- 검증: 36개 item ID uniqueness·치수, 8개 조건부 item patch 활성화, academy→training Portal lookup/transition/snapshot, `npm run check`, `git diff --check` 통과. 첫 PNG pass에서 문틀이 플레이어보다 크고 accent가 공통 ring처럼 보인 결함을 직접 판독해 `1857977405f8b3f86046fd55c938a16a7252d4f9`로 수리했다. Visible Chrome frame 180의 `academy`, `training`, `field`, `dungeon`, `boss`, `glasswind-field`, `glasswind-dungeon`, `glasswind-boss` PNG를 직접 읽어 사람 크기, 환경별 silhouette, 좌우 clipping 없음과 같은 RenderFrame 상태를 확인했다. Latest-main merge 뒤 `artifacts/visual-qa/IN-20260831-030641/latest-<screen>-180/`로 여덟 화면을 재촬영했고 이전 합격 PNG와 SHA-256이 각각 동일하며 capture `1440×810`, console error 0개다. 기능 완결성·조작 명료성·Graphics·설계/Method 정합·회귀 안전성은 모두 2 이상이다. 초기 smoke 명령의 잘못된 API 이름은 실제 `advanceTransition` caller로 고쳐 재실행했다.
 - 실제 blocker: 없음
 
 ### 결과 — coordinator 소유
 
-진행 전
+대형 공통 타원 ring을 제거하고 모든 Portal을 현재 Room의 재료와 형태를 따르는 사람 크기 출입구로 교체했다. Pure `PortalRenderItems` owner가 환경 style과 stable ID를 만들며 gameplay anchor·radius·spawn·transition, collider와 balance는 바꾸지 않았다. Final은 `31fad4b7a0a37cef0d2f1028ab866e84fb4fcc44`이다.
 
 ## IN-20260831-030839
 

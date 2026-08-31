@@ -1,3 +1,5 @@
+import { createPortalRenderItems } from './PortalRenderItems.js';
+
 function rectangle(x, y, width, height) {
   return [
     { x, y },
@@ -26,26 +28,6 @@ function renderItem(id, points, fill, options = {}) {
     renderOrder: options.renderOrder ?? 30,
     enabled: options.enabled ?? true,
   };
-}
-
-function portalItems(id, x, groundY, color, { enabled = true } = {}) {
-  const centerY = groundY - 52;
-  return [
-    renderItem(`${id}-outer`, regularPolygon(x, centerY, 39, 51, 14), '#162132', {
-      stroke: color,
-      lineWidth: 3,
-      opacity: 0.94,
-      order: 40,
-      enabled,
-    }),
-    renderItem(`${id}-inner`, regularPolygon(x, centerY + 2, 27, 40, 14), '#070b17', {
-      stroke: '#e7fff9',
-      lineWidth: 1.5,
-      opacity: 0.96,
-      order: 41,
-      enabled,
-    }),
-  ];
 }
 
 function forestRoomItems(prefix, { groundY = 430, bypass = false } = {}) {
@@ -105,7 +87,7 @@ const dungeonGroundY = 424;
 const bossGroundY = 426;
 
 export const ACADEMY_FIELD_PORTAL_ITEMS = Object.freeze(
-  portalItems('academy-field-gate', 910, 432, '#e7b86a'),
+  createPortalRenderItems('academy-field-gate', 910, 432, '#e7b86a', { style: 'academy' }),
 );
 
 export const FIRST_JOURNEY_ROOMS = Object.freeze([
@@ -130,9 +112,15 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
     ],
     renderItems: [
       ...forestRoomItems('field-crossing'),
-      ...portalItems('field-village-gate', 80, fieldGroundY, '#86d9d1'),
-      ...portalItems('field-canopy-gate', 355, fieldGroundY, '#91d08a'),
-      ...portalItems('field-dungeon-gate', 930, fieldGroundY, '#d59b68'),
+      ...createPortalRenderItems('field-village-gate', 80, fieldGroundY, '#86d9d1', {
+        style: 'forest',
+      }),
+      ...createPortalRenderItems('field-canopy-gate', 355, fieldGroundY, '#91d08a', {
+        style: 'forest',
+      }),
+      ...createPortalRenderItems('field-dungeon-gate', 930, fieldGroundY, '#d59b68', {
+        style: 'sealed',
+      }),
       renderItem(
         'field-guardian-bloom',
         regularPolygon(680, fieldGroundY - 4, 58, 13, 12),
@@ -185,8 +173,12 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         '#674837',
         { stroke: '#30251f', lineWidth: 8, order: 8 },
       ),
-      ...portalItems('canopy-return-gate', 80, fieldGroundY, '#91d08a'),
-      ...portalItems('canopy-dungeon-gate', 930, fieldGroundY, '#d59b68'),
+      ...createPortalRenderItems('canopy-return-gate', 80, fieldGroundY, '#91d08a', {
+        style: 'forest',
+      }),
+      ...createPortalRenderItems('canopy-dungeon-gate', 930, fieldGroundY, '#d59b68', {
+        style: 'sealed',
+      }),
     ],
     entities: [],
     triggers: [],
@@ -236,9 +228,16 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         lineWidth: 2,
         order: 0,
       }),
-      ...portalItems('dungeon-field-gate', 80, dungeonGroundY, '#d59b68'),
-      ...portalItems('dungeon-canopy-gate', 175, dungeonGroundY, '#91d08a'),
-      ...portalItems('dungeon-boss-gate', 930, dungeonGroundY, '#e26055', { enabled: false }),
+      ...createPortalRenderItems('dungeon-field-gate', 80, dungeonGroundY, '#d59b68', {
+        style: 'sealed',
+      }),
+      ...createPortalRenderItems('dungeon-canopy-gate', 175, dungeonGroundY, '#91d08a', {
+        style: 'sealed',
+      }),
+      ...createPortalRenderItems('dungeon-boss-gate', 930, dungeonGroundY, '#e26055', {
+        style: 'sealed',
+        enabled: false,
+      }),
       renderItem(
         'checkpoint-dormant',
         regularPolygon(625, dungeonGroundY - 50, 24, 46, 8, Math.PI / 8),
@@ -307,8 +306,13 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         '#a85d75',
         { opacity: 0.34, order: 2 },
       ),
-      ...portalItems('boss-dungeon-gate', 80, bossGroundY, '#e26055'),
-      ...portalItems('boss-shortcut-gate', 930, bossGroundY, '#f1c86c', { enabled: false }),
+      ...createPortalRenderItems('boss-dungeon-gate', 80, bossGroundY, '#e26055', {
+        style: 'storm',
+      }),
+      ...createPortalRenderItems('boss-shortcut-gate', 930, bossGroundY, '#f1c86c', {
+        style: 'storm',
+        enabled: false,
+      }),
       renderItem(
         'boss-reward-crystal',
         regularPolygon(800, bossGroundY - 56, 30, 54, 8, Math.PI / 8),
