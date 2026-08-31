@@ -84,7 +84,33 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   }),
   training: Object.freeze({ regionId: 'academy-region', roomId: 'training-room', x: 360 }),
   field: Object.freeze({ regionId: 'academy-region', roomId: 'field-crossing', x: 420 }),
+  'field-dialogue': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'field-crossing',
+    x: 540,
+    firstJourneySnapshot: Object.freeze({ phase: 'field' }),
+    dialogueScenarioId: 'field-departure-clue-interaction',
+    expectation: Object.freeze({
+      expectedDialogueTarget: 'field-departure-clue-interaction',
+      expectedDialogueSpeaker: '세라 교관의 정찰 표식',
+    }),
+  }),
   dungeon: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-dungeon', x: 420 }),
+  'dungeon-dialogue': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-forest-dungeon',
+    x: 342,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'dungeon',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+    }),
+    dialogueScenarioId: 'dungeon-gate-record-interaction',
+    expectation: Object.freeze({
+      expectedDialogueTarget: 'dungeon-gate-record-interaction',
+      expectedDialogueSpeaker: '봉인 회랑 경계 기록',
+    }),
+  }),
   'dungeon-threshold': Object.freeze({
     regionId: 'academy-region',
     roomId: 'sealed-forest-dungeon',

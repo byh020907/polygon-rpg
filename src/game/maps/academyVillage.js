@@ -649,6 +649,22 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
       ],
     },
     ...FIRST_JOURNEY_PATCHES,
+    {
+      id: 'first-journey-returned-with-reward',
+      priority: 60,
+      when: { flag: 'returnedWithReward' },
+      operations: [
+        {
+          op: 'set',
+          target: 'mentor-sera-interaction',
+          property: 'lines',
+          value: [
+            '돌아왔군. 봉인 핵의 증표가 네 첫 원정을 끝까지 증명하고 있어.',
+            'Guard와 Roll만으로 길을 고르고 checkpoint를 세운 판단까지, 모두 네 전투의 일부다.',
+          ],
+        },
+      ],
+    },
     ...GLASSWIND_PATCHES,
   ],
 });

@@ -114,6 +114,7 @@ function freezeSnapshot(state) {
       checkpointActivated,
       bossDefeated: canonical.bossDefeated,
       bossRewardClaimed: canonical.bossRewardClaimed,
+      returnedWithReward: canonical.returnedWithReward,
     }),
   });
 }

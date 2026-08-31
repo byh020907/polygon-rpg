@@ -136,6 +136,17 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         position: { x: 680, y: fieldGroundY },
         maxHealth: 95,
       },
+      {
+        id: 'field-departure-clue-interaction',
+        kind: 'story-interaction',
+        position: { x: 540, y: fieldGroundY - 82 },
+        interactionRange: 62,
+        speaker: '세라 교관의 정찰 표식',
+        lines: [
+          '노을풀밭의 수호 개체를 지나 봉인 회랑으로 향하라.',
+          '맞서는 길과 수관 우회로 중 어느 쪽을 고르든, 네 선택이 첫 원정의 기록이 된다.',
+        ],
+      },
     ],
     triggers: [],
     portals: ['academy-field-portal', 'field-bypass-portal', 'field-dungeon-portal'],
@@ -392,6 +403,29 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         position: { x: 500, y: dungeonGroundY },
         maxHealth: 95,
       },
+      {
+        id: 'dungeon-gate-record-interaction',
+        kind: 'story-interaction',
+        position: { x: 342, y: dungeonGroundY - 82 },
+        interactionRange: 64,
+        speaker: '봉인 회랑 경계 기록',
+        lines: [
+          '전방의 회랑 수호자가 checkpoint로 향하는 봉인을 붙들고 있다.',
+          '수호자를 쓰러뜨린 뒤 청록빛 기록석을 깨워야 봉인 핵으로 가는 문이 열린다.',
+        ],
+      },
+      {
+        id: 'dungeon-checkpoint-record-interaction',
+        kind: 'story-interaction',
+        position: { x: 760, y: dungeonGroundY - 82 },
+        interactionRange: 66,
+        speaker: '봉인 회랑 기록석',
+        lines: [
+          '회랑 수호자가 무너져 기록석의 봉인이 풀렸다.',
+          'checkpoint를 활성화해 이 원정의 귀환 지점을 새기면 봉인 핵의 문이 열린다.',
+        ],
+        enabled: false,
+      },
     ],
     triggers: [
       {
@@ -468,6 +502,18 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         encounterProfileId: 'boss',
         position: { x: 650, y: bossGroundY },
         maxHealth: 90,
+      },
+      {
+        id: 'boss-result-echo-interaction',
+        kind: 'story-interaction',
+        position: { x: 480, y: bossGroundY - 82 },
+        interactionRange: 68,
+        speaker: '봉인 핵의 잔향',
+        lines: [
+          '봉인 수문장이 쓰러지자 실습림을 짓누르던 마력의 흐름이 멎었다.',
+          '황금빛 보상 결정을 회수하면 학원촌으로 이어지는 귀환문이 깨어난다.',
+        ],
+        enabled: false,
       },
     ],
     triggers: [
@@ -611,6 +657,15 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
     operations: [
       { op: 'set-enabled', target: 'field-guardian', value: false },
       { op: 'set-enabled', target: 'field-guardian-bloom', value: true },
+      {
+        op: 'set',
+        target: 'field-departure-clue-interaction',
+        property: 'lines',
+        value: [
+          '노을풀밭의 수호 개체가 물러나고 봉인 회랑으로 향하는 길이 선명해졌다.',
+          '정면 돌파의 흔적은 남았다. 이제 회랑의 기록석을 찾아 첫 원정을 이어 가라.',
+        ],
+      },
     ],
   },
   {
@@ -623,6 +678,8 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-seal-core', value: false },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-open', value: true },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-rubble', value: true },
+      { op: 'set-enabled', target: 'dungeon-gate-record-interaction', value: false },
+      { op: 'set-enabled', target: 'dungeon-checkpoint-record-interaction', value: true },
       { op: 'set-enabled', target: 'sealed-forest-checkpoint', value: true },
       { op: 'set-enabled', target: 'dungeon-boss-portal', value: false },
       { op: 'set-enabled', target: 'dungeon-boss-gate-outer', value: false },
@@ -639,6 +696,15 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'checkpoint-dormant', value: false },
       { op: 'set-enabled', target: 'checkpoint-active', value: true },
       { op: 'set-enabled', target: 'checkpoint-active-aura', value: true },
+      {
+        op: 'set',
+        target: 'dungeon-checkpoint-record-interaction',
+        property: 'lines',
+        value: [
+          '첫 원정의 checkpoint가 청록빛으로 고정되었다.',
+          '봉인 핵으로 향하는 문이 열렸다. 안쪽의 수문장을 쓰러뜨리고 원정의 결과를 가져가라.',
+        ],
+      },
       { op: 'set-enabled', target: 'dungeon-boss-portal', value: true },
       { op: 'set-enabled', target: 'dungeon-boss-gate-outer', value: true },
       { op: 'set-enabled', target: 'dungeon-boss-gate-inner', value: true },
@@ -653,6 +719,7 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'boss-reward-trigger', value: true },
       { op: 'set-enabled', target: 'boss-reward-crystal', value: true },
       { op: 'set-enabled', target: 'boss-reward-aura', value: true },
+      { op: 'set-enabled', target: 'boss-result-echo-interaction', value: true },
     ],
   },
   {
@@ -663,6 +730,15 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'boss-reward-trigger', value: false },
       { op: 'set-enabled', target: 'boss-reward-crystal', value: false },
       { op: 'set-enabled', target: 'boss-reward-aura', value: false },
+      {
+        op: 'set',
+        target: 'boss-result-echo-interaction',
+        property: 'lines',
+        value: [
+          '보상 결정에 봉인 핵의 기록이 온전히 옮겨졌다.',
+          '첫 원정의 증표를 지니고 황금빛 귀환문을 지나 세라 교관에게 돌아가라.',
+        ],
+      },
       { op: 'set-enabled', target: 'boss-shortcut-portal', value: true },
       { op: 'set-enabled', target: 'boss-shortcut-gate-outer', value: true },
       { op: 'set-enabled', target: 'boss-shortcut-gate-inner', value: true },

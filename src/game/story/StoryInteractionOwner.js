@@ -69,7 +69,7 @@ export class StoryInteractionOwner {
       const interaction = findInteraction(entities, this.activeInteractionId);
       if (!interaction) {
         this.reset();
-        return Object.freeze({ consumed: false, transition: 'missing-target' });
+        return Object.freeze({ consumed: true, transition: 'missing-target' });
       }
       if (this.lineIndex < interaction.lines.length - 1) {
         this.lineIndex += 1;

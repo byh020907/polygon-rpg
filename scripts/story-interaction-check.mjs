@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 
 import { GameScene } from '../src/game/GameScene.js';
+import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
+import {
+  FIRST_JOURNEY_CHECKPOINT_ID,
+  JOURNEY_PHASE,
+  JOURNEY_ROUTE,
+} from '../src/game/encounter/FirstJourneyProgress.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 
@@ -28,6 +35,23 @@ function createAcademyScene(x) {
   return scene;
 }
 
+function createJourneyProgression(firstJourney) {
+  const base = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+  return Object.freeze({
+    ...base,
+    firstJourney: Object.freeze({ ...base.firstJourney, ...firstJourney }),
+  });
+}
+
+function createJourneyScene({ roomId, x, firstJourney }) {
+  const scene = new GameScene({
+    mapDefinition: ACADEMY_VILLAGE_MAP,
+    progressionSnapshot: createJourneyProgression(firstJourney),
+  });
+  scene.setVisualQaLocation({ regionId: 'academy-region', roomId, x });
+  return scene;
+}
+
 function jump(scene, sequence) {
   const before = Object.freeze({
     y: scene.position.y,
@@ -46,6 +70,104 @@ function assertJumpSuppressed(scene, before, label) {
     `${label}: Player vertical velocity는 변하지 않아야 한다.`,
   );
   assert.equal(scene.isGrounded, before.isGrounded, `${label}: grounded 상태를 유지해야 한다.`);
+  assert.equal(
+    scene.mapRuntime.getTransition(),
+    null,
+    `${label}: Portal transition이 새면 안 된다.`,
+  );
+}
+
+function resolvedEntityIds(scene) {
+  return scene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+}
+
+function assertEntityAvailability(scene, expectedPresentIds, expectedAbsentIds, label) {
+  const entityIds = resolvedEntityIds(scene);
+  for (const entityId of expectedPresentIds) {
+    assert.ok(entityIds.includes(entityId), `${label}: ${entityId} target이 활성 상태여야 한다.`);
+  }
+  for (const entityId of expectedAbsentIds) {
+    assert.ok(!entityIds.includes(entityId), `${label}: ${entityId} target은 잠겨 있어야 한다.`);
+  }
+}
+
+function assertPortalAvailability(scene, portalId, expected, label) {
+  const portalIds = scene.mapRuntime.getResolvedSnapshot().portals.map((portal) => portal.id);
+  assert.equal(portalIds.includes(portalId), expected, `${label}: ${portalId} availability 불일치`);
+}
+
+function assertStoryStatus(scene, { beatId, journeyLabel }, label) {
+  const status = scene.getWorldStatus();
+  assert.ok(Object.isFrozen(status), `${label}: world status DTO는 immutable이어야 한다.`);
+  assert.ok(Object.isFrozen(status.story), `${label}: story DTO는 immutable이어야 한다.`);
+  assert.equal(status.story.beatId, beatId, `${label}: story beat 불일치`);
+  assert.equal(
+    status.objective,
+    status.story.nextObjective,
+    `${label}: HUD objective와 story objective가 일치해야 한다.`,
+  );
+  assert.equal(status.journeyLabel, journeyLabel, `${label}: journey label 불일치`);
+}
+
+function verifyNamedDialogue(scene, { interactionId, speaker, label }) {
+  const progressionBefore = scene.getProgressionSnapshot();
+  const available = scene.getWorldStatus().dialogue;
+  assert.ok(Object.isFrozen(available), `${label}: available dialogue DTO는 immutable이어야 한다.`);
+  assert.equal(available.available, true, `${label}: interaction이 Player 범위에 있어야 한다.`);
+  assert.equal(available.active, false);
+  assert.equal(available.interactionId, interactionId, `${label}: target ID 불일치`);
+  assert.equal(available.speaker, speaker, `${label}: speaker 불일치`);
+  assert.ok(available.speaker.trim().length > 0, `${label}: speaker 이름은 비어 있으면 안 된다.`);
+
+  let sequence = 1;
+  const started = jump(scene, sequence);
+  assertJumpSuppressed(scene, started.before, `${label} 시작`);
+  assert.equal(started.after.active, true);
+  assert.equal(started.after.interactionId, interactionId);
+  assert.equal(started.after.speaker, speaker);
+  assert.ok(
+    Object.isFrozen(started.after),
+    `${label}: active dialogue DTO는 immutable이어야 한다.`,
+  );
+  assert.ok(started.after.line.trim().length > 0, `${label}: 첫 대사는 비어 있으면 안 된다.`);
+  assert.ok(started.after.lineCount > 0, `${label}: 대사는 한 줄 이상이어야 한다.`);
+  const lines = [started.after.line];
+
+  scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: sequence }));
+  assert.equal(
+    scene.getWorldStatus().dialogue.line,
+    started.after.line,
+    `${label}: 같은 jump sequence가 대사를 두 번 소비하면 안 된다.`,
+  );
+  assertJumpSuppressed(scene, started.before, `${label} 같은 sequence`);
+
+  let dialogue = started.after;
+  while (dialogue.canAdvance) {
+    sequence += 1;
+    const advanced = jump(scene, sequence);
+    assertJumpSuppressed(scene, advanced.before, `${label} ${sequence}번째 줄`);
+    dialogue = advanced.after;
+    assert.equal(dialogue.active, true);
+    assert.equal(dialogue.interactionId, interactionId);
+    assert.equal(dialogue.speaker, speaker);
+    assert.ok(dialogue.line.trim().length > 0, `${label}: 모든 대사는 비어 있으면 안 된다.`);
+    assert.ok(Object.isFrozen(dialogue), `${label}: 진행된 dialogue DTO는 immutable이어야 한다.`);
+    lines.push(dialogue.line);
+  }
+  assert.equal(lines.length, dialogue.lineCount, `${label}: 모든 named line을 진행해야 한다.`);
+
+  sequence += 1;
+  const closed = jump(scene, sequence);
+  assertJumpSuppressed(scene, closed.before, `${label} 종료`);
+  assert.equal(closed.after.active, false);
+  assert.equal(closed.after.available, true);
+  assert.equal(closed.after.interactionId, interactionId);
+  assert.deepEqual(
+    scene.getProgressionSnapshot(),
+    progressionBefore,
+    `${label}: 대화만으로 progression이 바뀌면 안 된다.`,
+  );
+  return Object.freeze(lines);
 }
 
 function verifyInteractionRangeAndTargets() {
@@ -157,9 +279,244 @@ function verifyKeyboardTouchParity() {
   );
 }
 
+function verifyFirstJourneyStoryChain() {
+  const field = createJourneyScene({
+    roomId: 'field-crossing',
+    x: 540,
+    firstJourney: { phase: JOURNEY_PHASE.FIELD },
+  });
+  assertStoryStatus(
+    field,
+    { beatId: 'first-field-choice', journeyLabel: 'Field 탐험' },
+    'Field 출발 단서',
+  );
+  verifyNamedDialogue(field, {
+    interactionId: 'field-departure-clue-interaction',
+    speaker: '세라 교관의 정찰 표식',
+    label: 'Field 출발 단서',
+  });
+
+  const fieldCleared = createJourneyScene({
+    roomId: 'field-crossing',
+    x: 540,
+    firstJourney: {
+      phase: JOURNEY_PHASE.FIELD,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+    },
+  });
+  assertStoryStatus(
+    fieldCleared,
+    { beatId: 'first-field-cleared', journeyLabel: 'Field 탐험' },
+    'Field 결과 단서',
+  );
+  const fieldClearedLines = verifyNamedDialogue(fieldCleared, {
+    interactionId: 'field-departure-clue-interaction',
+    speaker: '세라 교관의 정찰 표식',
+    label: 'Field 결과 단서',
+  });
+  assert.match(fieldClearedLines.join(' '), /물러나|흔적/);
+
+  const dungeonGate = createJourneyScene({
+    roomId: 'sealed-forest-dungeon',
+    x: 342,
+    firstJourney: {
+      phase: JOURNEY_PHASE.DUNGEON,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+    },
+  });
+  assertEntityAvailability(
+    dungeonGate,
+    ['dungeon-gate-record-interaction'],
+    ['dungeon-checkpoint-record-interaction'],
+    'Dungeon guardian 관문',
+  );
+  assertStoryStatus(
+    dungeonGate,
+    { beatId: 'first-dungeon-guardian', journeyLabel: 'Dungeon 진입' },
+    'Dungeon guardian 관문',
+  );
+  verifyNamedDialogue(dungeonGate, {
+    interactionId: 'dungeon-gate-record-interaction',
+    speaker: '봉인 회랑 경계 기록',
+    label: 'Dungeon guardian 관문',
+  });
+  assertPortalAvailability(dungeonGate, 'dungeon-boss-portal', false, 'Dungeon guardian 관문');
+
+  const dungeonSeal = createJourneyScene({
+    roomId: 'sealed-forest-dungeon',
+    x: 760,
+    firstJourney: {
+      phase: JOURNEY_PHASE.DUNGEON,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+    },
+  });
+  assertEntityAvailability(
+    dungeonSeal,
+    ['dungeon-checkpoint-record-interaction'],
+    ['dungeon-gate-record-interaction'],
+    'Dungeon checkpoint 해금',
+  );
+  assertStoryStatus(
+    dungeonSeal,
+    { beatId: 'first-dungeon-seal', journeyLabel: 'Dungeon 진입' },
+    'Dungeon checkpoint 해금',
+  );
+  verifyNamedDialogue(dungeonSeal, {
+    interactionId: 'dungeon-checkpoint-record-interaction',
+    speaker: '봉인 회랑 기록석',
+    label: 'Dungeon checkpoint 해금',
+  });
+  assertPortalAvailability(dungeonSeal, 'dungeon-boss-portal', false, 'Dungeon checkpoint 해금');
+
+  const checkpoint = createJourneyScene({
+    roomId: 'sealed-forest-dungeon',
+    x: 760,
+    firstJourney: {
+      phase: JOURNEY_PHASE.CHECKPOINT,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+    },
+  });
+  assertStoryStatus(
+    checkpoint,
+    { beatId: 'first-dungeon-checkpoint', journeyLabel: 'Checkpoint 확보' },
+    'Dungeon checkpoint 활성',
+  );
+  const checkpointLines = verifyNamedDialogue(checkpoint, {
+    interactionId: 'dungeon-checkpoint-record-interaction',
+    speaker: '봉인 회랑 기록석',
+    label: 'Dungeon checkpoint 활성',
+  });
+  assert.match(checkpointLines.join(' '), /checkpoint|문이 열렸다/i);
+  assertPortalAvailability(checkpoint, 'dungeon-boss-portal', true, 'Dungeon checkpoint 활성');
+
+  const bossResult = createJourneyScene({
+    roomId: 'sealed-forest-boss',
+    x: 480,
+    firstJourney: {
+      phase: JOURNEY_PHASE.REWARD,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+    },
+  });
+  assertStoryStatus(bossResult, { beatId: 'first-reward', journeyLabel: '보상 회수' }, 'Boss 결과');
+  assertEntityAvailability(
+    bossResult,
+    ['boss-result-echo-interaction'],
+    ['sealed-forest-warden'],
+    'Boss 결과',
+  );
+  verifyNamedDialogue(bossResult, {
+    interactionId: 'boss-result-echo-interaction',
+    speaker: '봉인 핵의 잔향',
+    label: 'Boss 결과',
+  });
+  assertPortalAvailability(bossResult, 'boss-shortcut-portal', false, 'Boss 결과');
+
+  const reward = createJourneyScene({
+    roomId: 'sealed-forest-boss',
+    x: 480,
+    firstJourney: {
+      phase: JOURNEY_PHASE.REWARD,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      gold: 120,
+    },
+  });
+  assertStoryStatus(
+    reward,
+    { beatId: 'first-shortcut', journeyLabel: '보상 회수' },
+    'Boss 보상과 shortcut',
+  );
+  const rewardLines = verifyNamedDialogue(reward, {
+    interactionId: 'boss-result-echo-interaction',
+    speaker: '봉인 핵의 잔향',
+    label: 'Boss 보상과 shortcut',
+  });
+  assert.match(rewardLines.join(' '), /보상 결정|귀환문/);
+  assertPortalAvailability(reward, 'boss-shortcut-portal', true, 'Boss 보상과 shortcut');
+
+  const returned = createJourneyScene({
+    roomId: 'academy-plaza',
+    x: 420,
+    firstJourney: {
+      phase: JOURNEY_PHASE.RETURNED,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    },
+  });
+  assertStoryStatus(
+    returned,
+    { beatId: 'glasswind-briefing', journeyLabel: '첫 원정 완료' },
+    '학원촌 귀환 반응',
+  );
+  const returnLines = verifyNamedDialogue(returned, {
+    interactionId: 'mentor-sera-interaction',
+    speaker: '세라 교관',
+    label: '학원촌 귀환 반응',
+  });
+  assert.match(returnLines.join(' '), /돌아왔군|첫 원정/);
+}
+
+function verifyStaleDialogueConsumesOneJump() {
+  const scene = createJourneyScene({
+    roomId: 'sealed-forest-dungeon',
+    x: 342,
+    firstJourney: {
+      phase: JOURNEY_PHASE.DUNGEON,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+    },
+  });
+  const started = jump(scene, 1);
+  assert.equal(started.after.interactionId, 'dungeon-gate-record-interaction');
+
+  const result = scene.journeyProgress.resolveEncounter('field', 'sealed-dungeon-guardian');
+  assert.equal(result.changed, true);
+  scene.syncJourneyWorldContext();
+  scene.emitDurableProgressionChanged();
+  assertEntityAvailability(
+    scene,
+    ['dungeon-checkpoint-record-interaction'],
+    ['dungeon-gate-record-interaction'],
+    'stale dialogue target 교체',
+  );
+
+  const missingTarget = jump(scene, 2);
+  assertJumpSuppressed(scene, missingTarget.before, 'stale dialogue 종료');
+  assert.equal(missingTarget.after.active, false);
+  assert.equal(missingTarget.after.available, false);
+
+  const beforeNextJumpY = scene.position.y;
+  scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 3 }));
+  assert.equal(scene.isGrounded, false, 'stale target 종료 다음 새 sequence는 정상 jump여야 한다.');
+  assert.ok(scene.position.y < beforeNextJumpY);
+}
+
 verifyInteractionRangeAndTargets();
 verifyDialogueProgressionAndSequenceConsumption();
 verifyKeyboardTouchParity();
+verifyFirstJourneyStoryChain();
+verifyStaleDialogueConsumesOneJump();
 
 console.log(
   JSON.stringify(
@@ -174,6 +531,11 @@ console.log(
         'jump-suppression',
         'keyboard-touch-parity',
         'immutable-dialogue-dto',
+        'first-journey-stage-dialogue-matrix',
+        'locked-and-obsolete-targets',
+        'story-objective-journey-label-alignment',
+        'stale-target-single-jump-consumption',
+        'journey-portal-availability-regression',
       ],
     },
     null,

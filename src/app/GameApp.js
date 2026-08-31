@@ -292,6 +292,18 @@ export class GameApp extends SceneNode {
     }
     this.start({ manual: true });
     this.scene.reset();
+    if (scenario.firstJourneySnapshot) {
+      const progression = this.scene.getProgressionSnapshot();
+      this.scene.restoreProgression(
+        Object.freeze({
+          ...progression,
+          firstJourney: Object.freeze({
+            ...progression.firstJourney,
+            ...scenario.firstJourneySnapshot,
+          }),
+        }),
+      );
+    }
     this.scene.setVisualQaLocation(scenario);
     this.resize();
 
