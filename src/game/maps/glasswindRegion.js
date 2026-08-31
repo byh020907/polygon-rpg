@@ -1,4 +1,7 @@
-import { createPortalRenderItems } from './PortalRenderItems.js';
+import {
+  createEnvironmentPortalLandmarkItems,
+  createPortalRenderItems,
+} from './PortalRenderItems.js';
 
 function rectangle(x, y, width, height) {
   return [
@@ -48,11 +51,15 @@ const fieldGroundY = 428;
 const dungeonGroundY = 424;
 const bossGroundY = 426;
 
-export const ACADEMY_GLASSWIND_PORTAL_ITEMS = Object.freeze(
-  createPortalRenderItems('academy-glasswind-gate', 710, 432, '#78e2ec', {
-    style: 'academy',
+export const ACADEMY_GLASSWIND_PORTAL_ITEMS = Object.freeze([
+  ...createEnvironmentPortalLandmarkItems('academy-glasswind-gate', 710, 432, {
+    style: 'crystal-stair',
   }),
-);
+  ...createPortalRenderItems('academy-glasswind-gate', 710, 432, '#78e2ec', {
+    style: 'academy',
+    order: 36,
+  }),
+]);
 
 const fieldRoom = {
   id: 'glasswind-approach',

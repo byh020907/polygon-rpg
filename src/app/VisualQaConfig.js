@@ -72,6 +72,81 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 
 const VISUAL_QA_SCENARIOS = Object.freeze({
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
+  'academy-space-day': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 820,
+    timePhase: 'day',
+    expectation: Object.freeze({
+      expectedTimePhase: 'day',
+      expectedItems: Object.freeze([
+        'academy-training-gate-landmark-opening',
+        'academy-glasswind-gate-landmark-opening',
+        'academy-field-gate-landmark-opening',
+        'plaza-foreground-planter-left',
+      ]),
+      expectedAbsentItems: Object.freeze(['moon', 'lamp-glow']),
+      expectedPortalIds: Object.freeze([
+        'academy-field-portal',
+        'academy-glasswind-portal',
+        'academy-training-portal',
+      ]),
+    }),
+  }),
+  'academy-space-night': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 120,
+    timePhase: 'night',
+    expectation: Object.freeze({
+      expectedTimePhase: 'night',
+      expectedPatchIds: Object.freeze(['night-presentation', 'first-field-night-presentation']),
+      expectedItems: Object.freeze(['academy-training-gate-landmark-opening', 'moon', 'lamp-glow']),
+      expectedAbsentItems: Object.freeze(['sun']),
+      expectedPortalIds: Object.freeze([
+        'academy-field-portal',
+        'academy-glasswind-portal',
+        'academy-training-portal',
+      ]),
+    }),
+  }),
+  'academy-space-story': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 820,
+    timePhase: 'day',
+    firstJourneySnapshot: Object.freeze({
+      phase: 'returned',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    }),
+    expectation: Object.freeze({
+      expectedTimePhase: 'day',
+      expectedPatchIds: Object.freeze([
+        'field-guardian-cleared',
+        'sealed-dungeon-guardian-cleared',
+        'sealed-checkpoint-active',
+        'sealed-boss-defeated',
+        'boss-reward-claimed',
+        'first-journey-returned-with-reward',
+      ]),
+      expectedItems: Object.freeze([
+        'academy-glasswind-gate-landmark-opening',
+        'academy-field-gate-landmark-opening',
+      ]),
+      expectedPortalIds: Object.freeze([
+        'academy-field-portal',
+        'academy-glasswind-portal',
+        'academy-training-portal',
+      ]),
+    }),
+  }),
   'academy-growth': Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-plaza',
@@ -101,6 +176,73 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   }),
   training: Object.freeze({ regionId: 'academy-region', roomId: 'training-room', x: 360 }),
   field: Object.freeze({ regionId: 'academy-region', roomId: 'field-crossing', x: 420 }),
+  'field-space-day': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'field-crossing',
+    x: 700,
+    timePhase: 'day',
+    firstJourneySnapshot: Object.freeze({ phase: 'field' }),
+    expectation: Object.freeze({
+      expectedTimePhase: 'day',
+      expectedItems: Object.freeze([
+        'field-village-gate-landmark-opening',
+        'field-canopy-gate-landmark-opening',
+        'field-dungeon-gate-landmark-opening',
+        'field-dungeon-locked-seal',
+        'field-crossing-day-canopy-light',
+      ]),
+      expectedAbsentItems: Object.freeze(['field-crossing-night-veil', 'field-dungeon-gate-inner']),
+      expectedPortalIds: Object.freeze(['academy-field-portal', 'field-bypass-portal']),
+    }),
+  }),
+  'field-space-night': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'field-crossing',
+    x: 420,
+    timePhase: 'night',
+    firstJourneySnapshot: Object.freeze({ phase: 'field' }),
+    expectation: Object.freeze({
+      expectedTimePhase: 'night',
+      expectedPatchIds: Object.freeze(['night-presentation', 'first-field-night-presentation']),
+      expectedItems: Object.freeze([
+        'field-canopy-gate-landmark-opening',
+        'field-crossing-night-veil',
+        'field-crossing-night-waylight',
+        'field-dungeon-locked-seal',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'field-crossing-day-canopy-light',
+        'field-dungeon-gate-inner',
+      ]),
+      expectedPortalIds: Object.freeze(['academy-field-portal', 'field-bypass-portal']),
+    }),
+  }),
+  'field-space-cleared': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'field-crossing',
+    x: 980,
+    timePhase: 'day',
+    firstJourneySnapshot: Object.freeze({
+      phase: 'field',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+    }),
+    expectation: Object.freeze({
+      expectedTimePhase: 'day',
+      expectedPatchIds: Object.freeze(['field-guardian-cleared']),
+      expectedItems: Object.freeze([
+        'field-guardian-bloom',
+        'field-dungeon-gate-landmark-opening',
+        'field-dungeon-gate-inner',
+      ]),
+      expectedAbsentItems: Object.freeze(['field-dungeon-locked-seal']),
+      expectedPortalIds: Object.freeze([
+        'academy-field-portal',
+        'field-bypass-portal',
+        'field-dungeon-portal',
+      ]),
+    }),
+  }),
   'field-dialogue': Object.freeze({
     regionId: 'academy-region',
     roomId: 'field-crossing',

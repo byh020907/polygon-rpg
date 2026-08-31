@@ -1460,6 +1460,16 @@ export class GameScene extends SceneNode {
     return status;
   }
 
+  setVisualQaTimePhase(timePhase) {
+    if (timePhase !== 'day' && timePhase !== 'night') {
+      throw new Error(`지원하지 않는 Visual QA time phase입니다: ${timePhase}`);
+    }
+    this.worldTimeHours = timePhase === 'night' ? 21 : 10;
+    this.updateTimePhase();
+    this.statusNode.publish({ force: true });
+    return this.getWorldStatus();
+  }
+
   updateTimePhase() {
     const nextPhase = timePhaseForHour(this.worldTimeHours);
     if (nextPhase === this.timePhase) return;
@@ -2769,6 +2779,7 @@ export class GameScene extends SceneNode {
         activeRoomId: mapSnapshot.active.roomId,
         timePhase: this.timePhase,
         appliedPatchIds: mapSnapshot.appliedPatchIds,
+        portalIds: Object.freeze(mapSnapshot.portals.map((portal) => portal.id).sort()),
       }),
       equipment: this.equipmentProfile,
       combatMotion: Object.freeze({

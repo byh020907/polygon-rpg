@@ -1,5 +1,8 @@
 import { defineMap } from '../map/MapDefinition.js';
-import { createPortalRenderItems } from './PortalRenderItems.js';
+import {
+  createEnvironmentPortalLandmarkItems,
+  createPortalRenderItems,
+} from './PortalRenderItems.js';
 import {
   ACADEMY_FIELD_PORTAL_ITEMS,
   FIRST_JOURNEY_PATCHES,
@@ -56,6 +59,7 @@ function renderItem(id, points, fill, options = {}) {
     lineWidth: options.lineWidth ?? 1,
     opacity: options.opacity ?? 1,
     order: options.order ?? 0,
+    ...(options.renderOrder !== undefined ? { renderOrder: options.renderOrder } : {}),
     enabled: options.enabled ?? true,
     ...(options.label ? { label: options.label } : {}),
     ...(options.role ? { role: options.role } : {}),
@@ -421,9 +425,13 @@ const frontLayerItems = [
     order: 17,
     presentationOnly: true,
   }),
-  ...createPortalRenderItems('test-portal', 104, 432, '#86d9d1', {
+  ...createEnvironmentPortalLandmarkItems('academy-training-gate', 104, 432, {
+    style: 'academy-door',
+    order: 8,
+  }),
+  ...createPortalRenderItems('academy-training-gate', 104, 432, '#86d9d1', {
     style: 'academy',
-    order: 9,
+    order: 12,
   }),
   ...ACADEMY_FIELD_PORTAL_ITEMS,
 ];
@@ -529,6 +537,30 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
               order: 0,
               renderOrder: 30,
             }),
+            renderItem(
+              'plaza-foreground-planter-left',
+              [
+                { x: 0, y: 466 },
+                { x: 76, y: 448 },
+                { x: 132, y: 482 },
+                { x: 148, y: 540 },
+                { x: 0, y: 540 },
+              ],
+              '#203a32',
+              { stroke: '#172a26', lineWidth: 2, order: 1, renderOrder: 30.72 },
+            ),
+            renderItem(
+              'plaza-foreground-planter-right',
+              [
+                { x: 884, y: 482 },
+                { x: 944, y: 448 },
+                { x: 1024, y: 466 },
+                { x: 1024, y: 540 },
+                { x: 868, y: 540 },
+              ],
+              '#203a32',
+              { stroke: '#172a26', lineWidth: 2, order: 1, renderOrder: 30.72 },
+            ),
           ],
           entities: [
             {

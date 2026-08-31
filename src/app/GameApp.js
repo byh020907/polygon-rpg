@@ -307,6 +307,7 @@ export class GameApp extends SceneNode {
         }),
       );
     }
+    if (scenario.timePhase) this.scene.setVisualQaTimePhase(scenario.timePhase);
     this.scene.setVisualQaLocation(scenario);
     this.resize();
 
@@ -348,6 +349,12 @@ export class GameApp extends SceneNode {
     const dialogue = this.scene.getWorldStatus().dialogue;
     const expectedDialogueTarget = scenario.expectation?.expectedDialogueTarget;
     const expectedDialogueSpeaker = scenario.expectation?.expectedDialogueSpeaker;
+    const expectedItems = scenario.expectation?.expectedItems ?? [];
+    const expectedAbsentItems = scenario.expectation?.expectedAbsentItems ?? [];
+    const expectedTimePhase = scenario.expectation?.expectedTimePhase;
+    const expectedPatchIds = scenario.expectation?.expectedPatchIds ?? [];
+    const expectedPortalIds = scenario.expectation?.expectedPortalIds;
+    const portalIds = renderFrame.map.portalIds;
     const expectedCombatEvent = renderFrame.combatEvents.find(
       (event) => event.type === expectedEvent,
     );
@@ -421,6 +428,15 @@ export class GameApp extends SceneNode {
           dialogue.interactionId === expectedDialogueTarget &&
           dialogue.speaker === expectedDialogueSpeaker &&
           renderFrame.player.isGrounded === true),
+      spatialItemsPresent: expectedItems.every((itemId) => itemIds.includes(itemId)),
+      spatialItemsAbsent: expectedAbsentItems.every((itemId) => !itemIds.includes(itemId)),
+      timePhaseMatches: !expectedTimePhase || renderFrame.map.timePhase === expectedTimePhase,
+      patchIdsMatch: expectedPatchIds.every((patchId) =>
+        renderFrame.map.appliedPatchIds.includes(patchId),
+      ),
+      portalIdsMatch:
+        !expectedPortalIds ||
+        JSON.stringify(portalIds) === JSON.stringify([...expectedPortalIds].sort()),
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -432,7 +448,12 @@ export class GameApp extends SceneNode {
         assertionEvidence.retaliationPresent &&
         assertionEvidence.anchorMatches &&
         assertionEvidence.staminaMatches &&
-        assertionEvidence.dialogueMatches,
+        assertionEvidence.dialogueMatches &&
+        assertionEvidence.spatialItemsPresent &&
+        assertionEvidence.spatialItemsAbsent &&
+        assertionEvidence.timePhaseMatches &&
+        assertionEvidence.patchIdsMatch &&
+        assertionEvidence.portalIdsMatch,
     });
     if (!assertion.passed) {
       throw new Error(`Visual QA scenario assertion failed: ${start}`);
@@ -446,6 +467,9 @@ export class GameApp extends SceneNode {
       mapId: renderFrame.map.id,
       regionId: renderFrame.map.activeRegionId,
       roomId: renderFrame.map.activeRoomId,
+      timePhase: renderFrame.map.timePhase,
+      appliedPatchIds: renderFrame.map.appliedPatchIds,
+      portalIds: Object.freeze(portalIds),
       itemCount: renderFrame.items.length,
       assertion,
       combatMotion: renderFrame.combatMotion,
@@ -465,6 +489,7 @@ export class GameApp extends SceneNode {
               'front-boot',
               'combat-enemy-training-mask',
               expectedItem,
+              ...expectedItems,
             ].includes(item.id),
           )
           .map((item) => Object.freeze({ id: item.id, points: item.points })),

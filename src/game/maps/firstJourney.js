@@ -1,4 +1,7 @@
-import { createPortalRenderItems } from './PortalRenderItems.js';
+import {
+  createEnvironmentPortalLandmarkItems,
+  createPortalRenderItems,
+} from './PortalRenderItems.js';
 
 function rectangle(x, y, width, height) {
   return [
@@ -30,16 +33,36 @@ function renderItem(id, points, fill, options = {}) {
   };
 }
 
-function forestRoomItems(prefix, { groundY = 430, bypass = false } = {}) {
+function terrainBand(points, depth) {
+  const bottomY = Math.max(...points.map((point) => point.y)) + depth;
+  return [...points, { x: points.at(-1).x, y: bottomY }, { x: points[0].x, y: bottomY }];
+}
+
+function pathBand(points, depth = 34) {
+  return [
+    ...points.map((point) => ({ x: point.x, y: point.y + 4 })),
+    ...points.toReversed().map((point) => ({ x: point.x, y: point.y + depth })),
+  ];
+}
+
+function forestRoomItems(
+  prefix,
+  { groundY = 430, bypass = false, width = 1024, terrain = null } = {},
+) {
+  const groundLine = terrain ?? [
+    { x: 0, y: groundY },
+    { x: width, y: groundY },
+  ];
   const trees = [
     [142, 294, 54],
     [268, 274, 68],
     [470, 300, 48],
     [624, 270, 72],
     [810, 292, 58],
+    ...(width > 1024 ? [[1060, 278, 66]] : []),
   ];
   return [
-    renderItem(`${prefix}-sky`, rectangle(0, 0, 1024, groundY), '#102a2b', { order: -100 }),
+    renderItem(`${prefix}-sky`, rectangle(0, 0, width, groundY), '#102a2b', { order: -100 }),
     renderItem(
       `${prefix}-ridge`,
       [
@@ -50,12 +73,34 @@ function forestRoomItems(prefix, { groundY = 430, bypass = false } = {}) {
         { x: 535, y: 295 },
         { x: 700, y: 170 },
         { x: 860, y: 305 },
-        { x: 1024, y: 175 },
-        { x: 1024, y: groundY },
+        { x: width, y: 175 },
+        { x: width, y: groundY },
         { x: 0, y: groundY },
       ],
       bypass ? '#1d4a45' : '#254c43',
       { stroke: '#132c2c', lineWidth: 2, order: -60 },
+    ),
+    renderItem(
+      `${prefix}-day-canopy-light`,
+      [
+        { x: width * 0.3, y: 92 },
+        { x: width * 0.42, y: 92 },
+        { x: width * 0.56, y: groundY },
+        { x: width * 0.43, y: groundY },
+      ],
+      '#d8d69a',
+      { opacity: 0.12, order: -40 },
+    ),
+    renderItem(`${prefix}-night-veil`, rectangle(0, 0, width, groundY), '#071224', {
+      opacity: 0.5,
+      order: -35,
+      enabled: false,
+    }),
+    renderItem(
+      `${prefix}-night-waylight`,
+      regularPolygon(width * 0.58, groundY - 74, 38, 46, 14, Math.PI / 14),
+      '#7cd9cf',
+      { opacity: 0.24, order: -5, enabled: false },
     ),
     ...trees.flatMap(([x, y, size], index) => [
       renderItem(`${prefix}-trunk-${index}`, rectangle(x - 8, y, 16, groundY - y), '#4a342b', {
@@ -70,60 +115,147 @@ function forestRoomItems(prefix, { groundY = 430, bypass = false } = {}) {
         { stroke: '#173a31', lineWidth: 2, order: -11 + index },
       ),
     ]),
-    renderItem(`${prefix}-ground`, rectangle(0, groundY, 1024, 540 - groundY), '#263c33', {
+    renderItem(`${prefix}-ground`, terrainBand(groundLine, 116), '#263c33', {
       stroke: '#547362',
       lineWidth: 2,
       order: 0,
     }),
-    renderItem(`${prefix}-path`, rectangle(0, groundY + 22, 1024, 48), '#4b5145', {
+    renderItem(`${prefix}-path`, pathBand(groundLine), '#4b5145', {
       opacity: 0.72,
       order: 1,
     }),
+    renderItem(
+      `${prefix}-foreground-root-left`,
+      [
+        { x: 0, y: groundY + 18 },
+        { x: 96, y: groundY + 6 },
+        { x: 156, y: groundY + 46 },
+        { x: 0, y: 540 },
+      ],
+      '#17291f',
+      { opacity: 0.8, order: 2, renderOrder: 30.72 },
+    ),
+    renderItem(
+      `${prefix}-foreground-root-right`,
+      [
+        { x: width - 152, y: groundY + 45 },
+        { x: width - 82, y: groundY + 5 },
+        { x: width, y: groundY + 18 },
+        { x: width, y: 540 },
+      ],
+      '#17291f',
+      { opacity: 0.8, order: 2, renderOrder: 30.72 },
+    ),
   ];
 }
 
 const fieldGroundY = 430;
 const dungeonGroundY = 424;
 const bossGroundY = 426;
+const FIELD_ROOM_WIDTH = 1200;
+const fieldCrossingTerrain = Object.freeze([
+  Object.freeze({ x: 0, y: fieldGroundY }),
+  Object.freeze({ x: 180, y: fieldGroundY }),
+  Object.freeze({ x: 300, y: 412 }),
+  Object.freeze({ x: 460, y: 412 }),
+  Object.freeze({ x: 540, y: fieldGroundY }),
+  Object.freeze({ x: FIELD_ROOM_WIDTH, y: fieldGroundY }),
+]);
+const fieldCanopyTerrain = Object.freeze([
+  Object.freeze({ x: 0, y: fieldGroundY }),
+  Object.freeze({ x: 160, y: fieldGroundY }),
+  Object.freeze({ x: 300, y: 398 }),
+  Object.freeze({ x: 540, y: 412 }),
+  Object.freeze({ x: 820, y: 394 }),
+  Object.freeze({ x: 960, y: fieldGroundY }),
+  Object.freeze({ x: FIELD_ROOM_WIDTH, y: fieldGroundY }),
+]);
 
-export const ACADEMY_FIELD_PORTAL_ITEMS = Object.freeze(
-  createPortalRenderItems('academy-field-gate', 910, 432, '#e7b86a', { style: 'academy' }),
-);
+export const ACADEMY_FIELD_PORTAL_ITEMS = Object.freeze([
+  ...createEnvironmentPortalLandmarkItems('academy-field-gate', 910, 432, {
+    style: 'academy-door',
+  }),
+  ...createPortalRenderItems('academy-field-gate', 910, 432, '#e7b86a', {
+    style: 'academy',
+    order: 36,
+  }),
+]);
 
 export const FIRST_JOURNEY_ROOMS = Object.freeze([
   {
     id: 'field-crossing',
     label: '노을풀밭 갈림길',
-    bounds: { x: 2480, y: 0, width: 1024, height: 540 },
+    bounds: { x: 2480, y: 0, width: FIELD_ROOM_WIDTH, height: 540 },
     cameraAnchor: { x: 480, y: 270 },
     groundY: fieldGroundY,
-    movementBounds: { minX: 24, maxX: 1000 },
+    movementBounds: { minX: 24, maxX: 1176 },
     renderOrder: 30,
     surfaces: [
       {
         id: 'field-crossing-ground-surface',
         kind: 'solid',
         material: 'forest-earth',
-        points: [
-          { x: 0, y: fieldGroundY },
-          { x: 1024, y: fieldGroundY },
-        ],
+        points: fieldCrossingTerrain,
       },
     ],
     renderItems: [
-      ...forestRoomItems('field-crossing'),
+      ...forestRoomItems('field-crossing', {
+        width: FIELD_ROOM_WIDTH,
+        terrain: fieldCrossingTerrain,
+      }),
+      ...createEnvironmentPortalLandmarkItems('field-village-gate', 80, fieldGroundY, {
+        style: 'village-road',
+      }),
       ...createPortalRenderItems('field-village-gate', 80, fieldGroundY, '#86d9d1', {
         style: 'forest',
+        order: 36,
       }),
-      ...createPortalRenderItems('field-canopy-gate', 355, fieldGroundY, '#91d08a', {
+      ...createEnvironmentPortalLandmarkItems('field-canopy-gate', 420, 412, {
+        style: 'root-arch',
+      }),
+      ...createPortalRenderItems('field-canopy-gate', 420, 412, '#91d08a', {
         style: 'forest',
+        order: 36,
       }),
-      ...createPortalRenderItems('field-dungeon-gate', 930, fieldGroundY, '#d59b68', {
+      ...createEnvironmentPortalLandmarkItems('field-dungeon-gate', 1110, fieldGroundY, {
+        style: 'sealed-stone',
+      }),
+      ...createPortalRenderItems('field-dungeon-gate', 1110, fieldGroundY, '#d59b68', {
         style: 'sealed',
+        order: 36,
+        enabled: false,
       }),
       renderItem(
+        'field-dungeon-locked-seal',
+        [
+          { x: 1082, y: fieldGroundY },
+          { x: 1088, y: 346 },
+          { x: 1110, y: 314 },
+          { x: 1132, y: 346 },
+          { x: 1138, y: fieldGroundY },
+        ],
+        '#7b3f58',
+        { stroke: '#e493a8', lineWidth: 3, opacity: 0.82, order: 39 },
+      ),
+      renderItem(
+        'field-guardian-combat-glade',
+        regularPolygon(760, fieldGroundY + 2, 118, 22, 14, Math.PI / 14),
+        '#385b45',
+        { stroke: '#77a579', lineWidth: 2, opacity: 0.7, order: 7 },
+      ),
+      renderItem(
+        'field-route-marker',
+        [
+          { x: 565, y: fieldGroundY },
+          { x: 575, y: 330 },
+          { x: 584, y: fieldGroundY },
+        ],
+        '#74533a',
+        { stroke: '#2b251f', lineWidth: 2, order: 8 },
+      ),
+      renderItem(
         'field-guardian-bloom',
-        regularPolygon(680, fieldGroundY - 4, 58, 13, 12),
+        regularPolygon(760, fieldGroundY - 4, 58, 13, 12),
         '#8df0bd',
         { stroke: '#e5fff0', lineWidth: 2, opacity: 0.55, order: 20, enabled: false },
       ),
@@ -133,7 +265,7 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         id: 'field-guardian',
         kind: 'combat-enemy',
         encounterProfileId: 'field',
-        position: { x: 680, y: fieldGroundY },
+        position: { x: 760, y: fieldGroundY },
         maxHealth: 95,
       },
       {
@@ -154,41 +286,43 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
   {
     id: 'field-canopy',
     label: '실습림 수관 우회로',
-    bounds: { x: 3720, y: 0, width: 1024, height: 540 },
+    bounds: { x: 3720, y: 0, width: FIELD_ROOM_WIDTH, height: 540 },
     cameraAnchor: { x: 480, y: 270 },
     groundY: fieldGroundY,
-    movementBounds: { minX: 24, maxX: 1000 },
+    movementBounds: { minX: 24, maxX: 1176 },
     renderOrder: 30,
     surfaces: [
       {
         id: 'field-canopy-ground-surface',
         kind: 'solid',
         material: 'root-bridge',
-        points: [
-          { x: 0, y: fieldGroundY },
-          { x: 1024, y: fieldGroundY },
-        ],
+        points: fieldCanopyTerrain,
       },
     ],
     renderItems: [
-      ...forestRoomItems('field-canopy', { bypass: true }),
-      renderItem(
-        'canopy-root-bridge',
-        [
-          { x: 140, y: fieldGroundY },
-          { x: 280, y: fieldGroundY - 42 },
-          { x: 535, y: fieldGroundY - 18 },
-          { x: 800, y: fieldGroundY - 45 },
-          { x: 920, y: fieldGroundY },
-        ],
-        '#674837',
-        { stroke: '#30251f', lineWidth: 8, order: 8 },
-      ),
+      ...forestRoomItems('field-canopy', {
+        bypass: true,
+        width: FIELD_ROOM_WIDTH,
+        terrain: fieldCanopyTerrain,
+      }),
+      renderItem('canopy-root-bridge', fieldCanopyTerrain, '#674837', {
+        stroke: '#30251f',
+        lineWidth: 8,
+        order: 8,
+      }),
+      ...createEnvironmentPortalLandmarkItems('canopy-return-gate', 80, fieldGroundY, {
+        style: 'root-arch',
+      }),
       ...createPortalRenderItems('canopy-return-gate', 80, fieldGroundY, '#91d08a', {
         style: 'forest',
+        order: 36,
       }),
-      ...createPortalRenderItems('canopy-dungeon-gate', 930, fieldGroundY, '#d59b68', {
+      ...createEnvironmentPortalLandmarkItems('canopy-dungeon-gate', 1110, fieldGroundY, {
+        style: 'sealed-stone',
+      }),
+      ...createPortalRenderItems('canopy-dungeon-gate', 1110, fieldGroundY, '#d59b68', {
         style: 'sealed',
+        order: 36,
       }),
     ],
     entities: [],
@@ -556,8 +690,8 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
     from: {
       regionId: 'academy-region',
       roomId: 'field-crossing',
-      anchor: { x: 355, y: fieldGroundY },
-      spawn: { x: 415, y: fieldGroundY - 82 },
+      anchor: { x: 420, y: 412 },
+      spawn: { x: 500, y: 339 },
       radius: 52,
     },
     to: {
@@ -572,11 +706,12 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
   {
     id: 'field-dungeon-portal',
     bidirectional: true,
+    enabled: false,
     from: {
       regionId: 'academy-region',
       roomId: 'field-crossing',
-      anchor: { x: 930, y: fieldGroundY },
-      spawn: { x: 865, y: fieldGroundY - 82 },
+      anchor: { x: 1110, y: fieldGroundY },
+      spawn: { x: 1045, y: fieldGroundY - 82 },
       radius: 52,
     },
     to: {
@@ -594,8 +729,8 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
     from: {
       regionId: 'academy-region',
       roomId: 'field-canopy',
-      anchor: { x: 930, y: fieldGroundY },
-      spawn: { x: 865, y: fieldGroundY - 82 },
+      anchor: { x: 1110, y: fieldGroundY },
+      spawn: { x: 1045, y: fieldGroundY - 82 },
       radius: 52,
     },
     to: {
@@ -651,12 +786,29 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
 
 export const FIRST_JOURNEY_PATCHES = Object.freeze([
   {
+    id: 'first-field-night-presentation',
+    priority: 11,
+    when: { eq: ['timePhase', 'night'] },
+    operations: [
+      { op: 'set-enabled', target: 'field-crossing-day-canopy-light', value: false },
+      { op: 'set-enabled', target: 'field-crossing-night-veil', value: true },
+      { op: 'set-enabled', target: 'field-crossing-night-waylight', value: true },
+      { op: 'set-enabled', target: 'field-canopy-day-canopy-light', value: false },
+      { op: 'set-enabled', target: 'field-canopy-night-veil', value: true },
+      { op: 'set-enabled', target: 'field-canopy-night-waylight', value: true },
+    ],
+  },
+  {
     id: 'field-guardian-cleared',
     priority: 20,
     when: { flag: 'fieldGuardianDefeated' },
     operations: [
       { op: 'set-enabled', target: 'field-guardian', value: false },
       { op: 'set-enabled', target: 'field-guardian-bloom', value: true },
+      { op: 'set-enabled', target: 'field-dungeon-portal', value: true },
+      { op: 'set-enabled', target: 'field-dungeon-locked-seal', value: false },
+      { op: 'set-enabled', target: 'field-dungeon-gate-outer', value: true },
+      { op: 'set-enabled', target: 'field-dungeon-gate-inner', value: true },
       {
         op: 'set',
         target: 'field-departure-clue-interaction',

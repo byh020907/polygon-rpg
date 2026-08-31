@@ -177,6 +177,169 @@ function renderItem(id, points, fill, options) {
   };
 }
 
+function rectangle(x, y, width, height) {
+  return [
+    { x, y },
+    { x: x + width, y },
+    { x: x + width, y: y + height },
+    { x, y: y + height },
+  ];
+}
+
+const LANDMARK_STYLES = Object.freeze({
+  'academy-door': Object.freeze({
+    structureFill: '#4a5960',
+    structureStroke: '#202f35',
+    openingFill: '#111923',
+    accentFill: '#d4b46e',
+  }),
+  'village-road': Object.freeze({
+    structureFill: '#65503c',
+    structureStroke: '#2b2622',
+    openingFill: '#172821',
+    accentFill: '#8fc9a0',
+  }),
+  'root-arch': Object.freeze({
+    structureFill: '#654735',
+    structureStroke: '#2a211d',
+    openingFill: '#11231c',
+    accentFill: '#83c88b',
+  }),
+  'sealed-stone': Object.freeze({
+    structureFill: '#3b414d',
+    structureStroke: '#191f29',
+    openingFill: '#090e16',
+    accentFill: '#a76b66',
+  }),
+  'crystal-stair': Object.freeze({
+    structureFill: '#3d5865',
+    structureStroke: '#193442',
+    openingFill: '#081722',
+    accentFill: '#77d7dd',
+  }),
+});
+
+export function createEnvironmentPortalLandmarkItems(
+  id,
+  x,
+  groundY,
+  { style, enabled = true, renderOrder = 30, order = 32 } = {},
+) {
+  const colors = LANDMARK_STYLES[style];
+  if (!colors) throw new Error(`지원하지 않는 환경 Portal landmark입니다: ${style}`);
+  if (!id || !Number.isFinite(x) || !Number.isFinite(groundY)) {
+    throw new TypeError('환경 Portal landmark에는 id와 유한한 x/groundY가 필요합니다.');
+  }
+
+  const openingWidth = style === 'village-road' ? 92 : style === 'crystal-stair' ? 78 : 72;
+  const openingHeight = style === 'village-road' ? 100 : style === 'sealed-stone' ? 112 : 106;
+  const left = x - openingWidth / 2;
+  const top = groundY - openingHeight;
+  const structure = (() => {
+    switch (style) {
+      case 'academy-door':
+        return [
+          { x: x - 62, y: groundY },
+          { x: x - 62, y: groundY - 116 },
+          { x: x - 48, y: groundY - 116 },
+          { x: x - 38, y: groundY - 138 },
+          { x: x + 38, y: groundY - 138 },
+          { x: x + 48, y: groundY - 116 },
+          { x: x + 62, y: groundY - 116 },
+          { x: x + 62, y: groundY },
+        ];
+      case 'village-road':
+        return [
+          { x: x - 72, y: groundY },
+          { x: x - 66, y: groundY - 92 },
+          { x: x - 56, y: groundY - 118 },
+          { x: x - 42, y: groundY - 122 },
+          { x: x - 46, y: groundY - 108 },
+          { x: x + 48, y: groundY - 104 },
+          { x: x + 42, y: groundY - 122 },
+          { x: x + 58, y: groundY - 116 },
+          { x: x + 70, y: groundY - 88 },
+          { x: x + 72, y: groundY },
+        ];
+      case 'root-arch':
+        return [
+          { x: x - 63, y: groundY },
+          { x: x - 57, y: groundY - 54 },
+          { x: x - 43, y: groundY - 100 },
+          { x: x - 18, y: groundY - 126 },
+          { x, y: groundY - 134 },
+          { x: x + 22, y: groundY - 124 },
+          { x: x + 48, y: groundY - 94 },
+          { x: x + 58, y: groundY - 45 },
+          { x: x + 64, y: groundY },
+        ];
+      case 'sealed-stone':
+        return [
+          { x: x - 68, y: groundY },
+          { x: x - 68, y: groundY - 118 },
+          { x: x - 52, y: groundY - 118 },
+          { x: x - 52, y: groundY - 138 },
+          { x: x + 52, y: groundY - 138 },
+          { x: x + 52, y: groundY - 118 },
+          { x: x + 68, y: groundY - 118 },
+          { x: x + 68, y: groundY },
+        ];
+      case 'crystal-stair':
+        return [
+          { x: x - 70, y: groundY },
+          { x: x - 58, y: groundY - 42 },
+          { x: x - 66, y: groundY - 78 },
+          { x: x - 42, y: groundY - 130 },
+          { x: x - 12, y: groundY - 118 },
+          { x: x + 10, y: groundY - 150 },
+          { x: x + 38, y: groundY - 124 },
+          { x: x + 64, y: groundY - 82 },
+          { x: x + 54, y: groundY - 36 },
+          { x: x + 72, y: groundY },
+        ];
+      default:
+        return [];
+    }
+  })();
+
+  return [
+    renderItem(`${id}-landmark-structure`, structure, colors.structureFill, {
+      stroke: colors.structureStroke,
+      lineWidth: 4,
+      opacity: 0.98,
+      order,
+      renderOrder,
+      enabled,
+    }),
+    renderItem(
+      `${id}-landmark-opening`,
+      rectangle(left, top, openingWidth, openingHeight),
+      colors.openingFill,
+      {
+        stroke: colors.accentFill,
+        lineWidth: 2,
+        opacity: 0.98,
+        order: order + 1,
+        renderOrder,
+        enabled,
+      },
+    ),
+    renderItem(
+      `${id}-landmark-threshold`,
+      rectangle(x - 48, groundY - 6, 96, 8),
+      colors.accentFill,
+      {
+        stroke: colors.structureStroke,
+        lineWidth: 1.5,
+        opacity: 0.82,
+        order: order + 2,
+        renderOrder,
+        enabled,
+      },
+    ),
+  ];
+}
+
 export function createPortalRenderItems(
   id,
   x,
