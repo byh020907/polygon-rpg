@@ -13,7 +13,11 @@ export function resolveRecoveryPunish({
   const backThreshold = enemyRole === 'boss' ? BOSS_BACK_PUNISH_DEAD_ZONE : 0;
   const continues =
     enemyRole === 'boss' && claimedComboCycle !== 0 && claimedComboCycle === comboCycle;
-  const opens = recoveryWindowOpen && signedAttackSide < -backThreshold && !continues;
+  const opens =
+    recoveryWindowOpen &&
+    claimedComboCycle === 0 &&
+    signedAttackSide < -backThreshold &&
+    !continues;
 
   return Object.freeze({
     accepted: enemyRole !== 'boss' || opens || continues,
