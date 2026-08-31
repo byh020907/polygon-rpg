@@ -59,6 +59,8 @@
 - 환경형 사람 크기 Portal integration: `d2a05e95b370c88b0b5db9017dbba41de6ca443a` · final을 main에 non-rewriting merge해 terminal 원문·결과를 보존한 뒤 live INBOX의 exact `IN-20260831-030641` done block만 제거했다.
 - Direct INBOX lane: explicit-only `$dev-inbox-direct`, lease-guarded `claim-direct`, `direct-*` lifecycle과 background wait sentinel을 추가했다. Direct claim은 구현 전에 main에 push되고 current conversation이 진행 보고·구현·QA·통합을 소유하며, background outer loop와 ROADMAP selection은 claim 완료 또는 authorized recovery까지 대기한다.
 - Canonical prompt mode boundary: `loop/PROMPT.md`가 interview, intake, lifecycle, background, roadmap, direct, control, status와 recovery의 실제 절차를 모두 소유한다. `$dev-inbox-interview`, `$dev-inbox-add`, `$dev-inbox-direct`, `$dev-team-loop`, `$dev-loop-status`, `$dev-loop-recover`는 mode trigger만 맡고 skill-local 실행 reference는 제거했다.
+- Independent verifier gate: 한 complete-work conversation 안에서 developer parent가 candidate를 만들고, turn history를 상속하지 않는 mandatory read-only verifier subagent가 exact hash·diff·checks·PNG를 독립 판정한다. FAIL은 새 candidate와 새 verifier로 반복하고 PASS 대상 hash만 integration한다.
+- Native verifier preflight: local `codex-cli 0.150.1`의 `multi_agent`가 `stable / true`라 headless parent session 안의 verifier subagent 경로를 사용할 수 있다.
 
 ## Next
 

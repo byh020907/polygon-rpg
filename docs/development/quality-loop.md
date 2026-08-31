@@ -1,21 +1,18 @@
 # Polygon RPG Quality-Driven Development Loop
 
-이 문서는 complete-work Codex session이 기능 실행에서 멈추지 않고 플레이 가능한 결과를 직접 관찰·평가·수리하는 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), queue는 [`../feedback/INBOX.md`](../feedback/INBOX.md), 실행 절차는 [`process.md`](./process.md)가 소유한다. Engineering Method와 구현 단위 규칙은 [`../../AGENTS.md`](../../AGENTS.md)가 소유하며 이 문서에서 다시 정의하지 않는다.
+이 문서는 complete-work Codex session이 기능 실행에서 멈추지 않고 플레이 가능한 결과를 직접 관찰·평가·수리하는 품질 계약이다. 제품 방향은 [`../DESIGN.md`](../DESIGN.md), queue는 [`../feedback/INBOX.md`](../feedback/INBOX.md), lifecycle 경계는 [`process.md`](./process.md), 실제 실행 절차는 [`../../loop/PROMPT.md`](../../loop/PROMPT.md)가 소유한다. Engineering Method와 구현 단위 규칙은 [`../../AGENTS.md`](../../AGENTS.md)가 소유하며 이 문서에서 다시 정의하지 않는다.
 
-## 개발 Persona와 Director 경계
+## 개발 Persona와 독립 Verifier 경계
 
 Executor는 **10년차 1인 인디 게임 개발자**다. 레전드 오브 곡괭이와 아이작 계열 액션 게임처럼 반복 플레이의 손맛, 즉시 읽히는 상태, 위험과 보상, replay 품질을 꼼꼼히 판단한다. 기능이 돌아가는 것과 플레이 화면이 합격인 것을 구분하며 작은 결함도 실제 경로에서 재현하고 수리한다.
 
-하나의 nonterminal INBOX entry와 executor branch가 하나의 Lead Game Developer & QA Director 경계다. 한 fresh session이 다음을 모두 소유한다.
+하나의 nonterminal INBOX entry와 executor branch가 완전한 품질 단위다. 한 fresh parent session 안에서 역할을 다음처럼 분리한다.
 
-- 현재 main과 기존 checkpoint에서 복구
-- entry 전체 구현과 affected deterministic checks
-- runnable checkpoint push
-- 실제 visible Chrome의 fixed-frame PNG capture와 직접 판독
-- 기준 미달 수리·재검사·재촬영 반복
-- clean final, main integration, live INBOX cleanup과 STATUS evidence
+- **Developer parent:** 현재 evidence 복구, entry 전체 구현, affected checks, runnable checkpoint와 candidate final을 소유한다.
+- **Verifier subagent:** turn history를 상속하지 않는 fresh read-only context에서 exact candidate diff·checks·PNG·완료 조건을 독립 판정한다.
+- **Developer parent:** `FAIL`을 수리해 새 candidate를 다시 검증받고, exact hash `PASS` 뒤에만 main integration·live INBOX cleanup·STATUS evidence를 소유한다.
 
-Checkpoint와 lifecycle marker는 interruption recovery를 위한 Git memory다. Writer와 verifier를 별도 session으로 나눠 정상 종료하지 않는다. 같은 session 안에서 구현 후 artifact를 새로 생성해 결과 기준으로 검증하며, 필요하면 bounded read-only subagent로 독립 관점을 보조할 수 있다.
+Checkpoint와 lifecycle marker는 interruption recovery를 위한 Git memory다. 역할은 developer parent와 mandatory verifier subagent로 분리하지만 scheduled tick이나 별도 승인 대화로 넘기지 않는다. 둘은 같은 complete-work outer run 안에서 candidate → verdict → repair를 반복하므로 entry 하나가 완결되기 전 정상 종료하지 않는다.
 
 ## 품질 기억
 
@@ -57,12 +54,12 @@ baseline 실행·채점
 → entry 완료 조건 전체를 만족하는 구현
 → affected deterministic checks
 → runnable checkpoint commit·push
-→ visible browser fixed-frame PNG 생성
-→ PNG 직접 판독·같은 rubric 재채점
-→ 가장 큰 결함 하나 수리
-→ 검사·checkpoint·PNG를 같은 session에서 반복
-→ final 회귀 검사
-→ clean final·main integration·evidence 정리
+→ developer visible browser fixed-frame PNG 생성·자체 점검
+→ candidate final commit·push
+→ fresh read-only verifier subagent가 diff·검사·PNG·rubric 독립 판정
+→ FAIL이면 developer가 가장 큰 결함을 수리하고 새 candidate로 재검증
+→ exact candidate PASS
+→ main integration·evidence 정리
 ```
 
 한 번에 한 병목을 고친다는 것은 session을 끝내라는 뜻이 아니다. 같은 entry의 모든 합격 조건을 충족할 때까지 이 inner loop를 반복한다.
@@ -93,7 +90,7 @@ Final은 다음을 모두 만족할 때만 만든다.
 - Latest main과 clean ancestry
 - Placeholder, 설명 없는 TODO와 임시 검증 asset 없음
 
-Final 후 같은 session이 main integration과 INBOX cleanup까지 계속한다.
+Candidate final은 fresh verifier가 exact hash에 `PASS`를 반환해야 통합 가능한 final이 된다. Candidate가 한 byte라도 바뀌거나 필수 검사·화면이 미확인이면 기존 verdict는 무효다. PASS 후 developer parent가 같은 outer run에서 main integration과 INBOX cleanup까지 계속한다.
 
 ## Feedback와 규칙 승격
 

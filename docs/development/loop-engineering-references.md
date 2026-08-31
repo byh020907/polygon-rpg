@@ -1,6 +1,6 @@
 # File-Memory Loop Engineering References
 
-이 문서는 Polygon RPG complete-work loop의 설계 근거와 recovery matrix를 소유한다. 실제 실행 계약은 [`process.md`](./process.md), 품질 기준은 [`quality-loop.md`](./quality-loop.md), 환경값은 [`../../loop/env.ps1`](../../loop/env.ps1)이 canonical owner다.
+이 문서는 Polygon RPG complete-work loop의 설계 근거와 recovery matrix를 소유한다. Lifecycle 경계는 [`process.md`](./process.md), 실제 실행 절차는 [`../../loop/PROMPT.md`](../../loop/PROMPT.md), 품질 기준은 [`quality-loop.md`](./quality-loop.md), 환경값은 [`../../loop/env.ps1`](../../loop/env.ps1)이 canonical owner다.
 
 ## 채택한 controller model
 
@@ -10,7 +10,7 @@ Desired state
 Observed state
   main · background/direct claim · executor refs/worktrees · lease · run log · visual artifact
 Complete-Work Reconcile Session
-  recover → implement → check → visible QA → repair → final → integrate → cleanup
+  recover → developer candidate → fresh verifier subagent → repair/PASS → integrate → cleanup
 Outer supervisor
   Windows PowerShell loop + Task Scheduler abnormal-exit restart
 ```
@@ -90,6 +90,8 @@ Outer supervisor
 - Codex app scheduled conversation이 또 다른 task를 만들고 승인을 기다리는 coordinator 구조
 - 한 session이 checkpoint만 남기고 다음 scheduled conversation에 verifier/integration을 떠넘기는 구조
 - Prompt text로 execution permission을 우회하는 구조
+
+대신 한 complete-work outer run 안에서 developer parent와 turn history를 상속하지 않는 read-only verifier subagent를 분리한다. Verifier는 exact candidate의 독립 verdict만 소유하고 FAIL은 같은 outer run의 parent repair로 돌아가므로 scheduled tick마다 phase를 넘기지 않는다.
 
 ## 팀장 제공 fresh-session prompt 반영
 

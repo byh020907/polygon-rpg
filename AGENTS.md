@@ -125,7 +125,7 @@ Layer 3에서는 필요한 파일, import/export, caller와 검증 경로만 좁
 | `ARCH-SCENE-NODE-SIGNAL`  | Runtime은 재사용 가능한 Scene subtree, tree-owned Node lifecycle과 owner 정리 Signal로 조립한다. Command는 직접 method, 완료 사건만 Signal을 사용한다.                            | `docs/runtime-architecture.md`             |
 | `VERIFY-USER-OWNED-TESTS` | 영구 test는 명시 요청 시만 추가한다. 동일 원인 결함·지적이 두 번 확인되고 기계 측정 가능하면 이번 결정에 따라 최소 check로 승격한다.                                              | 사용자 결정, quality loop, 최종 diff       |
 | `PROCESS-DEV-TEAM-LOOP`   | Skill은 canonical prompt mode만 trigger한다. Background와 explicit direct lane은 entry 하나를 완결하며 `$dev-team-loop`는 on/off/status 제어만 맡는다.                            | prompt, process, skills                    |
-| `PROCESS-QUALITY-LOOP`    | INBOX entry·branch가 Director 경계다. Checkpoint는 visible PNG QA와 same-session repair 전의 복구 evidence다.                                                                     | quality loop, skill                        |
+| `PROCESS-QUALITY-LOOP`    | Candidate는 verifier가 exact hash를 PASS해야 통합한다.                                                                                                                            | prompt, quality loop                       |
 | `GIT-MESSAGES-KOREAN`     | 에이전트가 새로 작성하는 local commit subject·body와 명시적 merge commit message는 기본적으로 한국어를 사용한다. 기술 token은 보존하며 기존 이력은 이 규칙만으로 수정하지 않는다. | `docs/development/process.md`              |
 | `GIT-PURPOSE-COMMITS`     | 큰 작업은 독립적으로 이해·검증·되돌릴 수 있는 목적 단위로 나누고 commit에는 변경 이유와 검증 근거를 남긴다.                                                                       | Core Engineering Principles·process        |
 | `COMM-TEAMLEAD-PLAIN-KO`  | 팀장 답변은 기능·관찰 질문부터 쓰고, 구체적 판단 항목 없이는 의견 대기로 멈추지 않는다.                                                                                           | `docs/development/process.md`, skill       |
@@ -346,14 +346,14 @@ Node·Scene·Scene Tree·Signal의 적용 계약은 [`docs/runtime-architecture.
 - 기능 목록이 아니라 처음부터 끝까지 플레이 가능한 사용자 시나리오를 하나의 개발·피드백 단위로 사용한다.
 - 적용 품질 축에 0 또는 1이 남은 결과를 feedback candidate나 완료 결과로 제출하지 않는다.
 - 한 inner iteration에서는 가장 큰 품질 병목 하나를 개선하고 같은 rubric과 artifact 경로로 전후를 비교하되, 같은 session에서 entry 전체 합격까지 반복한다.
-- INBOX entry·executor branch 하나가 통합 artifact와 품질 판정을 소유한다.
+- INBOX entry·branch가 artifact를, 분리된 fresh read-only verifier가 품질 판정을 소유한다.
 - 메인은 새 명령을 INBOX에 기록하되 질문·상태·예시·인터뷰·직접 실행은 등록하지 않는다.
 - Outer PowerShell loop는 entry마다 새 `codex exec --ephemeral` session을 열고 session은 clean integration까지 수행한다.
 - Entry는 `codex/loop/<IN-ID>` worktree에서 실행한다. `resume`, `fork`, `--continue`를 쓰지 않는다.
-- Checkpoint는 same-session visual QA 전 복구점이다. 정상 session은 checkpoint·verifying·ready에서 끝나지 않는다.
+- Checkpoint는 visual QA 전 복구점이다. Candidate는 verifier PASS가 필요하며 정상 session은 중간 marker에서 끝나지 않는다.
 - 화면 작업은 `loop/visual-qa.ps1`의 visible Chrome PNG를 직접 판독하고 같은 session에서 수리한다.
 - `loop/STOP`은 entry 완결 뒤 정상 종료한다. 미완료/tool failure는 nonzero로 끝나 scheduler가 복구한다.
-- Subagent는 한 run 내부의 bounded helper이며 parent가 같은 executor branch에 통합한다.
+- Verifier는 history 없는 read-only gate다. FAIL 수리나 hash 변경 뒤 verifier를 호출한다. 다른 subagent는 helper다.
 - 다른 entry의 executor branch/worktree를 수정하거나 guessed cleanup하지 않는다.
 - 정상 범위 edit·검사·commit·branch push·non-rewriting main merge/push에 승인을 묻지 않는다. 사람에게 묻는 것은 가역 default 없는 Product Decision, Canonical Conflict, credential·외부 차단뿐이다.
 - 게임 규칙은 공용 `game-kit` 기반이 알지 못하게 한다.

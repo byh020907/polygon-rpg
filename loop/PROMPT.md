@@ -15,6 +15,7 @@ Caller가 지정한 mode 하나만 실행한다. Mode를 임의로 바꾸거나 
 | `BACKGROUND_ENTRY` | `loop/loop.ps1`이 exact `IN-*`와 함께 호출  | entry 완전 통합·정리 또는 구체적 blocker           |
 | `ROADMAP_CONVERGE` | queue가 빈 outer loop                       | playable vertical job 완결 또는 전체 완료 증명     |
 | `DIRECT`           | explicit `$dev-inbox-direct`                | 현재 대화에서 entry 하나 완전 통합·정리            |
+| `VERIFIER`         | developer parent의 fresh-context subagent   | exact candidate의 독립 PASS/FAIL 판정              |
 | `INTERVIEW`        | `$dev-inbox-interview` 또는 interview-first | 승인 가능한 요청 원문 확정 또는 mutation 없는 종료 |
 | `INBOX_INTAKE`     | 일반 새 개발 명령 또는 `$dev-inbox-add`     | 원문 entry commit·push 후 즉시 반환                |
 | `LIFECYCLE`        | exact entry의 pause/cancel/reopen 요청      | main metadata commit·push 후 반환                  |
@@ -58,11 +59,13 @@ Mutation 또는 전체 상태 판정 전에 다음을 완전히 읽는다.
 6. 요청의 완전한 사용자 결과를 구현한다. 한 병목, 계획, 문서 한 조각이나 임시 상태에서 끝내지 않는다.
 7. Affected deterministic checks, `npm run check`, `git diff --check`를 실행하고 runnable checkpoint를 visual inspection 전에 commit·push한다.
 8. 화면 작업은 entry에 맞는 stable `GAME_START`, fixed `GAME_FRAME`으로 `loop/visual-qa.ps1`을 실행한다. 실제 창에서 저장된 PNG와 metadata를 직접 읽고 start/room/frame/viewport/console을 확인한다.
-9. 적용 quality axis에 0 또는 1이 있으면 같은 session에서 수정 → 검사 → checkpoint → capture를 반복한다.
-10. Latest main을 branch에 non-rewriting merge하고 owned diff와 회귀를 재검증한 뒤 clean final을 push한다.
-11. Main에서 `--no-ff --no-commit`으로 final을 합치고 terminal raw/result와 STATUS를 merge commit에 보존해 push한다.
-12. 실제 merge hash를 얻은 뒤 `node loop/inbox.mjs remove-done`으로 exact `done` block만 제거하고 STATUS hash를 기록한 cleanup commit을 push한다.
-13. Origin을 다시 fetch한다. Partial merge 없는 clean `main == origin/main`, clean executor worktree, local/remote final 일치, final의 main 포함, entry 부재와 lease 해제를 `loop/completion.mjs`로 확인한다.
+9. 적용 quality axis에 0 또는 1이 있으면 같은 developer parent session에서 수정 → 검사 → checkpoint → capture를 반복한다.
+10. Latest main을 branch에 non-rewriting merge하고 owned diff와 회귀를 재검증한 뒤 exact candidate final을 commit·push한다.
+11. Codex-native subagent를 turn history 상속 없이 fresh context로 생성해 이 파일의 `VERIFIER` mode, exact entry ID, candidate full hash, base hash, completion contract, owned paths, 검사 명령과 artifact 경로를 전달한다. Parent는 verifier가 끝날 때까지 기다린다.
+12. Verifier가 `FAIL`이면 merge하지 않는다. Findings를 developer가 수리하고 새 candidate를 push한 뒤 **새 fresh verifier subagent**로 다시 검증한다. `PASS` 뒤 candidate hash가 바뀌면 verdict는 무효이며 다시 검증한다.
+13. Exact candidate에 대한 `PASS`가 있을 때만 main에서 `--no-ff --no-commit`으로 합치고 verifier verdict·candidate hash·terminal raw/result와 STATUS를 merge commit에 보존해 push한다.
+14. 실제 merge hash를 얻은 뒤 `node loop/inbox.mjs remove-done`으로 exact `done` block만 제거하고 STATUS hash를 기록한 cleanup commit을 push한다.
+15. Origin을 다시 fetch한다. Partial merge 없는 clean `main == origin/main`, clean executor worktree, local/remote final 일치, final의 main 포함, entry 부재와 lease 해제를 `loop/completion.mjs`로 확인한다.
 
 `direct-*` claim이 있으면 아무 background/ROADMAP 일도 선택하지 않고 outer loop에 대기 상태를 반환한다. `loop/STOP`은 현재 entry가 완결된 뒤 outer loop가 처리한다.
 
@@ -83,6 +86,48 @@ Exact ID가 있으면 그것을, 없으면 highest-priority oldest `new`를 고�
 5. Deterministic executor worktree를 생성/복구하고 `BACKGROUND_ENTRY`의 구현, checkpoint, visible QA, repair, final, integration, exact cleanup과 completion gate를 **이 현재 대화에서** 끝낸다.
 
 진행은 concise commentary로 보인다. `codex exec`, `loop/control.ps1 start|run-once`, 새 task/thread, fork나 handoff를 호출하지 않는다. `direct-verifying`과 `direct-integrating`은 interruption marker일 뿐 정상 종료점이 아니다. 중단되면 claim과 evidence를 보존하고 다음 explicit `DIRECT`가 resume한다. Invocation text를 새 INBOX entry로 등록하거나 두 번째 item으로 넘어가지 않는다.
+
+## `VERIFIER` — 필수 독립 검증 subagent
+
+Verifier는 developer parent와 같은 outer run 안에서 동작하지만 turn history를 상속하지 않는 fresh-context read-only Codex-native subagent다. Parent의 결론을 신뢰하거나 구현을 보조하지 않고 exact candidate가 원문과 품질 계약을 만족하는지만 독립 판정한다.
+
+### 입력 계약
+
+Parent handoff에는 다음만 포함한다.
+
+- Exact entry ID, immutable raw request와 completion/non-scope/quality contract.
+- Candidate full commit hash, 비교 base와 owned paths.
+- Affected check 명령과 developer가 만든 visual artifact/metadata 경로.
+- 검증에 필요한 canonical 문서 경로.
+
+“완료됐다”, “문제없다” 같은 parent의 자기평가를 근거로 전달하지 않는다. Candidate가 checkout된 worktree가 dirty하거나 전달 hash와 HEAD가 다르면 즉시 `FAIL`이다.
+
+### 독립 검증 순서
+
+1. `AGENTS.md`, DESIGN, current main의 exact INBOX entry, quality contract와 관련 canonical 문서를 직접 읽는다.
+2. Base부터 candidate까지 owned diff, caller, state/dependency direction과 non-scope 침범을 검사한다.
+3. 전달받은 검사 결과를 신뢰하지 않고 affected deterministic checks, `npm run check`, `git diff --check`를 직접 다시 실행한다.
+4. 화면 작업은 candidate용 stable scene PNG와 metadata를 직접 읽는다. Artifact가 exact candidate를 증명하지 못하거나 coverage가 부족하면 verifier 전용 경로로 `loop/visual-qa.ps1`을 다시 실행하고 PNG를 직접 판독한다.
+5. Immutable request의 observable behavior, 적용 quality axis 2 이상, regression과 completion gate를 항목별로 판정한다.
+
+Verifier는 ignored verifier artifact 외의 tracked file edit, commit, merge, push, INBOX/STATUS mutation, lease 조작과 직접 수리를 하지 않는다. 실패 원인과 재현 evidence만 parent에 반환한다. Tool이나 subagent를 사용할 수 없으면 자기검증으로 대체하지 않고 `FAIL`한다.
+
+### 출력 계약
+
+```text
+VERDICT: PASS | FAIL
+CANDIDATE: <full hash>
+FINDINGS:
+- [P1|P2|P3] <finding or 없음>
+CHECKS:
+- <command>: <result>
+ARTIFACTS:
+- <path>: <direct observation>
+UNVERIFIED:
+- <boundary or 없음>
+```
+
+요청 미충족, P1/P2 finding, 적용 quality axis 0/1, 실패한 check, 확인 불가능한 필수 화면이 하나라도 있으면 `FAIL`이다. `PASS`는 명시된 candidate hash 하나에만 유효하다.
 
 ## `INTERVIEW` — 등록 전 요구 구체화
 

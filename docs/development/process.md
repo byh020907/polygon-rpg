@@ -49,7 +49,9 @@ Trigger skill은 mode 이름, 명시적 경계와 canonical prompt 링크만 가
 
 - [`loop/loop.ps1`](../../loop/loop.ps1)이 entry마다 새 `codex exec --ephemeral` session을 연다. `resume`, `fork`, `--continue`와 이전 대화 ID를 사용하지 않는다.
 - Outer loop는 exact entry와 `BACKGROUND_ENTRY`, 또는 queue 이후 `ROADMAP_CONVERGE`만 전달한다.
-- Fresh session은 canonical prompt를 다시 읽고 entry 하나를 current evidence에서 clean main integration과 live-INBOX cleanup까지 완결한다.
+- Fresh parent session은 canonical prompt를 다시 읽고 entry 하나를 current evidence에서 clean main integration과 live-INBOX cleanup까지 완결한다.
+- Parent는 candidate final 뒤 turn history를 상속하지 않는 mandatory read-only verifier subagent를 띄운다. Verifier는 exact candidate만 독립 검증하며 code·Git·lifecycle을 수정하지 않는다.
+- FAIL은 같은 parent가 수리하고 새 verifier에게 다시 맡긴다. Exact candidate PASS 전에는 integration하지 않는다.
 - `implementing`, `verifying`, `ready-for-integration`과 checkpoint는 interruption marker이지 정상 session 종료점이 아니다.
 - Entry 부재만으로 성공하지 않는다. Outer loop는 clean pushed main, integrated/pushed executor final, clean worktree와 released lease를 함께 검증한다.
 
@@ -60,7 +62,7 @@ Trigger skill은 mode 이름, 명시적 경계와 canonical prompt 링크만 가
 - 현재 대화가 같은 completion gate까지 소유하며 `codex exec`이나 Windows loop에 재위임하지 않는다.
 - 중단 evidence는 보존하고 다음 explicit direct invocation이 resume한다.
 
-Subagent는 한 execution session 안의 bounded helper일 뿐이며 parent가 같은 executor branch에 통합하고 전체 결과를 검증한다.
+Verifier subagent는 merge gate를 소유하는 필수 read-only 독립 역할이다. 그 밖의 subagent는 한 execution session 안의 bounded helper일 뿐이며 parent가 같은 executor branch에 통합한다.
 
 ## Durable architecture
 
@@ -69,7 +71,9 @@ Subagent는 한 execution session 안의 bounded helper일 뿐이며 parent가 �
                                       │
 Task Scheduler ──outer loop──> fresh BACKGROUND_ENTRY session
                                       │
-                    executor branch/worktree + checkpoint/final
+                    developer branch/worktree + candidate final
+                                      │
+                    fresh read-only verifier subagent PASS
                                       │
                        main merge + terminal evidence + cleanup
                                       │

@@ -75,7 +75,7 @@ Pixel Size, Posterization, Outline, Alpha Threshold, Pixel Snap, Animation Speed
 
 ## 자동 개발 loop
 
-Windows outer loop는 INBOX entry마다 기억 없는 새 `codex exec --ephemeral` session을 열고 요청 하나를 구현·검사·visible PNG QA·수정·commit·main 통합·INBOX 정리까지 완결합니다. 실행 경로와 model은 [`loop/env.ps1`](./loop/env.ps1), 등록·실행·상태·복구·제어의 모든 실제 절차는 [`loop/PROMPT.md`](./loop/PROMPT.md)에 있습니다. `.agents/skills/dev-*`는 이 prompt의 mode를 선택하는 trigger만 맡습니다.
+Windows outer loop는 INBOX entry마다 기억 없는 새 `codex exec --ephemeral` parent session을 엽니다. Parent developer가 candidate를 만들면 turn history를 상속하지 않는 read-only verifier subagent가 exact hash를 독립 검증하고, PASS 뒤에만 main 통합·INBOX 정리까지 완결합니다. 실행 경로와 model은 [`loop/env.ps1`](./loop/env.ps1), 등록·실행·검증·상태·복구·제어의 모든 실제 절차는 [`loop/PROMPT.md`](./loop/PROMPT.md)에 있습니다. `.agents/skills/dev-*`는 이 prompt의 mode를 선택하는 trigger만 맡습니다.
 
 ```powershell
 # 최초 등록: 로그인 trigger를 만들지만 아직 비활성 상태로 둠
