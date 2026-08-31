@@ -34,6 +34,7 @@ import {
   trainCombatSkill as trainProgressionCombatSkill,
 } from './progression/ProgressionState.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
+import { resolveFirstJourneyStory } from './story/FirstJourneyStory.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -1820,9 +1821,17 @@ export class GameScene extends SceneNode {
     const progressionComplete =
       progression.combatSkillLevel === 3 &&
       progression.ownedEquipmentIds.length === EQUIPMENT_PROFILES.length;
-    let objective = progressionComplete
-      ? '장비를 고른 뒤 중앙 청록 Portal에서 ↑로 유리바람 협곡 원정을 시작하세요.'
-      : '훈련으로 성장하거나 중앙 청록 Portal에서 새 유리바람 협곡 원정을 시작하세요.';
+    const story = resolveFirstJourneyStory({
+      equipment: {
+        id: this.equipmentProfile.id,
+        label: this.equipmentProfile.label,
+        progressionComplete,
+      },
+      journey,
+      regionExpansion,
+      activeRoomId: roomId,
+    });
+    let objective = story.nextObjective;
     let encounterHint = '';
 
     if (roomId === 'training-room') {
@@ -1830,20 +1839,11 @@ export class GameScene extends SceneNode {
       encounterHint = `${this.progressionNotice} · 현재 인장 ${progression.trainingMarks}`;
     }
     if (roomId === 'field-crossing') {
-      objective = journey.fieldGuardianDefeated
-        ? '수호 수액으로 최대 HP +20. 오른쪽 Portal에서 ↑로 Dungeon에 들어가세요.'
-        : '감시 골렘을 쓰러뜨리거나 중간 초록 Portal에서 ↑로 우회하세요.';
       if (!journey.fieldGuardianDefeated) {
         encounterHint = '일반 조우 보상: 수호 수액 · 최대 HP +20';
       }
     }
-    if (roomId === 'field-canopy') {
-      objective = '전투를 우회했습니다. 오른쪽 Portal에서 ↑로 폐쇄 실습림에 진입하세요.';
-    }
     if (roomId === 'sealed-forest-dungeon') {
-      objective = journey.checkpointActivated
-        ? 'Checkpoint 확보. 오른쪽 붉은 Portal에서 ↑로 Boss에게 도전하세요.'
-        : '회랑의 청록 봉인석에 접근해 Checkpoint를 활성화하세요.';
       encounterHint = journey.checkpointActivated
         ? '사망 시 이 Checkpoint에서 회복합니다.'
         : 'Checkpoint는 HP를 모두 회복하고 Boss Portal을 엽니다.';
@@ -1886,9 +1886,6 @@ export class GameScene extends SceneNode {
       }
     }
     if (roomId === 'glasswind-observatory') {
-      objective = regionExpansion.checkpointActivated
-        ? '바람닻 확보. 오른쪽 보라 Portal에서 폭풍눈 Boss에게 도전하세요.'
-        : '관측소 중앙의 청록 바람닻에 접근해 Checkpoint와 Boss Portal을 활성화하세요.';
       encounterHint = regionExpansion.checkpointActivated
         ? '사망 시 관측소 Checkpoint에서 회복합니다.'
         : '바람닻이 Boss Portal과 부활 위치를 함께 고정합니다.';
@@ -1918,9 +1915,6 @@ export class GameScene extends SceneNode {
       }
     }
     if (roomId === 'academy-plaza' && journey.returnedWithReward) {
-      objective = regionExpansion.returnedWithReward
-        ? objective
-        : '첫 원정 장비를 정비하고 중앙 청록 Portal에서 새 유리바람 협곡으로 출발하세요.';
       encounterHint = regionExpansion.returnedWithReward
         ? encounterHint
         : progressionComplete
@@ -1928,8 +1922,6 @@ export class GameScene extends SceneNode {
           : this.progressionNotice;
     }
     if (roomId === 'academy-plaza' && regionExpansion.returnedWithReward) {
-      objective =
-        '유리바람 협곡 원정 완료. 장비를 바꾸고 중앙 청록 Portal에서 전체 loop를 반복할 수 있습니다.';
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
 
@@ -1946,6 +1938,7 @@ export class GameScene extends SceneNode {
 
     return Object.freeze({
       areaName: `${map.name} · ${room.label}`,
+      story,
       objective,
       encounterHint,
       encounterHealthLabel:

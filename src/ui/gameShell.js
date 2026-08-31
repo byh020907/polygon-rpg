@@ -112,7 +112,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     renderStats: 'Renderer idle',
     gameStats: 'World ready',
     areaName: '왕립 마법학교 학원촌',
-    objective: '장비를 고르고 중앙 청록 Portal에서 ↑로 유리바람 협곡 원정을 시작하세요.',
+    storyBeatId: 'academy-briefing',
+    storyTitle: '세라 교관의 출정 수업',
+    storyBriefing: '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다.',
+    objective: '장비를 고른 뒤 오른쪽 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
     journeyLabel: '학원촌 준비',
     encounterHint: '',
     encounterHealthLabel: '',
@@ -192,6 +195,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         },
         setWorldStatus: (status) => {
           this.areaName = status.areaName;
+          this.storyBeatId = status.story.beatId;
+          this.storyTitle = status.story.title;
+          this.storyBriefing = status.story.briefing;
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
           this.canSelectEquipment = status.canSelectEquipment;

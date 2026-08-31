@@ -57,6 +57,9 @@ function renderItem(id, points, fill, options = {}) {
     opacity: options.opacity ?? 1,
     order: options.order ?? 0,
     enabled: options.enabled ?? true,
+    ...(options.label ? { label: options.label } : {}),
+    ...(options.role ? { role: options.role } : {}),
+    ...(options.presentationOnly ? { presentationOnly: true } : {}),
   };
 }
 
@@ -327,6 +330,88 @@ const frontLayerItems = [
     opacity: 0.28,
     order: 8,
     enabled: false,
+  }),
+  renderItem('mentor-sera-shadow', regularPolygon(490, 428, 19, 5, 10), '#111719', {
+    opacity: 0.5,
+    order: 10,
+    role: 'academy-mentor-landmark',
+    presentationOnly: true,
+  }),
+  renderItem(
+    'mentor-sera-sheathed-sword',
+    [
+      { x: 475, y: 378 },
+      { x: 480, y: 376 },
+      { x: 507, y: 421 },
+      { x: 501, y: 424 },
+    ],
+    '#bcc8c2',
+    { stroke: '#26353a', lineWidth: 2, order: 11, presentationOnly: true },
+  ),
+  renderItem(
+    'mentor-sera-coat',
+    [
+      { x: 479, y: 374 },
+      { x: 497, y: 374 },
+      { x: 508, y: 426 },
+      { x: 471, y: 426 },
+    ],
+    '#385c65',
+    {
+      stroke: '#17282e',
+      lineWidth: 2,
+      order: 12,
+      label: '전투교관 세라',
+      role: 'academy-mentor-landmark',
+      presentationOnly: true,
+    },
+  ),
+  renderItem(
+    'mentor-sera-sash',
+    [
+      { x: 476, y: 391 },
+      { x: 499, y: 383 },
+      { x: 502, y: 390 },
+      { x: 478, y: 399 },
+    ],
+    '#d5aa5f',
+    { stroke: '#5b4226', lineWidth: 1, order: 13, presentationOnly: true },
+  ),
+  renderItem('mentor-sera-head', regularPolygon(488, 361, 10, 12, 12, -Math.PI / 2), '#b67e62', {
+    stroke: '#30252a',
+    lineWidth: 2,
+    order: 14,
+    presentationOnly: true,
+  }),
+  renderItem(
+    'mentor-sera-hair',
+    [
+      { x: 478, y: 361 },
+      { x: 479, y: 350 },
+      { x: 489, y: 346 },
+      { x: 499, y: 354 },
+      { x: 495, y: 361 },
+      { x: 488, y: 356 },
+    ],
+    '#202a31',
+    { stroke: '#10161a', lineWidth: 1.5, order: 15, presentationOnly: true },
+  ),
+  renderItem(
+    'mentor-sera-shoulder-guard',
+    [
+      { x: 476, y: 372 },
+      { x: 482, y: 367 },
+      { x: 487, y: 374 },
+      { x: 480, y: 380 },
+    ],
+    '#9aa9a7',
+    { stroke: '#263638', lineWidth: 1.5, order: 16, presentationOnly: true },
+  ),
+  renderItem('mentor-sera-crest', regularPolygon(489, 387, 4, 6, 4, Math.PI / 4), '#73ded2', {
+    stroke: '#163b3d',
+    lineWidth: 1,
+    order: 17,
+    presentationOnly: true,
   }),
   ...createPortalRenderItems('test-portal', 104, 432, '#86d9d1', {
     style: 'academy',

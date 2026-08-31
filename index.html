@@ -225,10 +225,23 @@
             <em x-show="encounterHealthLabel" x-text="encounterHealthLabel"></em>
           </section>
 
-          <div class="quest-line">
-            <small>목표</small>
-            <strong x-text="objective"></strong>
-          </div>
+          <section
+            class="story-briefing"
+            x-bind:data-story-beat="storyBeatId"
+            aria-labelledby="story-briefing-title"
+            aria-describedby="story-briefing-detail story-current-objective"
+            aria-live="polite"
+          >
+            <header>
+              <small x-text="`STORY · ${storyBeatId}`"></small>
+              <strong id="story-briefing-title" x-text="storyTitle"></strong>
+            </header>
+            <p id="story-briefing-detail" x-text="storyBriefing"></p>
+            <div id="story-current-objective">
+              <small>현재 목표</small>
+              <strong x-text="objective"></strong>
+            </div>
+          </section>
 
           <section class="mobile-controls" aria-label="모바일 게임 조작">
             <div class="mobile-direction-pad" aria-label="이동과 자세">
