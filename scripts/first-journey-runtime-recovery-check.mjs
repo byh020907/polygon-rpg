@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
+const KEYBOARD_CODE_BY_ACTION = Object.freeze({
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+  jump: 'ArrowUp',
+  guard: 'ArrowDown',
+  basicAttack: 'KeyA',
+  strongAttack: 'KeyS',
+});
 const EMPTY_INPUT = Object.freeze({
   left: false,
   right: false,
@@ -17,9 +26,15 @@ const EMPTY_INPUT = Object.freeze({
 });
 
 class RuntimeDriver {
-  constructor(scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP })) {
+  constructor(
+    scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP }),
+    { keyboardInput = false } = {},
+  ) {
     this.scene = scene;
     this.sequences = { jump: 0, basicAttack: 0, strongAttack: 0 };
+    this.keyboardInput = keyboardInput
+      ? new KeyboardInputAdapter({ target: null, documentTarget: null })
+      : null;
     this.trace = [];
     scene.enterTree();
   }
@@ -35,12 +50,31 @@ class RuntimeDriver {
   }
 
   tick(overrides = {}) {
+    if (this.keyboardInput) {
+      const current = this.keyboardInput.snapshot();
+      for (const [action, code] of Object.entries(KEYBOARD_CODE_BY_ACTION)) {
+        const requested = overrides[action] === true;
+        if (requested && !current[action]) {
+          this.keyboardInput.onKeyDown({ code, preventDefault() {} });
+        } else if (!requested && current[action]) {
+          this.keyboardInput.onKeyUp({ code });
+        }
+      }
+      const inputSnapshot = this.keyboardInput.snapshot();
+      this.scene.update(STEP_SECONDS, inputSnapshot);
+      return inputSnapshot;
+    }
     const inputSnapshot = this.snapshot(overrides);
     this.scene.update(STEP_SECONDS, inputSnapshot);
     return inputSnapshot;
   }
 
   press(action, overrides = {}) {
+    if (this.keyboardInput) {
+      const inputSnapshot = this.tick({ ...overrides, [action]: true });
+      this.keyboardInput.onKeyUp({ code: KEYBOARD_CODE_BY_ACTION[action] });
+      return inputSnapshot;
+    }
     this.sequences[action] += 1;
     return this.tick({
       ...overrides,
@@ -96,12 +130,7 @@ class RuntimeDriver {
         ? portal.from
         : portal.to;
     this.moveTo(this.worldX(endpoint.anchor.x), `${label} Portal`);
-    this.sequences.jump += 1;
-    this.tick({
-      ...extraInput,
-      jump: true,
-      jumpSequence: this.sequences.jump,
-    });
+    this.press('jump', extraInput);
     assert.ok(
       this.scene.mapRuntime.getTransition(),
       `${label}: Portal transition이 시작되어야 합니다.`,
@@ -222,7 +251,7 @@ class RuntimeDriver {
 }
 
 function verifyDebugFreeFirstJourney() {
-  const driver = new RuntimeDriver();
+  const driver = new RuntimeDriver(undefined, { keyboardInput: true });
   const { scene } = driver;
   driver.record('prepare');
   driver.completeDialogue(488, '세라 교관', '학원촌 준비 대화');
@@ -358,6 +387,64 @@ function verifyTransitionSourceExitFailureRollback() {
   driver.usePortal('academy-field-portal', 'field-crossing', 'source-exit 실패 뒤 재시도');
 }
 
+function verifyTransitionSourceDisposeFailureRollback() {
+  const driver = new RuntimeDriver();
+  const { scene } = driver;
+  const disposedSource = scene.roomSceneNode;
+  driver.moveTo(driver.worldX(910), 'source-dispose failure Portal');
+  const sourceLocation = { ...scene.mapRuntime.getActiveLocation() };
+  const sourcePosition = { ...scene.position };
+  const sourceCameraPosition = { ...scene.cameraPosition };
+  const originalDispose = disposedSource.dispose.bind(disposedSource);
+  let injectOnce = true;
+  disposedSource.dispose = () => {
+    const disposed = originalDispose();
+    if (injectOnce) {
+      injectOnce = false;
+      throw new Error('injected source Room Scene dispose failure');
+    }
+    return disposed;
+  };
+
+  driver.sequences.jump += 1;
+  driver.sequences.strongAttack += 1;
+  const heldFailureInput = driver.snapshot({
+    jump: true,
+    jumpSequence: driver.sequences.jump,
+    strongAttack: true,
+    strongAttackSequence: driver.sequences.strongAttack,
+  });
+  driver.tick(heldFailureInput);
+  for (let index = 0; index < 120 && scene.mapRuntime.getTransition(); index += 1) {
+    driver.tick(heldFailureInput);
+  }
+
+  assert.deepEqual(scene.mapRuntime.getActiveLocation(), sourceLocation);
+  assert.deepEqual(scene.position, sourcePosition);
+  assert.deepEqual(scene.cameraPosition, sourceCameraPosition);
+  assert.notEqual(
+    scene.roomSceneNode,
+    disposedSource,
+    'dispose 실패 뒤에는 이미 해제된 source 대신 fresh Room Scene을 복구해야 합니다.',
+  );
+  assert.equal(disposedSource.isDisposed, true);
+  assert.equal(scene.roomSceneNode.parent, scene);
+  assert.equal(scene.roomSceneNode.isInsideTree, true);
+  assert.ok(scene.children.includes(scene.roomSceneNode));
+  assert.equal(scene.journeyProgress.snapshot().phase, 'prepare');
+  assert.match(scene.getWorldStatus().encounterHint, /Room 전환 실패.*복구/);
+
+  const staminaBefore = scene.combatCommands.snapshot().stamina;
+  driver.tick(heldFailureInput);
+  assert.equal(scene.combatCommands.snapshot().id, 'idle');
+  assert.equal(
+    scene.combatCommands.snapshot().stamina,
+    staminaBefore,
+    'dispose 실패 중 입력을 복구 뒤 재생하면 안 됩니다.',
+  );
+  driver.usePortal('academy-field-portal', 'field-crossing', 'source-dispose 실패 뒤 재시도');
+}
+
 function verifyKoResetAndDurableInvariants(completedProgression) {
   const driver = new RuntimeDriver(
     createTestGameScene({
@@ -412,6 +499,7 @@ function verifyKoResetAndDurableInvariants(completedProgression) {
 const journey = verifyDebugFreeFirstJourney();
 verifyTransitionFailureRollback();
 verifyTransitionSourceExitFailureRollback();
+verifyTransitionSourceDisposeFailureRollback();
 verifyKoResetAndDurableInvariants(journey.progression);
 
 console.log(
@@ -422,6 +510,7 @@ console.log(
         'debug-free-public-input-story-portal-combat-flow',
         'atomic-room-transition-failure-rollback-and-stale-input-consumption',
         'source-room-exit-failure-restores-attached-active-scene',
+        'source-room-dispose-failure-restores-fresh-attached-scene',
         'ko-checkpoint-reset-with-reward-and-shortcut-idempotence',
       ],
       trace: journey.trace,
