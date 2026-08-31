@@ -246,7 +246,7 @@ export class CombatCommandController {
     return combatMotionPolicy(id, this.timingProfile).frame ?? null;
   }
 
-  reset() {
+  reset({ inputSnapshot = null } = {}) {
     this.active = null;
     this.queuedMotion = null;
     this.sequence = 0;
@@ -258,9 +258,16 @@ export class CombatCommandController {
     this.lastStaminaAction = null;
     this.lastCommandTransition = null;
     this.continueNextStarterInCombo = false;
-    this.previousGuardInput = false;
-    this.previousInputs = Object.fromEntries(INPUT_NAMES.map((name) => [name, false]));
-    this.previousSequences = Object.fromEntries(INPUT_NAMES.map((name) => [name, 0]));
+    this.previousGuardInput = Boolean(inputSnapshot?.guard);
+    this.previousInputs = Object.fromEntries(
+      INPUT_NAMES.map((name) => [name, Boolean(inputSnapshot?.[name])]),
+    );
+    this.previousSequences = Object.fromEntries(
+      INPUT_NAMES.map((name) => {
+        const sequence = inputSnapshot?.[`${name}Sequence`];
+        return [name, Number.isSafeInteger(sequence) ? sequence : 0];
+      }),
+    );
   }
 
   update(

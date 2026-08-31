@@ -380,6 +380,7 @@ export class GameScene extends SceneNode {
     this.playerWeaponContactHistory = [];
     this.playerCombatGeometry = null;
     this.progressionNotice = `훈련 인장은 학습 조건, 원정 Gold는 장비·command 성장 비용입니다.`;
+    this.recoveryNotice = '';
     this.storyInteractionOwner.reset();
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
@@ -735,6 +736,7 @@ export class GameScene extends SceneNode {
   beginPortalTransition(portal) {
     const transition = this.mapRuntime.beginPortalTransition(portal.id);
     this.portalTransitionPresentation = {
+      sourceLocation: { ...this.mapRuntime.getActiveLocation() },
       startPosition: { ...this.position },
       destinationPosition: { ...transition.destinationPosition },
       sourceCameraPosition: { ...this.cameraPosition },
@@ -744,6 +746,7 @@ export class GameScene extends SceneNode {
     this.airComboFloatSeconds = 0;
     this.airComboGravityScale = 1;
     this.isGrounded = true;
+    this.recoveryNotice = '';
     return true;
   }
 
@@ -768,7 +771,14 @@ export class GameScene extends SceneNode {
     const presentation = this.portalTransitionPresentation;
     if (!presentation) return false;
 
-    const { transition, completion } = this.mapRuntime.advanceTransition(deltaSeconds);
+    let transitionResult;
+    try {
+      transitionResult = this.mapRuntime.advanceTransition(deltaSeconds);
+    } catch (error) {
+      this.recoverPortalTransition(presentation, error);
+      return true;
+    }
+    const { transition, completion } = transitionResult;
     const amount = smoothStep(transition.progress);
     this.position.x = lerp(
       presentation.startPosition.x,
@@ -794,11 +804,16 @@ export class GameScene extends SceneNode {
     };
 
     if (!completion) return true;
+    try {
+      this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
+    } catch (error) {
+      this.recoverPortalTransition(presentation, error);
+      return true;
+    }
     this.position = { ...completion.position };
     this.cameraPosition = { ...presentation.destinationCameraPosition };
     this.portalTransitionPresentation = null;
     this.storyInteractionOwner.reset();
-    this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
     const journeyTransition = this.journeyProgress.recordPortal(completion.portalId);
     const regionExpansionTransition = this.regionExpansionProgress.recordPortal(
       completion.portalId,
@@ -815,6 +830,31 @@ export class GameScene extends SceneNode {
       }),
     );
     return true;
+  }
+
+  recoverPortalTransition(presentation, cause) {
+    try {
+      this.mapRuntime.cancelTransition();
+      const sourceSnapshot = this.mapRuntime.setActiveLocation(
+        presentation.sourceLocation.regionId,
+        presentation.sourceLocation.roomId,
+      );
+      this.replaceRoomScene(sourceSnapshot);
+      this.position = { ...presentation.startPosition };
+      this.previousPosition = { ...this.position };
+      this.cameraPosition = { ...presentation.sourceCameraPosition };
+      this.previousCameraPosition = { ...this.cameraPosition };
+      this.portalTransitionPresentation = null;
+      this.storyInteractionOwner.reset();
+      this.recoveryNotice = 'Room 전환 실패 · 출발 지점으로 복구됨 · ↑로 다시 시도하세요.';
+      this.statusNode.publish({ force: true });
+    } catch (recoveryError) {
+      throw new AggregateError(
+        [cause, recoveryError],
+        'Room 전환 실패 뒤 출발 지점 복구에도 실패했습니다.',
+        { cause: recoveryError },
+      );
+    }
   }
 
   updateCameraFollow(deltaSeconds) {
@@ -974,20 +1014,20 @@ export class GameScene extends SceneNode {
 
   replaceRoomScene(
     snapshot = this.mapRuntime.getResolvedSnapshot(),
-    { resetExisting = false } = {},
+    { resetExisting = false, forceReplace = false } = {},
   ) {
     const activeRoomScene = this.roomSceneNode;
     if (
-      activeRoomScene?.location.regionId === snapshot.active.regionId &&
-      activeRoomScene?.location.roomId === snapshot.active.roomId
+      !forceReplace &&
+      activeRoomScene &&
+      !activeRoomScene.isDisposed &&
+      activeRoomScene.parent === this &&
+      (!this.isInsideTree || activeRoomScene.isInsideTree) &&
+      activeRoomScene.location.regionId === snapshot.active.regionId &&
+      activeRoomScene.location.roomId === snapshot.active.roomId
     ) {
       if (resetExisting) activeRoomScene.resetEncounter();
       return activeRoomScene;
-    }
-
-    if (activeRoomScene) {
-      if (activeRoomScene.parent === this) this.removeChild(activeRoomScene);
-      activeRoomScene.dispose();
     }
 
     const spinProfile = this.getAttackHitProfile('spin');
@@ -998,9 +1038,19 @@ export class GameScene extends SceneNode {
         contactSpacings: spinProfile.contactSpacings,
       },
     });
+    this.addChild(roomScene);
+    try {
+      if (activeRoomScene) {
+        if (activeRoomScene.parent === this) this.removeChild(activeRoomScene);
+        activeRoomScene.dispose();
+      }
+    } catch (error) {
+      if (roomScene.parent === this) this.removeChild(roomScene);
+      roomScene.dispose();
+      throw error;
+    }
     this.roomSceneNode = roomScene;
     this.connectRoomSceneSignals(roomScene);
-    this.addChild(roomScene);
     return roomScene;
   }
 
@@ -1102,7 +1152,7 @@ export class GameScene extends SceneNode {
     }
   }
 
-  respawnPlayerAfterKo() {
+  respawnPlayerAfterKo(inputSnapshot = {}) {
     const journey = this.journeyProgress.snapshot();
     const regionExpansion = this.regionExpansionProgress.snapshot();
     const activeRegionId = this.mapRuntime.getActiveLocation().regionId;
@@ -1117,7 +1167,7 @@ export class GameScene extends SceneNode {
     const checkpoint = this.mapRuntime.getTriggerLocation(checkpointId);
     if (checkpoint) {
       const mapSnapshot = this.mapRuntime.setActiveLocation(checkpoint.regionId, checkpoint.roomId);
-      this.replaceRoomScene(mapSnapshot);
+      this.replaceRoomScene(mapSnapshot, { forceReplace: true });
       this.position = {
         x: checkpoint.position.x,
         y: checkpoint.position.y - CHARACTER_FOOT_OFFSET,
@@ -1142,6 +1192,24 @@ export class GameScene extends SceneNode {
     this.playerBlockImpactSeconds = 0;
     this.playerRetaliationPending = false;
     this.playerRetaliationSeconds = 0;
+    this.playerInvulnerableSeconds = 0;
+    this.playerHitstunSeconds = 0;
+    this.playerKoSeconds = 0;
+    this.rollState = null;
+    this.landingRecoverySeconds = 0;
+    this.hitStopSeconds = 0;
+    this.airComboFloatSeconds = 0;
+    this.airComboGravityScale = 1;
+    this.airComboFacing = 0;
+    this.storyInteractionOwner.reset();
+    this.combatCommands.reset({ inputSnapshot });
+    this.combatCameraFeedback.reset();
+    this.combatEvents.reset();
+    this.jumpWasPressed = Boolean(inputSnapshot.jump);
+    this.guardWasPressed = Boolean(inputSnapshot.guard);
+    if (Number.isSafeInteger(inputSnapshot.jumpSequence)) {
+      this.lastJumpSequence = inputSnapshot.jumpSequence;
+    }
     this.isGrounded = true;
   }
 
@@ -1339,7 +1407,7 @@ export class GameScene extends SceneNode {
     this.playerBlockImpactSeconds = Math.max(0, this.playerBlockImpactSeconds - deltaSeconds);
     this.playerBlockstunSeconds = Math.max(0, this.playerBlockstunSeconds - deltaSeconds);
     if (this.playerHealth === 0 && this.playerKoSeconds === 0) {
-      this.respawnPlayerAfterKo();
+      this.respawnPlayerAfterKo(inputSnapshot);
     }
     const landingControlsLocked = this.landingRecoverySeconds > 0;
     const nextLandingRecoverySeconds = this.landingRecoverySeconds - deltaSeconds;
@@ -1684,6 +1752,7 @@ export class GameScene extends SceneNode {
     if (roomId === 'academy-plaza' && regionExpansion.returnedWithReward) {
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
+    if (this.recoveryNotice) encounterHint = this.recoveryNotice;
 
     const nextSkillLevel = Math.min(
       this.combatProgressionProfile.maxSkillLevel,
