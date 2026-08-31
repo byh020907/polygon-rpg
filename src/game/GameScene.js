@@ -1818,7 +1818,9 @@ export class GameScene extends SceneNode {
       this.respawnPlayerAfterKo();
     }
     const landingControlsLocked = this.landingRecoverySeconds > 0;
-    this.landingRecoverySeconds = Math.max(0, this.landingRecoverySeconds - deltaSeconds);
+    const nextLandingRecoverySeconds = this.landingRecoverySeconds - deltaSeconds;
+    this.landingRecoverySeconds =
+      nextLandingRecoverySeconds <= Number.EPSILON ? 0 : nextLandingRecoverySeconds;
     const wasGrounded = this.isGrounded;
 
     const controlsLocked =
