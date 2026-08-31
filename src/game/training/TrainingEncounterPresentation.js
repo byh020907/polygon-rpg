@@ -556,6 +556,121 @@ export function createTrainingEnemyItems(enemy, renderOrder) {
     ),
   ];
 
+  if (enemy.profileId === 'training') {
+    const orderNear = (itemId, offset) => items.findIndex((item) => item.id === itemId) + offset;
+    items.push(
+      polygon(
+        'combat-enemy-training-waist-cloth',
+        [
+          { x: -18, y: 12 },
+          { x: 18, y: 11 },
+          { x: 17, y: 27 },
+          { x: 7, y: 42 },
+          { x: -2, y: 35 },
+          { x: -11, y: 43 },
+          { x: -18, y: 27 },
+        ],
+        { x, y: y - 31 },
+        '#c89045',
+        {
+          stroke: '#513147',
+          lineWidth: 2,
+          order: orderNear('combat-enemy-body', 0.25),
+        },
+      ),
+      polygon(
+        'combat-enemy-training-shoulder-plate',
+        [
+          { x: -12, y: -7 },
+          { x: 0, y: -13 },
+          { x: 13, y: -7 },
+          { x: 15, y: 3 },
+          { x: 5, y: 10 },
+          { x: -10, y: 7 },
+        ],
+        weaponShoulder,
+        '#4d294b',
+        {
+          stroke: '#e6cf9f',
+          lineWidth: 2,
+          order: orderNear('combat-enemy-upper-weapon-arm', 0.25),
+        },
+      ),
+      polygon(
+        'combat-enemy-training-mask',
+        [
+          { x: -15, y: -5 },
+          { x: 12, y: -8 },
+          { x: 18, y: 0 },
+          { x: 9, y: 11 },
+          { x: -10, y: 9 },
+          { x: -17, y: 2 },
+        ],
+        { x, y: y - 79 },
+        '#f0ddb4',
+        {
+          stroke: '#4d294b',
+          lineWidth: 2,
+          order: orderNear('combat-enemy-head', 0.25),
+        },
+      ),
+      polygon(
+        'combat-enemy-training-gauntlet',
+        [
+          { x: -8, y: -7 },
+          { x: 8, y: -7 },
+          { x: 12, y: 0 },
+          { x: 6, y: 8 },
+          { x: -8, y: 7 },
+          { x: -11, y: 0 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        '#603257',
+        {
+          stroke: '#2a172b',
+          lineWidth: 2,
+          order: orderNear('combat-enemy-lower-weapon-arm', 0.25),
+        },
+      ),
+      polygon(
+        'combat-enemy-training-back-boot',
+        [
+          { x: -9, y: -8 },
+          { x: 7, y: -8 },
+          { x: 15, y: -3 },
+          { x: 16, y: 5 },
+          { x: 3, y: 9 },
+          { x: -10, y: 6 },
+        ],
+        { x: x - 9, y },
+        '#492542',
+        {
+          stroke: '#211321',
+          lineWidth: 1.5,
+          order: orderNear('combat-enemy-back-leg', 0.25),
+        },
+      ),
+      polygon(
+        'combat-enemy-training-front-boot',
+        [
+          { x: -9, y: -8 },
+          { x: 8, y: -8 },
+          { x: 17, y: -3 },
+          { x: 18, y: 5 },
+          { x: 4, y: 9 },
+          { x: -10, y: 6 },
+        ],
+        { x: x + 10, y },
+        '#633052',
+        {
+          stroke: '#281427',
+          lineWidth: 1.5,
+          order: orderNear('combat-enemy-front-leg', 0.25),
+        },
+      ),
+    );
+  }
+
   return items.map((item, index) =>
     Object.freeze({
       ...item,

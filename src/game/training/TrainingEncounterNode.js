@@ -36,6 +36,12 @@ const ENEMY_NON_HURT_ITEM_IDS = new Set([
   'combat-enemy-sweep-trail',
   'combat-enemy-glasswind-wing-back',
   'combat-enemy-glasswind-wing-front',
+  'combat-enemy-training-waist-cloth',
+  'combat-enemy-training-shoulder-plate',
+  'combat-enemy-training-mask',
+  'combat-enemy-training-gauntlet',
+  'combat-enemy-training-back-boot',
+  'combat-enemy-training-front-boot',
 ]);
 const PLAYER_NON_HURT_ITEM_IDS = new Set([
   'shadow',
@@ -45,6 +51,16 @@ const PLAYER_NON_HURT_ITEM_IDS = new Set([
   'sword-hilt',
   'sword-blade',
   'sword-shine',
+  'hair-back',
+  'hair-fringe',
+  'uniform-coat-tail',
+  'uniform-front-panel',
+  'shield-pauldron',
+  'sword-pauldron',
+  'shield-glove',
+  'sword-glove',
+  'back-boot',
+  'front-boot',
 ]);
 
 function pointToSegmentDistance(pointValue, start, end) {
