@@ -326,6 +326,16 @@ export class CombatCommandController {
     return true;
   }
 
+  cancelAirMotionForLanding() {
+    const activeWasAirborne = AIR_MOTION_IDS.has(this.active?.id);
+    const queuedWasAirborne = AIR_MOTION_IDS.has(this.queuedMotion);
+    if (activeWasAirborne) this.active = null;
+    if (queuedWasAirborne) this.queuedMotion = null;
+    this.continueNextStarterInCombo = false;
+    this.airActions = 0;
+    return activeWasAirborne || queuedWasAirborne;
+  }
+
   clearComboContinuation() {
     this.continueNextStarterInCombo = false;
   }
@@ -356,7 +366,7 @@ export class CombatCommandController {
       phase: frame.phase,
       frame,
       movementScale: motionPolicy.movementScale,
-      canJump: true,
+      canJump: !AIR_MOTION_IDS.has(this.active.id) && frame.index >= frame.chainStart,
       sequence: this.active.sequence,
       comboCycle: this.active.comboCycle,
       airActions: this.airActions,

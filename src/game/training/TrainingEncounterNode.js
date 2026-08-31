@@ -1,6 +1,7 @@
 import { SpinContactConstraint } from '../../combat/SpinContactConstraint.js';
 import { COMBAT_EVENT_TYPE } from '../../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
+import { resolveRecoveryPunish } from '../../combat/RecoveryPunish.js';
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
@@ -823,11 +824,16 @@ export class TrainingEncounterNode extends SceneNode {
     });
     this.contactSeconds = 0.18;
     if (enemy.aiState === 'evade') return false;
-    const bossPunishAccepted =
-      enemy.role !== 'boss' ||
-      enemy.punishWindowOpen ||
-      enemy.punishComboCycle === combatState.comboCycle;
-    if (this.entity.encounterProfile.guardOutsidePunish && !bossPunishAccepted) {
+    const recoveryPunish = resolveRecoveryPunish({
+      enemyRole: enemy.role,
+      recoveryWindowOpen: enemy.punishWindowOpen,
+      claimedComboCycle: enemy.punishComboCycle,
+      comboCycle: combatState.comboCycle,
+      playerPositionX: player.position.x,
+      enemyPositionX: enemy.position.x,
+      attackFacing: enemy.attackFacing,
+    });
+    if (this.entity.encounterProfile.guardOutsidePunish && !recoveryPunish.accepted) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'enemy',
         target: 'player',
@@ -861,10 +867,10 @@ export class TrainingEncounterNode extends SceneNode {
       return true;
     }
     const enemyAirborne = enemy.position.y < enemy.groundY;
-    const backPunish =
-      enemy.punishWindowOpen &&
-      (enemy.role === 'boss' || (player.position.x - enemy.position.x) * enemy.attackFacing < 0);
-    if (backPunish && enemy.role === 'boss') enemy.punishComboCycle = combatState.comboCycle;
+    const backPunish = recoveryPunish.opens;
+    if (recoveryPunish.opens && enemy.role === 'boss') {
+      enemy.punishComboCycle = combatState.comboCycle;
+    }
     const finalPulse = !profile.hitPulses || pulseIndex === profile.hitPulses.length - 1;
     const juggleRole =
       profile.juggleRole ?? (enemyAirborne ? 'sustain' : finalPulse ? 'launcher' : null);

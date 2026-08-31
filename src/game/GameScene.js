@@ -1817,16 +1817,22 @@ export class GameScene extends SceneNode {
     if (this.playerHealth === 0 && this.playerKoSeconds === 0) {
       this.respawnPlayerAfterKo();
     }
+    const landingControlsLocked = this.landingRecoverySeconds > 0;
     this.landingRecoverySeconds = Math.max(0, this.landingRecoverySeconds - deltaSeconds);
     const wasGrounded = this.isGrounded;
 
     const controlsLocked =
-      this.playerHitstunSeconds > 0 || this.playerBlockstunSeconds > 0 || this.playerHealth === 0;
+      landingControlsLocked ||
+      this.playerHitstunSeconds > 0 ||
+      this.playerBlockstunSeconds > 0 ||
+      this.playerHealth === 0;
+    const rawJumpPressed = Boolean(inputSnapshot.jump);
+    const rawGuardPressed = Boolean(inputSnapshot.guard);
     const horizontal = controlsLocked
       ? 0
       : Number(inputSnapshot.right) - Number(inputSnapshot.left);
-    const jumpPressed = controlsLocked ? false : Boolean(inputSnapshot.jump);
-    const guardPressed = controlsLocked ? false : Boolean(inputSnapshot.guard);
+    const jumpPressed = controlsLocked ? false : rawJumpPressed;
+    const guardPressed = controlsLocked ? false : rawGuardPressed;
     const guardEdge = guardPressed && !this.guardWasPressed;
     const jumpSequence = inputSnapshot.jumpSequence;
     const jumpIssued = controlsLocked
@@ -1879,8 +1885,8 @@ export class GameScene extends SceneNode {
     }
 
     this.movementIntent = isTransitioning ? 0 : horizontal;
-    this.jumpWasPressed = jumpPressed;
-    this.guardWasPressed = guardPressed;
+    this.jumpWasPressed = rawJumpPressed;
+    this.guardWasPressed = rawGuardPressed;
     if (Number.isSafeInteger(jumpSequence)) this.lastJumpSequence = jumpSequence;
     if (isTransitioning) {
       this.updatePortalTransition(deltaSeconds);
@@ -1976,6 +1982,7 @@ export class GameScene extends SceneNode {
         this.airComboFacing = 0;
       }
       this.isGrounded = true;
+      this.combatCommands.cancelAirMotionForLanding();
       this.combatCommands.clearComboContinuation();
       if (!wasGrounded) {
         this.landingRecoverySeconds = LANDING_RECOVERY_SECONDS;
