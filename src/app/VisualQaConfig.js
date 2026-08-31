@@ -99,7 +99,22 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'glasswind-dungeon': Object.freeze({
     regionId: 'glasswind-region',
     roomId: 'glasswind-observatory',
-    x: 360,
+    x: 590,
+  }),
+  'glasswind-dungeon-entrance': Object.freeze({
+    regionId: 'glasswind-region',
+    roomId: 'glasswind-observatory',
+    x: 150,
+  }),
+  'glasswind-dungeon-checkpoint': Object.freeze({
+    regionId: 'glasswind-region',
+    roomId: 'glasswind-observatory',
+    x: 1000,
+  }),
+  'glasswind-dungeon-threshold': Object.freeze({
+    regionId: 'glasswind-region',
+    roomId: 'glasswind-observatory',
+    x: 1100,
   }),
   'glasswind-boss': Object.freeze({
     regionId: 'glasswind-region',

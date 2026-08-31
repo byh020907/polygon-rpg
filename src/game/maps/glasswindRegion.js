@@ -163,10 +163,10 @@ const fieldRoom = {
 const dungeonRoom = {
   id: 'glasswind-observatory',
   label: '유리바람 협곡 · 바람잠긴 관측소',
-  bounds: { x: 8680, y: 0, width: 1024, height: 540 },
+  bounds: { x: 8680, y: 0, width: 1200, height: 540 },
   cameraAnchor: { x: 480, y: 270 },
   groundY: dungeonGroundY,
-  movementBounds: { minX: 24, maxX: 1000 },
+  movementBounds: { minX: 24, maxX: 1176 },
   renderOrder: 30,
   surfaces: [
     {
@@ -175,59 +175,255 @@ const dungeonRoom = {
       material: 'observatory-stone',
       points: [
         { x: 0, y: dungeonGroundY },
-        { x: 1024, y: dungeonGroundY },
+        { x: 250, y: dungeonGroundY },
+      ],
+    },
+    {
+      id: 'glasswind-observatory-ascent-surface',
+      kind: 'solid',
+      material: 'windglass-ramp',
+      points: [
+        { x: 250, y: dungeonGroundY },
+        { x: 390, y: 390 },
+      ],
+    },
+    {
+      id: 'glasswind-observatory-gallery-surface',
+      kind: 'solid',
+      material: 'observatory-brass',
+      points: [
+        { x: 390, y: 390 },
+        { x: 660, y: 390 },
+      ],
+    },
+    {
+      id: 'glasswind-observatory-descent-surface',
+      kind: 'solid',
+      material: 'windglass-ramp',
+      points: [
+        { x: 660, y: 390 },
+        { x: 760, y: dungeonGroundY },
+      ],
+    },
+    {
+      id: 'glasswind-observatory-lower-surface',
+      kind: 'solid',
+      material: 'observatory-stone',
+      points: [
+        { x: 760, y: dungeonGroundY },
+        { x: 880, y: dungeonGroundY },
+      ],
+    },
+    {
+      id: 'glasswind-checkpoint-alcove-surface',
+      kind: 'solid',
+      material: 'calmed-windglass',
+      points: [
+        { x: 880, y: dungeonGroundY },
+        { x: 920, y: 408 },
+        { x: 1040, y: 408 },
+        { x: 1080, y: dungeonGroundY },
+      ],
+    },
+    {
+      id: 'glasswind-boss-threshold-surface',
+      kind: 'solid',
+      material: 'stormglass-threshold',
+      points: [
+        { x: 1080, y: dungeonGroundY },
+        { x: 1200, y: dungeonGroundY },
       ],
     },
   ],
   renderItems: [
-    renderItem('glasswind-dungeon-backdrop', rectangle(0, 0, 1024, 540), '#07121e', {
+    renderItem('glasswind-dungeon-backdrop', rectangle(0, 0, 1200, 540), '#07121e', {
       order: -100,
     }),
     renderItem(
       'glasswind-observatory-dome',
-      regularPolygon(560, 295, 325, 220, 16, Math.PI / 16),
+      regularPolygon(590, 292, 445, 230, 18, Math.PI / 18),
       '#13283a',
       { stroke: '#42637a', lineWidth: 4, opacity: 0.9, order: -50 },
     ),
-    renderItem('glasswind-dungeon-floor', rectangle(0, dungeonGroundY, 1024, 116), '#263746', {
+    renderItem(
+      'glasswind-observatory-entrance-vault',
+      [
+        { x: 0, y: dungeonGroundY },
+        { x: 0, y: 202 },
+        { x: 56, y: 154 },
+        { x: 196, y: 154 },
+        { x: 250, y: 218 },
+        { x: 250, y: dungeonGroundY },
+      ],
+      '#1e3344',
+      { stroke: '#587386', lineWidth: 3, opacity: 0.94, order: -32 },
+    ),
+    renderItem('glasswind-observatory-entrance-floor', rectangle(0, 424, 250, 116), '#263746', {
       stroke: '#658093',
       lineWidth: 2,
       order: 0,
     }),
+    renderItem(
+      'glasswind-observatory-ascent',
+      [
+        { x: 250, y: dungeonGroundY },
+        { x: 390, y: 390 },
+        { x: 390, y: 540 },
+        { x: 250, y: 540 },
+      ],
+      '#304a59',
+      { stroke: '#83a7b4', lineWidth: 2, order: 1 },
+    ),
+    renderItem('glasswind-observatory-gallery-floor', rectangle(390, 390, 270, 150), '#354956', {
+      stroke: '#8ba4ad',
+      lineWidth: 2,
+      order: 1,
+    }),
+    renderItem(
+      'glasswind-observatory-descent',
+      [
+        { x: 660, y: 390 },
+        { x: 760, y: dungeonGroundY },
+        { x: 760, y: 540 },
+        { x: 660, y: 540 },
+      ],
+      '#304a59',
+      { stroke: '#83a7b4', lineWidth: 2, order: 1 },
+    ),
+    renderItem('glasswind-observatory-lower-floor', rectangle(760, 424, 120, 116), '#263746', {
+      stroke: '#658093',
+      lineWidth: 2,
+      order: 0,
+    }),
+    renderItem(
+      'glasswind-checkpoint-alcove-floor',
+      [
+        { x: 880, y: dungeonGroundY },
+        { x: 920, y: 408 },
+        { x: 1040, y: 408 },
+        { x: 1080, y: dungeonGroundY },
+        { x: 1080, y: 540 },
+        { x: 880, y: 540 },
+      ],
+      '#31505a',
+      { stroke: '#87aaa9', lineWidth: 2, order: 2 },
+    ),
+    renderItem('glasswind-boss-threshold-floor', rectangle(1080, 424, 120, 116), '#332f47', {
+      stroke: '#9274a4',
+      lineWidth: 2,
+      order: 2,
+    }),
+    renderItem(
+      'glasswind-observatory-wind-lens',
+      regularPolygon(525, 258, 116, 102, 16, Math.PI / 16),
+      '#1c4a5b',
+      { stroke: '#8ce6e2', lineWidth: 5, opacity: 0.82, order: -18 },
+    ),
+    renderItem(
+      'glasswind-observatory-wind-lens-core',
+      regularPolygon(525, 258, 48, 62, 12, Math.PI / 12),
+      '#74d8d5',
+      { stroke: '#eafffc', lineWidth: 2, opacity: 0.28, order: -17 },
+    ),
+    renderItem(
+      'glasswind-observatory-crosswind-hazard',
+      [
+        { x: 682, y: 390 },
+        { x: 700, y: 342 },
+        { x: 716, y: 390 },
+        { x: 732, y: 350 },
+        { x: 748, y: 410 },
+        { x: 760, y: dungeonGroundY },
+      ],
+      '#6dcbd0',
+      { stroke: '#d9ffff', lineWidth: 2, opacity: 0.5, order: 7 },
+    ),
+    renderItem(
+      'glasswind-checkpoint-alcove',
+      [
+        { x: 842, y: dungeonGroundY },
+        { x: 858, y: 270 },
+        { x: 902, y: 212 },
+        { x: 980, y: 188 },
+        { x: 1058, y: 212 },
+        { x: 1102, y: 270 },
+        { x: 1118, y: dungeonGroundY },
+      ],
+      '#1d343d',
+      { stroke: '#557e83', lineWidth: 3, opacity: 0.92, order: -26 },
+    ),
+    renderItem(
+      'glasswind-checkpoint-plinth',
+      [
+        { x: 936, y: 408 },
+        { x: 946, y: 392 },
+        { x: 1014, y: 392 },
+        { x: 1024, y: 408 },
+      ],
+      '#527579',
+      { stroke: '#a3c4c1', lineWidth: 2, order: 6 },
+    ),
+    renderItem(
+      'glasswind-boss-threshold-arch',
+      [
+        { x: 1042, y: dungeonGroundY },
+        { x: 1042, y: 278 },
+        { x: 1072, y: 226 },
+        { x: 1110, y: 204 },
+        { x: 1148, y: 226 },
+        { x: 1178, y: 278 },
+        { x: 1178, y: dungeonGroundY },
+      ],
+      '#2d2b42',
+      { stroke: '#9d73ad', lineWidth: 4, opacity: 0.96, order: -20 },
+    ),
+    renderItem(
+      'glasswind-boss-threshold-opening',
+      [
+        { x: 1070, y: dungeonGroundY },
+        { x: 1070, y: 310 },
+        { x: 1084, y: 276 },
+        { x: 1110, y: 262 },
+        { x: 1136, y: 276 },
+        { x: 1150, y: 310 },
+        { x: 1150, y: dungeonGroundY },
+      ],
+      '#090b18',
+      { stroke: '#d890e8', lineWidth: 2, opacity: 0.98, order: -19 },
+    ),
     ...createPortalRenderItems('glasswind-observatory-return', 80, dungeonGroundY, '#9fe8bc', {
       style: 'observatory',
     }),
-    ...createPortalRenderItems('glasswind-boss-gate', 930, dungeonGroundY, '#d890e8', {
+    ...createPortalRenderItems('glasswind-boss-gate', 1110, dungeonGroundY, '#d890e8', {
       style: 'observatory',
       enabled: false,
     }),
     renderItem(
       'glasswind-anchor-dormant',
-      regularPolygon(610, dungeonGroundY - 50, 26, 48, 10, Math.PI / 10),
+      regularPolygon(980, 358, 26, 48, 10, Math.PI / 10),
       '#3d5664',
       { stroke: '#7893a0', lineWidth: 2, order: 16 },
     ),
     renderItem(
       'glasswind-anchor-active',
-      regularPolygon(610, dungeonGroundY - 50, 31, 54, 10, Math.PI / 10),
+      regularPolygon(980, 358, 31, 54, 10, Math.PI / 10),
       '#72ebdd',
       { stroke: '#f0fffd', lineWidth: 3, opacity: 0.84, order: 17, enabled: false },
     ),
-    renderItem(
-      'glasswind-anchor-aura',
-      regularPolygon(610, dungeonGroundY - 44, 62, 72, 16),
-      '#67e5d9',
-      { opacity: 0.18, order: 15, enabled: false },
-    ),
-    shard('glasswind-dungeon-shard-a', 340, 340, 34, '#657f9c', { order: 4 }),
-    shard('glasswind-dungeon-shard-b', 760, 354, 28, '#6e88a2', { order: 5 }),
+    renderItem('glasswind-anchor-aura', regularPolygon(980, 364, 62, 72, 16), '#67e5d9', {
+      opacity: 0.18,
+      order: 15,
+      enabled: false,
+    }),
+    shard('glasswind-dungeon-shard-a', 318, 344, 34, '#657f9c', { order: 4 }),
+    shard('glasswind-dungeon-shard-b', 812, 362, 28, '#6e88a2', { order: 5 }),
   ],
   entities: [],
   triggers: [
     {
       id: 'glasswind-checkpoint',
       kind: 'glasswind-checkpoint',
-      position: { x: 610, y: dungeonGroundY },
+      position: { x: 980, y: 408 },
       radius: 58,
     },
   ],
@@ -369,8 +565,8 @@ export const GLASSWIND_PORTALS = Object.freeze([
     from: {
       regionId: 'glasswind-region',
       roomId: 'glasswind-observatory',
-      anchor: { x: 930, y: dungeonGroundY },
-      spawn: { x: 865, y: dungeonGroundY - 82 },
+      anchor: { x: 1110, y: dungeonGroundY },
+      spawn: { x: 1045, y: 410 - 82 },
       radius: 52,
     },
     to: {

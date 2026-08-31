@@ -1180,12 +1180,13 @@ export class GameScene extends SceneNode {
     const minX = room.movementBounds?.minX ?? room.bounds.x;
     const maxX = room.movementBounds?.maxX ?? room.bounds.x + room.bounds.width;
     const requestedX = room.bounds.x + (x ?? 140);
+    const playerX = Math.max(
+      minX + CHARACTER_BOUNDARY_HALF_WIDTH,
+      Math.min(maxX - CHARACTER_BOUNDARY_HALF_WIDTH, requestedX),
+    );
     this.position = {
-      x: Math.max(
-        minX + CHARACTER_BOUNDARY_HALF_WIDTH,
-        Math.min(maxX - CHARACTER_BOUNDARY_HALF_WIDTH, requestedX),
-      ),
-      y: room.groundY - CHARACTER_FOOT_OFFSET,
+      x: playerX,
+      y: this.mapRuntime.getGroundYAt(playerX) - CHARACTER_FOOT_OFFSET,
     };
     this.previousPosition = { ...this.position };
     this.cameraPosition = { ...mapSnapshot.cameraPosition };
@@ -1513,8 +1514,10 @@ export class GameScene extends SceneNode {
 
   tryPortalTransition() {
     if (!this.canStartPortalTransition()) return false;
-    const room = this.mapRuntime.getActiveRoom();
-    const portal = this.mapRuntime.findPortalAt({ x: this.position.x, y: room.groundY });
+    const portal = this.mapRuntime.findPortalAt({
+      x: this.position.x,
+      y: this.position.y + CHARACTER_FOOT_OFFSET,
+    });
     return portal ? this.beginPortalTransition(portal) : false;
   }
 
@@ -1797,7 +1800,7 @@ export class GameScene extends SceneNode {
       const radius = Number.isFinite(trigger.radius) ? trigger.radius : 48;
       const distance = Math.hypot(
         this.position.x - trigger.position.x,
-        snapshot.room.groundY - trigger.position.y,
+        this.position.y + CHARACTER_FOOT_OFFSET - trigger.position.y,
       );
       if (distance > radius) continue;
 
@@ -1860,9 +1863,10 @@ export class GameScene extends SceneNode {
       this.cameraPosition = { ...mapSnapshot.cameraPosition };
     } else {
       const activeRoom = this.mapRuntime.getActiveRoom();
+      const respawnX = (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140;
       this.position = {
-        x: (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140,
-        y: activeRoom.groundY - CHARACTER_FOOT_OFFSET,
+        x: respawnX,
+        y: this.mapRuntime.getGroundYAt(respawnX) - CHARACTER_FOOT_OFFSET,
       };
       this.roomSceneNode?.resetEncounter();
     }
@@ -2214,6 +2218,9 @@ export class GameScene extends SceneNode {
         movementBounds.minX,
         Math.min(movementBounds.maxX, this.position.x),
       );
+      if (this.isGrounded) {
+        this.position.y = this.mapRuntime.getGroundYAt(this.position.x) - CHARACTER_FOOT_OFFSET;
+      }
       this.updateCameraFollow(deltaSeconds);
       this.animationTime += deltaSeconds * animationSpeed * 1.8;
       return;
@@ -2230,10 +2237,14 @@ export class GameScene extends SceneNode {
       this.facing = comboFacing;
     }
     const activeRoom = this.mapRuntime.getActiveRoom();
-    const playerGroundY = activeRoom.groundY - CHARACTER_FOOT_OFFSET;
+    const playerGroundY = this.mapRuntime.getGroundYAt(this.position.x) - CHARACTER_FOOT_OFFSET;
     this.airComboFloatSeconds = Math.max(0, this.airComboFloatSeconds - deltaSeconds);
     const playerGravityMultiplier =
       this.airComboFloatSeconds > 0 ? 0.08 : this.airComboGravityScale;
+    if (wasGrounded && this.isGrounded) {
+      this.position.y = playerGroundY;
+      this.verticalVelocity = 0;
+    }
     this.verticalVelocity += GRAVITY * playerGravityMultiplier * deltaSeconds;
     this.position.y += this.verticalVelocity * deltaSeconds;
     if (this.position.y >= playerGroundY) {

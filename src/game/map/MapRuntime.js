@@ -74,6 +74,20 @@ function distanceBetween(left, right) {
   return Math.hypot(left.x - right.x, left.y - right.y);
 }
 
+function surfaceYAtX(surface, x) {
+  const matches = [];
+  for (let index = 1; index < surface.points.length; index += 1) {
+    const from = surface.points[index - 1];
+    const to = surface.points[index];
+    const minX = Math.min(from.x, to.x);
+    const maxX = Math.max(from.x, to.x);
+    if (x < minX || x > maxX || from.x === to.x) continue;
+    const amount = (x - from.x) / (to.x - from.x);
+    matches.push(from.y + (to.y - from.y) * amount);
+  }
+  return matches.length > 0 ? Math.min(...matches) : null;
+}
+
 function sortedRenderItems(rooms) {
   return Object.freeze(
     rooms
@@ -169,6 +183,16 @@ export class MapRuntime {
       );
     }
     return worldRoom(room);
+  }
+
+  getGroundYAt(x) {
+    if (!Number.isFinite(x)) throw new TypeError('ground 탐색 x는 유한한 숫자여야 합니다.');
+    const room = this.getActiveRoom();
+    const candidates = room.surfaces
+      .filter((surface) => surface.enabled !== false && surface.kind === 'solid')
+      .map((surface) => surfaceYAtX(surface, x))
+      .filter(Number.isFinite);
+    return candidates.length > 0 ? Math.min(...candidates) : room.groundY;
   }
 
   getTriggerLocation(qualifiedId) {
