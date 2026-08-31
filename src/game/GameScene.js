@@ -1312,7 +1312,7 @@ export class GameScene extends SceneNode {
     const regionExpansionEncounter = result.profileId.startsWith('glasswind-');
     const resolution = regionExpansionEncounter
       ? this.regionExpansionProgress.resolveEncounter(result.profileId)
-      : this.journeyProgress.resolveEncounter(result.profileId);
+      : this.journeyProgress.resolveEncounter(result.profileId, result.entityId);
     if (!resolution.changed) return resolution;
     if (resolution.kind === 'field-guardian-defeated') {
       this.playerMaxHealth += resolution.maxHealthBonus;
@@ -1844,9 +1844,13 @@ export class GameScene extends SceneNode {
       }
     }
     if (roomId === 'sealed-forest-dungeon') {
-      encounterHint = journey.checkpointActivated
-        ? '사망 시 이 Checkpoint에서 회복합니다.'
-        : 'Checkpoint는 HP를 모두 회복하고 Boss Portal을 엽니다.';
+      if (!journey.dungeonGuardianDefeated) {
+        encounterHint = '회랑 수호자를 쓰러뜨리면 봉인이 풀리고 Checkpoint 길이 열립니다.';
+      } else if (!journey.checkpointActivated) {
+        encounterHint = '수호자 관문 개방 · 청록 봉인석에서 HP를 회복하고 Checkpoint를 확보하세요.';
+      } else {
+        encounterHint = '사망 시 이 Checkpoint에서 회복 · 오른쪽 Boss Portal 진입 가능';
+      }
     }
     if (roomId === 'sealed-forest-boss') {
       if (journey.bossRewardClaimed) {

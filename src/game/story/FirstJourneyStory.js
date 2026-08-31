@@ -6,6 +6,7 @@ export const FIRST_JOURNEY_STORY_BEAT = Object.freeze({
   FIRST_FIELD_CHOICE: 'first-field-choice',
   FIRST_FIELD_CLEARED: 'first-field-cleared',
   FIRST_FIELD_BYPASS: 'first-field-bypass',
+  FIRST_DUNGEON_GUARDIAN: 'first-dungeon-guardian',
   FIRST_DUNGEON_SEAL: 'first-dungeon-seal',
   FIRST_DUNGEON_CHECKPOINT: 'first-dungeon-checkpoint',
   FIRST_BOSS: 'first-boss',
@@ -53,6 +54,12 @@ const STORY_BEATS = Object.freeze({
     briefing:
       '수호 수액을 포기하고 전투를 피해 숲의 상층으로 올랐습니다. 짧은 길이지만 Dungeon에서는 가호 없이 싸워야 합니다.',
     nextObjective: '전투를 우회했습니다. 오른쪽 Portal에서 ↑로 폐쇄 실습림에 진입하세요.',
+  }),
+  [FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_GUARDIAN]: Object.freeze({
+    title: '봉인 회랑의 수호 관문',
+    briefing:
+      '회랑 수호자가 봉인석으로 이어지는 통로를 붙들고 있습니다. Field에서 익힌 기본기를 다시 사용해 붉은 봉인을 해제해야 합니다.',
+    nextObjective: '회랑 중앙의 수호자를 쓰러뜨려 Checkpoint로 가는 봉인 관문을 여세요.',
   }),
   [FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_SEAL]: Object.freeze({
     title: '폐쇄 실습림의 봉인',
@@ -170,6 +177,11 @@ const STORY_RULES = Object.freeze([
   }),
   Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_SEAL,
+    matches: ({ activeRoomId, journey }) =>
+      activeRoomId === 'sealed-forest-dungeon' && Boolean(journey?.dungeonGuardianDefeated),
+  }),
+  Object.freeze({
+    beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_GUARDIAN,
     matches: matchesRoom('sealed-forest-dungeon'),
   }),
   Object.freeze({

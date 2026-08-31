@@ -3,6 +3,11 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   training: Object.freeze({ regionId: 'academy-region', roomId: 'training-room', x: 360 }),
   field: Object.freeze({ regionId: 'academy-region', roomId: 'field-crossing', x: 420 }),
   dungeon: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-dungeon', x: 420 }),
+  'dungeon-threshold': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-forest-dungeon',
+    x: 930,
+  }),
   boss: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-boss', x: 360 }),
   'glasswind-field': Object.freeze({
     regionId: 'glasswind-region',

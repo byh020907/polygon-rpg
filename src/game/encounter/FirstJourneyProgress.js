@@ -14,6 +14,7 @@ function freezeSnapshot(state) {
     checkpoint: state.checkpoint ? Object.freeze({ ...state.checkpoint }) : null,
     storyFlags: Object.freeze({
       fieldGuardianDefeated: state.fieldGuardianDefeated,
+      dungeonGuardianDefeated: state.dungeonGuardianDefeated,
       checkpointActivated: state.checkpointActivated,
       bossDefeated: state.bossDefeated,
       bossRewardClaimed: state.bossRewardClaimed,
@@ -31,6 +32,7 @@ export class FirstJourneyProgress {
       phase: JOURNEY_PHASE.PREPARE,
       routeChoice: null,
       fieldGuardianDefeated: false,
+      dungeonGuardianDefeated: false,
       fieldWardActive: false,
       checkpointActivated: false,
       checkpoint: null,
@@ -68,7 +70,22 @@ export class FirstJourneyProgress {
     return this.snapshot();
   }
 
-  resolveEncounter(profileId) {
+  resolveEncounter(profileId, entityId = null) {
+    if (entityId === 'sealed-dungeon-guardian') {
+      if (this.state.dungeonGuardianDefeated) {
+        return Object.freeze({
+          changed: false,
+          kind: 'already-resolved',
+          snapshot: this.snapshot(),
+        });
+      }
+      this.state.dungeonGuardianDefeated = true;
+      return Object.freeze({
+        changed: true,
+        kind: 'dungeon-guardian-defeated',
+        snapshot: this.snapshot(),
+      });
+    }
     if (profileId === 'field' && !this.state.fieldGuardianDefeated) {
       this.state.fieldGuardianDefeated = true;
       this.state.fieldWardActive = true;
