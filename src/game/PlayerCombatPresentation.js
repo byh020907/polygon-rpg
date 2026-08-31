@@ -1,12 +1,11 @@
-import { sampleCombatTargetPose } from '../animation/CombatPoseLibrary.js';
-import { sampleCharacterBonePose } from '../animation/CharacterBonePoseLibrary.js';
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 import { COMBAT_EVENT_TYPE } from '../combat/CombatEvent.js';
-import { PLAYER_COMBAT_GEOMETRY_SCALE } from '../combat/SharedCombatGeometry.js';
+import {
+  PLAYER_CHARACTER_FOOT_OFFSET,
+  PLAYER_COMBAT_GEOMETRY_SCALE,
+} from '../combat/SharedCombatGeometry.js';
 
 export const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
-
-const CHARACTER_FOOT_OFFSET = 82;
 
 const ARM_IK_SOLVER = new TwoBoneIKSolver();
 const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
@@ -185,8 +184,8 @@ function createCharacterItems(
   });
   const swordOrigin = rightArm.hand;
   const bladeOrigin = {
-    x: swordOrigin.x + Math.cos(swordRotation) * 8,
-    y: swordOrigin.y + Math.sin(swordRotation) * 8,
+    x: swordOrigin.x + Math.cos(swordRotation) * 5,
+    y: swordOrigin.y + Math.sin(swordRotation) * 5,
   };
   const trailItems = [
     polygon(
@@ -618,7 +617,7 @@ function createCharacterItems(
         ? Object.freeze(geometryPoints)
         : Object.freeze(
             item.points.map((point) => {
-              const footY = position.y + CHARACTER_FOOT_OFFSET;
+              const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
               const relativeX =
                 (point.x - position.x) * (item.id === 'shadow' ? 1 : bonePose.bodyScaleX);
               const relativeY =
@@ -817,12 +816,6 @@ function latestCombatEvent(events, type, predicate = () => true) {
     if (events[index].type === type && predicate(events[index])) return events[index];
   }
   return null;
-}
-
-export function samplePlayerPresentationPose({ motionState, boneInput }) {
-  const targetPose = sampleCombatTargetPose(motionState);
-  const bonePose = sampleCharacterBonePose({ ...boneInput, motionState });
-  return Object.freeze({ targetPose, bonePose });
 }
 
 export function createPlayerCombatPresentation({

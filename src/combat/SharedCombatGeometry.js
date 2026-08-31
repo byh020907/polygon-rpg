@@ -1,8 +1,8 @@
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 
 export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.265;
+export const PLAYER_CHARACTER_FOOT_OFFSET = 82;
 
-const PLAYER_FOOT_OFFSET = 68;
 const PLAYER_IK_SOLVER = new TwoBoneIKSolver();
 
 function freezePoint(point) {
@@ -47,7 +47,7 @@ function limbPolygon(start, end, width) {
 }
 
 function posePlayerPoints(points, { position, facing, targetPose, bonePose, renderScale }) {
-  const footY = position.y + PLAYER_FOOT_OFFSET;
+  const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
   const lean = targetPose.bodyLean + bonePose.bodyLean;
   const cosine = Math.cos(lean);
   const sine = Math.sin(lean);
@@ -90,8 +90,8 @@ export function samplePlayerCombatGeometry({
     bendDirection: -1,
   });
   const bladeOrigin = {
-    x: rightArm.hand.x + Math.cos(targetPose.swordAngle) * 8,
-    y: rightArm.hand.y + Math.sin(targetPose.swordAngle) * 8,
+    x: rightArm.hand.x + Math.cos(targetPose.swordAngle) * 5,
+    y: rightArm.hand.y + Math.sin(targetPose.swordAngle) * 5,
   };
   const weaponPoints = transformPoints(
     [

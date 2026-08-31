@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
+import { samplePlayerMotionPose } from '../src/animation/PlayerMotionPose.js';
 import { samplePlayerCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import {
   CHARACTER_RENDER_SCALE,
   createPlayerCombatPresentation,
-  samplePlayerPresentationPose,
 } from '../src/game/PlayerCombatPresentation.js';
 import { GameScene } from '../src/game/GameScene.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
@@ -14,58 +14,58 @@ import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
     count: 33,
-    digest: '6898bedbc28b40df57c10f30ee89c14fd9719670a02af9f420a5d84918233158',
+    digest: '49c619bb528e40c2807db732e57288b250bbce0f88e04fd79f707d5feee454b3',
   }),
   'pose-move': Object.freeze({
     count: 33,
-    digest: '6df71cedeb7702680c4f135368a25250f58ea1b6ed8256b0769e495d040fb3b6',
+    digest: '05b44d7b668be3a70a30eb3ee6530ed9caedbd527a92666b926606ebd2df916b',
   }),
   'pose-guard': Object.freeze({
     count: 33,
-    digest: '97f2a16cb66c16190b70edabacc340713e5b37eb6d61e2e5e5de7a0b03adc319',
+    digest: '009fff69735a43c71684dadd35107be332c2c01b106f1e56d35ec9ba8cf2427c',
   }),
   'pose-roll': Object.freeze({
     count: 33,
-    digest: 'e69d5af5df838dfa03687ec87b29813e0ecffa4f209f484dc39bc3362b39398d',
+    digest: 'e466c0ec1eb4097621ec68c55a6d84c6931b0fadcf513acd5a465af7a1f1944b',
   }),
   'pose-ground-attack': Object.freeze({
     count: 33,
-    digest: 'd8a68cec5cb96230e36daa36117ff6d7f39ce1cf0883fa5834f68f8f8cd2cd05',
+    digest: 'b02869f80b53531b714098974c0fb65a8c7fbf2d6293703f97874cf404ac847d',
   }),
   'pose-air-attack': Object.freeze({
     count: 33,
-    digest: '4aea524ff809585f86fd23cdacabb537c546ef2acf7083d9b390f5f68c99ae9b',
+    digest: '7f11ef31d5bb042b93dd17795338fd0661f1874b4d2c94489cb695e3ebf4d9da',
   }),
   'pose-hit': Object.freeze({
     count: 33,
-    digest: 'cf339adc9bdf585dbe57f2d8cd531ad603e4aadc31c43b67a0b2e5f997250578',
+    digest: '7082bd6fe6c2cfdb6abfa9965aa5679d7a6e0a3ce03b4b3d41eb9fa729628242',
   }),
 });
 
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
     count: 40,
-    digest: '5c5caa293a8d8b2ae58a4b19f886361adebb6b0161586fd22dad2eb3523b3c2e',
+    digest: 'c6ae161ddb7b3b7bd22aaf84f4ec068cc00f0cea724734778fec4665a80bab8c',
   }),
   'combat-block': Object.freeze({
     count: 39,
-    digest: '1a73c0a8d3c675f43b0025f7d8869cdad666bd25b4934a702b8a2e223f9af4a2',
+    digest: 'dec097728ea43f2ff2e4c5116578e273751f4bfc0429cf8c4601d667f32b4738',
   }),
   'combat-evade': Object.freeze({
     count: 36,
-    digest: '1b0485fd5d5c985a261ef902bb51c19dcd953bbd257e00a769fc2b1b9580d94d',
+    digest: '725241350b843fc30acde9a58af7a8753a96274e722b56c1ecfffb8badb5c8e7',
   }),
   'combat-punish': Object.freeze({
     count: 39,
-    digest: '166f4e4eca5ce4ec5a878c0839864cc6557aa893c35c30a8f173f75352a7b442',
+    digest: 'bd7c491e0c3ebe4d07a567556ea6e421970d5d282e0ee5f4a5a9a9ee964ed0f9',
   }),
   'combat-launch': Object.freeze({
     count: 40,
-    digest: '1b91547c0773cdc014f0dcad880baa8e2919ef9a10c0d1ac987d6c5aecab5f9f',
+    digest: '87246561c07cc2db89a91eac750349e2798575de2fdc31c3d271a99108a266f3',
   }),
   'combat-guard-break': Object.freeze({
     count: 39,
-    digest: '7663d447fd79b8d5b0bcddaaa14298311d562e11b1da8887688301d1da568968',
+    digest: '6d2127bfd24bdfe7b1ff52322d79c997b7167144788c1c20185e154cbeace127',
   }),
 });
 
@@ -147,7 +147,7 @@ const fixedBoneInput = Object.freeze({
   knockedOut: false,
   rollProgress: null,
 });
-const fixedPose = samplePlayerPresentationPose(
+const fixedPose = samplePlayerMotionPose(
   Object.freeze({ motionState: fixedMotionState, boneInput: fixedBoneInput }),
 );
 const fixedCombatGeometry = samplePlayerCombatGeometry({
@@ -183,6 +183,8 @@ function assertDeepFrozen(value, seen = new Set()) {
 assertDeepFrozen(fixedOutput);
 const bladeItem = fixedOutput.characterItems.find((item) => item.id === 'sword-blade');
 const shieldItem = fixedOutput.characterItems.find((item) => item.id === 'shield');
+const torsoItem = fixedOutput.characterItems.find((item) => item.id === 'torso');
+const hiltItem = fixedOutput.characterItems.find((item) => item.id === 'sword-hilt');
 assert.strictEqual(
   bladeItem.points,
   fixedOutput.combatGeometry.weapon.points,
@@ -193,6 +195,37 @@ assert.strictEqual(
   fixedOutput.combatGeometry.shield.points,
   'rendered shield must reuse shared gameplay geometry exactly',
 );
+assert.deepEqual(
+  torsoItem.points,
+  fixedOutput.combatGeometry.hurt.find(({ part }) => part === 'torso').points,
+  'rendered torso and gameplay hurt polygon must share the same posed foot pivot',
+);
+function pointSegmentDistance(point, start, end) {
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  const lengthSquared = deltaX * deltaX + deltaY * deltaY;
+  const amount =
+    lengthSquared === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            1,
+            ((point.x - start.x) * deltaX + (point.y - start.y) * deltaY) / lengthSquared,
+          ),
+        );
+  return Math.hypot(point.x - (start.x + deltaX * amount), point.y - (start.y + deltaY * amount));
+}
+const bladeRoot = bladeItem.points[0];
+const hiltBladeGap = Math.min(
+  ...hiltItem.points.map((point, index) =>
+    pointSegmentDistance(bladeRoot, point, hiltItem.points[(index + 1) % hiltItem.points.length]),
+  ),
+);
+assert.ok(
+  hiltBladeGap < 1e-7,
+  `rendered sword hilt edge and shared blade root must stay connected: ${hiltBladeGap}`,
+);
 
 const [gameSceneSource, presentationSource] = await Promise.all([
   readFile(new URL('../src/game/GameScene.js', import.meta.url), 'utf8'),
@@ -200,7 +233,7 @@ const [gameSceneSource, presentationSource] = await Promise.all([
 ]);
 assert.doesNotMatch(
   gameSceneSource,
-  /CombatPoseLibrary|CharacterBonePoseLibrary|TwoBoneIKSolver/,
+  /CombatPoseLibrary|CharacterBonePoseLibrary|TwoBoneIKSolver|samplePlayerPresentationPose/,
   'GameScene must not import or own pose/IK projection',
 );
 assert.doesNotMatch(
@@ -224,6 +257,7 @@ console.log(
       'fixed-public-item-parity',
       'deep-frozen-output',
       'shared-sword-shield-geometry-identity',
+      'shared-body-foot-pivot-and-connected-sword',
       'plain-owner-boundary',
     ],
   }),

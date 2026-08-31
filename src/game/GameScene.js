@@ -6,17 +6,16 @@ import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
 import {
+  PLAYER_CHARACTER_FOOT_OFFSET,
   PLAYER_COMBAT_GEOMETRY_SCALE,
   createSweptWeaponGeometry,
   samplePlayerCombatGeometry as sampleSharedPlayerCombatGeometry,
 } from '../combat/SharedCombatGeometry.js';
+import { samplePlayerMotionPose } from '../animation/PlayerMotionPose.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
-import {
-  createPlayerCombatPresentation,
-  samplePlayerPresentationPose,
-} from './PlayerCombatPresentation.js';
+import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
 import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
   EQUIPMENT_PROFILES,
@@ -178,7 +177,7 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
 const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 const CHARACTER_CELL_SIZE = 48;
 const CHARACTER_BOUNDARY_HALF_WIDTH = CHARACTER_CELL_SIZE / 2;
-const CHARACTER_FOOT_OFFSET = 82;
+const CHARACTER_FOOT_OFFSET = PLAYER_CHARACTER_FOOT_OFFSET;
 const WORLD_HOURS_PER_SECOND = 0.04;
 
 function lerp(start, end, amount) {
@@ -1185,7 +1184,7 @@ export class GameScene extends SceneNode {
             phase: 'guard',
           })
         : combatState;
-    const pose = samplePlayerPresentationPose(
+    const pose = samplePlayerMotionPose(
       Object.freeze({
         motionState: poseCombatState,
         boneInput: Object.freeze({
@@ -1802,7 +1801,7 @@ export class GameScene extends SceneNode {
       this.playerCombatGeometry?.sequence === combatState.sequence
         ? this.playerCombatGeometry
         : null;
-    const pose = samplePlayerPresentationPose(
+    const pose = samplePlayerMotionPose(
       Object.freeze({
         motionState: poseCombatState,
         boneInput: Object.freeze({
