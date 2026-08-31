@@ -274,6 +274,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.$nextTick(() => gameApp.enterGame());
     },
 
+    resetSavedProgress() {
+      return gameApp.resetSavedProgress();
+    },
+
     openRenderLab() {
       mobileViewport.leaveLandscape();
       this.screen = GAME_SCREEN.RENDER_LAB;

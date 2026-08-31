@@ -5,12 +5,14 @@ import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
   EQUIPMENT_PROFILES,
 } from '../game/equipment/EquipmentProfiles.js';
+import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
 import { CanvasRetroRenderer } from '../rendering/CanvasRetroRenderer.js';
+import { readVisualQaRequest } from './VisualQaConfig.js';
 
 export const GAME_SCREEN = Object.freeze({
   MENU: 'menu',
@@ -54,23 +56,54 @@ function assertUiBridge(uiBridge) {
   return uiBridge;
 }
 
+const PROGRESSION_STORAGE_KEY = 'polygon-rpg.progression.v1';
+
 function createProgressionStorage() {
   try {
-    return new ProgressionStorage(window.localStorage, 'polygon-rpg.progression.v1');
+    return Object.freeze({
+      ok: true,
+      storage: new ProgressionStorage(window.localStorage, PROGRESSION_STORAGE_KEY),
+    });
   } catch {
-    return null;
+    return Object.freeze({
+      ok: false,
+      reason: 'storage-unavailable',
+      message: '저장소를 사용할 수 없습니다. 새 진행은 이 세션에서만 유지됩니다.',
+    });
   }
 }
 
 export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas }) {
     super('GameApp');
-    this.progressionStorage = createProgressionStorage();
     const equipmentIds = EQUIPMENT_PROFILES.map((profile) => profile.id);
-    const progressionSnapshot = this.progressionStorage?.load(
-      DEFAULT_EQUIPMENT_PROFILE_ID,
-      equipmentIds,
+    const freshProgression = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+    this.isVisualQa = Boolean(readVisualQaRequest());
+    this.progressionStorage = null;
+    if (this.isVisualQa) {
+      this.progressionLoadResult = Object.freeze({
+        ok: true,
+        kind: 'visual-qa-fresh',
+        snapshot: freshProgression,
+      });
+    } else {
+      const storageResult = createProgressionStorage();
+      if (storageResult.ok) {
+        this.progressionStorage = storageResult.storage;
+        this.progressionLoadResult = this.progressionStorage.load(
+          DEFAULT_EQUIPMENT_PROFILE_ID,
+          equipmentIds,
+        );
+      } else {
+        this.progressionLoadResult = storageResult;
+      }
+    }
+    this.autosaveEnabled = Boolean(
+      !this.isVisualQa && this.progressionStorage && this.progressionLoadResult.ok,
     );
+    const progressionSnapshot = this.progressionLoadResult.ok
+      ? this.progressionLoadResult.snapshot
+      : freshProgression;
     this.scene = this.addChild(GAME_SCENE.instantiate({ progressionSnapshot }));
     this.camera = new Camera2D();
 
@@ -126,12 +159,15 @@ export class GameApp extends SceneNode {
       this.renderFrame(renderFrame);
     });
     this.connectTo(this.scene.progressionChanged, (snapshot) => {
-      const saved = this.progressionStorage?.save(snapshot) ?? false;
-      this.uiBridge.setSaveStatus(saved ? '성장 자동 저장됨' : '이 세션만 유지 · 저장 사용 불가');
+      this.saveProgression(snapshot);
     });
-    this.uiBridge.setSaveStatus(
-      this.progressionStorage ? '성장 자동 저장 준비' : '이 세션만 유지 · 저장 사용 불가',
-    );
+    this.uiBridge.setSaveStatus(this.initialSaveStatus());
+    if (this.progressionLoadResult.ok && this.progressionLoadResult.kind === 'migrated') {
+      const migrationSave = this.saveProgression(this.scene.getProgressionSnapshot());
+      if (migrationSave.ok) {
+        this.uiBridge.setSaveStatus('이전 저장 진행 변환·저장 완료');
+      }
+    }
     this.resizeObserver.observe(this.gameHost.canvas);
     this.resizeObserver.observe(this.polygonHost.canvas);
     this.resizeObserver.observe(this.retroHost.canvas);
@@ -169,6 +205,80 @@ export class GameApp extends SceneNode {
     this.input.clear({ resetSequences: true });
     this.scene.reset();
     this.onScreenChanged();
+  }
+
+  initialSaveStatus() {
+    if (this.isVisualQa) return '시각 검증용 새 진행 · 저장하지 않음';
+    if (!this.progressionLoadResult.ok) return this.progressionLoadResult.message;
+    if (this.progressionLoadResult.kind === 'loaded') {
+      return '저장 진행 불러옴 · 자동 저장 준비';
+    }
+    if (this.progressionLoadResult.kind === 'migrated') {
+      return '이전 저장 진행 변환됨 · 자동 저장 준비';
+    }
+    return '새 진행 · 자동 저장 준비';
+  }
+
+  saveProgression(snapshot) {
+    if (this.isVisualQa) {
+      return Object.freeze({
+        ok: false,
+        reason: 'visual-qa-disabled',
+        message: '시각 검증에서는 진행을 저장하지 않습니다.',
+      });
+    }
+    if (!this.autosaveEnabled || !this.progressionStorage) {
+      const result = Object.freeze({
+        ok: false,
+        reason: 'autosave-disabled',
+        message: this.progressionLoadResult.ok
+          ? '자동 저장을 사용할 수 없습니다. 현재 진행은 이 세션에서만 유지됩니다.'
+          : this.progressionLoadResult.message,
+      });
+      this.uiBridge?.setSaveStatus(result.message);
+      return result;
+    }
+    const result = this.progressionStorage.save(snapshot);
+    this.uiBridge?.setSaveStatus(result.ok ? '진행 자동 저장됨' : `저장 실패 · ${result.message}`);
+    return result;
+  }
+
+  resetSavedProgress() {
+    const freshProgression = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+    if (this.isVisualQa || !this.progressionStorage) {
+      const result = Object.freeze({
+        ok: false,
+        reason: this.isVisualQa ? 'visual-qa-disabled' : 'storage-unavailable',
+        message: this.isVisualQa
+          ? '시각 검증에서는 저장 진행을 변경하지 않습니다.'
+          : '저장 진행 초기화 실패 · 저장소를 사용할 수 없어 현재 진행을 유지합니다.',
+      });
+      this.uiBridge?.setSaveStatus(result.message);
+      return result;
+    }
+
+    const saveResult = this.progressionStorage.save(freshProgression);
+    if (!saveResult.ok) {
+      const result = Object.freeze({
+        ok: false,
+        reason: saveResult.reason,
+        message: `저장 진행 초기화 실패 · 현재 진행 유지 · ${saveResult.message}`,
+      });
+      this.uiBridge?.setSaveStatus(result.message);
+      return result;
+    }
+
+    this.autosaveEnabled = true;
+    this.progressionLoadResult = Object.freeze({
+      ok: true,
+      kind: 'reset',
+      snapshot: freshProgression,
+    });
+    this.input.clear({ resetSequences: true });
+    this.scene.restoreProgression(freshProgression);
+    this.runner.reset(performance.now());
+    this.uiBridge?.setSaveStatus('저장 진행 초기화 완료 · 새 진행 자동 저장 준비');
+    return Object.freeze({ ok: true, kind: 'reset', snapshot: freshProgression });
   }
 
   runVisualQa({ start, frame, scenario }) {

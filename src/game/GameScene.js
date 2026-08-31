@@ -27,8 +27,10 @@ import {
   getCombatSkillUpgradeCost,
 } from './progression/ProgressionProfiles.js';
 import {
+  assertProgressionSnapshot,
   awardTrainingMarks,
   createProgressionSnapshot,
+  mergeProgressionSnapshot,
   purchaseEquipment as purchaseProgressionEquipment,
   selectEquipment as selectProgressionEquipment,
   trainCombatSkill as trainProgressionCombatSkill,
@@ -1051,8 +1053,9 @@ function timePhaseForHour(hour) {
 export class GameScene extends SceneNode {
   constructor({ mapDefinition = ACADEMY_VILLAGE_MAP, progressionSnapshot = null } = {}) {
     super('GameScene');
-    this.progressionSnapshot =
+    const initialProgression =
       progressionSnapshot ?? createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
+    this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
     this.equipmentProfile = getEquipmentProfile(this.progressionSnapshot.equippedEquipmentId);
     const skillProfile = this.getCombatSkillProfile();
     this.combatCommands = new CombatCommandController({
@@ -1061,8 +1064,10 @@ export class GameScene extends SceneNode {
     });
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
-    this.journeyProgress = new FirstJourneyProgress();
-    this.regionExpansionProgress = new RegionExpansionProgress();
+    this.journeyProgress = new FirstJourneyProgress(this.progressionSnapshot.firstJourney);
+    this.regionExpansionProgress = new RegionExpansionProgress(
+      this.progressionSnapshot.regionExpansion,
+    );
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: {
         timePhase: 'day',
@@ -1088,6 +1093,25 @@ export class GameScene extends SceneNode {
     return getCombatSkillLevelProfile(this.progressionSnapshot.combatSkillLevel);
   }
 
+  getProgressionSnapshot() {
+    return this.progressionSnapshot;
+  }
+
+  restoreProgression(snapshot) {
+    assertProgressionSnapshot(snapshot);
+    const nextSnapshot = mergeProgressionSnapshot(snapshot);
+    const nextEquipment = getEquipmentProfile(nextSnapshot.equippedEquipmentId);
+    const nextJourney = new FirstJourneyProgress(nextSnapshot.firstJourney);
+    const nextRegionExpansion = new RegionExpansionProgress(nextSnapshot.regionExpansion);
+
+    this.progressionSnapshot = nextSnapshot;
+    this.equipmentProfile = nextEquipment;
+    this.journeyProgress = nextJourney;
+    this.regionExpansionProgress = nextRegionExpansion;
+    this.reset();
+    return this.progressionSnapshot;
+  }
+
   onPhysicsProcess(deltaSeconds, context = {}) {
     if (context.active === false) return;
     this.update(deltaSeconds, context.inputSnapshot ?? {}, context.simulationSettings ?? {});
@@ -1098,8 +1122,10 @@ export class GameScene extends SceneNode {
   }
 
   reset() {
-    const journey = this.journeyProgress.reset();
-    const regionExpansion = this.regionExpansionProgress.reset();
+    const journey = this.journeyProgress.restore(this.progressionSnapshot.firstJourney);
+    const regionExpansion = this.regionExpansionProgress.restore(
+      this.progressionSnapshot.regionExpansion,
+    );
     this.worldTimeHours = 10;
     this.timePhase = timePhaseForHour(this.worldTimeHours);
     this.mapRuntime.setWorldContext({
@@ -1126,8 +1152,8 @@ export class GameScene extends SceneNode {
     this.movementIntent = 0;
     this.rollState = null;
     this.hitStopSeconds = 0;
-    this.playerHealth = 100;
-    this.playerMaxHealth = 100;
+    this.playerMaxHealth = journey.fieldWardActive ? 120 : 100;
+    this.playerHealth = this.playerMaxHealth;
     this.playerHitstunSeconds = 0;
     this.playerInvulnerableSeconds = 0;
     this.playerKoSeconds = 0;
@@ -1211,6 +1237,15 @@ export class GameScene extends SceneNode {
     });
   }
 
+  emitDurableProgressionChanged() {
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      firstJourney: this.journeyProgress.persistenceSnapshot(),
+      regionExpansion: this.regionExpansionProgress.persistenceSnapshot(),
+    });
+    this.progressionChanged.emit(this.progressionSnapshot);
+    return this.progressionSnapshot;
+  }
+
   advanceWorldTime(deltaSeconds) {
     this.worldTimeHours = (this.worldTimeHours + deltaSeconds * WORLD_HOURS_PER_SECOND + 24) % 24;
     this.updateTimePhase();
@@ -1278,8 +1313,15 @@ export class GameScene extends SceneNode {
     this.cameraPosition = { ...presentation.destinationCameraPosition };
     this.portalTransitionPresentation = null;
     this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
-    this.journeyProgress.recordPortal(completion.portalId);
-    this.regionExpansionProgress.recordPortal(completion.portalId);
+    const journeyTransition = this.journeyProgress.recordPortal(completion.portalId);
+    const regionExpansionTransition = this.regionExpansionProgress.recordPortal(
+      completion.portalId,
+    );
+    if (journeyTransition.changed || regionExpansionTransition.changed) {
+      this.syncJourneyWorldContext();
+      this.emitDurableProgressionChanged();
+      this.statusNode.publish({ force: true });
+    }
     this.roomChanged.emit(
       Object.freeze({
         portalId: completion.portalId,
@@ -1319,7 +1361,7 @@ export class GameScene extends SceneNode {
     if (skillChanged) this.combatCommands.setCommandProfile(nextSkill);
     this.progressionSnapshot = nextSnapshot;
     this.equipmentProfile = nextEquipment;
-    this.progressionChanged.emit(nextSnapshot);
+    this.progressionChanged.emit(this.progressionSnapshot);
     this.statusNode.publish({ force: true });
     return transaction;
   }
@@ -1494,6 +1536,7 @@ export class GameScene extends SceneNode {
       );
     }
     this.syncJourneyWorldContext();
+    this.emitDurableProgressionChanged();
     this.statusNode.publish({ force: true });
     return resolution;
   }
@@ -1520,6 +1563,7 @@ export class GameScene extends SceneNode {
         if (!result.changed) continue;
         this.playerHealth = this.playerMaxHealth;
         this.syncJourneyWorldContext();
+        this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
 
@@ -1527,6 +1571,7 @@ export class GameScene extends SceneNode {
         const result = this.journeyProgress.claimBossReward(trigger.gold);
         if (!result.changed) continue;
         this.syncJourneyWorldContext();
+        this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
 
@@ -1542,6 +1587,7 @@ export class GameScene extends SceneNode {
         if (!result.changed) continue;
         this.playerHealth = this.playerMaxHealth;
         this.syncJourneyWorldContext();
+        this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
 
@@ -1549,6 +1595,7 @@ export class GameScene extends SceneNode {
         const result = this.regionExpansionProgress.claimBossReward(trigger.gold);
         if (!result.changed) continue;
         this.syncJourneyWorldContext();
+        this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
     }

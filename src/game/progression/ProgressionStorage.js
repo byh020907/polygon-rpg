@@ -2,18 +2,50 @@ import {
   PROGRESSION_SCHEMA_VERSION,
   assertProgressionSnapshot,
   createProgressionSnapshot,
+  mergeProgressionSnapshot,
 } from './ProgressionState.js';
+
+const LEGACY_PROGRESSION_SCHEMA_VERSION = 1;
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function sanitizeNonNegativeInteger(value, fallback = 0) {
-  return Number.isSafeInteger(value) && value >= 0 ? value : fallback;
+function assertEquipmentId(equipmentId, label) {
+  if (typeof equipmentId !== 'string' || equipmentId.trim().length === 0) {
+    throw new TypeError(`${label}은(는) 비어 있지 않은 문자열이어야 합니다.`);
+  }
 }
 
-function sanitizeSkillLevel(value) {
-  return Number.isInteger(value) && value >= 0 && value <= 3 ? value : 0;
+function assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds) {
+  if (!Number.isSafeInteger(value.trainingMarks) || value.trainingMarks < 0) {
+    throw new TypeError('저장된 훈련 인장이 올바르지 않습니다.');
+  }
+  if (!Array.isArray(value.ownedEquipmentIds) || value.ownedEquipmentIds.length === 0) {
+    throw new TypeError('저장된 소유 장비 목록이 올바르지 않습니다.');
+  }
+  const ownedIds = new Set();
+  for (const equipmentId of value.ownedEquipmentIds) {
+    assertEquipmentId(equipmentId, '저장된 장비 ID');
+    if (!allowedEquipmentIds.has(equipmentId) || ownedIds.has(equipmentId)) {
+      throw new Error('저장된 장비 목록에 지원하지 않거나 중복된 항목이 있습니다.');
+    }
+    ownedIds.add(equipmentId);
+  }
+  if (!ownedIds.has(defaultEquipmentId)) {
+    throw new Error('저장된 장비 목록에 기본 장비가 없습니다.');
+  }
+  assertEquipmentId(value.equippedEquipmentId, '저장된 착용 장비 ID');
+  if (!ownedIds.has(value.equippedEquipmentId)) {
+    throw new Error('저장된 착용 장비를 소유하고 있지 않습니다.');
+  }
+  if (
+    !Number.isInteger(value.combatSkillLevel) ||
+    value.combatSkillLevel < 0 ||
+    value.combatSkillLevel > 3
+  ) {
+    throw new TypeError('저장된 combat skill level이 올바르지 않습니다.');
+  }
 }
 
 function createAllowedEquipmentIds(value, defaultEquipmentId) {
@@ -25,45 +57,22 @@ function createAllowedEquipmentIds(value, defaultEquipmentId) {
   return ids;
 }
 
-function sanitizeOwnedEquipmentIds(value, defaultEquipmentId, allowedEquipmentIds) {
-  const ids = [defaultEquipmentId];
-  if (!Array.isArray(value)) return ids;
-  const seen = new Set(ids);
-  for (const equipmentId of value) {
-    if (
-      typeof equipmentId !== 'string' ||
-      equipmentId.trim().length === 0 ||
-      seen.has(equipmentId) ||
-      !allowedEquipmentIds.has(equipmentId)
-    ) {
-      continue;
-    }
-    ids.push(equipmentId);
-    seen.add(equipmentId);
-  }
-  return ids;
+function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
+  assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
+  const fresh = createProgressionSnapshot(defaultEquipmentId);
+  return mergeProgressionSnapshot({
+    ...fresh,
+    trainingMarks: value.trainingMarks,
+    ownedEquipmentIds: value.ownedEquipmentIds,
+    equippedEquipmentId: value.equippedEquipmentId,
+    combatSkillLevel: value.combatSkillLevel,
+  });
 }
 
-function sanitizeStoredSnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
-  const fallback = createProgressionSnapshot(defaultEquipmentId);
-  if (!isRecord(value) || value.version !== PROGRESSION_SCHEMA_VERSION) return fallback;
-
-  const ownedEquipmentIds = sanitizeOwnedEquipmentIds(
-    value.ownedEquipmentIds,
-    defaultEquipmentId,
-    allowedEquipmentIds,
-  );
-  const equippedEquipmentId = ownedEquipmentIds.includes(value.equippedEquipmentId)
-    ? value.equippedEquipmentId
-    : defaultEquipmentId;
-
-  return Object.freeze({
-    version: PROGRESSION_SCHEMA_VERSION,
-    trainingMarks: sanitizeNonNegativeInteger(value.trainingMarks),
-    ownedEquipmentIds: Object.freeze(ownedEquipmentIds),
-    equippedEquipmentId,
-    combatSkillLevel: sanitizeSkillLevel(value.combatSkillLevel),
-  });
+function validateCurrentSnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
+  assertProgressionSnapshot(value);
+  assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
+  return mergeProgressionSnapshot(value);
 }
 
 function createStoredRecord(snapshot) {
@@ -73,7 +82,13 @@ function createStoredRecord(snapshot) {
     ownedEquipmentIds: [...snapshot.ownedEquipmentIds],
     equippedEquipmentId: snapshot.equippedEquipmentId,
     combatSkillLevel: snapshot.combatSkillLevel,
+    firstJourney: snapshot.firstJourney,
+    regionExpansion: snapshot.regionExpansion,
   };
+}
+
+function failure(reason, message) {
+  return Object.freeze({ ok: false, reason, message });
 }
 
 export class ProgressionStorage {
@@ -95,24 +110,98 @@ export class ProgressionStorage {
   }
 
   load(defaultEquipmentId, allowedEquipmentIds = [defaultEquipmentId]) {
-    const fallback = createProgressionSnapshot(defaultEquipmentId);
     const allowedIds = createAllowedEquipmentIds(allowedEquipmentIds, defaultEquipmentId);
+    let serialized;
     try {
-      const serialized = this.storage.getItem(this.key);
-      if (serialized === null) return fallback;
-      return sanitizeStoredSnapshot(JSON.parse(serialized), defaultEquipmentId, allowedIds);
+      serialized = this.storage.getItem(this.key);
     } catch {
-      return fallback;
+      return failure(
+        'read-failed',
+        '저장 진행을 읽지 못했습니다. 새 진행은 이 세션에서만 유지됩니다.',
+      );
+    }
+
+    if (serialized === null) {
+      return Object.freeze({
+        ok: true,
+        kind: 'fresh',
+        snapshot: createProgressionSnapshot(defaultEquipmentId),
+      });
+    }
+    if (typeof serialized !== 'string') {
+      return failure(
+        'invalid-data',
+        '저장 진행 형식이 올바르지 않습니다. 초기화 전까지 저장하지 않습니다.',
+      );
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(serialized);
+    } catch {
+      return failure(
+        'parse-failed',
+        '저장 진행이 손상되었습니다. 초기화 전까지 저장하지 않습니다.',
+      );
+    }
+    if (!isRecord(parsed) || !Number.isSafeInteger(parsed.version)) {
+      return failure(
+        'invalid-data',
+        '저장 진행 형식이 올바르지 않습니다. 초기화 전까지 저장하지 않습니다.',
+      );
+    }
+    if (
+      parsed.version !== LEGACY_PROGRESSION_SCHEMA_VERSION &&
+      parsed.version !== PROGRESSION_SCHEMA_VERSION
+    ) {
+      return failure(
+        'unsupported-version',
+        '지원하지 않는 저장 진행입니다. 초기화 전까지 기존 기록을 보존합니다.',
+      );
+    }
+
+    try {
+      const snapshot =
+        parsed.version === LEGACY_PROGRESSION_SCHEMA_VERSION
+          ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds)
+          : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds);
+      return Object.freeze({
+        ok: true,
+        kind: parsed.version === LEGACY_PROGRESSION_SCHEMA_VERSION ? 'migrated' : 'loaded',
+        snapshot,
+      });
+    } catch {
+      return failure(
+        'invalid-data',
+        '저장 진행 값이 올바르지 않습니다. 초기화 전까지 저장하지 않습니다.',
+      );
     }
   }
 
   save(snapshot) {
-    assertProgressionSnapshot(snapshot);
+    let validated;
     try {
-      this.storage.setItem(this.key, JSON.stringify(createStoredRecord(snapshot)));
-      return true;
+      assertProgressionSnapshot(snapshot);
+      validated = mergeProgressionSnapshot(snapshot);
     } catch {
-      return false;
+      return failure('invalid-data', '현재 진행 값이 올바르지 않아 저장하지 못했습니다.');
+    }
+
+    let serialized;
+    try {
+      serialized = JSON.stringify(createStoredRecord(validated));
+    } catch {
+      return failure('serialize-failed', '현재 진행을 저장 형식으로 만들지 못했습니다.');
+    }
+
+    try {
+      this.storage.setItem(this.key, serialized);
+      return Object.freeze({ ok: true, kind: 'saved', snapshot: validated });
+    } catch {
+      return failure(
+        'write-failed',
+        '저장소에 진행을 쓰지 못했습니다. 현재 세션 진행은 유지됩니다.',
+      );
     }
   }
 }

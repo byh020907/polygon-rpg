@@ -43,7 +43,7 @@
                 @click="startGame"
                 @touchend.prevent="startGame"
               >
-                <span>새 게임 시작</span>
+                <span>게임 시작 / 계속하기</span>
                 <small>ACADEMY VILLAGE</small>
               </button>
               <button
@@ -64,8 +64,18 @@
                 <span>렌더 연구실</span>
                 <small>POLYGON / RETRO 비교</small>
               </button>
+              <button
+                class="menu-button"
+                type="button"
+                @click="resetSavedProgress"
+                @touchend.prevent="resetSavedProgress"
+              >
+                <span>저장 진행 초기화</span>
+                <small>현재 저장을 새 진행으로 교체</small>
+              </button>
             </div>
 
+            <p class="menu-version" x-text="saveStatus" aria-live="polite"></p>
             <p class="menu-version">PRE-ALPHA · STATIC CANVAS BUILD</p>
           </section>
 

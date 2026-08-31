@@ -1,4 +1,13 @@
-export const PROGRESSION_SCHEMA_VERSION = 1;
+import {
+  createFirstJourneyProgressSnapshot,
+  toFirstJourneyProgressSnapshot,
+} from '../encounter/FirstJourneyProgress.js';
+import {
+  createRegionExpansionProgressSnapshot,
+  toRegionExpansionProgressSnapshot,
+} from '../encounter/RegionExpansionProgress.js';
+
+export const PROGRESSION_SCHEMA_VERSION = 2;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -35,6 +44,8 @@ function freezeSnapshot({
   ownedEquipmentIds,
   equippedEquipmentId,
   combatSkillLevel,
+  firstJourney,
+  regionExpansion,
 }) {
   return Object.freeze({
     version: PROGRESSION_SCHEMA_VERSION,
@@ -42,6 +53,8 @@ function freezeSnapshot({
     ownedEquipmentIds: Object.freeze([...ownedEquipmentIds]),
     equippedEquipmentId,
     combatSkillLevel,
+    firstJourney: toFirstJourneyProgressSnapshot(firstJourney),
+    regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
   });
 }
 
@@ -52,11 +65,13 @@ export function createProgressionSnapshot(defaultEquipmentId) {
     ownedEquipmentIds: [defaultEquipmentId],
     equippedEquipmentId: defaultEquipmentId,
     combatSkillLevel: 0,
+    firstJourney: createFirstJourneyProgressSnapshot(),
+    regionExpansion: createRegionExpansionProgressSnapshot(),
   });
 }
 
 export function assertProgressionSnapshot(snapshot) {
-  if (!snapshot || typeof snapshot !== 'object') {
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new TypeError('progression snapshot은 객체여야 합니다.');
   }
   if (snapshot.version !== PROGRESSION_SCHEMA_VERSION) {
@@ -85,7 +100,21 @@ export function assertProgressionSnapshot(snapshot) {
   ) {
     throw new RangeError('combat skill level은 0..3 사이의 정수여야 합니다.');
   }
+  toFirstJourneyProgressSnapshot(snapshot.firstJourney);
+  toRegionExpansionProgressSnapshot(snapshot.regionExpansion);
   return snapshot;
+}
+
+export function mergeProgressionSnapshot(
+  snapshot,
+  { firstJourney = snapshot?.firstJourney, regionExpansion = snapshot?.regionExpansion } = {},
+) {
+  assertProgressionSnapshot(snapshot);
+  return freezeSnapshot({
+    ...snapshot,
+    firstJourney,
+    regionExpansion,
+  });
 }
 
 function createTransaction(changed, reason, snapshot) {
