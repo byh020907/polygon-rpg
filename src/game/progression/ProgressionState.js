@@ -17,7 +17,9 @@ export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   ALREADY_OWNED: 'already-owned',
   ALREADY_EQUIPPED: 'already-equipped',
   NOT_OWNED: 'not-owned',
-  INSUFFICIENT_FUNDS: 'insufficient-funds',
+  INSUFFICIENT_GOLD: 'insufficient-gold',
+  INSUFFICIENT_TRAINING: 'insufficient-training',
+  UNAVAILABLE: 'unavailable',
   MAX_LEVEL: 'max-level',
 });
 
@@ -121,6 +123,32 @@ function createTransaction(changed, reason, snapshot) {
   return Object.freeze({ changed, reason, snapshot: freezeSnapshot(snapshot) });
 }
 
+export function getAvailableGold(snapshot) {
+  assertProgressionSnapshot(snapshot);
+  const gold = snapshot.firstJourney.gold + snapshot.regionExpansion.gold;
+  if (!Number.isSafeInteger(gold)) {
+    throw new RangeError('보유 Gold가 안전한 정수 범위를 넘습니다.');
+  }
+  return gold;
+}
+
+function spendGold(snapshot, goldCost) {
+  assertNonNegativeInteger(goldCost, 'Gold 비용');
+  const firstJourneySpend = Math.min(snapshot.firstJourney.gold, goldCost);
+  const regionExpansionSpend = goldCost - firstJourneySpend;
+  return freezeSnapshot({
+    ...snapshot,
+    firstJourney: {
+      ...snapshot.firstJourney,
+      gold: snapshot.firstJourney.gold - firstJourneySpend,
+    },
+    regionExpansion: {
+      ...snapshot.regionExpansion,
+      gold: snapshot.regionExpansion.gold - regionExpansionSpend,
+    },
+  });
+}
+
 export function awardTrainingMarks(snapshot, amount) {
   assertProgressionSnapshot(snapshot);
   assertPositiveInteger(amount, '훈련 인장 획득량');
@@ -135,23 +163,30 @@ export function awardTrainingMarks(snapshot, amount) {
   );
 }
 
-export function purchaseEquipment(snapshot, { profileId, cost } = {}) {
+export function purchaseEquipment(
+  snapshot,
+  { profileId, goldCost, trainingMarkRequirement = 0 } = {},
+) {
   assertProgressionSnapshot(snapshot);
   assertEquipmentId(profileId, '구매 장비 profile ID');
   if (snapshot.ownedEquipmentIds.includes(profileId)) {
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_OWNED, snapshot);
   }
-  assertNonNegativeInteger(cost, '장비 구매 비용');
-  if (snapshot.trainingMarks < cost) {
-    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_FUNDS, snapshot);
+  assertNonNegativeInteger(goldCost, '장비 Gold 비용');
+  assertNonNegativeInteger(trainingMarkRequirement, '장비 훈련 인장 요구량');
+  if (snapshot.trainingMarks < trainingMarkRequirement) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING, snapshot);
   }
+  if (getAvailableGold(snapshot) < goldCost) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD, snapshot);
+  }
+  const paidSnapshot = spendGold(snapshot, goldCost);
   return createTransaction(
     true,
     PROGRESSION_TRANSACTION_REASON.PURCHASED,
     freezeSnapshot({
-      ...snapshot,
-      trainingMarks: snapshot.trainingMarks - cost,
-      ownedEquipmentIds: [...snapshot.ownedEquipmentIds, profileId],
+      ...paidSnapshot,
+      ownedEquipmentIds: [...paidSnapshot.ownedEquipmentIds, profileId],
     }),
   );
 }
@@ -172,21 +207,25 @@ export function selectEquipment(snapshot, profileId) {
   );
 }
 
-export function trainCombatSkill(snapshot, cost) {
+export function trainCombatSkill(snapshot, { goldCost, trainingMarkRequirement = 0 } = {}) {
   assertProgressionSnapshot(snapshot);
   if (snapshot.combatSkillLevel >= 3) {
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.MAX_LEVEL, snapshot);
   }
-  assertNonNegativeInteger(cost, 'combat skill 승급 비용');
-  if (snapshot.trainingMarks < cost) {
-    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_FUNDS, snapshot);
+  assertNonNegativeInteger(goldCost, 'combat skill Gold 비용');
+  assertNonNegativeInteger(trainingMarkRequirement, 'combat skill 훈련 인장 요구량');
+  if (snapshot.trainingMarks < trainingMarkRequirement) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING, snapshot);
   }
+  if (getAvailableGold(snapshot) < goldCost) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD, snapshot);
+  }
+  const paidSnapshot = spendGold(snapshot, goldCost);
   return createTransaction(
     true,
     PROGRESSION_TRANSACTION_REASON.TRAINED,
     freezeSnapshot({
-      ...snapshot,
-      trainingMarks: snapshot.trainingMarks - cost,
+      ...paidSnapshot,
       combatSkillLevel: snapshot.combatSkillLevel + 1,
     }),
   );

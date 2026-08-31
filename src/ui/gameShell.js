@@ -1,5 +1,4 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
-import { EQUIPMENT_PROFILES } from '../game/equipment/EquipmentProfiles.js';
 
 function formatRuntimeStats({
   fps,
@@ -136,27 +135,19 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     timeLabel: '낮',
     canSelectEquipment: true,
     canManageProgression: true,
-    selectedEquipmentId: EQUIPMENT_PROFILES[0].id,
-    selectedEquipmentLabel: EQUIPMENT_PROFILES[0].label,
-    equipmentOptions: Object.freeze(
-      EQUIPMENT_PROFILES.map(({ id, shortLabel, description, purchaseCost }, index) =>
-        Object.freeze({
-          id,
-          shortLabel,
-          description,
-          purchaseCost,
-          owned: index === 0,
-          selected: index === 0,
-        }),
-      ),
-    ),
+    selectedEquipmentId: '',
+    selectedEquipmentLabel: '장비 정보 불러오는 중',
+    equipmentOptions: Object.freeze([]),
     trainingMarks: 0,
     combatSkillLevel: 0,
     combatSkillMaxLevel: 3,
     combatSkillLabel: '기본 수련',
     combatSkillDescription: '기본 공격과 한 번의 공중 행동을 사용합니다.',
     combatSkillNextLevel: 1,
-    combatSkillNextCost: 1,
+    combatSkillNextGoldCost: 120,
+    combatSkillNextTrainingMarkRequirement: 1,
+    combatSkillCanTrain: false,
+    combatSkillActionLabel: 'Lv.1 · 120 Gold',
     combatCommandGuide: 'A/S starter · 공중 starter 1회',
     progressionNotice: '훈련 골렘 처치 시 인장 +3',
     saveStatus: '성장 저장 준비 중',
@@ -226,7 +217,11 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.combatSkillLabel = status.combatSkill.label;
           this.combatSkillDescription = status.combatSkill.description;
           this.combatSkillNextLevel = status.combatSkill.nextLevel;
-          this.combatSkillNextCost = status.combatSkill.nextCost;
+          this.combatSkillNextGoldCost = status.combatSkill.nextGoldCost;
+          this.combatSkillNextTrainingMarkRequirement =
+            status.combatSkill.nextTrainingMarkRequirement;
+          this.combatSkillCanTrain = status.combatSkill.canTrain;
+          this.combatSkillActionLabel = status.combatSkill.actionLabel;
           this.combatCommandGuide = status.combatSkill.commandGuide;
           this.progressionNotice = status.progressionNotice;
           this.journeyLabel = status.journeyLabel;
@@ -336,12 +331,6 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     trainCombatSkill() {
       gameApp.trainCombatSkill();
-    },
-
-    equipmentActionLabel(option) {
-      if (option.selected) return '장착 중';
-      if (option.owned) return '장착';
-      return `구매 · ◆${option.purchaseCost}`;
     },
 
     destroy() {

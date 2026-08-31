@@ -72,6 +72,23 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 
 const VISUAL_QA_SCENARIOS = Object.freeze({
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
+  'academy-growth': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 270,
+    progressionSnapshot: Object.freeze({ trainingMarks: 0 }),
+    firstJourneySnapshot: Object.freeze({
+      phase: 'returned',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    }),
+  }),
   'academy-dialogue': Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-plaza',

@@ -178,8 +178,10 @@
           >
             <header>
               <span>
-                <small>TRAINING GROWTH</small>
-                <strong x-text="`◆ ${trainingMarks} · ${selectedEquipmentLabel}`"></strong>
+                <small>JOURNEY GROWTH</small>
+                <strong
+                  x-text="`${gold} Gold · 인장 ${trainingMarks} · ${selectedEquipmentLabel}`"
+                ></strong>
               </span>
               <em x-text="saveStatus"></em>
             </header>
@@ -192,19 +194,11 @@
               </div>
               <button
                 type="button"
-                x-bind:disabled="
-                  combatSkillLevel >= combatSkillMaxLevel || trainingMarks < combatSkillNextCost
-                "
+                x-bind:disabled="!combatSkillCanTrain"
                 @click="trainCombatSkill"
                 @touchend.prevent="trainCombatSkill"
               >
-                <span
-                  x-text="
-                    combatSkillLevel >= combatSkillMaxLevel
-                      ? 'MAX'
-                      : `Lv.${combatSkillNextLevel} · ◆${combatSkillNextCost}`
-                  "
-                ></span>
+                <span x-text="combatSkillActionLabel"></span>
               </button>
             </article>
             <div class="equipment-grid">
@@ -215,14 +209,14 @@
                     'is-selected': option.selected,
                     'is-locked': !option.owned,
                   }"
-                  x-bind:disabled="option.selected || (!option.owned && trainingMarks < option.purchaseCost)"
+                  x-bind:disabled="!option.canChoose"
                   x-bind:aria-pressed="option.selected"
                   @click="chooseEquipment(option)"
                   @touchend.prevent="chooseEquipment(option)"
                 >
                   <strong x-text="option.shortLabel"></strong>
                   <small x-text="option.description"></small>
-                  <span x-text="equipmentActionLabel(option)"></span>
+                  <span x-text="option.actionLabel"></span>
                 </button>
               </template>
             </div>

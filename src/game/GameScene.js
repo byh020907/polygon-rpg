@@ -22,12 +22,15 @@ import { MapRuntime } from './map/MapRuntime.js';
 import {
   TRAINING_CLEAR_REWARD,
   getCombatSkillLevelProfile,
+  getCombatSkillTrainingMarkRequirement,
   getCombatSkillUpgradeCost,
 } from './progression/ProgressionProfiles.js';
 import {
+  PROGRESSION_TRANSACTION_REASON,
   assertProgressionSnapshot,
   awardTrainingMarks,
   createProgressionSnapshot,
+  getAvailableGold,
   mergeProgressionSnapshot,
   purchaseEquipment as purchaseProgressionEquipment,
   selectEquipment as selectProgressionEquipment,
@@ -1156,7 +1159,7 @@ export class GameScene extends SceneNode {
     this.airHeavyConnectedSequence = 0;
     this.playerWeaponContactHistory = [];
     this.playerWeaponContactGeometry = null;
-    this.progressionNotice = `성장 상태 유지 · 훈련 골렘 처치 시 인장 +${TRAINING_CLEAR_REWARD}`;
+    this.progressionNotice = `훈련 인장은 학습 조건, 원정 Gold는 장비·command 성장 비용입니다.`;
     this.storyInteractionOwner.reset();
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
@@ -1612,62 +1615,85 @@ export class GameScene extends SceneNode {
     if (skillChanged) this.combatCommands.setCommandProfile(nextSkill);
     this.progressionSnapshot = nextSnapshot;
     this.equipmentProfile = nextEquipment;
+    this.journeyProgress.restore(nextSnapshot.firstJourney);
+    this.regionExpansionProgress.restore(nextSnapshot.regionExpansion);
     this.progressionChanged.emit(this.progressionSnapshot);
     this.statusNode.publish({ force: true });
     return transaction;
   }
 
+  unavailableProgressionTransaction() {
+    return Object.freeze({
+      changed: false,
+      reason: PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
+      snapshot: this.progressionSnapshot,
+    });
+  }
+
   selectEquipment(profileId) {
-    if (!this.canManageProgression()) return false;
+    if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
     const profile = getEquipmentProfile(profileId);
     const transaction = selectProgressionEquipment(this.progressionSnapshot, profile.id);
-    if (!transaction.changed) return false;
+    if (!transaction.changed) return transaction;
     this.progressionNotice = `${profile.shortLabel} 장착 · frame/거리/경직 profile 변경`;
-    this.commitProgression(transaction, { equipmentChanged: true });
-    return true;
+    return this.commitProgression(transaction, { equipmentChanged: true });
   }
 
   purchaseEquipment(profileId) {
-    if (!this.canManageProgression()) return false;
+    if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
     const profile = getEquipmentProfile(profileId);
     const purchase = purchaseProgressionEquipment(this.progressionSnapshot, {
       profileId: profile.id,
-      cost: profile.purchaseCost,
+      goldCost: profile.goldCost,
+      trainingMarkRequirement: profile.trainingMarkRequirement,
     });
     if (!purchase.changed) {
       this.progressionNotice =
-        purchase.reason === 'insufficient-funds'
-          ? `${profile.shortLabel} 구매에 훈련 인장 ${profile.purchaseCost}개가 필요합니다.`
-          : '이미 소유한 장비입니다.';
+        purchase.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING
+          ? `${profile.shortLabel} 해금에 훈련 인장 ${profile.trainingMarkRequirement}개가 필요합니다.`
+          : purchase.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD
+            ? `${profile.shortLabel} 구매에 원정 Gold ${profile.goldCost}가 필요합니다.`
+            : '이미 소유한 장비입니다.';
       this.statusNode.publish({ force: true });
-      return false;
+      return purchase;
     }
     const equip = selectProgressionEquipment(purchase.snapshot, profile.id);
+    const transaction = Object.freeze({
+      changed: true,
+      reason: PROGRESSION_TRANSACTION_REASON.PURCHASED,
+      snapshot: equip.snapshot,
+    });
     this.progressionNotice = `${profile.shortLabel} 구매·장착 완료`;
-    this.commitProgression(equip, { equipmentChanged: true });
-    return true;
+    return this.commitProgression(transaction, { equipmentChanged: true });
   }
 
   trainCombatSkill() {
-    if (!this.canManageProgression()) return false;
+    if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
     const currentLevel = this.progressionSnapshot.combatSkillLevel;
     if (currentLevel >= 3) {
+      const transaction = trainProgressionCombatSkill(this.progressionSnapshot);
       this.progressionNotice = 'Command 수련은 이미 최고 단계입니다.';
       this.statusNode.publish({ force: true });
-      return false;
+      return transaction;
     }
     const targetLevel = currentLevel + 1;
-    const cost = getCombatSkillUpgradeCost(targetLevel);
-    const transaction = trainProgressionCombatSkill(this.progressionSnapshot, cost);
+    const goldCost = getCombatSkillUpgradeCost(targetLevel);
+    const trainingMarkRequirement = getCombatSkillTrainingMarkRequirement(targetLevel);
+    const transaction = trainProgressionCombatSkill(this.progressionSnapshot, {
+      goldCost,
+      trainingMarkRequirement,
+    });
     if (!transaction.changed) {
-      this.progressionNotice = `Lv.${targetLevel} 수련에 훈련 인장 ${cost}개가 필요합니다.`;
+      this.progressionNotice =
+        transaction.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING
+          ? `Lv.${targetLevel} 수련에 훈련 인장 ${trainingMarkRequirement}개가 필요합니다.`
+          : `Lv.${targetLevel} 수련에 원정 Gold ${goldCost}가 필요합니다.`;
       this.statusNode.publish({ force: true });
-      return false;
+      return transaction;
     }
     const skill = getCombatSkillLevelProfile(targetLevel);
     this.progressionNotice = `Command Lv.${targetLevel} · ${skill.label} 해금`;
-    this.commitProgression(transaction, { skillChanged: true });
-    return true;
+    return this.commitProgression(transaction, { skillChanged: true });
   }
 
   tryStartRoll(direction) {
@@ -2417,7 +2443,7 @@ export class GameScene extends SceneNode {
         ? encounterHint
         : progressionComplete
           ? 'M4 COMPLETE · 새 Sweep Jump 전투 준비'
-          : this.progressionNotice;
+          : '';
     }
     if (roomId === 'academy-plaza' && regionExpansion.returnedWithReward) {
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
@@ -2426,6 +2452,11 @@ export class GameScene extends SceneNode {
     const nextSkillLevel = Math.min(3, progression.combatSkillLevel + 1);
     const nextSkillCost =
       progression.combatSkillLevel >= 3 ? null : getCombatSkillUpgradeCost(nextSkillLevel);
+    const nextSkillTrainingMarkRequirement =
+      progression.combatSkillLevel >= 3
+        ? null
+        : getCombatSkillTrainingMarkRequirement(nextSkillLevel);
+    const availableGold = getAvailableGold(progression);
     const commandGuide = skill.loopCancel
       ? '지상 AA/AS/SA · 공중 AA/AS/SA · finisher→starter loop cancel'
       : skill.airCombos
@@ -2468,16 +2499,30 @@ export class GameScene extends SceneNode {
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
       equipmentOptions: Object.freeze(
-        EQUIPMENT_PROFILES.map((profile) =>
-          Object.freeze({
+        EQUIPMENT_PROFILES.map((profile) => {
+          const owned = progression.ownedEquipmentIds.includes(profile.id);
+          const selected = progression.equippedEquipmentId === profile.id;
+          const affordable =
+            progression.trainingMarks >= profile.trainingMarkRequirement &&
+            availableGold >= profile.goldCost;
+          return Object.freeze({
             id: profile.id,
             shortLabel: profile.shortLabel,
             description: profile.description,
-            purchaseCost: profile.purchaseCost,
-            owned: progression.ownedEquipmentIds.includes(profile.id),
-            selected: progression.equippedEquipmentId === profile.id,
-          }),
-        ),
+            goldCost: profile.goldCost,
+            trainingMarkRequirement: profile.trainingMarkRequirement,
+            owned,
+            selected,
+            canChoose: !selected && (owned || affordable),
+            actionLabel: selected
+              ? '장착 중'
+              : owned
+                ? '장착'
+                : profile.trainingMarkRequirement > 0
+                  ? `${profile.goldCost} Gold · 인장 ${profile.trainingMarkRequirement}`
+                  : `${profile.goldCost} Gold`,
+          });
+        }),
       ),
       combatSkill: Object.freeze({
         level: progression.combatSkillLevel,
@@ -2489,7 +2534,18 @@ export class GameScene extends SceneNode {
         maxAirActions: skill.maxAirActions,
         commandGuide,
         nextLevel: progression.combatSkillLevel >= 3 ? null : nextSkillLevel,
-        nextCost: nextSkillCost,
+        nextGoldCost: nextSkillCost,
+        nextTrainingMarkRequirement: nextSkillTrainingMarkRequirement,
+        canTrain:
+          progression.combatSkillLevel < 3 &&
+          availableGold >= nextSkillCost &&
+          progression.trainingMarks >= nextSkillTrainingMarkRequirement,
+        actionLabel:
+          progression.combatSkillLevel >= 3
+            ? 'MAX'
+            : nextSkillTrainingMarkRequirement > 0
+              ? `Lv.${nextSkillLevel} · ${nextSkillCost} Gold · 인장 ${nextSkillTrainingMarkRequirement}`
+              : `Lv.${nextSkillLevel} · ${nextSkillCost} Gold`,
       }),
       progressionNotice: this.progressionNotice,
     });
@@ -2505,7 +2561,7 @@ export class GameScene extends SceneNode {
       staminaExhausted: combatStatus.exhausted,
       lastStaminaAction: combatStatus.lastStaminaAction,
       lastCommandTransition: combatStatus.lastCommandTransition,
-      gold: this.journeyProgress.snapshot().gold + this.regionExpansionProgress.snapshot().gold,
+      gold: getAvailableGold(this.progressionSnapshot),
       trainingMarks: this.progressionSnapshot.trainingMarks,
     });
   }
