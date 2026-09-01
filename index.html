@@ -272,18 +272,23 @@
           <section
             class="dialogue-bubble"
             x-show="dialogue.available"
-            x-bind:data-dialogue-active="dialogue.active"
+            x-bind:data-dialogue-active="String(dialogue.active)"
             x-bind:data-dialogue-target="dialogue.interactionId"
             aria-labelledby="dialogue-speaker"
-            aria-describedby="dialogue-line dialogue-prompt"
-            aria-live="polite"
-            aria-atomic="true"
+            x-bind:data-dialogue-complete="String(dialogue.revealComplete)"
+            x-bind:style="dialogue.screenAnchor ? `--dialogue-anchor-x: ${dialogue.screenAnchor.x}px; --dialogue-anchor-y: ${dialogue.screenAnchor.y}px` : ''"
+            aria-describedby="dialogue-accessible-line dialogue-prompt"
           >
             <header>
               <small x-text="dialogue.active ? 'DIALOGUE' : 'INTERACT'"></small>
               <strong id="dialogue-speaker" x-text="dialogue.speaker"></strong>
             </header>
-            <p id="dialogue-line" x-show="dialogue.active" x-text="dialogue.line"></p>
+            <p
+              id="dialogue-visible-line"
+              x-show="dialogue.active"
+              aria-hidden="true"
+              x-text="dialogue.visibleLine"
+            ></p>
             <footer>
               <span
                 x-show="dialogue.active"
@@ -292,6 +297,13 @@
               <strong id="dialogue-prompt" x-text="dialogue.prompt"></strong>
             </footer>
           </section>
+          <p
+            id="dialogue-accessible-line"
+            class="visually-hidden"
+            aria-live="polite"
+            aria-atomic="true"
+            x-text="dialogue.active ? dialogue.line : ''"
+          ></p>
 
           <section class="mobile-controls" aria-label="모바일 게임 조작">
             <div class="mobile-direction-pad" aria-label="이동과 자세">

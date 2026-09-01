@@ -140,6 +140,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       canAdvance: false,
       canClose: false,
       prompt: '',
+      worldAnchor: null,
+      visibleLine: '',
+      revealComplete: false,
+      screenAnchor: null,
     }),
     objective: '장비를 고른 뒤 오른쪽 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
     journeyLabel: '학원촌 준비',
@@ -245,6 +249,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.encounterHint = status.encounterHint;
           this.encounterHealthLabel = status.encounterHealthLabel;
           this.wardLabel = status.wardLabel;
+        },
+        setDialoguePresentation: (dialogue) => {
+          this.dialogue = dialogue;
         },
         setSaveStatus: (status) => {
           this.saveStatus = status;

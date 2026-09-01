@@ -897,22 +897,48 @@ dd {
 .dialogue-bubble {
   position: absolute;
   z-index: 6;
-  right: 50%;
-  bottom: clamp(66px, 11%, 92px);
+  left: var(--dialogue-anchor-x, 50%);
+  top: var(--dialogue-anchor-y, 50%);
   display: grid;
   gap: 6px;
-  width: min(520px, calc(100% - 32px));
-  padding: 12px 16px;
+  width: min(336px, calc(100% - 36px));
+  padding: 9px 12px;
   color: #eef5ef;
   border: 1px solid rgb(116 222 210 / 58%);
-  border-radius: 12px 12px 12px 3px;
+  border-radius: 10px;
   background: linear-gradient(145deg, rgb(7 20 24 / 96%), rgb(14 35 38 / 90%));
   box-shadow: 0 12px 34px rgb(0 0 0 / 46%);
   font-family: Georgia, 'Times New Roman', serif;
   line-height: 1.45;
   text-shadow: 1px 1px 0 #000;
   pointer-events: none;
-  transform: translateX(50%);
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.dialogue-bubble::after {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border: 7px solid transparent;
+  border-top-color: rgb(14 35 38 / 96%);
+  border-bottom: 0;
+  content: '';
+  transform: translateX(-50%);
+}
+
+.dialogue-bubble[data-dialogue-active='false'] {
+  width: max-content;
+  max-width: min(210px, calc(100% - 36px));
+  padding: 5px 8px;
+  border-color: rgb(243 212 154 / 62%);
+  border-radius: 999px;
+}
+
+.dialogue-bubble[data-dialogue-active='false'] header small,
+.dialogue-bubble[data-dialogue-active='false'] footer {
+  display: none;
 }
 
 .dialogue-bubble header,
@@ -1432,9 +1458,8 @@ kbd {
   }
 
   .dialogue-bubble {
-    bottom: max(70px, 20vh);
-    width: min(48vw, 440px);
-    padding: 7px 10px;
+    width: min(300px, calc(100% - 36px));
+    padding: 6px 9px;
   }
 }
 
@@ -1609,8 +1634,7 @@ kbd {
   }
 
   .dialogue-bubble {
-    bottom: 70px;
-    width: calc(100% - 24px);
+    width: min(300px, calc(100% - 36px));
   }
 
   .control-hints {

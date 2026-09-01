@@ -9,7 +9,31 @@ const EMPTY_DIALOGUE = Object.freeze({
   canAdvance: false,
   canClose: false,
   prompt: '',
+  worldAnchor: null,
+  visibleLine: '',
+  revealComplete: false,
 });
+
+const REVEAL_CHARACTERS_PER_SECOND = 28;
+const COMMA_PAUSE_SECONDS = 0.12;
+const TERMINAL_PAUSE_SECONDS = 0.22;
+
+function dialogueWorldAnchor(interaction) {
+  return Object.freeze({
+    x: interaction.position.x,
+    y: interaction.position.y,
+  });
+}
+
+function punctuationPause(character) {
+  if (',，、;；:：'.includes(character)) return COMMA_PAUSE_SECONDS;
+  if ('.!?…。！？'.includes(character)) return TERMINAL_PAUSE_SECONDS;
+  return 0;
+}
+
+function revealPrefix(line, characterCount) {
+  return Array.from(line).slice(0, characterCount).join('');
+}
 
 function isStoryInteraction(entity) {
   return (
@@ -57,11 +81,40 @@ export class StoryInteractionOwner {
   constructor() {
     this.activeInteractionId = null;
     this.lineIndex = -1;
+    this.revealedCharacters = 0;
+    this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
   }
 
   reset() {
     this.activeInteractionId = null;
     this.lineIndex = -1;
+    this.revealedCharacters = 0;
+    this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+  }
+
+  advance(deltaSeconds, { entities = [] } = {}) {
+    if (!this.activeInteractionId || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
+    const interaction = findInteraction(entities, this.activeInteractionId);
+    if (!interaction) return;
+    const characters = Array.from(interaction.lines[this.lineIndex] ?? '');
+    let remainingSeconds = deltaSeconds;
+    while (
+      remainingSeconds >= this.revealDelaySeconds &&
+      this.revealedCharacters < characters.length
+    ) {
+      remainingSeconds -= this.revealDelaySeconds;
+      const character = characters[this.revealedCharacters];
+      this.revealedCharacters += 1;
+      this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND + punctuationPause(character);
+    }
+    if (this.revealedCharacters < characters.length) this.revealDelaySeconds -= remainingSeconds;
+  }
+
+  completeCurrentLine(entities) {
+    const interaction = findInteraction(entities, this.activeInteractionId);
+    if (!interaction) return;
+    this.revealedCharacters = Array.from(interaction.lines[this.lineIndex]).length;
+    this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
   }
 
   handleJump({ entities = [], playerPosition = null } = {}) {
@@ -71,8 +124,15 @@ export class StoryInteractionOwner {
         this.reset();
         return Object.freeze({ consumed: true, transition: 'missing-target' });
       }
+      const lineLength = Array.from(interaction.lines[this.lineIndex]).length;
+      if (this.revealedCharacters < lineLength) {
+        this.completeCurrentLine(entities);
+        return Object.freeze({ consumed: true, transition: 'completed-line' });
+      }
       if (this.lineIndex < interaction.lines.length - 1) {
         this.lineIndex += 1;
+        this.revealedCharacters = 0;
+        this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
         return Object.freeze({ consumed: true, transition: 'advanced' });
       }
       this.reset();
@@ -83,6 +143,8 @@ export class StoryInteractionOwner {
     if (!interaction) return Object.freeze({ consumed: false, transition: 'none' });
     this.activeInteractionId = interaction.id;
     this.lineIndex = 0;
+    this.revealedCharacters = 0;
+    this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
     return Object.freeze({ consumed: true, transition: 'started' });
   }
 
@@ -93,17 +155,23 @@ export class StoryInteractionOwner {
     if (activeInteraction) {
       const lineCount = activeInteraction.lines.length;
       const canAdvance = this.lineIndex < lineCount - 1;
+      const line = activeInteraction.lines[this.lineIndex];
+      const lineLength = Array.from(line).length;
+      const revealComplete = this.revealedCharacters >= lineLength;
       return Object.freeze({
         active: true,
         available: true,
         interactionId: activeInteraction.id,
         speaker: activeInteraction.speaker,
-        line: activeInteraction.lines[this.lineIndex],
+        line,
+        visibleLine: revealPrefix(line, this.revealedCharacters),
         lineIndex: this.lineIndex,
         lineCount,
-        canAdvance,
-        canClose: !canAdvance,
-        prompt: canAdvance ? '↑ 다음 대사' : '↑ 대화 마치기',
+        canAdvance: revealComplete && canAdvance,
+        canClose: revealComplete && !canAdvance,
+        revealComplete,
+        prompt: revealComplete ? (canAdvance ? '↑ 다음 대사' : '↑ 대화 마치기') : '↑ 대사 완성',
+        worldAnchor: dialogueWorldAnchor(activeInteraction),
       });
     }
 
@@ -115,6 +183,7 @@ export class StoryInteractionOwner {
       interactionId: availableInteraction.id,
       speaker: availableInteraction.speaker,
       prompt: `↑ ${availableInteraction.speaker} 상호작용`,
+      worldAnchor: dialogueWorldAnchor(availableInteraction),
     });
   }
 }

@@ -15,6 +15,7 @@ import { CanvasHost } from '../rendering/CanvasHost.js';
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
 import { CanvasRetroRenderer } from '../rendering/CanvasRetroRenderer.js';
 import { readVisualQaRequest } from './VisualQaConfig.js';
+import { projectDialogue } from './DialoguePresentation.js';
 
 export const GAME_SCREEN = Object.freeze({
   MENU: 'menu',
@@ -49,10 +50,11 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.setGameStats !== 'function' ||
     typeof uiBridge.setPlayerStatus !== 'function' ||
     typeof uiBridge.setWorldStatus !== 'function' ||
+    typeof uiBridge.setDialoguePresentation !== 'function' ||
     typeof uiBridge.setSaveStatus !== 'function'
   ) {
     throw new TypeError(
-      'GameApp UI bridge에는 snapshot, stats와 world status writer가 필요합니다.',
+      'GameApp UI bridge에는 snapshot, stats와 world/dialogue status writer가 필요합니다.',
     );
   }
   return uiBridge;
@@ -348,6 +350,10 @@ export class GameApp extends SceneNode {
         simulationSettings,
         active: true,
       });
+      const dialogueFrames = { start: 0, active: 72, end: 1_200 }[phase] ?? 0;
+      for (let index = 0; index < dialogueFrames; index += 1) {
+        this.fixedProcess(1 / 120, { inputSnapshot, simulationSettings, active: true });
+      }
     }
     if (scenario.combatScenarioId)
       this.scene.setVisualQaCombatScenario(scenario.combatScenarioId, phase);
@@ -442,6 +448,11 @@ export class GameApp extends SceneNode {
         (dialogue.active === true &&
           dialogue.interactionId === expectedDialogueTarget &&
           dialogue.speaker === expectedDialogueSpeaker &&
+          (phase === 'start'
+            ? dialogue.visibleLine.length <= 1
+            : phase === 'active'
+              ? dialogue.visibleLine.length > 0 && dialogue.revealComplete === false
+              : dialogue.revealComplete === true) &&
           renderFrame.player.isGrounded === true),
       spatialItemsPresent: expectedItems.every((itemId) => itemIds.includes(itemId)),
       spatialItemsAbsent: expectedAbsentItems.every((itemId) => !itemIds.includes(itemId)),
@@ -603,6 +614,14 @@ export class GameApp extends SceneNode {
 
   renderFrame(renderFrame) {
     const uiState = this.uiBridge.snapshot();
+    this.uiBridge.setDialoguePresentation(
+      projectDialogue(
+        this.scene.getWorldStatus().dialogue,
+        renderFrame,
+        this.gameHost.viewport,
+        this.camera.worldSize,
+      ),
+    );
     if (this.isVisualQa) {
       const renderer =
         this.visualQaRequest.renderer === 'polygon'

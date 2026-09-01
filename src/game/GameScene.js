@@ -1398,6 +1398,7 @@ export class GameScene extends SceneNode {
     this.previousCameraPosition = { ...this.cameraPosition };
     this.combatCameraFeedback.update(deltaSeconds);
     this.combatEvents.update(deltaSeconds);
+    this.storyInteractionOwner.advance(deltaSeconds, this.getStoryInteractionContext());
     if (this.hitStopSeconds > 0) {
       this.hitStopSeconds = Math.max(0, this.hitStopSeconds - deltaSeconds);
       if (this.hitStopSeconds === 0 && this.pendingPlayerKnockbackX !== 0) {

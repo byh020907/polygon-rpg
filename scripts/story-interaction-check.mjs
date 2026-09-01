@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
+import { dialogueSafeBounds, projectDialogue } from '../src/app/DialoguePresentation.js';
 import {
   FIRST_JOURNEY_CHECKPOINT_ID,
   JOURNEY_PHASE,
@@ -77,6 +78,15 @@ function assertJumpSuppressed(scene, before, label) {
   );
 }
 
+function revealCurrentLine(scene, label) {
+  for (let step = 0; step < 1_200; step += 1) {
+    const dialogue = scene.getWorldStatus().dialogue;
+    if (dialogue.revealComplete) return dialogue;
+    scene.update(STEP_SECONDS, EMPTY_INPUT);
+  }
+  assert.fail(`${label}: typewriter가 제한 시간 안에 line을 완성하지 못했습니다.`);
+}
+
 function resolvedEntityIds(scene) {
   return scene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
 }
@@ -130,8 +140,13 @@ function verifyNamedDialogue(scene, { interactionId, speaker, label }) {
     `${label}: active dialogue DTO는 immutable이어야 한다.`,
   );
   assert.ok(started.after.line.trim().length > 0, `${label}: 첫 대사는 비어 있으면 안 된다.`);
+  assert.equal(
+    started.after.visibleLine,
+    '',
+    `${label}: 시작 직후에는 typewriter가 빈 line에서 시작해야 한다.`,
+  );
   assert.ok(started.after.lineCount > 0, `${label}: 대사는 한 줄 이상이어야 한다.`);
-  const lines = [started.after.line];
+  const lines = [];
 
   scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: sequence }));
   assert.equal(
@@ -142,7 +157,15 @@ function verifyNamedDialogue(scene, { interactionId, speaker, label }) {
   assertJumpSuppressed(scene, started.before, `${label} 같은 sequence`);
 
   let dialogue = started.after;
-  while (dialogue.canAdvance) {
+  while (true) {
+    dialogue = revealCurrentLine(scene, `${label} ${dialogue.lineIndex + 1}번째 줄`);
+    assert.equal(
+      dialogue.visibleLine,
+      dialogue.line,
+      `${label}: 완성 line은 authored line과 일치해야 한다.`,
+    );
+    lines.push(dialogue.line);
+    if (!dialogue.canAdvance) break;
     sequence += 1;
     const advanced = jump(scene, sequence);
     assertJumpSuppressed(scene, advanced.before, `${label} ${sequence}번째 줄`);
@@ -152,7 +175,6 @@ function verifyNamedDialogue(scene, { interactionId, speaker, label }) {
     assert.equal(dialogue.speaker, speaker);
     assert.ok(dialogue.line.trim().length > 0, `${label}: 모든 대사는 비어 있으면 안 된다.`);
     assert.ok(Object.isFrozen(dialogue), `${label}: 진행된 dialogue DTO는 immutable이어야 한다.`);
-    lines.push(dialogue.line);
   }
   assert.equal(lines.length, dialogue.lineCount, `${label}: 모든 named line을 진행해야 한다.`);
 
@@ -196,7 +218,7 @@ function verifyInteractionRangeAndTargets() {
       speaker: '세라 교관',
       lineIndex: 0,
       lineCount: 2,
-      canAdvance: true,
+      canAdvance: false,
     },
   );
   assert.ok(Object.isFrozen(mentorResult.after), 'dialogue DTO는 immutable이어야 한다.');
@@ -206,6 +228,7 @@ function verifyInteractionRangeAndTargets() {
   assertJumpSuppressed(facility, facilityResult.before, '시설 안내판 상호작용 시작');
   assert.equal(facilityResult.after.speaker, '장비 공방 안내판');
   assert.equal(facilityResult.after.interactionId, 'academy-workshop-sign-interaction');
+  assert.deepEqual(facilityResult.after.worldAnchor, { x: 829, y: 358 });
 
   const fieldGate = createAcademyScene(910);
   fieldGate.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
@@ -230,17 +253,106 @@ function verifyDialogueProgressionAndSequenceConsumption() {
     '같은 jump sequence를 fixed catch-up step에서 다시 소비하면 안 된다.',
   );
 
+  revealCurrentLine(scene, '대화 첫 줄');
   const advanced = jump(scene, 2);
   assertJumpSuppressed(scene, advanced.before, '대화 다음 줄');
   assert.equal(advanced.after.lineIndex, 1);
   assert.equal(advanced.after.canAdvance, false);
-  assert.equal(advanced.after.canClose, true);
+  assert.equal(advanced.after.canClose, false);
 
+  const completedLastLine = revealCurrentLine(scene, '대화 마지막 줄');
+  assert.equal(completedLastLine.canClose, true);
   const closed = jump(scene, 3);
   assertJumpSuppressed(scene, closed.before, '대화 종료');
   assert.equal(closed.after.active, false);
   assert.equal(closed.after.available, true);
   assert.equal(closed.after.lineIndex, -1);
+}
+
+function verifyTypewriterRevealAndCompletionJump() {
+  const scene = createAcademyScene(420);
+  const started = jump(scene, 1);
+  assert.equal(started.after.visibleLine, '');
+  assert.deepEqual(started.after.worldAnchor, { x: 488, y: 350 });
+  assert.ok(
+    Object.isFrozen(started.after.worldAnchor),
+    'nested world anchor는 immutable이어야 한다.',
+  );
+
+  for (let step = 0; step < 72; step += 1) scene.update(STEP_SECONDS, EMPTY_INPUT);
+  const partial = scene.getWorldStatus().dialogue;
+  assert.ok(partial.visibleLine.length > 0, '0.6초 뒤 typewriter partial text가 있어야 한다.');
+  assert.ok(
+    partial.visibleLine.length < partial.line.length,
+    '0.6초 뒤 line은 아직 완성되면 안 된다.',
+  );
+
+  const completed = jump(scene, 2);
+  assert.equal(completed.after.lineIndex, 0, 'reveal 중 jump는 다음 line으로 넘기면 안 된다.');
+  assert.equal(
+    completed.after.visibleLine,
+    completed.after.line,
+    'reveal 중 jump는 current line만 완성해야 한다.',
+  );
+  assert.equal(completed.after.canAdvance, true);
+  const advanced = jump(scene, 3);
+  assert.equal(advanced.after.lineIndex, 1, '완성 후 새 sequence만 다음 line으로 진행해야 한다.');
+}
+
+function verifyDialoguePresentationSafeBounds() {
+  const frame = Object.freeze({ cameraOffset: Object.freeze({ x: 0, y: 0 }) });
+  const cameraWorldSize = Object.freeze({ width: 960, height: 540 });
+  const activeDialogue = Object.freeze({
+    active: true,
+    available: true,
+    worldAnchor: Object.freeze({ x: -200, y: -200 }),
+  });
+  const availableDialogue = Object.freeze({
+    active: false,
+    available: true,
+    worldAnchor: Object.freeze({ x: 1_500, y: -200 }),
+  });
+  const viewport = Object.freeze({ cssWidth: 320, cssHeight: 180 });
+  const activeBounds = dialogueSafeBounds(activeDialogue, viewport);
+  const active = projectDialogue(activeDialogue, frame, viewport, cameraWorldSize);
+  assert.equal(active.screenAnchor.x, activeBounds.minX);
+  assert.equal(active.screenAnchor.y, activeBounds.minY);
+  assert.ok(active.screenAnchor.x >= 18 && active.screenAnchor.x <= 302);
+  assert.ok(active.screenAnchor.y >= 18 && active.screenAnchor.y <= 162);
+
+  const availableBounds = dialogueSafeBounds(availableDialogue, viewport);
+  const available = projectDialogue(availableDialogue, frame, viewport, cameraWorldSize);
+  assert.equal(available.screenAnchor.x, availableBounds.maxX);
+  assert.equal(available.screenAnchor.y, availableBounds.minY);
+  assert.ok(available.screenAnchor.x >= 18 && available.screenAnchor.x <= 302);
+  assert.ok(available.screenAnchor.y >= 18 && available.screenAnchor.y <= 162);
+
+  const mobileLandscapeViewport = Object.freeze({ cssWidth: 844, cssHeight: 390 });
+  const bottomExtreme = projectDialogue(
+    Object.freeze({
+      ...activeDialogue,
+      worldAnchor: Object.freeze({ x: 480, y: 2_000 }),
+    }),
+    frame,
+    mobileLandscapeViewport,
+    cameraWorldSize,
+  );
+  assert.equal(dialogueSafeBounds(activeDialogue, mobileLandscapeViewport).maxY, 280);
+  assert.ok(
+    bottomExtreme.screenAnchor.y <= 280,
+    'mobile controls 위 safe inset을 침범하면 안 된다.',
+  );
+
+  const centered = projectDialogue(
+    Object.freeze({
+      ...activeDialogue,
+      worldAnchor: Object.freeze({ x: 480, y: 270 }),
+    }),
+    frame,
+    Object.freeze({ cssWidth: 1_440, cssHeight: 810 }),
+    cameraWorldSize,
+  );
+  assert.deepEqual(centered.screenAnchor, { x: 720, y: 405 });
 }
 
 function verifyKeyboardTouchParity() {
@@ -514,6 +626,8 @@ function verifyStaleDialogueConsumesOneJump() {
 
 verifyInteractionRangeAndTargets();
 verifyDialogueProgressionAndSequenceConsumption();
+verifyTypewriterRevealAndCompletionJump();
+verifyDialoguePresentationSafeBounds();
 verifyKeyboardTouchParity();
 verifyFirstJourneyStoryChain();
 verifyStaleDialogueConsumesOneJump();
@@ -531,6 +645,8 @@ console.log(
         'jump-suppression',
         'keyboard-touch-parity',
         'immutable-dialogue-dto',
+        'world-anchor-and-typewriter-reveal',
+        'dialogue-bubble-safe-projection',
         'first-journey-stage-dialogue-matrix',
         'locked-and-obsolete-targets',
         'story-objective-journey-label-alignment',
