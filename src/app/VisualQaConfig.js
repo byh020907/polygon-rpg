@@ -136,9 +136,11 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
       expectedAbsentItems: Object.freeze(['moon', 'lamp-glow']),
       expectedPortalIds: Object.freeze([
+        'academy-enchanter-shop-portal',
         'academy-field-portal',
         'academy-glasswind-portal',
         'academy-training-portal',
+        'academy-weapon-shop-portal',
       ]),
     }),
   }),
@@ -153,9 +155,11 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedItems: Object.freeze(['academy-training-gate-landmark-opening', 'moon', 'lamp-glow']),
       expectedAbsentItems: Object.freeze(['sun']),
       expectedPortalIds: Object.freeze([
+        'academy-enchanter-shop-portal',
         'academy-field-portal',
         'academy-glasswind-portal',
         'academy-training-portal',
+        'academy-weapon-shop-portal',
       ]),
     }),
   }),
@@ -191,9 +195,11 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'academy-sealed-shortcut-gate-landmark-opening',
       ]),
       expectedPortalIds: Object.freeze([
+        'academy-enchanter-shop-portal',
         'academy-field-portal',
         'academy-glasswind-portal',
         'academy-training-portal',
+        'academy-weapon-shop-portal',
         'boss-shortcut-portal',
       ]),
     }),
@@ -215,22 +221,46 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       gold: 120,
     }),
   }),
-  'academy-weapon-shop': Object.freeze({
+  'academy-weapon-house': Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-plaza',
-    x: 650,
+    x: 1440,
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'weapon-shop-house-body',
+        'weapon-shop-sign-blade',
+        'academy-weapon-shop-door-landmark-opening',
+      ]),
+    }),
+  }),
+  'academy-enchanter-house': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 2400,
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'enchanter-shop-house-body',
+        'enchanter-shop-sign-rune',
+        'academy-enchanter-shop-door-landmark-opening',
+      ]),
+    }),
+  }),
+  'academy-weapon-shop': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-weapon-shop',
+    x: 610,
     dialogueScenarioId: 'weapon-merchant-karen-interaction',
     firstJourneySnapshot: Object.freeze({ gold: 120 }),
     expectation: Object.freeze({
-      expectedItem: 'weapon-merchant-karen-coat',
+      expectedItem: 'weapon-merchant-karen-coat-interior',
       expectedDialogueTarget: 'weapon-merchant-karen-interaction',
       expectedDialogueSpeaker: '카린 무기상',
     }),
   }),
   'academy-forge': Object.freeze({
     regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 829,
+    roomId: 'academy-enchanter-shop',
+    x: 610,
     dialogueScenarioId: 'enchanter-lio-interaction',
     firstJourneySnapshot: Object.freeze({ gold: 120 }),
     enchantmentSnapshot: Object.freeze({
@@ -241,7 +271,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
     expectation: Object.freeze({
-      expectedItem: 'enchanter-lio-coat',
+      expectedItem: 'enchanter-lio-coat-interior',
       expectedDialogueTarget: 'enchanter-lio-interaction',
       expectedDialogueSpeaker: '리오 인챈터',
     }),

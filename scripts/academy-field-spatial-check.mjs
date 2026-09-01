@@ -20,17 +20,33 @@ const EMPTY_INPUT = Object.freeze({
 const ROOM_CASES = Object.freeze([
   Object.freeze({
     roomId: 'academy-plaza',
-    width: 1024,
+    width: 2880,
     portalIds: Object.freeze([
+      'academy-enchanter-shop-portal',
       'academy-field-portal',
       'academy-glasswind-portal',
       'academy-training-portal',
+      'academy-weapon-shop-portal',
     ]),
     landmarkPrefixes: Object.freeze([
+      'academy-enchanter-shop-door',
       'academy-training-gate',
       'academy-glasswind-gate',
       'academy-field-gate',
+      'academy-weapon-shop-door',
     ]),
+  }),
+  Object.freeze({
+    roomId: 'academy-weapon-shop',
+    width: 1024,
+    portalIds: Object.freeze(['academy-weapon-shop-portal']),
+    landmarkPrefixes: Object.freeze(['weapon-shop-interior-exit']),
+  }),
+  Object.freeze({
+    roomId: 'academy-enchanter-shop',
+    width: 1024,
+    portalIds: Object.freeze(['academy-enchanter-shop-portal']),
+    landmarkPrefixes: Object.freeze(['enchanter-shop-interior-exit']),
   }),
   Object.freeze({
     roomId: 'field-crossing',
@@ -92,11 +108,36 @@ function assertSpatialDefinitions() {
 
   const academy = roomDefinition('academy-plaza');
   assert.ok(
+    academy.bounds.width >= 960 * 3,
+    'Academy Village exterior는 logical camera view 세 개 이상 이어져야 한다.',
+  );
+  assert.ok(
     academy.renderItems.some(
       (item) => item.id === 'plaza-foreground-planter-left' && item.renderOrder > 30.5,
     ),
     'Academy Plaza에는 Player 앞을 지나는 실제 foreground layer가 필요하다.',
   );
+
+  const weaponShop = roomDefinition('academy-weapon-shop');
+  const enchanterShop = roomDefinition('academy-enchanter-shop');
+  assert.ok(
+    !academy.entities.some((entity) =>
+      ['weapon-merchant-karen-interaction', 'enchanter-lio-interaction'].includes(entity.id),
+    ),
+    '상점 NPC는 exterior snapshot에 중복 생성되면 안 된다.',
+  );
+  assert.equal(
+    weaponShop.entities.find((entity) => entity.id === 'weapon-merchant-karen-interaction')
+      ?.commands[0]?.type,
+    'manage-sword',
+  );
+  assert.equal(
+    enchanterShop.entities.find((entity) => entity.id === 'enchanter-lio-interaction')?.commands[0]
+      ?.type,
+    'upgrade-sword-enchantment',
+  );
+  assert.ok(academy.renderItems.some((item) => item.id === 'weapon-shop-house-body'));
+  assert.ok(academy.renderItems.some((item) => item.id === 'enchanter-shop-house-body'));
 
   const crossing = roomDefinition('field-crossing');
   assert.deepEqual(crossing.surfaces[0].points, [
@@ -296,7 +337,7 @@ function assertPatchAndRouteMatrix() {
   const forwardTravel = forward.beginPortalTransition('academy-field-portal');
   assert.ok(forwardTravel.destinationCameraPosition.x > forwardTravel.sourceCameraPosition.x);
   assert.ok(
-    forwardTravel.destinationPosition.x > 2480 + 80,
+    forwardTravel.destinationPosition.x > roomDefinition('field-crossing').bounds.x + 80,
     'Field 도착 spawn은 입구 안쪽이어야 한다.',
   );
 
@@ -310,6 +351,40 @@ function assertPatchAndRouteMatrix() {
     reverseTravel.destinationPosition.x < 910,
     'Academy 귀환 spawn은 입구 안쪽이어야 한다.',
   );
+}
+
+function completePortal(runtime, portalId) {
+  runtime.beginPortalTransition(portalId);
+  return runtime.advanceTransition(1).completion;
+}
+
+function assertShopInteriorRoundTrips() {
+  for (const shopCase of [
+    {
+      portalId: 'academy-weapon-shop-portal',
+      roomId: 'academy-weapon-shop',
+      exteriorSpawnX: 1370,
+    },
+    {
+      portalId: 'academy-enchanter-shop-portal',
+      roomId: 'academy-enchanter-shop',
+      exteriorSpawnX: 2330,
+    },
+  ]) {
+    const runtime = new MapRuntime(ACADEMY_VILLAGE_MAP);
+    runtime.setActiveLocation('academy-region', 'academy-plaza');
+    assert.equal(completePortal(runtime, shopCase.portalId).active.roomId, shopCase.roomId);
+    assert.equal(runtime.getActiveLocation().roomId, shopCase.roomId);
+    const reverseTransition = runtime.beginPortalTransition(shopCase.portalId);
+    assert.equal(
+      reverseTransition.destinationCameraPosition.x,
+      shopCase.exteriorSpawnX,
+      '긴 exterior로 돌아갈 때 camera는 doorway spawn을 즉시 보여 줘야 한다.',
+    );
+    const returned = runtime.advanceTransition(1).completion;
+    assert.equal(returned.active.roomId, 'academy-plaza');
+    assert.equal(returned.position.x, shopCase.exteriorSpawnX);
+  }
 }
 
 function assertPlayerTraversalAndCameraTravel() {
@@ -339,7 +414,10 @@ function assertPlayerTraversalAndCameraTravel() {
       );
     }
   }
-  assert.ok(scene.position.x >= 2480 + 1080, 'Field 입구에서 Dungeon threshold까지 이동해야 한다.');
+  assert.ok(
+    scene.position.x >= roomDefinition('field-crossing').bounds.x + 1080,
+    'Field 입구에서 Dungeon threshold까지 이동해야 한다.',
+  );
   assert.ok(minimumFootY <= 412.001, 'Field route의 실제 고저차를 통과해야 한다.');
   assert.ok(
     scene.cameraPosition.x - initialCameraX >= 200,
@@ -347,9 +425,25 @@ function assertPlayerTraversalAndCameraTravel() {
   );
 }
 
+function assertVillageThreeViewTraversal() {
+  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 120 });
+  const initialCameraX = scene.cameraPosition.x;
+  for (let tick = 0; tick < 1500; tick += 1) {
+    scene.update(STEP_SECONDS, Object.freeze({ ...EMPTY_INPUT, right: true }));
+  }
+  assert.ok(scene.position.x >= 2700, 'Player가 세 번째 exterior view까지 걸어갈 수 있어야 한다.');
+  assert.ok(
+    scene.cameraPosition.x - initialCameraX >= 1800,
+    'camera가 세 logical view에 걸친 학원촌 길을 따라야 한다.',
+  );
+}
+
 assertSpatialDefinitions();
 assertPatchAndRouteMatrix();
+assertShopInteriorRoundTrips();
 assertPlayerTraversalAndCameraTravel();
+assertVillageThreeViewTraversal();
 
 console.log(
   JSON.stringify(

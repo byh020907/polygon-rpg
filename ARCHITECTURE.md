@@ -122,6 +122,7 @@ Immutable status + RenderFrame
 - Chunk resolve context는 World Clock phase, remaining Deadline, Crisis와 stable event flags로 제한한다. 이 context가 같으면 unload/reload 뒤 같은 NPC·facility·encounter·route patch를 만들고 offline 경과 시간은 context에 섞지 않는다.
 - Deadline 0의 Crisis 전환과 최근 핵심 사건 직후 rewind snapshot은 World Time/Progression coordinator가 원자 적용한다. Meta progression은 보존하고 unreturned expedition reward만 폐기하며 retry-aware stable flag를 추가한다.
 - Dungeon authored content는 signature rule의 입구 소개, 전투 결합, 숨은 분기 응용과 Boss 시험을 stable stage ID로 제공한다. Map/Encounter coordinator는 첫 방문의 핵심 gate만 blocking하고 cleared patch에서는 강제 전투를 제거하며 shortcut과 빠른 이동 경로를 결정적으로 연다.
+- Academy Village authored content는 fixed logical camera view 세 개 이상에 걸친 연속 exterior surface와 서로 구분되는 무기상·인챈터 건물 입구를 제공한다. 각 입구는 독립된 interior Room으로 전환하고 interior의 출구만 정확한 exterior doorway spawn으로 돌아간다. 상점 NPC entity와 interaction은 해당 interior Room에서만 resolve되며 exterior snapshot에 중복 생성하지 않는다.
 - Boss authored profile은 읽을 수 있는 attack cycle과 arena interaction, weakness exposure 또는 part transition 중 하나를 명시하며 Encounter owner가 phase와 recovery window를 기록한다.
 - 낮밤 patch는 필수 경로를 닫지 않는다. Night optional elite와 새 pattern은 stable encounter ID로 resolve되고 완료 시 확정 progression reward를 idempotent하게 지급한다.
 
@@ -153,6 +154,7 @@ Immutable status + RenderFrame
   history replacement로 동기화한다. Adapter와 panel은 gameplay owner의 mutable state를 직접 쓰지 않는다.
 - World-anchored dialogue UI는 active authored interaction anchor와 camera read model만 screen-space로 투영하고 viewport safe area에서 clamp한다. Available-only interaction과 종료된 대화에는 bubble DOM presentation을 만들지 않는다. 글자별 시각 reveal은 screen reader에 partial text를 반복 announce하지 않으며 full line을 별도 accessible status로 제공한다.
 - 무기상점과 인챈터 UI는 stable NPC interaction ID에 연결된 dialogue command surface이며, 상시 growth HUD가 검 구매나 속성 선택 transaction을 직접 노출하지 않는다.
+- 무기상점과 인챈터의 authored interaction은 각 상점 interior Room의 entity에 scope되고, Map Runtime이 active interior snapshot을 소유하는 동안에만 Story owner가 해당 interaction을 available로 resolve한다. Exterior doorway Portal은 transaction command를 직접 노출하지 않는다.
 - Story owner는 NPC가 시작·완료한 핵심 대화의 stable conversation ID를 completion result로 내보내고 Progression owner가 viewed/completed ID의 final writer가 된다. Story는 current reaction과 별개로 이 snapshot에서 다시 읽을 수 있는 immutable transcript DTO를 resolve한다.
 - Mobile/desktop은 같은 gameplay simulation과 world framing을 공유하고 layout만 presentation adapter가 조정한다.
 
@@ -188,6 +190,7 @@ Immutable status + RenderFrame
   기본 menu의 debug-free 상태, hold progress, desktop/mobile panel, Apply 즉시 반영과 URL reload 복원을 확인한다.
 - Story browser flow는 대화 시작 전·종료 후 bubble이 보이지 않고 active 동안만 화자 anchor에 나타나는지 desktop/mobile에서 확인한다.
 - Map fixture와 Browser flow는 polygon 경사의 render/collision 발 위치 일치, 단방향 platform의 아래→위 통과와 위→아래 착지를 고정한다.
+- Academy Village fixture와 Browser flow는 exterior가 logical camera view 세 개 이상을 이동하는지, 두 건물 입구가 서로 다른 interior Room과 doorway return spawn에 연결되는지, 각 상점 NPC·conversation command가 자기 interior에서만 존재하는지를 고정한다.
 - Visual 변경은 stable scenario와 frame에서 실제 browser viewport PNG를 만들고 직접 판독한다. Polygon/Retro, desktop/narrow viewport와 relevant pose/state를 같은 acceptance 기준으로 비교한다.
 - Persistence는 versioned round-trip, corrupt payload, failure result와 idempotent reward recovery를 검증한다.
 - Architecture verification은 import direction, state writer uniqueness, renderer read-only boundary와 forbidden direct dependency를 검사한다.

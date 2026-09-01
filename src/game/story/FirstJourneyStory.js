@@ -30,9 +30,9 @@ const STORY_BEATS = Object.freeze({
   [FIRST_JOURNEY_STORY_BEAT.ACADEMY_BRIEFING]: Object.freeze({
     title: '세라 교관의 출정 수업',
     briefing:
-      '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다. 카린 무기상과 대화해 검의 거리와 빈틈을 확인하고 학원촌에서 출정하세요.',
+      '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다. 학원촌 거리를 지나 카린의 검 공방 안에서 검의 거리와 빈틈을 확인하고 출정하세요.',
     nextObjective:
-      '광장 오른쪽의 카린 무기상과 대화해 검을 고른 뒤 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
+      '거리 두 번째 구역의 카린 검 공방 입구로 들어가 검을 고른 뒤 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
   }),
   [FIRST_JOURNEY_STORY_BEAT.ACADEMY_TRAINING]: Object.freeze({
     title: '세라의 기본기 점검',
@@ -174,6 +174,10 @@ function matchesRoom(roomId) {
   return ({ activeRoomId }) => activeRoomId === roomId;
 }
 
+function matchesAcademyRoom({ activeRoomId }) {
+  return ['academy-plaza', 'academy-weapon-shop', 'academy-enchanter-shop'].includes(activeRoomId);
+}
+
 const STORY_RULES = Object.freeze([
   Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.ACADEMY_TRAINING,
@@ -270,12 +274,12 @@ const STORY_RULES = Object.freeze([
   Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.GLASSWIND_RETURN,
     matches: ({ activeRoomId, regionExpansion }) =>
-      activeRoomId === ACADEMY_ROOM_ID && Boolean(regionExpansion?.returnedWithReward),
+      matchesAcademyRoom({ activeRoomId }) && Boolean(regionExpansion?.returnedWithReward),
   }),
   Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.GLASSWIND_BRIEFING,
     matches: ({ activeRoomId, journey }) =>
-      activeRoomId === ACADEMY_ROOM_ID && Boolean(journey?.returnedWithReward),
+      matchesAcademyRoom({ activeRoomId }) && Boolean(journey?.returnedWithReward),
   }),
 ]);
 

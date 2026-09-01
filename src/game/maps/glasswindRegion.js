@@ -64,7 +64,7 @@ export const ACADEMY_GLASSWIND_PORTAL_ITEMS = Object.freeze([
 const fieldRoom = {
   id: 'glasswind-approach',
   label: '유리바람 협곡 · 벼랑길',
-  bounds: { x: 7440, y: 0, width: 1024, height: 540 },
+  bounds: { x: 9296, y: 0, width: 1024, height: 540 },
   cameraAnchor: { x: 480, y: 270 },
   groundY: fieldGroundY,
   movementBounds: { minX: 24, maxX: 760 },
@@ -170,7 +170,7 @@ const fieldRoom = {
 const dungeonRoom = {
   id: 'glasswind-observatory',
   label: '유리바람 협곡 · 바람잠긴 관측소',
-  bounds: { x: 8680, y: 0, width: 1200, height: 540 },
+  bounds: { x: 10536, y: 0, width: 1200, height: 540 },
   cameraAnchor: { x: 480, y: 270 },
   groundY: dungeonGroundY,
   movementBounds: { minX: 24, maxX: 1176 },
@@ -440,7 +440,7 @@ const dungeonRoom = {
 const bossRoom = {
   id: 'glasswind-storm-eye',
   label: '유리바람 협곡 · 폭풍눈 중앙정',
-  bounds: { x: 9920, y: 0, width: 1024, height: 540 },
+  bounds: { x: 11776, y: 0, width: 1024, height: 540 },
   cameraAnchor: { x: 480, y: 270 },
   groundY: bossGroundY,
   movementBounds: { minX: 24, maxX: 1000 },

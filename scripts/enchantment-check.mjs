@@ -755,7 +755,11 @@ function verifyVisualQaLevelsAndRuntimeContext() {
         gold: fire.goldCosts[0],
       }),
     );
-    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 829 });
+    scene.setVisualQaLocation({
+      regionId: 'academy-region',
+      roomId: 'academy-enchanter-shop',
+      x: 610,
+    });
     const inactive = scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-fire');
     assert.equal(inactive.changed, false);
     assert.equal(inactive.reason, 'unavailable');

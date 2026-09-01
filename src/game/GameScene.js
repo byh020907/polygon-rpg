@@ -57,6 +57,15 @@ const GRAVITY = 1180;
 const ROLL_DURATION_SECONDS = combatFramesToSeconds(25);
 const ROLL_SPEED = 320;
 const LANDING_RECOVERY_SECONDS = combatFramesToSeconds(8);
+const ACADEMY_ROOM_IDS = Object.freeze([
+  'academy-plaza',
+  'academy-weapon-shop',
+  'academy-enchanter-shop',
+]);
+
+function isAcademyRoom(roomId) {
+  return ACADEMY_ROOM_IDS.includes(roomId);
+}
 
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
 function attackHitProfile(motionId, { startFrame, endFrame, hitPulseFrames, ...profile }) {
@@ -511,7 +520,16 @@ export class GameScene extends SceneNode {
       y: this.mapRuntime.getGroundYAt(playerX) - CHARACTER_FOOT_OFFSET,
     };
     this.previousPosition = { ...this.position };
-    this.cameraPosition = { ...mapSnapshot.cameraPosition };
+    const cameraBounds = mapSnapshot.cameraBounds;
+    const minimumCameraX = cameraBounds.x + 480;
+    const maximumCameraX = cameraBounds.x + cameraBounds.width - 480;
+    this.cameraPosition = {
+      x:
+        minimumCameraX <= maximumCameraX
+          ? Math.max(minimumCameraX, Math.min(maximumCameraX, playerX))
+          : mapSnapshot.cameraPosition.x,
+      y: mapSnapshot.cameraPosition.y,
+    };
     this.previousCameraPosition = { ...this.cameraPosition };
     this.verticalVelocity = 0;
     this.isGrounded = true;
@@ -1145,7 +1163,7 @@ export class GameScene extends SceneNode {
   canManageProgression() {
     const location = this.mapRuntime.getActiveLocation();
     return (
-      location.roomId === 'academy-plaza' &&
+      isAcademyRoom(location.roomId) &&
       !this.mapRuntime.getTransition() &&
       this.combatCommands.snapshot().id === 'idle'
     );
@@ -2299,14 +2317,14 @@ export class GameScene extends SceneNode {
         encounterHint = 'GUARD · JUMP · ROLL · PUNISH';
       }
     }
-    if (roomId === 'academy-plaza' && journey.returnedWithReward) {
+    if (isAcademyRoom(roomId) && journey.returnedWithReward) {
       encounterHint = regionExpansion.returnedWithReward
         ? encounterHint
         : progressionComplete
           ? 'M4 COMPLETE · 새 Sweep Jump 전투 준비'
           : '';
     }
-    if (roomId === 'academy-plaza' && regionExpansion.returnedWithReward) {
+    if (isAcademyRoom(roomId) && regionExpansion.returnedWithReward) {
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
     if (this.recoveryNotice) encounterHint = this.recoveryNotice;
@@ -2352,12 +2370,12 @@ export class GameScene extends SceneNode {
           : '',
       journeyLabel:
         location.regionId === 'glasswind-region' ||
-        (roomId === 'academy-plaza' && regionExpansion.phase !== 'prepare')
+        (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
           ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
           : (phaseLabels[journey.phase] ?? journey.phase),
       wardLabel:
         location.regionId === 'glasswind-region' ||
-        (roomId === 'academy-plaza' && regionExpansion.phase !== 'prepare')
+        (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
           ? regionExpansion.glasswindBridgeStable
             ? '유리바람 다리 · 안정'
             : '횡풍 장벽 · 활성'

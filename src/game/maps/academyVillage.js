@@ -568,6 +568,217 @@ const frontLayerItems = [
   ...ACADEMY_SEALED_SHORTCUT_PORTAL_ITEMS,
 ];
 
+const exteriorFrontLayerItems = frontLayerItems.filter(
+  (item) =>
+    !item.id.startsWith('shop-') &&
+    !item.id.startsWith('weapon-merchant-karen-') &&
+    !item.id.startsWith('enchanter-lio-'),
+);
+
+function translateRenderItems(items, idSuffix, deltaX, deltaY = 0) {
+  return items.map((item) => ({
+    ...item,
+    id: `${item.id}-${idSuffix}`,
+    points: item.points.map((point) => ({ x: point.x + deltaX, y: point.y + deltaY })),
+  }));
+}
+
+const academyStreetExtensionItems = [
+  renderItem('academy-east-middle-ground', rectangle(960, 390, 1920, 42), '#665443', {
+    stroke: '#3b352f',
+    lineWidth: 2,
+    order: 0,
+  }),
+  renderItem('academy-east-front-ground', rectangle(960, 432, 1920, 108), '#51473d', {
+    stroke: '#332f2c',
+    lineWidth: 2,
+    order: 0,
+  }),
+  renderItem('academy-east-plaza-path', rectangle(960, 448, 1920, 62), '#68655d', {
+    opacity: 0.7,
+    order: 1,
+  }),
+  renderItem('weapon-shop-house-body', rectangle(1248, 294, 384, 138), '#745c4b', {
+    stroke: '#382f2d',
+    lineWidth: 3,
+    order: 3,
+    label: '카린의 검 공방',
+    role: 'academy-weapon-shop-house',
+    presentationOnly: true,
+  }),
+  renderItem(
+    'weapon-shop-house-roof',
+    [
+      { x: 1216, y: 300 },
+      { x: 1440, y: 218 },
+      { x: 1664, y: 300 },
+    ],
+    '#354f66',
+    { stroke: '#1a2a35', lineWidth: 4, order: 4 },
+  ),
+  renderItem('weapon-shop-sign', rectangle(1272, 314, 136, 36), '#d8aa58', {
+    stroke: '#513c23',
+    lineWidth: 2,
+    order: 6,
+    label: '카린 무기상',
+    role: 'academy-weapon-shop-sign',
+    presentationOnly: true,
+  }),
+  renderItem(
+    'weapon-shop-sign-blade',
+    [
+      { x: 1298, y: 344 },
+      { x: 1292, y: 338 },
+      { x: 1364, y: 318 },
+      { x: 1376, y: 319 },
+      { x: 1367, y: 328 },
+    ],
+    '#eef4ef',
+    { stroke: '#34464b', lineWidth: 1.5, order: 7, presentationOnly: true },
+  ),
+  renderItem('weapon-shop-sign-guard', rectangle(1292, 333, 24, 6), '#4b3125', {
+    stroke: '#261d1a',
+    lineWidth: 1,
+    order: 8,
+    presentationOnly: true,
+  }),
+  renderItem('weapon-shop-window-night', rectangle(1288, 346, 68, 42), '#f1c56e', {
+    stroke: '#574129',
+    lineWidth: 2,
+    opacity: 0.92,
+    order: 6,
+    enabled: false,
+  }),
+  renderItem('enchanter-shop-house-body', rectangle(2208, 284, 384, 148), '#614c63', {
+    stroke: '#302735',
+    lineWidth: 3,
+    order: 3,
+    label: '리오의 인챈트 공방',
+    role: 'academy-enchanter-shop-house',
+    presentationOnly: true,
+  }),
+  renderItem(
+    'enchanter-shop-house-roof',
+    [
+      { x: 2176, y: 292 },
+      { x: 2400, y: 202 },
+      { x: 2624, y: 292 },
+    ],
+    '#563c5b',
+    { stroke: '#271c2d', lineWidth: 4, order: 4 },
+  ),
+  renderItem('enchanter-shop-sign', rectangle(2228, 306, 136, 38), '#9bd8ca', {
+    stroke: '#294840',
+    lineWidth: 2,
+    order: 6,
+    label: '리오 인챈터',
+    role: 'academy-enchanter-shop-sign',
+    presentationOnly: true,
+  }),
+  renderItem(
+    'enchanter-shop-sign-rune',
+    [
+      { x: 2296, y: 309 },
+      { x: 2318, y: 325 },
+      { x: 2296, y: 341 },
+      { x: 2274, y: 325 },
+    ],
+    '#293f5c',
+    { stroke: '#eefbf6', lineWidth: 2, order: 7, presentationOnly: true },
+  ),
+  renderItem('enchanter-shop-sign-gem', regularPolygon(2296, 325, 8, 8, 6), '#f1d27c', {
+    stroke: '#5f4722',
+    lineWidth: 1,
+    order: 8,
+    presentationOnly: true,
+  }),
+  renderItem('enchanter-shop-window-night', rectangle(2248, 340, 68, 42), '#b8eee0', {
+    stroke: '#35564f',
+    lineWidth: 2,
+    opacity: 0.9,
+    order: 6,
+    enabled: false,
+  }),
+  ...createEnvironmentPortalLandmarkItems('academy-weapon-shop-door', 1440, 432, {
+    style: 'academy-door',
+    order: 8,
+  }),
+  ...createPortalRenderItems('academy-weapon-shop-door', 1440, 432, '#e5b862', {
+    style: 'academy',
+    order: 12,
+  }),
+  ...createEnvironmentPortalLandmarkItems('academy-enchanter-shop-door', 2400, 432, {
+    style: 'academy-door',
+    order: 8,
+  }),
+  ...createPortalRenderItems('academy-enchanter-shop-door', 2400, 432, '#78d9cf', {
+    style: 'academy',
+    order: 12,
+  }),
+];
+
+function createShopInteriorItems({ idPrefix, wallFill, counterFill, signFill }) {
+  return [
+    renderItem(`${idPrefix}-interior-wall`, rectangle(0, 0, 1024, 432), wallFill, {
+      stroke: '#29272b',
+      lineWidth: 3,
+      order: -10,
+    }),
+    renderItem(`${idPrefix}-interior-floor`, rectangle(0, 432, 1024, 108), '#3e352f', {
+      stroke: '#211d1b',
+      lineWidth: 2,
+      order: 0,
+    }),
+    renderItem(`${idPrefix}-counter`, rectangle(520, 394, 230, 38), counterFill, {
+      stroke: '#2d2623',
+      lineWidth: 3,
+      order: 7,
+    }),
+    renderItem(`${idPrefix}-wall-sign`, rectangle(456, 92, 308, 62), signFill, {
+      stroke: '#342d2a',
+      lineWidth: 3,
+      order: 2,
+      presentationOnly: true,
+    }),
+    ...createEnvironmentPortalLandmarkItems(`${idPrefix}-interior-exit`, 104, 432, {
+      style: 'academy-door',
+      order: 8,
+    }),
+    ...createPortalRenderItems(`${idPrefix}-interior-exit`, 104, 432, '#d8d0ba', {
+      style: 'academy',
+      order: 12,
+    }),
+  ];
+}
+
+const weaponMerchantInteriorItems = [
+  ...createShopInteriorItems({
+    idPrefix: 'weapon-shop',
+    wallFill: '#3a4652',
+    counterFill: '#76553d',
+    signFill: '#c79a4d',
+  }),
+  ...translateRenderItems(
+    frontLayerItems.filter((item) => item.id.startsWith('weapon-merchant-karen-')),
+    'interior',
+    -40,
+  ),
+];
+
+const enchanterInteriorItems = [
+  ...createShopInteriorItems({
+    idPrefix: 'enchanter-shop',
+    wallFill: '#403447',
+    counterFill: '#72504d',
+    signFill: '#71bcb0',
+  }),
+  ...translateRenderItems(
+    frontLayerItems.filter((item) => item.id.startsWith('enchanter-lio-')),
+    'interior',
+    -219,
+  ),
+];
+
 const combatDungeonItems = [
   renderItem('dungeon-backdrop', rectangle(0, 0, 960, 540), '#090d17', {
     order: -100,
@@ -619,8 +830,8 @@ function withRenderLayer(items, renderOrder) {
 export const ACADEMY_VILLAGE_MAP = defineMap({
   id: 'academy-village',
   name: '왕립 마법학교 학원권',
-  version: 2,
-  worldSize: { width: 11920, height: 540 },
+  version: 3,
+  worldSize: { width: 13776, height: 1240 },
   gridSize: 48,
   palette: DAY_PALETTE,
   groundY: null,
@@ -641,11 +852,11 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
       rooms: [
         {
           id: 'academy-plaza',
-          label: '학원촌 중앙광장',
-          bounds: { x: 0, y: 0, width: 1024, height: 540 },
+          label: '학원촌 중앙거리',
+          bounds: { x: 0, y: 0, width: 2880, height: 540 },
           cameraAnchor: { x: 480, y: 270 },
           groundY: 432,
-          movementBounds: { minX: 24, maxX: 1000 },
+          movementBounds: { minX: 24, maxX: 2856 },
           renderOrder: 30,
           surfaces: [
             {
@@ -654,15 +865,16 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
               material: 'academy-stone',
               points: [
                 { x: 0, y: 432 },
-                { x: 1024, y: 432 },
+                { x: 2880, y: 432 },
               ],
             },
           ],
           renderItems: [
             ...withRenderLayer(backLayerItems, 10),
             ...withRenderLayer(middleLayerItems, 20),
-            ...withRenderLayer(frontLayerItems, 30),
+            ...withRenderLayer(exteriorFrontLayerItems, 30),
             ...withRenderLayer(ACADEMY_GLASSWIND_PORTAL_ITEMS, 30),
+            ...withRenderLayer(academyStreetExtensionItems, 30),
             renderItem('plaza-ground-extension', rectangle(960, 432, 64, 108), '#51473d', {
               stroke: '#332f2c',
               lineWidth: 2,
@@ -706,32 +918,43 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
                 '황금 문 너머 실습림에서 Guard와 Roll의 차이를 증명해 봐.',
               ],
             },
+          ],
+          triggers: [],
+          portals: [
+            'academy-training-portal',
+            'academy-glasswind-portal',
+            'academy-field-portal',
+            'boss-shortcut-portal',
+            'academy-weapon-shop-portal',
+            'academy-enchanter-shop-portal',
+          ],
+        },
+        {
+          id: 'academy-weapon-shop',
+          label: '카린의 검 공방',
+          bounds: { x: 960, y: 700, width: 1024, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 432,
+          movementBounds: { minX: 24, maxX: 1000 },
+          renderOrder: 30,
+          surfaces: [
             {
-              id: 'enchanter-lio-interaction',
-              kind: 'story-interaction',
-              position: { x: 829, y: 352 },
-              interactionRange: 64,
-              speaker: '리오 인챈터',
-              lines: [
-                '검을 보여 줘. 가져온 재료와 Gold가 맞으면 속성의 결을 한 단계 새겨 주지.',
-                '한 검에는 한 속성만 남는다. 아래에서 지금 검에 새길 속성을 골라.',
-              ],
-              commands: [
-                { id: 'enchant-fire', type: 'upgrade-sword-enchantment', enchantId: 'fire' },
-                {
-                  id: 'enchant-lightning',
-                  type: 'upgrade-sword-enchantment',
-                  enchantId: 'lightning',
-                },
-                { id: 'enchant-ice', type: 'upgrade-sword-enchantment', enchantId: 'ice' },
-                { id: 'enchant-earth', type: 'upgrade-sword-enchantment', enchantId: 'earth' },
+              id: 'weapon-shop-floor-surface',
+              kind: 'solid',
+              material: 'academy-wood',
+              points: [
+                { x: 0, y: 432 },
+                { x: 1024, y: 432 },
               ],
             },
+          ],
+          renderItems: withRenderLayer(weaponMerchantInteriorItems, 30),
+          entities: [
             {
               id: 'weapon-merchant-karen-interaction',
               kind: 'story-interaction',
-              position: { x: 650, y: 352 },
-              interactionRange: 52,
+              position: { x: 610, y: 352 },
+              interactionRange: 64,
               speaker: '카린 무기상',
               lines: [
                 '검은 숫자만 고르는 물건이 아니야. 빠른 연계와 묵직한 파쇄 중 네 공략에 맞는 쪽을 골라.',
@@ -752,17 +975,58 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
             },
           ],
           triggers: [],
-          portals: [
-            'academy-training-portal',
-            'academy-glasswind-portal',
-            'academy-field-portal',
-            'boss-shortcut-portal',
+          portals: ['academy-weapon-shop-portal'],
+        },
+        {
+          id: 'academy-enchanter-shop',
+          label: '리오의 인챈트 공방',
+          bounds: { x: 2024, y: 700, width: 1024, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 432,
+          movementBounds: { minX: 24, maxX: 1000 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'enchanter-shop-floor-surface',
+              kind: 'solid',
+              material: 'academy-wood',
+              points: [
+                { x: 0, y: 432 },
+                { x: 1024, y: 432 },
+              ],
+            },
           ],
+          renderItems: withRenderLayer(enchanterInteriorItems, 30),
+          entities: [
+            {
+              id: 'enchanter-lio-interaction',
+              kind: 'story-interaction',
+              position: { x: 610, y: 352 },
+              interactionRange: 64,
+              speaker: '리오 인챈터',
+              lines: [
+                '검을 보여 줘. 가져온 재료와 Gold가 맞으면 속성의 결을 한 단계 새겨 주지.',
+                '한 검에는 한 속성만 남는다. 아래에서 지금 검에 새길 속성을 골라.',
+              ],
+              commands: [
+                { id: 'enchant-fire', type: 'upgrade-sword-enchantment', enchantId: 'fire' },
+                {
+                  id: 'enchant-lightning',
+                  type: 'upgrade-sword-enchantment',
+                  enchantId: 'lightning',
+                },
+                { id: 'enchant-ice', type: 'upgrade-sword-enchantment', enchantId: 'ice' },
+                { id: 'enchant-earth', type: 'upgrade-sword-enchantment', enchantId: 'earth' },
+              ],
+            },
+          ],
+          triggers: [],
+          portals: ['academy-enchanter-shop-portal'],
         },
         {
           id: 'training-room',
           label: '독립 훈련장',
-          bounds: { x: 1240, y: 0, width: 1024, height: 540 },
+          bounds: { x: 3096, y: 0, width: 1024, height: 540 },
           cameraAnchor: { x: 480, y: 270 },
           groundY: 420,
           movementBounds: { minX: 24, maxX: 1000 },
@@ -817,6 +1081,44 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
   ],
   portals: [
     {
+      id: 'academy-weapon-shop-portal',
+      bidirectional: true,
+      from: {
+        regionId: 'academy-region',
+        roomId: 'academy-plaza',
+        anchor: { x: 1440, y: 432 },
+        spawn: { x: 1370, y: 350 },
+        radius: 48,
+      },
+      to: {
+        regionId: 'academy-region',
+        roomId: 'academy-weapon-shop',
+        anchor: { x: 104, y: 432 },
+        spawn: { x: 164, y: 350 },
+        radius: 48,
+      },
+      transition: { durationSeconds: 0.28 },
+    },
+    {
+      id: 'academy-enchanter-shop-portal',
+      bidirectional: true,
+      from: {
+        regionId: 'academy-region',
+        roomId: 'academy-plaza',
+        anchor: { x: 2400, y: 432 },
+        spawn: { x: 2330, y: 350 },
+        radius: 48,
+      },
+      to: {
+        regionId: 'academy-region',
+        roomId: 'academy-enchanter-shop',
+        anchor: { x: 104, y: 432 },
+        spawn: { x: 164, y: 350 },
+        radius: 48,
+      },
+      transition: { durationSeconds: 0.28 },
+    },
+    {
       id: 'academy-training-portal',
       bidirectional: true,
       from: {
@@ -849,7 +1151,8 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
         { op: 'set-enabled', target: 'moon', value: true },
         { op: 'set-enabled', target: 'player-window-night', value: true },
         { op: 'set-enabled', target: 'mentor-window-night', value: true },
-        { op: 'set-enabled', target: 'shop-window-night', value: true },
+        { op: 'set-enabled', target: 'weapon-shop-window-night', value: true },
+        { op: 'set-enabled', target: 'enchanter-shop-window-night', value: true },
         { op: 'set-enabled', target: 'lamp-glow', value: true },
       ],
     },

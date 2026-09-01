@@ -31,9 +31,9 @@ function input(overrides = {}) {
   return Object.freeze({ ...EMPTY_INPUT, ...overrides });
 }
 
-function createAcademyScene(x) {
+function createAcademyScene(x, roomId = 'academy-plaza') {
   const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
-  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x });
+  scene.setVisualQaLocation({ regionId: 'academy-region', roomId, x });
   return scene;
 }
 
@@ -224,12 +224,21 @@ function verifyInteractionRangeAndTargets() {
   );
   assert.ok(Object.isFrozen(mentorResult.after), 'dialogue DTO는 immutable이어야 한다.');
 
-  const facility = createAcademyScene(790);
+  const exteriorFacility = createAcademyScene(2400);
+  exteriorFacility.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
+  assert.equal(exteriorFacility.getWorldStatus().dialogue.active, false);
+  assert.equal(
+    exteriorFacility.mapRuntime.getTransition()?.portalId,
+    'academy-enchanter-shop-portal',
+    '거리의 상점 입구는 NPC 대화 대신 실내 Portal을 시작해야 한다.',
+  );
+
+  const facility = createAcademyScene(610, 'academy-enchanter-shop');
   const facilityResult = jump(facility, 1);
   assertJumpSuppressed(facility, facilityResult.before, '리오 인챈터 대화 시작');
   assert.equal(facilityResult.after.speaker, '리오 인챈터');
   assert.equal(facilityResult.after.interactionId, 'enchanter-lio-interaction');
-  assert.deepEqual(facilityResult.after.worldAnchor, { x: 829, y: 352 });
+  assert.deepEqual(facilityResult.after.worldAnchor, { x: 2634, y: 1052 });
   assert.deepEqual(
     facilityResult.after.commands.map((command) => command.id),
     ['enchant-fire', 'enchant-lightning', 'enchant-ice', 'enchant-earth'],
@@ -609,6 +618,27 @@ function verifyFirstJourneyStoryChain() {
     label: '학원촌 귀환 반응',
   });
   assert.match(returnLines.join(' '), /돌아왔군|첫 원정/);
+
+  const returnedShop = createJourneyScene({
+    roomId: 'academy-weapon-shop',
+    x: 610,
+    firstJourney: {
+      phase: JOURNEY_PHASE.RETURNED,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    },
+  });
+  assertStoryStatus(
+    returnedShop,
+    { beatId: 'glasswind-briefing', journeyLabel: '첫 원정 완료' },
+    '상점 실내 귀환 상태 유지',
+  );
 }
 
 function verifyStaleDialogueConsumesOneJump() {

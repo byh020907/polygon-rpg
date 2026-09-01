@@ -27,7 +27,11 @@ const HEAVY_PROFILE_ID = 'heavy-sword';
 const STEP = 1 / 120;
 
 function openWeaponMerchantDialogue(scene) {
-  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 650 });
+  scene.setVisualQaLocation({
+    regionId: 'academy-region',
+    roomId: 'academy-weapon-shop',
+    x: 610,
+  });
   scene.update(
     STEP,
     Object.freeze({

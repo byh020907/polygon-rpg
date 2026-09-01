@@ -70,6 +70,19 @@ function endpointSpawn(endpoint, room) {
   );
 }
 
+function cameraPositionAt(room, position) {
+  const bounds = room.cameraBounds ?? room.bounds;
+  const minimumX = bounds.x + 480;
+  const maximumX = bounds.x + bounds.width - 480;
+  return Object.freeze({
+    x:
+      minimumX <= maximumX
+        ? Math.max(minimumX, Math.min(maximumX, position.x))
+        : room.cameraAnchor.x,
+    y: room.cameraAnchor.y,
+  });
+}
+
 function distanceBetween(left, right) {
   return Math.hypot(left.x - right.x, left.y - right.y);
 }
@@ -343,14 +356,15 @@ export class MapRuntime {
     }
     const sourceRoom = worldRoom(sourceRoomDefinition);
     const destinationRoom = worldRoom(destinationRoomDefinition);
+    const destinationPosition = endpointSpawn(destination, destinationRoomDefinition);
     const intent = deepFreeze({
       portalId: portal.id,
       travelSegmentId: portal.travelSegmentId ?? null,
       from: { ...this.active },
       to: { regionId: destination.regionId, roomId: destination.roomId },
-      destinationPosition: endpointSpawn(destination, destinationRoomDefinition),
+      destinationPosition,
       sourceCameraPosition: sourceRoom.cameraAnchor,
-      destinationCameraPosition: destinationRoom.cameraAnchor,
+      destinationCameraPosition: cameraPositionAt(destinationRoom, destinationPosition),
       durationSeconds: portal.transition.durationSeconds,
       elapsedSeconds: 0,
       progress: 0,
