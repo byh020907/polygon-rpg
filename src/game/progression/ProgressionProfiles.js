@@ -1,5 +1,19 @@
 export const TRAINING_CLEAR_REWARD = 3;
 
+export const FIRST_JOURNEY_WEAPON_FORGE_PROFILE = Object.freeze({
+  choiceGroupId: 'first-journey-weapon-archetype',
+  sourceId: 'first-journey-boss-reward',
+  materialId: 'sealed-guardian-core',
+  materialLabel: '봉인 수호핵',
+  sourceQuantity: 1,
+  materialCost: 1,
+  optionProfileIds: Object.freeze([
+    'swift-chain-sword',
+    'posture-breaker-sword',
+    'rear-punish-sword',
+  ]),
+});
+
 function freezeLevelProfile(profile) {
   return Object.freeze({ ...profile });
 }
@@ -82,6 +96,8 @@ export function getCombatSkillTrainingMarkRequirement(level) {
 export const COMBAT_PROGRESSION_PROFILE = Object.freeze({
   trainingClearReward: TRAINING_CLEAR_REWARD,
   maxSkillLevel: COMBAT_SKILL_LEVEL_PROFILES.length - 1,
+  merchantProfileIds: Object.freeze(['balanced-sword', 'heavy-sword']),
+  weaponForge: FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
   getSkillLevelProfile: getCombatSkillLevelProfile,
   getSkillUpgradeCost: getCombatSkillUpgradeCost,
   getSkillTrainingMarkRequirement: getCombatSkillTrainingMarkRequirement,

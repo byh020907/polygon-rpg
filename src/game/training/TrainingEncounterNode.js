@@ -1041,7 +1041,10 @@ export class TrainingEncounterNode extends SceneNode {
       combatState.id === 'shieldBash'
         ? (this.entity.encounterProfile.posture?.shieldCounterDamage ?? 0)
         : profile.guardBreak
-          ? (this.entity.encounterProfile.posture?.strongDamage ?? 0)
+          ? Math.round(
+              (this.entity.encounterProfile.posture?.strongDamage ?? 0) *
+                (profile.postureDamageScale ?? 1),
+            )
           : 0;
     const earthContactPostureDamage =
       this.enchantmentContext.active?.id === 'earth' &&
@@ -1138,7 +1141,12 @@ export class TrainingEncounterNode extends SceneNode {
     const juggleRole =
       profile.juggleRole ?? (enemyAirborne ? 'sustain' : finalPulse ? 'launcher' : null);
     const damageScale = enemyAirborne ? Math.max(0.4, 1 - enemy.juggleHits * 0.1) : 1;
-    const baseDamage = Math.max(1, Math.round(profile.damage * damageScale));
+    const baseDamage = Math.max(
+      1,
+      Math.round(
+        profile.damage * damageScale * (backPunish ? (profile.backPunishDamageScale ?? 1) : 1),
+      ),
+    );
     const enchantment =
       combatState.id === 'shieldBash' || profile.contactPart === 'shield'
         ? null

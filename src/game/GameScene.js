@@ -24,9 +24,11 @@ import {
   PROGRESSION_TRANSACTION_REASON,
   assertProgressionSnapshot,
   awardEnemyEnchantMaterial,
+  awardWeaponForgeMaterial,
   awardTrainingMarks,
   createProgressionSnapshot,
   getAvailableGold,
+  forgeWeaponArchetype as forgeProgressionWeaponArchetype,
   mergeProgressionSnapshot,
   purchaseEquipment as purchaseProgressionEquipment,
   recordViewedConversation,
@@ -227,6 +229,8 @@ function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, 
     damage: baseProfile.damage * equipmentProfile.attack.damageScale * skillProfile.damageScale,
     range: baseProfile.range * equipmentProfile.attack.rangeScale,
     hitstunScale: equipmentProfile.attack.hitstunScale,
+    postureDamageScale: equipmentProfile.attack.postureDamageScale ?? 1,
+    backPunishDamageScale: equipmentProfile.attack.backPunishDamageScale ?? 1,
     launchY: baseProfile.launchY * equipmentProfile.attack.launchScale,
     ...(baseProfile.relaunchSpeed
       ? { relaunchSpeed: baseProfile.relaunchSpeed * equipmentProfile.attack.launchScale }
@@ -261,13 +265,22 @@ function assertEquipmentCatalog(catalog) {
 }
 
 function assertCombatProgressionProfile(profile) {
+  const weaponForge = profile?.weaponForge;
   if (
     !profile ||
     !Number.isInteger(profile.trainingClearReward) ||
     !Number.isInteger(profile.maxSkillLevel) ||
     typeof profile.getSkillLevelProfile !== 'function' ||
     typeof profile.getSkillUpgradeCost !== 'function' ||
-    typeof profile.getSkillTrainingMarkRequirement !== 'function'
+    typeof profile.getSkillTrainingMarkRequirement !== 'function' ||
+    !Array.isArray(profile.merchantProfileIds) ||
+    !weaponForge ||
+    typeof weaponForge.choiceGroupId !== 'string' ||
+    typeof weaponForge.sourceId !== 'string' ||
+    typeof weaponForge.materialId !== 'string' ||
+    !Number.isSafeInteger(weaponForge.sourceQuantity) ||
+    !Number.isSafeInteger(weaponForge.materialCost) ||
+    !Array.isArray(weaponForge.optionProfileIds)
   ) {
     throw new TypeError('GameScene에는 authored combat progression profile 주입이 필요합니다.');
   }
@@ -443,6 +456,7 @@ export class GameScene extends SceneNode {
     );
     this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
     this.reconcileEnchantMaterials();
+    this.reconcileWeaponForgeMaterial();
     this.timePhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
@@ -1206,13 +1220,49 @@ export class GameScene extends SceneNode {
     return snapshot;
   }
 
+  reconcileWeaponForgeMaterial() {
+    const forgeProfile = this.combatProgressionProfile.weaponForge;
+    const journey = this.journeyProgress.snapshot();
+    const sourceReady =
+      forgeProfile.sourceId === 'first-journey-boss-reward' && journey.bossRewardClaimed;
+    if (!sourceReady) return this.progressionSnapshot;
+    const transaction = awardWeaponForgeMaterial(this.progressionSnapshot, {
+      sourceId: forgeProfile.sourceId,
+      materialId: forgeProfile.materialId,
+      quantity: forgeProfile.sourceQuantity,
+    });
+    if (transaction.changed) this.progressionSnapshot = transaction.snapshot;
+    return this.progressionSnapshot;
+  }
+
   resolveDialogueStatus() {
     const dialogue = this.storyInteractionOwner.snapshot(this.getStoryInteractionContext());
     if (!dialogue.active || dialogue.commands.length === 0) return dialogue;
     const progression = this.progressionSnapshot;
     const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
     const availableGold = getAvailableGold(progression);
-    const commands = dialogue.commands.map((command) => {
+    const forgeProfile = this.combatProgressionProfile.weaponForge;
+    const selectedArchetypeId =
+      progression.weaponForge.selectedProfileIdsByGroup[forgeProfile.choiceGroupId] ?? null;
+    const forgeMaterialQuantity =
+      progression.weaponForge.materialQuantities[forgeProfile.materialId] ?? 0;
+    const hasForgeCommands = dialogue.commands.some(
+      (command) => command.type === 'forge-weapon-archetype',
+    );
+    const forgeDecisionReady =
+      hasForgeCommands &&
+      selectedArchetypeId === null &&
+      forgeMaterialQuantity >= forgeProfile.materialCost;
+    const visibleCommands = !hasForgeCommands
+      ? dialogue.commands
+      : forgeDecisionReady
+        ? dialogue.commands.filter((command) => command.type === 'forge-weapon-archetype')
+        : dialogue.commands.filter(
+            (command) =>
+              command.type !== 'forge-weapon-archetype' ||
+              command.profileId === selectedArchetypeId,
+          );
+    const commands = visibleCommands.map((command) => {
       if (command.type === 'upgrade-sword-enchantment') {
         const profile = this.enchantmentCatalog.getProfile(command.enchantId);
         const active = record.elementId === profile.id;
@@ -1272,6 +1322,37 @@ export class GameScene extends SceneNode {
                 : `${profile.goldCost} Gold`,
         });
       }
+      if (command.type === 'forge-weapon-archetype') {
+        const profile = this.equipmentCatalog.getProfile(command.profileId);
+        const selected = selectedArchetypeId === profile.id;
+        const choiceComplete = selectedArchetypeId !== null;
+        const active = progression.equippedEquipmentId === profile.id;
+        return Object.freeze({
+          id: command.id,
+          type: command.type,
+          profileId: profile.id,
+          label: profile.label,
+          description: profile.description,
+          materialId: forgeProfile.materialId,
+          materialLabel: forgeProfile.materialLabel,
+          materialQuantity: forgeMaterialQuantity,
+          materialCost: forgeProfile.materialCost,
+          active,
+          selected,
+          canChoose:
+            (selected && !active) ||
+            (!choiceComplete && forgeMaterialQuantity >= forgeProfile.materialCost),
+          actionLabel: selected
+            ? active
+              ? '제작 선택 · 장착 중'
+              : '제작 선택 · 장착'
+            : choiceComplete
+              ? '다른 archetype 선택 완료'
+              : forgeMaterialQuantity >= forgeProfile.materialCost
+                ? `${forgeProfile.materialLabel} ${forgeProfile.materialCost}개`
+                : `${forgeProfile.materialLabel} 필요`,
+        });
+      }
       if (command.type === 'replay-transcript') {
         return Object.freeze({
           ...command,
@@ -1306,6 +1387,9 @@ export class GameScene extends SceneNode {
     }
     if (command.type === 'manage-sword') {
       return this.manageMerchantSword(command.profileId);
+    }
+    if (command.type === 'forge-weapon-archetype') {
+      return this.forgeMerchantWeaponArchetype(command.profileId);
     }
     if (command.type !== 'upgrade-sword-enchantment') {
       return this.unavailableProgressionTransaction();
@@ -1379,6 +1463,55 @@ export class GameScene extends SceneNode {
       snapshot: equip.snapshot,
     });
     this.progressionNotice = `${profile.shortLabel} 구매·장착 완료 · 인챈트 없음`;
+    return this.commitProgression(transaction, { equipmentChanged: true });
+  }
+
+  forgeMerchantWeaponArchetype(profileId) {
+    const forgeProfile = this.combatProgressionProfile.weaponForge;
+    if (!forgeProfile.optionProfileIds.includes(profileId)) {
+      return this.unavailableProgressionTransaction();
+    }
+    let profile;
+    try {
+      profile = this.equipmentCatalog.getProfile(profileId);
+    } catch {
+      return this.unavailableProgressionTransaction();
+    }
+    const selectedProfileId =
+      this.progressionSnapshot.weaponForge.selectedProfileIdsByGroup[forgeProfile.choiceGroupId] ??
+      null;
+    if (
+      selectedProfileId === profile.id &&
+      this.progressionSnapshot.ownedEquipmentIds.includes(profile.id)
+    ) {
+      const equip = selectProgressionEquipment(this.progressionSnapshot, profile.id);
+      this.progressionNotice = equip.changed
+        ? `${profile.shortLabel} 장착 · archetype combat profile 복원`
+        : '이미 장착 중인 archetype입니다.';
+      if (!equip.changed) {
+        this.statusNode.publish({ force: true });
+        return equip;
+      }
+      return this.commitProgression(equip, { equipmentChanged: true });
+    }
+    const transaction = forgeProgressionWeaponArchetype(this.progressionSnapshot, {
+      choiceGroupId: forgeProfile.choiceGroupId,
+      profileId: profile.id,
+      optionProfileIds: forgeProfile.optionProfileIds,
+      materialId: forgeProfile.materialId,
+      materialCost: forgeProfile.materialCost,
+    });
+    this.progressionNotice = transaction.changed
+      ? `${profile.shortLabel} 제작·장착 완료 · ${forgeProfile.materialLabel} 소비 · 인챈트 없음`
+      : transaction.reason === PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN
+        ? '첫 archetype 제작 선택은 이미 완료되었습니다.'
+        : transaction.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_MATERIAL
+          ? `${forgeProfile.materialLabel}이 필요합니다.`
+          : '이 archetype은 제작할 수 없습니다.';
+    if (!transaction.changed) {
+      this.statusNode.publish({ force: true });
+      return transaction;
+    }
     return this.commitProgression(transaction, { equipmentChanged: true });
   }
 
@@ -1610,6 +1743,7 @@ export class GameScene extends SceneNode {
     );
     this.syncJourneyWorldContext();
     this.reconcileEnchantMaterials();
+    this.reconcileWeaponForgeMaterial();
     this.emitDurableProgressionChanged();
     this.statusNode.publish({ force: true });
     return resolution;
@@ -1639,6 +1773,7 @@ export class GameScene extends SceneNode {
         if (!result.changed) continue;
         this.syncJourneyWorldContext();
         this.reconcileEnchantMaterials();
+        this.reconcileWeaponForgeMaterial();
         this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
@@ -1665,6 +1800,7 @@ export class GameScene extends SceneNode {
         if (!result.changed) continue;
         this.syncJourneyWorldContext();
         this.reconcileEnchantMaterials();
+        this.reconcileWeaponForgeMaterial();
         this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
@@ -2225,7 +2361,14 @@ export class GameScene extends SceneNode {
     };
     const progressionComplete =
       progression.combatSkillLevel === this.combatProgressionProfile.maxSkillLevel &&
-      progression.ownedEquipmentIds.length === this.equipmentCatalog.profiles.length;
+      this.combatProgressionProfile.merchantProfileIds.every((profileId) =>
+        progression.ownedEquipmentIds.includes(profileId),
+      ) &&
+      Boolean(
+        progression.weaponForge.selectedProfileIdsByGroup[
+          this.combatProgressionProfile.weaponForge.choiceGroupId
+        ],
+      );
     const story = resolveFirstJourneyStory({
       equipment: {
         id: this.equipmentProfile.id,
@@ -2454,6 +2597,17 @@ export class GameScene extends SceneNode {
       })(),
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
+      weaponForge: Object.freeze({
+        materialLabel: this.combatProgressionProfile.weaponForge.materialLabel,
+        materialQuantity:
+          progression.weaponForge.materialQuantities[
+            this.combatProgressionProfile.weaponForge.materialId
+          ] ?? 0,
+        selectedProfileId:
+          progression.weaponForge.selectedProfileIdsByGroup[
+            this.combatProgressionProfile.weaponForge.choiceGroupId
+          ] ?? null,
+      }),
       combatSkill: Object.freeze({
         level: progression.combatSkillLevel,
         maxLevel: 3,

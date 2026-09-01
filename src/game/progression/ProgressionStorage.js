@@ -6,7 +6,7 @@ import {
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6]);
+const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6, 7]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -56,6 +56,36 @@ function createAllowedEquipmentIds(value, defaultEquipmentId) {
     if (typeof equipmentId === 'string' && equipmentId.trim().length > 0) ids.add(equipmentId);
   }
   return ids;
+}
+
+function validateWeaponForgeSnapshot(value, profile, ownedEquipmentIds) {
+  if (!profile) return value;
+  if (!isRecord(value)) throw new TypeError('저장된 무기 forge 진행이 필요합니다.');
+  const materialEntries = Object.entries(value.materialQuantities ?? {});
+  if (materialEntries.some(([materialId]) => materialId !== profile.materialId)) {
+    throw new TypeError('저장된 무기 forge material ID가 올바르지 않습니다.');
+  }
+  if (
+    !Array.isArray(value.claimedSourceIds) ||
+    value.claimedSourceIds.some((sourceId) => sourceId !== profile.sourceId)
+  ) {
+    throw new TypeError('저장된 무기 forge source ID가 올바르지 않습니다.');
+  }
+  if (!isRecord(value.selectedProfileIdsByGroup)) {
+    throw new TypeError('저장된 무기 forge 선택 기록이 올바르지 않습니다.');
+  }
+  const choiceEntries = Object.entries(value.selectedProfileIdsByGroup);
+  if (
+    choiceEntries.some(
+      ([groupId, profileId]) =>
+        groupId !== profile.choiceGroupId ||
+        !profile.optionProfileIds.includes(profileId) ||
+        !ownedEquipmentIds.includes(profileId),
+    )
+  ) {
+    throw new TypeError('저장된 무기 forge archetype 선택이 올바르지 않습니다.');
+  }
+  return value;
 }
 
 function migrateLegacyEnchantment(value, ownedEquipmentIds, equippedEquipmentId, catalog) {
@@ -143,6 +173,7 @@ function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds, e
       : {}),
     ...(value.version === 3 && value.worldTime ? { worldTime: value.worldTime } : {}),
     ...(value.version >= 4 ? { worldTime: value.worldTime } : {}),
+    ...(value.version >= 7 ? { viewedConversationIds: value.viewedConversationIds } : {}),
     enchantment: legacyEnchantment,
   });
 }
@@ -152,6 +183,7 @@ function validateCurrentSnapshot(
   defaultEquipmentId,
   allowedEquipmentIds,
   enchantmentCatalog,
+  weaponForgeProfile,
 ) {
   if (
     !isRecord(value.firstJourney) ||
@@ -161,6 +193,7 @@ function validateCurrentSnapshot(
   }
   assertProgressionSnapshot(value);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
+  validateWeaponForgeSnapshot(value.weaponForge, weaponForgeProfile, value.ownedEquipmentIds);
   return mergeProgressionSnapshot(value, {
     enchantment: canonicalizeEnchantmentSnapshot(
       value.enchantment,
@@ -178,6 +211,7 @@ function createStoredRecord(snapshot) {
     equippedEquipmentId: snapshot.equippedEquipmentId,
     combatSkillLevel: snapshot.combatSkillLevel,
     viewedConversationIds: snapshot.viewedConversationIds,
+    weaponForge: snapshot.weaponForge,
     firstJourney: snapshot.firstJourney,
     regionExpansion: snapshot.regionExpansion,
     worldTime: snapshot.worldTime,
@@ -190,7 +224,7 @@ function failure(reason, message) {
 }
 
 export class ProgressionStorage {
-  constructor(storage, key, enchantmentCatalog = null) {
+  constructor(storage, key, enchantmentCatalog = null, weaponForgeProfile = null) {
     if (
       !storage ||
       typeof storage.getItem !== 'function' ||
@@ -206,6 +240,7 @@ export class ProgressionStorage {
     this.storage = storage;
     this.key = key;
     this.enchantmentCatalog = enchantmentCatalog;
+    this.weaponForgeProfile = weaponForgeProfile;
   }
 
   load(
@@ -269,7 +304,13 @@ export class ProgressionStorage {
       }
       const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
         ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds, enchantmentCatalog)
-        : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds, enchantmentCatalog);
+        : validateCurrentSnapshot(
+            parsed,
+            defaultEquipmentId,
+            allowedIds,
+            enchantmentCatalog,
+            this.weaponForgeProfile,
+          );
       return Object.freeze({
         ok: true,
         kind: LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ? 'migrated' : 'loaded',
@@ -288,6 +329,11 @@ export class ProgressionStorage {
     try {
       assertProgressionSnapshot(snapshot);
       if (!this.enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
+      validateWeaponForgeSnapshot(
+        snapshot.weaponForge,
+        this.weaponForgeProfile,
+        snapshot.ownedEquipmentIds,
+      );
       validated = mergeProgressionSnapshot(snapshot, {
         enchantment: canonicalizeEnchantmentSnapshot(
           snapshot.enchantment,

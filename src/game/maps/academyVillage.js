@@ -957,8 +957,8 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
               interactionRange: 64,
               speaker: '카린 무기상',
               lines: [
-                '검은 숫자만 고르는 물건이 아니야. 빠른 연계와 묵직한 파쇄 중 네 공략에 맞는 쪽을 골라.',
-                '새 검은 인챈트가 없는 기본 상태로 건네고, 이미 산 검도 여기서 바로 장착해 줄게.',
+                '검은 숫자만 고르는 물건이 아니야. 산 검은 여기서 장착하고, Boss의 봉인 수호핵은 딱 한 archetype으로 벼려 줄게.',
+                '연환의 빠른 연계, 철심의 guard·posture 파쇄, 장검의 reach·배후 punish 중 네 공략 하나를 골라.',
               ],
               commands: [
                 {
@@ -970,6 +970,21 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
                   id: 'manage-heavy-sword',
                   type: 'manage-sword',
                   profileId: 'heavy-sword',
+                },
+                {
+                  id: 'forge-swift-chain-sword',
+                  type: 'forge-weapon-archetype',
+                  profileId: 'swift-chain-sword',
+                },
+                {
+                  id: 'forge-posture-breaker-sword',
+                  type: 'forge-weapon-archetype',
+                  profileId: 'posture-breaker-sword',
+                },
+                {
+                  id: 'forge-rear-punish-sword',
+                  type: 'forge-weapon-archetype',
+                  profileId: 'rear-punish-sword',
                 },
               ],
             },

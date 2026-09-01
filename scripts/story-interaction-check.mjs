@@ -756,7 +756,7 @@ function verifyCoreConversationTranscriptReplayPersistence() {
   ]);
 
   const memory = createMemoryStorage();
-  const storage = new ProgressionStorage(memory, 'story-transcript-v7', ENCHANTMENT_CATALOG);
+  const storage = new ProgressionStorage(memory, 'story-transcript-v8', ENCHANTMENT_CATALOG);
   assert.equal(storage.save(completed).ok, true);
   const loaded = storage.load(
     DEFAULT_EQUIPMENT_PROFILE_ID,
@@ -767,7 +767,7 @@ function verifyCoreConversationTranscriptReplayPersistence() {
   assert.equal(loaded.kind, 'loaded');
   assert.deepEqual(loaded.snapshot.viewedConversationIds, completed.viewedConversationIds);
 
-  const legacyRecord = JSON.parse(memory.getItem('story-transcript-v7'));
+  const legacyRecord = JSON.parse(memory.getItem('story-transcript-v8'));
   legacyRecord.version = 6;
   delete legacyRecord.viewedConversationIds;
   memory.setItem('story-transcript-v6', JSON.stringify(legacyRecord));
@@ -848,7 +848,7 @@ console.log(
         'story-objective-journey-label-alignment',
         'progression-owned-core-conversation-completion',
         'current-reaction-independent-transcript-replay',
-        'viewed-conversation-v7-round-trip-and-v6-migration',
+        'viewed-conversation-v8-round-trip-and-v6-migration',
         'stale-target-single-jump-consumption',
         'journey-portal-availability-regression',
       ],

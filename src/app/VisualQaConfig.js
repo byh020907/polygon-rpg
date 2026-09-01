@@ -265,6 +265,28 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedDialogueSpeaker: '카린 무기상',
     }),
   }),
+  'academy-weapon-forge': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-weapon-shop',
+    x: 610,
+    dialogueScenarioId: 'weapon-merchant-karen-interaction',
+    firstJourneySnapshot: Object.freeze({
+      phase: 'returned',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    }),
+    expectation: Object.freeze({
+      expectedItem: 'weapon-merchant-karen-coat-interior',
+      expectedDialogueTarget: 'weapon-merchant-karen-interaction',
+      expectedDialogueSpeaker: '카린 무기상',
+    }),
+  }),
   'academy-forge': Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-enchanter-shop',

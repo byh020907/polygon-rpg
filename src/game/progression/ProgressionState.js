@@ -13,10 +13,11 @@ import {
   upgradeSwordEnchantment as upgradeEnchantment,
 } from '../enchantment/EnchantmentState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 7;
+export const PROGRESSION_SCHEMA_VERSION = 8;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
+  FORGED: 'forged',
   PURCHASED: 'purchased',
   EQUIPPED: 'equipped',
   TRAINED: 'trained',
@@ -29,6 +30,9 @@ export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   MAX_LEVEL: 'max-level',
   VIEWED: 'viewed',
   ALREADY_VIEWED: 'already-viewed',
+  ALREADY_CLAIMED: 'already-claimed',
+  ALREADY_CHOSEN: 'already-chosen',
+  INSUFFICIENT_MATERIAL: 'insufficient-material',
 });
 
 function assertEquipmentId(equipmentId, label = '장비 ID') {
@@ -55,6 +59,11 @@ function freezeSnapshot({
   equippedEquipmentId,
   combatSkillLevel,
   viewedConversationIds,
+  weaponForge = {
+    materialQuantities: {},
+    claimedSourceIds: [],
+    selectedProfileIdsByGroup: {},
+  },
   firstJourney,
   regionExpansion,
   worldTime,
@@ -71,6 +80,11 @@ function freezeSnapshot({
     equippedEquipmentId,
     combatSkillLevel,
     viewedConversationIds: Object.freeze([...viewedConversationIds]),
+    weaponForge: Object.freeze({
+      materialQuantities: Object.freeze({ ...weaponForge.materialQuantities }),
+      claimedSourceIds: Object.freeze([...weaponForge.claimedSourceIds]),
+      selectedProfileIdsByGroup: Object.freeze({ ...weaponForge.selectedProfileIdsByGroup }),
+    }),
     firstJourney: toFirstJourneyProgressSnapshot(firstJourney),
     regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
     worldTime: toWorldTimeSnapshot(worldTime),
@@ -97,6 +111,11 @@ export function createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog
     equippedEquipmentId: defaultEquipmentId,
     combatSkillLevel: 0,
     viewedConversationIds: [],
+    weaponForge: {
+      materialQuantities: {},
+      claimedSourceIds: [],
+      selectedProfileIdsByGroup: {},
+    },
     firstJourney: createFirstJourneyProgressSnapshot(),
     regionExpansion: createRegionExpansionProgressSnapshot(),
     worldTime: createWorldTimeSnapshot(),
@@ -148,6 +167,42 @@ export function assertProgressionSnapshot(snapshot) {
     new Set(snapshot.viewedConversationIds).size !== snapshot.viewedConversationIds.length
   ) {
     throw new TypeError('확인한 핵심 대화 ID 목록이 올바르지 않습니다.');
+  }
+  const weaponForge = snapshot.weaponForge;
+  if (!weaponForge || typeof weaponForge !== 'object' || Array.isArray(weaponForge)) {
+    throw new TypeError('무기 forge 진행이 필요합니다.');
+  }
+  if (
+    !weaponForge.materialQuantities ||
+    typeof weaponForge.materialQuantities !== 'object' ||
+    Array.isArray(weaponForge.materialQuantities)
+  ) {
+    throw new TypeError('무기 forge material 수량이 올바르지 않습니다.');
+  }
+  for (const [materialId, quantity] of Object.entries(weaponForge.materialQuantities)) {
+    assertEquipmentId(materialId, '무기 forge material ID');
+    assertNonNegativeInteger(quantity, `${materialId} 수량`);
+  }
+  if (
+    !Array.isArray(weaponForge.claimedSourceIds) ||
+    weaponForge.claimedSourceIds.some((id) => typeof id !== 'string' || id.length === 0) ||
+    new Set(weaponForge.claimedSourceIds).size !== weaponForge.claimedSourceIds.length
+  ) {
+    throw new TypeError('무기 forge claimed source가 올바르지 않습니다.');
+  }
+  if (
+    !weaponForge.selectedProfileIdsByGroup ||
+    typeof weaponForge.selectedProfileIdsByGroup !== 'object' ||
+    Array.isArray(weaponForge.selectedProfileIdsByGroup)
+  ) {
+    throw new TypeError('무기 forge 상호배타 선택 기록이 올바르지 않습니다.');
+  }
+  for (const [groupId, profileId] of Object.entries(weaponForge.selectedProfileIdsByGroup)) {
+    assertEquipmentId(groupId, '무기 forge 선택 group ID');
+    assertEquipmentId(profileId, '무기 forge 선택 profile ID');
+    if (!ownedIds.has(profileId)) {
+      throw new Error(`forge 선택 무기는 먼저 소유해야 합니다: ${profileId}`);
+    }
   }
   toFirstJourneyProgressSnapshot(snapshot.firstJourney);
   toRegionExpansionProgressSnapshot(snapshot.regionExpansion);
@@ -207,6 +262,7 @@ export function mergeProgressionSnapshot(
     worldTime = snapshot?.worldTime,
     enchantment = snapshot?.enchantment,
     viewedConversationIds = snapshot?.viewedConversationIds,
+    weaponForge = snapshot?.weaponForge,
   } = {},
 ) {
   assertProgressionSnapshot(snapshot);
@@ -217,6 +273,7 @@ export function mergeProgressionSnapshot(
     worldTime,
     enchantment,
     viewedConversationIds,
+    weaponForge,
   });
 }
 
@@ -298,6 +355,93 @@ export function awardEnemyEnchantMaterial(snapshot, reward, catalog) {
     totalQuantity: material.totalQuantity,
     snapshot: freezeSnapshot({ ...snapshot, enchantment: material.enchantment }),
   });
+}
+
+export function awardWeaponForgeMaterial(snapshot, { sourceId, materialId, quantity = 1 } = {}) {
+  assertProgressionSnapshot(snapshot);
+  assertEquipmentId(sourceId, '무기 forge material source ID');
+  assertEquipmentId(materialId, '무기 forge material ID');
+  assertPositiveInteger(quantity, '무기 forge material 획득량');
+  if (snapshot.weaponForge.claimedSourceIds.includes(sourceId)) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_CLAIMED, snapshot);
+  }
+  const currentQuantity = snapshot.weaponForge.materialQuantities[materialId] ?? 0;
+  const nextQuantity = currentQuantity + quantity;
+  if (!Number.isSafeInteger(nextQuantity)) {
+    throw new RangeError('무기 forge material 수량이 안전한 정수 범위를 넘습니다.');
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.AWARDED,
+    freezeSnapshot({
+      ...snapshot,
+      weaponForge: {
+        ...snapshot.weaponForge,
+        materialQuantities: {
+          ...snapshot.weaponForge.materialQuantities,
+          [materialId]: nextQuantity,
+        },
+        claimedSourceIds: [...snapshot.weaponForge.claimedSourceIds, sourceId],
+      },
+    }),
+  );
+}
+
+export function forgeWeaponArchetype(
+  snapshot,
+  { choiceGroupId, profileId, optionProfileIds, materialId, materialCost = 1 } = {},
+) {
+  assertProgressionSnapshot(snapshot);
+  assertEquipmentId(choiceGroupId, '무기 archetype choice group ID');
+  assertEquipmentId(profileId, '무기 archetype profile ID');
+  assertEquipmentId(materialId, '무기 archetype material ID');
+  assertPositiveInteger(materialCost, '무기 archetype material 비용');
+  if (
+    !Array.isArray(optionProfileIds) ||
+    optionProfileIds.some((candidate) => typeof candidate !== 'string' || candidate.length === 0)
+  ) {
+    throw new TypeError('무기 archetype option profile ID 목록이 필요합니다.');
+  }
+  if (!optionProfileIds.includes(profileId)) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.UNAVAILABLE, snapshot);
+  }
+  if (snapshot.weaponForge.selectedProfileIdsByGroup[choiceGroupId]) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN, snapshot);
+  }
+  if (snapshot.ownedEquipmentIds.includes(profileId)) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_OWNED, snapshot);
+  }
+  const materialQuantity = snapshot.weaponForge.materialQuantities[materialId] ?? 0;
+  if (materialQuantity < materialCost) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_MATERIAL, snapshot);
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.FORGED,
+    freezeSnapshot({
+      ...snapshot,
+      ownedEquipmentIds: [...snapshot.ownedEquipmentIds, profileId],
+      equippedEquipmentId: profileId,
+      weaponForge: {
+        ...snapshot.weaponForge,
+        materialQuantities: {
+          ...snapshot.weaponForge.materialQuantities,
+          [materialId]: materialQuantity - materialCost,
+        },
+        selectedProfileIdsByGroup: {
+          ...snapshot.weaponForge.selectedProfileIdsByGroup,
+          [choiceGroupId]: profileId,
+        },
+      },
+      enchantment: {
+        ...snapshot.enchantment,
+        swordEnchantments: {
+          ...snapshot.enchantment.swordEnchantments,
+          [profileId]: { elementId: null, level: 0 },
+        },
+      },
+    }),
+  );
 }
 
 export function purchaseEquipment(

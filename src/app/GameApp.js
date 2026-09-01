@@ -76,6 +76,7 @@ function createProgressionStorage() {
         window.localStorage,
         PROGRESSION_STORAGE_KEY,
         ENCHANTMENT_CATALOG,
+        COMBAT_PROGRESSION_PROFILE.weaponForge,
       ),
     });
   } catch {
