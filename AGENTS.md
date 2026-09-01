@@ -21,6 +21,14 @@ Do not discover, read, or apply sibling Methods unless the Human explicitly adds
 
 Before product work, read the selected Method and all four Project Sources completely. Treat code, tests, commits, issues, prior documents, conversations, and `STATE.md` as evidence rather than Desired State authority.
 
+## Human Feedback Ingress
+
+- INBOX registration is a latency-critical parallel control plane. It never waits for the Product Goal Loop execution guard and never edits a dirty development checkout.
+- Register each approved verbatim feedback from an isolated temporary Git worktree created from the latest `origin/main`. A feedback-only commit changes only `INBOX.md`, uses a Korean commit message, and fast-forward pushes to `origin/main` immediately.
+- If `origin/main` advances before publication, replay the INBOX-only change on the new tip or a fresh worktree. Never force-push, overwrite another writer, or drop immutable feedback wording.
+- A development tick may finish its current Execution Goal, but before final integration it fetches and non-rewriting merges the latest `origin/main`, preserves concurrently added unprocessed INBOX entries, and removes only feedback it actually incorporated into the Desired State.
+- The worktree is transport isolation only. `INBOX.md` remains the sole Human Feedback source and loop correctness does not depend on a persistent worktree.
+
 ## Project Instructions
 
 - Preserve existing Human changes and immutable feedback wording.
