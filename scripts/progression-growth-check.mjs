@@ -827,7 +827,7 @@ console.log(
         'equipment-range-speed-hitstun-guard-tradeoff',
         'command-route-unlock',
         'idempotence-and-wallet-order',
-        'schema-v8-archetype-round-trip-v7-migration-and-write-failure',
+        'schema-v9-archetype-round-trip-v7-migration-and-write-failure',
         'active-weapon-merchant-dialogue-only-and-static-equipment-ui-removal',
         'authored-content-composition-injection-boundary',
       ],

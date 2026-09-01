@@ -7,6 +7,7 @@ import {
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 
 const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6, 7]);
+const PREVIOUS_PROGRESSION_SCHEMA_VERSION = 8;
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -137,9 +138,19 @@ function migrateLegacyEnchantment(value, ownedEquipmentIds, equippedEquipmentId,
   );
 }
 
-function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds, enchantmentCatalog) {
+function migrateLegacySnapshot(
+  value,
+  defaultEquipmentId,
+  allowedEquipmentIds,
+  enchantmentCatalog,
+  scrapCampaignProfile,
+) {
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
-  const fresh = createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog);
+  const fresh = createProgressionSnapshot(
+    defaultEquipmentId,
+    enchantmentCatalog,
+    scrapCampaignProfile,
+  );
   const emptyEnchantment = canonicalizeEnchantmentSnapshot(
     {
       ...fresh.enchantment,
@@ -184,6 +195,7 @@ function validateCurrentSnapshot(
   allowedEquipmentIds,
   enchantmentCatalog,
   weaponForgeProfile,
+  scrapCampaignProfile,
 ) {
   if (
     !isRecord(value.firstJourney) ||
@@ -191,7 +203,7 @@ function validateCurrentSnapshot(
   ) {
     throw new TypeError('현재 저장 진행에는 Dungeon signature stage ID가 필요합니다.');
   }
-  assertProgressionSnapshot(value);
+  assertProgressionSnapshot(value, scrapCampaignProfile);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
   validateWeaponForgeSnapshot(value.weaponForge, weaponForgeProfile, value.ownedEquipmentIds);
   return mergeProgressionSnapshot(value, {
@@ -201,6 +213,33 @@ function validateCurrentSnapshot(
       value.ownedEquipmentIds,
     ),
   });
+}
+
+function migrateVersionEightSnapshot(
+  value,
+  defaultEquipmentId,
+  allowedEquipmentIds,
+  enchantmentCatalog,
+  weaponForgeProfile,
+  scrapCampaignProfile,
+) {
+  const fresh = createProgressionSnapshot(
+    defaultEquipmentId,
+    enchantmentCatalog,
+    scrapCampaignProfile,
+  );
+  return validateCurrentSnapshot(
+    {
+      ...value,
+      version: PROGRESSION_SCHEMA_VERSION,
+      scrapCampaign: fresh.scrapCampaign,
+    },
+    defaultEquipmentId,
+    allowedEquipmentIds,
+    enchantmentCatalog,
+    weaponForgeProfile,
+    scrapCampaignProfile,
+  );
 }
 
 function createStoredRecord(snapshot) {
@@ -215,6 +254,7 @@ function createStoredRecord(snapshot) {
     firstJourney: snapshot.firstJourney,
     regionExpansion: snapshot.regionExpansion,
     worldTime: snapshot.worldTime,
+    scrapCampaign: snapshot.scrapCampaign,
     enchantment: snapshot.enchantment,
   };
 }
@@ -224,7 +264,13 @@ function failure(reason, message) {
 }
 
 export class ProgressionStorage {
-  constructor(storage, key, enchantmentCatalog = null, weaponForgeProfile = null) {
+  constructor(
+    storage,
+    key,
+    enchantmentCatalog = null,
+    weaponForgeProfile = null,
+    scrapCampaignProfile = null,
+  ) {
     if (
       !storage ||
       typeof storage.getItem !== 'function' ||
@@ -241,6 +287,7 @@ export class ProgressionStorage {
     this.key = key;
     this.enchantmentCatalog = enchantmentCatalog;
     this.weaponForgeProfile = weaponForgeProfile;
+    this.scrapCampaignProfile = scrapCampaignProfile;
   }
 
   load(
@@ -263,7 +310,11 @@ export class ProgressionStorage {
       return Object.freeze({
         ok: true,
         kind: 'fresh',
-        snapshot: createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog),
+        snapshot: createProgressionSnapshot(
+          defaultEquipmentId,
+          enchantmentCatalog,
+          this.scrapCampaignProfile,
+        ),
       });
     }
     if (typeof serialized !== 'string') {
@@ -290,6 +341,7 @@ export class ProgressionStorage {
     }
     if (
       !LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) &&
+      parsed.version !== PREVIOUS_PROGRESSION_SCHEMA_VERSION &&
       parsed.version !== PROGRESSION_SCHEMA_VERSION
     ) {
       return failure(
@@ -302,18 +354,37 @@ export class ProgressionStorage {
       if (!enchantmentCatalog || !Array.isArray(enchantmentCatalog.profiles)) {
         throw new TypeError('저장 enchantment catalog이 필요합니다.');
       }
+      const isLegacy =
+        LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ||
+        parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION;
       const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
-        ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds, enchantmentCatalog)
-        : validateCurrentSnapshot(
+        ? migrateLegacySnapshot(
             parsed,
             defaultEquipmentId,
             allowedIds,
             enchantmentCatalog,
-            this.weaponForgeProfile,
-          );
+            this.scrapCampaignProfile,
+          )
+        : parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION
+          ? migrateVersionEightSnapshot(
+              parsed,
+              defaultEquipmentId,
+              allowedIds,
+              enchantmentCatalog,
+              this.weaponForgeProfile,
+              this.scrapCampaignProfile,
+            )
+          : validateCurrentSnapshot(
+              parsed,
+              defaultEquipmentId,
+              allowedIds,
+              enchantmentCatalog,
+              this.weaponForgeProfile,
+              this.scrapCampaignProfile,
+            );
       return Object.freeze({
         ok: true,
-        kind: LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ? 'migrated' : 'loaded',
+        kind: isLegacy ? 'migrated' : 'loaded',
         snapshot,
       });
     } catch {
@@ -327,7 +398,7 @@ export class ProgressionStorage {
   save(snapshot) {
     let validated;
     try {
-      assertProgressionSnapshot(snapshot);
+      assertProgressionSnapshot(snapshot, this.scrapCampaignProfile);
       if (!this.enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
       validateWeaponForgeSnapshot(
         snapshot.weaponForge,

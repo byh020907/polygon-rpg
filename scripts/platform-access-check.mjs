@@ -118,6 +118,13 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /@pointerup="releaseDebugMenuHold"/);
   assert.match(html, /@lostpointercapture="interruptDebugMenuHold"/);
   assert.match(html, /@click="activateGameMenu"/);
+  assert.match(html, /class="operation-map-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
+  assert.match(html, /id="operation-map-title"/);
+  assert.match(html, /@keydown\.tab="trapOperationMapFocus\(\$event\)"/);
+  assert.match(html, /x-for="region in campaign\.regions"/);
+  assert.match(html, /x-for="edge in campaign\.routeEdges"/);
+  assert.match(html, /수도 도착 예정/);
+  assert.match(html, /x-text="campaign\.hudLabel"/);
   assert.match(html, /id="debug-panel-title"/);
   assert.match(html, /class="debug-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
   assert.match(html, /@keydown\.tab="trapDebugPanelFocus\(\$event\)"/);
@@ -128,12 +135,15 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /x-bind:selected="phaseId === debugPhase"/);
   assert.match(css, /--debug-hold-progress/);
   assert.match(css, /\.debug-panel-backdrop/);
+  assert.match(css, /\.operation-map-backdrop/);
   const gameFooterMarkup = html.slice(
     html.indexOf('<footer class="game-footer">'),
     html.indexOf('<section\n        class="lab-screen"'),
   );
   assert.doesNotMatch(gameFooterMarkup, /x-text="gameStats"|FPS|logical/);
   assert.match(shell, /debugPanelOpen: this\.debugPanelOpen/);
+  assert.match(shell, /operationMapOpen: this\.operationMapOpen/);
+  assert.match(shell, /this\.openOperationMap\(\)/);
   assert.match(shell, /this\.debugPanelOpen = true;[\s\S]*gameApp\.onScreenChanged\(\)/);
   assert.match(shell, /setDebugBackgroundInert\(globalThis\.document, true\)/);
   assert.match(shell, /addEventListener\('blur', \(\) => debugMenuHold\?\.interrupt\(\)/);

@@ -662,7 +662,7 @@ function verifyPersistenceMigrationAndRecovery() {
   ).snapshot;
   const adapter = new MemoryStorage();
   const storage = new ProgressionStorage(adapter, 'enchantment-v8', ENCHANTMENT_CATALOG);
-  assert.equal(PROGRESSION_SCHEMA_VERSION, 8);
+  assert.equal(PROGRESSION_SCHEMA_VERSION, 9);
   assert.equal(storage.save(upgraded).ok, true);
   const roundTrip = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(roundTrip.ok, true);
@@ -683,7 +683,7 @@ function verifyPersistenceMigrationAndRecovery() {
   const migrated = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(migrated.ok, true);
   assert.equal(migrated.kind, 'migrated');
-  assert.equal(migrated.snapshot.version, 8);
+  assert.equal(migrated.snapshot.version, PROGRESSION_SCHEMA_VERSION);
   assert.deepEqual(migrated.snapshot.enchantment.swordEnchantments[DEFAULT_SWORD_ID], {
     elementId: 'fire',
     level: 1,
@@ -836,8 +836,8 @@ console.log(
         'shield-contact-exclusion',
         'idempotent-source-material-quantity-award',
         'four-authored-repeatable-enemies-and-one-award-per-life',
-        'repeatable-material-quantity-v8-round-trip',
-        'v5-migration-v8-round-trip-corrupt-and-write-failure',
+        'repeatable-material-quantity-v9-round-trip',
+        'v5-migration-v9-round-trip-corrupt-and-write-failure',
         'polygon-retro-level-1-level-5-visual-qa-fixtures',
         'active-npc-conversation-command-only-and-static-hud-removal',
       ],

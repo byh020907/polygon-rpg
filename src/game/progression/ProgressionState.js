@@ -8,12 +8,16 @@ import {
 } from '../encounter/RegionExpansionProgress.js';
 import { createWorldTimeSnapshot, toWorldTimeSnapshot } from '../world/WorldTimeState.js';
 import {
+  createScrapCampaignSnapshot,
+  toScrapCampaignSnapshot,
+} from '../campaign/ScrapCampaignState.js';
+import {
   awardRepeatableEnchantMaterial,
   createEnchantmentSnapshot,
   upgradeSwordEnchantment as upgradeEnchantment,
 } from '../enchantment/EnchantmentState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 8;
+export const PROGRESSION_SCHEMA_VERSION = 9;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -67,6 +71,7 @@ function freezeSnapshot({
   firstJourney,
   regionExpansion,
   worldTime,
+  scrapCampaign,
   enchantment = {
     materialQuantities: {},
     swordEnchantments: {},
@@ -88,6 +93,7 @@ function freezeSnapshot({
     firstJourney: toFirstJourneyProgressSnapshot(firstJourney),
     regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
     worldTime: toWorldTimeSnapshot(worldTime),
+    scrapCampaign,
     enchantment: Object.freeze({
       materialQuantities: Object.freeze({ ...enchantment.materialQuantities }),
       swordEnchantments: Object.freeze(
@@ -103,7 +109,11 @@ function freezeSnapshot({
   });
 }
 
-export function createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog = null) {
+export function createProgressionSnapshot(
+  defaultEquipmentId,
+  enchantmentCatalog = null,
+  scrapCampaignProfile,
+) {
   assertEquipmentId(defaultEquipmentId, '기본 장비 ID');
   return freezeSnapshot({
     trainingMarks: 0,
@@ -119,6 +129,7 @@ export function createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog
     firstJourney: createFirstJourneyProgressSnapshot(),
     regionExpansion: createRegionExpansionProgressSnapshot(),
     worldTime: createWorldTimeSnapshot(),
+    scrapCampaign: createScrapCampaignSnapshot(scrapCampaignProfile),
     enchantment: enchantmentCatalog
       ? createEnchantmentSnapshot([defaultEquipmentId], enchantmentCatalog)
       : {
@@ -129,7 +140,7 @@ export function createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog
   });
 }
 
-export function assertProgressionSnapshot(snapshot) {
+export function assertProgressionSnapshot(snapshot, scrapCampaignProfile) {
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new TypeError('progression snapshot은 객체여야 합니다.');
   }
@@ -207,6 +218,7 @@ export function assertProgressionSnapshot(snapshot) {
   toFirstJourneyProgressSnapshot(snapshot.firstJourney);
   toRegionExpansionProgressSnapshot(snapshot.regionExpansion);
   toWorldTimeSnapshot(snapshot.worldTime);
+  toScrapCampaignSnapshot(snapshot.scrapCampaign, scrapCampaignProfile);
   const enchantment = snapshot.enchantment;
   if (!enchantment || typeof enchantment !== 'object')
     throw new TypeError('enchantment 진행이 필요합니다.');
@@ -260,6 +272,7 @@ export function mergeProgressionSnapshot(
     firstJourney = snapshot?.firstJourney,
     regionExpansion = snapshot?.regionExpansion,
     worldTime = snapshot?.worldTime,
+    scrapCampaign = snapshot?.scrapCampaign,
     enchantment = snapshot?.enchantment,
     viewedConversationIds = snapshot?.viewedConversationIds,
     weaponForge = snapshot?.weaponForge,
@@ -271,6 +284,7 @@ export function mergeProgressionSnapshot(
     firstJourney,
     regionExpansion,
     worldTime,
+    scrapCampaign,
     enchantment,
     viewedConversationIds,
     weaponForge,

@@ -8,137 +8,114 @@
     <style>
       :root {
         color-scheme: dark;
-        --ink: #f5f0df;
-        --muted: #b9b5aa;
-        --paper: #11151b;
-        --surface: #1a2029;
-        --surface-raised: #222b36;
-        --line: #394451;
-        --gold: #e0b767;
-        --cyan: #66d6cf;
-        --danger: #e4796d;
-        --radius: 18px;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
-        font-family:
-          Inter,
-          Pretendard,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          sans-serif;
+        --ink: #f7f0dc;
+        --muted: #b9b4a6;
+        --paper: #101318;
+        --surface: #191e25;
+        --raised: #222a32;
+        --line: #46505a;
+        --rust: #e47f49;
+        --brass: #e4bd64;
+        --signal: #75d6c4;
+        font-family: Inter, Pretendard, ui-sans-serif, system-ui, sans-serif;
       }
-
       * {
         box-sizing: border-box;
       }
-
       body {
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at 85% 0%, rgba(102, 214, 207, 0.11), transparent 28rem),
+          radial-gradient(circle at 85% 0, rgba(228, 127, 73, 0.12), transparent 30rem),
           var(--paper);
         line-height: 1.65;
       }
-
       .page {
         width: min(1180px, calc(100% - 32px));
         margin: 24px auto 64px;
       }
-
+      .hero,
+      section {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: var(--surface);
+      }
       .hero {
         padding: clamp(34px, 7vw, 78px);
-        overflow: hidden;
         background:
-          linear-gradient(120deg, rgba(10, 14, 18, 0.28), rgba(10, 14, 18, 0.82)),
-          linear-gradient(145deg, #314c50, #18222d 58%, #15171d);
-        border: 1px solid #4e6467;
-        border-radius: 28px;
-        box-shadow: var(--shadow);
+          linear-gradient(120deg, rgba(10, 12, 15, 0.18), rgba(10, 12, 15, 0.84)),
+          linear-gradient(145deg, #59402d, #253039 58%, #181b20);
       }
-
       .kicker,
       .requirement-id {
         margin: 0 0 10px;
-        color: var(--cyan);
+        color: var(--brass);
         font-size: 0.78rem;
         font-weight: 800;
         letter-spacing: 0.12em;
         text-transform: uppercase;
       }
-
-      .hero h1 {
-        max-width: 820px;
+      h1 {
+        max-width: 900px;
         margin: 0;
-        font-size: clamp(2.7rem, 8vw, 6rem);
-        line-height: 0.95;
-        letter-spacing: -0.055em;
+        font-size: clamp(2.6rem, 7vw, 5.7rem);
+        line-height: 0.96;
+        letter-spacing: -0.05em;
       }
-
-      .hero .lead {
-        max-width: 780px;
-        margin: 26px 0 0;
-        color: #d7ddd9;
-        font-size: clamp(1.04rem, 2.1vw, 1.35rem);
+      .lead {
+        max-width: 850px;
+        margin: 24px 0 0;
+        color: #e0ddd3;
+        font-size: clamp(1.05rem, 2vw, 1.34rem);
       }
-
       main {
         display: grid;
         gap: 22px;
         margin-top: 22px;
         min-width: 0;
       }
-
       section {
         min-width: 0;
         padding: clamp(24px, 4vw, 42px);
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
       }
-
       h2,
       h3,
       p {
         margin-top: 0;
       }
       h2 {
-        margin-bottom: 20px;
+        margin-bottom: 18px;
         font-size: clamp(1.5rem, 3vw, 2.15rem);
       }
       h3 {
         margin-bottom: 10px;
-        font-size: 1.12rem;
       }
-      .section-intro {
-        max-width: 820px;
+      .intro {
+        max-width: 850px;
         color: var(--muted);
       }
-
       .grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
-        min-width: 0;
       }
-
       .card,
       .requirement,
-      .surface {
+      .region,
+      .map-node {
         min-width: 0;
-        padding: 22px;
-        background: var(--surface-raised);
+        padding: 20px;
         border: 1px solid var(--line);
         border-radius: 14px;
+        background: var(--raised);
       }
-
-      .requirement-id {
-        color: var(--gold);
+      ul {
+        padding-left: 1.2rem;
       }
-
-      ol.flow {
+      li + li {
+        margin-top: 8px;
+      }
+      .flow {
         display: grid;
         grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 10px;
@@ -146,56 +123,74 @@
         list-style: none;
         counter-reset: flow;
       }
-
-      ol.flow li {
-        min-height: 150px;
-        padding: 18px;
-        background: var(--surface-raised);
+      .flow li {
+        min-height: 145px;
+        padding: 17px;
         border: 1px solid var(--line);
-        border-radius: 14px;
+        border-radius: 12px;
+        background: var(--raised);
         counter-increment: flow;
       }
-
-      ol.flow li::before {
+      .flow li::before {
         display: grid;
         width: 30px;
         height: 30px;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
         place-items: center;
-        color: #10151a;
-        background: var(--gold);
-        border-radius: 999px;
+        color: #111;
+        background: var(--brass);
+        border-radius: 50%;
         content: counter(flow);
         font-weight: 900;
       }
-
-      ul {
-        padding-left: 1.2rem;
-      }
-      li + li {
-        margin-top: 8px;
-      }
-
-      .journey {
-        display: grid;
-        gap: 12px;
-        grid-template-columns: repeat(3, 1fr);
+      .campaign-map {
         margin: 18px 0 0;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #15191e;
       }
-
-      .journey article {
-        padding: 18px;
-        background: #171d25;
-        border-left: 3px solid var(--cyan);
-        border-radius: 8px;
+      .campaign-map-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
       }
-
+      .map-node {
+        position: relative;
+        padding: 16px;
+        border-color: #665b48;
+      }
+      .map-node::after {
+        position: absolute;
+        top: 50%;
+        right: -11px;
+        width: 11px;
+        height: 2px;
+        background: var(--rust);
+        content: '';
+      }
+      .map-node:last-child::after {
+        display: none;
+      }
+      figcaption {
+        margin-top: 14px;
+        color: var(--muted);
+      }
+      .regions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+      .region strong {
+        color: var(--signal);
+      }
       .table-wrap {
         overflow-x: auto;
       }
       table {
         width: 100%;
-        min-width: 760px;
+        min-width: 780px;
         border-collapse: collapse;
       }
       caption {
@@ -205,66 +200,56 @@
       }
       th,
       td {
-        padding: 14px;
+        padding: 13px;
         border-bottom: 1px solid var(--line);
         text-align: left;
         vertical-align: top;
       }
       th {
-        color: var(--gold);
-        background: #171d25;
-        font-size: 0.88rem;
+        color: var(--brass);
+        background: #15191e;
       }
-
       .note {
         padding: 16px 18px;
-        color: #dce9e6;
-        background: rgba(102, 214, 207, 0.08);
-        border: 1px solid rgba(102, 214, 207, 0.3);
+        border: 1px solid rgba(117, 214, 196, 0.34);
         border-radius: 12px;
+        background: rgba(117, 214, 196, 0.08);
       }
-
       footer {
         padding: 26px 8px 0;
         color: var(--muted);
         text-align: center;
-        font-size: 0.9rem;
       }
-
       @media (max-width: 900px) {
-        ol.flow {
+        .flow {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-        .journey {
+        .campaign-map-grid {
           grid-template-columns: 1fr;
         }
+        .map-node::after {
+          display: none;
+        }
       }
-
       @media (max-width: 680px) {
         .page {
           width: min(100% - 20px, 1180px);
           margin-top: 10px;
         }
-        .hero {
-          border-radius: 18px;
-        }
         .grid,
-        ol.flow {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        ol.flow li {
-          min-height: auto;
+        .regions,
+        .flow {
+          grid-template-columns: 1fr;
         }
       }
-
       @media print {
         :root {
           color-scheme: light;
-          --ink: #161a1d;
-          --muted: #4d5358;
+          --ink: #16191c;
+          --muted: #50555a;
           --paper: #fff;
           --surface: #fff;
-          --surface-raised: #fff;
+          --raised: #fff;
           --line: #aeb5ba;
         }
         body,
@@ -278,45 +263,17 @@
         }
         .hero,
         section {
-          box-shadow: none;
           break-inside: avoid;
-        }
-        .hero .lead {
-          color: var(--ink);
-        }
-        .journey article,
-        th {
-          background: #fff;
-        }
-        .note {
-          color: var(--ink);
-          background: #fff;
-          border-color: var(--line);
-        }
-        .table-wrap {
-          overflow: visible;
         }
         table {
           min-width: 0;
           table-layout: fixed;
-          font-size: 0.82rem;
+          font-size: 0.8rem;
         }
         th,
         td {
-          padding: 9px;
+          padding: 8px;
           overflow-wrap: anywhere;
-        }
-        th:nth-child(1),
-        td:nth-child(1) {
-          width: 20%;
-        }
-        th:nth-child(2),
-        td:nth-child(2) {
-          width: 50%;
-        }
-        th:nth-child(3),
-        td:nth-child(3) {
-          width: 30%;
         }
         footer {
           display: none;
@@ -328,477 +285,354 @@
     <div class="page">
       <header class="hero">
         <p class="kicker">Product Goal · Current Desired State</p>
-        <h1>검과 방패로 마법 생물을 공략하는 Polygon RPG</h1>
+        <h1>D-30, 고철 대왕보다 먼저 왕국의 다섯 기계를 구한다</h1>
         <p class="lead">
-          플레이어는 마법 없이 기본기, 거리, 방향, guard, roll과 공중 연계를 숙련하고, 살아 있는
-          마을에서 준비해 서로 다른 Field와 Dungeon을 탐험하고 Boss를 쓰러뜨리며 전투 선택지를
-          확장한다.
+          동네 고물상 견습생인 플레이어는 실수로 고철 대왕 골렘을 깨운다. 현재의 검·방패 액션 감각을
+          유지한 채, 한 달 동안 원하는 순서로 다섯 대지역의 생활 문제를 해결하고 산업기계를 조립식
+          거대 로봇의 부품으로 바꾸어 수도 파괴를 막는다.
         </p>
       </header>
 
       <main>
-        <section id="product-intent" aria-labelledby="product-intent-title">
-          <h2 id="product-intent-title">Product Intent</h2>
+        <section id="intent" aria-labelledby="intent-title">
+          <h2 id="intent-title">Product Intent</h2>
           <div class="grid">
             <article class="card">
               <h3>Target Player</h3>
               <p>
-                버튼 수보다 타이밍과 위치 선정, 읽기 쉬운 반응과 짧고 깊은 연계를 선호하는 2D 액션
-                RPG 플레이어.
+                짧고 깊은 기본기 액션, 눈에 보이는 준비, 자유로운 공략 순서와 가벼운 재난 모험을
+                선호하는 2D action RPG 플레이어.
               </p>
             </article>
             <article class="card">
               <h3>Desired Outcome</h3>
               <p>
-                플레이어는 실패 원인을 화면에서 이해하고, 준비와 원정을 반복할수록 새로운 command와
-                장비 선택으로 자신만의 공략 흐름을 만든다.
+                플레이어는 매 행동의 시간값과 고철 대왕의 진로를 읽고, 지역 주민을 도운 결과가
+                맵·로봇 외형·전투 선택에 쌓이는 자신만의 한 달을 완성한다.
               </p>
             </article>
           </div>
         </section>
 
         <section id="core-flow" aria-labelledby="core-flow-title">
-          <h2 id="core-flow-title">Core Player Flow</h2>
+          <h2 id="core-flow-title">One-Month Player Loop</h2>
           <ol class="flow">
-            <li><strong>Prepare</strong><br />학원촌에서 장비와 다음 목적지를 확인한다.</li>
-            <li><strong>Explore</strong><br />Field의 갈림길, 조우와 환경 단서를 읽는다.</li>
-            <li><strong>Delve</strong><br />Dungeon의 checkpoint와 전투 관문을 통과한다.</li>
-            <li><strong>Confront</strong><br />Boss의 telegraph를 읽고 기본기로 공략한다.</li>
-            <li><strong>Reward</strong><br />장비, 재화와 command 확장을 획득한다.</li>
-            <li>
-              <strong>Return</strong><br />열린 shortcut으로 마을에 돌아와 다음 원정을 준비한다.
-            </li>
+            <li><strong>Plan</strong><br />작전 지도에서 경로·예상 시간·연장을 비교한다.</li>
+            <li><strong>Travel</strong><br />실제 연결로 끝에서 1구간 장거리 이동을 확정한다.</li>
+            <li><strong>Help</strong><br />지역의 생활 문제와 설비 상태를 현장에서 확인한다.</li>
+            <li><strong>Fight</strong><br />수거 유닛·산업기계와 Boss를 기존 기본기로 공략한다.</li>
+            <li><strong>Recover</strong><br />기계를 분리하거나 놓친 부품 수송대를 추격한다.</li>
+            <li><strong>Assemble</strong><br />D-DAY 경로와 차고의 조립식 로봇 외형을 갱신한다.</li>
           </ol>
+        </section>
+
+        <section id="campaign-surface" aria-labelledby="campaign-surface-title">
+          <h2 id="campaign-surface-title">Operation Map and Five Regions</h2>
+          <p class="intro">
+            다섯 지역은 처음부터 열려 있고 회수 순서는 자유롭다. 각 사건은 해결 전후의 실제 설비와
+            지역 생활을 바꾼다.
+          </p>
+          <figure class="campaign-map">
+            <div class="campaign-map-grid" aria-label="다섯 지역과 수도를 향하는 고철 대왕 경로">
+              <article class="map-node">
+                <strong>폐광 산촌</strong><br />보행식 굴착기 → 다리
+              </article>
+              <article class="map-node">
+                <strong>항구 조선소</strong><br />쌍둥이 크레인 → 팔
+              </article>
+              <article class="map-node">
+                <strong>온실 평원</strong><br />구형 동력로 → 동력원
+              </article>
+              <article class="map-node"><strong>설산 교역로</strong><br />제설 열차 → 장갑</article>
+              <article class="map-node">
+                <strong>붉은 채석장</strong><br />암반 절단기 → 거대 검
+              </article>
+            </div>
+            <figcaption>
+              작전 지도는 현재 위치, 연결 도로, 고철 대왕의 위치·방향·수도 도착 예정, 사건 상태,
+              시간과 연장, 부품과 완성도를 같은 상태에서 투영한다.
+            </figcaption>
+          </figure>
+          <div class="regions">
+            <article class="region">
+              <h3>폐광 산촌</h3>
+              <p>
+                붕괴 광산의 작업자를 구출하고 폐광이 결정된 <strong>보행식 대형 굴착기</strong>의
+                하체·구동부를 인수한다.
+              </p>
+            </article>
+            <article class="region">
+              <h3>항구 조선소</h3>
+              <p>
+                수거대에게 점거된 조선소를 되찾아 마지막 선박 수리를 끝내고
+                <strong>쌍둥이 크레인의 유압 장치</strong>를 인수한다.
+              </p>
+            </article>
+            <article class="region">
+              <h3>온실 평원</h3>
+              <p>
+                안전한 지열 설비를 복구한 뒤 불안정한 <strong>구형 고출력 동력로</strong>를
+                분리한다.
+              </p>
+            </article>
+            <article class="region">
+              <h3>설산 교역로</h3>
+              <p>
+                옛 터널을 개통해 산길을 대체하고 필요 없어진 <strong>장갑 제설 열차 차체</strong>를
+                인수한다.
+              </p>
+            </article>
+            <article class="region">
+              <h3>붉은 채석장</h3>
+              <p>
+                마지막 채굴과 안전 폐쇄를 끝내고 <strong>초대형 암반 절단기</strong>를 인수한다.
+              </p>
+            </article>
+          </div>
         </section>
 
         <section id="requirements" aria-labelledby="requirements-title">
           <h2 id="requirements-title">Product Requirements</h2>
-          <p class="section-intro">
-            Identifier는 현재 제품, Gap과 verification evidence를 연결하며 개발 순서나 과거
-            version을 뜻하지 않는다.
-          </p>
           <div class="grid">
             <article class="requirement" id="PG-COMBAT-CONTROL">
               <p class="requirement-id">PG-COMBAT-CONTROL</p>
-              <h3>기본기 중심의 전투를 직접 조작한다</h3>
+              <h3>검·방패 기본기와 현재 전투 감각을 유지한다</h3>
               <ul>
                 <li>
-                  이동, jump, guard, 방향 roll과 Basic/Strong 두 공격 입력이 공통 command grammar를
-                  이룬다.
+                  이동, jump, guard, 방향 roll과 Basic/Strong 두 공격이 desktop·touch 공통 command
+                  grammar를 이룬다.
                 </li>
                 <li>
-                  지상과 공중의 짧은 sequence, launcher, 명시된 cancel window와 finisher를 입력
-                  타이밍과 위치로 연결한다.
+                  Stamina, just guard 뒤 Basic 전용 방패 반격, damaging-hit-confirm cancel, Strong
+                  guard break·startup interrupt와 shield/Boss posture를 유지한다.
                 </li>
                 <li>
-                  Guard 가능한 공격과 roll로 통과해야 하는 공격을 구분하며, 무분별한 공격은
-                  recovery와 counter 위험을 만든다.
+                  공격 가능 범위, guard 가능 여부, 강공 준비와 약점은 몸체·가동 부위·예비 동작으로
+                  읽히며 text 색만 판정 근거로 삼지 않는다.
                 </li>
                 <li>
-                  Basic/Strong 공격, guard와 roll은 stamina를 소비한다. Guard를 유지하는 동안에도
-                  stamina가 계속 줄고, 일반 guard로 공격을 막으면 공격 위력에 따라 크게 줄며 잔량이
-                  부족하면 guard가 깨져 같은 action을 계속 난사할 수 없다.
-                </li>
-                <li>
-                  Guard 시작 직후의 짧은 타이밍에 정면의 guard 가능한 공격을 막으면 just guard가
-                  된다. Just guard는 해당 타격의 stamina 소모를 막고 stamina를 크게 회복하며, 잠시
-                  다른 action을 막는 동안 새 Basic 입력으로만 방패를 치는 전용 수동 반격을 실행한다.
-                </li>
-                <li>
-                  Strong 공격은 느리고 읽을 수 있는 준비 동작 뒤 guard를 깨지만, 준비 중 상대의
-                  공격에 맞으면 Player와 적 모두 취소된다.
-                </li>
-                <li>
-                  방패형 적과 Boss만 별도의 읽을 수 있는 guard·posture를 가진다. Strong과 just guard
-                  뒤 전용 방패 반격은 이를 크게 무너뜨리고, 소진 시 짧은 groggy가 열리지만 일반
-                  적에게 두 번째 HP처럼 적용하지 않는다.
-                </li>
-                <li>
-                  공격 cancel은 실제 피해 적중 뒤에만 열리고 whiff나 block에서는 열리지 않으며 같은
-                  공격으로 연속 cancel할 수 없다. 공격 중 guard cancel도 stamina를 소비하고 잔량이
-                  부족하면 거부되므로 무위험 탈출이나 무한 연계를 만들지 않는다.
-                </li>
-                <li>
-                  입력 buffer와 cancel은 관대하지만 whiff, 잘못된 방향과 늦은 대응의 결과는
-                  일관된다.
+                  거대 로봇 최종전도 같은 이동·공격·guard·stamina·combo grammar를 확대해 사용하며
+                  별도 미니게임이 되지 않는다.
                 </li>
               </ul>
             </article>
-
-            <article class="requirement" id="PG-COMBAT-FEEDBACK">
-              <p class="requirement-id">PG-COMBAT-FEEDBACK</p>
-              <h3>전투 결과와 원인을 즉시 읽는다</h3>
+            <article class="requirement" id="PG-SCRAP-AWAKENING">
+              <p class="requirement-id">PG-SCRAP-AWAKENING</p>
+              <h3>내 손으로 고철 대왕을 깨우는 도입을 플레이한다</h3>
               <ul>
                 <li>
-                  적중, block, evade, punish, launch, landing과 무적은 색, 동작, hit-stop과 위치가
-                  서로 다르게 보인다.
+                  첫 수거 의뢰에서 폐병기 안 반짝이는 제어장치에 접근해 jump/상호작용으로 직접
+                  회수한다.
                 </li>
                 <li>
-                  Impact는 실제 weapon과 hurt area가 접촉한 위치에 고정되고 knockback 뒤 다른 위치로
-                  떠다니지 않는다.
+                  입력 잠금, 카메라 이동, 눈 점등, 부품 결합과 화면 흔들림으로 불완전한 고철 대왕의
+                  각성을 보여 준다.
                 </li>
                 <li>
-                  공중 combo 보호 규칙은 연계를 임의로 끊지 않으며, 다음 neutral의 retaliation
-                  보호는 해당 캐릭터 silhouette에 붙어 읽힌다.
+                  <strong>수도 도착까지 D-30</strong>을 표시한 뒤 조작을 돌려주며 제어장치는 이후
+                  거대 로봇의 두뇌가 된다.
                 </li>
                 <li>
-                  Just guard는 실제 방패 contact에 붙는 방패 섬광, 원형 파동, 강한 spark, 짧은
-                  hit-stop과 stamina 회복 표시로 일반 block과 즉시 구분된다. 이어지는 전용 방패
-                  반격도 검 공격과 다른 pose와 impact로 읽힌다.
-                </li>
-                <li>Polygon과 Retro 출력은 같은 판정과 같은 원인·결과를 전달한다.</li>
-              </ul>
-            </article>
-
-            <article class="requirement" id="PG-COMBAT-ENCHANT">
-              <p class="requirement-id">PG-COMBAT-ENCHANT</p>
-              <h3>검 인챈트 하나로 적과 지역에 맞는 공략을 준비한다</h3>
-              <ul>
-                <li>
-                  Player는 마법을 직접 시전하지 않고 현재 장착한 검에 화염·전기·냉기·대지 중 인챈트
-                  하나만 부여한다. 각 검은 처음에는 인챈트가 없는 기본 상태이고 인챈트는 최대
-                  5단계이며, 방패치기에는 검 인챈트가 적용되지 않는다.
-                </li>
-                <li>
-                  속성 피해와 상태 축적은 약점에서 증가하고 중립에서는 기준값을 유지하며 내성에서는
-                  감소하지만, 어떤 적도 속성 때문에 피해가 0이 되거나 공략이 불가능해지지 않는다.
-                </li>
-                <li>
-                  화염은 재생과 식물 방어를 태우고, 전기는 읽을 수 있는 준비 동작을 interrupt하며,
-                  냉기는 이동과 회복을 늦추고, 대지는 guard와 posture를 크게 무너뜨린다.
-                </li>
-                <li>
-                  Basic은 빠른 타격으로 현재 속성 상태를 유지·연장하고 Strong은 더 큰 속성 축적과
-                  posture 피해를 준다. 속성 결과는 같은 command grammar와 contact 판정 위에서
-                  동작한다.
-                </li>
-                <li>
-                  학원촌의 인챈터 NPC와 대화해 현재 검을 인챈트한다. 각 속성에 대응하는 적이 주는
-                  재료와 Gold를 함께 소비하며 단계별 재료 수는 2, 4, 8, 16, 32개로 증가한다. 인챈트
-                  선택과 강화는 상시 HUD가 아니라 인챈터와의 대화 흐름 안에서만 나타난다.
-                </li>
-                <li>
-                  인챈트 성능은 단계에 비례해 증가하고 5단계에서는 무기 공격력의 1.5배에 해당하는
-                  속성 피해를 추가한다. 재료 획득과 강화 결과는 낮은 확률에 의존하지 않는다.
+                  고물상 주인은 고물상 내부에서 장치를 분석하고 왕국 지도와 차고문을 열어 미완성
+                  골격·완성도 0%를 보여 준다. 인물의 태도는 “퇴직했는데 또 야근”처럼 가볍다.
                 </li>
               </ul>
             </article>
-
-            <article class="requirement" id="PG-WORLD-JOURNEY">
-              <p class="requirement-id">PG-WORLD-JOURNEY</p>
-              <h3>마을에서 출발하는 하나의 완전한 원정을 경험한다</h3>
+            <article class="requirement" id="PG-OPEN-CAMPAIGN">
+              <p class="requirement-id">PG-OPEN-CAMPAIGN</p>
+              <h3>다섯 대지역을 원하는 순서로 해결한다</h3>
               <ul>
                 <li>
-                  학원촌은 기본 camera view 기준 세 화면 이상 이어지는 길과 구역을 가지며, 장비
-                  선택, 이름과 역할이 읽히는 인물·시설, 상호작용과 다음 목적을 이해하는 실제 생활
-                  공간으로 기능한다.
+                  다섯 지역은 처음부터 방문 가능하고 필수 부품 다섯 개를 모두 회수해야 D-DAY 전
+                  최종전을 시작할 수 있다.
                 </li>
                 <li>
-                  Field, Dungeon과 Boss 공간은 이름만 다른 전투 방이 아니라 지형, 이동 경로, 환경
-                  이야기와 조우 역할이 구분된다.
+                  지역은 NPC 말풍선 → 상태 확인 → 이동·전투 → Boss → 대체 설비/마지막 작업 → 기계
+                  분리 → 회수 → 경로·로봇 갱신의 완전한 흐름을 가진다.
                 </li>
                 <li>
-                  첫 원정은 준비, 이야기 사건, 이동, route 선택, checkpoint, Boss, 보상과 shortcut
-                  귀환을 debug 조작 없이 끝까지 진행한다.
+                  플레이어가 먼저 확보하면 고철 대왕이 우회해 D-DAY가 2~5일 연장된다. 사건 소요는
+                  연장보다 약간 길어 전체 압박은 줄어든다.
                 </li>
                 <li>
-                  각 Dungeon은 signature 환경 규칙 하나를 입구에서 소개하고, 전투와 결합한 뒤 숨은
-                  분기에서 응용하고 Boss에서 시험한다. 첫 방문에는 핵심 encounter만 통행을 막으며,
-                  클리어 후에는 강제 전투가 사라지고 cleared state와 shortcut으로 빠르게 재방문한다.
+                  고철 대왕이 먼저 도착하면 시설이 파괴되고, 추가 2구간 수송대 추격으로 필수 부품을
+                  되찾되 D-DAY 연장은 받지 못한다.
                 </li>
                 <li>
-                  Boss는 단순한 HP 벽이 아니라 읽을 수 있는 attack cycle과 arena 상호작용, 약점 노출
-                  또는 부위 변화 중 하나를 가져 학습한 공략을 시험한다.
+                  해결 전후 설비는 맵에서 작동/분해 상태가 바뀌고 부품은 회수 순서와 무관하게 차고
+                  로봇 외형에 누적된다.
+                </li>
+              </ul>
+            </article>
+            <article class="requirement" id="PG-CAMPAIGN-TIME">
+              <p class="requirement-id">PG-CAMPAIGN-TIME</p>
+              <h3>의미 있는 선택으로만 D-DAY가 흐른다</h3>
+              <ul>
+                <li>
+                  하루는 아침·낮·저녁·밤 네 구간이며 HUD는 현재 날짜·시간대·D-DAY를 작고 명확하게
+                  표시한다.
                 </li>
                 <li>
-                  이야기는 고정 설명문이나 화면을 덮는 하단 panel이 아니라 인물·대상의 머리 위 world
-                  anchor를 가리키는 이름 붙은 말풍선으로 진행된다. 말풍선은 화면 가장자리와 mobile
-                  control을 피해 고정되고, 글자는 읽을 수 있는 속도로 순차 표시된다. 말풍선은 대화를
-                  실제로 시작한 동안에만 나타나며, 호출하지 않은 interaction은 빈 말풍선이나 작은
-                  표식으로 화면에 남지 않는다.
+                  장거리 지역 연결로, 완전 회복 캠프/숙박, KO 거점 복귀와 핵심 사건 확정만 시간을
+                  소비한다.
                 </li>
                 <li>
-                  글자가 표시 중일 때 jump 입력은 현재 줄을 즉시 완성하고, 완성 뒤 새 jump 입력만
-                  다음 대사를 진행하거나 닫는다. 대화가 소비한 같은 입력은 Player jump를 발생시키지
+                  대화, 구매, 인벤토리, 즉시 인챈트, 일반 전투, 지역 내 탐색·Room 이동과 offline
+                  시간은 무료다.
+                </li>
+                <li>
+                  장거리 이동은 실제 도로 끝에서 목적지와 1구간 비용을 알리고 짧은 이동 연출 뒤
+                  공간적으로 이어지는 연결 Chunk로 보낸다.
+                </li>
+                <li>
+                  핵심 사건은 총 예상 시간과 성공 연장을 시작 전에 비교하고, D-DAY를 넘기는 행동은
+                  경고 뒤 확정할 수 있다.
+                </li>
+                <li>
+                  D-DAY 0은 예외 없이 조작 잠금 → 지도상 수도 도착 → 마을 파괴 연출 → 게임오버로
+                  이어진다.
+                </li>
+              </ul>
+            </article>
+            <article class="requirement" id="PG-OPERATION-MAP">
+              <p class="requirement-id">PG-OPERATION-MAP</p>
+              <h3>작전 지도에서 한 달 전체를 판단한다</h3>
+              <ul>
+                <li>
+                  게임 MENU를 짧게 누르거나 고물상 벽 지도를 조사하면 같은 전체 작전 지도가 열린다.
+                </li>
+                <li>
+                  지도는 현재 위치, 지역 연결로, 고철 대왕 위치·방향·도착 예정, 사건 상태, 예상
+                  이동/사건 시간, 성공 연장, 부품과 완성도를 표시한다.
+                </li>
+                <li>
+                  고철 대왕 표시는 실제로 시간을 소비한 확정 action에서만 이동하며 변경된 경로와
+                  D-DAY 원인을 함께 보인다.
+                </li>
+                <li>
+                  MENU 1초 hold의 개발자 panel과 짧은 작전 지도 activation은 서로 중복 실행되지
                   않는다.
                 </li>
-                <li>
-                  현재 목표와 이야기 변화는 인물 반응, 환경 상태, HUD와 이용 가능한 길에 일관되게
-                  반영된다.
-                </li>
-                <li>
-                  주요 이야기는 게시판이 아니라 이름과 역할이 있는 NPC와의 직접 대화로
-                  시작·완료하고, 귀환·재도전 결과가 NPC 대사, 시설과 환경에 반영된다. 이미 본 핵심
-                  대화는 다시 확인할 수 있다.
-                </li>
-                <li>
-                  학원촌에는 외형과 입구가 서로 구분되는 무기상점 집과 인챈터 집이 있다. 각 상점
-                  NPC는 거리 바깥이 아니라 해당 집의 독립된 실내에 있고, Player가 거리의 입구로
-                  들어가 실내 NPC와 대화할 때만 검 구매 또는 인챈트를 시작하고 완료한다.
-                </li>
               </ul>
             </article>
-
-            <article class="requirement" id="PG-WORLD-SPACE">
-              <p class="requirement-id">PG-WORLD-SPACE</p>
-              <h3>지역과 출입구가 실제 장소처럼 연결된다</h3>
+            <article class="requirement" id="PG-SCRAP-GROWTH">
+              <p class="requirement-id">PG-SCRAP-GROWTH</p>
+              <h3>생활권의 고철 장비로 전투 선택을 확장한다</h3>
               <ul>
                 <li>
-                  Room은 이동 가능한 바닥, 경계, 전경·배경, landmark와 전투 공간이 한 장면으로
-                  읽힌다.
+                  무기·인챈트 NPC는 고철 병기와 마력 기계를 다루는 생활권 인물이며 transaction은
+                  실제 대화 안에서만 열린다.
                 </li>
                 <li>
-                  Dungeon은 입구, 탐색·전투 구간, checkpoint와 Boss 진입 경계가 서로 다른 공간
-                  역할과 위험으로 구분된다.
+                  검별 단일 인챈트, 속성 affinity와 단계 성장, 장비별 speed·reach·posture
+                  trade-off는 현재 combat grammar를 확장한다.
                 </li>
                 <li>
-                  Portal은 공통 차원문이 아니라 문, 계단, 골목, 뿌리 arch, 석문과 결정 틈처럼 주변
-                  환경의 일부로 보인다.
-                </li>
-                <li>
-                  출입구의 개구부는 플레이어와 비슷한 사람 크기이며 camera travel이 목적지 방향과
-                  공간 깊이를 전달한다.
-                </li>
-                <li>
-                  낮밤, story와 local event 변화는 기존 공간의 의미를 바꾸되 필수 경로를 끊지
-                  않는다.
-                </li>
-                <li>
-                  Field와 Dungeon의 높낮이는 평평한 발판을 이어 붙인 모습이 아니라 render와
-                  collision이 일치하는 polygon 지형의 언덕과 경사로 읽힌다. 별도 platform은 일반
-                  RPG의 단방향 표면처럼 아래에서 위로 통과하고 위에서 내려올 때만 착지한다.
+                  주인공 장비는 작업복·고글·공구 가방·임시 수리 흔적을 유지하고 회수 지역 재료가
+                  누적되며 무관한 판타지 갑옷이 되지 않는다.
                 </li>
               </ul>
             </article>
-
-            <article class="requirement" id="PG-WORLD-TIME">
-              <p class="requirement-id">PG-WORLD-TIME</p>
-              <h3>의미 있는 행동으로만 세계의 위기 시간이 흐른다</h3>
+            <article class="requirement" id="PG-SCRAP-READABILITY">
+              <p class="requirement-id">PG-SCRAP-READABILITY</p>
+              <h3>직업·소속·공격을 silhouette로 읽는다</h3>
               <ul>
                 <li>
-                  전역 World Clock과 하나의 Deadline은 실제 여행, 중요한 encounter 완료,
-                  채집·제작·훈련, 휴식·야영, KO와 원정 포기처럼 의미 있는 행동에서만 정해진 양만큼
-                  진행한다. 메뉴, 대화, Chunk load/unload, 접속 종료와 offline 시간에는 흐르지
-                  않는다.
+                  얇은 stickman 계열 인간형 비율 위에 직업별 작업복·도구·동작과 큰 장비 면을 얹는다.
                 </li>
                 <li>
-                  여행 시간은 작은 Chunk 경계가 아니라 도로·숲길·협곡처럼 authored Travel Segment를
-                  완주했을 때 확정된다. 열린 shortcut과 정리한 도로는 이후 같은 이동의 시간 비용을
-                  줄인다.
+                  고물상 주인, 광부, 조선공, 온실 기술자, 열차 승무원과 채석공은
+                  복장·도구·말투·행동이 실제 일에서 나온다.
                 </li>
                 <li>
-                  각 Chunk는 load될 때 현재 전역 시간과 stable event flag만 읽어 낮밤, NPC 반응,
-                  적·elite 배치, 시설, 열린 길과 붕괴 단계를 결정적으로 재구성하며, load되지 않은
-                  Chunk를 background simulation하지 않는다.
+                  적은 고철 대왕 수거 유닛, 폭주 산업기계, 설비 기생/도둑 기계 생물이며 지역 Boss는
+                  지역 사건과 기계 기능을 전투 동작으로 확장한다.
                 </li>
                 <li>
-                  작은 사건, guardian, Dungeon 핵심 장치와 Boss 같은 핵심 사건은 Deadline을 정해진
-                  양만큼 연장하되 최대치로 초기화하지 않는다. HUD와 인물·환경 반응은 남은 시간과
-                  원인을 함께 전달한다.
+                  지역별 색·산업 재료와 공통 리벳·판금·케이블·작업용 천·수리 흔적이 최종 로봇에서
+                  다시 읽힌다.
                 </li>
                 <li>
-                  Deadline이 0이면 모든 Chunk가 Crisis 상태를 재구성하고 NPC·시설·적 배치가 최종
-                  대응 상태가 되며 side activity 대신 핵심 방어 사건이 열린다.
-                </li>
-                <li>
-                  핵심 방어 사건 실패는 최근 핵심 사건 직후의 안정 지점으로 되감는다. 장비, 인챈트와
-                  command 해금은 보존하고 귀환하지 않은 원정 보상만 잃으며, 다음 시도에는 위기
-                  원인을 아는 NPC 반응이 추가된다.
-                </li>
-                <li>
-                  낮밤은 필수 경로를 막는 시간표가 아니라 선택적 위험·보상이다. 밤에는 optional
-                  elite와 새 pattern이 나타나고, 승리는 낮은 확률 drop 대신 탐험·장비 성장으로
-                  이어지는 확정 보상을 준다.
+                  구현 전에 주인공·핵심 NPC·적 계열·Boss의 정면/측면 silhouette, 대표 pose와 실제
+                  화면 크기 구분 기준을 시각화해 비교한다.
                 </li>
               </ul>
             </article>
-
-            <article class="requirement" id="PG-GROWTH-CHOICE">
-              <p class="requirement-id">PG-GROWTH-CHOICE</p>
-              <h3>성장은 기존 전투 선택을 확장한다</h3>
+            <article class="requirement" id="PG-FINAL-BATTLE">
+              <p class="requirement-id">PG-FINAL-BATTLE</p>
+              <h3>다섯 산업기계가 보이는 조립식 로봇으로 결전한다</h3>
               <ul>
                 <li>
-                  장비는 공격, 방어, 속도, 사거리, 경직, launch와 guard 성질 사이의 읽을 수 있는
-                  trade-off를 제공한다.
+                  굴착기 다리, 크레인 팔, 동력로, 제설 열차 장갑과 채석장 절단검의 원래 색·형태가
+                  완성품에서 구분된다.
                 </li>
                 <li>
-                  재화, 장비와 command 해금은 Field 탐색, Dungeon 공략과 Boss 보상에 연결되며
-                  마을에서 다음 선택으로 이어진다.
+                  최종전은 배경·적·Player를 거대 전장 규모로 바꾸되 현재 전투 입력과 판정 원칙을
+                  유지한다.
                 </li>
                 <li>
-                  성장은 별도 cooldown 버튼을 늘리는 대신 같은 command의 성질, branch와 cancel
-                  route를 확장한다.
-                </li>
-                <li>
-                  Boss와 지역의 첫 클리어 확정 재료는 학원촌 대장간의 상호배타적 무기 선택으로
-                  이어진다. 첫 선택지는 빠른 연계형, guard·posture 파쇄형, 긴 reach·배후 punish형 세
-                  archetype이며 숫자만 높은 상위호환을 만들지 않는다.
-                </li>
-                <li>
-                  무기상점 NPC는 서로 다른 trade-off를 가진 여러 검을 판매하고, 구매한 검은 각각
-                  인챈트가 없는 기본 상태로 시작한다. 검 구매와 장착은 NPC 대화 안에서 이루어진다.
-                </li>
-                <li>
-                  획득한 성장, Boss 결과, 보상과 열린 shortcut은 같은 기기에서 다시 열어도 유지된다.
+                  고철 대왕은 무거운 신체 공포가 아니라 캐주얼하게 과장된 불완전 조립과 수거
+                  행동으로 위협을 전달한다.
                 </li>
               </ul>
             </article>
-
-            <article class="requirement" id="PG-CHARACTER-READABILITY">
-              <p class="requirement-id">PG-CHARACTER-READABILITY</p>
-              <h3>작은 화면에서도 캐릭터의 정체성과 동작을 읽는다</h3>
-              <ul>
-                <li>
-                  인간형은 작은 머리, 가늘고 긴 몸통·팔다리의 stickman형 비율 위에 큰 장비 면을
-                  얹는다.
-                </li>
-                <li>
-                  플레이어는 머리 방향과 머리카락, 교복형 천, 어깨 장비, 흉갑, 장갑, 부츠, 손, 검과
-                  방패가 기본 배율에서 구분된다.
-                </li>
-                <li>대표 인간형 적은 색 분할, 장비와 자세가 플레이어와 즉시 구분된다.</li>
-                <li>
-                  Idle, 이동, guard, roll, 지상·공중 공격과 피격 pose에서 polygon이 겹치거나
-                  silhouette가 무너지지 않는다.
-                </li>
-              </ul>
-            </article>
-
             <article class="requirement" id="PG-PLATFORM-ACCESS">
               <p class="requirement-id">PG-PLATFORM-ACCESS</p>
-              <h3>Desktop과 mobile에서 같은 핵심 흐름을 수행한다</h3>
+              <h3>Desktop과 mobile에서 같은 캠페인을 수행한다</h3>
               <ul>
-                <li>Keyboard와 touch control은 같은 gameplay intent와 command 결과를 만든다.</li>
                 <li>
-                  Mobile landscape와 desktop에서 HUD, 현재 목표, 캐릭터와 전투 공간이 서로 가리지
-                  않으며 목표를 숨기지 않는다.
+                  Keyboard와 touch는 같은 gameplay intent와 command 결과를 만들고 operation map과
+                  대화를 keyboard로도 사용할 수 있다.
                 </li>
                 <li>
-                  대화 말풍선은 화자를 가리키면서도 현재 화자의 얼굴과 몸, Player와 mobile control을
-                  가리지 않고 safe area 안에서 읽힌다.
+                  Mobile landscape와 desktop에서 HUD, 목표, 작전 지도, 말풍선과 control이 서로
+                  가리지 않는다.
                 </li>
                 <li>
-                  메뉴와 화면 전환 control은 text 또는 accessible name으로 목적을 식별하고
-                  keyboard로 사용할 수 있다.
+                  개발자 panel은 stable intro/region/robot/last-segment/game-over/final-battle
+                  상태를 같은 page에 즉시 적용하고 URL로 복원한다.
                 </li>
-                <li>
-                  기본 메뉴와 플레이 화면에는 실제 게임 흐름만 보인다. 게임 안의 MENU control을 1초
-                  동안 계속 누르면 누르는 동안 control 아래 진행 bar가 차오른 뒤 개발자 debug
-                  panel이 열리고, 짧게 누르면 평소처럼 메뉴로 돌아간다.
-                </li>
-                <li>
-                  개발자 debug panel은 stable 시작 장면, renderer, phase, frame과 reduced-motion을
-                  선택해 같은 게임 화면에서 E2E 상태를 재현한다. 적용 control을 누르면 page 재진입
-                  없이 현재 실행 중인 게임 화면과 panel control에 즉시 반영되고, 설정은 공유 가능한
-                  URL에도 반영된다. 같은 URL로 열면 panel control과 화면이 동일한 설정을 복원한다.
-                </li>
-                <li>Reduced-motion 환경에서도 판정 이해에 필요한 feedback은 유지된다.</li>
+                <li>Polygon과 Retro는 같은 immutable state와 판정 원인을 전달한다.</li>
               </ul>
             </article>
-
             <article class="requirement" id="PG-RECOVERY">
               <p class="requirement-id">PG-RECOVERY</p>
-              <h3>진행 실패와 복구 결과가 명확하다</h3>
+              <h3>시간 선택과 게임오버를 복구 가능하게 저장한다</h3>
               <ul>
                 <li>
-                  저장 실패나 손상된 진행은 성공한 것처럼 보이지 않고 재시도 또는 초기화 영향을
-                  설명한다.
+                  매일 아침, 핵심 사건 완료 직후와 시간 소비 action 확정 직전에 복구 가능한 저장을
+                  만든다.
                 </li>
                 <li>
-                  Room 전환 중에는 입력이 도착 후 재생되지 않으며 Player, collision, entity와 목표가
-                  함께 전환된다.
+                  게임오버 뒤 최근 날짜 또는 더 이전 핵심 사건 완료 save를 골라 재개하며 세계 안의
+                  시간 되감기로 표현하지 않는다.
                 </li>
                 <li>
-                  KO, encounter reset과 마을 귀환은 보상 중복이나 shortcut 역전을 만들지 않는다.
+                  저장 실패·손상, Room 전환 실패, KO와 반복 trigger는 숨은 시간 소비·보상 중복·stale
+                  input을 만들지 않는다.
                 </li>
               </ul>
             </article>
           </div>
         </section>
 
-        <section id="journey-surfaces" aria-labelledby="journey-surfaces-title">
-          <h2 id="journey-surfaces-title">World and Story Surfaces</h2>
-          <p class="section-intro">
-            각 공간은 현재 목표와 플레이 선택을 보여 주는 제품 표면이다. 단순한 배경 교체나 debug
-            selector로 대체하지 않는다.
-          </p>
-          <div class="journey">
-            <article>
-              <h3>Academy Village</h3>
-              <p>훈련생의 출발점. 장비, 인물, 시설, 귀환 변화와 다음 원정의 동기를 보여 준다.</p>
-            </article>
-            <article>
-              <h3>Field Route</h3>
-              <p>우회와 전투, 환경 단서와 보상을 선택하며 Dungeon 입구까지 이동한다.</p>
-            </article>
-            <article>
-              <h3>Dungeon</h3>
-              <p>Field보다 폐쇄적이고 위험한 공간에서 checkpoint와 Boss 진입 조건을 확보한다.</p>
-            </article>
-            <article>
-              <h3>Boss Arena</h3>
-              <p>지역의 위협과 학습한 전투 규칙을 하나의 명확한 encounter로 시험한다.</p>
-            </article>
-            <article>
-              <h3>Reward and Shortcut</h3>
-              <p>승리 결과가 보상, 열린 길과 공간 변화로 나타나 귀환 부담을 줄인다.</p>
-            </article>
-            <article>
-              <h3>Village Return</h3>
-              <p>귀환한 Player가 성장 결과와 다음 이야기 목표를 확인하고 새 원정을 준비한다.</p>
-            </article>
-          </div>
-        </section>
-
-        <section id="constraints" aria-labelledby="constraints-title">
-          <h2 id="constraints-title">Product Constraints</h2>
+        <section id="visual-language" aria-labelledby="visual-language-title">
+          <h2 id="visual-language-title">Visual and Tone Constraints</h2>
           <ul>
             <li>
-              제품은 별도 설치나 계정 없이 current desktop/mobile browser에서 핵심 흐름을 실행한다.
+              이야기는 캐주얼한 고철 아포칼립스이며 감염, 신체 개조, 잔혹한 body horror와 지나치게
+              음울한 비밀극을 사용하지 않는다.
             </li>
             <li>
-              Player는 마법을 직접 시전하지 않으며 검 하나에 활성화한 인챈트 하나, 방패, 장비와 신체
-              동작으로 마법 생물을 공략한다.
+              도입과 지역 변화는 별도 영상이 아니라 polygon render object, camera, shake, 말풍선,
+              combat, map patch와 저장 flag로 플레이 안에서 표현한다.
             </li>
+            <li>배경만 바꾸고 기존 학원 판타지형 Player·교관·마법 생물·Boss를 남기지 않는다.</li>
             <li>
-              Polygon 제작 효율과 Retro Pixel 가독성을 함께 유지하며 asset·character·story를
-              Reference에서 복제하지 않는다.
-            </li>
-            <li>
-              자유 Z축 belt-scroll, cooldown skill 순환, 직접 stat point 분배와 대량 콘텐츠 선행은
-              현재 제품 정체성에 포함하지 않는다.
-            </li>
-            <li>
-              별도 Mental·Rage gauge, 수치만 증가하는 무속성 강화 level, 일일 의뢰 제한, 낮은 확률의
-              대량 무작위 farming, 대량 반복 업적과 rank·NG+ 선행을 핵심 성장이나 진행 조건으로 두지
-              않는다.
+              낮은 확률 farming, 시간에 따른 필수 경로 폐쇄, portal마다 시간 청구와 세계지도
+              순간이동을 핵심 진행으로 사용하지 않는다.
             </li>
           </ul>
-        </section>
-
-        <section id="experience-references" aria-labelledby="experience-references-title">
-          <h2 id="experience-references-title">Product Experience References</h2>
-          <div class="grid">
-            <article class="card">
-              <h3>레전드 오브 곡괭이</h3>
-              <p>
-                작은 화면에서도 강한 silhouette, 가늘고 과장된 인간형 비율, 기본기 중심의 횡스크롤
-                action과 마을 준비에서 원정·Boss로 이어지는 흐름을 원칙으로 참고한다.
-              </p>
-            </article>
-            <article class="card">
-              <h3>케로로파이터</h3>
-              <p>
-                적은 기본 입력으로 시작해 방향, 위치, timing, guard, 회피, cancel과 공중 연계
-                숙련으로 보상이 커지는 command grammar와 즉시 읽히는 타격 feedback을 원칙으로
-                참고한다.
-              </p>
-            </article>
-          </div>
-          <p class="note">
-            Reference의 character, 명칭, story, map, item, motion, sprite, sound, 원본 command열과
-            balance 수치는 복제하지 않는다.
-          </p>
         </section>
 
         <section id="acceptance" aria-labelledby="acceptance-title">
@@ -810,130 +644,98 @@
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">Reference</th>
-                  <th scope="col">Observable Condition</th>
-                  <th scope="col">Evidence</th>
+                  <th>Reference</th>
+                  <th>Observable Condition</th>
+                  <th>Evidence</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row">PG-COMBAT-CONTROL</th>
+                  <th>PG-COMBAT-CONTROL</th>
                   <td>
-                    Guard → roll 배후 → launcher → 공중 연계 → landing을 반복하며 whiff와 난사의
-                    recovery·stamina risk를 확인하고, 느린 Strong으로 guard를 깨거나 준비 중
-                    피격으로 취소되는 결과를 확인한다. Guard 유지 소모와 공격 위력별 block 소모를
-                    감수하거나, 짧은 just guard로 stamina를 회복한 뒤 Basic만 허용되는 전용 방패
-                    반격을 선택한다. 실제 피해 적중 뒤에만 다른 공격으로 cancel하고 whiff·block·같은
-                    공격의 연속 cancel은 거부되며, 충분한 stamina로 guard cancel 비용을 지불한다.
-                    방패형 적과 Boss의 posture를 무너뜨려 groggy를 여는 동안 일반 적에는 별도
-                    posture가 생기지 않는다.
+                    사람 크기와 거대 전장에서 같은 Basic/Strong·guard·roll·stamina·combo 원칙으로
+                    공격 예고와 실패 원인을 구분한다.
                   </td>
-                  <td>결정적 combat trace와 실제 training 플레이</td>
+                  <td>120Hz trace와 Polygon/Retro 실제 플레이</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-COMBAT-FEEDBACK</th>
+                  <th>PG-SCRAP-AWAKENING</th>
                   <td>
-                    적중, block, just guard, 전용 방패 반격, evade, punish, 무적과 실제 contact
-                    위치를 설명 없이 구분하고, just guard의 stamina 회복을 화면에서 확인한다.
+                    장치를 직접 회수해 각성 연출과 D-30를 보고, 고물상 지도·로봇 0%까지 debug 없이
+                    진행한다.
                   </td>
-                  <td>고정 frame Polygon/Retro capture와 event/contact metadata</td>
+                  <td>도입 event trace와 전/중/후 capture</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-COMBAT-ENCHANT</th>
+                  <th>PG-OPEN-CAMPAIGN</th>
                   <td>
-                    무기상점 NPC와 대화해 기본 상태의 검을 사고, 인챈터 NPC와 대화해 대응 적 재료와
-                    Gold를 2·4·8·16·32개 단계로 소비해 최대 5단계까지 올린다. 상시 속성 선택 HUD가
-                    없어야 하며, 같은 Basic/Strong을 약점·중립·내성 적에게 적중시켜 단계별 피해와
-                    상태 축적 차이, 각 속성 부가효과와 방패치기 제외를 확인한다. 내성 공략에서도
-                    피해는 0이 되지 않고 5단계 속성 추가 피해는 무기 공격력의 1.5배다.
+                    임의 순서로 지역을 해결하거나 놓친 수송대를 추격해 다섯 부품을 진행 불가 없이
+                    모은다.
                   </td>
-                  <td>120Hz 속성 combat trace, forge transaction과 Polygon/Retro 상태 판독</td>
+                  <td>순서 조합 fixture, map patch와 persistence</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-WORLD-JOURNEY</th>
+                  <th>PG-CAMPAIGN-TIME</th>
                   <td>
-                    마을 준비부터 Field·Dungeon·Boss·보상·shortcut 귀환과 새 목표까지 debug 조작
-                    없이 완료한다. 세 화면 이상 이어지는 학원촌 거리에서 서로 다른 두 상점 집을
-                    찾고, 각 입구로 들어가 독립된 실내의 무기상과 인챈터에게서만 해당 transaction을
-                    실행한 뒤 거리로 돌아온다. 대화 말풍선은 화자 머리 위를 가리키고 글자를 순차
-                    표시하며, 표시 중 jump는 줄을 완성하고 다음 jump만 대사를 진행하는 동안 Player는
-                    jump하지 않는다. 대화를 시작하기 전과 닫은 뒤에는 빈 말풍선이나 작은 표식이 남지
-                    않는다. Dungeon signature 규칙을 입구·전투·숨은 분기·Boss에서 단계적으로
-                    사용하고, 클리어 후 강제 전투 없는 shortcut 재방문과 NPC 핵심 대화 재확인을
-                    수행한다.
+                    무료 행동은 시간을 바꾸지 않고 장거리·휴식·KO·핵심 사건만 4구간 단위로 D-DAY와
+                    고철 대왕을 갱신한다.
                   </td>
-                  <td>연속 플레이 trace, reveal timing·anchor metadata와 desktop/mobile capture</td>
+                  <td>결정적 action ledger와 game-over boundary</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-WORLD-SPACE</th>
+                  <th>PG-OPERATION-MAP</th>
                   <td>
-                    각 Room과 출입구가 환경별 landmark와 사람 크기로 구분되고 필수 경로가 유지된다.
-                    Polygon 언덕의 보이는 표면과 실제 발 위치가 일치하며, 단방향 platform은 아래에서
-                    통과하고 위에서만 착지한다.
+                    MENU short와 벽 지도가 같은 current state를 열고 위치·경로·예상값·부품·완성도를
+                    desktop/mobile에서 읽는다.
                   </td>
-                  <td>각 stable scene의 desktop/mobile capture와 map validation</td>
+                  <td>semantic inspection과 actual Browser flow</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-WORLD-TIME</th>
+                  <th>PG-SCRAP-GROWTH</th>
                   <td>
-                    메뉴·대화·대기·reload와 작은 Chunk 전환은 시간을 바꾸지 않고 authored Travel
-                    Segment와 의미 있는 사건만 Clock/Deadline을 한 번 갱신한다. 낮밤·shortcut 비용·
-                    Deadline 연장·Crisis Chunk 재구성과 방어 실패 되감기를 연속 원정에서 확인한다.
-                    밤의 optional elite가 필수 경로를 막지 않고 확정 탐험·성장 보상을 주는지도
-                    확인한다.
+                    지역 재료와 고철 장비가 기존 command의 reach·속도·posture·속성을 바꾸고 reload
+                    뒤 유지된다.
                   </td>
-                  <td>
-                    결정적 action ledger, persistence round-trip, Chunk rebuild와 Crisis recovery
-                    trace
-                  </td>
+                  <td>combat/profile 비교와 round-trip</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-GROWTH-CHOICE</th>
+                  <th>PG-SCRAP-READABILITY</th>
                   <td>
-                    서로 다른 장비가 실제 전투 선택을 바꾸고, 첫 클리어 재료로 고른 세 무기
-                    archetype 중 하나가 연계·posture 파쇄·reach punish를 서로 다르게 확장하며,
-                    보상·해금·저장이 reload 뒤 유지된다.
+                    실제 viewport 크기에서 직업·소속·방향·공격 준비를 silhouette와 가동 부위로
+                    구분한다.
                   </td>
-                  <td>profile 비교, progression transition과 persistence round-trip</td>
+                  <td>정면/측면/pose board와 desktop/mobile capture</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-CHARACTER-READABILITY</th>
-                  <td>
-                    기본 배율의 모든 핵심 pose에서 Player와 대표 적의 머리, 손발, 장비, 검·방패와
-                    방향을 구분한다.
-                  </td>
-                  <td>Polygon/Retro pose matrix와 narrow viewport 직접 판독</td>
+                  <th>PG-FINAL-BATTLE</th>
+                  <td>다섯 부품이 보이는 완성 로봇으로 기존 grammar의 거대 결전을 끝낸다.</td>
+                  <td>부품별 조립 state와 최종전 trace</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-PLATFORM-ACCESS</th>
+                  <th>PG-PLATFORM-ACCESS</th>
                   <td>
-                    Desktop keyboard와 mobile touch에서 같은 원정·전투 흐름을 수행하고 control과
-                    focus를 식별하며, 화자·Player·control을 가리지 않는 같은 대화 흐름을 읽는다.
-                    기본 메뉴에는 실제 게임 control만 보이고, 게임 MENU를 짧게 누르면 메뉴로
-                    돌아가지만 1초 hold하면 채워지는 진행 bar 뒤 개발자 panel이 열린다. Panel에서
-                    선택한 E2E 설정을 적용하면 page reload 없이 현재 게임 화면과 control 값이 즉시
-                    바뀌고 URL에도 반영되며, 해당 URL을 다시 열었을 때 같은 control 값과 game
-                    state가 복원되는지 확인한다.
+                    Keyboard/touch에서 같은 캠페인·작전 지도·대화 흐름을 수행하고 debug state를
+                    URL로 재현한다.
                   </td>
-                  <td>desktop/mobile/keyboard flow와 accessible-name inspection</td>
+                  <td>desktop/mobile accessible flow와 console</td>
                 </tr>
                 <tr>
-                  <th scope="row">PG-RECOVERY</th>
+                  <th>PG-RECOVERY</th>
                   <td>
-                    저장 실패, KO와 Room 전환 실패가 숨은 진행·중복 보상·입력 재생 없이 복구된다.
+                    pre-action·아침·핵심 사건 save와 game-over 선택 복구가 시간·부품·보상을 원자
+                    복원한다.
                   </td>
-                  <td>failure injection과 progression/map invariant inspection</td>
+                  <td>failure injection과 multi-slot round-trip</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p class="note">
-            모든 acceptance는 현재 코드 존재나 과거 완료 기록이 아니라 실행·관찰·구조 evidence로
-            다시 확인한다.
+            시각 QA는 도입 전/중/후, 각 지역 전/회수 직전/해결/추격, 부품별 로봇, 마지막
+            1구간/D-DAY/game-over와 최종전을 결정적 상태로 실제 PNG에서 판독한다.
           </p>
         </section>
       </main>
-
       <footer>
         이 문서는 Polygon RPG의 현재 Product Desired State만 설명하며 backlog, version과 완료 이력을
         포함하지 않는다.

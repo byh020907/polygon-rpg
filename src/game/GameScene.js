@@ -56,6 +56,7 @@ import {
   getWorldClockReadModel,
   toWorldTimeSnapshot,
 } from './world/WorldTimeState.js';
+import { getScrapCampaignReadModel } from './campaign/ScrapCampaignState.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -312,6 +313,19 @@ function assertWorldTimeProfile(profile) {
   return profile;
 }
 
+function assertScrapCampaignProfile(profile) {
+  if (
+    !profile ||
+    !Array.isArray(profile.regions) ||
+    typeof profile.getRegion !== 'function' ||
+    !profile.startLocation ||
+    !profile.capital
+  ) {
+    throw new TypeError('GameScene에는 authored scrap campaign profile 주입이 필요합니다.');
+  }
+  return profile;
+}
+
 function assertEnchantmentCatalog(catalog) {
   if (!catalog || !Array.isArray(catalog.profiles) || typeof catalog.getProfile !== 'function')
     throw new TypeError('GameScene에는 authored enchantment catalog 주입이 필요합니다.');
@@ -326,6 +340,7 @@ export class GameScene extends SceneNode {
     encounterFactory,
     encounterAttackProfiles,
     worldTimeProfile,
+    scrapCampaignProfile,
     enchantmentCatalog,
     progressionSnapshot = null,
   } = {}) {
@@ -337,10 +352,15 @@ export class GameScene extends SceneNode {
     this.encounterFactory = assertEncounterFactory(encounterFactory);
     this.encounterAttackProfiles = assertEncounterAttackProfiles(encounterAttackProfiles);
     this.worldTimeProfile = assertWorldTimeProfile(worldTimeProfile);
+    this.scrapCampaignProfile = assertScrapCampaignProfile(scrapCampaignProfile);
     this.enchantmentCatalog = assertEnchantmentCatalog(enchantmentCatalog);
     const initialProgression =
       progressionSnapshot ??
-      createProgressionSnapshot(this.equipmentCatalog.defaultProfileId, this.enchantmentCatalog);
+      createProgressionSnapshot(
+        this.equipmentCatalog.defaultProfileId,
+        this.enchantmentCatalog,
+        this.scrapCampaignProfile,
+      );
     this.progressionSnapshot = mergeProgressionSnapshot(initialProgression, {
       enchantment: canonicalizeEnchantmentSnapshot(
         initialProgression.enchantment,
@@ -419,7 +439,7 @@ export class GameScene extends SceneNode {
   }
 
   restoreProgression(snapshot) {
-    assertProgressionSnapshot(snapshot);
+    assertProgressionSnapshot(snapshot, this.scrapCampaignProfile);
     const nextSnapshot = mergeProgressionSnapshot(snapshot, {
       enchantment: canonicalizeEnchantmentSnapshot(
         snapshot.enchantment,
@@ -2341,6 +2361,10 @@ export class GameScene extends SceneNode {
     const skill = this.getCombatSkillProfile();
     const encounter = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
     const worldTime = getWorldClockReadModel(this.worldTimeSnapshot);
+    const scrapCampaign = getScrapCampaignReadModel(
+      progression.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
     const phaseLabels = {
       prepare: '학원촌 준비',
       field: 'Field 탐험',
@@ -2579,10 +2603,9 @@ export class GameScene extends SceneNode {
               ? '우회 · 수액 없음'
               : '수호 수액 미획득',
       timePhase: worldTime.timePhase,
-      timeLabel: `${worldTime.timePhase === 'night' ? '밤' : '낮'} · D${worldTime.day} ${worldTime.timeLabel}`,
-      deadlineLabel: worldTime.crisis
-        ? 'CRISIS · 핵심 방어 사건'
-        : `Deadline ${Math.floor(worldTime.deadlineMinutes / 60)}:${String(worldTime.deadlineMinutes % 60).padStart(2, '0')}`,
+      timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
+      deadlineLabel: scrapCampaign.deadlineLabel,
+      campaign: scrapCampaign,
       roomId,
       canManageProgression: this.canManageProgression(),
       activeEnchantId:

@@ -119,6 +119,19 @@ function focusDebugPanel(browserDocument) {
   browserDocument.getElementById('debug-panel-title')?.focus();
 }
 
+function setOperationMapBackgroundInert(browserDocument, isInert) {
+  const operationMap = browserDocument.querySelector('.operation-map-backdrop');
+  const viewport = operationMap?.parentElement;
+  if (!viewport) return;
+  for (const child of viewport.children) {
+    if (child !== operationMap) child.inert = isInert;
+  }
+}
+
+function focusOperationMap(browserDocument) {
+  browserDocument.getElementById('operation-map-title')?.focus();
+}
+
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
@@ -147,6 +160,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
   Alpine.data('gameShell', () => ({
     screen: initialScreen,
     visualQa: Boolean(visualQaRequest),
+    operationMapOpen: false,
     debugPanelOpen: debugConfigurationAdapter.panelRequested,
     debugMenuHoldProgress: 0,
     debugScenarioIds: debugConfigurationAdapter.scenarioIds,
@@ -174,10 +188,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     animationSpeed: 1,
     renderStats: 'Renderer idle',
     gameStats: 'World ready',
-    areaName: '왕립 마법학교 학원촌',
-    storyBeatId: 'academy-briefing',
-    storyTitle: '세라 교관의 출정 수업',
-    storyBriefing: '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다.',
+    areaName: '동네 고물상',
+    storyBeatId: 'scrap-control-device',
+    storyTitle: '첫 고철 수거 의뢰',
+    storyBriefing: '폐병기 안에서 반짝이는 제어장치를 직접 회수하세요.',
     dialogue: Object.freeze({
       active: false,
       available: false,
@@ -198,14 +212,29 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       screenAnchor: null,
       commands: Object.freeze([]),
     }),
-    objective:
-      '광장 오른쪽의 카린 무기상과 대화해 검을 고른 뒤 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
-    journeyLabel: '학원촌 준비',
+    objective: '폐병기 안의 반짝이는 제어장치에 접근해 ↑로 회수하세요.',
+    journeyLabel: '고철 대왕 각성 전',
     encounterHint: '',
     encounterHealthLabel: '',
-    wardLabel: '수호 수액 미획득',
-    timeLabel: '낮',
-    deadlineLabel: 'Deadline 12:00',
+    wardLabel: '로봇 완성도 0%',
+    timeLabel: 'Day 1 · 아침',
+    deadlineLabel: 'D-30',
+    campaign: Object.freeze({
+      hudLabel: 'Day 1 · 아침 · D-30',
+      currentLocationLabel: '동네 고물상',
+      rivalLocationLabel: '각성지',
+      rivalDirectionLabel: '폐광 산촌',
+      rivalArrivalLabel: 'Day 31 · 아침',
+      rivalDelaySegments: 0,
+      lastChangeLabel: '고철 대왕 각성 · 수도 도착까지 D-30',
+      collectedPartCount: 0,
+      totalPartCount: 5,
+      completionPercent: 0,
+      finalBattleAvailable: false,
+      gameOver: false,
+      routeEdges: Object.freeze([]),
+      regions: Object.freeze([]),
+    }),
     canManageProgression: true,
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
@@ -266,6 +295,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         snapshot: () =>
           Object.freeze({
             screen: this.screen,
+            operationMapOpen: this.operationMapOpen,
             debugPanelOpen: this.debugPanelOpen,
             reducedMotion: this.reducedMotion,
             isPlaying: this.isPlaying,
@@ -304,6 +334,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
           this.deadlineLabel = status.deadlineLabel;
+          this.campaign = status.campaign;
           this.canManageProgression = status.canManageProgression;
           this.activeEnchantId = status.activeEnchantId;
           this.activeEnchantLabel = status.activeEnchantLabel;
@@ -447,15 +478,59 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         debugMenuHold.consumePrimaryActivation();
         return;
       }
-      if (result && !result.completed) this.showMenu();
+      if (result && !result.completed) this.openOperationMap();
     },
 
     activateGameMenu() {
       if (!debugMenuHold?.consumePrimaryActivation()) return;
-      this.showMenu();
+      this.openOperationMap();
+    },
+
+    openOperationMap() {
+      if (this.debugPanelOpen || this.operationMapOpen) return;
+      this.operationMapOpen = true;
+      setOperationMapBackgroundInert(globalThis.document, true);
+      gameApp.onScreenChanged();
+      this.$nextTick(() =>
+        globalThis.requestAnimationFrame(() => focusOperationMap(globalThis.document)),
+      );
+    },
+
+    closeOperationMap() {
+      if (!this.operationMapOpen) return;
+      this.operationMapOpen = false;
+      setOperationMapBackgroundInert(globalThis.document, false);
+      gameApp.onScreenChanged();
+      this.$nextTick(() => globalThis.document.getElementById('game-menu-control')?.focus());
+    },
+
+    trapOperationMapFocus(event) {
+      const panel = globalThis.document.querySelector('.operation-map-panel');
+      if (!panel) return;
+      const focusable = [...panel.querySelectorAll(DEBUG_PANEL_FOCUSABLE_SELECTOR)].filter(
+        (element) => element.getClientRects().length > 0,
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        focusOperationMap(globalThis.document);
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && (event.target === first || !focusable.includes(event.target))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && event.target === last) {
+        event.preventDefault();
+        first.focus();
+      }
     },
 
     openDebugPanel() {
+      if (this.operationMapOpen) {
+        this.operationMapOpen = false;
+        setOperationMapBackgroundInert(globalThis.document, false);
+      }
       this.debugPanelOpen = true;
       setDebugBackgroundInert(globalThis.document, true);
       gameApp.onScreenChanged();
@@ -520,6 +595,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       try {
         debugConfigurationAdapter.returnToPlayerGame();
         this.visualQa = false;
+        this.operationMapOpen = false;
         this.debugPanelOpen = false;
         this.screen = GAME_SCREEN.GAME;
         this.isPlaying = true;
@@ -543,8 +619,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     openRenderLab() {
       mobileViewport.leaveLandscape();
       this.debugPanelOpen = false;
+      this.operationMapOpen = false;
       debugMenuHold?.cancel();
       setDebugBackgroundInert(globalThis.document, false);
+      setOperationMapBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.RENDER_LAB, {
         menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_START,
       });
@@ -559,8 +637,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     showMenu() {
       mobileViewport.leaveLandscape();
       this.debugPanelOpen = false;
+      this.operationMapOpen = false;
       debugMenuHold?.cancel();
       setDebugBackgroundInert(globalThis.document, false);
+      setOperationMapBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.MENU);
       this.screen = focusRequest.screen;
       this.isPlaying = false;
@@ -594,6 +674,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       debugHoldAbortController = null;
       debugMenuHold?.cancel();
       setDebugBackgroundInert(globalThis.document, false);
+      setOperationMapBackgroundInert(globalThis.document, false);
       mobileViewport.leaveLandscape();
       gameApp.destroy();
     },

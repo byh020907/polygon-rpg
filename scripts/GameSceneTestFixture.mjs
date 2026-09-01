@@ -6,6 +6,7 @@ import { COMBAT_PROGRESSION_PROFILE } from '../src/game/progression/ProgressionP
 import { TRAINING_ENCOUNTER_SCENE } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { WORLD_TIME_PROFILE } from '../src/game/world/WorldTimeProfiles.js';
+import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
 
 function createTrainingEncounter(options) {
   return TRAINING_ENCOUNTER_SCENE.instantiate({
@@ -23,6 +24,7 @@ export function createTestGameScene(options = {}) {
     encounterFactory: createTrainingEncounter,
     encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
     worldTimeProfile: WORLD_TIME_PROFILE,
+    scrapCampaignProfile: SCRAP_CAMPAIGN_PROFILE,
     enchantmentCatalog: ENCHANTMENT_CATALOG,
   });
 }

@@ -30,10 +30,10 @@
 
         <div class="menu-content">
           <section class="title-card">
-            <p class="menu-kicker">A MAGIC ACADEMY · A BODY WITHOUT SPELLS</p>
+            <p class="menu-kicker">A SCRAPYARD APPRENTICE · THIRTY DAYS TO THE CAPITAL</p>
             <h1 id="game-title"><span>POLYGON</span><strong>RPG</strong></h1>
             <p class="menu-subtitle">
-              Vector bones beneath the surface.<br />Pixel legends on the screen.
+              다섯 산업기계를 먼저 구해<br />우리 식의 거대 로봇을 완성한다.
             </p>
 
             <div class="menu-actions">
@@ -45,7 +45,7 @@
                 @touchend.prevent="startGame"
               >
                 <span>게임 시작 / 계속하기</span>
-                <small>ACADEMY VILLAGE</small>
+                <small>D-30 · 동네 고물상</small>
               </button>
               <button
                 id="menu-mobile-start-control"
@@ -73,12 +73,12 @@
           </section>
 
           <aside class="journey-card">
-            <p class="journey-index">JOURNEY 01</p>
+            <p class="journey-index">CAMPAIGN · D-30</p>
             <div class="journey-mark" aria-hidden="true">◆</div>
-            <h2>마법이 없는 몸</h2>
+            <h2>퇴직했는데 또 야근</h2>
             <p>
-              모두가 주문을 사용하는 학원촌에서 홀로 마법을 쓰지 못하는 주인공. 옆집의 전직
-              전투교관에게 맨몸으로 마법에 맞서는 법을 배운다.
+              값나가는 고철인 줄 알고 떼어낸 제어장치가 고철 대왕을 깨웠다. 고물상 주인과 함께 왕국
+              다섯 지역의 산업기계를 먼저 회수해 수도를 지킨다.
             </p>
             <dl>
               <div>
@@ -109,7 +109,7 @@
         <div class="game-viewport">
           <canvas
             id="game-canvas"
-            aria-label="Polygon RPG 게임 화면"
+            aria-label="고철 대왕 D-30 캠페인 게임 화면"
             aria-describedby="game-status-surface"
           ></canvas>
 
@@ -143,9 +143,8 @@
             <p class="hud-money"><span>MONEY</span> <strong x-text="`${gold} Gold`"></strong></p>
           </div>
 
-          <div class="hud-item-counter" aria-label="원정 준비 효과">
-            <b>◆</b
-            ><span x-text="`훈련 인장 ${trainingMarks} · ${wardLabel} · ${deadlineLabel}`"></span>
+          <div class="hud-item-counter" aria-label="캠페인 날짜와 D-DAY">
+            <b>◆</b><span x-text="campaign.hudLabel"></span>
           </div>
           <div class="game-area-label">
             <small x-text="`REGION · ${timeLabel}`"></small><strong x-text="areaName"></strong>
@@ -154,7 +153,7 @@
             id="game-menu-control"
             class="game-menu-button"
             type="button"
-            aria-label="메인 메뉴. 1초 동안 누르면 개발자 디버그 패널 열기"
+            aria-label="작전 지도. 1초 동안 누르면 개발자 디버그 패널 열기"
             aria-describedby="game-menu-debug-hint"
             x-bind:class="{ 'is-debug-holding': debugMenuHoldProgress > 0 }"
             x-bind:style="`--debug-hold-progress: ${debugMenuHoldPercent}`"
@@ -168,11 +167,120 @@
             @keyup.space.prevent="releaseDebugMenuKeyboardHold"
             @click="activateGameMenu"
           >
-            MENU
+            MAP
           </button>
           <p id="game-menu-debug-hint" class="visually-hidden">
-            짧게 누르면 메인 메뉴로 돌아가고, 1초 동안 계속 누르면 개발자 디버그 패널이 열립니다.
+            짧게 누르면 전체 작전 지도가 열리고, 1초 동안 계속 누르면 개발자 디버그 패널이 열립니다.
           </p>
+
+          <div
+            class="operation-map-backdrop"
+            x-show="operationMapOpen"
+            @click.self="closeOperationMap"
+            @keydown.escape.stop.prevent="closeOperationMap"
+            @keydown.tab="trapOperationMapFocus($event)"
+          >
+            <section
+              class="operation-map-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="operation-map-title"
+              aria-describedby="operation-map-summary"
+            >
+              <header class="operation-map-header">
+                <div>
+                  <small>ROYAL SCRAP OPERATION</small>
+                  <h2 id="operation-map-title" tabindex="-1">고철 대왕 추격 작전 지도</h2>
+                </div>
+                <button type="button" aria-label="작전 지도 닫기" @click="closeOperationMap">
+                  닫기
+                </button>
+              </header>
+
+              <p id="operation-map-summary" class="operation-map-summary">
+                <strong x-text="campaign.hudLabel"></strong>
+                <span x-text="`현재 위치 · ${campaign.currentLocationLabel}`"></span>
+                <span
+                  x-text="`고철 대왕 · ${campaign.rivalLocationLabel} → ${campaign.rivalDirectionLabel}`"
+                ></span>
+                <span x-text="`수도 도착 예정 · ${campaign.rivalArrivalLabel}`"></span>
+              </p>
+
+              <nav class="operation-map-connections" aria-label="대지역 연결 도로">
+                <template x-for="edge in campaign.routeEdges" x-bind:key="edge.id">
+                  <span
+                    x-bind:data-route-id="edge.id"
+                    x-text="`${edge.fromLabel} ↔ ${edge.toLabel} · ${edge.travelSegments}구간`"
+                  ></span>
+                </template>
+              </nav>
+
+              <section class="operation-map-route" aria-label="다섯 대지역 작전 현황">
+                <template x-for="region in campaign.regions" x-bind:key="region.id">
+                  <article
+                    class="operation-map-region"
+                    x-bind:data-region-id="region.id"
+                    x-bind:data-region-status="region.status"
+                    x-bind:style="`--operation-region-color: ${region.color}`"
+                  >
+                    <header>
+                      <span class="operation-map-node" aria-hidden="true"></span>
+                      <div>
+                        <small x-text="region.statusLabel"></small>
+                        <h3 x-text="region.label"></h3>
+                      </div>
+                    </header>
+                    <p x-text="region.machineLabel"></p>
+                    <dl>
+                      <div>
+                        <dt>이동</dt>
+                        <dd x-text="`${region.travelSegments}구간`"></dd>
+                      </div>
+                      <div>
+                        <dt>사건</dt>
+                        <dd x-text="`${region.eventSegments}구간`"></dd>
+                      </div>
+                      <div>
+                        <dt>성공</dt>
+                        <dd x-text="`D-DAY +${region.extensionDays}일`"></dd>
+                      </div>
+                    </dl>
+                    <strong
+                      x-text="region.collected ? `${region.robotModule} 조립 · ${region.partLabel}` : `미회수 · ${region.robotModule}`"
+                    ></strong>
+                  </article>
+                </template>
+              </section>
+
+              <section class="operation-map-assembly" aria-label="거대 로봇 조립 현황">
+                <div>
+                  <small>GARAGE ASSEMBLY</small>
+                  <strong x-text="`완성도 ${campaign.completionPercent}%`"></strong>
+                  <span
+                    x-text="`${campaign.collectedPartCount}/${campaign.totalPartCount} 필수 부품`"
+                  ></span>
+                </div>
+                <div
+                  class="operation-map-progress"
+                  role="progressbar"
+                  aria-label="거대 로봇 완성도"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  x-bind:aria-valuenow="campaign.completionPercent"
+                >
+                  <i x-bind:style="`width: ${campaign.completionPercent}%`"></i>
+                </div>
+                <p x-text="campaign.lastChangeLabel"></p>
+              </section>
+
+              <footer class="operation-map-actions">
+                <button id="operation-map-close-control" type="button" @click="closeOperationMap">
+                  작전으로 돌아가기
+                </button>
+                <button type="button" @click="showMenu">게임 종료 메뉴</button>
+              </footer>
+            </section>
+          </div>
 
           <div
             class="debug-panel-backdrop"
@@ -291,7 +399,10 @@
             aria-labelledby="game-status-title"
           >
             <h2 id="game-status-title">Canvas 대체 현재 게임 상태</h2>
-            <p x-text="`지역: ${areaName} · ${timeLabel}`"></p>
+            <p x-text="`지역: ${areaName} · ${campaign.hudLabel}`"></p>
+            <p
+              x-text="`작전: ${campaign.currentLocationLabel} · 고철 대왕 ${campaign.rivalLocationLabel} → ${campaign.rivalDirectionLabel}`"
+            ></p>
             <p x-text="`목표: ${objective}`"></p>
             <p x-text="`진행: ${journeyLabel}`"></p>
             <p

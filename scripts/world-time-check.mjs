@@ -104,8 +104,13 @@ completePortal(scene, 'academy-field-portal');
 const afterTravel = scene.getProgressionSnapshot().worldTime;
 assert.equal(afterTravel.clockMinutes - beforeIdle.clockMinutes, 90);
 assert.equal(afterTravel.deadlineMinutes, beforeIdle.deadlineMinutes - 90);
-assert.match(scene.getWorldStatus().timeLabel, /D1 11:30/);
-assert.equal(scene.getWorldStatus().deadlineLabel, 'Deadline 10:30');
+assert.equal(scene.getWorldStatus().timeLabel, 'Day 1 · 아침');
+assert.equal(scene.getWorldStatus().deadlineLabel, 'D-30');
+assert.equal(
+  scene.getWorldStatus().campaign.rivalProgressSegments,
+  undefined,
+  'UI는 mutable campaign internals 대신 operation-map read model만 노출해야 합니다.',
+);
 assert.ok(
   WORLD_TIME_PROFILE.getTravelAction('sealed-shortcut-return').clockCostMinutes <
     WORLD_TIME_PROFILE.getTravelAction('academy-sealed-road').clockCostMinutes,
@@ -211,7 +216,7 @@ console.log(
       'same-context-deterministic-chunk-rebuild',
       'deadline-crisis-boundary',
       'v2-migration-and-v3-round-trip',
-      'hud-clock-and-deadline-read-model',
+      'campaign-hud-independent-from-legacy-world-time-read-model',
     ],
   }),
 );

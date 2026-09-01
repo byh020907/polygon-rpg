@@ -11,6 +11,7 @@ import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
 import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
 import { WORLD_TIME_PROFILE } from '../game/world/WorldTimeProfiles.js';
+import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -77,6 +78,7 @@ function createProgressionStorage() {
         PROGRESSION_STORAGE_KEY,
         ENCHANTMENT_CATALOG,
         COMBAT_PROGRESSION_PROFILE.weaponForge,
+        SCRAP_CAMPAIGN_PROFILE,
       ),
     });
   } catch {
@@ -100,7 +102,11 @@ export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas, visualQaRequest = null }) {
     super('GameApp');
     const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
-    const freshProgression = createProgressionSnapshot(EQUIPMENT_CATALOG.defaultProfileId);
+    const freshProgression = createProgressionSnapshot(
+      EQUIPMENT_CATALOG.defaultProfileId,
+      ENCHANTMENT_CATALOG,
+      SCRAP_CAMPAIGN_PROFILE,
+    );
     this.visualQaRequest = visualQaRequest;
     this.isVisualQa = Boolean(this.visualQaRequest);
     this.progressionStorage = null;
@@ -137,6 +143,7 @@ export class GameApp extends SceneNode {
         encounterFactory: createTrainingEncounter,
         encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
         worldTimeProfile: WORLD_TIME_PROFILE,
+        scrapCampaignProfile: SCRAP_CAMPAIGN_PROFILE,
         enchantmentCatalog: ENCHANTMENT_CATALOG,
         progressionSnapshot,
       }),
@@ -157,7 +164,11 @@ export class GameApp extends SceneNode {
     this.input = new GameInputController({
       isActive: () => {
         const uiState = this.uiBridge?.snapshot();
-        return uiState?.screen !== GAME_SCREEN.MENU && uiState?.debugPanelOpen !== true;
+        return (
+          uiState?.screen === GAME_SCREEN.GAME &&
+          uiState?.debugPanelOpen !== true &&
+          uiState?.operationMapOpen !== true
+        );
       },
     });
     this.animationFrameId = null;
@@ -284,7 +295,11 @@ export class GameApp extends SceneNode {
   }
 
   resetSavedProgress() {
-    const freshProgression = createProgressionSnapshot(EQUIPMENT_CATALOG.defaultProfileId);
+    const freshProgression = createProgressionSnapshot(
+      EQUIPMENT_CATALOG.defaultProfileId,
+      ENCHANTMENT_CATALOG,
+      SCRAP_CAMPAIGN_PROFILE,
+    );
     if (this.isVisualQa || !this.progressionStorage) {
       const result = Object.freeze({
         ok: false,
