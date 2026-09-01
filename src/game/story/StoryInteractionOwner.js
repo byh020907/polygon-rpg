@@ -3,7 +3,10 @@ const EMPTY_COMMANDS = Object.freeze([]);
 const EMPTY_DIALOGUE = Object.freeze({
   active: false,
   available: false,
+  mode: 'current',
   interactionId: null,
+  conversationId: null,
+  title: '',
   speaker: '',
   line: '',
   lineIndex: -1,
@@ -40,6 +43,13 @@ function revealPrefix(line, characterCount) {
 
 function isStoryInteraction(entity) {
   const commands = entity?.commands ?? EMPTY_COMMANDS;
+  const conversationIsValid =
+    entity?.conversationId === undefined
+      ? entity?.conversationTitle === undefined
+      : typeof entity.conversationId === 'string' &&
+        entity.conversationId.length > 0 &&
+        typeof entity.conversationTitle === 'string' &&
+        entity.conversationTitle.length > 0;
   return (
     entity?.kind === 'story-interaction' &&
     typeof entity.id === 'string' &&
@@ -51,6 +61,7 @@ function isStoryInteraction(entity) {
     Number.isFinite(entity.position?.y) &&
     Number.isFinite(entity.interactionRange) &&
     entity.interactionRange > 0 &&
+    conversationIsValid &&
     Array.isArray(commands) &&
     commands.every(
       (command) =>
@@ -65,6 +76,87 @@ function isStoryInteraction(entity) {
 
 function interactionCommands(interaction) {
   return interaction?.commands ?? EMPTY_COMMANDS;
+}
+
+function isTranscript(transcript) {
+  return (
+    transcript &&
+    typeof transcript.id === 'string' &&
+    transcript.id.length > 0 &&
+    typeof transcript.title === 'string' &&
+    transcript.title.length > 0 &&
+    typeof transcript.interactionId === 'string' &&
+    transcript.interactionId.length > 0 &&
+    typeof transcript.speaker === 'string' &&
+    transcript.speaker.length > 0 &&
+    Array.isArray(transcript.lines) &&
+    transcript.lines.length > 0 &&
+    transcript.lines.every((line) => typeof line === 'string' && line.trim().length > 0)
+  );
+}
+
+function findTranscript(transcripts, transcriptId, interactionId) {
+  return (
+    transcripts?.find(
+      (transcript) =>
+        isTranscript(transcript) &&
+        transcript.id === transcriptId &&
+        transcript.interactionId === interactionId,
+    ) ?? null
+  );
+}
+
+function replayCommands(interaction, transcripts) {
+  if (!interaction?.conversationId || !Array.isArray(transcripts)) return EMPTY_COMMANDS;
+  return Object.freeze(
+    transcripts
+      .filter(
+        (transcript) =>
+          isTranscript(transcript) &&
+          transcript.interactionId === interaction.id &&
+          transcript.id !== interaction.conversationId,
+      )
+      .map((transcript) =>
+        Object.freeze({
+          id: `replay-transcript:${transcript.id}`,
+          type: 'replay-transcript',
+          transcriptId: transcript.id,
+          label: `지난 대화 · ${transcript.title}`,
+          actionLabel: '다시 듣기',
+          description: '완료한 핵심 대화 기록',
+        }),
+      ),
+  );
+}
+
+function availableCommands(interaction, transcripts) {
+  const commands = [
+    ...interactionCommands(interaction),
+    ...replayCommands(interaction, transcripts),
+  ];
+  return commands.length === 0 ? EMPTY_COMMANDS : Object.freeze(commands);
+}
+
+function dialogueSource(interaction, transcriptId, transcripts) {
+  if (!interaction) return null;
+  if (transcriptId) {
+    const transcript = findTranscript(transcripts, transcriptId, interaction.id);
+    if (!transcript) return null;
+    return Object.freeze({
+      mode: 'transcript',
+      conversationId: transcript.id,
+      title: transcript.title,
+      speaker: transcript.speaker,
+      lines: transcript.lines,
+    });
+  }
+  return Object.freeze({
+    mode: 'current',
+    conversationId: interaction.conversationId ?? null,
+    title: interaction.conversationTitle ?? '',
+    speaker: interaction.speaker,
+    lines: interaction.lines,
+  });
 }
 
 function distanceBetween(left, right) {
@@ -97,6 +189,7 @@ function findInteraction(entities, interactionId) {
 export class StoryInteractionOwner {
   constructor() {
     this.activeInteractionId = null;
+    this.activeTranscriptId = null;
     this.lineIndex = -1;
     this.revealedCharacters = 0;
     this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
@@ -104,16 +197,18 @@ export class StoryInteractionOwner {
 
   reset() {
     this.activeInteractionId = null;
+    this.activeTranscriptId = null;
     this.lineIndex = -1;
     this.revealedCharacters = 0;
     this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
   }
 
-  advance(deltaSeconds, { entities = [] } = {}) {
+  advance(deltaSeconds, { entities = [], transcripts = [] } = {}) {
     if (!this.activeInteractionId || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
     const interaction = findInteraction(entities, this.activeInteractionId);
-    if (!interaction) return;
-    const characters = Array.from(interaction.lines[this.lineIndex] ?? '');
+    const source = dialogueSource(interaction, this.activeTranscriptId, transcripts);
+    if (!source) return;
+    const characters = Array.from(source.lines[this.lineIndex] ?? '');
     let remainingSeconds = deltaSeconds;
     while (
       remainingSeconds >= this.revealDelaySeconds &&
@@ -127,33 +222,42 @@ export class StoryInteractionOwner {
     if (this.revealedCharacters < characters.length) this.revealDelaySeconds -= remainingSeconds;
   }
 
-  completeCurrentLine(entities) {
+  completeCurrentLine({ entities = [], transcripts = [] } = {}) {
     const interaction = findInteraction(entities, this.activeInteractionId);
-    if (!interaction) return;
-    this.revealedCharacters = Array.from(interaction.lines[this.lineIndex]).length;
+    const source = dialogueSource(interaction, this.activeTranscriptId, transcripts);
+    if (!source) return;
+    this.revealedCharacters = Array.from(source.lines[this.lineIndex]).length;
     this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
   }
 
-  handleJump({ entities = [], playerPosition = null } = {}) {
+  handleJump({ entities = [], playerPosition = null, transcripts = [] } = {}) {
     if (this.activeInteractionId) {
       const interaction = findInteraction(entities, this.activeInteractionId);
-      if (!interaction) {
+      const source = dialogueSource(interaction, this.activeTranscriptId, transcripts);
+      if (!source) {
         this.reset();
         return Object.freeze({ consumed: true, transition: 'missing-target' });
       }
-      const lineLength = Array.from(interaction.lines[this.lineIndex]).length;
+      const lineLength = Array.from(source.lines[this.lineIndex]).length;
       if (this.revealedCharacters < lineLength) {
-        this.completeCurrentLine(entities);
+        this.completeCurrentLine({ entities, transcripts });
         return Object.freeze({ consumed: true, transition: 'completed-line' });
       }
-      if (this.lineIndex < interaction.lines.length - 1) {
+      if (this.lineIndex < source.lines.length - 1) {
         this.lineIndex += 1;
         this.revealedCharacters = 0;
         this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
         return Object.freeze({ consumed: true, transition: 'advanced' });
       }
+      const conversationId = source.mode === 'current' ? source.conversationId : null;
+      const replayedConversationId = source.mode === 'transcript' ? source.conversationId : null;
       this.reset();
-      return Object.freeze({ consumed: true, transition: 'closed' });
+      return Object.freeze({
+        consumed: true,
+        transition: 'closed',
+        conversationId,
+        replayedConversationId,
+      });
     }
 
     const interaction = nearestInteraction(entities, playerPosition);
@@ -165,28 +269,51 @@ export class StoryInteractionOwner {
     return Object.freeze({ consumed: true, transition: 'started' });
   }
 
-  authorizeCommand({ entities = [] } = {}, interactionId, commandId) {
+  authorizeCommand({ entities = [], transcripts = [] } = {}, interactionId, commandId) {
     if (this.activeInteractionId !== interactionId) return null;
     const interaction = findInteraction(entities, interactionId);
     if (!interaction) return null;
-    return interactionCommands(interaction).find((command) => command.id === commandId) ?? null;
+    return (
+      availableCommands(interaction, transcripts).find((command) => command.id === commandId) ??
+      null
+    );
   }
 
-  snapshot({ entities = [], playerPosition = null } = {}) {
+  startTranscript({ entities = [], transcripts = [] } = {}, interactionId, transcriptId) {
+    if (this.activeInteractionId !== interactionId) return null;
+    const interaction = findInteraction(entities, interactionId);
+    const transcript = findTranscript(transcripts, transcriptId, interactionId);
+    if (!interaction || !transcript || transcript.id === interaction.conversationId) return null;
+    this.activeTranscriptId = transcript.id;
+    this.lineIndex = 0;
+    this.revealedCharacters = 0;
+    this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+    return transcript;
+  }
+
+  snapshot({ entities = [], playerPosition = null, transcripts = [] } = {}) {
     const activeInteraction = this.activeInteractionId
       ? findInteraction(entities, this.activeInteractionId)
       : null;
     if (activeInteraction) {
-      const lineCount = activeInteraction.lines.length;
+      const source = dialogueSource(activeInteraction, this.activeTranscriptId, transcripts);
+      if (!source) {
+        this.reset();
+        return EMPTY_DIALOGUE;
+      }
+      const lineCount = source.lines.length;
       const canAdvance = this.lineIndex < lineCount - 1;
-      const line = activeInteraction.lines[this.lineIndex];
+      const line = source.lines[this.lineIndex];
       const lineLength = Array.from(line).length;
       const revealComplete = this.revealedCharacters >= lineLength;
       return Object.freeze({
         active: true,
         available: true,
+        mode: source.mode,
         interactionId: activeInteraction.id,
-        speaker: activeInteraction.speaker,
+        conversationId: source.conversationId,
+        title: source.title,
+        speaker: source.speaker,
         line,
         visibleLine: revealPrefix(line, this.revealedCharacters),
         lineIndex: this.lineIndex,
@@ -196,7 +323,10 @@ export class StoryInteractionOwner {
         revealComplete,
         prompt: revealComplete ? (canAdvance ? '↑ 다음 대사' : '↑ 대화 마치기') : '↑ 대사 완성',
         worldAnchor: dialogueWorldAnchor(activeInteraction),
-        commands: interactionCommands(activeInteraction),
+        commands:
+          source.mode === 'current'
+            ? availableCommands(activeInteraction, transcripts)
+            : EMPTY_COMMANDS,
       });
     }
 

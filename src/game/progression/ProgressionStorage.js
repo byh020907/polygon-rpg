@@ -6,7 +6,7 @@ import {
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5]);
+const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -177,6 +177,7 @@ function createStoredRecord(snapshot) {
     ownedEquipmentIds: [...snapshot.ownedEquipmentIds],
     equippedEquipmentId: snapshot.equippedEquipmentId,
     combatSkillLevel: snapshot.combatSkillLevel,
+    viewedConversationIds: snapshot.viewedConversationIds,
     firstJourney: snapshot.firstJourney,
     regionExpansion: snapshot.regionExpansion,
     worldTime: snapshot.worldTime,

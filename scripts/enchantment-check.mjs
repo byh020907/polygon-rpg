@@ -619,7 +619,7 @@ function verifyRepeatableEnemyMaterialRewards() {
     );
 
     const adapter = new MemoryStorage();
-    const storage = new ProgressionStorage(adapter, 'repeatable-material-v6', ENCHANTMENT_CATALOG);
+    const storage = new ProgressionStorage(adapter, 'repeatable-material-v7', ENCHANTMENT_CATALOG);
     assert.equal(storage.save(scene.getProgressionSnapshot()).ok, true);
     const loaded = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
     assert.equal(loaded.ok, true);
@@ -661,8 +661,8 @@ function verifyPersistenceMigrationAndRecovery() {
     ENCHANTMENT_CATALOG,
   ).snapshot;
   const adapter = new MemoryStorage();
-  const storage = new ProgressionStorage(adapter, 'enchantment-v6', ENCHANTMENT_CATALOG);
-  assert.equal(PROGRESSION_SCHEMA_VERSION, 6);
+  const storage = new ProgressionStorage(adapter, 'enchantment-v7', ENCHANTMENT_CATALOG);
+  assert.equal(PROGRESSION_SCHEMA_VERSION, 7);
   assert.equal(storage.save(upgraded).ok, true);
   const roundTrip = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(roundTrip.ok, true);
@@ -683,7 +683,7 @@ function verifyPersistenceMigrationAndRecovery() {
   const migrated = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(migrated.ok, true);
   assert.equal(migrated.kind, 'migrated');
-  assert.equal(migrated.snapshot.version, 6);
+  assert.equal(migrated.snapshot.version, 7);
   assert.deepEqual(migrated.snapshot.enchantment.swordEnchantments[DEFAULT_SWORD_ID], {
     elementId: 'fire',
     level: 1,
@@ -836,8 +836,8 @@ console.log(
         'shield-contact-exclusion',
         'idempotent-source-material-quantity-award',
         'four-authored-repeatable-enemies-and-one-award-per-life',
-        'repeatable-material-quantity-v6-round-trip',
-        'v5-migration-v6-round-trip-corrupt-and-write-failure',
+        'repeatable-material-quantity-v7-round-trip',
+        'v5-migration-v7-round-trip-corrupt-and-write-failure',
         'polygon-retro-level-1-level-5-visual-qa-fixtures',
         'active-npc-conversation-command-only-and-static-hud-removal',
       ],

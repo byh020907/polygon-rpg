@@ -181,7 +181,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     dialogue: Object.freeze({
       active: false,
       available: false,
+      mode: 'current',
       interactionId: null,
+      conversationId: null,
+      title: '',
       speaker: '',
       line: '',
       lineIndex: -1,

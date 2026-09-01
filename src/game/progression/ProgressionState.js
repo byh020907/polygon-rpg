@@ -13,7 +13,7 @@ import {
   upgradeSwordEnchantment as upgradeEnchantment,
 } from '../enchantment/EnchantmentState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 6;
+export const PROGRESSION_SCHEMA_VERSION = 7;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -27,6 +27,8 @@ export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   INSUFFICIENT_TRAINING: 'insufficient-training',
   UNAVAILABLE: 'unavailable',
   MAX_LEVEL: 'max-level',
+  VIEWED: 'viewed',
+  ALREADY_VIEWED: 'already-viewed',
 });
 
 function assertEquipmentId(equipmentId, label = '장비 ID') {
@@ -52,6 +54,7 @@ function freezeSnapshot({
   ownedEquipmentIds,
   equippedEquipmentId,
   combatSkillLevel,
+  viewedConversationIds,
   firstJourney,
   regionExpansion,
   worldTime,
@@ -67,6 +70,7 @@ function freezeSnapshot({
     ownedEquipmentIds: Object.freeze([...ownedEquipmentIds]),
     equippedEquipmentId,
     combatSkillLevel,
+    viewedConversationIds: Object.freeze([...viewedConversationIds]),
     firstJourney: toFirstJourneyProgressSnapshot(firstJourney),
     regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
     worldTime: toWorldTimeSnapshot(worldTime),
@@ -92,6 +96,7 @@ export function createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog
     ownedEquipmentIds: [defaultEquipmentId],
     equippedEquipmentId: defaultEquipmentId,
     combatSkillLevel: 0,
+    viewedConversationIds: [],
     firstJourney: createFirstJourneyProgressSnapshot(),
     regionExpansion: createRegionExpansionProgressSnapshot(),
     worldTime: createWorldTimeSnapshot(),
@@ -134,6 +139,15 @@ export function assertProgressionSnapshot(snapshot) {
     snapshot.combatSkillLevel > 3
   ) {
     throw new RangeError('combat skill level은 0..3 사이의 정수여야 합니다.');
+  }
+  if (
+    !Array.isArray(snapshot.viewedConversationIds) ||
+    snapshot.viewedConversationIds.some(
+      (conversationId) => typeof conversationId !== 'string' || conversationId.trim().length === 0,
+    ) ||
+    new Set(snapshot.viewedConversationIds).size !== snapshot.viewedConversationIds.length
+  ) {
+    throw new TypeError('확인한 핵심 대화 ID 목록이 올바르지 않습니다.');
   }
   toFirstJourneyProgressSnapshot(snapshot.firstJourney);
   toRegionExpansionProgressSnapshot(snapshot.regionExpansion);
@@ -192,6 +206,7 @@ export function mergeProgressionSnapshot(
     regionExpansion = snapshot?.regionExpansion,
     worldTime = snapshot?.worldTime,
     enchantment = snapshot?.enchantment,
+    viewedConversationIds = snapshot?.viewedConversationIds,
   } = {},
 ) {
   assertProgressionSnapshot(snapshot);
@@ -201,6 +216,7 @@ export function mergeProgressionSnapshot(
     regionExpansion,
     worldTime,
     enchantment,
+    viewedConversationIds,
   });
 }
 
@@ -245,6 +261,22 @@ export function awardTrainingMarks(snapshot, amount) {
     true,
     PROGRESSION_TRANSACTION_REASON.AWARDED,
     freezeSnapshot({ ...snapshot, trainingMarks }),
+  );
+}
+
+export function recordViewedConversation(snapshot, conversationId) {
+  assertProgressionSnapshot(snapshot);
+  assertEquipmentId(conversationId, '핵심 대화 ID');
+  if (snapshot.viewedConversationIds.includes(conversationId)) {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_VIEWED, snapshot);
+  }
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.VIEWED,
+    freezeSnapshot({
+      ...snapshot,
+      viewedConversationIds: [...snapshot.viewedConversationIds, conversationId],
+    }),
   );
 }
 

@@ -29,6 +29,7 @@ import {
   getAvailableGold,
   mergeProgressionSnapshot,
   purchaseEquipment as purchaseProgressionEquipment,
+  recordViewedConversation,
   selectEquipment as selectProgressionEquipment,
   trainCombatSkill as trainProgressionCombatSkill,
   upgradeSwordEnchantment as upgradeProgressionSwordEnchantment,
@@ -39,7 +40,10 @@ import {
   canonicalizeEnchantmentSnapshot,
 } from './enchantment/EnchantmentState.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
-import { resolveFirstJourneyStory } from './story/FirstJourneyStory.js';
+import {
+  resolveFirstJourneyConversationTranscripts,
+  resolveFirstJourneyStory,
+} from './story/FirstJourneyStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
 import {
   createTrainingEnemyItems,
@@ -1045,6 +1049,9 @@ export class GameScene extends SceneNode {
     return Object.freeze({
       entities: mapSnapshot.entities,
       playerPosition: Object.freeze({ ...this.position }),
+      transcripts: resolveFirstJourneyConversationTranscripts(
+        this.progressionSnapshot.viewedConversationIds,
+      ),
     });
   }
 
@@ -1260,6 +1267,13 @@ export class GameScene extends SceneNode {
                 : `${profile.goldCost} Gold`,
         });
       }
+      if (command.type === 'replay-transcript') {
+        return Object.freeze({
+          ...command,
+          canChoose: this.canManageProgression(),
+          active: false,
+        });
+      }
       return Object.freeze({ ...command, canChoose: false, active: false });
     });
     return Object.freeze({ ...dialogue, commands: Object.freeze(commands) });
@@ -1273,6 +1287,17 @@ export class GameScene extends SceneNode {
     );
     if (!command || !this.canManageProgression()) {
       return this.unavailableProgressionTransaction();
+    }
+    if (command.type === 'replay-transcript') {
+      const transcript = this.storyInteractionOwner.startTranscript(
+        this.getStoryInteractionContext(),
+        interactionId,
+        command.transcriptId,
+      );
+      if (!transcript) return this.unavailableProgressionTransaction();
+      this.progressionNotice = `지난 핵심 대화 재생 · ${transcript.title}`;
+      this.statusNode.publish({ force: true });
+      return Object.freeze({ changed: false, reason: 'replay-started', transcript });
     }
     if (command.type === 'manage-sword') {
       return this.manageMerchantSword(command.profileId);
@@ -1961,6 +1986,21 @@ export class GameScene extends SceneNode {
     const dialogueResult = jumpIssued
       ? this.storyInteractionOwner.handleJump(this.getStoryInteractionContext())
       : null;
+    if (dialogueResult?.conversationId) {
+      const transcript = resolveFirstJourneyConversationTranscripts([
+        dialogueResult.conversationId,
+      ])[0];
+      if (transcript) {
+        const viewed = recordViewedConversation(
+          this.progressionSnapshot,
+          dialogueResult.conversationId,
+        );
+        if (viewed.changed) {
+          this.progressionNotice = `핵심 대화 기록됨 · ${transcript.title}`;
+          this.commitProgression(viewed);
+        }
+      }
+    }
     const dialogueConsumed = dialogueResult?.consumed === true;
     const portalStarted = jumpIssued && !dialogueConsumed && this.tryPortalTransition();
     if (this.mapRuntime.getTransition() === null && guardEdge) this.tryStartRoll(horizontal);

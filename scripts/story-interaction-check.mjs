@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
+import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import { dialogueSafeBounds, projectDialogue } from '../src/app/DialoguePresentation.js';
 import {
   FIRST_JOURNEY_CHECKPOINT_ID,
@@ -10,6 +11,8 @@ import {
 } from '../src/game/encounter/FirstJourneyProgress.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
+import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
+import { FIRST_JOURNEY_CONVERSATION } from '../src/game/story/FirstJourneyStory.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
@@ -37,18 +40,19 @@ function createAcademyScene(x, roomId = 'academy-plaza') {
   return scene;
 }
 
-function createJourneyProgression(firstJourney) {
+function createJourneyProgression(firstJourney, viewedConversationIds = []) {
   const base = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
   return Object.freeze({
     ...base,
+    viewedConversationIds: Object.freeze([...viewedConversationIds]),
     firstJourney: Object.freeze({ ...base.firstJourney, ...firstJourney }),
   });
 }
 
-function createJourneyScene({ roomId, x, firstJourney }) {
+function createJourneyScene({ roomId, x, firstJourney, viewedConversationIds = [] }) {
   const scene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: createJourneyProgression(firstJourney),
+    progressionSnapshot: createJourneyProgression(firstJourney, viewedConversationIds),
   });
   scene.setVisualQaLocation({ regionId: 'academy-region', roomId, x });
   return scene;
@@ -120,7 +124,7 @@ function assertStoryStatus(scene, { beatId, journeyLabel }, label) {
   assert.equal(status.journeyLabel, journeyLabel, `${label}: journey label 불일치`);
 }
 
-function verifyNamedDialogue(scene, { interactionId, speaker, label }) {
+function verifyNamedDialogue(scene, { interactionId, speaker, label, conversationId = null }) {
   const progressionBefore = scene.getProgressionSnapshot();
   const available = scene.getWorldStatus().dialogue;
   assert.ok(Object.isFrozen(available), `${label}: available dialogue DTO는 immutable이어야 한다.`);
@@ -185,11 +189,26 @@ function verifyNamedDialogue(scene, { interactionId, speaker, label }) {
   assert.equal(closed.after.active, false);
   assert.equal(closed.after.available, true);
   assert.equal(closed.after.interactionId, interactionId);
-  assert.deepEqual(
-    scene.getProgressionSnapshot(),
-    progressionBefore,
-    `${label}: 대화만으로 progression이 바뀌면 안 된다.`,
-  );
+  const progressionAfter = scene.getProgressionSnapshot();
+  if (conversationId) {
+    assert.deepEqual(progressionAfter.viewedConversationIds, [
+      ...progressionBefore.viewedConversationIds,
+      ...(!progressionBefore.viewedConversationIds.includes(conversationId)
+        ? [conversationId]
+        : []),
+    ]);
+    assert.deepEqual(
+      { ...progressionAfter, viewedConversationIds: progressionBefore.viewedConversationIds },
+      progressionBefore,
+      `${label}: 완료 ID 외 progression은 바뀌면 안 된다.`,
+    );
+  } else {
+    assert.deepEqual(
+      progressionAfter,
+      progressionBefore,
+      `${label}: 대화만으로 progression이 바뀌면 안 된다.`,
+    );
+  }
   return Object.freeze(lines);
 }
 
@@ -616,6 +635,7 @@ function verifyFirstJourneyStoryChain() {
     interactionId: 'mentor-sera-interaction',
     speaker: '세라 교관',
     label: '학원촌 귀환 반응',
+    conversationId: FIRST_JOURNEY_CONVERSATION.SERA_RETURN.id,
   });
   assert.match(returnLines.join(' '), /돌아왔군|첫 원정/);
 
@@ -639,6 +659,126 @@ function verifyFirstJourneyStoryChain() {
     { beatId: 'glasswind-briefing', journeyLabel: '첫 원정 완료' },
     '상점 실내 귀환 상태 유지',
   );
+}
+
+function createMemoryStorage() {
+  const values = new Map();
+  return Object.freeze({
+    getItem(key) {
+      return values.has(key) ? values.get(key) : null;
+    },
+    setItem(key, value) {
+      values.set(key, value);
+    },
+  });
+}
+
+function finishActiveDialogue(scene, startingSequence, label) {
+  let sequence = startingSequence;
+  while (scene.getWorldStatus().dialogue.active) {
+    const dialogue = revealCurrentLine(scene, `${label} ${sequence} reveal`);
+    sequence += 1;
+    jump(scene, sequence);
+    if (!dialogue.canAdvance) break;
+  }
+  return sequence;
+}
+
+function verifyCoreConversationTranscriptReplayPersistence() {
+  const departure = createAcademyScene(420);
+  const progressionEvents = [];
+  departure.progressionChanged.connect((snapshot) => progressionEvents.push(snapshot));
+  const departureLines = verifyNamedDialogue(departure, {
+    interactionId: 'mentor-sera-interaction',
+    speaker: '세라 교관',
+    label: '첫 원정 출정 핵심 대화',
+    conversationId: FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.id,
+  });
+  assert.deepEqual(departureLines, FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.lines);
+  assert.equal(
+    progressionEvents.length,
+    1,
+    '핵심 대화 완료는 durable snapshot을 한 번 내보내야 한다.',
+  );
+
+  const returned = createJourneyScene({
+    roomId: 'academy-plaza',
+    x: 420,
+    viewedConversationIds: departure.getProgressionSnapshot().viewedConversationIds,
+    firstJourney: {
+      phase: JOURNEY_PHASE.RETURNED,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    },
+  });
+  const returnedBefore = returned.getProgressionSnapshot();
+  const started = jump(returned, 1).after;
+  assert.equal(started.conversationId, FIRST_JOURNEY_CONVERSATION.SERA_RETURN.id);
+  assert.equal(started.title, FIRST_JOURNEY_CONVERSATION.SERA_RETURN.title);
+  assert.deepEqual(started.line, FIRST_JOURNEY_CONVERSATION.SERA_RETURN.lines[0]);
+  const replayCommand = started.commands.find((command) => command.type === 'replay-transcript');
+  assert.ok(replayCommand, '귀환 반응에서 완료한 출정 대화 replay command가 보여야 한다.');
+  assert.equal(replayCommand.transcriptId, FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.id);
+  assert.equal(replayCommand.canChoose, true);
+  assert.match(replayCommand.label, /첫 원정 출정 수업/);
+
+  const replay = returned.executeDialogueCommand(started.interactionId, replayCommand.id);
+  assert.equal(replay.reason, 'replay-started');
+  assert.ok(Object.isFrozen(replay.transcript));
+  const transcript = returned.getWorldStatus().dialogue;
+  assert.equal(transcript.mode, 'transcript');
+  assert.equal(transcript.conversationId, FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.id);
+  assert.equal(transcript.title, FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.title);
+  assert.equal(transcript.line, FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.lines[0]);
+  assert.deepEqual(transcript.commands, []);
+  let sequence = finishActiveDialogue(returned, 1, '출정 transcript replay');
+  assert.deepEqual(
+    returned.getProgressionSnapshot(),
+    returnedBefore,
+    'transcript replay 자체는 progression을 다시 쓰면 안 된다.',
+  );
+
+  const restarted = jump(returned, sequence + 1).after;
+  sequence += 1;
+  assert.equal(restarted.mode, 'current');
+  assert.equal(restarted.conversationId, FIRST_JOURNEY_CONVERSATION.SERA_RETURN.id);
+  finishActiveDialogue(returned, sequence, '귀환 핵심 대화');
+  const completed = returned.getProgressionSnapshot();
+  assert.deepEqual(completed.viewedConversationIds, [
+    FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.id,
+    FIRST_JOURNEY_CONVERSATION.SERA_RETURN.id,
+  ]);
+
+  const memory = createMemoryStorage();
+  const storage = new ProgressionStorage(memory, 'story-transcript-v7', ENCHANTMENT_CATALOG);
+  assert.equal(storage.save(completed).ok, true);
+  const loaded = storage.load(
+    DEFAULT_EQUIPMENT_PROFILE_ID,
+    [DEFAULT_EQUIPMENT_PROFILE_ID],
+    ENCHANTMENT_CATALOG,
+  );
+  assert.equal(loaded.ok, true);
+  assert.equal(loaded.kind, 'loaded');
+  assert.deepEqual(loaded.snapshot.viewedConversationIds, completed.viewedConversationIds);
+
+  const legacyRecord = JSON.parse(memory.getItem('story-transcript-v7'));
+  legacyRecord.version = 6;
+  delete legacyRecord.viewedConversationIds;
+  memory.setItem('story-transcript-v6', JSON.stringify(legacyRecord));
+  const migrated = new ProgressionStorage(memory, 'story-transcript-v6', ENCHANTMENT_CATALOG).load(
+    DEFAULT_EQUIPMENT_PROFILE_ID,
+    [DEFAULT_EQUIPMENT_PROFILE_ID],
+    ENCHANTMENT_CATALOG,
+  );
+  assert.equal(migrated.ok, true);
+  assert.equal(migrated.kind, 'migrated');
+  assert.deepEqual(migrated.snapshot.viewedConversationIds, []);
 }
 
 function verifyStaleDialogueConsumesOneJump() {
@@ -683,6 +823,7 @@ verifyDialoguePresentationSafeBounds();
 verifyDialogueBubbleActiveLifetime();
 verifyKeyboardTouchParity();
 verifyFirstJourneyStoryChain();
+verifyCoreConversationTranscriptReplayPersistence();
 verifyStaleDialogueConsumesOneJump();
 
 console.log(
@@ -705,6 +846,9 @@ console.log(
         'first-journey-stage-dialogue-matrix',
         'locked-and-obsolete-targets',
         'story-objective-journey-label-alignment',
+        'progression-owned-core-conversation-completion',
+        'current-reaction-independent-transcript-replay',
+        'viewed-conversation-v7-round-trip-and-v6-migration',
         'stale-target-single-jump-consumption',
         'journey-portal-availability-regression',
       ],

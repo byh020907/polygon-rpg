@@ -1,5 +1,58 @@
 const ACADEMY_ROOM_ID = 'academy-plaza';
 
+function conversation({ id, title, interactionId, speaker, lines }) {
+  return Object.freeze({
+    id,
+    title,
+    interactionId,
+    speaker,
+    lines: Object.freeze([...lines]),
+  });
+}
+
+export const FIRST_JOURNEY_CONVERSATION = Object.freeze({
+  SERA_DEPARTURE: conversation({
+    id: 'sera-first-journey-departure',
+    title: '첫 원정 출정 수업',
+    interactionId: 'mentor-sera-interaction',
+    speaker: '세라 교관',
+    lines: [
+      '마법이 없어도 발과 방패, 검을 내는 순간은 네가 고를 수 있어.',
+      '황금 문 너머 실습림에서 Guard와 Roll의 차이를 증명해 봐.',
+    ],
+  }),
+  SERA_RETURN: conversation({
+    id: 'sera-first-journey-return',
+    title: '첫 원정 귀환 보고',
+    interactionId: 'mentor-sera-interaction',
+    speaker: '세라 교관',
+    lines: [
+      '돌아왔군. 봉인 핵의 증표가 네 첫 원정을 끝까지 증명하고 있어.',
+      'Guard와 Roll만으로 길을 고르고 checkpoint를 세운 판단까지, 모두 네 전투의 일부다.',
+    ],
+  }),
+});
+
+const FIRST_JOURNEY_CONVERSATIONS_BY_ID = Object.freeze(
+  Object.fromEntries(
+    Object.values(FIRST_JOURNEY_CONVERSATION).map((candidate) => [candidate.id, candidate]),
+  ),
+);
+
+export function resolveFirstJourneyConversationTranscripts(
+  viewedConversationIds,
+  interactionId = null,
+) {
+  if (!Array.isArray(viewedConversationIds)) return Object.freeze([]);
+  return Object.freeze(
+    viewedConversationIds
+      .map((conversationId) => FIRST_JOURNEY_CONVERSATIONS_BY_ID[conversationId])
+      .filter(
+        (candidate) => candidate && (!interactionId || candidate.interactionId === interactionId),
+      ),
+  );
+}
+
 export const FIRST_JOURNEY_STORY_BEAT = Object.freeze({
   ACADEMY_BRIEFING: 'academy-briefing',
   ACADEMY_TRAINING: 'academy-training',

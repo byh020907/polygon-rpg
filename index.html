@@ -375,7 +375,9 @@
               aria-describedby="dialogue-accessible-line dialogue-prompt"
             >
               <header>
-                <small>DIALOGUE</small>
+                <small
+                  x-text="dialogue.mode === 'transcript' ? `TRANSCRIPT · ${dialogue.title}` : 'DIALOGUE'"
+                ></small>
                 <strong id="dialogue-speaker" x-text="dialogue.speaker"></strong>
               </header>
               <p id="dialogue-visible-line" aria-hidden="true" x-text="dialogue.visibleLine"></p>
@@ -384,7 +386,9 @@
                 x-show="dialogue.commands.length > 0"
                 x-bind:aria-label="`${dialogue.speaker} 대화 선택`"
               >
-                <p>
+                <p
+                  x-show="dialogue.commands.some((command) => command.type !== 'replay-transcript')"
+                >
                   <strong
                     x-text="`현재 검 · ${selectedEquipmentLabel} · ${activeEnchantLabel}`"
                   ></strong>

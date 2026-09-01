@@ -427,6 +427,31 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedDialogueSpeaker: '세라 교관',
     }),
   }),
+  'academy-transcript': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'academy-plaza',
+    x: 420,
+    dialogueScenarioId: 'mentor-sera-interaction',
+    progressionSnapshot: Object.freeze({
+      viewedConversationIds: Object.freeze(['sera-first-journey-departure']),
+    }),
+    firstJourneySnapshot: Object.freeze({
+      phase: 'returned',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+    }),
+    expectation: Object.freeze({
+      expectedDialogueTarget: 'mentor-sera-interaction',
+      expectedDialogueSpeaker: '세라 교관',
+      expectedPatchIds: Object.freeze(['first-journey-returned-with-reward']),
+    }),
+  }),
   training: Object.freeze({ regionId: 'academy-region', roomId: 'training-room', x: 360 }),
   field: Object.freeze({ regionId: 'academy-region', roomId: 'field-crossing', x: 420 }),
   'field-space-day': Object.freeze({

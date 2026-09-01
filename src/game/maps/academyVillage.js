@@ -16,6 +16,7 @@ import {
   GLASSWIND_PORTALS,
   GLASSWIND_REGION,
 } from './glasswindRegion.js';
+import { FIRST_JOURNEY_CONVERSATION } from '../story/FirstJourneyStory.js';
 
 const DAY_PALETTE = Object.freeze({
   background: '#18333b',
@@ -912,11 +913,10 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
               kind: 'story-interaction',
               position: { x: 488, y: 350 },
               interactionRange: 112,
-              speaker: '세라 교관',
-              lines: [
-                '마법이 없어도 발과 방패, 검을 내는 순간은 네가 고를 수 있어.',
-                '황금 문 너머 실습림에서 Guard와 Roll의 차이를 증명해 봐.',
-              ],
+              speaker: FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.speaker,
+              conversationId: FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.id,
+              conversationTitle: FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.title,
+              lines: FIRST_JOURNEY_CONVERSATION.SERA_DEPARTURE.lines,
             },
           ],
           triggers: [],
@@ -1166,10 +1166,19 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
           op: 'set',
           target: 'mentor-sera-interaction',
           property: 'lines',
-          value: [
-            '돌아왔군. 봉인 핵의 증표가 네 첫 원정을 끝까지 증명하고 있어.',
-            'Guard와 Roll만으로 길을 고르고 checkpoint를 세운 판단까지, 모두 네 전투의 일부다.',
-          ],
+          value: FIRST_JOURNEY_CONVERSATION.SERA_RETURN.lines,
+        },
+        {
+          op: 'set',
+          target: 'mentor-sera-interaction',
+          property: 'conversationId',
+          value: FIRST_JOURNEY_CONVERSATION.SERA_RETURN.id,
+        },
+        {
+          op: 'set',
+          target: 'mentor-sera-interaction',
+          property: 'conversationTitle',
+          value: FIRST_JOURNEY_CONVERSATION.SERA_RETURN.title,
         },
       ],
     },
