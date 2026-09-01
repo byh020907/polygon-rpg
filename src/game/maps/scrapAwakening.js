@@ -34,6 +34,17 @@ export const SCRAP_SHIPYARD_FACILITY_CONVERSATION_ID = 'harbor-shipyard:facility
 export const SCRAP_SHIPYARD_REPLACEMENT_CONVERSATION_ID = 'harbor-shipyard:replacement-complete';
 export const SCRAP_SHIPYARD_SEPARATION_CONVERSATION_ID = 'harbor-shipyard:machine-separated';
 export const SCRAP_SHIPYARD_PART_CONVERSATION_ID = 'harbor-shipyard:part-claimed';
+export const SCRAP_GREENHOUSE_ROAD_PORTAL_ID = 'scrapyard-greenhouse-plains-road';
+export const SCRAP_GREENHOUSE_REGION_ID = 'greenhouse-plains';
+export const SCRAP_GREENHOUSE_ROAD_ROOM_ID = 'greenhouse-plains-roadhead';
+export const SCRAP_GREENHOUSE_PIPE_ROOM_ID = 'greenhouse-plains-broken-pipeline';
+export const SCRAP_GREENHOUSE_REACTOR_ROOM_ID = 'greenhouse-plains-reactor-house';
+export const SCRAP_GREENHOUSE_TECHNICIAN_CONVERSATION_ID = 'greenhouse-plains:technician-briefing';
+export const SCRAP_GREENHOUSE_FACILITY_CONVERSATION_ID = 'greenhouse-plains:facility-observed';
+export const SCRAP_GREENHOUSE_REPLACEMENT_CONVERSATION_ID =
+  'greenhouse-plains:replacement-complete';
+export const SCRAP_GREENHOUSE_SEPARATION_CONVERSATION_ID = 'greenhouse-plains:machine-separated';
+export const SCRAP_GREENHOUSE_PART_CONVERSATION_ID = 'greenhouse-plains:part-claimed';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -374,8 +385,46 @@ const renderItems = [
     lineWidth: 3,
     order: 27,
     enabled: false,
-    label: 'ROBOT 40% · 2/5 PARTS · 다리+팔',
+    label: 'ROBOT 40% · 2/5 PARTS',
     role: 'completion-forty',
+  }),
+  item('garage-robot-reactor-core', polygon(482, 318, 22, 28, 8, Math.PI / 8), '#9bd66b', {
+    stroke: '#425329',
+    lineWidth: 4,
+    order: 27,
+    enabled: false,
+    label: '구형 고출력 동력로 · 주 동력원 모듈',
+    role: 'arcane-reactor-module',
+  }),
+  item('garage-robot-reactor-pipe-left', rectangle(451, 306, 12, 48), '#b9a363', {
+    stroke: '#4d4527',
+    lineWidth: 3,
+    order: 26,
+    enabled: false,
+    role: 'reactor-geothermal-pipe',
+  }),
+  item('garage-robot-reactor-pipe-right', rectangle(501, 306, 12, 48), '#b9a363', {
+    stroke: '#4d4527',
+    lineWidth: 3,
+    order: 26,
+    enabled: false,
+    role: 'reactor-geothermal-pipe',
+  }),
+  item('garage-robot-reactor-twenty-label', rectangle(424, 190, 116, 16), '#9bd66b', {
+    stroke: '#425329',
+    lineWidth: 2,
+    order: 28,
+    enabled: false,
+    label: 'ROBOT 20% · 1/5 PARTS · 동력원',
+    role: 'completion-twenty',
+  }),
+  item('garage-robot-sixty-label', rectangle(416, 182, 132, 24), '#bde47e', {
+    stroke: '#425329',
+    lineWidth: 3,
+    order: 29,
+    enabled: false,
+    label: 'ROBOT 60% · 3/5 PARTS · 다리+팔+동력원',
+    role: 'completion-sixty',
   }),
   item('wreck-hull-lower', polygon(986, 374, 206, 72, 10, Math.PI / 10), '#504d49', {
     stroke: '#252729',
@@ -511,6 +560,19 @@ const renderItems = [
     order: 28,
     enabled: false,
     label: '항구 조선소 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  ...createEnvironmentPortalLandmarkItems('scrapyard-greenhouse-road-gate', 1200, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 30,
+  }),
+  item('scrapyard-greenhouse-road-sign', rectangle(1136, 314, 128, 48), '#648347', {
+    stroke: '#2b3d20',
+    lineWidth: 3,
+    order: 32,
+    enabled: false,
+    label: '온실 평원 연결로 · 1구간',
     role: 'long-distance-road-sign',
   }),
 ];
@@ -1023,6 +1085,234 @@ const shipyardCraneRenderItems = [
   }),
 ];
 
+const greenhouseRoadheadRenderItems = [
+  item('greenhouse-roadhead-sky', rectangle(0, 0, 1440, 426), '#253d35', {
+    stroke: '#10221c',
+    order: -100,
+    label: '유리 온실이 이어진 평원',
+  }),
+  item('greenhouse-roadhead-ground', rectangle(0, 426, 1440, 114), '#4a5135', {
+    stroke: '#202519',
+    order: 0,
+  }),
+  item('greenhouse-roadhead-road', rectangle(0, 438, 1440, 30), '#6e7550', {
+    stroke: '#2d3222',
+    order: 1,
+  }),
+  item(
+    'greenhouse-glasshouse-shell',
+    [
+      { x: 880, y: 426 },
+      { x: 920, y: 272 },
+      { x: 1080, y: 214 },
+      { x: 1240, y: 272 },
+      { x: 1280, y: 426 },
+    ],
+    '#6e9e7d',
+    {
+      stroke: '#b5d7a4',
+      lineWidth: 5,
+      opacity: 0.72,
+      order: 8,
+      label: '작물 난방이 멈춘 대형 온실',
+      role: 'greenhouse-facility',
+    },
+  ),
+  ...createEnvironmentPortalLandmarkItems('greenhouse-roadhead-return-gate', 68, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 22,
+  }),
+  item('greenhouse-roadhead-return-sign', rectangle(18, 320, 118, 42), '#648347', {
+    stroke: '#2b3d20',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '동네 고물상 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  item('greenhouse-technician-vest', rectangle(596, 330, 32, 96), '#426052', {
+    stroke: '#1a2b24',
+    lineWidth: 3,
+    order: 18,
+    label: '온실 기술자 · 필터 조끼',
+    role: 'greenhouse-technician',
+  }),
+  item('greenhouse-technician-visor', rectangle(598, 312, 28, 10), '#7fcf7a', {
+    stroke: '#294829',
+    lineWidth: 2,
+    order: 20,
+    role: 'pressure-visor',
+  }),
+  item(
+    'greenhouse-technician-sensor',
+    [
+      { x: 626, y: 348 },
+      { x: 633, y: 346 },
+      { x: 656, y: 410 },
+      { x: 649, y: 412 },
+    ],
+    '#b9f1ce',
+    { stroke: '#294829', lineWidth: 2, order: 20, role: 'geothermal-sensor' },
+  ),
+  item('greenhouse-pressure-board', rectangle(790, 326, 86, 100), '#657047', {
+    stroke: '#29301e',
+    lineWidth: 4,
+    order: 16,
+    label: '지열 배관 압력·파손 현황판',
+    role: 'facility-status',
+  }),
+  item('greenhouse-pressure-warning', rectangle(805, 342, 56, 14), '#d98356', {
+    stroke: '#552d20',
+    lineWidth: 2,
+    order: 17,
+    role: 'facility-warning-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('greenhouse-pipeline-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('greenhouse-pipeline-sign', rectangle(1268, 314, 136, 48), '#648347', {
+    stroke: '#2b3d20',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '파열 지열 배관 · 지역 내 이동 무료',
+    role: 'local-greenhouse-route',
+  }),
+];
+
+const greenhousePipelineRenderItems = [
+  item('greenhouse-pipeline-backdrop', rectangle(0, 0, 1440, 540), '#1c3028', {
+    stroke: '#0d1713',
+    order: -100,
+    label: '파열된 온실 지열 배관 구역',
+  }),
+  item('greenhouse-pipeline-ground', rectangle(0, 426, 1440, 114), '#414a32', {
+    stroke: '#1a1f14',
+    order: 0,
+  }),
+  item('greenhouse-pipeline-header', rectangle(180, 142, 1080, 28), '#9d8955', {
+    stroke: '#453b24',
+    lineWidth: 4,
+    order: 6,
+    label: '온실 지열 주 배관',
+    role: 'geothermal-pipe',
+  }),
+  item('greenhouse-pipeline-rupture-left', rectangle(600, 164, 20, 138), '#4a3b2b', {
+    stroke: '#d98356',
+    lineWidth: 3,
+    order: 8,
+    label: '파열 배관',
+    role: 'ruptured-pipe',
+  }),
+  item('greenhouse-pipeline-steam-signal', polygon(610, 304, 58, 34, 10), '#d8f0cf', {
+    stroke: '#9bd66b',
+    lineWidth: 2,
+    opacity: 0.48,
+    order: 10,
+    role: 'steam-leak',
+  }),
+  ...createEnvironmentPortalLandmarkItems('greenhouse-pipeline-roadhead-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+  ...createEnvironmentPortalLandmarkItems('greenhouse-pipeline-reactor-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('greenhouse-reactor-house-sign', rectangle(1268, 314, 136, 48), '#648347', {
+    stroke: '#2b3d20',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '구형 동력로실 · Boss',
+    role: 'boss-route-sign',
+  }),
+];
+
+const greenhouseReactorRenderItems = [
+  item('greenhouse-reactor-backdrop', rectangle(0, 0, 1440, 540), '#223228', {
+    stroke: '#0e1711',
+    order: -100,
+    label: '구형 고출력 동력로실',
+  }),
+  item('greenhouse-reactor-ground', rectangle(0, 426, 1440, 114), '#454c32', {
+    stroke: '#1b2015',
+    order: 0,
+  }),
+  item('greenhouse-safe-pipeline', rectangle(248, 238, 222, 30), '#b9a363', {
+    stroke: '#4d4527',
+    lineWidth: 4,
+    order: 12,
+    enabled: false,
+    label: '복구된 저압 지열 배관 · 작물 난방 가동',
+    role: 'replacement-facility',
+  }),
+  item('greenhouse-safe-pressure-signal', rectangle(284, 214, 150, 16), '#75d6c4', {
+    stroke: '#245e5b',
+    lineWidth: 2,
+    order: 14,
+    enabled: false,
+    role: 'replacement-complete-signal',
+  }),
+  item('greenhouse-old-reactor-shell', polygon(850, 316, 112, 108, 10, Math.PI / 10), '#6f783f', {
+    stroke: '#30361f',
+    lineWidth: 5,
+    order: 14,
+    label: '구형 고출력 마력 동력로',
+    role: 'industrial-machine',
+  }),
+  item('greenhouse-old-reactor-core', polygon(850, 312, 42, 54, 8, Math.PI / 8), '#9bd66b', {
+    stroke: '#efffcf',
+    lineWidth: 4,
+    order: 16,
+    role: 'reactor-core',
+  }),
+  item('greenhouse-old-reactor-pipe-left', rectangle(720, 266, 28, 160), '#b9a363', {
+    stroke: '#4d4527',
+    lineWidth: 4,
+    order: 13,
+    role: 'geothermal-pipe',
+  }),
+  item('greenhouse-old-reactor-pipe-right', rectangle(952, 266, 28, 160), '#b9a363', {
+    stroke: '#4d4527',
+    lineWidth: 4,
+    order: 13,
+    role: 'geothermal-pipe',
+  }),
+  item('greenhouse-separated-reactor-shell', rectangle(746, 300, 208, 126), '#566041', {
+    stroke: '#29301e',
+    lineWidth: 5,
+    order: 14,
+    enabled: false,
+    label: '주 동력원이 분리된 구형 동력로',
+    role: 'machine-separated',
+  }),
+  item('greenhouse-reactor-cradle', rectangle(1036, 344, 184, 82), '#4a5738', {
+    stroke: '#222a19',
+    lineWidth: 4,
+    order: 14,
+    enabled: false,
+    label: '고출력 동력로 회수대',
+    role: 'part-ready',
+  }),
+  item('greenhouse-reactor-signal', rectangle(1052, 358, 152, 20), '#9bd66b', {
+    stroke: '#425329',
+    lineWidth: 2,
+    order: 16,
+    enabled: false,
+    label: 'ARCANE REACTOR · 회수 가능',
+    role: 'part-ready-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('greenhouse-reactor-pipeline-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+];
+
 const activatedStages = [
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
@@ -1125,7 +1415,11 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             },
           ],
           triggers: [],
-          portals: [SCRAP_MINE_ROAD_PORTAL_ID, SCRAP_SHIPYARD_ROAD_PORTAL_ID],
+          portals: [
+            SCRAP_MINE_ROAD_PORTAL_ID,
+            SCRAP_SHIPYARD_ROAD_PORTAL_ID,
+            SCRAP_GREENHOUSE_ROAD_PORTAL_ID,
+          ],
         },
       ],
     },
@@ -1495,6 +1789,189 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         },
       ],
     },
+    {
+      id: SCRAP_GREENHOUSE_REGION_ID,
+      label: '온실 평원',
+      rooms: [
+        {
+          id: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+          label: '온실 평원 · 연결로 진입부',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'greenhouse-roadhead-ground-surface',
+              kind: 'solid',
+              material: 'greenhouse-packed-road',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: greenhouseRoadheadRenderItems,
+          entities: [
+            {
+              id: 'greenhouse-technician-briefing',
+              kind: 'story-interaction',
+              position: { x: 612, y: 354 },
+              interactionRange: 84,
+              speaker: '온실 기술자',
+              conversationId: SCRAP_GREENHOUSE_TECHNICIAN_CONVERSATION_ID,
+              conversationTitle: '파열된 지열 설비 복구 요청',
+              lines: [
+                '주 배관이 터져 온실 작물 난방이 멈췄어. 기생 기계가 압력선을 뜯어 먹고 있고.',
+                '안전한 저압 배관을 연결하면 불안정한 구형 고출력 동력로를 완전히 떼어낼 수 있어.',
+                '오른쪽 압력판에서 파손 범위와 복구 시간을 먼저 확인해 줘.',
+              ],
+              presentationProfileId: 'greenhouse-technician',
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: 'greenhouse-facility-inspection',
+              kind: 'story-interaction',
+              position: { x: 832, y: 354 },
+              interactionRange: 78,
+              speaker: '온실 지열 압력 현황판',
+              conversationId: SCRAP_GREENHOUSE_FACILITY_CONVERSATION_ID,
+              conversationTitle: '배관 파손과 복구 시간 확인',
+              lines: [
+                '기생 기계 제거, 압력선 확보, 조절기 제압과 안전한 저압 지열 배관 복구까지 18구간 예상.',
+                '성공하면 고철 대왕은 과열 평원을 우회해 수도 도착이 4일 늦어진다.',
+              ],
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'facility-observed',
+              requestCampaignEventStart: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: [SCRAP_GREENHOUSE_ROAD_PORTAL_ID, 'greenhouse-roadhead-pipeline-portal'],
+        },
+        {
+          id: SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+          label: '온실 평원 · 파열 지열 배관',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'greenhouse-pipeline-ground-surface',
+              kind: 'solid',
+              material: 'ruptured-geothermal-pipeline',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: greenhousePipelineRenderItems,
+          entities: [
+            {
+              id: 'greenhouse-pipe-parasite',
+              kind: 'combat-enemy',
+              encounterProfileId: 'greenhouse-pipe-parasite',
+              position: { x: 808, y: 426 },
+              maxHealth: 88,
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'journey-combat',
+            },
+          ],
+          triggers: [],
+          portals: ['greenhouse-roadhead-pipeline-portal', 'greenhouse-pipeline-reactor-portal'],
+        },
+        {
+          id: SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+          label: '온실 평원 · 구형 고출력 동력로실',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'greenhouse-reactor-ground-surface',
+              kind: 'solid',
+              material: 'old-reactor-house-floor',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: greenhouseReactorRenderItems,
+          entities: [
+            {
+              id: 'greenhouse-geothermal-boss',
+              kind: 'combat-enemy',
+              encounterProfileId: 'greenhouse-geothermal-boss',
+              position: { x: 850, y: 426 },
+              maxHealth: 132,
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'boss-defeated',
+            },
+            {
+              id: 'greenhouse-safe-system-restoration',
+              kind: 'story-interaction',
+              position: { x: 360, y: 354 },
+              interactionRange: 84,
+              speaker: '온실 기술자',
+              conversationId: SCRAP_GREENHOUSE_REPLACEMENT_CONVERSATION_ID,
+              conversationTitle: '안전한 저압 지열 설비 복구',
+              lines: [
+                '기생 기계와 과열 조절기가 멈췄어. 이 저압 배관을 연결하면 온실 난방을 안전하게 돌릴 수 있어.',
+                '압력 안정. 작물 난방이 복구됐고 구형 고출력 동력로는 생활 설비에서 완전히 분리됐어.',
+              ],
+              presentationProfileId: 'greenhouse-technician',
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'replacement-complete',
+              enabled: false,
+            },
+            {
+              id: 'greenhouse-reactor-separation',
+              kind: 'story-interaction',
+              position: { x: 850, y: 354 },
+              interactionRange: 94,
+              speaker: '구형 고출력 마력 동력로',
+              conversationId: SCRAP_GREENHOUSE_SEPARATION_CONVERSATION_ID,
+              conversationTitle: '고출력 동력로 분리',
+              lines: [
+                '냉각 우회선이 가동됐다. 황동 압력 밸브와 좌우 지열 배관의 잠금핀을 해제한다.',
+                '고출력 동력로가 회수대에 고정됐다. 차고 로봇의 주 동력원으로 사용할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'machine-separated',
+              enabled: false,
+            },
+            {
+              id: 'greenhouse-reactor-part-claim',
+              kind: 'story-interaction',
+              position: { x: 1128, y: 354 },
+              interactionRange: 90,
+              speaker: '고출력 동력로 회수대',
+              conversationId: SCRAP_GREENHOUSE_PART_CONVERSATION_ID,
+              conversationTitle: '주 동력원 부품 회수',
+              lines: [
+                '구형 고출력 동력로를 확보했다. 차고 조립식 로봇의 주 동력원이 누적 조립된다.',
+                '고철 대왕은 과열 평원을 우회한다. D-DAY +4일, 다음 지역은 자유롭게 선택할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
+              campaignStageKind: 'part-claimed',
+              completeCampaignRegion: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: ['greenhouse-pipeline-reactor-portal'],
+        },
+      ],
+    },
   ],
   portals: [
     {
@@ -1621,6 +2098,71 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       to: {
         regionId: SCRAP_SHIPYARD_REGION_ID,
         roomId: SCRAP_SHIPYARD_CRANE_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: SCRAP_GREENHOUSE_ROAD_PORTAL_ID,
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_AWAKENING_REGION_ID,
+        roomId: SCRAP_AWAKENING_ROOM_ID,
+        anchor: { x: 1200, y: 426 },
+        spawn: { x: 1148, y: 350 },
+        radius: 76,
+      },
+      to: {
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 122, y: 350 },
+        radius: 76,
+      },
+      campaignTravel: {
+        routeId: 'road:neighborhood-scrapyard:greenhouse-plains',
+        fromLocationId: 'neighborhood-scrapyard',
+        toLocationId: SCRAP_GREENHOUSE_REGION_ID,
+      },
+      transition: { durationSeconds: 0.48 },
+    },
+    {
+      id: 'greenhouse-roadhead-pipeline-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        roomId: SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: 'greenhouse-pipeline-reactor-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        roomId: SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        roomId: SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
         anchor: { x: 68, y: 426 },
         spawn: { x: 126, y: 350 },
         radius: 74,
@@ -1796,6 +2338,46 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
+      id: 'scrapyard-greenhouse-road-open',
+      priority: 107,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-greenhouse-road-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-greenhouse-road-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-greenhouse-road-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'scrapyard-greenhouse-road-sign', value: true },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-roadhead-return-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-roadhead-return-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-roadhead-return-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'greenhouse-roadhead-return-sign', value: true },
+      ],
+    },
+    {
       id: 'scrapyard-walker-drive-installed',
       priority: 110,
       when: { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
@@ -1821,6 +2403,18 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
+      id: 'scrapyard-arcane-reactor-installed',
+      priority: 113,
+      when: { fact: 'scrapCollectedPartIds', includes: 'arcane-reactor' },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-core', value: true },
+        { op: 'set-enabled', target: 'garage-robot-reactor-pipe-left', value: true },
+        { op: 'set-enabled', target: 'garage-robot-reactor-pipe-right', value: true },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: true },
+      ],
+    },
+    {
       id: 'scrapyard-walker-crane-forty-percent',
       priority: 114,
       when: {
@@ -1833,6 +2427,54 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-forty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-walker-reactor-forty-percent',
+      priority: 115,
+      when: {
+        all: [
+          { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
+          { fact: 'scrapCollectedPartIds', includes: 'arcane-reactor' },
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-crane-reactor-forty-percent',
+      priority: 116,
+      when: {
+        all: [
+          { fact: 'scrapCollectedPartIds', includes: 'crane-hydraulics' },
+          { fact: 'scrapCollectedPartIds', includes: 'arcane-reactor' },
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-first-three-sixty-percent',
+      priority: 117,
+      when: {
+        all: [
+          { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
+          { fact: 'scrapCollectedPartIds', includes: 'crane-hydraulics' },
+          { fact: 'scrapCollectedPartIds', includes: 'arcane-reactor' },
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-sixty-label', value: true },
       ],
     },
     {
@@ -2124,6 +2766,152 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           target: 'shipyard-hydraulics-signal',
           property: 'label',
           value: 'CRANE HYDRAULICS · 차고 수송 완료',
+        },
+      ],
+    },
+    {
+      id: 'greenhouse-briefing-complete',
+      priority: 260,
+      when: {
+        all: [
+          {
+            fact: 'scrapRegionStageIds.greenhouse-plains',
+            in: ['greenhouse-plains:npc-briefing', 'greenhouse-plains:facility-observed'],
+          },
+          { fact: 'scrapRegionStatuses.greenhouse-plains', eq: 'available' },
+        ],
+      },
+      operations: [{ op: 'set-enabled', target: 'greenhouse-facility-inspection', value: true }],
+    },
+    {
+      id: 'greenhouse-core-event-started',
+      priority: 270,
+      when: { fact: 'scrapRegionStatuses.greenhouse-plains', in: ['in-progress', 'resolved'] },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-facility-inspection', value: false },
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_ROAD_PORTAL_ID, value: false },
+        { op: 'set-enabled', target: 'greenhouse-roadhead-pipeline-portal', value: true },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-pipeline-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-pipeline-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-pipeline-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'greenhouse-pipeline-sign', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-journey-combat-complete',
+      priority: 280,
+      when: {
+        fact: 'scrapRegionStageIds.greenhouse-plains',
+        in: [
+          'greenhouse-plains:journey-combat',
+          'greenhouse-plains:boss-defeated',
+          'greenhouse-plains:replacement-complete',
+          'greenhouse-plains:machine-separated',
+          'greenhouse-plains:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-pipe-parasite', value: false },
+        { op: 'set-enabled', target: 'greenhouse-pipeline-reactor-portal', value: true },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-pipeline-reactor-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-pipeline-reactor-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'greenhouse-pipeline-reactor-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'greenhouse-reactor-house-sign', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-boss-defeated',
+      priority: 290,
+      when: {
+        fact: 'scrapRegionStageIds.greenhouse-plains',
+        in: [
+          'greenhouse-plains:boss-defeated',
+          'greenhouse-plains:replacement-complete',
+          'greenhouse-plains:machine-separated',
+          'greenhouse-plains:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-geothermal-boss', value: false },
+        { op: 'set-enabled', target: 'greenhouse-safe-system-restoration', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-replacement-complete',
+      priority: 300,
+      when: {
+        fact: 'scrapRegionStageIds.greenhouse-plains',
+        in: [
+          'greenhouse-plains:replacement-complete',
+          'greenhouse-plains:machine-separated',
+          'greenhouse-plains:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-safe-system-restoration', value: false },
+        { op: 'set-enabled', target: 'greenhouse-safe-pipeline', value: true },
+        { op: 'set-enabled', target: 'greenhouse-safe-pressure-signal', value: true },
+        { op: 'set-enabled', target: 'greenhouse-reactor-separation', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-machine-separated',
+      priority: 310,
+      when: {
+        fact: 'scrapRegionStageIds.greenhouse-plains',
+        in: ['greenhouse-plains:machine-separated', 'greenhouse-plains:campaign-updated'],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-reactor-separation', value: false },
+        { op: 'set-enabled', target: 'greenhouse-old-reactor-shell', value: false },
+        { op: 'set-enabled', target: 'greenhouse-old-reactor-core', value: false },
+        { op: 'set-enabled', target: 'greenhouse-old-reactor-pipe-left', value: false },
+        { op: 'set-enabled', target: 'greenhouse-old-reactor-pipe-right', value: false },
+        { op: 'set-enabled', target: 'greenhouse-separated-reactor-shell', value: true },
+        { op: 'set-enabled', target: 'greenhouse-reactor-cradle', value: true },
+        { op: 'set-enabled', target: 'greenhouse-reactor-signal', value: true },
+        { op: 'set-enabled', target: 'greenhouse-reactor-part-claim', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-campaign-updated',
+      priority: 320,
+      when: {
+        fact: 'scrapRegionStageIds.greenhouse-plains',
+        eq: 'greenhouse-plains:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-reactor-part-claim', value: false },
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set',
+          target: 'greenhouse-reactor-signal',
+          property: 'label',
+          value: 'ARCANE REACTOR · 차고 수송 완료',
         },
       ],
     },

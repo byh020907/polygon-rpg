@@ -332,6 +332,35 @@ assert.equal(
   harborSuccess.regionEventStageIds['harbor-shipyard'],
   'harbor-shipyard:campaign-updated',
 );
+const greenhouseProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('greenhouse-plains');
+let greenhouseStarted = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'greenhouse-plains' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+greenhouseStarted = commit(
+  greenhouseStarted,
+  regionStageAction('greenhouse-plains', 'npc-briefing'),
+);
+greenhouseStarted = commit(
+  greenhouseStarted,
+  regionStageAction('greenhouse-plains', 'facility-observed'),
+);
+const greenhouseEventPreview = previewScrapCampaignAction(
+  greenhouseStarted,
+  regionEventStartAction('greenhouse-plains'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(greenhouseEventPreview.costSegments, 18);
+assert.equal(greenhouseEventPreview.successExtensionDays, 4);
+const greenhouseSuccess = resolveRegion(fresh, 'greenhouse-plains');
+assert.equal(greenhouseSuccess.regionStates['greenhouse-plains'], 'resolved');
+assert.equal(greenhouseSuccess.collectedPartIds.includes(greenhouseProfile.part.id), true);
+assert.equal(greenhouseSuccess.deadlineSegments, 120 - 18 + 16);
+assert.equal(greenhouseSuccess.rivalDelaySegments, 16);
+assert.equal(
+  greenhouseSuccess.regionEventStageIds['greenhouse-plains'],
+  'greenhouse-plains:campaign-updated',
+);
 for (const orderedSnapshot of [
   resolveRegion(resolveRegion(fresh, 'abandoned-mine'), 'harbor-shipyard'),
   commit(resolveRegion(fresh, 'harbor-shipyard'), convoyAction('abandoned-mine')),
@@ -344,6 +373,17 @@ for (const orderedSnapshot of [
     ['abandoned-mine', 'harbor-shipyard'],
   );
 }
+const firstThreeResolved = resolveRegion(
+  resolveRegion(resolveRegion(fresh, 'abandoned-mine'), 'harbor-shipyard'),
+  'greenhouse-plains',
+);
+const firstThreeReadModel = getScrapCampaignReadModel(firstThreeResolved, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(firstThreeReadModel.collectedPartCount, 3);
+assert.equal(firstThreeReadModel.completionPercent, 60);
+assert.deepEqual(
+  firstThreeReadModel.regions.filter((region) => region.collected).map((region) => region.id),
+  ['abandoned-mine', 'harbor-shipyard', 'greenhouse-plains'],
+);
 const versionThreeMine = { ...mineSuccess, version: 3 };
 delete versionThreeMine.regionEventStageIds;
 const migratedVersionThreeMine = toScrapCampaignSnapshot(versionThreeMine, SCRAP_CAMPAIGN_PROFILE);
@@ -475,6 +515,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'harbor-fourteen-segment-three-day-detour-and-crane-part',
       'mine-harbor-order-or-convoy-two-part-forty-percent',
+      'greenhouse-eighteen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
       'v3-region-stage-migration-to-v4',
       'rival-first-convoy-two-segment-no-extension-recovery',
       'five-part-order-independent-final-battle-unlock',

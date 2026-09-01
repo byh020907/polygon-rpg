@@ -20,6 +20,7 @@ const SCRAP_ENEMY_TOOL_KINDS = Object.freeze([
   'drill-maw',
   'conveyor-ram',
   'hydraulic-crane',
+  'geothermal-manifold',
 ]);
 
 function assertCharacterPresentationProfile(profile) {
@@ -498,6 +499,77 @@ function createScrapEnemyAppearanceItems({
           stroke: '#dfffff',
           lineWidth: 2.5,
           order: headOrder + 0.3,
+        },
+      ),
+    ];
+  }
+
+  if (toolKind === 'geothermal-manifold') {
+    const pipeLength = Math.max(weaponLength - 12, 60);
+    const rearPipeStart = { x: x - shoulderWidth + 5, y: y - 57 };
+    const rearPipeEnd = { x: x - shoulderWidth - 38, y: y - 82 };
+    return [
+      ...commonItems,
+      polygon(
+        'combat-enemy-geothermal-main-pipe',
+        [
+          { x: -9, y: -10 },
+          { x: pipeLength - 12, y: -9 },
+          { x: pipeLength + 7, y: -2 },
+          { x: pipeLength + 7, y: 8 },
+          { x: -9, y: 10 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        material,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 4,
+          order: weaponOrder + 0.24,
+        },
+      ),
+      limbSegment('combat-enemy-geothermal-rear-pipe', rearPipeStart, rearPipeEnd, 16, material, {
+        ...presentation,
+        stroke: accent,
+        lineWidth: 3,
+        order: bodyOrder - 0.1,
+      }),
+      polygon(
+        'combat-enemy-geothermal-pressure-valve',
+        regularPolygon(18, 18, 8, Math.PI / 8),
+        { x: x + shoulderWidth - 3, y: y - 53 },
+        accent,
+        {
+          ...presentation,
+          stroke: '#efffcf',
+          lineWidth: 3,
+          order: bodyOrder + 0.32,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-geothermal-steam-stack',
+        { x: x - 8, y: y - 78 },
+        { x: x - 18, y: y - 114 },
+        11,
+        plateEdge,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2.5,
+          order: headOrder + 0.18,
+        },
+      ),
+      polygon(
+        'combat-enemy-geothermal-steam-warning',
+        regularPolygon(headRadius + 6, Math.max(7, headRadius), 10, Math.PI / 10),
+        { x: x - 18, y: y - 120 },
+        '#d8f0cf',
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2,
+          opacity: 0.72,
+          order: headOrder + 0.28,
         },
       ),
     ];

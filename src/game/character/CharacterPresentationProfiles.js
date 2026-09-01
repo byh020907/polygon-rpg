@@ -161,6 +161,19 @@ const RAW_PROFILES = [
     landmarks: ['좌우 유압 붐', '청록 도장강 기둥', '굵은 교차 유압 케이블'],
     representativePose: '한쪽 붐을 뒤로 당기고 다른 붐의 압착 범위를 케이블 장력으로 예고하는 자세',
   },
+  {
+    id: 'greenhouse-geothermal-boss',
+    label: '과열 지열 조절기',
+    roleLabel: '온실 평원 Boss',
+    family: 'machine',
+    accent: '#9bd66b',
+    material: '#6f783f',
+    toolKind: 'geothermal-manifold',
+    minimumViewportHeight: 90,
+    proportions: { shoulder: 35, hip: 26, head: 7, sideDepth: 21 },
+    landmarks: ['황동 압력 밸브', '좌우 지열 배관', '과열 증기 배출관'],
+    representativePose: '한쪽 배관을 들어 증기 분출선을 예고하고 압력 밸브를 노출하는 자세',
+  },
 ];
 
 function validateProfile(profile) {

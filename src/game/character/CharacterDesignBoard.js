@@ -360,6 +360,35 @@ function toolItems(profile, view, toolBaseX, toolBaseY, action, order) {
       ),
     ];
   }
+  if (profile.toolKind === 'geothermal-manifold') {
+    return [
+      item(
+        id,
+        [
+          { x: toolBaseX - 8, y: toolBaseY + 4 },
+          { x: toolBaseX + 10, y: toolBaseY - (action ? 9 : 2) },
+          { x: toolBaseX + 30, y: toolBaseY + 2 },
+          { x: toolBaseX + 28, y: toolBaseY + 10 },
+          { x: toolBaseX + 7, y: toolBaseY + 7 },
+          { x: toolBaseX - 5, y: toolBaseY + 14 },
+        ],
+        profile.material,
+        { stroke: accent, order },
+      ),
+      item(
+        `${id}-pressure-valve`,
+        octagon(toolBaseX + 10, toolBaseY - (action ? 10 : 2), 7, 7),
+        accent,
+        { stroke: '#efffcf', order: order + 1 },
+      ),
+      item(
+        `${id}-steam-stack`,
+        slantedBar(toolBaseX - 7, toolBaseY + 2, 24, 5, action ? 12 : 4),
+        '#b6caa3',
+        { stroke: accent, order: order - 1 },
+      ),
+    ];
+  }
   return [
     item(
       id,

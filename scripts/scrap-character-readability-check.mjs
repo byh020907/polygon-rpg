@@ -9,7 +9,7 @@ import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
-assert.equal(profiles.length, 12);
+assert.equal(profiles.length, 13);
 assert.equal(new Set(profiles.map((profile) => profile.id)).size, profiles.length);
 assert.deepEqual(CHARACTER_PRESENTATION_PROFILE.comparisonViews, [
   'front',
@@ -34,6 +34,7 @@ const requiredRoleIds = [
   'regional-boss',
   'mine-collapse-boss',
   'shipyard-twin-crane-boss',
+  'greenhouse-geothermal-boss',
 ];
 assert.deepEqual(
   profiles.map((profile) => profile.id),
@@ -199,6 +200,13 @@ for (const scenario of [
     profileId: 'shipyard-twin-crane-boss',
     landmarkId: 'combat-enemy-hydraulic-crane-boom',
   },
+  {
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    regionId: 'greenhouse-plains',
+    roomId: 'greenhouse-plains-reactor-house',
+    profileId: 'greenhouse-geothermal-boss',
+    landmarkId: 'combat-enemy-geothermal-main-pipe',
+  },
 ]) {
   const scenarioScene = createTestGameScene({
     mapDefinition: scenario.mapDefinition ?? ACADEMY_VILLAGE_MAP,
@@ -247,6 +255,7 @@ process.stdout.write(
       'composition-injected-player-and-encounter-profile-ids',
       'actual-gameplay-scrap-landmarks-without-fantasy-fallback',
       'shipyard-worker-and-twin-crane-boss-distinct-job-machine-silhouettes',
+      'greenhouse-technician-and-geothermal-boss-distinct-job-machine-silhouettes',
       'renderer-read-only-presentation-items-and-combat-geometry-preserved',
     ],
   })}\n`,

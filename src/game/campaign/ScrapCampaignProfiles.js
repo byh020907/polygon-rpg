@@ -105,8 +105,23 @@ const regions = [
     label: '온실 평원',
     route: { travelSegments: 1, rivalArrivalSegment: 40 },
     event: { costSegments: 18, extensionSegments: 16, label: '지열 설비 복구와 구형 동력로 분리' },
-    eventStages: eventStages('greenhouse-plains'),
-    objectives: {},
+    eventStages: eventStages('greenhouse-plains', {
+      'npc-briefing': '오른쪽 지열 압력판에서 파손 범위, 18구간 비용과 성공 연장을 확인하세요.',
+      'facility-observed':
+        '파열된 온실 배관 구역으로 들어가 기생 기계를 제거하고 복구선을 확보하세요.',
+      'journey-combat': '복구선을 따라 구형 동력로실로 이동해 과열 조절기 Boss를 제압하세요.',
+      'boss-defeated': '온실 기술자와 안전한 저압 지열 배관을 연결해 작물 난방을 복구하세요.',
+      'replacement-complete': '구형 고출력 동력로를 냉각하고 주 동력원을 분리하세요.',
+      'machine-separated': '동력로실 회수대에서 고출력 동력로를 수령하세요.',
+      'part-claimed': '고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.',
+      'campaign-updated': '고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.',
+    }),
+    objectives: {
+      arrival: '온실 기술자에게 지열 배관 파열과 작물 난방 상황을 들으세요.',
+      eventStart: '핵심 사건을 확정해 18구간 지열 설비 복구를 시작하세요.',
+      resolved:
+        '고출력 동력로 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 누적 조립 상태를 확인하세요.',
+    },
     mapPatches: mapPatches('greenhouse-plains'),
     machineLabel: '구형 고출력 마력 동력로',
     part: { id: 'arcane-reactor', label: '고출력 동력로', robotModule: '주 동력원' },

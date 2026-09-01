@@ -16,6 +16,11 @@ import {
   SCRAP_SHIPYARD_ROAD_ROOM_ID,
   SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
   SCRAP_SHIPYARD_CRANE_ROOM_ID,
+  SCRAP_GREENHOUSE_ROAD_PORTAL_ID,
+  SCRAP_GREENHOUSE_REGION_ID,
+  SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+  SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -774,6 +779,243 @@ assert.deepEqual(
   '완료 reload의 반복 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
 );
 
+const greenhouseFlowScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedShipyardProgression,
+});
+let greenhouseJumpSequence = 2_000;
+let greenhouseCampaignRequest = null;
+greenhouseFlowScene.campaignActionPreviewRequested.connect((request) => {
+  greenhouseCampaignRequest = request;
+});
+assert.equal(
+  greenhouseFlowScene.mapRuntime.getActiveLocation().roomId,
+  SCRAP_SHIPYARD_ROAD_ROOM_ID,
+);
+setAtPortalToRoom(greenhouseFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, SCRAP_AWAKENING_ROOM_ID);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+greenhouseJumpSequence += 1;
+assert.equal(greenhouseCampaignRequest?.preview.targetLocationLabel, '동네 고물상');
+assert.equal(greenhouseFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(greenhouseFlowScene);
+
+greenhouseCampaignRequest = null;
+setAtPortalToRoom(greenhouseFlowScene, SCRAP_AWAKENING_ROOM_ID, SCRAP_GREENHOUSE_ROAD_ROOM_ID);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+greenhouseJumpSequence += 1;
+assert.equal(greenhouseCampaignRequest?.portalId, SCRAP_GREENHOUSE_ROAD_PORTAL_ID);
+assert.equal(greenhouseCampaignRequest?.preview.targetLocationLabel, '온실 평원');
+assert.equal(greenhouseCampaignRequest?.preview.costSegments, 1);
+assert.equal(greenhouseFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(greenhouseFlowScene);
+assert.deepEqual(greenhouseFlowScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+});
+assert.equal(greenhouseFlowScene.getWorldStatus().campaign.currentLocationId, 'greenhouse-plains');
+assert.match(greenhouseFlowScene.getWorldStatus().objective, /온실 기술자/);
+assert.doesNotMatch(
+  `${greenhouseFlowScene.getWorldStatus().story.title} ${greenhouseFlowScene.getWorldStatus().objective}`,
+  /학원|교관|마법 생물/,
+);
+
+setAtCampaignInteraction(greenhouseFlowScene, SCRAP_GREENHOUSE_ROAD_ROOM_ID, 'npc-briefing');
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+let greenhouseRegion = greenhouseFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
+assert.equal(greenhouseRegion.eventStageKind, 'npc-briefing');
+assert.match(greenhouseFlowScene.getWorldStatus().objective, /18구간/);
+
+setAtCampaignInteraction(greenhouseFlowScene, SCRAP_GREENHOUSE_ROAD_ROOM_ID, 'facility-observed');
+const beforeGreenhouseEvent = greenhouseFlowScene.getProgressionSnapshot().scrapCampaign;
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+assert.equal(greenhouseCampaignRequest?.source, 'region-core-event');
+assert.equal(greenhouseCampaignRequest?.preview.costSegments, 18);
+assert.equal(greenhouseCampaignRequest?.preview.successExtensionDays, 4);
+assert.equal(
+  greenhouseFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
+  beforeGreenhouseEvent.elapsedSegments,
+  '온실 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
+);
+assert.equal(greenhouseFlowScene.cancelScrapCampaignAction().cancelled, true);
+
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+assert.equal(greenhouseFlowScene.confirmScrapCampaignAction().started, true);
+greenhouseRegion = greenhouseFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
+assert.equal(greenhouseRegion.status, 'in-progress');
+assert.equal(greenhouseFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(greenhouseFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-24');
+
+setAtPortalToRoom(
+  greenhouseFlowScene,
+  SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+greenhouseJumpSequence += 1;
+finishPortalTransition(greenhouseFlowScene);
+assert.equal(
+  greenhouseFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'greenhouse-pipe-parasite',
+);
+greenhouseFlowScene.enterTree();
+greenhouseFlowScene.roomSceneNode.encounter.completeForVisualQa();
+greenhouseRegion = greenhouseFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
+assert.equal(greenhouseRegion.eventStageKind, 'journey-combat');
+const greenhouseMidReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: greenhouseFlowScene.getProgressionSnapshot(),
+});
+greenhouseMidReload.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+  x: 808,
+});
+assert.equal(
+  greenhouseMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'greenhouse-pipe-parasite'),
+  false,
+  '지열 배관 전투 완료 reload는 기생 기계를 되살리면 안 됩니다.',
+);
+assert.ok(
+  greenhouseMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .portals.some((portal) => portal.to.roomId === SCRAP_GREENHOUSE_REACTOR_ROOM_ID),
+);
+
+setAtPortalToRoom(
+  greenhouseFlowScene,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+  SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+greenhouseJumpSequence += 1;
+finishPortalTransition(greenhouseFlowScene);
+const greenhouseBoss = greenhouseFlowScene.roomSceneNode.getEncounterGameplaySnapshot();
+assert.equal(greenhouseBoss.profileId, 'greenhouse-geothermal-boss');
+assert.equal(greenhouseBoss.presentationProfileId, 'greenhouse-geothermal-boss');
+assert.match(greenhouseBoss.weakPoint.label, /압력|밸브|배관/);
+greenhouseFlowScene.roomSceneNode.encounter.completeForVisualQa();
+
+setAtCampaignInteraction(
+  greenhouseFlowScene,
+  SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+  'replacement-complete',
+);
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-safe-pipeline'));
+setAtCampaignInteraction(
+  greenhouseFlowScene,
+  SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+  'machine-separated',
+);
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-reactor-signal'));
+setAtCampaignInteraction(greenhouseFlowScene, SCRAP_GREENHOUSE_REACTOR_ROOM_ID, 'part-claimed');
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+
+const greenhouseCompleteCampaign = greenhouseFlowScene.getWorldStatus().campaign;
+greenhouseRegion = greenhouseCompleteCampaign.regions.find(
+  (region) => region.id === SCRAP_GREENHOUSE_REGION_ID,
+);
+assert.equal(greenhouseRegion.status, 'resolved');
+assert.equal(greenhouseRegion.eventStageKind, 'campaign-updated');
+assert.equal(greenhouseRegion.collected, true);
+assert.equal(greenhouseCompleteCampaign.collectedPartCount, 3);
+assert.equal(greenhouseCompleteCampaign.completionPercent, 60);
+assert.equal(greenhouseCompleteCampaign.deadlineLabel, 'D-28');
+assert.equal(greenhouseCompleteCampaign.rivalDelaySegments, 16);
+
+setAtPortalToRoom(
+  greenhouseFlowScene,
+  SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+greenhouseJumpSequence += 1;
+finishPortalTransition(greenhouseFlowScene);
+setAtPortalToRoom(
+  greenhouseFlowScene,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+  SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+greenhouseJumpSequence += 1;
+finishPortalTransition(greenhouseFlowScene);
+setAtPortalToRoom(greenhouseFlowScene, SCRAP_GREENHOUSE_ROAD_ROOM_ID, SCRAP_AWAKENING_ROOM_ID);
+greenhouseFlowScene.update(
+  STEP_SECONDS,
+  input({ jump: true, jumpSequence: greenhouseJumpSequence }),
+);
+assert.equal(greenhouseFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(greenhouseFlowScene);
+const completedGreenhouseProgression = greenhouseFlowScene.getProgressionSnapshot();
+greenhouseFlowScene.exitTree();
+
+const completedGreenhouseReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedGreenhouseProgression,
+});
+assert.equal(
+  completedGreenhouseReload.getWorldStatus().campaign.currentLocationId,
+  'neighborhood-scrapyard',
+);
+for (const expectedItemId of [
+  'garage-robot-walker-leg-left',
+  'garage-robot-crane-arm-left',
+  'garage-robot-reactor-core',
+  'garage-robot-reactor-pipe-left',
+  'garage-robot-sixty-label',
+]) {
+  assert.ok(itemIds(completedGreenhouseReload).includes(expectedItemId), expectedItemId);
+}
+assert.ok(!itemIds(completedGreenhouseReload).includes('garage-robot-forty-label'));
+assert.equal(completedGreenhouseReload.getWorldStatus().wardLabel, '3/5 부품 · 로봇 60%');
+assert.match(completedGreenhouseReload.getWorldStatus().encounterHint, /3\/5 PARTS · ROBOT 60%/);
+const beforeRepeatedGreenhouseClaim = completedGreenhouseReload.getProgressionSnapshot();
+completedGreenhouseReload.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+  x: 1128,
+});
+assert.equal(
+  completedGreenhouseReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'greenhouse-reactor-part-claim'),
+  false,
+  '완료 reload 뒤 동력로 회수 trigger는 다시 활성화되면 안 됩니다.',
+);
+completedGreenhouseReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 3_000 }));
+assert.deepEqual(
+  completedGreenhouseReload.getProgressionSnapshot(),
+  beforeRepeatedGreenhouseClaim,
+  '완료 reload의 반복 온실 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
 const mineReload = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: travelScene.getProgressionSnapshot(),
@@ -851,6 +1093,9 @@ console.log(
       'shipyard-eight-stage-worker-drydock-crane-machine-part-flow',
       'shipyard-event-preview-fourteen-segments-three-day-extension-and-cancel',
       'shipyard-midstage-and-part-reload-idempotence-and-garage-forty-percent',
+      'greenhouse-eight-stage-technician-pipeline-reactor-machine-part-flow',
+      'greenhouse-event-preview-eighteen-segments-four-day-extension-and-cancel',
+      'greenhouse-midstage-and-part-reload-idempotence-and-garage-sixty-percent',
       'keyboard-touch-interaction-parity',
     ],
   }),
