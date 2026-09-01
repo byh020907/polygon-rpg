@@ -59,7 +59,10 @@ import {
 import {
   advanceScrapGarageReveal,
   advanceScrapAwakening,
+  commitScrapCampaignAction,
   getScrapCampaignReadModel,
+  previewScrapCampaignAction,
+  SCRAP_CAMPAIGN_ACTION_KIND,
   startScrapGarageReveal,
   startScrapAwakening,
   toScrapCampaignSnapshot,
@@ -477,6 +480,9 @@ export class GameScene extends SceneNode {
     this.roomChanged = this.ownSignal(new Signal('roomChanged'));
     this.progressionChanged = this.ownSignal(new Signal('progressionChanged'));
     this.operationMapRequested = this.ownSignal(new Signal('operationMapRequested'));
+    this.campaignActionPreviewRequested = this.ownSignal(
+      new Signal('campaignActionPreviewRequested'),
+    );
     this.roomSceneNode = null;
     this.roomSceneConnections = [];
     this.statusNode = this.addChild(new GameStatusNode(this));
@@ -556,22 +562,29 @@ export class GameScene extends SceneNode {
     this.reconcileEnchantMaterials();
     this.reconcileWeaponForgeMaterial();
     this.timePhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
+    const scrapCampaign = getScrapCampaignReadModel(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
       deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
       crisis: this.worldTimeSnapshot.crisis,
       weather: 'clear',
       storyFlags: { ...journey.storyFlags, ...regionExpansion.storyFlags },
-      scrapAwakeningStageId: getScrapCampaignReadModel(
-        this.progressionSnapshot.scrapCampaign,
-        this.scrapCampaignProfile,
-      ).awakeningStageId,
-      scrapGarageRevealStageId: getScrapCampaignReadModel(
-        this.progressionSnapshot.scrapCampaign,
-        this.scrapCampaignProfile,
-      ).garageRevealStageId,
+      scrapAwakeningStageId: scrapCampaign.awakeningStageId,
+      scrapGarageRevealStageId: scrapCampaign.garageRevealStageId,
     });
-    const mapSnapshot = this.mapRuntime.reset();
+    let mapSnapshot = this.mapRuntime.reset();
+    if (scrapCampaign.currentLocationId !== this.scrapCampaignProfile.startLocation.id) {
+      const endpoint = this.resolveScrapCampaignMapEndpoint(scrapCampaign.currentLocationId);
+      if (endpoint) {
+        mapSnapshot = this.mapRuntime.setActiveLocation(endpoint.regionId, endpoint.roomId, {
+          position: endpoint.spawn ?? endpoint.anchor,
+          facing: endpoint.facing ?? 1,
+        });
+      }
+    }
     const spawn = mapSnapshot.spawn?.position ?? { x: 270, y: 350 };
     this.position = { ...spawn };
     this.previousPosition = { ...this.position };
@@ -616,6 +629,7 @@ export class GameScene extends SceneNode {
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
     this.portalTransitionPresentation = null;
+    this.pendingScrapCampaignTravel = null;
     this.cameraPosition = { ...mapSnapshot.cameraPosition };
     this.previousCameraPosition = { ...this.cameraPosition };
     this.equipmentProfile = this.equipmentCatalog.getProfile(
@@ -661,6 +675,14 @@ export class GameScene extends SceneNode {
     this.isGrounded = true;
     this.statusNode.publish({ force: true });
     return mapSnapshot;
+  }
+
+  resolveScrapCampaignMapEndpoint(locationId) {
+    for (const portal of this.mapRuntime.getResolvedMap().portals) {
+      if (portal.campaignTravel?.fromLocationId === locationId) return portal.from;
+      if (portal.campaignTravel?.toLocationId === locationId) return portal.to;
+    }
+    return null;
   }
 
   setVisualQaScrapAwakeningStage(stageId) {
@@ -1358,6 +1380,88 @@ export class GameScene extends SceneNode {
     return true;
   }
 
+  createScrapCampaignTravelAction(portal) {
+    const travel = portal?.campaignTravel;
+    if (!travel) throw new TypeError('campaign 장거리 이동 portal이 필요합니다.');
+    const active = this.mapRuntime.getActiveLocation();
+    const movingForward =
+      active.regionId === portal.from.regionId && active.roomId === portal.from.roomId;
+    const movingBackward =
+      active.regionId === portal.to.regionId && active.roomId === portal.to.roomId;
+    if (!movingForward && !movingBackward) {
+      throw new Error(`현재 위치에서 사용할 수 없는 campaign 연결로입니다: ${portal.id}`);
+    }
+    const targetLocationId = movingForward ? travel.toLocationId : travel.fromLocationId;
+    const campaignSnapshot = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const targetLabel =
+      targetLocationId === this.scrapCampaignProfile.startLocation.id
+        ? this.scrapCampaignProfile.startLocation.label
+        : this.scrapCampaignProfile.getRegion(targetLocationId)?.label;
+    const route = this.scrapCampaignProfile.routes.find(
+      (candidate) => candidate.id === travel.routeId,
+    );
+    if (!targetLabel || !route) throw new Error('campaign 연결로 authored profile이 불완전합니다.');
+    return Object.freeze({
+      actionId: `travel:${portal.id}:${campaignSnapshot.elapsedSegments}:${campaignSnapshot.committedActionIds.length}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL,
+      label: `장거리 이동 · ${targetLabel}`,
+      routeId: route.id,
+      targetLocationId,
+      costSegments: route.travelSegments,
+    });
+  }
+
+  requestScrapCampaignTravel(portal) {
+    if (this.pendingScrapCampaignTravel || !this.canStartPortalTransition()) return false;
+    const action = this.createScrapCampaignTravelAction(portal);
+    const preview = previewScrapCampaignAction(
+      this.progressionSnapshot.scrapCampaign,
+      action,
+      this.scrapCampaignProfile,
+    );
+    this.pendingScrapCampaignTravel = Object.freeze({ portalId: portal.id, action, preview });
+    this.combatCommands.reset();
+    this.rollState = null;
+    this.campaignActionPreviewRequested.emit(
+      Object.freeze({
+        source: 'long-distance-road-end',
+        portalId: portal.id,
+        preview,
+      }),
+    );
+    return true;
+  }
+
+  confirmScrapCampaignTravel() {
+    const pending = this.pendingScrapCampaignTravel;
+    if (!pending) return Object.freeze({ started: false, reason: 'no-pending-preview' });
+    const portal = this.mapRuntime.getPortal(pending.portalId);
+    if (!portal) {
+      this.pendingScrapCampaignTravel = null;
+      return Object.freeze({ started: false, reason: 'portal-unavailable' });
+    }
+    previewScrapCampaignAction(
+      this.progressionSnapshot.scrapCampaign,
+      pending.action,
+      this.scrapCampaignProfile,
+    );
+    this.beginPortalTransition(portal, { campaignAction: pending.action });
+    this.pendingScrapCampaignTravel = null;
+    return Object.freeze({ started: true, reason: 'confirmed', preview: pending.preview });
+  }
+
+  cancelScrapCampaignTravel() {
+    if (!this.pendingScrapCampaignTravel) {
+      return Object.freeze({ cancelled: false, reason: 'no-pending-preview' });
+    }
+    const preview = this.pendingScrapCampaignTravel.preview;
+    this.pendingScrapCampaignTravel = null;
+    return Object.freeze({ cancelled: true, reason: 'cancelled', preview });
+  }
+
   emitDurableProgressionChanged() {
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       firstJourney: this.journeyProgress.persistenceSnapshot(),
@@ -1388,12 +1492,12 @@ export class GameScene extends SceneNode {
   }
 
   canStartPortalTransition() {
-    if (this.mapRuntime.getTransition()) return false;
+    if (this.mapRuntime.getTransition() || this.pendingScrapCampaignTravel) return false;
     const combatState = this.combatCommands.snapshot();
     return this.isGrounded && !this.rollState && combatState.id === 'idle';
   }
 
-  beginPortalTransition(portal) {
+  beginPortalTransition(portal, { campaignAction = null } = {}) {
     const transition = this.mapRuntime.beginPortalTransition(portal.id);
     this.portalTransitionPresentation = {
       sourceLocation: { ...this.mapRuntime.getActiveLocation() },
@@ -1401,6 +1505,7 @@ export class GameScene extends SceneNode {
       destinationPosition: { ...transition.destinationPosition },
       sourceCameraPosition: { ...this.cameraPosition },
       destinationCameraPosition: { ...transition.destinationCameraPosition },
+      campaignAction,
     };
     this.verticalVelocity = 0;
     this.airComboFloatSeconds = 0;
@@ -1416,7 +1521,10 @@ export class GameScene extends SceneNode {
       x: this.position.x,
       y: this.position.y + CHARACTER_FOOT_OFFSET,
     });
-    return portal ? this.beginPortalTransition(portal) : false;
+    if (!portal) return false;
+    return portal.campaignTravel
+      ? this.requestScrapCampaignTravel(portal)
+      : this.beginPortalTransition(portal);
   }
 
   getStoryInteractionContext() {
@@ -1467,30 +1575,46 @@ export class GameScene extends SceneNode {
     };
 
     if (!completion) return true;
+    let journeyTransition;
+    let regionExpansionTransition;
+    let travelTransaction;
+    let campaignTransaction = Object.freeze({ changed: false });
     try {
       this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
+      this.position = { ...completion.position };
+      this.cameraPosition = { ...presentation.destinationCameraPosition };
+      this.storyInteractionOwner.reset();
+      journeyTransition = this.journeyProgress.recordPortal(completion.portalId);
+      regionExpansionTransition = this.regionExpansionProgress.recordPortal(completion.portalId);
+      const travelAction = this.worldTimeProfile.getTravelAction(completion.travelSegmentId);
+      travelTransaction = this.applyWorldAction(
+        `travel:${completion.travelSegmentId ?? completion.portalId}`,
+        travelAction,
+        { repeatable: true },
+      );
+      if (presentation.campaignAction) {
+        campaignTransaction = commitScrapCampaignAction(
+          this.progressionSnapshot.scrapCampaign,
+          presentation.campaignAction,
+          this.scrapCampaignProfile,
+        );
+        if (campaignTransaction.changed) {
+          this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+            scrapCampaign: campaignTransaction.snapshot,
+          });
+          this.progressionNotice = `${campaignTransaction.preview.label} · ${campaignTransaction.preview.after.phaseLabel} · ${campaignTransaction.preview.after.deadlineLabel}`;
+        }
+      }
     } catch (error) {
       this.recoverPortalTransition(presentation, error);
       return true;
     }
-    this.position = { ...completion.position };
-    this.cameraPosition = { ...presentation.destinationCameraPosition };
     this.portalTransitionPresentation = null;
-    this.storyInteractionOwner.reset();
-    const journeyTransition = this.journeyProgress.recordPortal(completion.portalId);
-    const regionExpansionTransition = this.regionExpansionProgress.recordPortal(
-      completion.portalId,
-    );
-    const travelAction = this.worldTimeProfile.getTravelAction(completion.travelSegmentId);
-    const travelTransaction = this.applyWorldAction(
-      `travel:${completion.travelSegmentId ?? completion.portalId}`,
-      travelAction,
-      { repeatable: true },
-    );
     if (
       journeyTransition.changed ||
       regionExpansionTransition.changed ||
-      travelTransaction.changed
+      travelTransaction.changed ||
+      campaignTransaction.changed
     ) {
       this.syncJourneyWorldContext();
       this.emitDurableProgressionChanged();
@@ -2761,6 +2885,15 @@ export class GameScene extends SceneNode {
     const characterBoardActive = Boolean(room.characterBoardManifest);
     const scrapAwakeningLocation =
       map.id === this.scrapAwakeningProfile.mapId && roomId === this.scrapAwakeningProfile.roomId;
+    const scrapCampaignRegion = this.scrapCampaignProfile.getRegion(
+      scrapCampaign.currentLocationId,
+    );
+    const scrapCampaignRegionReadModel = scrapCampaign.regions.find(
+      (region) => region.id === scrapCampaignRegion?.id,
+    );
+    const scrapCampaignRegionLocation = Boolean(
+      scrapCampaignRegion && location.regionId === scrapCampaignRegion.id,
+    );
     const scrapIntroPresentation =
       scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
         ? scrapCampaign.garageReveal
@@ -2775,23 +2908,31 @@ export class GameScene extends SceneNode {
           briefing: scrapIntroPresentation.briefing,
           nextObjective: scrapIntroPresentation.objective,
         })
-      : characterBoardActive
+      : scrapCampaignRegionLocation
         ? Object.freeze({
-            beatId: 'scrap-character-readability',
-            title: '고철 생활권 캐릭터 설계 비교',
-            briefing:
-              '정면·측면·대표 pose에서 직업 도구, 작업복과 공격 가동부를 실제 gameplay 크기로 비교합니다.',
+            beatId: `scrap-region:${scrapCampaignRegion.id}:roadhead`,
+            title: `${scrapCampaignRegion.label} 연결로 도착`,
+            briefing: `${scrapCampaignRegion.visual.material} 지대 너머에서 ${scrapCampaignRegion.machineLabel} 작업 신호가 잡힙니다.`,
+            nextObjective:
+              '왼쪽 실제 연결로에서 ↑로 고물상에 돌아가거나 MAP에서 사건 시간과 성공 연장을 비교하세요.',
           })
-        : resolveFirstJourneyStory({
-            equipment: {
-              id: this.equipmentProfile.id,
-              label: this.equipmentProfile.label,
-              progressionComplete,
-            },
-            journey,
-            regionExpansion,
-            activeRoomId: roomId,
-          });
+        : characterBoardActive
+          ? Object.freeze({
+              beatId: 'scrap-character-readability',
+              title: '고철 생활권 캐릭터 설계 비교',
+              briefing:
+                '정면·측면·대표 pose에서 직업 도구, 작업복과 공격 가동부를 실제 gameplay 크기로 비교합니다.',
+            })
+          : resolveFirstJourneyStory({
+              equipment: {
+                id: this.equipmentProfile.id,
+                label: this.equipmentProfile.label,
+                progressionComplete,
+              },
+              journey,
+              regionExpansion,
+              activeRoomId: roomId,
+            });
     const dialogue = this.resolveDialogueStatus();
     const encounterMaterial = encounter?.materialReward
       ? this.enchantmentCatalog.getProfile(encounter.materialReward.elementId)
@@ -2934,7 +3075,6 @@ export class GameScene extends SceneNode {
     if (isAcademyRoom(roomId) && regionExpansion.returnedWithReward) {
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
-    if (this.recoveryNotice) encounterHint = this.recoveryNotice;
     if (characterBoardActive) {
       objective = '각 열의 정면·측면·대표 pose에서 복장과 공구 silhouette를 비교하세요.';
       encounterHint = 'DESIGN COMPARISON · FRONT / SIDE / ACTION';
@@ -2943,6 +3083,11 @@ export class GameScene extends SceneNode {
       objective = scrapIntroPresentation.objective;
       encounterHint = scrapIntroPresentation.cue;
     }
+    if (scrapCampaignRegionLocation) {
+      objective = story.nextObjective;
+      encounterHint = `ROADHEAD · ${scrapCampaignRegion.event.label} · ${scrapCampaignRegionReadModel.eventSegments}구간 / D-DAY +${scrapCampaignRegionReadModel.extensionDays}일`;
+    }
+    if (this.recoveryNotice) encounterHint = this.recoveryNotice;
 
     const nextSkillLevel = Math.min(
       this.combatProgressionProfile.maxSkillLevel,
@@ -2966,7 +3111,10 @@ export class GameScene extends SceneNode {
           : 'A/S starter · 공중 starter 1회';
 
     return Object.freeze({
-      areaName: characterBoardActive ? room.label : `${map.name} · ${room.label}`,
+      areaName:
+        characterBoardActive || scrapCampaignRegionLocation
+          ? room.label
+          : `${map.name} · ${room.label}`,
       story,
       dialogue,
       objective,
@@ -2995,10 +3143,12 @@ export class GameScene extends SceneNode {
                 : scrapCampaign.deadlineRevealed
                   ? '각성 완료 · D-30 · 고물상 복귀'
                   : '첫 고철 수거 의뢰'
-          : location.regionId === 'glasswind-region' ||
-              (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
-            ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
-            : (phaseLabels[journey.phase] ?? journey.phase),
+          : scrapCampaignRegionLocation
+            ? `${scrapCampaignRegion.label} 도착 · 사건 대기`
+            : location.regionId === 'glasswind-region' ||
+                (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
+              ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
+              : (phaseLabels[journey.phase] ?? journey.phase),
       wardLabel: scrapAwakeningLocation
         ? scrapCampaign.garageRevealComplete
           ? '제어장치 · 우리 로봇 두뇌 장착'
@@ -3007,16 +3157,18 @@ export class GameScene extends SceneNode {
             : scrapCampaign.deadlineRevealed
               ? '회수한 제어장치 · 보유 중'
               : '제어장치 · 폐병기 흉곽 안'
-        : location.regionId === 'glasswind-region' ||
-            (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
-          ? regionExpansion.glasswindBridgeStable
-            ? '유리바람 다리 · 안정'
-            : '횡풍 장벽 · 활성'
-          : journey.fieldWardActive
-            ? '수호 수액 · HP +20'
-            : journey.routeChoice === 'bypass'
-              ? '우회 · 수액 없음'
-              : '수호 수액 미획득',
+        : scrapCampaignRegionLocation
+          ? `${scrapCampaignRegion.machineLabel} · 현장 신호 확인`
+          : location.regionId === 'glasswind-region' ||
+              (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
+            ? regionExpansion.glasswindBridgeStable
+              ? '유리바람 다리 · 안정'
+              : '횡풍 장벽 · 활성'
+            : journey.fieldWardActive
+              ? '수호 수액 · HP +20'
+              : journey.routeChoice === 'bypass'
+                ? '우회 · 수액 없음'
+                : '수호 수액 미획득',
       timePhase: worldTime.timePhase,
       timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
       deadlineLabel: scrapCampaign.deadlineLabel,

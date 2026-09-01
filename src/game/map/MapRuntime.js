@@ -183,12 +183,20 @@ export class MapRuntime {
     return this.active;
   }
 
-  setActiveLocation(regionId, roomId) {
+  setActiveLocation(regionId, roomId, { position = null, facing = 1 } = {}) {
     if (!this.definition.getRoom(regionId, roomId)) {
       throw new Error(`존재하지 않는 region/room입니다: ${regionId}/${roomId}`);
     }
+    if (
+      position !== null &&
+      (!Number.isFinite(position?.x) || !Number.isFinite(position?.y) || !Number.isFinite(facing))
+    ) {
+      throw new TypeError('active location spawn에는 유한한 position과 facing이 필요합니다.');
+    }
     this.active = Object.freeze({ regionId, roomId });
-    this.activeSpawn = null;
+    this.activeSpawn = position
+      ? deepFreeze({ position: { x: position.x, y: position.y }, facing })
+      : null;
     this.pendingTransition = null;
     this.revision += 1;
     this.invalidate();
@@ -360,6 +368,7 @@ export class MapRuntime {
     const intent = deepFreeze({
       portalId: portal.id,
       travelSegmentId: portal.travelSegmentId ?? null,
+      campaignTravel: portal.campaignTravel ?? null,
       from: { ...this.active },
       to: { regionId: destination.regionId, roomId: destination.roomId },
       destinationPosition,
@@ -414,6 +423,7 @@ export class MapRuntime {
     return deepFreeze({
       portalId: result.portalId,
       travelSegmentId: result.travelSegmentId,
+      campaignTravel: result.campaignTravel,
       active: { ...this.active },
       position: { ...result.destinationPosition },
       facing: this.activeSpawn.facing,

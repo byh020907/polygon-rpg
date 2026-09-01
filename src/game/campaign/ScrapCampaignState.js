@@ -337,6 +337,25 @@ function validateAction(action, profile) {
   if (action.targetRegionId !== undefined && !profile.getRegion(action.targetRegionId)) {
     throw new Error(`지원하지 않는 target region입니다: ${action.targetRegionId}`);
   }
+  const targetLocationId = action.targetLocationId ?? action.targetRegionId;
+  if (
+    action.targetLocationId !== undefined &&
+    action.targetRegionId !== undefined &&
+    action.targetLocationId !== action.targetRegionId
+  ) {
+    throw new Error('campaign action의 target location과 region이 서로 다릅니다.');
+  }
+  if (
+    targetLocationId !== undefined &&
+    targetLocationId !== profile.startLocation.id &&
+    targetLocationId !== profile.capital.id &&
+    !profile.getRegion(targetLocationId)
+  ) {
+    throw new Error(`지원하지 않는 target location입니다: ${targetLocationId}`);
+  }
+  if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL && targetLocationId === undefined) {
+    throw new Error('장거리 이동에는 target location이 필요합니다.');
+  }
   if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS) {
     const region = profile.getRegion(action.targetRegionId);
     if (
@@ -350,7 +369,42 @@ function validateAction(action, profile) {
       throw new Error('지역 성공 action은 authored 사건 비용·2~5일 연장과 일치해야 합니다.');
     }
   }
-  return Object.freeze({ ...action, extensionSegments });
+  return Object.freeze({ ...action, targetLocationId, extensionSegments });
+}
+
+function resolveTravelRoute(currentLocationId, targetLocationId, profile) {
+  const route = profile.routes.find(
+    (candidate) =>
+      (candidate.fromId === currentLocationId && candidate.toId === targetLocationId) ||
+      (candidate.toId === currentLocationId && candidate.fromId === targetLocationId),
+  );
+  if (!route) {
+    throw new Error(
+      `현재 위치에서 이어지는 장거리 연결로가 없습니다: ${currentLocationId} → ${targetLocationId}`,
+    );
+  }
+  return route;
+}
+
+function locationLabel(locationId, profile) {
+  if (locationId === profile.startLocation.id) return profile.startLocation.label;
+  if (locationId === profile.capital.id) return profile.capital.label;
+  return profile.getRegion(locationId)?.label ?? locationId;
+}
+
+function rivalRouteReadModel(progressSegments, profile) {
+  const reachedRegions = profile.regions.filter(
+    (region) => progressSegments >= region.route.rivalArrivalSegment,
+  );
+  const rivalRegion = reachedRegions.at(-1) ?? null;
+  const nextRivalRegion = profile.regions.find(
+    (region) => progressSegments < region.route.rivalArrivalSegment,
+  );
+  return Object.freeze({
+    progressSegments,
+    locationLabel: rivalRegion?.label ?? '각성지',
+    directionLabel: nextRivalRegion?.label ?? profile.capital.label,
+  });
 }
 
 function timeReadModel(elapsedSegments, deadlineSegments) {
@@ -373,7 +427,27 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
   const current = toScrapCampaignSnapshot(snapshot, profile);
   const authoredAction = validateAction(action, profile);
   const alreadyCommitted = current.committedActionIds.includes(authoredAction.actionId);
+  const travelRoute =
+    authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL
+      ? alreadyCommitted
+        ? (profile.routes.find((candidate) => candidate.id === authoredAction.routeId) ?? null)
+        : resolveTravelRoute(current.currentLocationId, authoredAction.targetLocationId, profile)
+      : null;
+  if (travelRoute && travelRoute.travelSegments !== authoredAction.costSegments) {
+    throw new Error('장거리 이동 비용은 authored 연결로 구간과 일치해야 합니다.');
+  }
+  if (travelRoute && authoredAction.routeId && authoredAction.routeId !== travelRoute.id) {
+    throw new Error('장거리 이동 action의 route ID가 현재 연결로와 일치하지 않습니다.');
+  }
   const willGameOver = !alreadyCommitted && authoredAction.costSegments >= current.deadlineSegments;
+  const appliedCostSegments = alreadyCommitted ? 0 : authoredAction.costSegments;
+  const rivalDelayConsumedSegments = Math.min(current.rivalDelaySegments, appliedCostSegments);
+  const rivalMovementSegments = appliedCostSegments - rivalDelayConsumedSegments;
+  const rivalBefore = rivalRouteReadModel(current.rivalProgressSegments, profile);
+  const rivalAfter = rivalRouteReadModel(
+    current.rivalProgressSegments + rivalMovementSegments,
+    profile,
+  );
   const nextDeadlineSegments = alreadyCommitted
     ? current.deadlineSegments
     : willGameOver
@@ -385,6 +459,12 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
     kind: authoredAction.kind,
     costSegments: authoredAction.costSegments,
     extensionSegments: authoredAction.extensionSegments,
+    routeId: travelRoute?.id ?? null,
+    targetLocationId: authoredAction.targetLocationId ?? null,
+    targetLocationLabel:
+      authoredAction.targetLocationId === undefined
+        ? null
+        : locationLabel(authoredAction.targetLocationId, profile),
     alreadyCommitted,
     requiresDeadlineWarning: willGameOver,
     willGameOver,
@@ -393,6 +473,12 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
       current.elapsedSegments + (alreadyCommitted ? 0 : authoredAction.costSegments),
       nextDeadlineSegments,
     ),
+    rival: Object.freeze({
+      before: rivalBefore,
+      after: rivalAfter,
+      movementSegments: rivalMovementSegments,
+      delayConsumedSegments: rivalDelayConsumedSegments,
+    }),
   });
 }
 
@@ -437,8 +523,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
       ? profile.getRegion(authoredAction.targetRegionId)
       : null;
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL) {
-      if (!region) throw new Error('장거리 이동에는 target region이 필요합니다.');
-      currentLocationId = region.id;
+      currentLocationId = authoredAction.targetLocationId;
     }
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS) {
       if (regionStates[region.id] !== SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE) {
@@ -519,13 +604,7 @@ export function getScrapCampaignReadModel(snapshot, profile) {
             : region.mapPatches.before,
     });
   });
-  const reachedRegions = profile.regions.filter(
-    (region) => current.rivalProgressSegments >= region.route.rivalArrivalSegment,
-  );
-  const rivalRegion = reachedRegions.at(-1) ?? null;
-  const nextRivalRegion = profile.regions.find(
-    (region) => current.rivalProgressSegments < region.route.rivalArrivalSegment,
-  );
+  const rivalRoute = rivalRouteReadModel(current.rivalProgressSegments, profile);
   const completionPercent = Math.round(
     (current.collectedPartIds.length / profile.regions.length) * 100,
   );
@@ -563,10 +642,8 @@ export function getScrapCampaignReadModel(snapshot, profile) {
     garageReveal: getScrapGarageRevealPresentation(current.garageRevealStageId),
     currentLocationId: current.currentLocationId,
     currentLocationLabel: currentLocation.label,
-    rivalLocationLabel: rivalRegion?.label ?? '각성지',
-    rivalDirectionLabel: current.gameOver
-      ? profile.capital.label
-      : (nextRivalRegion?.label ?? profile.capital.label),
+    rivalLocationLabel: rivalRoute.locationLabel,
+    rivalDirectionLabel: current.gameOver ? profile.capital.label : rivalRoute.directionLabel,
     rivalArrivalLabel: `Day ${rivalArrival.day} · ${rivalArrival.phaseLabel}`,
     rivalDelaySegments: current.rivalDelaySegments,
     lastChangeLabel: current.lastChangeLabel,

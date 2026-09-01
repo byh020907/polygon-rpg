@@ -37,12 +37,12 @@ function commit(snapshot, action) {
   return commitScrapCampaignAction(snapshot, action, SCRAP_CAMPAIGN_PROFILE).snapshot;
 }
 
-function travelAction(actionId, targetRegionId) {
+function travelAction(actionId, targetLocationId) {
   return {
     actionId,
     kind: SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL,
-    label: `${targetRegionId} 장거리 연결로 이동`,
-    targetRegionId,
+    label: `${targetLocationId} 장거리 연결로 이동`,
+    targetLocationId,
     costSegments: 1,
   };
 }
@@ -191,6 +191,11 @@ const travelPreview = previewScrapCampaignAction(fresh, travel, SCRAP_CAMPAIGN_P
 assert.equal(travelPreview.costSegments, 1);
 assert.equal(travelPreview.before.phaseId, 'morning');
 assert.equal(travelPreview.after.phaseId, 'day');
+assert.equal(travelPreview.routeId, 'road:neighborhood-scrapyard:abandoned-mine');
+assert.equal(travelPreview.targetLocationLabel, '폐광 산촌');
+assert.equal(travelPreview.rival.movementSegments, 1);
+assert.equal(travelPreview.rival.before.locationLabel, '각성지');
+assert.equal(travelPreview.rival.after.directionLabel, '폐광 산촌');
 const afterTravel = commit(fresh, travel);
 assert.equal(afterTravel.currentLocationId, 'abandoned-mine');
 assert.equal(afterTravel.elapsedSegments, 1);
@@ -198,12 +203,21 @@ assert.equal(afterTravel.rivalProgressSegments, 1);
 const repeatedTravel = commitScrapCampaignAction(afterTravel, travel, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(repeatedTravel.changed, false);
 assert.deepEqual(repeatedTravel.snapshot, afterTravel);
+const returnedToScrapyard = commit(
+  afterTravel,
+  travelAction('travel:abandoned-mine:scrapyard', 'neighborhood-scrapyard'),
+);
+assert.equal(returnedToScrapyard.currentLocationId, 'neighborhood-scrapyard');
+assert.equal(returnedToScrapyard.elapsedSegments, 2);
 
 let fourPhaseCycle = fresh;
 for (let index = 0; index < 4; index += 1) {
   fourPhaseCycle = commit(
     fourPhaseCycle,
-    travelAction(`travel:phase-probe:${index}`, 'abandoned-mine'),
+    travelAction(
+      `travel:phase-probe:${index}`,
+      index % 2 === 0 ? 'abandoned-mine' : 'neighborhood-scrapyard',
+    ),
   );
 }
 const nextMorning = getScrapCampaignReadModel(fourPhaseCycle, SCRAP_CAMPAIGN_PROFILE);
@@ -330,6 +344,7 @@ console.log(
       'owner-analysis-map-garage-stage-order-and-v2-migration',
       'explicit-route-edges-rival-arrival-and-region-stage-patches',
       'free-actions-zero-cost-and-one-segment-travel',
+      'bidirectional-authored-route-and-rival-preview',
       'four-segment-day-rollover',
       'stable-action-idempotence',
       'player-first-event-cost-and-2-to-5-day-detour',

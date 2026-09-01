@@ -330,6 +330,70 @@
           </div>
 
           <div
+            class="campaign-action-backdrop"
+            x-show="campaignActionPreviewOpen"
+            @click.self="cancelCampaignActionPreview"
+            @keydown.escape.stop.prevent="cancelCampaignActionPreview"
+            @keydown.tab="trapCampaignActionFocus($event)"
+          >
+            <section
+              class="campaign-action-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="campaign-action-title"
+              aria-describedby="campaign-action-summary"
+            >
+              <header>
+                <small>LONG-DISTANCE ROAD · CONFIRM</small>
+                <h2 id="campaign-action-title" tabindex="-1">장거리 이동을 확정할까요?</h2>
+              </header>
+              <p id="campaign-action-summary">
+                <strong x-text="campaignActionPreview.targetLocationLabel"></strong>
+                <span
+                  x-text="`${campaignActionPreview.costSegments}구간을 소비하는 실제 연결로입니다.`"
+                ></span>
+              </p>
+              <dl class="campaign-action-time-grid">
+                <div>
+                  <dt>출발</dt>
+                  <dd
+                    x-text="`Day ${campaignActionPreview.before.day} · ${campaignActionPreview.before.phaseLabel} · ${campaignActionPreview.before.deadlineLabel}`"
+                  ></dd>
+                </div>
+                <div>
+                  <dt>도착</dt>
+                  <dd
+                    x-text="`Day ${campaignActionPreview.after.day} · ${campaignActionPreview.after.phaseLabel} · ${campaignActionPreview.after.deadlineLabel}`"
+                  ></dd>
+                </div>
+                <div>
+                  <dt>고철 대왕</dt>
+                  <dd
+                    x-text="campaignActionPreview.rival.movementSegments > 0 ? `${campaignActionPreview.rival.before.locationLabel} → ${campaignActionPreview.rival.after.directionLabel} 방향 · +${campaignActionPreview.rival.movementSegments}구간` : `우회 지연 적용 · 이동 없음`"
+                  ></dd>
+                </div>
+              </dl>
+              <p
+                class="campaign-action-warning"
+                x-show="campaignActionPreview.requiresDeadlineWarning"
+              >
+                이 이동을 확정하면 D-DAY 0에 도달해 수도 파괴가 시작됩니다.
+              </p>
+              <footer>
+                <button type="button" @click="cancelCampaignActionPreview">취소 · 시간 유지</button>
+                <button
+                  id="campaign-action-confirm-control"
+                  class="campaign-action-confirm"
+                  type="button"
+                  @click="confirmCampaignActionPreview"
+                >
+                  이동 확정 · 1구간
+                </button>
+              </footer>
+            </section>
+          </div>
+
+          <div
             class="debug-panel-backdrop"
             x-show="debugPanelOpen"
             @click.self="closeDebugPanel"

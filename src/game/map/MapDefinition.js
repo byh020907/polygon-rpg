@@ -145,6 +145,15 @@ function normalizePortal(portal, mapId, index) {
   if (normalized.travelSegmentId !== undefined) {
     assertId(normalized.travelSegmentId, `${normalized.qualifiedId}.travelSegmentId`);
   }
+  if (normalized.campaignTravel !== undefined) {
+    assertRecord(normalized.campaignTravel, `${normalized.qualifiedId}.campaignTravel`);
+    for (const field of ['routeId', 'fromLocationId', 'toLocationId']) {
+      assertId(
+        normalized.campaignTravel[field],
+        `${normalized.qualifiedId}.campaignTravel.${field}`,
+      );
+    }
+  }
   assertFinite(
     normalized.transition.durationSeconds,
     `${normalized.qualifiedId}.transition.durationSeconds`,

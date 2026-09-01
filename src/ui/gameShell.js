@@ -132,6 +132,19 @@ function focusOperationMap(browserDocument) {
   browserDocument.getElementById('operation-map-title')?.focus();
 }
 
+function setCampaignActionBackgroundInert(browserDocument, isInert) {
+  const backdrop = browserDocument.querySelector('.campaign-action-backdrop');
+  const viewport = backdrop?.parentElement;
+  if (!viewport) return;
+  for (const child of viewport.children) {
+    if (child !== backdrop) child.inert = isInert;
+  }
+}
+
+function focusCampaignActionPreview(browserDocument) {
+  browserDocument.getElementById('campaign-action-title')?.focus();
+}
+
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
@@ -163,6 +176,21 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     visualQa: Boolean(visualQaRequest),
     operationMapOpen: false,
     operationMapAvailable: false,
+    campaignActionPreviewOpen: false,
+    campaignActionPreview: Object.freeze({
+      label: '',
+      targetLocationLabel: '',
+      costSegments: 0,
+      requiresDeadlineWarning: false,
+      before: Object.freeze({ day: 1, phaseLabel: '아침', deadlineLabel: 'D-30' }),
+      after: Object.freeze({ day: 1, phaseLabel: '아침', deadlineLabel: 'D-30' }),
+      rival: Object.freeze({
+        movementSegments: 0,
+        delayConsumedSegments: 0,
+        before: Object.freeze({ locationLabel: '각성지', directionLabel: '폐광 산촌' }),
+        after: Object.freeze({ locationLabel: '각성지', directionLabel: '폐광 산촌' }),
+      }),
+    }),
     debugPanelOpen: debugConfigurationAdapter.panelRequested,
     debugMenuHoldProgress: 0,
     debugScenarioIds: debugConfigurationAdapter.scenarioIds,
@@ -309,6 +337,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           Object.freeze({
             screen: this.screen,
             operationMapOpen: this.operationMapOpen,
+            campaignActionPreviewOpen: this.campaignActionPreviewOpen,
             debugPanelOpen: this.debugPanelOpen,
             reducedMotion: this.reducedMotion,
             isPlaying: this.isPlaying,
@@ -380,6 +409,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         },
         requestOperationMap: () => {
           this.openOperationMap('game-canvas');
+        },
+        requestCampaignActionPreview: (request) => {
+          this.openCampaignActionPreview(request.preview);
         },
       });
       this.$nextTick(() => {
@@ -506,7 +538,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     },
 
     openOperationMap(openerId = 'game-menu-control') {
-      if (this.debugPanelOpen || this.operationMapOpen) return;
+      if (this.debugPanelOpen || this.operationMapOpen || this.campaignActionPreviewOpen) return;
       operationMapOpenerId = openerId;
       this.operationMapOpen = true;
       setOperationMapBackgroundInert(globalThis.document, true);
@@ -546,9 +578,63 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       }
     },
 
+    openCampaignActionPreview(preview) {
+      if (this.debugPanelOpen || this.operationMapOpen || this.campaignActionPreviewOpen) return;
+      this.campaignActionPreview = preview;
+      this.campaignActionPreviewOpen = true;
+      setCampaignActionBackgroundInert(globalThis.document, true);
+      gameApp.onScreenChanged();
+      this.$nextTick(() =>
+        globalThis.requestAnimationFrame(() => focusCampaignActionPreview(globalThis.document)),
+      );
+    },
+
+    confirmCampaignActionPreview() {
+      if (!this.campaignActionPreviewOpen) return;
+      const result = gameApp.confirmCampaignActionPreview();
+      if (!result.started) return;
+      this.campaignActionPreviewOpen = false;
+      setCampaignActionBackgroundInert(globalThis.document, false);
+      gameApp.onScreenChanged();
+      this.$nextTick(() => globalThis.document.getElementById('game-canvas')?.focus());
+    },
+
+    cancelCampaignActionPreview() {
+      if (!this.campaignActionPreviewOpen) return;
+      gameApp.cancelCampaignActionPreview();
+      this.campaignActionPreviewOpen = false;
+      setCampaignActionBackgroundInert(globalThis.document, false);
+      gameApp.onScreenChanged();
+      this.$nextTick(() => globalThis.document.getElementById('game-canvas')?.focus());
+    },
+
+    trapCampaignActionFocus(event) {
+      const panel = globalThis.document.querySelector('.campaign-action-panel');
+      if (!panel) return;
+      const focusable = [...panel.querySelectorAll(DEBUG_PANEL_FOCUSABLE_SELECTOR)].filter(
+        (element) => element.getClientRects().length > 0,
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        focusCampaignActionPreview(globalThis.document);
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && (event.target === first || !focusable.includes(event.target))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && event.target === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    },
+
     openDebugPanel() {
+      if (this.campaignActionPreviewOpen) return;
       if (this.operationMapOpen) {
         this.operationMapOpen = false;
+        this.campaignActionPreviewOpen = false;
         setOperationMapBackgroundInert(globalThis.document, false);
       }
       this.debugPanelOpen = true;
@@ -613,14 +699,17 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     returnToPlayerGame() {
       try {
+        if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
         debugConfigurationAdapter.returnToPlayerGame();
         this.visualQa = false;
         this.operationMapOpen = false;
+        this.campaignActionPreviewOpen = false;
         this.debugPanelOpen = false;
         this.screen = GAME_SCREEN.GAME;
         this.isPlaying = true;
         this.reducedMotion = gameApp.prefersReducedMotion();
         setDebugBackgroundInert(globalThis.document, false);
+        setCampaignActionBackgroundInert(globalThis.document, false);
         this.debugConfigurationStatus = '일반 게임으로 돌아왔습니다.';
         this.$nextTick(() =>
           applyFocusAfterPaint(
@@ -638,11 +727,14 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     openRenderLab() {
       mobileViewport.leaveLandscape();
+      if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
       this.debugPanelOpen = false;
       this.operationMapOpen = false;
+      this.campaignActionPreviewOpen = false;
       debugMenuHold?.cancel();
       setDebugBackgroundInert(globalThis.document, false);
       setOperationMapBackgroundInert(globalThis.document, false);
+      setCampaignActionBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.RENDER_LAB, {
         menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_START,
       });
@@ -656,11 +748,14 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     showMenu() {
       mobileViewport.leaveLandscape();
+      if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
       this.debugPanelOpen = false;
       this.operationMapOpen = false;
+      this.campaignActionPreviewOpen = false;
       debugMenuHold?.cancel();
       setDebugBackgroundInert(globalThis.document, false);
       setOperationMapBackgroundInert(globalThis.document, false);
+      setCampaignActionBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.MENU);
       this.screen = focusRequest.screen;
       this.isPlaying = false;

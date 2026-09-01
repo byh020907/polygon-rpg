@@ -6,6 +6,9 @@ import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
+  SCRAP_MINE_ROAD_PORTAL_ID,
+  SCRAP_MINE_ROAD_REGION_ID,
+  SCRAP_MINE_ROAD_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -288,6 +291,121 @@ assert.ok(
   '완료 reload 뒤 벽 지도 interaction이 유지되어야 합니다.',
 );
 
+const failedTravelScene = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+  x: 1340,
+});
+const failedTravelBefore = failedTravelScene.getProgressionSnapshot().scrapCampaign;
+failedTravelScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 10 }));
+assert.equal(failedTravelScene.confirmScrapCampaignTravel().started, true);
+const replaceFailedTravelRoom = failedTravelScene.replaceRoomScene.bind(failedTravelScene);
+let failDestinationRoomOnce = true;
+failedTravelScene.replaceRoomScene = (snapshot, options) => {
+  if (failDestinationRoomOnce && snapshot.active.regionId === SCRAP_MINE_ROAD_REGION_ID) {
+    failDestinationRoomOnce = false;
+    throw new Error('fixture campaign destination room failure');
+  }
+  return replaceFailedTravelRoom(snapshot, options);
+};
+for (let tick = 0; tick < 120 && failedTravelScene.mapRuntime.getTransition(); tick += 1) {
+  failedTravelScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.deepEqual(failedTravelScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+});
+assert.deepEqual(
+  failedTravelScene.getProgressionSnapshot().scrapCampaign,
+  failedTravelBefore,
+  'destination Room 교체 실패는 campaign action을 commit하면 안 됩니다.',
+);
+assert.match(failedTravelScene.getWorldStatus().encounterHint, /Room 전환 실패/);
+
+const travelScene = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+  x: 1340,
+});
+let campaignTravelRequest = null;
+travelScene.campaignActionPreviewRequested.connect((request) => {
+  campaignTravelRequest = request;
+});
+const beforeTravelPreview = travelScene.getProgressionSnapshot().scrapCampaign;
+travelScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 10 }));
+assert.equal(campaignTravelRequest?.source, 'long-distance-road-end');
+assert.equal(campaignTravelRequest?.portalId, SCRAP_MINE_ROAD_PORTAL_ID);
+assert.equal(campaignTravelRequest?.preview.targetLocationLabel, '폐광 산촌');
+assert.equal(campaignTravelRequest?.preview.costSegments, 1);
+assert.equal(campaignTravelRequest?.preview.before.phaseLabel, '아침');
+assert.equal(campaignTravelRequest?.preview.after.phaseLabel, '낮');
+assert.equal(campaignTravelRequest?.preview.rival.movementSegments, 1);
+assert.deepEqual(
+  travelScene.getProgressionSnapshot().scrapCampaign,
+  beforeTravelPreview,
+  'preview는 campaign 시간을 소비하면 안 됩니다.',
+);
+assert.equal(travelScene.cancelScrapCampaignTravel().cancelled, true);
+assert.deepEqual(
+  travelScene.getProgressionSnapshot().scrapCampaign,
+  beforeTravelPreview,
+  '취소는 campaign snapshot을 바꾸면 안 됩니다.',
+);
+
+campaignTravelRequest = null;
+travelScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 11 }));
+assert.equal(campaignTravelRequest?.preview.targetLocationLabel, '폐광 산촌');
+assert.equal(travelScene.confirmScrapCampaignTravel().started, true);
+for (let tick = 0; tick < 120 && travelScene.mapRuntime.getTransition(); tick += 1) {
+  travelScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.deepEqual(travelScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+});
+const afterMineTravel = travelScene.getWorldStatus().campaign;
+const mineRoadheadStatus = travelScene.getWorldStatus();
+assert.equal(afterMineTravel.currentLocationId, 'abandoned-mine');
+assert.equal(afterMineTravel.currentLocationLabel, '폐광 산촌');
+assert.equal(afterMineTravel.phaseLabel, '낮');
+assert.equal(afterMineTravel.deadlineLabel, 'D-30');
+assert.equal(afterMineTravel.lastChangeLabel, '장거리 이동 · 폐광 산촌');
+assert.equal(mineRoadheadStatus.story.beatId, 'scrap-region:abandoned-mine:roadhead');
+assert.equal(mineRoadheadStatus.journeyLabel, '폐광 산촌 도착 · 사건 대기');
+assert.match(mineRoadheadStatus.encounterHint, /붕괴 광산 구조와 굴착기 인수/);
+assert.doesNotMatch(
+  `${mineRoadheadStatus.story.title} ${mineRoadheadStatus.objective} ${mineRoadheadStatus.wardLabel}`,
+  /학원|교관|마법 생물/,
+  '고철 캠페인 목적지에서 Academy story fallback이 노출되면 안 됩니다.',
+);
+assert.ok(itemIds(travelScene).includes('mine-roadhead-warning-post'));
+
+const mineReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: travelScene.getProgressionSnapshot(),
+});
+assert.deepEqual(mineReload.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+});
+assert.equal(mineReload.getWorldStatus().campaign.currentLocationId, 'abandoned-mine');
+assert.equal(mineReload.getWorldStatus().story.beatId, 'scrap-region:abandoned-mine:roadhead');
+assert.ok(itemIds(mineReload).includes('mine-roadhead-return-sign'));
+
+campaignTravelRequest = null;
+travelScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 12 }));
+assert.equal(campaignTravelRequest?.preview.targetLocationLabel, '동네 고물상');
+assert.equal(campaignTravelRequest?.preview.before.phaseLabel, '낮');
+assert.equal(campaignTravelRequest?.preview.after.phaseLabel, '저녁');
+assert.equal(travelScene.confirmScrapCampaignTravel().started, true);
+for (let tick = 0; tick < 120 && travelScene.mapRuntime.getTransition(); tick += 1) {
+  travelScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.deepEqual(travelScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+});
+assert.equal(travelScene.getWorldStatus().campaign.currentLocationId, 'neighborhood-scrapyard');
+assert.equal(travelScene.getWorldStatus().campaign.phaseLabel, '저녁');
+
 const keyboardScene = createAwakeningScene();
 const keyboard = new KeyboardInputAdapter({ isActive: () => true });
 keyboard.onKeyDown({ code: 'ArrowUp', target: { closest: () => null }, preventDefault() {} });
@@ -329,6 +447,8 @@ console.log(
       'owner-dialogue-analysis-map-garage-zero-percent-sequence',
       'garage-reveal-input-lock-camera-and-reload-resume',
       'wall-map-operation-command-and-completed-reload',
+      'failed-campaign-room-transition-zero-time-rollback',
+      'road-end-preview-cancel-confirm-and-bidirectional-campaign-commit',
       'keyboard-touch-interaction-parity',
     ],
   }),

@@ -62,7 +62,8 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.setWorldStatus !== 'function' ||
     typeof uiBridge.setDialoguePresentation !== 'function' ||
     typeof uiBridge.setSaveStatus !== 'function' ||
-    typeof uiBridge.requestOperationMap !== 'function'
+    typeof uiBridge.requestOperationMap !== 'function' ||
+    typeof uiBridge.requestCampaignActionPreview !== 'function'
   ) {
     throw new TypeError(
       'GameApp UI bridge에는 snapshot, stats와 world/dialogue status writer가 필요합니다.',
@@ -178,7 +179,8 @@ export class GameApp extends SceneNode {
         return (
           uiState?.screen === GAME_SCREEN.GAME &&
           uiState?.debugPanelOpen !== true &&
-          uiState?.operationMapOpen !== true
+          uiState?.operationMapOpen !== true &&
+          uiState?.campaignActionPreviewOpen !== true
         );
       },
     });
@@ -225,6 +227,9 @@ export class GameApp extends SceneNode {
     });
     this.connectTo(this.scene.operationMapRequested, () => {
       this.uiBridge.requestOperationMap();
+    });
+    this.connectTo(this.scene.campaignActionPreviewRequested, (request) => {
+      this.uiBridge.requestCampaignActionPreview(request);
     });
     this.uiBridge.setSaveStatus(this.initialSaveStatus());
     if (this.progressionLoadResult.ok && this.progressionLoadResult.kind === 'migrated') {
@@ -714,6 +719,14 @@ export class GameApp extends SceneNode {
     return result;
   }
 
+  confirmCampaignActionPreview() {
+    return this.scene.confirmScrapCampaignTravel();
+  }
+
+  cancelCampaignActionPreview() {
+    return this.scene.cancelScrapCampaignTravel();
+  }
+
   resize() {
     this.gameHost.resize();
     this.polygonHost.resize();
@@ -752,7 +765,8 @@ export class GameApp extends SceneNode {
     const active =
       (uiState.screen === GAME_SCREEN.GAME &&
         uiState.debugPanelOpen !== true &&
-        uiState.operationMapOpen !== true) ||
+        uiState.operationMapOpen !== true &&
+        uiState.campaignActionPreviewOpen !== true) ||
       (uiState.screen === GAME_SCREEN.RENDER_LAB && uiState.isPlaying);
     if (!active) return;
     this.fixedProcess(deltaSeconds, {

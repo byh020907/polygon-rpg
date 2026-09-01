@@ -4,6 +4,7 @@ import {
   SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
 } from '../campaign/ScrapGarageRevealState.js';
 import { defineMap } from '../map/MapDefinition.js';
+import { createEnvironmentPortalLandmarkItems } from './PortalRenderItems.js';
 
 export const SCRAP_AWAKENING_MAP_ID = 'scrap-awakening-commission';
 export const SCRAP_AWAKENING_REGION_ID = 'scrap-waste-edge';
@@ -13,6 +14,9 @@ export const SCRAP_AWAKENING_FOCUS_X = 980;
 export const SCRAP_GARAGE_REVEAL_FOCUS_X = 300;
 export const SCRAPYARD_OWNER_ENTITY_ID = 'scrapyard-owner-analysis';
 export const SCRAPYARD_WALL_MAP_ENTITY_ID = 'scrapyard-wall-operation-map';
+export const SCRAP_MINE_ROAD_PORTAL_ID = 'scrapyard-abandoned-mine-road';
+export const SCRAP_MINE_ROAD_REGION_ID = 'abandoned-mine';
+export const SCRAP_MINE_ROAD_ROOM_ID = 'abandoned-mine-roadhead';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -382,6 +386,74 @@ const renderItems = [
     stroke: '#141616',
     order: 40,
   }),
+  ...createEnvironmentPortalLandmarkItems('scrapyard-mine-road-gate', 1372, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 22,
+  }),
+  item('scrapyard-mine-road-sign', rectangle(1304, 320, 104, 42), '#7f5738', {
+    stroke: '#2b2019',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '폐광 산촌 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+];
+
+const mineRoadheadRenderItems = [
+  item(
+    'mine-roadhead-skyline',
+    [
+      { x: 0, y: 326 },
+      { x: 150, y: 214 },
+      { x: 300, y: 292 },
+      { x: 520, y: 142 },
+      { x: 730, y: 300 },
+      { x: 940, y: 176 },
+      { x: 1180, y: 306 },
+      { x: 1440, y: 226 },
+      { x: 1440, y: 426 },
+      { x: 0, y: 426 },
+    ],
+    '#55483d',
+    { stroke: '#261f1b', order: -80, label: '폐광 산촌 능선' },
+  ),
+  item('mine-roadhead-ground', rectangle(0, 426, 1440, 114), '#4a4036', {
+    stroke: '#201b17',
+    order: 0,
+  }),
+  item('mine-roadhead-road', rectangle(0, 438, 1440, 30), '#76644e', {
+    stroke: '#2d261f',
+    order: 1,
+  }),
+  ...createEnvironmentPortalLandmarkItems('mine-roadhead-return-gate', 68, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 22,
+  }),
+  item('mine-roadhead-return-sign', rectangle(22, 320, 116, 42), '#7f5738', {
+    stroke: '#2b2019',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '동네 고물상 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  item('mine-roadhead-warning-post', rectangle(510, 286, 24, 140), '#c98945', {
+    stroke: '#30231b',
+    lineWidth: 3,
+    order: 12,
+    label: '붕괴 광산 구조 작업 경고표지',
+    role: 'mine-safety-marker',
+  }),
+  item('mine-roadhead-derrick', rectangle(990, 232, 38, 194), '#6e5d4a', {
+    stroke: '#251f1a',
+    lineWidth: 4,
+    order: 10,
+    label: '보행식 굴착기 작업장 진입부',
+    role: 'industrial-machine-landmark',
+  }),
 ];
 
 const activatedStages = [
@@ -486,12 +558,68 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             },
           ],
           triggers: [],
-          portals: [],
+          portals: [SCRAP_MINE_ROAD_PORTAL_ID],
+        },
+      ],
+    },
+    {
+      id: SCRAP_MINE_ROAD_REGION_ID,
+      label: '폐광 산촌',
+      rooms: [
+        {
+          id: SCRAP_MINE_ROAD_ROOM_ID,
+          label: '폐광 산촌 · 연결로 진입부',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'mine-roadhead-ground-surface',
+              kind: 'solid',
+              material: 'packed-mine-road',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: mineRoadheadRenderItems,
+          entities: [],
+          triggers: [],
+          portals: [SCRAP_MINE_ROAD_PORTAL_ID],
         },
       ],
     },
   ],
-  portals: [],
+  portals: [
+    {
+      id: SCRAP_MINE_ROAD_PORTAL_ID,
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_AWAKENING_REGION_ID,
+        roomId: SCRAP_AWAKENING_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1320, y: 350 },
+        radius: 76,
+      },
+      to: {
+        regionId: SCRAP_MINE_ROAD_REGION_ID,
+        roomId: SCRAP_MINE_ROAD_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 118, y: 350 },
+        radius: 76,
+      },
+      campaignTravel: {
+        routeId: 'road:neighborhood-scrapyard:abandoned-mine',
+        fromLocationId: 'neighborhood-scrapyard',
+        toLocationId: 'abandoned-mine',
+      },
+      transition: { durationSeconds: 0.48 },
+    },
+  ],
   patches: [
     {
       id: 'scrap-device-recovered',
@@ -578,6 +706,46 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       priority: 90,
       when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
       operations: [{ op: 'set-enabled', target: SCRAPYARD_WALL_MAP_ENTITY_ID, value: true }],
+    },
+    {
+      id: 'scrapyard-mine-road-open',
+      priority: 100,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_MINE_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-mine-road-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-mine-road-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-mine-road-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'scrapyard-mine-road-sign', value: true },
+        {
+          op: 'set-enabled',
+          target: 'mine-roadhead-return-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'mine-roadhead-return-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'mine-roadhead-return-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'mine-roadhead-return-sign', value: true },
+      ],
     },
   ],
 });

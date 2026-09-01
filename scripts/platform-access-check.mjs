@@ -377,6 +377,7 @@ function verifySamePageGameApplicationReplacement() {
     setDialoguePresentation: (value) => uiWrites.push(['dialogue', value]),
     setSaveStatus: (value) => uiWrites.push(['save', value]),
     requestOperationMap: () => uiWrites.push(['operation-map-request']),
+    requestCampaignActionPreview: (value) => uiWrites.push(['campaign-action-preview', value]),
   };
   application.connectUi(uiBridge);
 

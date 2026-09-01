@@ -10,6 +10,7 @@ function createBufferedUiBridge(uiBridge) {
     'setDialoguePresentation',
     'setSaveStatus',
     'requestOperationMap',
+    'requestCampaignActionPreview',
   ]);
   const bridge = { snapshot: () => uiBridge.snapshot() };
   for (const name of writerNames) {
@@ -182,6 +183,14 @@ export class GameApplication {
 
   executeDialogueCommand(interactionId, commandId) {
     return this.currentApp.executeDialogueCommand(interactionId, commandId);
+  }
+
+  confirmCampaignActionPreview() {
+    return this.currentApp.confirmCampaignActionPreview();
+  }
+
+  cancelCampaignActionPreview() {
+    return this.currentApp.cancelCampaignActionPreview();
   }
 
   pressMobileAction(actionId, pointerId) {
