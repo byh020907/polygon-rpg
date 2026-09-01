@@ -24,7 +24,7 @@ const TRAVEL_ACTIONS = Object.freeze({
     deadlineCostMinutes: 60,
   }),
   'sealed-shortcut-return': freezeAction({
-    label: '봉인숲 shortcut 귀환',
+    label: '학원촌 ↔ 봉인 핵 shortcut',
     clockCostMinutes: 20,
     deadlineCostMinutes: 20,
   }),

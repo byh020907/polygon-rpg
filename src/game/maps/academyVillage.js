@@ -5,6 +5,7 @@ import {
 } from './PortalRenderItems.js';
 import {
   ACADEMY_FIELD_PORTAL_ITEMS,
+  ACADEMY_SEALED_SHORTCUT_PORTAL_ITEMS,
   FIRST_JOURNEY_PATCHES,
   FIRST_JOURNEY_PORTALS,
   FIRST_JOURNEY_ROOMS,
@@ -434,6 +435,7 @@ const frontLayerItems = [
     order: 12,
   }),
   ...ACADEMY_FIELD_PORTAL_ITEMS,
+  ...ACADEMY_SEALED_SHORTCUT_PORTAL_ITEMS,
 ];
 
 const combatDungeonItems = [
@@ -488,7 +490,7 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
   id: 'academy-village',
   name: '왕립 마법학교 학원권',
   version: 2,
-  worldSize: { width: 10960, height: 540 },
+  worldSize: { width: 11920, height: 540 },
   gridSize: 48,
   palette: DAY_PALETTE,
   groundY: null,

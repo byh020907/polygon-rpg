@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
+import { EQUIPMENT_CATALOG } from '../src/game/equipment/EquipmentProfiles.js';
+import {
+  FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE,
+  FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE,
+} from '../src/game/journey/FirstJourneyDungeonSignature.js';
+import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
@@ -117,6 +124,7 @@ class RuntimeDriver {
         bossRewardClaimed: journey.bossRewardClaimed,
         returnedWithReward: journey.returnedWithReward,
         gold: journey.gold,
+        dungeonSignatureStageIds: journey.dungeonSignatureStageIds,
       }),
     );
   }
@@ -259,17 +267,58 @@ function verifyDebugFreeFirstJourney() {
   driver.completeDialogue(540, '세라 교관의 정찰 표식', 'Field route 선택 대화');
   driver.usePortal('field-bypass-portal', 'field-canopy', '수관 우회 선택');
   driver.usePortal('bypass-dungeon-portal', 'sealed-forest-dungeon', 'Dungeon 진입');
+  assert.deepEqual(
+    scene.mapRuntime.getActiveRoom().signatureRule.stages.map(({ id }) => id),
+    Object.values(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE),
+    `${FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.label} authored content가 stable stage 순서를 제공해야 합니다.`,
+  );
+  assert.equal(
+    scene.mapRuntime
+      .getResolvedSnapshot()
+      .entities.find(({ id }) => id === 'sealed-dungeon-guardian')?.signatureStageId,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+  );
   driver.fightCurrentEncounter('Dungeon guardian 격파', {
     isCompleted: () => scene.journeyProgress.snapshot().dungeonGuardianDefeated,
   });
+  assert.deepEqual(scene.journeyProgress.snapshot().dungeonSignatureStageIds, [
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+  ]);
+  driver.usePortal('dungeon-resonance-branch-portal', 'sealed-resonance-vault', '숨은 잔향실 분기');
+  assert.equal(
+    scene.mapRuntime
+      .getResolvedSnapshot()
+      .triggers.find(({ id }) => id === 'sealed-resonance-hidden-stage-trigger')?.stageId,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+  );
+  driver.moveTo(driver.worldX(420), '숨은 잔향 기록석 trigger');
+  assert.deepEqual(scene.journeyProgress.snapshot().dungeonSignatureStageIds, [
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+  ]);
+  driver.completeDialogue(420, '숨은 잔향 기록석', '숨은 분기 공명 대화');
+  driver.usePortal('dungeon-resonance-branch-portal', 'sealed-forest-dungeon', '숨은 잔향실 복귀');
   driver.moveTo(driver.worldX(850), 'Dungeon checkpoint trigger');
   assert.equal(scene.journeyProgress.snapshot().checkpointActivated, true);
   driver.record('Checkpoint 활성');
   driver.completeDialogue(760, '봉인 회랑 기록석', 'Checkpoint 기록 대화');
   driver.usePortal('dungeon-boss-portal', 'sealed-forest-boss', 'Boss 진입');
+  assert.equal(
+    scene.mapRuntime.getResolvedSnapshot().entities.find(({ id }) => id === 'sealed-forest-warden')
+      ?.signatureStageId,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+  );
   driver.fightCurrentEncounter('Boss 격파', {
     isCompleted: () => scene.journeyProgress.snapshot().bossDefeated,
   });
+  assert.deepEqual(scene.journeyProgress.snapshot().dungeonSignatureStageIds, [
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+    FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+  ]);
   driver.completeDialogue(480, '봉인 핵의 잔향', 'Boss 결과 대화');
   driver.moveTo(driver.worldX(800), 'Boss reward trigger');
   const rewarded = scene.journeyProgress.snapshot();
@@ -289,6 +338,8 @@ function verifyDebugFreeFirstJourney() {
       'field',
       'dungeon',
       'dungeon',
+      'dungeon',
+      'dungeon',
       'checkpoint',
       'boss',
       'reward',
@@ -297,6 +348,195 @@ function verifyDebugFreeFirstJourney() {
     ],
   );
   return Object.freeze({ progression: scene.getProgressionSnapshot(), trace: driver.trace });
+}
+
+function createMemoryStorage() {
+  const values = new Map();
+  return Object.freeze({
+    getItem(key) {
+      return values.has(key) ? values.get(key) : null;
+    },
+    setItem(key, value) {
+      values.set(key, value);
+    },
+  });
+}
+
+function verifySignaturePersistenceAndClearedRevisit(completedProgression) {
+  const memoryStorage = createMemoryStorage();
+  const allowedEquipmentIds = EQUIPMENT_CATALOG.profiles.map(({ id }) => id);
+  const storage = new ProgressionStorage(
+    memoryStorage,
+    'polygon-rpg-signature-revisit',
+    ENCHANTMENT_CATALOG,
+  );
+  const saved = storage.save(completedProgression);
+  assert.equal(saved.ok, true, '완료 진행과 signature stage를 저장해야 합니다.');
+  const loaded = storage.load(EQUIPMENT_CATALOG.defaultProfileId, allowedEquipmentIds);
+  assert.equal(loaded.ok, true);
+  assert.equal(loaded.kind, 'loaded');
+  assert.deepEqual(
+    loaded.snapshot.firstJourney.dungeonSignatureStageIds,
+    completedProgression.firstJourney.dungeonSignatureStageIds,
+    'signature stage ID가 versioned persistence round-trip 뒤 유지돼야 합니다.',
+  );
+
+  const currentWithoutSignature = JSON.parse(JSON.stringify(loaded.snapshot));
+  delete currentWithoutSignature.firstJourney.dungeonSignatureStageIds;
+  memoryStorage.setItem(
+    'polygon-rpg-current-missing-signature',
+    JSON.stringify(currentWithoutSignature),
+  );
+  const rejectedCurrent = new ProgressionStorage(
+    memoryStorage,
+    'polygon-rpg-current-missing-signature',
+    ENCHANTMENT_CATALOG,
+  ).load(EQUIPMENT_CATALOG.defaultProfileId, allowedEquipmentIds);
+  assert.deepEqual(
+    { ok: rejectedCurrent.ok, reason: rejectedCurrent.reason },
+    { ok: false, reason: 'invalid-data' },
+    'v5 current payload는 typed Dungeon signature stage field 누락을 정상 load로 위장하면 안 됩니다.',
+  );
+  const currentWithUnknownSignature = JSON.parse(JSON.stringify(loaded.snapshot));
+  currentWithUnknownSignature.firstJourney.dungeonSignatureStageIds.push(
+    'sealed-resonance:unknown-stage',
+  );
+  memoryStorage.setItem(
+    'polygon-rpg-current-unknown-signature',
+    JSON.stringify(currentWithUnknownSignature),
+  );
+  const rejectedUnknown = new ProgressionStorage(
+    memoryStorage,
+    'polygon-rpg-current-unknown-signature',
+    ENCHANTMENT_CATALOG,
+  ).load(EQUIPMENT_CATALOG.defaultProfileId, allowedEquipmentIds);
+  assert.deepEqual(
+    { ok: rejectedUnknown.ok, reason: rejectedUnknown.reason },
+    { ok: false, reason: 'invalid-data' },
+    '지원하지 않는 signature stage ID는 current payload에서 거부해야 합니다.',
+  );
+  const stageWithoutGuardian = JSON.parse(JSON.stringify(loaded.snapshot));
+  Object.assign(stageWithoutGuardian.firstJourney, {
+    phase: 'dungeon',
+    dungeonGuardianDefeated: false,
+    checkpointId: null,
+    bossDefeated: false,
+    bossRewardClaimed: false,
+    returnedWithReward: false,
+    gold: 0,
+    dungeonSignatureStageIds: [
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+    ],
+  });
+  memoryStorage.setItem('polygon-rpg-stage-without-guardian', JSON.stringify(stageWithoutGuardian));
+  const rejectedStageWithoutGuardian = new ProgressionStorage(
+    memoryStorage,
+    'polygon-rpg-stage-without-guardian',
+    ENCHANTMENT_CATALOG,
+  ).load(EQUIPMENT_CATALOG.defaultProfileId, allowedEquipmentIds);
+  assert.deepEqual(
+    { ok: rejectedStageWithoutGuardian.ok, reason: rejectedStageWithoutGuardian.reason },
+    { ok: false, reason: 'invalid-data' },
+    'guardian clear 없이 combat/hidden stage만 가진 current payload를 거부해야 합니다.',
+  );
+
+  const bossWithoutGate = JSON.parse(JSON.stringify(loaded.snapshot));
+  Object.assign(bossWithoutGate.firstJourney, {
+    phase: 'reward',
+    dungeonGuardianDefeated: false,
+    checkpointId: null,
+    bossDefeated: true,
+    bossRewardClaimed: true,
+    returnedWithReward: false,
+    dungeonSignatureStageIds: [
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+    ],
+  });
+  memoryStorage.setItem('polygon-rpg-boss-without-gate', JSON.stringify(bossWithoutGate));
+  const rejectedBossWithoutGate = new ProgressionStorage(
+    memoryStorage,
+    'polygon-rpg-boss-without-gate',
+    ENCHANTMENT_CATALOG,
+  ).load(EQUIPMENT_CATALOG.defaultProfileId, allowedEquipmentIds);
+  assert.deepEqual(
+    { ok: rejectedBossWithoutGate.ok, reason: rejectedBossWithoutGate.reason },
+    { ok: false, reason: 'invalid-data' },
+    'guardian/checkpoint 없이 Boss clear와 shortcut만 가진 current payload를 거부해야 합니다.',
+  );
+
+  const legacyV4 = JSON.parse(JSON.stringify(loaded.snapshot));
+  legacyV4.version = 4;
+  delete legacyV4.firstJourney.dungeonSignatureStageIds;
+  memoryStorage.setItem('polygon-rpg-v4-signature-migration', JSON.stringify(legacyV4));
+  const migratedV4 = new ProgressionStorage(
+    memoryStorage,
+    'polygon-rpg-v4-signature-migration',
+    ENCHANTMENT_CATALOG,
+  ).load(EQUIPMENT_CATALOG.defaultProfileId, allowedEquipmentIds);
+  assert.equal(migratedV4.ok, true);
+  assert.equal(migratedV4.kind, 'migrated');
+  assert.deepEqual(
+    migratedV4.snapshot.firstJourney.dungeonSignatureStageIds,
+    [
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+      FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+    ],
+    'v4 clear flags는 legacy migration에서 안전한 signature stage로 재구성돼야 합니다.',
+  );
+
+  const driver = new RuntimeDriver(
+    createTestGameScene({
+      mapDefinition: ACADEMY_VILLAGE_MAP,
+      progressionSnapshot: loaded.snapshot,
+    }),
+  );
+  const { scene } = driver;
+  const durableBefore = scene.journeyProgress.persistenceSnapshot();
+  driver.usePortal('boss-shortcut-portal', 'sealed-forest-boss', '학원촌 역방향 shortcut 재방문');
+  assert.equal(
+    scene.roomSceneNode.getEncounterGameplaySnapshot(),
+    null,
+    'cleared Boss Room은 강제 encounter를 다시 만들면 안 됩니다.',
+  );
+  driver.usePortal('dungeon-boss-portal', 'sealed-forest-dungeon', '정리된 Dungeon 재방문');
+  assert.equal(
+    scene.roomSceneNode.getEncounterGameplaySnapshot(),
+    null,
+    'cleared Dungeon은 guardian encounter를 다시 만들면 안 됩니다.',
+  );
+  assert.match(scene.getWorldStatus().encounterHint, /CLEARED REVISIT/);
+  assert.deepEqual(
+    scene.mapRuntime.getResolvedSnapshot().appliedPatchIds.filter((id) => id.startsWith('sealed-')),
+    [
+      'sealed-resonance-introduced',
+      'sealed-dungeon-guardian-cleared',
+      'sealed-checkpoint-active',
+      'sealed-resonance-hidden-branch-applied',
+      'sealed-boss-defeated',
+    ],
+    '완료 진행은 stable patch 순서로 cleared Dungeon을 재구성해야 합니다.',
+  );
+  driver.usePortal(
+    'dungeon-resonance-branch-portal',
+    'sealed-resonance-vault',
+    'cleared 숨은 분기 재방문',
+  );
+  assert.equal(scene.roomSceneNode.getEncounterGameplaySnapshot(), null);
+  driver.usePortal(
+    'dungeon-resonance-branch-portal',
+    'sealed-forest-dungeon',
+    'cleared 숨은 분기 복귀',
+  );
+  assert.deepEqual(
+    scene.journeyProgress.persistenceSnapshot(),
+    durableBefore,
+    '재방문은 clear 결과나 signature stage를 역전·중복 변경하면 안 됩니다.',
+  );
 }
 
 function verifyTransitionFailureRollback() {
@@ -497,6 +737,7 @@ function verifyKoResetAndDurableInvariants(completedProgression) {
 }
 
 const journey = verifyDebugFreeFirstJourney();
+verifySignaturePersistenceAndClearedRevisit(journey.progression);
 verifyTransitionFailureRollback();
 verifyTransitionSourceExitFailureRollback();
 verifyTransitionSourceDisposeFailureRollback();
@@ -508,6 +749,8 @@ console.log(
       probe: 'first-journey-runtime-recovery',
       assertions: [
         'debug-free-public-input-story-portal-combat-flow',
+        'signature-introduction-combat-hidden-branch-boss-test-stage-order',
+        'versioned-signature-persistence-and-bidirectional-cleared-revisit',
         'atomic-room-transition-failure-rollback-and-stale-input-consumption',
         'source-room-exit-failure-restores-attached-active-scene',
         'source-room-dispose-failure-restores-fresh-attached-scene',

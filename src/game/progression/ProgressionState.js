@@ -8,7 +8,7 @@ import {
 } from '../encounter/RegionExpansionProgress.js';
 import { createWorldTimeSnapshot, toWorldTimeSnapshot } from '../world/WorldTimeState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 4;
+export const PROGRESSION_SCHEMA_VERSION = 5;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',

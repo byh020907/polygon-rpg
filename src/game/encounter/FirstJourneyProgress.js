@@ -1,3 +1,8 @@
+import {
+  FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE,
+  canonicalizeFirstJourneyDungeonSignatureStageIds,
+} from '../journey/FirstJourneyDungeonSignature.js';
+
 export const JOURNEY_PHASE = Object.freeze({
   PREPARE: 'prepare',
   FIELD: 'field',
@@ -48,6 +53,7 @@ export function createFirstJourneyProgressSnapshot() {
     bossRewardClaimed: false,
     returnedWithReward: false,
     gold: 0,
+    dungeonSignatureStageIds: Object.freeze([]),
   });
 }
 
@@ -68,6 +74,46 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
   assertBoolean(snapshot.bossRewardClaimed, '첫 원정 Boss 보상 상태');
   assertBoolean(snapshot.returnedWithReward, '첫 원정 귀환 상태');
   assertNonNegativeInteger(snapshot.gold, '첫 원정 gold');
+  const inferredSignatureStageIds = [
+    ...(snapshot.dungeonSignatureStageIds ?? []),
+    ...([
+      JOURNEY_PHASE.DUNGEON,
+      JOURNEY_PHASE.CHECKPOINT,
+      JOURNEY_PHASE.BOSS,
+      JOURNEY_PHASE.REWARD,
+      JOURNEY_PHASE.RETURNED,
+    ].includes(snapshot.phase) ||
+    snapshot.dungeonGuardianDefeated ||
+    snapshot.bossDefeated
+      ? [FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION]
+      : []),
+    ...(snapshot.dungeonGuardianDefeated || snapshot.bossDefeated
+      ? [FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT]
+      : []),
+    ...(snapshot.bossDefeated ? [FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST] : []),
+  ];
+  const dungeonSignatureStageIds = canonicalizeFirstJourneyDungeonSignatureStageIds([
+    ...new Set(inferredSignatureStageIds),
+  ]);
+  const dungeonSignatureStages = new Set(dungeonSignatureStageIds);
+  if (
+    dungeonSignatureStages.has(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT) !==
+    snapshot.dungeonGuardianDefeated
+  ) {
+    throw new Error('guardian 전투 stage와 Dungeon guardian 격파 상태가 일치해야 합니다.');
+  }
+  if (
+    dungeonSignatureStages.has(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH) &&
+    !snapshot.dungeonGuardianDefeated
+  ) {
+    throw new Error('숨은 분기 stage에는 Dungeon guardian 격파가 필요합니다.');
+  }
+  if (
+    dungeonSignatureStages.has(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST) !==
+    snapshot.bossDefeated
+  ) {
+    throw new Error('Boss 시험 stage와 첫 원정 Boss 격파 상태가 일치해야 합니다.');
+  }
   if (snapshot.bossRewardClaimed && !snapshot.bossDefeated) {
     throw new Error('첫 원정 Boss 보상은 Boss 격파 뒤에만 기록할 수 있습니다.');
   }
@@ -79,6 +125,12 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
   }
   if (snapshot.phase === JOURNEY_PHASE.REWARD && !snapshot.bossDefeated) {
     throw new Error('첫 원정 reward phase에는 Boss 격파가 필요합니다.');
+  }
+  if (snapshot.phase === JOURNEY_PHASE.BOSS && checkpointId === null) {
+    throw new Error('첫 원정 Boss phase에는 Dungeon checkpoint가 필요합니다.');
+  }
+  if (snapshot.bossDefeated && checkpointId === null) {
+    throw new Error('첫 원정 Boss 격파에는 Dungeon checkpoint가 필요합니다.');
   }
   if (snapshot.phase === JOURNEY_PHASE.CHECKPOINT && checkpointId === null) {
     throw new Error('첫 원정 checkpoint phase에는 checkpoint 위치가 필요합니다.');
@@ -97,6 +149,7 @@ export function toFirstJourneyProgressSnapshot(snapshot) {
     bossRewardClaimed: snapshot.bossRewardClaimed,
     returnedWithReward: snapshot.returnedWithReward,
     gold: snapshot.gold,
+    dungeonSignatureStageIds,
   });
 }
 
@@ -104,6 +157,7 @@ function freezeSnapshot(state) {
   const canonical = toFirstJourneyProgressSnapshot(state);
   const checkpointActivated = canonical.checkpointId !== null;
   const fieldWardActive = canonical.fieldGuardianDefeated;
+  const dungeonSignatureStages = new Set(canonical.dungeonSignatureStageIds);
   return Object.freeze({
     ...canonical,
     fieldWardActive,
@@ -115,6 +169,18 @@ function freezeSnapshot(state) {
       bossDefeated: canonical.bossDefeated,
       bossRewardClaimed: canonical.bossRewardClaimed,
       returnedWithReward: canonical.returnedWithReward,
+      dungeonSignatureIntroduced: dungeonSignatureStages.has(
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+      ),
+      dungeonSignatureGuardianCombat: dungeonSignatureStages.has(
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+      ),
+      dungeonSignatureHiddenBranch: dungeonSignatureStages.has(
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+      ),
+      dungeonSignatureBossTest: dungeonSignatureStages.has(
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+      ),
     }),
   });
 }
@@ -152,6 +218,9 @@ export class FirstJourneyProgress {
 
   recordPortal(portalId) {
     const previous = this.persistenceSnapshot();
+    if (['field-dungeon-portal', 'bypass-dungeon-portal'].includes(portalId)) {
+      this.recordDungeonSignatureStage(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION);
+    }
     if (!this.state.returnedWithReward) {
       if (portalId === 'academy-field-portal') this.state.phase = JOURNEY_PHASE.FIELD;
       if (portalId === 'field-bypass-portal') {
@@ -179,7 +248,21 @@ export class FirstJourneyProgress {
       current.phase !== previous.phase ||
       current.routeChoice !== previous.routeChoice ||
       current.returnedWithReward !== previous.returnedWithReward;
-    return Object.freeze({ changed, snapshot: this.snapshot() });
+    const signatureChanged =
+      current.dungeonSignatureStageIds.length !== previous.dungeonSignatureStageIds.length;
+    return Object.freeze({ changed: changed || signatureChanged, snapshot: this.snapshot() });
+  }
+
+  recordDungeonSignatureStage(stageId) {
+    const previous = this.persistenceSnapshot();
+    if (previous.dungeonSignatureStageIds.includes(stageId)) {
+      return Object.freeze({ changed: false, snapshot: this.snapshot() });
+    }
+    this.state.dungeonSignatureStageIds = canonicalizeFirstJourneyDungeonSignatureStageIds([
+      ...previous.dungeonSignatureStageIds,
+      stageId,
+    ]);
+    return Object.freeze({ changed: true, snapshot: this.snapshot() });
   }
 
   resolveEncounter(profileId, entityId = null) {
@@ -192,6 +275,8 @@ export class FirstJourneyProgress {
         });
       }
       this.state.dungeonGuardianDefeated = true;
+      this.recordDungeonSignatureStage(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION);
+      this.recordDungeonSignatureStage(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT);
       return Object.freeze({
         changed: true,
         kind: 'dungeon-guardian-defeated',
@@ -210,6 +295,9 @@ export class FirstJourneyProgress {
     if (profileId === 'boss' && !this.state.bossDefeated) {
       this.state.bossDefeated = true;
       this.state.phase = JOURNEY_PHASE.REWARD;
+      this.recordDungeonSignatureStage(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION);
+      this.recordDungeonSignatureStage(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT);
+      this.recordDungeonSignatureStage(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST);
       return Object.freeze({
         changed: true,
         kind: 'boss-defeated',

@@ -1,3 +1,6 @@
+import { FIRST_JOURNEY_CHECKPOINT_ID } from '../game/encounter/FirstJourneyProgress.js';
+import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../game/journey/FirstJourneyDungeonSignature.js';
+
 export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
 const VISUAL_QA_PHASES = new Set(VISUAL_QA_PHASE_IDS);
 
@@ -185,11 +188,13 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedItems: Object.freeze([
         'academy-glasswind-gate-landmark-opening',
         'academy-field-gate-landmark-opening',
+        'academy-sealed-shortcut-gate-landmark-opening',
       ]),
       expectedPortalIds: Object.freeze([
         'academy-field-portal',
         'academy-glasswind-portal',
         'academy-training-portal',
+        'boss-shortcut-portal',
       ]),
     }),
   }),
@@ -418,6 +423,87 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     }),
   }),
   dungeon: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-dungeon', x: 420 }),
+  'dungeon-signature-entrance': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-forest-dungeon',
+    x: 276,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'dungeon',
+      routeChoice: 'bypass',
+      dungeonSignatureStageIds: Object.freeze([FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION]),
+    }),
+    expectation: Object.freeze({
+      expectedPatchIds: Object.freeze(['sealed-resonance-introduced']),
+      expectedItems: Object.freeze([
+        'sealed-dungeon-entrance-vestibule',
+        'sealed-resonance-introduction-active',
+        'sealed-dungeon-guardian-sigil',
+        'sealed-dungeon-guardian-seal',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'sealed-resonance-introduction-dormant',
+        'dungeon-resonance-branch-gate-inner',
+      ]),
+      expectedPortalIds: Object.freeze(['bypass-dungeon-portal']),
+    }),
+  }),
+  'dungeon-signature-combat': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-forest-dungeon',
+    x: 640,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'dungeon',
+      routeChoice: 'bypass',
+      dungeonGuardianDefeated: true,
+      dungeonSignatureStageIds: Object.freeze([
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+      ]),
+    }),
+    expectation: Object.freeze({
+      expectedPatchIds: Object.freeze([
+        'sealed-resonance-introduced',
+        'sealed-dungeon-guardian-cleared',
+      ]),
+      expectedItems: Object.freeze([
+        'sealed-dungeon-guardian-open',
+        'sealed-dungeon-guardian-rubble',
+        'dungeon-resonance-branch-gate-landmark-opening',
+        'dungeon-resonance-branch-gate-inner',
+      ]),
+      expectedAbsentItems: Object.freeze(['sealed-dungeon-guardian-seal']),
+      expectedPortalIds: Object.freeze([
+        'bypass-dungeon-portal',
+        'dungeon-resonance-branch-portal',
+      ]),
+    }),
+  }),
+  'dungeon-signature-hidden-branch': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-resonance-vault',
+    x: 420,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'dungeon',
+      routeChoice: 'bypass',
+      dungeonGuardianDefeated: true,
+      dungeonSignatureStageIds: Object.freeze([
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+      ]),
+    }),
+    expectation: Object.freeze({
+      expectedPatchIds: Object.freeze(['sealed-resonance-hidden-branch-applied']),
+      expectedItems: Object.freeze([
+        'sealed-resonance-vault-arch',
+        'sealed-resonance-hidden-active',
+        'sealed-resonance-hidden-wave',
+        'resonance-vault-return-gate-landmark-opening',
+      ]),
+      expectedAbsentItems: Object.freeze(['sealed-resonance-hidden-dormant']),
+      expectedPortalIds: Object.freeze(['dungeon-resonance-branch-portal']),
+    }),
+  }),
   'dungeon-dialogue': Object.freeze({
     regionId: 'academy-region',
     roomId: 'sealed-forest-dungeon',
@@ -438,7 +524,72 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     roomId: 'sealed-forest-dungeon',
     x: 930,
   }),
+  'dungeon-cleared-revisit': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-forest-dungeon',
+    x: 680,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'returned',
+      routeChoice: 'bypass',
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+      dungeonSignatureStageIds: Object.freeze(Object.values(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE)),
+    }),
+    expectation: Object.freeze({
+      expectedPatchIds: Object.freeze([
+        'sealed-resonance-introduced',
+        'sealed-dungeon-guardian-cleared',
+        'sealed-checkpoint-active',
+        'sealed-resonance-hidden-branch-applied',
+        'sealed-boss-defeated',
+        'boss-reward-claimed',
+      ]),
+      expectedItems: Object.freeze([
+        'sealed-dungeon-guardian-open',
+        'dungeon-resonance-branch-gate-inner',
+        'checkpoint-active',
+        'dungeon-boss-gate-inner',
+      ]),
+      expectedAbsentItems: Object.freeze(['sealed-dungeon-guardian-seal', 'checkpoint-dormant']),
+      expectedPortalIds: Object.freeze([
+        'bypass-dungeon-portal',
+        'dungeon-boss-portal',
+        'dungeon-resonance-branch-portal',
+      ]),
+    }),
+  }),
   boss: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-boss', x: 360 }),
+  'boss-signature-test': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-forest-boss',
+    x: 500,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'boss',
+      routeChoice: 'bypass',
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      dungeonSignatureStageIds: Object.freeze([
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+      ]),
+    }),
+    expectation: Object.freeze({
+      expectedPatchIds: Object.freeze(['sealed-resonance-hidden-branch-applied']),
+      expectedItems: Object.freeze([
+        'boss-arena-seal',
+        'boss-arena-rune',
+        'boss-resonance-trial-active',
+        'boss-dungeon-gate-inner',
+      ]),
+      expectedAbsentItems: Object.freeze(['boss-resonance-trial-dormant']),
+      expectedPortalIds: Object.freeze(['dungeon-boss-portal']),
+    }),
+  }),
   'glasswind-field': Object.freeze({
     regionId: 'glasswind-region',
     roomId: 'glasswind-approach',

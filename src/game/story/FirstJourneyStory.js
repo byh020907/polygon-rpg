@@ -7,8 +7,11 @@ export const FIRST_JOURNEY_STORY_BEAT = Object.freeze({
   FIRST_FIELD_CLEARED: 'first-field-cleared',
   FIRST_FIELD_BYPASS: 'first-field-bypass',
   FIRST_DUNGEON_GUARDIAN: 'first-dungeon-guardian',
+  FIRST_DUNGEON_HIDDEN_BRANCH: 'first-dungeon-hidden-branch',
+  FIRST_DUNGEON_HIDDEN_BRANCH_APPLIED: 'first-dungeon-hidden-branch-applied',
   FIRST_DUNGEON_SEAL: 'first-dungeon-seal',
   FIRST_DUNGEON_CHECKPOINT: 'first-dungeon-checkpoint',
+  FIRST_DUNGEON_CLEARED_REVISIT: 'first-dungeon-cleared-revisit',
   FIRST_BOSS: 'first-boss',
   FIRST_REWARD: 'first-reward',
   FIRST_SHORTCUT: 'first-shortcut',
@@ -59,7 +62,19 @@ const STORY_BEATS = Object.freeze({
     title: '봉인 회랑의 수호 관문',
     briefing:
       '회랑 수호자가 봉인석으로 이어지는 통로를 붙들고 있습니다. Field에서 익힌 기본기를 다시 사용해 붉은 봉인을 해제해야 합니다.',
-    nextObjective: '회랑 중앙의 수호자를 쓰러뜨려 Checkpoint로 가는 봉인 관문을 여세요.',
+    nextObjective: '붉은 봉인을 붙든 회랑 수호자를 쓰러뜨려 청록 기록석의 공명을 깨우세요.',
+  }),
+  [FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_HIDDEN_BRANCH]: Object.freeze({
+    title: '봉인 회랑의 숨은 잔향',
+    briefing:
+      '수호자가 사라지며 회랑 옆의 청록 틈이 열렸습니다. 숨은 잔향실은 같은 봉인 공명을 안전하게 응용하는 선택 분기입니다.',
+    nextObjective: '잔향 기록석에 접근해 봉인 공명을 적용하거나 왼쪽 문으로 회랑에 돌아가세요.',
+  }),
+  [FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_HIDDEN_BRANCH_APPLIED]: Object.freeze({
+    title: '이어진 청록 잔향',
+    briefing:
+      '숨은 기록석이 깨어나 같은 공명이 봉인 핵까지 이어졌습니다. 이 분기는 다시 방문해도 완료 상태를 유지합니다.',
+    nextObjective: '활성화한 청록 잔향을 확인하고 왼쪽 문으로 봉인 회랑에 돌아가세요.',
   }),
   [FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_SEAL]: Object.freeze({
     title: '폐쇄 실습림의 봉인',
@@ -72,6 +87,12 @@ const STORY_BEATS = Object.freeze({
     briefing:
       '청록 봉인석이 다시 켜지며 회복 지점과 Boss 문이 연결됐습니다. 첫 원정의 위협이 문 너머에서 기다립니다.',
     nextObjective: 'Checkpoint 확보. 오른쪽 붉은 Portal에서 ↑로 Boss에게 도전하세요.',
+  }),
+  [FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_CLEARED_REVISIT]: Object.freeze({
+    title: '정리된 봉인 회랑',
+    briefing:
+      '격파한 guardian과 Boss는 돌아오지 않았고 청록 기록석, 숨은 분기와 열린 문이 그대로 유지됩니다.',
+    nextObjective: '정리된 봉인 회랑을 강제 전투 없이 살펴보고 열린 길로 이동하세요.',
   }),
   [FIRST_JOURNEY_STORY_BEAT.FIRST_BOSS]: Object.freeze({
     title: '봉인 수호자의 시험',
@@ -171,6 +192,11 @@ const STORY_RULES = Object.freeze([
     matches: matchesRoom('field-canopy'),
   }),
   Object.freeze({
+    beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_CLEARED_REVISIT,
+    matches: ({ activeRoomId, journey }) =>
+      activeRoomId === 'sealed-forest-dungeon' && Boolean(journey?.returnedWithReward),
+  }),
+  Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_CHECKPOINT,
     matches: ({ activeRoomId, journey }) =>
       activeRoomId === 'sealed-forest-dungeon' && Boolean(journey?.checkpointActivated),
@@ -183,6 +209,16 @@ const STORY_RULES = Object.freeze([
   Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_GUARDIAN,
     matches: matchesRoom('sealed-forest-dungeon'),
+  }),
+  Object.freeze({
+    beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_HIDDEN_BRANCH_APPLIED,
+    matches: ({ activeRoomId, journey }) =>
+      activeRoomId === 'sealed-resonance-vault' &&
+      Boolean(journey?.storyFlags?.dungeonSignatureHiddenBranch),
+  }),
+  Object.freeze({
+    beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_DUNGEON_HIDDEN_BRANCH,
+    matches: matchesRoom('sealed-resonance-vault'),
   }),
   Object.freeze({
     beatId: FIRST_JOURNEY_STORY_BEAT.FIRST_SHORTCUT,

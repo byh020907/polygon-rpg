@@ -2,6 +2,10 @@ import {
   createEnvironmentPortalLandmarkItems,
   createPortalRenderItems,
 } from './PortalRenderItems.js';
+import {
+  FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE,
+  FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE,
+} from '../journey/FirstJourneyDungeonSignature.js';
 
 function rectangle(x, y, width, height) {
   return [
@@ -30,6 +34,8 @@ function renderItem(id, points, fill, options = {}) {
     order: options.order ?? 0,
     renderOrder: options.renderOrder ?? 30,
     enabled: options.enabled ?? true,
+    signatureRuleId: options.signatureRuleId,
+    signatureStageId: options.signatureStageId,
   };
 }
 
@@ -152,6 +158,7 @@ function forestRoomItems(
 const fieldGroundY = 430;
 const dungeonGroundY = 424;
 const bossGroundY = 426;
+const resonanceVaultGroundY = 424;
 const FIELD_ROOM_WIDTH = 1200;
 const fieldCrossingTerrain = Object.freeze([
   Object.freeze({ x: 0, y: fieldGroundY }),
@@ -178,6 +185,18 @@ export const ACADEMY_FIELD_PORTAL_ITEMS = Object.freeze([
   ...createPortalRenderItems('academy-field-gate', 910, 432, '#e7b86a', {
     style: 'academy',
     order: 36,
+  }),
+]);
+
+export const ACADEMY_SEALED_SHORTCUT_PORTAL_ITEMS = Object.freeze([
+  ...createEnvironmentPortalLandmarkItems('academy-sealed-shortcut-gate', 310, 432, {
+    style: 'sealed-stone',
+    enabled: false,
+  }),
+  ...createPortalRenderItems('academy-sealed-shortcut-gate', 310, 432, '#f1c86c', {
+    style: 'sealed',
+    order: 36,
+    enabled: false,
   }),
 ]);
 
@@ -332,6 +351,7 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
   {
     id: 'sealed-forest-dungeon',
     label: '폐쇄 실습림 · 봉인 회랑',
+    signatureRule: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE,
     bounds: { x: 4960, y: 0, width: 1200, height: 540 },
     cameraAnchor: { x: 480, y: 270 },
     groundY: dungeonGroundY,
@@ -395,6 +415,33 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         { stroke: '#242a36', lineWidth: 2, order: 4 },
       ),
       renderItem(
+        'sealed-resonance-introduction-dormant',
+        regularPolygon(276, dungeonGroundY - 5, 72, 16, 14, Math.PI / 14),
+        '#6d2948',
+        {
+          stroke: '#f28da7',
+          lineWidth: 2,
+          opacity: 0.58,
+          order: 7,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        },
+      ),
+      renderItem(
+        'sealed-resonance-introduction-active',
+        regularPolygon(276, dungeonGroundY - 5, 72, 16, 14, Math.PI / 14),
+        '#66d6cf',
+        {
+          stroke: '#effff9',
+          lineWidth: 2,
+          opacity: 0.7,
+          order: 8,
+          enabled: false,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        },
+      ),
+      renderItem(
         'sealed-dungeon-guardian-dais',
         [
           { x: 382, y: dungeonGroundY },
@@ -409,7 +456,14 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         'sealed-dungeon-guardian-sigil',
         regularPolygon(500, dungeonGroundY - 10, 104, 22, 12, Math.PI / 12),
         '#9a5c6d',
-        { stroke: '#f0a1ad', lineWidth: 2, opacity: 0.42, order: 6 },
+        {
+          stroke: '#f0a1ad',
+          lineWidth: 2,
+          opacity: 0.42,
+          order: 6,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+        },
       ),
       renderItem(
         'sealed-dungeon-guardian-seal',
@@ -455,6 +509,17 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         '#674454',
         { stroke: '#9c6f7c', lineWidth: 2, order: 8, enabled: false },
       ),
+      ...createEnvironmentPortalLandmarkItems(
+        'dungeon-resonance-branch-gate',
+        680,
+        dungeonGroundY,
+        { style: 'sealed-stone', enabled: false, order: 18 },
+      ),
+      ...createPortalRenderItems('dungeon-resonance-branch-gate', 680, dungeonGroundY, '#66d6cf', {
+        style: 'sealed',
+        enabled: false,
+        order: 38,
+      }),
       renderItem(
         'sealed-dungeon-checkpoint-alcove',
         [
@@ -536,6 +601,8 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         encounterProfileId: 'field',
         position: { x: 500, y: dungeonGroundY },
         maxHealth: 95,
+        signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+        signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
       },
       {
         id: 'dungeon-gate-record-interaction',
@@ -563,6 +630,13 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
     ],
     triggers: [
       {
+        id: 'sealed-resonance-introduction-trigger',
+        kind: 'dungeon-signature-stage',
+        stageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        position: { x: 276, y: dungeonGroundY },
+        radius: 44,
+      },
+      {
         id: 'sealed-forest-checkpoint',
         kind: 'checkpoint',
         position: { x: 850, y: dungeonGroundY },
@@ -570,7 +644,122 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         enabled: false,
       },
     ],
-    portals: ['field-dungeon-portal', 'bypass-dungeon-portal', 'dungeon-boss-portal'],
+    portals: [
+      'field-dungeon-portal',
+      'bypass-dungeon-portal',
+      'dungeon-resonance-branch-portal',
+      'dungeon-boss-portal',
+    ],
+  },
+  {
+    id: 'sealed-resonance-vault',
+    label: '봉인 회랑 · 숨은 잔향실',
+    signatureRule: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE,
+    bounds: { x: 11160, y: 0, width: 760, height: 540 },
+    cameraAnchor: { x: 380, y: 270 },
+    groundY: resonanceVaultGroundY,
+    movementBounds: { minX: 24, maxX: 736 },
+    renderOrder: 30,
+    surfaces: [
+      {
+        id: 'sealed-resonance-vault-ground-surface',
+        kind: 'solid',
+        material: 'sealed-stone',
+        points: [
+          { x: 0, y: resonanceVaultGroundY },
+          { x: 760, y: resonanceVaultGroundY },
+        ],
+      },
+    ],
+    renderItems: [
+      renderItem('sealed-resonance-vault-backdrop', rectangle(0, 0, 760, 540), '#090d17', {
+        order: -100,
+      }),
+      renderItem(
+        'sealed-resonance-vault-arch',
+        [
+          { x: 120, y: resonanceVaultGroundY },
+          { x: 170, y: 210 },
+          { x: 300, y: 132 },
+          { x: 460, y: 132 },
+          { x: 590, y: 210 },
+          { x: 640, y: resonanceVaultGroundY },
+        ],
+        '#252b39',
+        { stroke: '#596477', lineWidth: 4, order: -30 },
+      ),
+      renderItem(
+        'sealed-resonance-hidden-dormant',
+        regularPolygon(420, resonanceVaultGroundY - 62, 48, 72, 12, Math.PI / 12),
+        '#6d2948',
+        {
+          stroke: '#f28da7',
+          lineWidth: 3,
+          opacity: 0.74,
+          order: 12,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+        },
+      ),
+      renderItem(
+        'sealed-resonance-hidden-active',
+        regularPolygon(420, resonanceVaultGroundY - 62, 56, 82, 12, Math.PI / 12),
+        '#66d6cf',
+        {
+          stroke: '#effff9',
+          lineWidth: 3,
+          opacity: 0.86,
+          order: 13,
+          enabled: false,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+        },
+      ),
+      renderItem(
+        'sealed-resonance-hidden-wave',
+        regularPolygon(420, resonanceVaultGroundY - 36, 112, 22, 18, Math.PI / 18),
+        '#66d6cf',
+        { opacity: 0.22, order: 10, enabled: false },
+      ),
+      ...createEnvironmentPortalLandmarkItems(
+        'resonance-vault-return-gate',
+        80,
+        resonanceVaultGroundY,
+        { style: 'sealed-stone' },
+      ),
+      ...createPortalRenderItems(
+        'resonance-vault-return-gate',
+        80,
+        resonanceVaultGroundY,
+        '#66d6cf',
+        { style: 'sealed' },
+      ),
+    ],
+    entities: [
+      {
+        id: 'sealed-resonance-hidden-record-interaction',
+        kind: 'story-interaction',
+        position: { x: 420, y: resonanceVaultGroundY - 88 },
+        interactionRange: 72,
+        speaker: '숨은 잔향 기록석',
+        lines: [
+          '붉은 봉인을 붙든 존재가 쓰러지면 청록 기록석이 길의 잔향을 되살린다.',
+          '이 공명을 봉인 핵까지 이어 가면 같은 규칙으로 마지막 수문을 시험할 수 있다.',
+        ],
+        signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+        signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+      },
+    ],
+    triggers: [
+      {
+        id: 'sealed-resonance-hidden-stage-trigger',
+        kind: 'dungeon-signature-stage',
+        stageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+        position: { x: 420, y: resonanceVaultGroundY },
+        radius: 70,
+      },
+    ],
+    portals: ['dungeon-resonance-branch-portal'],
   },
   {
     id: 'sealed-forest-boss',
@@ -610,6 +799,33 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         '#a85d75',
         { opacity: 0.34, order: 2 },
       ),
+      renderItem(
+        'boss-resonance-trial-dormant',
+        regularPolygon(570, bossGroundY - 8, 128, 20, 18, Math.PI / 18),
+        '#6d2948',
+        {
+          stroke: '#f28da7',
+          lineWidth: 2,
+          opacity: 0.46,
+          order: 3,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+        },
+      ),
+      renderItem(
+        'boss-resonance-trial-active',
+        regularPolygon(570, bossGroundY - 8, 128, 20, 18, Math.PI / 18),
+        '#66d6cf',
+        {
+          stroke: '#effff9',
+          lineWidth: 2,
+          opacity: 0.68,
+          order: 4,
+          enabled: false,
+          signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+          signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+        },
+      ),
       ...createPortalRenderItems('boss-dungeon-gate', 80, bossGroundY, '#e26055', {
         style: 'storm',
       }),
@@ -636,6 +852,8 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         encounterProfileId: 'boss',
         position: { x: 650, y: bossGroundY },
         maxHealth: 90,
+        signatureRuleId: FIRST_JOURNEY_DUNGEON_SIGNATURE_RULE.id,
+        signatureStageId: FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
       },
       {
         id: 'boss-result-echo-interaction',
@@ -747,6 +965,26 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
     transition: { durationSeconds: 0.32 },
   },
   {
+    id: 'dungeon-resonance-branch-portal',
+    bidirectional: true,
+    enabled: false,
+    from: {
+      regionId: 'academy-region',
+      roomId: 'sealed-forest-dungeon',
+      anchor: { x: 680, y: dungeonGroundY },
+      spawn: { x: 620, y: dungeonGroundY - 82 },
+      radius: 46,
+    },
+    to: {
+      regionId: 'academy-region',
+      roomId: 'sealed-resonance-vault',
+      anchor: { x: 80, y: resonanceVaultGroundY },
+      spawn: { x: 150, y: resonanceVaultGroundY - 82 },
+      radius: 46,
+    },
+    transition: { durationSeconds: 0.28 },
+  },
+  {
     id: 'dungeon-boss-portal',
     bidirectional: true,
     enabled: false,
@@ -769,7 +1007,7 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
   {
     id: 'boss-shortcut-portal',
     travelSegmentId: 'sealed-shortcut-return',
-    bidirectional: false,
+    bidirectional: true,
     enabled: false,
     from: {
       regionId: 'academy-region',
@@ -781,8 +1019,8 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
     to: {
       regionId: 'academy-region',
       roomId: 'academy-plaza',
-      anchor: { x: 910, y: 432 },
-      spawn: { x: 850, y: 350 },
+      anchor: { x: 310, y: 432 },
+      spawn: { x: 370, y: 350 },
       radius: 52,
     },
     transition: { durationSeconds: 0.32 },
@@ -790,6 +1028,15 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
 ]);
 
 export const FIRST_JOURNEY_PATCHES = Object.freeze([
+  {
+    id: 'sealed-resonance-introduced',
+    priority: 21,
+    when: { flag: 'dungeonSignatureIntroduced' },
+    operations: [
+      { op: 'set-enabled', target: 'sealed-resonance-introduction-dormant', value: false },
+      { op: 'set-enabled', target: 'sealed-resonance-introduction-active', value: true },
+    ],
+  },
   {
     id: 'first-field-night-presentation',
     priority: 11,
@@ -835,6 +1082,24 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-seal-core', value: false },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-open', value: true },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-rubble', value: true },
+      { op: 'set-enabled', target: 'dungeon-resonance-branch-portal', value: true },
+      {
+        op: 'set-enabled',
+        target: 'dungeon-resonance-branch-gate-landmark-structure',
+        value: true,
+      },
+      {
+        op: 'set-enabled',
+        target: 'dungeon-resonance-branch-gate-landmark-opening',
+        value: true,
+      },
+      {
+        op: 'set-enabled',
+        target: 'dungeon-resonance-branch-gate-landmark-threshold',
+        value: true,
+      },
+      { op: 'set-enabled', target: 'dungeon-resonance-branch-gate-outer', value: true },
+      { op: 'set-enabled', target: 'dungeon-resonance-branch-gate-inner', value: true },
       { op: 'set-enabled', target: 'dungeon-gate-record-interaction', value: false },
       { op: 'set-enabled', target: 'dungeon-checkpoint-record-interaction', value: true },
       { op: 'set-enabled', target: 'sealed-forest-checkpoint', value: true },
@@ -865,6 +1130,18 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'dungeon-boss-portal', value: true },
       { op: 'set-enabled', target: 'dungeon-boss-gate-outer', value: true },
       { op: 'set-enabled', target: 'dungeon-boss-gate-inner', value: true },
+    ],
+  },
+  {
+    id: 'sealed-resonance-hidden-branch-applied',
+    priority: 35,
+    when: { flag: 'dungeonSignatureHiddenBranch' },
+    operations: [
+      { op: 'set-enabled', target: 'sealed-resonance-hidden-dormant', value: false },
+      { op: 'set-enabled', target: 'sealed-resonance-hidden-active', value: true },
+      { op: 'set-enabled', target: 'sealed-resonance-hidden-wave', value: true },
+      { op: 'set-enabled', target: 'boss-resonance-trial-dormant', value: false },
+      { op: 'set-enabled', target: 'boss-resonance-trial-active', value: true },
     ],
   },
   {
@@ -899,6 +1176,23 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'boss-shortcut-portal', value: true },
       { op: 'set-enabled', target: 'boss-shortcut-gate-outer', value: true },
       { op: 'set-enabled', target: 'boss-shortcut-gate-inner', value: true },
+      {
+        op: 'set-enabled',
+        target: 'academy-sealed-shortcut-gate-landmark-structure',
+        value: true,
+      },
+      {
+        op: 'set-enabled',
+        target: 'academy-sealed-shortcut-gate-landmark-opening',
+        value: true,
+      },
+      {
+        op: 'set-enabled',
+        target: 'academy-sealed-shortcut-gate-landmark-threshold',
+        value: true,
+      },
+      { op: 'set-enabled', target: 'academy-sealed-shortcut-gate-outer', value: true },
+      { op: 'set-enabled', target: 'academy-sealed-shortcut-gate-inner', value: true },
     ],
   },
 ]);

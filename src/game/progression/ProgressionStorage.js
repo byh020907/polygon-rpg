@@ -6,7 +6,7 @@ import {
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3]);
+const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -58,7 +58,7 @@ function createAllowedEquipmentIds(value, defaultEquipmentId) {
   return ids;
 }
 
-function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
+function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds, enchantmentCatalog) {
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
   const fresh = createProgressionSnapshot(defaultEquipmentId);
   return mergeProgressionSnapshot({
@@ -74,6 +74,12 @@ function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
         }
       : {}),
     ...(value.version === 3 && value.worldTime ? { worldTime: value.worldTime } : {}),
+    ...(value.version >= 4
+      ? {
+          worldTime: value.worldTime,
+          enchantment: canonicalizeEnchantmentSnapshot(value.enchantment, enchantmentCatalog),
+        }
+      : {}),
   });
 }
 
@@ -83,6 +89,12 @@ function validateCurrentSnapshot(
   allowedEquipmentIds,
   enchantmentCatalog,
 ) {
+  if (
+    !isRecord(value.firstJourney) ||
+    !Object.hasOwn(value.firstJourney, 'dungeonSignatureStageIds')
+  ) {
+    throw new TypeError('현재 저장 진행에는 Dungeon signature stage ID가 필요합니다.');
+  }
   assertProgressionSnapshot(value);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
   return mergeProgressionSnapshot(value, {
@@ -187,7 +199,7 @@ export class ProgressionStorage {
         throw new TypeError('저장 enchantment catalog이 필요합니다.');
       }
       const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
-        ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds)
+        ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds, enchantmentCatalog)
         : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds, enchantmentCatalog);
       return Object.freeze({
         ok: true,

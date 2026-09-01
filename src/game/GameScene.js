@@ -18,6 +18,7 @@ import { GameStatusNode } from './GameStatusNode.js';
 import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
 import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
 import { RegionExpansionProgress } from './encounter/RegionExpansionProgress.js';
+import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from './journey/FirstJourneyDungeonSignature.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import {
   PROGRESSION_TRANSACTION_REASON,
@@ -1440,6 +1441,14 @@ export class GameScene extends SceneNode {
         this.statusNode.publish({ force: true });
       }
 
+      if (trigger.kind === 'dungeon-signature-stage') {
+        const result = this.journeyProgress.recordDungeonSignatureStage(trigger.stageId);
+        if (!result.changed) continue;
+        this.syncJourneyWorldContext();
+        this.emitDurableProgressionChanged();
+        this.statusNode.publish({ force: true });
+      }
+
       if (trigger.kind === 'glasswind-checkpoint') {
         const result = this.regionExpansionProgress.activateCheckpoint(trigger.qualifiedId);
         if (!result.changed) continue;
@@ -2013,12 +2022,29 @@ export class GameScene extends SceneNode {
     }
     if (roomId === 'sealed-forest-dungeon') {
       if (!journey.dungeonGuardianDefeated) {
-        encounterHint = '회랑 수호자를 쓰러뜨리면 봉인이 풀리고 Checkpoint 길이 열립니다.';
+        objective = '붉은 봉인을 붙든 회랑 수호자를 쓰러뜨려 청록 기록석의 공명을 깨우세요.';
+        encounterHint = '봉인 공명 1/4 · 입구 소개 → guardian 전투';
+      } else if (
+        !journey.dungeonSignatureStageIds.includes(
+          FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+        )
+      ) {
+        encounterHint = '봉인 공명 2/4 · x680 숨은 분기는 선택 사항 · Boss 길은 유지';
       } else if (!journey.checkpointActivated) {
-        encounterHint = '수호자 관문 개방 · 청록 봉인석에서 HP를 회복하고 Checkpoint를 확보하세요.';
+        encounterHint = '봉인 공명 3/4 · 숨은 잔향 활성 · Checkpoint를 확보하세요.';
+      } else if (journey.returnedWithReward) {
+        objective = '정리된 봉인 회랑을 강제 전투 없이 살펴보고 열린 길로 이동하세요.';
+        encounterHint = 'CLEARED REVISIT · guardian 없음 · 숨은 분기와 Boss 문 유지';
       } else {
-        encounterHint = '사망 시 이 Checkpoint에서 회복 · 오른쪽 Boss Portal 진입 가능';
+        encounterHint = '봉인 공명 3/4 · 오른쪽 Boss Portal에서 마지막 시험';
       }
+    }
+    if (roomId === 'sealed-resonance-vault') {
+      encounterHint = journey.dungeonSignatureStageIds.includes(
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+      )
+        ? '봉인 공명 3/4 · 숨은 분기 적용 완료'
+        : '봉인 공명 2/4 · 붉은 기록석에 접근';
     }
     if (roomId === 'sealed-forest-boss') {
       if (journey.bossRewardClaimed) {
@@ -2038,7 +2064,11 @@ export class GameScene extends SceneNode {
         encounterHint = 'BASIC · GUARDABLE';
       } else {
         objective = '기본공격 Guard → 강공격 Roll → 청록 회복 틈 Punish로 공략하세요.';
-        encounterHint = 'GUARD · ROLL · PUNISH';
+        encounterHint = journey.dungeonSignatureStageIds.includes(
+          FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+        )
+          ? '봉인 공명 4/4 · 청록 잔향과 GUARD · ROLL · PUNISH'
+          : '봉인 공명 Boss 시험 · GUARD · ROLL · PUNISH';
       }
     }
     if (roomId === 'glasswind-approach') {
