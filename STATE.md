@@ -4,11 +4,11 @@
 
 ## Runtime Status
 
-`IMPLEMENTATION_COMPLETE`
+`RUNNING`
 
 ## Current Phase
 
-`human-review`
+`inbox-processing`
 
 ## Product Desired State Comparison
 
@@ -38,7 +38,12 @@
 
 ## Active Execution Goal
 
-없음. 모든 현재 Product·Engineering Desired State에 current evidence가 있으며 새 기능이나 maintenance를 임의로 만들지 않는다.
+`EG-SWORD-ENCHANTMENT-EVENT-WORLD-CLOCK`
+
+- Mapping: 병렬 INBOX로 들어온 검 인챈트와 사건 기반 World Clock/Deadline feedback을 다음 fresh tick에서 Product·Engineering Desired State에 먼저 반영한다.
+- Current Gap: 이번 tick의 just-guard candidate가 독립 검증된 뒤 새 feedback이 `origin/main`에 도착했다. 원문을 보존했으며 아직 Desired State나 제품에 반영하지 않았다.
+- Scope: reference는 복제 없이 원칙 수준으로 조사하고, enchant weakness/resistance·상태 효과·확정 재료 교체와 authored Travel Segment·event-driven time cost·deterministic Chunk reconstruction·Crisis/recovery를 현재형 Product/Architecture 계약으로 확정한다. 구현은 dependency와 독립 검증 단위에 따라 가장 작은 완전한 제품 Goal부터 선택한다.
+- Verification: deterministic enchant/status/time/Deadline/Chunk/recovery fixture, 실제 keyboard/touch journey, Polygon/Retro desktop/narrow와 independent verifier를 사용한다.
 
 ## Blockers
 
