@@ -1005,6 +1005,11 @@ export function createPlayerCombatPresentation({
   const enemyHitEvent =
     latestCombatEvent(
       combatEvents,
+      COMBAT_EVENT_TYPE.GUARD_BREAK,
+      (event) => event.target === 'enemy' && event.outcome === 'posture-break',
+    ) ??
+    latestCombatEvent(
+      combatEvents,
       COMBAT_EVENT_TYPE.LAUNCH,
       (event) => event.target === 'enemy',
     ) ??

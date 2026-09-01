@@ -51,6 +51,30 @@ function selectEncounterAttack(profile, patternIndex, healthRatio = 1) {
   return pattern[Math.max(0, patternIndex) % pattern.length];
 }
 
+function createPostureState(profile) {
+  const posture = profile.posture;
+  if (!posture) return null;
+  if (!(
+    Number.isFinite(posture.maximum) &&
+    posture.maximum > 0 &&
+    Number.isFinite(posture.groggySeconds)
+  )) {
+    throw new RangeError('encounter posture profile은 maximum과 groggySeconds를 가져야 합니다.');
+  }
+  return { current: posture.maximum, maximum: posture.maximum, groggySeconds: 0 };
+}
+
+function postureSnapshot(posture) {
+  if (!posture) return undefined;
+  return Object.freeze({
+    current: posture.current,
+    maximum: posture.maximum,
+    ratio: posture.current / posture.maximum,
+    groggy: posture.groggySeconds > 0,
+    groggySeconds: posture.groggySeconds,
+  });
+}
+
 export class TrainingEncounterNode extends SceneNode {
   constructor({ entity, groundY, movementBounds, spinContact, encounterProfiles, attackProfiles }) {
     super('TrainingEncounter');
@@ -100,6 +124,7 @@ export class TrainingEncounterNode extends SceneNode {
     this.assertNotDisposed();
     const maxHealth = this.entity.maxHealth;
     const encounterProfile = this.entity.encounterProfile;
+    const posture = createPostureState(encounterProfile);
     this.enemy = {
       id: this.entity.id,
       profileId: encounterProfile.id,
@@ -147,8 +172,10 @@ export class TrainingEncounterNode extends SceneNode {
       hitReactionWeaponAngle: -0.65,
       hitReactionWeaponLength: this.attackProfiles.light.weaponLength,
       punishWindowOpen: false,
+      punishWindowOrigin: null,
       punishComboCycle: 0,
       lastCommandTransition: null,
+      ...(posture ? { posture } : {}),
     };
     this.completionEmitted = false;
     this.lastHitMotionSequence = '';
@@ -163,6 +190,42 @@ export class TrainingEncounterNode extends SceneNode {
     this.lastVisualContact = null;
     this.contactSeconds = 0;
     this.spinContactConstraint.reset();
+  }
+
+  setVisualQaPostureScenario(state, { emitBreak = false } = {}) {
+    const enemy = this.enemy;
+    if (state === 'absent') {
+      if (enemy.posture) throw new Error('일반 적 posture QA에는 posture state가 없어야 합니다.');
+      return null;
+    }
+    if (!enemy.posture) throw new Error('posture QA에는 posture-enabled encounter가 필요합니다.');
+    if (!['full', 'reduced', 'groggy'].includes(state)) {
+      throw new Error(`지원하지 않는 posture QA state입니다: ${state}`);
+    }
+    enemy.posture.current =
+      state === 'full'
+        ? enemy.posture.maximum
+        : state === 'reduced'
+          ? enemy.posture.maximum * 0.42
+          : 0;
+    enemy.posture.groggySeconds = state === 'groggy' ? 0.8 : 0;
+    enemy.aiState = state === 'groggy' ? 'groggy' : 'idle';
+    enemy.aiSeconds = state === 'groggy' ? 0.8 : 0;
+    enemy.punishWindowOpen = state === 'groggy';
+    enemy.punishWindowOrigin = state === 'groggy' ? 'posture' : null;
+    if (state === 'groggy' && emitBreak) {
+      this.contactSeconds = 0.18;
+      this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD_BREAK, {
+        actor: 'player',
+        target: 'enemy',
+        attackId: 'shieldBash',
+        outcome: 'posture-break',
+        position: this.lastVisualContact?.position ?? enemy.position,
+        direction: 1,
+        strength: 2.3,
+      });
+    }
+    return postureSnapshot(enemy.posture);
   }
 
   getGameplaySnapshot() {
@@ -189,6 +252,7 @@ export class TrainingEncounterNode extends SceneNode {
       groundBounceDelaySeconds: enemy.groundBounceDelaySeconds,
       slamAttackerBouncePending: this.slamAttackerBouncePending,
       lastCommandTransition: enemy.lastCommandTransition,
+      ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
     });
   }
 
@@ -205,6 +269,7 @@ export class TrainingEncounterNode extends SceneNode {
     const presentationState = Object.freeze({
       ...enemy,
       position: freezePosition(enemy.position),
+      ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
     });
     return Object.freeze({
       enemy: Object.freeze({
@@ -226,6 +291,7 @@ export class TrainingEncounterNode extends SceneNode {
           frame: null,
         }),
         lastCommandTransition: enemy.lastCommandTransition,
+        ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
       }),
       presentationState,
       geometry: sampleTrainingEnemyCombatGeometry(presentationState, this.attackProfiles),
@@ -264,13 +330,33 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.recoveryBodyStartRotation = bodyStartRotation;
     enemy.recoveryAdvanceDeferred = deferAdvance;
     enemy.recoveryCompletionPending = false;
-    enemy.punishWindowOpen = source === 'attack';
-    if (!enemy.punishWindowOpen) enemy.punishComboCycle = 0;
+    const posturePunishActive =
+      enemy.punishWindowOrigin === 'posture' && enemy.posture?.groggySeconds > 0;
+    if (!posturePunishActive) {
+      enemy.punishWindowOpen = source === 'attack';
+      enemy.punishWindowOrigin = enemy.punishWindowOpen ? 'recovery' : null;
+      if (!enemy.punishWindowOpen) enemy.punishComboCycle = 0;
+    }
   }
 
   updateEnemyPhysics(deltaSeconds, player) {
     const enemy = this.enemy;
     enemy.hitFlashSeconds = Math.max(0, enemy.hitFlashSeconds - deltaSeconds);
+    if (enemy.posture?.groggySeconds > 0) {
+      enemy.posture.groggySeconds = Math.max(0, enemy.posture.groggySeconds - deltaSeconds);
+      if (enemy.posture.groggySeconds === 0) {
+        enemy.posture.current = enemy.posture.maximum;
+        if (enemy.punishWindowOrigin === 'posture') {
+          enemy.punishWindowOpen = false;
+          enemy.punishWindowOrigin = null;
+          enemy.punishComboCycle = 0;
+        }
+        if (enemy.aiState === 'groggy') {
+          enemy.aiState = 'idle';
+          enemy.aiSeconds = this.entity.encounterProfile.idleSeconds;
+        }
+      }
+    }
     if (enemy.position.y >= enemy.groundY) {
       enemy.retaliationInvulnerableSeconds = Math.max(
         0,
@@ -394,7 +480,8 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.health <= 0 ||
       enemy.position.y < enemy.groundY ||
       enemy.juggleLocked ||
-      enemy.hitstunSeconds > 0
+      enemy.hitstunSeconds > 0 ||
+      enemy.posture?.groggySeconds > 0
     )
       return;
     const distance = player.position.x - enemy.position.x;
@@ -416,6 +503,7 @@ export class TrainingEncounterNode extends SceneNode {
     if (distance !== 0) enemy.facing = Math.sign(distance);
     if (enemy.aiState === 'approach') {
       enemy.punishWindowOpen = false;
+      enemy.punishWindowOrigin = null;
       enemy.punishComboCycle = 0;
       enemy.attackKind = !player.isGrounded
         ? 'antiAir'
@@ -464,6 +552,7 @@ export class TrainingEncounterNode extends SceneNode {
       }
       enemy.aiState = 'idle';
       enemy.punishWindowOpen = false;
+      enemy.punishWindowOrigin = null;
       enemy.punishComboCycle = 0;
       enemy.aiSeconds = this.entity.encounterProfile.idleSeconds;
       return;
@@ -664,6 +753,7 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.retaliationCycleClaimed = cycleChanged;
     enemy.hitstunSeconds = 0;
     enemy.punishWindowOpen = false;
+    enemy.punishWindowOrigin = null;
     enemy.punishComboCycle = 0;
     this.startRecovery({
       source: 'retaliation',
@@ -760,11 +850,20 @@ export class TrainingEncounterNode extends SceneNode {
       enemyPositionX: enemy.position.x,
       attackFacing: enemy.attackFacing,
     });
+    const posturePunishAccepted =
+      enemy.punishWindowOrigin === 'posture' && enemy.posture?.groggySeconds > 0;
+    const punishAccepted = posturePunishAccepted || recoveryPunish.accepted;
     const interruptsStrongStartup = enemy.aiState === 'windup' && enemy.attackKind === 'heavy';
+    const postureDamage =
+      combatState.id === 'shieldBash'
+        ? (this.entity.encounterProfile.posture?.shieldCounterDamage ?? 0)
+        : profile.guardBreak
+          ? (this.entity.encounterProfile.posture?.strongDamage ?? 0)
+          : 0;
     const breaksEnemyGuard =
       profile.guardBreak === true &&
       !interruptsStrongStartup &&
-      ((this.entity.encounterProfile.guardOutsidePunish && !recoveryPunish.accepted) ||
+      ((this.entity.encounterProfile.guardOutsidePunish && !punishAccepted) ||
         (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY));
     if (breaksEnemyGuard) {
       enemy.lastCommandTransition = Object.freeze({
@@ -781,11 +880,17 @@ export class TrainingEncounterNode extends SceneNode {
         direction: player.facing,
         strength: 1.8,
       });
+      this.applyPostureDamage({
+        combatState,
+        visualContact,
+        damage: postureDamage,
+        direction: player.facing,
+      });
     }
     if (
       this.entity.encounterProfile.guardOutsidePunish &&
-      !recoveryPunish.accepted &&
-      !profile.guardBreak &&
+      !punishAccepted &&
+      !breaksEnemyGuard &&
       !interruptsStrongStartup
     ) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
@@ -797,6 +902,12 @@ export class TrainingEncounterNode extends SceneNode {
         strength: 1.25,
       });
       enemy.hitFlashSeconds = 0.07;
+      this.applyPostureDamage({
+        combatState,
+        visualContact,
+        damage: postureDamage,
+        direction: player.facing,
+      });
       this.cameraFeedbackOccurred.emit(
         Object.freeze({ direction: player.facing, strength: 1, durationSeconds: 0.055 }),
       );
@@ -812,6 +923,12 @@ export class TrainingEncounterNode extends SceneNode {
         strength: 0.8,
       });
       enemy.hitFlashSeconds = 0.08;
+      this.applyPostureDamage({
+        combatState,
+        visualContact,
+        damage: postureDamage,
+        direction: player.facing,
+      });
       this.startRecovery({
         source: 'guard',
         durationSeconds: 0.24,
@@ -822,6 +939,7 @@ export class TrainingEncounterNode extends SceneNode {
     }
     const enemyAirborne = enemy.position.y < enemy.groundY;
     const backPunish = recoveryPunish.opens;
+    const punishHit = posturePunishAccepted || backPunish;
     if (recoveryPunish.opens && enemy.role === 'boss') {
       enemy.punishComboCycle = combatState.comboCycle;
     }
@@ -833,7 +951,7 @@ export class TrainingEncounterNode extends SceneNode {
     this.emitCombatEvent(
       combatState.id === 'shieldBash'
         ? COMBAT_EVENT_TYPE.COUNTER
-        : backPunish
+        : punishHit
           ? COMBAT_EVENT_TYPE.PUNISH
           : juggleRole === 'launcher'
             ? COMBAT_EVENT_TYPE.LAUNCH
@@ -847,10 +965,12 @@ export class TrainingEncounterNode extends SceneNode {
         outcome:
           combatState.id === 'shieldBash'
             ? 'just-guard-counter'
-            : backPunish
-              ? 'back-punish'
-              : undefined,
-        strength: 1 + Math.min(2.5, damage * 0.08) + (backPunish ? 0.5 : 0),
+            : posturePunishAccepted
+              ? 'posture-groggy-punish'
+              : backPunish
+                ? 'back-punish'
+                : undefined,
+        strength: 1 + Math.min(2.5, damage * 0.08) + (punishHit ? 0.5 : 0),
       },
     );
     enemy.health = Math.max(0, enemy.health - damage);
@@ -972,6 +1092,13 @@ export class TrainingEncounterNode extends SceneNode {
     this.playerResultResolved.emit(
       Object.freeze({
         kind: 'player-attack',
+        damagingHit: Object.freeze({
+          sequence: combatState.sequence,
+          motionId: combatState.id,
+          target: enemy.id,
+          outcome: backPunish ? 'punish' : 'hit',
+          damage,
+        }),
         hitStopSeconds: profile.damage >= 20 || juggleRole === 'finisher' ? 0.05 : 0.035,
         playerMotion: Object.freeze(playerMotion),
       }),
@@ -983,10 +1110,40 @@ export class TrainingEncounterNode extends SceneNode {
           1.2 +
           Math.min(3.3, damage * 0.12) +
           (juggleRole === 'finisher' ? 0.5 : 0) +
-          (backPunish ? 0.5 : 0),
+          (punishHit ? 0.5 : 0),
         durationSeconds: profile.damage >= 20 || juggleRole === 'finisher' ? 0.12 : 0.085,
       }),
     );
+    return true;
+  }
+
+  applyPostureDamage({ combatState, visualContact, damage, direction }) {
+    const enemy = this.enemy;
+    if (!enemy.posture || !(damage > 0) || enemy.posture.groggySeconds > 0) return false;
+    enemy.posture.current = Math.max(0, enemy.posture.current - damage);
+    if (enemy.posture.current > 0) return true;
+    enemy.posture.groggySeconds = this.entity.encounterProfile.posture.groggySeconds;
+    enemy.punishWindowOpen = true;
+    enemy.punishWindowOrigin = 'posture';
+    enemy.punishComboCycle = 0;
+    enemy.aiState = 'groggy';
+    enemy.aiSeconds = enemy.posture.groggySeconds;
+    enemy.velocityX = 0;
+    enemy.lastCommandTransition = Object.freeze({
+      kind: 'posture-broken',
+      attackKind: combatState.id,
+      phase: combatState.phase,
+      target: 'enemy',
+    });
+    this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD_BREAK, {
+      actor: 'player',
+      target: 'enemy',
+      attackId: combatState.id,
+      outcome: 'posture-break',
+      position: visualContact.position,
+      direction,
+      strength: 2.3,
+    });
     return true;
   }
 

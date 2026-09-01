@@ -71,12 +71,13 @@ Mobile ───────┘                              │
 - Game orchestrator가 Player, camera presentation, combat result 적용과 progression coordination의 최종 writer다.
 - Map runtime만 active Region/Room, available Portal, spawn, collision/entity source와 pending transition을 쓴다.
 - Active Room subtree가 Room-local entity lifecycle을, Encounter owner가 enemy/AI/juggle state를 쓴다. Encounter는 Player mutable state를 직접 소유하지 않고 완료 result를 root에 전달한다.
-- Combat command owner가 startup/active/recovery, buffer, cancel과 combo cycle을 결정한다. Animation module은 normalized motion state를 읽을 뿐 command timing을 바꾸지 않는다.
+- Combat command owner가 startup/active/recovery, buffer, cancel과 combo cycle을 결정한다. Attack cancel은 confirmed damaging hit result 뒤 다른 attack으로만 열리고 whiff·block과 같은 attack의 연속 cancel을 거부한다. Guard cancel은 keyboard/touch가 공통 monotonic guard sequence로 전달하고 command owner가 authored stamina 비용을 한 번 지불할 수 있을 때만 연다. Animation module은 normalized motion state를 읽을 뿐 command timing을 바꾸지 않는다.
 - Combat command owner가 stamina 잔량·회복, action별 비용, guard 유지 drain과 guard 시작 경과 시간을 결정한다. Guard contact result의 authored attack 위력별 drain은 한 번만 적용하고, 짧은 just-guard window 안의 guardable contact는 drain 대신 회복과 Basic-only counter window를 하나의 command transition으로 기록한다. Counter window 중 다른 action sequence는 소비하되 실행하지 않고 새 Basic만 전용 shield-counter motion으로 전환한다. Strong startup의 guard-break와 피격 interrupt도 같은 command transition에서 기록한다.
 - Enchantment owner가 단일 active sword enchant, 확정 material unlock, 적 affinity, attack별 속성 축적·상태 지속과 부가효과 transition을 기록한다. Combat contact는 neutral enchant result를 적용하지만 shield contact에는 이를 요청하지 않는다.
+- Encounter owner는 방패형 적과 Boss에만 guard·posture를 만들고 Strong·전용 shield counter의 posture damage, break와 bounded groggy를 단일 transition으로 기록한다. 일반 적은 이 상태를 갖지 않는다.
 - Shared Combat Geometry는 gameplay와 RenderFrame builder가 함께 읽는 neutral contract다. Gameplay가 renderer/presentation module을 import해 판정을 계산하거나 renderer가 별도 contact geometry를 만들지 않는다.
 - Story interaction owner가 현재 대화 speaker·line·world anchor·순차 reveal 진행도·advance 가능 여부와 story transition을 쓴다. UI presentation은 immutable dialogue DTO와 camera read model로 화자 위 bubble을 투영하되 gameplay state를 쓰지 않는다. 같은 jump action의 이동, 현재 줄 완성 또는 다음 대화 진행 우선순위는 game domain이 현재 interaction context에서 한 번 결정한다.
-- Progression owner가 route, checkpoint, boss, reward, equipment와 unlock transition을 쓴다. Storage adapter는 versioned snapshot을 검증·직렬화할 뿐 rule을 결정하지 않는다.
+- Progression owner가 route, checkpoint, boss, reward, equipment와 unlock transition을 쓴다. 첫 지역·Boss material은 빠른 연계형, guard·posture 파쇄형, 긴 reach·배후 punish형 중 하나의 상호배타적 weapon archetype transaction으로 소비하고 숫자 상위호환을 만들지 않는다. Storage adapter는 versioned snapshot을 검증·직렬화할 뿐 rule을 결정하지 않는다.
 - World Time owner가 authored action ID별 Clock 비용·Deadline 비용/연장과 Crisis 진입을 idempotent ledger로 쓴다. Map Runtime은 현재 world snapshot을 읽어 active Chunk를 resolve할 뿐 시간을 진행하거나 unloaded Chunk를 simulation하지 않는다.
 - UI는 status DTO를 표시하고 public command만 호출한다. Renderer는 RenderFrame을 읽기만 한다.
 
@@ -118,6 +119,9 @@ Immutable status + RenderFrame
 - Portal/trigger/interaction authored content는 작은 Chunk 이동과 구분되는 stable Travel Segment 또는 의미 있는 world action ID·비용을 제공한다. World Time owner는 완료된 action만 commit하며 transition 실패나 같은 event 재진입에 이중 청구하지 않는다.
 - Chunk resolve context는 World Clock phase, remaining Deadline, Crisis와 stable event flags로 제한한다. 이 context가 같으면 unload/reload 뒤 같은 NPC·facility·encounter·route patch를 만들고 offline 경과 시간은 context에 섞지 않는다.
 - Deadline 0의 Crisis 전환과 최근 핵심 사건 직후 rewind snapshot은 World Time/Progression coordinator가 원자 적용한다. Meta progression은 보존하고 unreturned expedition reward만 폐기하며 retry-aware stable flag를 추가한다.
+- Dungeon authored content는 signature rule의 입구 소개, 전투 결합, 숨은 분기 응용과 Boss 시험을 stable stage ID로 제공한다. Map/Encounter coordinator는 첫 방문의 핵심 gate만 blocking하고 cleared patch에서는 강제 전투를 제거하며 shortcut과 빠른 이동 경로를 결정적으로 연다.
+- Boss authored profile은 읽을 수 있는 attack cycle과 arena interaction, weakness exposure 또는 part transition 중 하나를 명시하며 Encounter owner가 phase와 recovery window를 기록한다.
+- 낮밤 patch는 필수 경로를 닫지 않는다. Night optional elite와 새 pattern은 stable encounter ID로 resolve되고 완료 시 확정 progression reward를 idempotent하게 지급한다.
 
 ## Rendering and Presentation Contracts
 
@@ -139,6 +143,7 @@ Immutable status + RenderFrame
 - UI screen state와 presentation settings는 gameplay input snapshot에 섞지 않는다.
 - UI는 declarative binding과 accessible text/name을 사용하고 implicit browser globals나 element-name globals에 의존하지 않는다.
 - World-anchored dialogue UI는 authored interaction anchor와 camera read model을 screen-space로 투영하고 viewport safe area에서 clamp한다. 글자별 시각 reveal은 screen reader에 partial text를 반복 announce하지 않으며 full line을 별도 accessible status로 제공한다.
+- Story owner는 NPC가 시작·완료한 핵심 대화의 stable conversation ID를 completion result로 내보내고 Progression owner가 viewed/completed ID의 final writer가 된다. Story는 current reaction과 별개로 이 snapshot에서 다시 읽을 수 있는 immutable transcript DTO를 resolve한다.
 - Mobile/desktop은 같은 gameplay simulation과 world framing을 공유하고 layout만 presentation adapter가 조정한다.
 
 ## Persistence, Failure and Recovery
@@ -164,7 +169,9 @@ Immutable status + RenderFrame
 - Syntax, lint와 formatting은 `npm run check`, patch whitespace는 `git diff --check`로 검사한다.
 - Pure combat, map patch, progression과 input rule은 DOM 없는 deterministic fixtures로 검증한다. Guard 유지 drain, 공격 위력별 단일 contact drain, just-guard 경계·회복, Basic-only lock과 keyboard/touch parity를 120Hz trace로 고정한다.
 - Enchantment fixture는 Basic/Strong·shield contact, 네 속성, 약점/중립/내성의 non-zero damage, 상태 축적·지속과 확정 material transaction을 120Hz trace로 고정한다.
+- Combat fixture는 shield/Boss만 가진 posture, Strong·shield counter break, bounded groggy, damaging-hit-confirm-only cancel, whiff·block·same-attack cancel 거부와 keyboard/touch guard sequence·stamina 부족 거부를 120Hz trace로 고정한다.
 - World Time fixture는 menu/dialogue/idle/load 0비용, Travel Segment와 core event의 단일 commit, shortcut 비용 감소, Deadline 가산/차감·Crisis, deterministic Chunk rebuild, reload와 rewind invariant를 고정한다.
+- Journey fixture는 Dungeon signature stage, first-clear gate, cleared revisit shortcut, Boss cycle, NPC transcript와 night elite 확정 보상을 stable ID와 persistence round-trip으로 고정한다.
 - Browser flow는 실제 menu → game → journey/encounter path, resize, keyboard/mobile adapter와 console error를 확인한다.
 - Visual 변경은 stable scenario와 frame에서 실제 browser viewport PNG를 만들고 직접 판독한다. Polygon/Retro, desktop/narrow viewport와 relevant pose/state를 같은 acceptance 기준으로 비교한다.
 - Persistence는 versioned round-trip, corrupt payload, failure result와 idempotent reward recovery를 검증한다.

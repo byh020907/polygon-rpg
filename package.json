@@ -12,7 +12,7 @@
     "visual:qa": "node scripts/visual-qa.mjs",
     "lint": "eslint .",
     "check": "npm run lint && npm run format:check && npm run test:combat && npm run test:story && npm run test:journey && npm run test:world && npm run test:map && npm run test:growth && npm run test:platform",
-    "test:combat": "node scripts/shared-combat-geometry-check.mjs && node scripts/player-combat-presentation-check.mjs && node scripts/combat-stamina-check.mjs",
+    "test:combat": "node scripts/shared-combat-geometry-check.mjs && node scripts/player-combat-presentation-check.mjs && node scripts/combat-stamina-check.mjs && node scripts/combat-posture-cancel-check.mjs",
     "test:story": "node scripts/story-interaction-check.mjs",
     "test:journey": "node scripts/first-journey-runtime-recovery-check.mjs",
     "test:world": "node scripts/world-time-check.mjs",

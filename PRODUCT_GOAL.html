@@ -409,6 +409,16 @@
                   공격에 맞으면 Player와 적 모두 취소된다.
                 </li>
                 <li>
+                  방패형 적과 Boss만 별도의 읽을 수 있는 guard·posture를 가진다. Strong과 just guard
+                  뒤 전용 방패 반격은 이를 크게 무너뜨리고, 소진 시 짧은 groggy가 열리지만 일반
+                  적에게 두 번째 HP처럼 적용하지 않는다.
+                </li>
+                <li>
+                  공격 cancel은 실제 피해 적중 뒤에만 열리고 whiff나 block에서는 열리지 않으며 같은
+                  공격으로 연속 cancel할 수 없다. 공격 중 guard cancel도 stamina를 소비하고 잔량이
+                  부족하면 거부되므로 무위험 탈출이나 무한 연계를 만들지 않는다.
+                </li>
+                <li>
                   입력 buffer와 cancel은 관대하지만 whiff, 잘못된 방향과 늦은 대응의 결과는
                   일관된다.
                 </li>
@@ -485,6 +495,15 @@
                   귀환을 debug 조작 없이 끝까지 진행한다.
                 </li>
                 <li>
+                  각 Dungeon은 signature 환경 규칙 하나를 입구에서 소개하고, 전투와 결합한 뒤 숨은
+                  분기에서 응용하고 Boss에서 시험한다. 첫 방문에는 핵심 encounter만 통행을 막으며,
+                  클리어 후에는 강제 전투가 사라지고 cleared state와 shortcut으로 빠르게 재방문한다.
+                </li>
+                <li>
+                  Boss는 단순한 HP 벽이 아니라 읽을 수 있는 attack cycle과 arena 상호작용, 약점 노출
+                  또는 부위 변화 중 하나를 가져 학습한 공략을 시험한다.
+                </li>
+                <li>
                   이야기는 고정 설명문이나 화면을 덮는 하단 panel이 아니라 인물·대상의 머리 위 world
                   anchor를 가리키는 이름 붙은 말풍선으로 진행된다. 말풍선은 화면 가장자리와 mobile
                   control을 피해 고정되고, 글자는 읽을 수 있는 속도로 순차 표시된다.
@@ -497,6 +516,11 @@
                 <li>
                   현재 목표와 이야기 변화는 인물 반응, 환경 상태, HUD와 이용 가능한 길에 일관되게
                   반영된다.
+                </li>
+                <li>
+                  주요 이야기는 게시판이 아니라 이름과 역할이 있는 NPC와의 직접 대화로
+                  시작·완료하고, 귀환·재도전 결과가 NPC 대사, 시설과 환경에 반영된다. 이미 본 핵심
+                  대화는 다시 확인할 수 있다.
                 </li>
               </ul>
             </article>
@@ -562,6 +586,11 @@
                   command 해금은 보존하고 귀환하지 않은 원정 보상만 잃으며, 다음 시도에는 위기
                   원인을 아는 NPC 반응이 추가된다.
                 </li>
+                <li>
+                  낮밤은 필수 경로를 막는 시간표가 아니라 선택적 위험·보상이다. 밤에는 optional
+                  elite와 새 pattern이 나타나고, 승리는 낮은 확률 drop 대신 탐험·장비 성장으로
+                  이어지는 확정 보상을 준다.
+                </li>
               </ul>
             </article>
 
@@ -580,6 +609,11 @@
                 <li>
                   성장은 별도 cooldown 버튼을 늘리는 대신 같은 command의 성질, branch와 cancel
                   route를 확장한다.
+                </li>
+                <li>
+                  Boss와 지역의 첫 클리어 확정 재료는 학원촌 대장간의 상호배타적 무기 선택으로
+                  이어진다. 첫 선택지는 빠른 연계형, guard·posture 파쇄형, 긴 reach·배후 punish형 세
+                  archetype이며 숫자만 높은 상위호환을 만들지 않는다.
                 </li>
                 <li>
                   획득한 성장, Boss 결과, 보상과 열린 shortcut은 같은 기기에서 다시 열어도 유지된다.
@@ -700,6 +734,10 @@
               자유 Z축 belt-scroll, cooldown skill 순환, 직접 stat point 분배와 대량 콘텐츠 선행은
               현재 제품 정체성에 포함하지 않는다.
             </li>
+            <li>
+              별도 Mental·Rage gauge, 수치만 증가하는 강화 level, 일일 의뢰 제한, 반복 farming, 대량
+              반복 업적과 rank·NG+ 선행을 핵심 성장이나 진행 조건으로 두지 않는다.
+            </li>
           </ul>
         </section>
 
@@ -750,7 +788,10 @@
                     recovery·stamina risk를 확인하고, 느린 Strong으로 guard를 깨거나 준비 중
                     피격으로 취소되는 결과를 확인한다. Guard 유지 소모와 공격 위력별 block 소모를
                     감수하거나, 짧은 just guard로 stamina를 회복한 뒤 Basic만 허용되는 전용 방패
-                    반격을 선택한다.
+                    반격을 선택한다. 실제 피해 적중 뒤에만 다른 공격으로 cancel하고 whiff·block·같은
+                    공격의 연속 cancel은 거부되며, 충분한 stamina로 guard cancel 비용을 지불한다.
+                    방패형 적과 Boss의 posture를 무너뜨려 groggy를 여는 동안 일반 적에는 별도
+                    posture가 생기지 않는다.
                   </td>
                   <td>결정적 combat trace와 실제 training 플레이</td>
                 </tr>
@@ -777,7 +818,9 @@
                     마을 준비부터 Field·Dungeon·Boss·보상·shortcut 귀환과 새 목표까지 debug 조작
                     없이 완료한다. 대화 말풍선은 화자 머리 위를 가리키고 글자를 순차 표시하며, 표시
                     중 jump는 줄을 완성하고 다음 jump만 대사를 진행하는 동안 Player는 jump하지
-                    않는다.
+                    않는다. Dungeon signature 규칙을 입구·전투·숨은 분기·Boss에서 단계적으로
+                    사용하고, 클리어 후 강제 전투 없는 shortcut 재방문과 NPC 핵심 대화 재확인을
+                    수행한다.
                   </td>
                   <td>연속 플레이 trace, reveal timing·anchor metadata와 desktop/mobile capture</td>
                 </tr>
@@ -794,6 +837,8 @@
                     메뉴·대화·대기·reload와 작은 Chunk 전환은 시간을 바꾸지 않고 authored Travel
                     Segment와 의미 있는 사건만 Clock/Deadline을 한 번 갱신한다. 낮밤·shortcut 비용·
                     Deadline 연장·Crisis Chunk 재구성과 방어 실패 되감기를 연속 원정에서 확인한다.
+                    밤의 optional elite가 필수 경로를 막지 않고 확정 탐험·성장 보상을 주는지도
+                    확인한다.
                   </td>
                   <td>
                     결정적 action ledger, persistence round-trip, Chunk rebuild와 Crisis recovery
@@ -803,7 +848,9 @@
                 <tr>
                   <th scope="row">PG-GROWTH-CHOICE</th>
                   <td>
-                    서로 다른 장비가 실제 전투 선택을 바꾸고 보상·해금·저장이 reload 뒤 유지된다.
+                    서로 다른 장비가 실제 전투 선택을 바꾸고, 첫 클리어 재료로 고른 세 무기
+                    archetype 중 하나가 연계·posture 파쇄·reach punish를 서로 다르게 확장하며,
+                    보상·해금·저장이 reload 뒤 유지된다.
                   </td>
                   <td>profile 비교, progression transition과 persistence round-trip</td>
                 </tr>

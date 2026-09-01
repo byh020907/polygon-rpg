@@ -35,6 +35,12 @@ const ENCOUNTER_PROFILES = Object.freeze({
       Object.freeze(['light', 'heavy', 'heavy']),
     ]),
     guardOutsidePunish: true,
+    posture: Object.freeze({
+      maximum: 100,
+      groggySeconds: 1.1,
+      strongDamage: 48,
+      shieldCounterDamage: 62,
+    }),
   }),
   'glasswind-field': Object.freeze({
     id: 'glasswind-field',
@@ -63,6 +69,12 @@ const ENCOUNTER_PROFILES = Object.freeze({
       Object.freeze(['sweep', 'heavy', 'sweep']),
     ]),
     guardOutsidePunish: true,
+    posture: Object.freeze({
+      maximum: 120,
+      groggySeconds: 1.2,
+      strongDamage: 52,
+      shieldCounterDamage: 68,
+    }),
   }),
 });
 

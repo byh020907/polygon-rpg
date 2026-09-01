@@ -530,6 +530,10 @@ export class GameScene extends SceneNode {
         'combat-guard-break',
         'combat-just-guard',
         'combat-guard-counter',
+        'posture-full',
+        'posture-reduced',
+        'posture-groggy',
+        'posture-normal-enemy',
       ].includes(scenarioId)
     ) {
       throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
@@ -556,6 +560,20 @@ export class GameScene extends SceneNode {
     };
 
     switch (scenarioId) {
+      case 'posture-full':
+        encounter.setVisualQaPostureScenario('full');
+        break;
+      case 'posture-reduced':
+        startMotion('heavy', active ? 0.38 : 0.05);
+        encounter.setVisualQaPostureScenario('reduced');
+        break;
+      case 'posture-groggy':
+        startMotion('shieldBash', active ? 0.19 : 0.04);
+        encounter.setVisualQaPostureScenario('groggy', { emitBreak: active });
+        break;
+      case 'posture-normal-enemy':
+        encounter.setVisualQaPostureScenario('absent');
+        break;
       case 'combat-hit':
         startMotion('slash', active ? 0.25 : 0.04);
         if (active) {
@@ -1431,6 +1449,8 @@ export class GameScene extends SceneNode {
       this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds ?? 0);
     }
 
+    if (result.damagingHit) this.combatCommands.confirmDamagingHit(result.damagingHit);
+
     const motion = result.playerMotion;
     if (!motion) return;
     if (Number.isFinite(motion.positionXDelta)) this.position.x += motion.positionXDelta;
@@ -1967,7 +1987,11 @@ export class GameScene extends SceneNode {
       encounterHint,
       encounterHealthLabel:
         encounter && encounter.health > 0
-          ? `${encounter.label} · HP ${encounter.health}/${encounter.maxHealth}`
+          ? `${encounter.label} · HP ${encounter.health}/${encounter.maxHealth}${
+              encounter.posture
+                ? ` · ${encounter.posture.groggy ? 'GROGGY' : 'Posture'} ${Math.ceil(encounter.posture.current)}/${encounter.posture.maximum}`
+                : ''
+            }`
           : '',
       journeyLabel:
         location.regionId === 'glasswind-region' ||

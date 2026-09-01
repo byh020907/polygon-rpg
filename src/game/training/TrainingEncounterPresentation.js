@@ -133,6 +133,8 @@ export function createTrainingEnemyItems(
     combatGeometry ?? sampleTrainingEnemyCombatGeometry(enemy, profiles);
   const { x, y } = enemy.position;
   const flash = enemy.hitFlashSeconds > 0;
+  const groggy = enemy.posture?.groggy === true;
+  const groggyPulse = groggy ? 0.72 + 0.28 * Math.sin(enemy.posture.groggySeconds * 30) : 1;
   const glasswind = enemy.species === 'glasswind';
   const roleColor = glasswind
     ? enemy.role === 'boss'
@@ -143,13 +145,15 @@ export function createTrainingEnemyItems(
       : enemy.role === 'field'
         ? '#7f6341'
         : '#a74651';
-  const bodyFill = flash
-    ? '#f4e3ce'
-    : enemy.aiState === 'windup'
-      ? '#e28b45'
-      : enemy.aiState === 'guard'
-        ? '#4f7f9d'
-        : roleColor;
+  const bodyFill = groggy
+    ? '#bff8ed'
+    : flash
+      ? '#f4e3ce'
+      : enemy.aiState === 'windup'
+        ? '#e28b45'
+        : enemy.aiState === 'guard'
+          ? '#4f7f9d'
+          : roleColor;
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
   const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
   const presentationScale = enemy.presentationScale ?? TRAINING_ENEMY_PRESENTATION_SCALE;
@@ -190,6 +194,7 @@ export function createTrainingEnemyItems(
     enemy.aiState === 'recovery'
       ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
       : enemy.rotation +
+        (groggy ? -0.18 : 0) +
         (enemy.aiState === 'windup'
           ? -0.14
           : enemy.aiState === 'attack'
@@ -437,6 +442,35 @@ export function createTrainingEnemyItems(
       { x, y: y - 112 },
       healthRatio > 0.3 ? '#df6571' : '#f0c96b',
     ),
+    ...(enemy.posture && enemy.health > 0
+      ? [
+          polygon(
+            'combat-enemy-posture-back',
+            rectangle(-34, -5, 68, 10),
+            { x, y: y - 103 },
+            '#102d35',
+            { stroke: '#0a151b', lineWidth: 1 },
+          ),
+          polygon(
+            'combat-enemy-posture-fill',
+            rectangle(-32, -3, 64 * enemy.posture.ratio, 6),
+            { x, y: y - 103 },
+            groggy ? '#f2c96d' : '#55d9d0',
+            { opacity: groggyPulse },
+          ),
+          ...(groggy
+            ? [
+                polygon(
+                  'combat-enemy-posture-break',
+                  regularPolygon(42, 50, 8, Math.PI / 8),
+                  { x, y: y - 54 },
+                  '#f1c966',
+                  { stroke: '#dbfff7', lineWidth: 2, opacity: 0.16 + groggyPulse * 0.24 },
+                ),
+              ]
+            : []),
+        ]
+      : []),
   ];
 
   if (enemy.profileId === 'training') {
@@ -573,7 +607,9 @@ export function createTrainingEnemyItems(
         : Object.freeze(
             item.points.map((point) => {
               const rotatesWithBody =
-                item.id !== 'combat-enemy-shadow' && !item.id.startsWith('combat-enemy-health');
+                item.id !== 'combat-enemy-shadow' &&
+                !item.id.startsWith('combat-enemy-health') &&
+                !item.id.startsWith('combat-enemy-posture');
               const centerY = y - 50;
               const relativeX = point.x - x;
               const relativeY = point.y - centerY;
@@ -587,7 +623,8 @@ export function createTrainingEnemyItems(
               const embeddedOffset =
                 enemy.groundBounceDelaySeconds > 0 &&
                 item.id !== 'combat-enemy-shadow' &&
-                !item.id.startsWith('combat-enemy-health')
+                !item.id.startsWith('combat-enemy-health') &&
+                !item.id.startsWith('combat-enemy-posture')
                   ? 8
                   : 0;
               return Object.freeze({

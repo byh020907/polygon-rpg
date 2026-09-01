@@ -20,6 +20,7 @@ export const DEFAULT_COMBAT_STAMINA_PROFILE = Object.freeze({
     strongAttack: 24,
     guard: 6,
     roll: 18,
+    guardCancel: 18,
     block: 34,
   }),
 });
@@ -274,7 +275,11 @@ export class CombatCommandController {
     this.continueNextStarterInCombo = false;
     this.guardElapsedSeconds = 0;
     this.justGuardCounterWindowSeconds = 0;
+    this.damagingHitConfirm = null;
     this.previousGuardInput = Boolean(inputSnapshot?.guard);
+    this.previousGuardSequence = Number.isSafeInteger(inputSnapshot?.guardSequence)
+      ? inputSnapshot.guardSequence
+      : 0;
     this.previousInputs = Object.fromEntries(
       INPUT_NAMES.map((name) => [name, Boolean(inputSnapshot?.[name])]),
     );
@@ -312,6 +317,29 @@ export class CombatCommandController {
     const issuedCommand = acceptCommands
       ? this.readIssuedMotion(inputSnapshot, { isAirborne, counterOnly: counterWindowWasActive })
       : null;
+    const guardSequence = inputSnapshot.guardSequence;
+    const guardIssued =
+      (Number.isSafeInteger(guardSequence) && guardSequence > (this.previousGuardSequence ?? 0)) ||
+      (!Number.isSafeInteger(guardSequence) && inputSnapshot.guard && !this.previousGuardInput);
+    let guardCancelAccepted = false;
+    if (
+      this.active &&
+      !AIR_MOTION_IDS.has(this.active.id) &&
+      this.active.id !== 'shieldBash' &&
+      acceptCommands &&
+      allowGuard &&
+      inputSnapshot.guard &&
+      guardIssued
+    ) {
+      if (this.trySpendStamina('guardCancel', { transitionKind: 'guard-cancelled' })) {
+        this.active = null;
+        this.queuedMotion = null;
+        this.damagingHitConfirm = null;
+        this.heldPose = 'guard';
+        this.guardElapsedSeconds = 0;
+        guardCancelAccepted = true;
+      }
+    }
     if (this.active) {
       this.active.elapsedSeconds += deltaSeconds;
       if (issuedCommand && isAirborne && !AIR_MOTION_IDS.has(this.active.id)) {
@@ -324,20 +352,31 @@ export class CombatCommandController {
       const chainStartSeconds = combatFramesToSeconds(
         combatMotionPolicy(this.active.id, this.timingProfile).frame.chainStartFrame,
       );
+      const motionEnded = this.active.elapsedSeconds >= this.active.durationSeconds;
       if (
-        (this.queuedMotion && this.active.elapsedSeconds >= chainStartSeconds) ||
-        this.active.elapsedSeconds >= this.active.durationSeconds
+        (this.queuedMotion &&
+          this.damagingHitConfirm?.sequence === this.active.sequence &&
+          this.damagingHitConfirm.motionId === this.active.id &&
+          this.active.elapsedSeconds >= chainStartSeconds) ||
+        motionEnded
       ) {
         const transitionFrom = this.snapshot();
         const nextCommand = this.queuedMotion;
+        const hitConfirm = this.damagingHitConfirm;
         this.active = null;
         this.queuedMotion = null;
-        if (nextCommand) {
+        this.damagingHitConfirm = null;
+        if (
+          nextCommand &&
+          hitConfirm?.sequence === transitionFrom.sequence &&
+          hitConfirm.motionId === transitionFrom.id &&
+          nextCommand.motionId !== transitionFrom.id
+        ) {
           const continuesCombo = this.continuesComboRoute(transitionFrom.id, nextCommand.motionId);
           this.startIssuedCommand(nextCommand, transitionFrom, { continuesCombo });
         }
       }
-    } else if (issuedCommand) {
+    } else if (!guardCancelAccepted && issuedCommand) {
       this.startIssuedCommand(issuedCommand, null, {
         continuesCombo: this.continueNextStarterInCombo,
       });
@@ -352,7 +391,7 @@ export class CombatCommandController {
       Boolean(inputSnapshot.guard);
     if (this.justGuardCounterWindowSeconds > 0 && !this.active) {
       this.heldPose = 'guard';
-    } else if (wantsGuard && this.heldPose === 'guard') {
+    } else if (wantsGuard && (this.heldPose === 'guard' || guardCancelAccepted)) {
       this.guardElapsedSeconds += staminaDeltaSeconds;
       if (!this.applyGuardHoldDrain(staminaDeltaSeconds)) this.heldPose = 'idle';
     } else if (
@@ -367,6 +406,7 @@ export class CombatCommandController {
       this.guardElapsedSeconds = 0;
     }
     this.previousGuardInput = Boolean(inputSnapshot.guard);
+    if (Number.isSafeInteger(guardSequence)) this.previousGuardSequence = guardSequence;
     for (const inputName of INPUT_NAMES) {
       this.previousInputs[inputName] = Boolean(inputSnapshot[inputName]);
       const sequence = inputSnapshot[`${inputName}Sequence`];
@@ -653,6 +693,7 @@ export class CombatCommandController {
     this.continueNextStarterInCombo = preserveComboCycle;
     this.active = null;
     this.queuedMotion = null;
+    this.damagingHitConfirm = null;
     return true;
   }
 
@@ -663,6 +704,7 @@ export class CombatCommandController {
     const strongStartup = isStrongCombatMotion(interrupted.id) && interrupted.phase === 'windup';
     this.active = null;
     this.queuedMotion = null;
+    this.damagingHitConfirm = null;
     this.continueNextStarterInCombo = false;
     this.lastCommandTransition = Object.freeze({
       kind: strongStartup ? 'strong-startup-interrupted' : 'motion-interrupted',
@@ -680,6 +722,7 @@ export class CombatCommandController {
     const queuedWasAirborne = AIR_MOTION_IDS.has(this.queuedMotion?.motionId);
     if (activeWasAirborne) this.active = null;
     if (queuedWasAirborne) this.queuedMotion = null;
+    if (activeWasAirborne || queuedWasAirborne) this.damagingHitConfirm = null;
     this.continueNextStarterInCombo = false;
     this.airActions = 0;
     return activeWasAirborne || queuedWasAirborne;
@@ -687,6 +730,25 @@ export class CombatCommandController {
 
   clearComboContinuation() {
     this.continueNextStarterInCombo = false;
+  }
+
+  confirmDamagingHit({ sequence, motionId, target, outcome, damage } = {}) {
+    if (
+      !this.active ||
+      !Number.isSafeInteger(sequence) ||
+      sequence !== this.active.sequence ||
+      motionId !== this.active.id ||
+      !Number.isFinite(damage) ||
+      damage <= 0 ||
+      !target ||
+      outcome === 'block' ||
+      outcome === 'guard'
+    ) {
+      return false;
+    }
+    if (this.damagingHitConfirm?.sequence === sequence) return false;
+    this.damagingHitConfirm = Object.freeze({ sequence, motionId, target, outcome, damage });
+    return true;
   }
 
   snapshot() {
@@ -700,6 +762,9 @@ export class CombatCommandController {
       guardElapsedSeconds: this.guardElapsedSeconds,
       justGuardCounterWindowSeconds: this.justGuardCounterWindowSeconds,
       justGuardCounterReady: this.justGuardCounterWindowSeconds > 0,
+      damagingHitConfirmed: Boolean(
+        this.active && this.damagingHitConfirm?.sequence === this.active.sequence,
+      ),
     };
     if (!this.active) {
       const motionPolicy = combatMotionPolicy(this.heldPose, this.timingProfile);

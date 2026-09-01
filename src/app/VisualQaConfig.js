@@ -1,6 +1,36 @@
 const VISUAL_QA_PHASES = new Set(['start', 'active', 'end']);
 
 const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
+  'posture-full': Object.freeze({
+    expectedEvent: null,
+    expectedMotion: 'idle',
+    expectedItem: 'combat-enemy-posture-fill',
+    expectedContact: false,
+    expectedPosture: 'full',
+  }),
+  'posture-reduced': Object.freeze({
+    expectedEvent: null,
+    expectedMotion: 'heavy',
+    expectedItem: 'combat-enemy-posture-fill',
+    expectedContact: false,
+    expectedPosture: 'reduced',
+  }),
+  'posture-groggy': Object.freeze({
+    expectedEvent: 'guard-break',
+    expectedMotion: 'shieldBash',
+    expectedItem: 'combat-enemy-hit-ring',
+    expectedItems: Object.freeze(['combat-enemy-posture-break']),
+    expectedContact: true,
+    expectedAnchor: 'event-contact',
+    expectedPosture: 'groggy',
+  }),
+  'posture-normal-enemy': Object.freeze({
+    expectedEvent: null,
+    expectedMotion: 'idle',
+    expectedItem: 'combat-enemy-training-mask',
+    expectedContact: false,
+    expectedPosture: 'absent',
+  }),
   'combat-hit': Object.freeze({
     expectedEvent: 'hit',
     expectedMotion: 'slash',
@@ -326,7 +356,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       id,
       Object.freeze({
         regionId: 'academy-region',
-        roomId: 'training-room',
+        roomId:
+          id.startsWith('posture-') && id !== 'posture-normal-enemy'
+            ? 'sealed-forest-boss'
+            : 'training-room',
         x: 500,
         combatScenarioId: id,
         expectation,
@@ -384,7 +417,15 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
         eventExpected: phase === 'active' && scenario.expectation.expectedEvent !== null,
         expectedMotion: phase === 'end' ? 'idle' : scenario.expectation.expectedMotion,
         expectedItem:
-          phase === 'active' ? scenario.expectation.expectedItem : 'combat-enemy-training-mask',
+          phase === 'active'
+            ? scenario.expectation.expectedItem
+            : scenario.expectation.expectedPosture === 'absent' ||
+                scenario.expectation.expectedPosture === undefined
+              ? 'combat-enemy-training-mask'
+              : phase === 'start' && scenario.expectation.expectedPosture === 'groggy'
+                ? 'combat-enemy-posture-break'
+                : 'combat-enemy-posture-fill',
+        expectedItems: phase === 'active' ? (scenario.expectation.expectedItems ?? []) : [],
         expectedRetaliation:
           phase === 'active' && scenario.expectation.expectedRetaliation === true,
         expectedContact:
