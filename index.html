@@ -336,25 +336,6 @@
                 <span x-text="combatSkillActionLabel"></span>
               </button>
             </article>
-            <div class="equipment-grid">
-              <template x-for="option in equipmentOptions" x-bind:key="option.id">
-                <button
-                  type="button"
-                  x-bind:class="{
-                    'is-selected': option.selected,
-                    'is-locked': !option.owned,
-                  }"
-                  x-bind:disabled="!option.canChoose"
-                  x-bind:aria-pressed="option.selected"
-                  @click="chooseEquipment(option)"
-                  @touchend.prevent="chooseEquipment(option)"
-                >
-                  <strong x-text="option.shortLabel"></strong>
-                  <small x-text="option.description"></small>
-                  <span x-text="option.actionLabel"></span>
-                </button>
-              </template>
-            </div>
             <p class="growth-notice" x-text="progressionNotice" aria-live="polite"></p>
           </section>
 
@@ -401,10 +382,12 @@
               <nav
                 class="dialogue-command-surface"
                 x-show="dialogue.commands.length > 0"
-                aria-label="인챈터 대화 선택"
+                x-bind:aria-label="`${dialogue.speaker} 대화 선택`"
               >
                 <p>
-                  <strong x-text="`현재 검 · ${activeEnchantLabel}`"></strong>
+                  <strong
+                    x-text="`현재 검 · ${selectedEquipmentLabel} · ${activeEnchantLabel}`"
+                  ></strong>
                   <span x-text="progressionNotice" aria-live="polite"></span>
                 </p>
                 <div>
@@ -419,7 +402,7 @@
                       <strong x-text="command.label"></strong>
                       <span x-text="command.actionLabel"></span>
                       <small
-                        x-text="`${command.materialLabel} ${command.materialQuantity}/${command.materialCost ?? 0}`"
+                        x-text="command.materialLabel ? `${command.materialLabel} ${command.materialQuantity}/${command.materialCost ?? 0}` : command.description"
                       ></small>
                     </button>
                   </template>

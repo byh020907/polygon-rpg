@@ -30,8 +30,9 @@ const STORY_BEATS = Object.freeze({
   [FIRST_JOURNEY_STORY_BEAT.ACADEMY_BRIEFING]: Object.freeze({
     title: '세라 교관의 출정 수업',
     briefing:
-      '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다. 선택한 장비의 거리와 빈틈을 확인하고 학원촌에서 출정하세요.',
-    nextObjective: '장비를 고른 뒤 오른쪽 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
+      '전직 전투교관 세라가 주문 없이 마법 생물에 맞서는 첫 임무를 맡겼습니다. 카린 무기상과 대화해 검의 거리와 빈틈을 확인하고 학원촌에서 출정하세요.',
+    nextObjective:
+      '광장 오른쪽의 카린 무기상과 대화해 검을 고른 뒤 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
   }),
   [FIRST_JOURNEY_STORY_BEAT.ACADEMY_TRAINING]: Object.freeze({
     title: '세라의 기본기 점검',

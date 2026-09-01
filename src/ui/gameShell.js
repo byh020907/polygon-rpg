@@ -195,20 +195,19 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       screenAnchor: null,
       commands: Object.freeze([]),
     }),
-    objective: '장비를 고른 뒤 오른쪽 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
+    objective:
+      '광장 오른쪽의 카린 무기상과 대화해 검을 고른 뒤 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
     journeyLabel: '학원촌 준비',
     encounterHint: '',
     encounterHealthLabel: '',
     wardLabel: '수호 수액 미획득',
     timeLabel: '낮',
     deadlineLabel: 'Deadline 12:00',
-    canSelectEquipment: true,
     canManageProgression: true,
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
     selectedEquipmentId: '',
     selectedEquipmentLabel: '장비 정보 불러오는 중',
-    equipmentOptions: Object.freeze([]),
     trainingMarks: 0,
     combatSkillLevel: 0,
     combatSkillMaxLevel: 3,
@@ -302,13 +301,11 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
           this.deadlineLabel = status.deadlineLabel;
-          this.canSelectEquipment = status.canSelectEquipment;
           this.canManageProgression = status.canManageProgression;
           this.activeEnchantId = status.activeEnchantId;
           this.activeEnchantLabel = status.activeEnchantLabel;
           this.selectedEquipmentId = status.equipmentId;
           this.selectedEquipmentLabel = status.equipmentLabel;
-          this.equipmentOptions = status.equipmentOptions;
           this.combatSkillLevel = status.combatSkill.level;
           this.combatSkillMaxLevel = status.combatSkill.maxLevel;
           this.combatSkillLabel = status.combatSkill.label;
@@ -579,15 +576,6 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     toggleWorldTime() {
       gameApp.toggleWorldTime();
-    },
-
-    selectEquipment(profileId) {
-      gameApp.selectEquipment(profileId);
-    },
-
-    chooseEquipment(option) {
-      if (option.owned) gameApp.selectEquipment(option.id);
-      else gameApp.purchaseEquipment(option.id);
     },
 
     trainCombatSkill() {

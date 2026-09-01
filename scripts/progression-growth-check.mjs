@@ -24,6 +24,26 @@ import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.j
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const HEAVY_PROFILE_ID = 'heavy-sword';
+const STEP = 1 / 120;
+
+function openWeaponMerchantDialogue(scene) {
+  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 650 });
+  scene.update(
+    STEP,
+    Object.freeze({
+      left: false,
+      right: false,
+      jump: true,
+      guard: false,
+      basicAttack: false,
+      strongAttack: false,
+      jumpSequence: 1,
+      basicAttackSequence: 0,
+      strongAttackSequence: 0,
+    }),
+  );
+  return scene.getWorldStatus().dialogue;
+}
 
 function returnedFirstJourneyProgression({ trainingMarks = 0, gold = 120 } = {}) {
   const fresh = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
@@ -169,6 +189,7 @@ function verifyRuntimeTradeoffsAndStatus() {
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: returnedFirstJourneyProgression(),
   });
+  scene.enterTree();
   const balancedAttack = scene.getAttackHitProfile('slash');
   const balancedFrames = scene.combatCommands.getMotionFrameData('slash').durationFrames;
   const balancedGuardScene = createTestGameScene({
@@ -182,21 +203,46 @@ function verifyRuntimeTradeoffsAndStatus() {
     blockstunSeconds: 0.3,
     hitStopSeconds: 0.04,
   });
-  const optionBefore = scene
-    .getWorldStatus()
-    .equipmentOptions.find((option) => option.id === HEAVY_PROFILE_ID);
+  assert.equal(
+    scene.executeDialogueCommand('weapon-merchant-karen-interaction', 'manage-heavy-sword').reason,
+    PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
+    '활성 무기상 대화 밖에서는 구매 command를 실행할 수 없어야 한다.',
+  );
+  const merchantDialogue = openWeaponMerchantDialogue(scene);
+  assert.equal(merchantDialogue.active, true);
+  assert.equal(merchantDialogue.speaker, '카린 무기상');
+  const optionBefore = merchantDialogue.commands.find(
+    (command) => command.profileId === HEAVY_PROFILE_ID,
+  );
   assert.equal(optionBefore.canChoose, true);
   assert.equal(optionBefore.actionLabel, '120 Gold');
   assert.equal(scene.getWorldStatus().combatSkill.canTrain, true);
+  assert.equal(
+    scene.executeDialogueCommand('enchanter-lio-interaction', 'manage-heavy-sword').reason,
+    PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
+    '다른 NPC interaction ID로는 무기 구매를 위조할 수 없어야 한다.',
+  );
+  assert.equal(
+    scene.executeDialogueCommand('weapon-merchant-karen-interaction', 'manage-unknown-sword')
+      .reason,
+    PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
+    'authored 무기상 command 목록 밖의 ID는 실행할 수 없어야 한다.',
+  );
 
-  const purchaseResult = scene.purchaseEquipment(HEAVY_PROFILE_ID);
+  const purchaseResult = scene.executeDialogueCommand(
+    'weapon-merchant-karen-interaction',
+    'manage-heavy-sword',
+  );
   assert.equal(purchaseResult.changed, true);
   assert.equal(purchaseResult.reason, PROGRESSION_TRANSACTION_REASON.PURCHASED);
   assert.ok(Object.isFrozen(purchaseResult));
   const status = scene.getWorldStatus();
-  const heavyOption = status.equipmentOptions.find((option) => option.id === HEAVY_PROFILE_ID);
-  assert.equal(heavyOption.selected, true);
+  const heavyOption = status.dialogue.commands.find(
+    (command) => command.profileId === HEAVY_PROFILE_ID,
+  );
+  assert.equal(heavyOption.active, true);
   assert.equal(heavyOption.actionLabel, '장착 중');
+  assert.deepEqual(status.activeEnchantId, null, '새 검은 인챈트 없는 기본 상태여야 한다.');
   assert.equal(scene.getPlayerStatus().gold, 0);
   assert.equal(status.combatSkill.canTrain, false, '첫 보상으로 두 선택을 모두 살 수 없어야 한다.');
 
@@ -220,6 +266,7 @@ function verifyRuntimeTradeoffsAndStatus() {
     scene.playerBlockstunSeconds < balancedGuardScene.playerBlockstunSeconds,
     '중량형 방패는 동일 guard contact의 blockstun을 줄여야 한다.',
   );
+  scene.exitTree();
 
   const skillScene = createTestGameScene({
     mapDefinition: ACADEMY_VILLAGE_MAP,
@@ -256,7 +303,12 @@ function verifyPersistenceAndFailure() {
     mapDefinition: ACADEMY_VILLAGE_MAP,
     progressionSnapshot: returnedFirstJourneyProgression(),
   });
-  assert.equal(scene.purchaseEquipment(HEAVY_PROFILE_ID).changed, true);
+  scene.enterTree();
+  openWeaponMerchantDialogue(scene);
+  assert.equal(
+    scene.executeDialogueCommand('weapon-merchant-karen-interaction', 'manage-heavy-sword').changed,
+    true,
+  );
   const storageAdapter = new MemoryStorage();
   const storage = new ProgressionStorage(storageAdapter, 'growth-check', ENCHANTMENT_CATALOG);
   const saved = storage.save(scene.getProgressionSnapshot());
@@ -288,6 +340,7 @@ function verifyPersistenceAndFailure() {
     { ok: false, reason: 'write-failed' },
   );
   assert.ok(Object.isFrozen(failedSave), '저장 실패 결과는 immutable이어야 한다.');
+  scene.exitTree();
 
   const corrupt = new ProgressionStorage(
     new MemoryStorage('{broken'),
@@ -311,10 +364,20 @@ function verifyUiBoundaryAndInputParity() {
   );
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.match(html, /aria-label="장비와 command 성장"/);
-  assert.match(html, /@click="chooseEquipment\(option\)"/);
-  assert.match(html, /@touchend\.prevent="chooseEquipment\(option\)"/);
+  assert.doesNotMatch(html, /class="equipment-grid"/);
+  assert.doesNotMatch(html, /chooseEquipment\(option\)/);
+  assert.match(html, /executeDialogueCommand\(command\)/);
+  assert.match(html, /x-bind:aria-label="`\$\{dialogue\.speaker\} 대화 선택`"/);
   assert.match(html, /@click="trainCombatSkill"/);
   assert.match(html, /@touchend\.prevent="trainCombatSkill"/);
+  for (const sourcePath of ['../src/app/GameApp.js', '../src/app/GameApplication.js']) {
+    const source = readFileSync(new URL(sourcePath, import.meta.url), 'utf8');
+    assert.doesNotMatch(
+      source,
+      /\n\s*(?:selectEquipment|purchaseEquipment)\(/,
+      'Browser application boundary에 direct equipment entrypoint가 남으면 안 된다.',
+    );
+  }
 }
 
 function verifyAuthoredContentInjectionBoundary() {
@@ -396,7 +459,7 @@ console.log(
         'command-route-unlock',
         'idempotence-and-wallet-order',
         'persistence-round-trip-and-write-failure',
-        'ui-boundary-and-click-touch-parity',
+        'active-weapon-merchant-dialogue-only-and-static-equipment-ui-removal',
         'authored-content-composition-injection-boundary',
       ],
     },

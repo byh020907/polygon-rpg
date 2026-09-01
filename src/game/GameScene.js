@@ -1166,37 +1166,66 @@ export class GameScene extends SceneNode {
     const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
     const availableGold = getAvailableGold(progression);
     const commands = dialogue.commands.map((command) => {
-      if (command.type !== 'upgrade-sword-enchantment') return command;
-      const profile = this.enchantmentCatalog.getProfile(command.enchantId);
-      const active = record.elementId === profile.id;
-      const lockedToOtherElement = record.elementId !== null && !active;
-      const targetLevel = record.level + 1;
-      const materialCost = ENCHANTMENT_MATERIAL_COSTS[targetLevel] ?? null;
-      const goldCost = profile.goldCosts[targetLevel - 1] ?? null;
-      const materialQuantity = progression.enchantment.materialQuantities[profile.materialId];
-      const hasMaterial = materialCost !== null && materialQuantity >= materialCost;
-      const maxLevel = record.level >= 5;
-      return Object.freeze({
-        id: command.id,
-        type: command.type,
-        enchantId: profile.id,
-        label: profile.label,
-        materialLabel: profile.materialLabel,
-        swordId: progression.equippedEquipmentId,
-        level: active ? record.level : 0,
-        targetLevel,
-        materialQuantity,
-        materialCost,
-        goldCost,
-        active,
-        hasMaterial,
-        canChoose: !lockedToOtherElement && !maxLevel && hasMaterial && availableGold >= goldCost,
-        actionLabel: lockedToOtherElement
-          ? '다른 속성 적용됨'
-          : maxLevel
-            ? 'Lv.5 최고'
-            : `Lv.${targetLevel} · ${materialCost}개 + ${goldCost} Gold`,
-      });
+      if (command.type === 'upgrade-sword-enchantment') {
+        const profile = this.enchantmentCatalog.getProfile(command.enchantId);
+        const active = record.elementId === profile.id;
+        const lockedToOtherElement = record.elementId !== null && !active;
+        const targetLevel = record.level + 1;
+        const materialCost = ENCHANTMENT_MATERIAL_COSTS[targetLevel] ?? null;
+        const goldCost = profile.goldCosts[targetLevel - 1] ?? null;
+        const materialQuantity = progression.enchantment.materialQuantities[profile.materialId];
+        const hasMaterial = materialCost !== null && materialQuantity >= materialCost;
+        const maxLevel = record.level >= 5;
+        return Object.freeze({
+          id: command.id,
+          type: command.type,
+          enchantId: profile.id,
+          label: profile.label,
+          materialLabel: profile.materialLabel,
+          swordId: progression.equippedEquipmentId,
+          level: active ? record.level : 0,
+          targetLevel,
+          materialQuantity,
+          materialCost,
+          goldCost,
+          active,
+          hasMaterial,
+          canChoose: !lockedToOtherElement && !maxLevel && hasMaterial && availableGold >= goldCost,
+          actionLabel: lockedToOtherElement
+            ? '다른 속성 적용됨'
+            : maxLevel
+              ? 'Lv.5 최고'
+              : `Lv.${targetLevel} · ${materialCost}개 + ${goldCost} Gold`,
+        });
+      }
+      if (command.type === 'manage-sword') {
+        const profile = this.equipmentCatalog.getProfile(command.profileId);
+        const owned = progression.ownedEquipmentIds.includes(profile.id);
+        const active = progression.equippedEquipmentId === profile.id;
+        const affordable =
+          progression.trainingMarks >= profile.trainingMarkRequirement &&
+          availableGold >= profile.goldCost;
+        return Object.freeze({
+          id: command.id,
+          type: command.type,
+          profileId: profile.id,
+          label: profile.label,
+          description: profile.description,
+          goldCost: profile.goldCost,
+          trainingMarkRequirement: profile.trainingMarkRequirement,
+          owned,
+          active,
+          canChoose: !active && (owned || affordable),
+          actionLabel: active
+            ? '장착 중'
+            : owned
+              ? '장착'
+              : profile.trainingMarkRequirement > 0
+                ? `${profile.goldCost} Gold · 인장 ${profile.trainingMarkRequirement}`
+                : `${profile.goldCost} Gold`,
+        });
+      }
+      return Object.freeze({ ...command, canChoose: false, active: false });
     });
     return Object.freeze({ ...dialogue, commands: Object.freeze(commands) });
   }
@@ -1207,7 +1236,13 @@ export class GameScene extends SceneNode {
       interactionId,
       commandId,
     );
-    if (!command || command.type !== 'upgrade-sword-enchantment') {
+    if (!command || !this.canManageProgression()) {
+      return this.unavailableProgressionTransaction();
+    }
+    if (command.type === 'manage-sword') {
+      return this.manageMerchantSword(command.profileId);
+    }
+    if (command.type !== 'upgrade-sword-enchantment') {
       return this.unavailableProgressionTransaction();
     }
     const transaction = upgradeProgressionSwordEnchantment(
@@ -1237,6 +1272,51 @@ export class GameScene extends SceneNode {
     return this.commitProgression(transaction);
   }
 
+  manageMerchantSword(profileId) {
+    let profile;
+    try {
+      profile = this.equipmentCatalog.getProfile(profileId);
+    } catch {
+      return this.unavailableProgressionTransaction();
+    }
+    const owned = this.progressionSnapshot.ownedEquipmentIds.includes(profile.id);
+    if (owned) {
+      const transaction = selectProgressionEquipment(this.progressionSnapshot, profile.id);
+      this.progressionNotice = transaction.changed
+        ? `${profile.shortLabel} 장착 · frame/거리/경직 profile 변경`
+        : '이미 장착 중인 검입니다.';
+      if (!transaction.changed) {
+        this.statusNode.publish({ force: true });
+        return transaction;
+      }
+      return this.commitProgression(transaction, { equipmentChanged: true });
+    }
+
+    const purchase = purchaseProgressionEquipment(this.progressionSnapshot, {
+      profileId: profile.id,
+      goldCost: profile.goldCost,
+      trainingMarkRequirement: profile.trainingMarkRequirement,
+    });
+    if (!purchase.changed) {
+      this.progressionNotice =
+        purchase.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING
+          ? `${profile.shortLabel} 구매에 훈련 인장 ${profile.trainingMarkRequirement}개가 필요합니다.`
+          : purchase.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD
+            ? `${profile.shortLabel} 구매에 원정 Gold ${profile.goldCost}가 필요합니다.`
+            : '이미 소유한 검입니다.';
+      this.statusNode.publish({ force: true });
+      return purchase;
+    }
+    const equip = selectProgressionEquipment(purchase.snapshot, profile.id);
+    const transaction = Object.freeze({
+      changed: true,
+      reason: PROGRESSION_TRANSACTION_REASON.PURCHASED,
+      snapshot: equip.snapshot,
+    });
+    this.progressionNotice = `${profile.shortLabel} 구매·장착 완료 · 인챈트 없음`;
+    return this.commitProgression(transaction, { equipmentChanged: true });
+  }
+
   commitProgression(transaction, { equipmentChanged = false, skillChanged = false } = {}) {
     if (!transaction.changed) return transaction;
     const nextSnapshot = transaction.snapshot;
@@ -1262,43 +1342,6 @@ export class GameScene extends SceneNode {
       reason: PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
       snapshot: this.progressionSnapshot,
     });
-  }
-
-  selectEquipment(profileId) {
-    if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
-    const profile = this.equipmentCatalog.getProfile(profileId);
-    const transaction = selectProgressionEquipment(this.progressionSnapshot, profile.id);
-    if (!transaction.changed) return transaction;
-    this.progressionNotice = `${profile.shortLabel} 장착 · frame/거리/경직 profile 변경`;
-    return this.commitProgression(transaction, { equipmentChanged: true });
-  }
-
-  purchaseEquipment(profileId) {
-    if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
-    const profile = this.equipmentCatalog.getProfile(profileId);
-    const purchase = purchaseProgressionEquipment(this.progressionSnapshot, {
-      profileId: profile.id,
-      goldCost: profile.goldCost,
-      trainingMarkRequirement: profile.trainingMarkRequirement,
-    });
-    if (!purchase.changed) {
-      this.progressionNotice =
-        purchase.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING
-          ? `${profile.shortLabel} 해금에 훈련 인장 ${profile.trainingMarkRequirement}개가 필요합니다.`
-          : purchase.reason === PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD
-            ? `${profile.shortLabel} 구매에 원정 Gold ${profile.goldCost}가 필요합니다.`
-            : '이미 소유한 장비입니다.';
-      this.statusNode.publish({ force: true });
-      return purchase;
-    }
-    const equip = selectProgressionEquipment(purchase.snapshot, profile.id);
-    const transaction = Object.freeze({
-      changed: true,
-      reason: PROGRESSION_TRANSACTION_REASON.PURCHASED,
-      snapshot: equip.snapshot,
-    });
-    this.progressionNotice = `${profile.shortLabel} 구매·장착 완료`;
-    return this.commitProgression(transaction, { equipmentChanged: true });
   }
 
   trainCombatSkill() {
@@ -2271,7 +2314,6 @@ export class GameScene extends SceneNode {
         ? 'CRISIS · 핵심 방어 사건'
         : `Deadline ${Math.floor(worldTime.deadlineMinutes / 60)}:${String(worldTime.deadlineMinutes % 60).padStart(2, '0')}`,
       roomId,
-      canSelectEquipment: this.canManageProgression(),
       canManageProgression: this.canManageProgression(),
       activeEnchantId:
         progression.enchantment.swordEnchantments[progression.equippedEquipmentId].elementId,
@@ -2285,32 +2327,6 @@ export class GameScene extends SceneNode {
       })(),
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
-      equipmentOptions: Object.freeze(
-        this.equipmentCatalog.profiles.map((profile) => {
-          const owned = progression.ownedEquipmentIds.includes(profile.id);
-          const selected = progression.equippedEquipmentId === profile.id;
-          const affordable =
-            progression.trainingMarks >= profile.trainingMarkRequirement &&
-            availableGold >= profile.goldCost;
-          return Object.freeze({
-            id: profile.id,
-            shortLabel: profile.shortLabel,
-            description: profile.description,
-            goldCost: profile.goldCost,
-            trainingMarkRequirement: profile.trainingMarkRequirement,
-            owned,
-            selected,
-            canChoose: !selected && (owned || affordable),
-            actionLabel: selected
-              ? '장착 중'
-              : owned
-                ? '장착'
-                : profile.trainingMarkRequirement > 0
-                  ? `${profile.goldCost} Gold · 인장 ${profile.trainingMarkRequirement}`
-                  : `${profile.goldCost} Gold`,
-          });
-        }),
-      ),
       combatSkill: Object.freeze({
         level: progression.combatSkillLevel,
         maxLevel: 3,

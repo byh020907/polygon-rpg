@@ -460,8 +460,9 @@ function verifyTransactionsAndSwordIsolation() {
   assert.equal(scene.getEnchantContext().level, 5);
   assert.equal(scene.getEnchantContext().active.id, 'ice');
   assert.equal(scene.getEnchantContext().active.swordId, OTHER_SWORD_ID);
-  const equippedBalanced = scene.selectEquipment(DEFAULT_SWORD_ID);
+  const equippedBalanced = selectEquipment(scene.getProgressionSnapshot(), DEFAULT_SWORD_ID);
   assert.equal(equippedBalanced.changed, true);
+  scene.restoreProgression(equippedBalanced.snapshot);
   assert.equal(scene.getEnchantContext().active.id, 'fire');
   assert.equal(scene.getEnchantContext().active.level, 1);
   assert.deepEqual(scene.getProgressionSnapshot().enchantment.swordEnchantments[OTHER_SWORD_ID], {

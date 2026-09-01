@@ -175,14 +175,6 @@ export class GameApplication {
     return this.currentApp.toggleWorldTime();
   }
 
-  selectEquipment(profileId) {
-    return this.currentApp.selectEquipment(profileId);
-  }
-
-  purchaseEquipment(profileId) {
-    return this.currentApp.purchaseEquipment(profileId);
-  }
-
   trainCombatSkill() {
     return this.currentApp.trainCombatSkill();
   }

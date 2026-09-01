@@ -616,14 +616,6 @@ export class GameApp extends SceneNode {
     this.scene.toggleTimePhase();
   }
 
-  selectEquipment(profileId) {
-    return this.scene.selectEquipment(profileId);
-  }
-
-  purchaseEquipment(profileId) {
-    return this.scene.purchaseEquipment(profileId);
-  }
-
   trainCombatSkill() {
     return this.scene.trainCombatSkill();
   }
