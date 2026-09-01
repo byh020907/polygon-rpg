@@ -363,6 +363,19 @@ export class GameApp extends SceneNode {
         active: true,
       });
     }
+    for (const segment of scenario.inputTimelineByPhase?.[phase] ?? []) {
+      if (!Number.isInteger(segment.frames) || segment.frames < 1) {
+        throw new RangeError('Visual QA input timeline frame은 양의 정수여야 합니다.');
+      }
+      const scriptedInput = Object.freeze({ ...inputSnapshot, ...segment.input });
+      for (let index = 0; index < segment.frames; index += 1) {
+        this.fixedProcess(1 / 120, {
+          inputSnapshot: scriptedInput,
+          simulationSettings,
+          active: true,
+        });
+      }
+    }
     if (scenario.dialogueScenarioId) {
       this.fixedProcess(1 / 120, {
         inputSnapshot: Object.freeze({
@@ -383,22 +396,28 @@ export class GameApp extends SceneNode {
     if (scenario.poseScenarioId) this.scene.setVisualQaPoseScenario(scenario.poseScenarioId);
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);
-    const expectedEvent = scenario.expectation?.expectedEvent;
-    const expectedMotion = scenario.expectation?.expectedMotion;
-    const expectedItem = scenario.expectation?.expectedItem;
-    const expectedContact = scenario.expectation?.expectedContact;
-    const expectedRetaliation = scenario.expectation?.expectedRetaliation;
-    const expectedAnchor = scenario.expectation?.expectedAnchor;
-    const expectedEffectProgressMinimum = scenario.expectation?.expectedEffectProgressMinimum;
-    const expectedStamina = scenario.expectation?.expectedStamina;
+    const expectation = Object.freeze({
+      ...scenario.expectation,
+      ...scenario.phaseExpectations?.[phase],
+    });
+    const expectedEvent = expectation.expectedEvent;
+    const expectedMotion = expectation.expectedMotion;
+    const expectedItem = expectation.expectedItem;
+    const expectedContact = expectation.expectedContact;
+    const expectedRetaliation = expectation.expectedRetaliation;
+    const expectedAnchor = expectation.expectedAnchor;
+    const expectedEffectProgressMinimum = expectation.expectedEffectProgressMinimum;
+    const expectedStamina = expectation.expectedStamina;
+    const expectedPlayerGrounded = expectation.expectedPlayerGrounded;
+    const expectedPlayerYRange = expectation.expectedPlayerYRange;
     const dialogue = this.scene.getWorldStatus().dialogue;
-    const expectedDialogueTarget = scenario.expectation?.expectedDialogueTarget;
-    const expectedDialogueSpeaker = scenario.expectation?.expectedDialogueSpeaker;
-    const expectedItems = scenario.expectation?.expectedItems ?? [];
-    const expectedAbsentItems = scenario.expectation?.expectedAbsentItems ?? [];
-    const expectedTimePhase = scenario.expectation?.expectedTimePhase;
-    const expectedPatchIds = scenario.expectation?.expectedPatchIds ?? [];
-    const expectedPortalIds = scenario.expectation?.expectedPortalIds;
+    const expectedDialogueTarget = expectation.expectedDialogueTarget;
+    const expectedDialogueSpeaker = expectation.expectedDialogueSpeaker;
+    const expectedItems = expectation.expectedItems ?? [];
+    const expectedAbsentItems = expectation.expectedAbsentItems ?? [];
+    const expectedTimePhase = expectation.expectedTimePhase;
+    const expectedPatchIds = expectation.expectedPatchIds ?? [];
+    const expectedPortalIds = expectation.expectedPortalIds;
     const portalIds = renderFrame.map.portalIds;
     const expectedCombatEvent = renderFrame.combatEvents.find(
       (event) => event.type === expectedEvent,
@@ -472,6 +491,15 @@ export class GameApp extends SceneNode {
             expectedEffectProgressMinimum),
       staminaMatches:
         expectedStamina === undefined || renderFrame.player.stamina === expectedStamina,
+      playerGroundedMatches:
+        expectedPlayerGrounded === undefined ||
+        renderFrame.player.isGrounded === expectedPlayerGrounded,
+      playerYMatches:
+        expectedPlayerYRange === undefined ||
+        (Array.isArray(expectedPlayerYRange) &&
+          expectedPlayerYRange.length === 2 &&
+          renderFrame.player.position.y >= expectedPlayerYRange[0] &&
+          renderFrame.player.position.y <= expectedPlayerYRange[1]),
       dialogueMatches:
         !expectedDialogueTarget ||
         (dialogue.active === true &&
@@ -504,6 +532,8 @@ export class GameApp extends SceneNode {
         assertionEvidence.anchorMatches &&
         assertionEvidence.effectProgressMatches &&
         assertionEvidence.staminaMatches &&
+        assertionEvidence.playerGroundedMatches &&
+        assertionEvidence.playerYMatches &&
         assertionEvidence.dialogueMatches &&
         assertionEvidence.spatialItemsPresent &&
         assertionEvidence.spatialItemsAbsent &&

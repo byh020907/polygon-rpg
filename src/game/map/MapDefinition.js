@@ -1,4 +1,5 @@
 const OBJECT_COLLECTIONS = Object.freeze(['surfaces', 'renderItems', 'entities', 'triggers']);
+const SURFACE_KINDS = new Set(['solid', 'one-way']);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -86,6 +87,10 @@ function normalizeRoom(mapId, regionId, room, roomIndex) {
       result.qualifiedId = result.qualifiedId ?? qualify(mapId, regionId, room.id, result.id);
       result.enabled = result.enabled ?? true;
       if (collectionName === 'surfaces') {
+        assertId(result.kind, `${result.qualifiedId}.kind`);
+        if (!SURFACE_KINDS.has(result.kind)) {
+          throw new Error(`${result.qualifiedId}.kind을 지원하지 않습니다: ${result.kind}`);
+        }
         if (!Array.isArray(result.points) || result.points.length < 2) {
           throw new Error(`${result.qualifiedId}.points에는 최소 두 점이 필요합니다.`);
         }

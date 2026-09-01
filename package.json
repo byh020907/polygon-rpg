@@ -17,7 +17,7 @@
     "test:story": "node scripts/story-interaction-check.mjs",
     "test:journey": "node scripts/first-journey-runtime-recovery-check.mjs",
     "test:world": "node scripts/world-time-check.mjs",
-    "test:map": "node scripts/glasswind-spatial-check.mjs && node scripts/academy-field-spatial-check.mjs",
+    "test:map": "node scripts/glasswind-spatial-check.mjs && node scripts/academy-field-spatial-check.mjs && node scripts/one-way-platform-check.mjs",
     "test:growth": "node scripts/progression-growth-check.mjs",
     "test:platform": "node scripts/platform-access-check.mjs",
     "format": "prettier --write .",

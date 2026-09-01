@@ -504,6 +504,50 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedPortalIds: Object.freeze(['dungeon-resonance-branch-portal']),
     }),
   }),
+  'dungeon-one-way-platform': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'sealed-resonance-vault',
+    x: 270,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'dungeon',
+      routeChoice: 'bypass',
+      dungeonGuardianDefeated: true,
+      dungeonSignatureStageIds: Object.freeze([
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+      ]),
+    }),
+    inputTimelineByPhase: Object.freeze({
+      active: Object.freeze([
+        Object.freeze({ frames: 1, input: Object.freeze({ jump: true, jumpSequence: 1 }) }),
+        Object.freeze({ frames: 47, input: Object.freeze({ jumpSequence: 1 }) }),
+      ]),
+      end: Object.freeze([
+        Object.freeze({ frames: 1, input: Object.freeze({ jump: true, jumpSequence: 1 }) }),
+        Object.freeze({ frames: 79, input: Object.freeze({ jumpSequence: 1 }) }),
+      ]),
+    }),
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'sealed-resonance-vault-arch',
+        'sealed-resonance-vault-one-way-platform',
+      ]),
+    }),
+    phaseExpectations: Object.freeze({
+      start: Object.freeze({
+        expectedPlayerGrounded: true,
+        expectedPlayerYRange: Object.freeze([341, 343]),
+      }),
+      active: Object.freeze({
+        expectedPlayerGrounded: false,
+        expectedPlayerYRange: Object.freeze([247, 251]),
+      }),
+      end: Object.freeze({
+        expectedPlayerGrounded: true,
+        expectedPlayerYRange: Object.freeze([259, 261]),
+      }),
+    }),
+  }),
   'dungeon-dialogue': Object.freeze({
     regionId: 'academy-region',
     roomId: 'sealed-forest-dungeon',

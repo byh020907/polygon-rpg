@@ -1900,12 +1900,6 @@ export class GameScene extends SceneNode {
         movementBounds.minX,
         Math.min(movementBounds.maxX, this.position.x),
       );
-      if (this.isGrounded) {
-        this.position.y = this.mapRuntime.getGroundYAt(this.position.x) - CHARACTER_FOOT_OFFSET;
-      }
-      this.updateCameraFollow(deltaSeconds);
-      this.animationTime += deltaSeconds * animationSpeed * 1.8;
-      return;
     }
 
     const encounterAfterStep = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
@@ -1919,18 +1913,33 @@ export class GameScene extends SceneNode {
       this.facing = comboFacing;
     }
     const activeRoom = this.mapRuntime.getActiveRoom();
-    const playerGroundY = this.mapRuntime.getGroundYAt(this.position.x) - CHARACTER_FOOT_OFFSET;
     this.airComboFloatSeconds = Math.max(0, this.airComboFloatSeconds - deltaSeconds);
     const playerGravityMultiplier =
       this.airComboFloatSeconds > 0 ? 0.08 : this.airComboGravityScale;
-    if (wasGrounded && this.isGrounded) {
-      this.position.y = playerGroundY;
+    if (this.isGrounded) {
+      const support = this.mapRuntime.resolveSupportAt(this.position.x, {
+        footY: this.position.y + CHARACTER_FOOT_OFFSET,
+      });
+      if (support) {
+        this.position.y = support.y - CHARACTER_FOOT_OFFSET;
+      } else {
+        this.isGrounded = false;
+      }
+    }
+    if (this.isGrounded) {
       this.verticalVelocity = 0;
     }
+    const previousFootY = this.position.y + CHARACTER_FOOT_OFFSET;
     this.verticalVelocity += GRAVITY * playerGravityMultiplier * deltaSeconds;
     this.position.y += this.verticalVelocity * deltaSeconds;
-    if (this.position.y >= playerGroundY) {
-      this.position.y = playerGroundY;
+    const nextFootY = this.position.y + CHARACTER_FOOT_OFFSET;
+    const landing = this.mapRuntime.resolveLandingAt(this.position.x, {
+      previousFootY,
+      nextFootY,
+      descending: this.verticalVelocity >= 0,
+    });
+    if (landing) {
+      this.position.y = landing.y - CHARACTER_FOOT_OFFSET;
       this.verticalVelocity = 0;
       this.airComboFloatSeconds = 0;
       this.airComboGravityScale = 1;
@@ -1954,6 +1963,8 @@ export class GameScene extends SceneNode {
           durationSeconds: LANDING_RECOVERY_SECONDS,
         });
       }
+    } else {
+      this.isGrounded = false;
     }
 
     const movementBounds = activeRoom.movementBounds ?? {
@@ -1962,7 +1973,8 @@ export class GameScene extends SceneNode {
     };
     this.position.x = Math.max(movementBounds.minX, Math.min(movementBounds.maxX, this.position.x));
     this.updateCameraFollow(deltaSeconds);
-    this.animationTime += deltaSeconds * animationSpeed * (1 + Math.abs(horizontal) * 0.65);
+    this.animationTime +=
+      deltaSeconds * animationSpeed * (isRolling ? 1.8 : 1 + Math.abs(horizontal) * 0.65);
   }
 
   getWorldStatus() {

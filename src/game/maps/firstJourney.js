@@ -159,6 +159,10 @@ const fieldGroundY = 430;
 const dungeonGroundY = 424;
 const bossGroundY = 426;
 const resonanceVaultGroundY = 424;
+const resonanceVaultOneWayPlatform = Object.freeze([
+  Object.freeze({ x: 180, y: 342 }),
+  Object.freeze({ x: 360, y: 342 }),
+]);
 const FIELD_ROOM_WIDTH = 1200;
 const fieldCrossingTerrain = Object.freeze([
   Object.freeze({ x: 0, y: fieldGroundY }),
@@ -670,6 +674,12 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
           { x: 760, y: resonanceVaultGroundY },
         ],
       },
+      {
+        id: 'sealed-resonance-vault-one-way-platform-surface',
+        kind: 'one-way',
+        material: 'resonance-stone',
+        points: resonanceVaultOneWayPlatform,
+      },
     ],
     renderItems: [
       renderItem('sealed-resonance-vault-backdrop', rectangle(0, 0, 760, 540), '#090d17', {
@@ -687,6 +697,12 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         ],
         '#252b39',
         { stroke: '#596477', lineWidth: 4, order: -30 },
+      ),
+      renderItem(
+        'sealed-resonance-vault-one-way-platform',
+        [...resonanceVaultOneWayPlatform, { x: 348, y: 356 }, { x: 192, y: 356 }],
+        '#4d6670',
+        { stroke: '#8fc3bd', lineWidth: 2, opacity: 0.94, order: 5 },
       ),
       renderItem(
         'sealed-resonance-hidden-dormant',

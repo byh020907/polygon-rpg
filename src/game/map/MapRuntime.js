@@ -88,6 +88,18 @@ function surfaceYAtX(surface, x) {
   return matches.length > 0 ? Math.min(...matches) : null;
 }
 
+function surfaceResolution(surface, y) {
+  return Object.freeze({
+    surfaceId: surface.qualifiedId,
+    kind: surface.kind,
+    y,
+  });
+}
+
+function compareSurfaceResolution(left, right) {
+  return left.y - right.y || left.surfaceId.localeCompare(right.surfaceId);
+}
+
 function sortedRenderItems(rooms) {
   return Object.freeze(
     rooms
@@ -193,6 +205,58 @@ export class MapRuntime {
       .map((surface) => surfaceYAtX(surface, x))
       .filter(Number.isFinite);
     return candidates.length > 0 ? Math.min(...candidates) : room.groundY;
+  }
+
+  resolveSupportAt(x, { footY, maxStepHeight = 6 } = {}) {
+    if (!Number.isFinite(x) || !Number.isFinite(footY)) {
+      throw new TypeError('support 탐색에는 유한한 x/footY가 필요합니다.');
+    }
+    if (!Number.isFinite(maxStepHeight) || maxStepHeight < 0) {
+      throw new TypeError('support maxStepHeight는 0 이상의 유한한 숫자여야 합니다.');
+    }
+    const candidates = this.getActiveRoom()
+      .surfaces.filter(
+        (surface) =>
+          surface.enabled !== false && (surface.kind === 'solid' || surface.kind === 'one-way'),
+      )
+      .map((surface) => {
+        const y = surfaceYAtX(surface, x);
+        return Number.isFinite(y) ? surfaceResolution(surface, y) : null;
+      })
+      .filter(
+        (resolution) => resolution !== null && Math.abs(resolution.y - footY) <= maxStepHeight,
+      )
+      .sort(
+        (left, right) =>
+          Math.abs(left.y - footY) - Math.abs(right.y - footY) ||
+          compareSurfaceResolution(left, right),
+      );
+    return candidates[0] ?? null;
+  }
+
+  resolveLandingAt(x, { previousFootY, nextFootY, descending } = {}) {
+    if (!Number.isFinite(x) || !Number.isFinite(previousFootY) || !Number.isFinite(nextFootY)) {
+      throw new TypeError('landing 탐색에는 유한한 x/previousFootY/nextFootY가 필요합니다.');
+    }
+    if (descending !== true) return null;
+    const epsilon = 0.001;
+    const candidates = this.getActiveRoom()
+      .surfaces.filter(
+        (surface) =>
+          surface.enabled !== false && (surface.kind === 'solid' || surface.kind === 'one-way'),
+      )
+      .map((surface) => {
+        const y = surfaceYAtX(surface, x);
+        return Number.isFinite(y) ? surfaceResolution(surface, y) : null;
+      })
+      .filter(
+        (resolution) =>
+          resolution !== null &&
+          previousFootY <= resolution.y + epsilon &&
+          nextFootY >= resolution.y - epsilon,
+      )
+      .sort(compareSurfaceResolution);
+    return candidates[0] ?? null;
   }
 
   getTriggerLocation(qualifiedId) {
