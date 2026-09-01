@@ -67,6 +67,14 @@ const EFFECT_PARITY = Object.freeze({
     count: 39,
     digest: '6d2127bfd24bdfe7b1ff52322d79c997b7167144788c1c20185e154cbeace127',
   }),
+  'combat-just-guard': Object.freeze({
+    count: 44,
+    digest: '9e47525e4c34af894213cdad0a0cca40d4049e1866a090a274d3a1a3cd41139d',
+  }),
+  'combat-guard-counter': Object.freeze({
+    count: 40,
+    digest: '345a27007d0dd2d8a6737c5bfc727a1626c5e89bb538cd787ae94042585bd0c1',
+  }),
 });
 
 const round = (value) => Math.round(value * 1_000_000) / 1_000_000;
@@ -88,7 +96,9 @@ function presentationItems(frame) {
   return frame.items.filter(
     (item) =>
       item.renderOrder === 30.5 ||
-      /^(player-(block|retaliation|hit|evade)|combat-enemy-hit|enemy-punish)/.test(item.id),
+      /^(player-(block|retaliation|hit|evade|just-guard|shield-counter)|combat-enemy-hit|enemy-punish)/.test(
+        item.id,
+      ),
   );
 }
 

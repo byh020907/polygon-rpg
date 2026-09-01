@@ -395,8 +395,14 @@
                   recovery와 counter 위험을 만든다.
                 </li>
                 <li>
-                  Basic/Strong 공격, guard와 roll은 stamina를 소비하고, guard로 공격을 막으면
-                  stamina가 크게 줄어 같은 action을 계속 난사할 수 없다.
+                  Basic/Strong 공격, guard와 roll은 stamina를 소비한다. Guard를 유지하는 동안에도
+                  stamina가 계속 줄고, 일반 guard로 공격을 막으면 공격 위력에 따라 크게 줄며 잔량이
+                  부족하면 guard가 깨져 같은 action을 계속 난사할 수 없다.
+                </li>
+                <li>
+                  Guard 시작 직후의 짧은 타이밍에 정면의 guard 가능한 공격을 막으면 just guard가
+                  된다. Just guard는 해당 타격의 stamina 소모를 막고 stamina를 크게 회복하며, 잠시
+                  다른 action을 막는 동안 새 Basic 입력으로만 방패를 치는 전용 수동 반격을 실행한다.
                 </li>
                 <li>
                   Strong 공격은 느리고 읽을 수 있는 준비 동작 뒤 guard를 깨지만, 준비 중 상대의
@@ -424,6 +430,11 @@
                 <li>
                   공중 combo 보호 규칙은 연계를 임의로 끊지 않으며, 다음 neutral의 retaliation
                   보호는 해당 캐릭터 silhouette에 붙어 읽힌다.
+                </li>
+                <li>
+                  Just guard는 실제 방패 contact에 붙는 방패 섬광, 원형 파동, 강한 spark, 짧은
+                  hit-stop과 stamina 회복 표시로 일반 block과 즉시 구분된다. 이어지는 전용 방패
+                  반격도 검 공격과 다른 pose와 impact로 읽힌다.
                 </li>
                 <li>Polygon과 Retro 출력은 같은 판정과 같은 원인·결과를 전달한다.</li>
               </ul>
@@ -672,14 +683,17 @@
                   <td>
                     Guard → roll 배후 → launcher → 공중 연계 → landing을 반복하며 whiff와 난사의
                     recovery·stamina risk를 확인하고, 느린 Strong으로 guard를 깨거나 준비 중
-                    피격으로 취소되는 결과를 확인한다.
+                    피격으로 취소되는 결과를 확인한다. Guard 유지 소모와 공격 위력별 block 소모를
+                    감수하거나, 짧은 just guard로 stamina를 회복한 뒤 Basic만 허용되는 전용 방패
+                    반격을 선택한다.
                   </td>
                   <td>결정적 combat trace와 실제 training 플레이</td>
                 </tr>
                 <tr>
                   <th scope="row">PG-COMBAT-FEEDBACK</th>
                   <td>
-                    적중, block, evade, punish, 무적과 실제 contact 위치를 설명 없이 구분한다.
+                    적중, block, just guard, 전용 방패 반격, evade, punish, 무적과 실제 contact
+                    위치를 설명 없이 구분하고, just guard의 stamina 회복을 화면에서 확인한다.
                   </td>
                   <td>고정 frame Polygon/Retro capture와 event/contact metadata</td>
                 </tr>

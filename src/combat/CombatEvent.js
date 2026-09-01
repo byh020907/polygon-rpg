@@ -1,5 +1,7 @@
 export const COMBAT_EVENT_TYPE = Object.freeze({
   GUARD: 'guard',
+  JUST_GUARD: 'just-guard',
+  COUNTER: 'counter',
   GUARD_BREAK: 'guard-break',
   EVADE: 'evade',
   HIT: 'hit',
@@ -42,6 +44,7 @@ export class CombatEventBuffer {
       position = null,
       direction = 0,
       strength = 1,
+      staminaDelta = 0,
       durationSeconds = 0.18,
     } = {},
   ) {
@@ -59,6 +62,9 @@ export class CombatEventBuffer {
     if (!Number.isFinite(strength) || strength < 0) {
       throw new RangeError('CombatEvent strength는 0 이상의 유한한 숫자여야 합니다.');
     }
+    if (!Number.isFinite(staminaDelta)) {
+      throw new RangeError('CombatEvent staminaDelta는 유한한 숫자여야 합니다.');
+    }
     if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
       throw new RangeError('CombatEvent durationSeconds는 양수여야 합니다.');
     }
@@ -73,6 +79,7 @@ export class CombatEventBuffer {
       position: frozenPosition(position),
       direction,
       strength,
+      staminaDelta,
       durationSeconds,
       remainingSeconds: durationSeconds,
     });

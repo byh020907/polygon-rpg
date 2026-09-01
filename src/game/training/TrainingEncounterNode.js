@@ -600,6 +600,11 @@ export class TrainingEncounterNode extends SceneNode {
       this.playerResultResolved.emit(
         Object.freeze({
           kind: 'guard',
+          attackId: enemy.attackKind,
+          contactPosition: visualContact.position,
+          contactDirection: Math.sign(distance) || 1,
+          guardStaminaDamage: profile.guardStaminaDamage,
+          justGuardEligible: profile.guardable === true,
           blockImpactSeconds: 0.14,
           blockImpactStrength: profile.blockStrength,
           blockstunSeconds: profile.blockstunSeconds,
@@ -718,7 +723,12 @@ export class TrainingEncounterNode extends SceneNode {
       return false;
     const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, this.attackProfiles);
     const playerWeapons = frame.playerGeometry
-      ? [frame.playerGeometry.weapon, frame.playerGeometry.sweep].filter(Boolean)
+      ? [
+          profile.contactPart === 'shield'
+            ? frame.playerGeometry.shield
+            : frame.playerGeometry.weapon,
+          frame.playerGeometry.sweep,
+        ].filter(Boolean)
       : [];
     const visualContact = closestCombatContact(playerWeapons, enemyGeometry.hurt);
     if (!visualContact.contact) return false;
@@ -821,18 +831,25 @@ export class TrainingEncounterNode extends SceneNode {
     const damageScale = enemyAirborne ? Math.max(0.4, 1 - enemy.juggleHits * 0.1) : 1;
     const damage = Math.max(1, Math.round(profile.damage * damageScale));
     this.emitCombatEvent(
-      backPunish
-        ? COMBAT_EVENT_TYPE.PUNISH
-        : juggleRole === 'launcher'
-          ? COMBAT_EVENT_TYPE.LAUNCH
-          : COMBAT_EVENT_TYPE.HIT,
+      combatState.id === 'shieldBash'
+        ? COMBAT_EVENT_TYPE.COUNTER
+        : backPunish
+          ? COMBAT_EVENT_TYPE.PUNISH
+          : juggleRole === 'launcher'
+            ? COMBAT_EVENT_TYPE.LAUNCH
+            : COMBAT_EVENT_TYPE.HIT,
       {
         actor: 'player',
         target: 'enemy',
         attackId: combatState.id,
         position: visualContact.position,
         direction: player.facing,
-        outcome: backPunish ? 'back-punish' : undefined,
+        outcome:
+          combatState.id === 'shieldBash'
+            ? 'just-guard-counter'
+            : backPunish
+              ? 'back-punish'
+              : undefined,
         strength: 1 + Math.min(2.5, damage * 0.08) + (backPunish ? 0.5 : 0),
       },
     );

@@ -304,6 +304,16 @@ function sampleCombat(motionState) {
         leadFootY: 66,
         capeLift: 0.9,
       });
+    case 'shieldBash':
+      return pose({
+        rootX: action * 11,
+        rootY: 2 + action,
+        bodyLean: -0.06 + action * 0.2,
+        headTilt: -action * 0.08,
+        rearFootX: -17,
+        leadFootX: 18 + action * 7,
+        capeLift: 0.3 + action * 0.34,
+      });
     default:
       return pose();
   }

@@ -140,10 +140,21 @@ function verifyGuardRollExhaustionAndRecovery() {
   assert.equal(state.id, 'guard');
   assert.equal(state.stamina, 94);
   state = runTicks(guard, 120, input({ guard: true }));
-  assert.equal(state.stamina, 94, 'guard hold는 시작 비용을 반복 차감하거나 회복하지 않는다.');
-  assert.deepEqual(guard.applyGuardContact(), { broken: false, drain: 34, stamina: 60 });
-  assert.deepEqual(guard.applyGuardContact(), { broken: false, drain: 34, stamina: 26 });
-  assert.deepEqual(guard.applyGuardContact(), { broken: true, drain: 26, stamina: 0 });
+  assertClose(state.stamina, 84, 'guard hold 1초는 초당 10 stamina를 지속 소모한다.');
+  const lightBlock = guard.applyGuardContact({ staminaDamage: 24 });
+  assert.deepEqual(
+    { ...lightBlock, stamina: Math.round(lightBlock.stamina) },
+    { broken: false, drain: 24, recovery: 0, justGuard: false, stamina: 60 },
+  );
+  const strongerBlock = guard.applyGuardContact({ staminaDamage: 36 });
+  assert.deepEqual(
+    { ...strongerBlock, stamina: Math.round(strongerBlock.stamina) },
+    { broken: false, drain: 36, recovery: 0, justGuard: false, stamina: 24 },
+  );
+  const brokenBlock = guard.applyGuardContact({ staminaDamage: 30 });
+  assert.equal(brokenBlock.broken, true);
+  assertClose(brokenBlock.drain, 24, '부족한 일반 block drain은 잔량을 모두 소비한다.');
+  assert.equal(brokenBlock.stamina, 0);
   assert.equal(guard.snapshot().lastCommandTransition.kind, 'guard-broken');
 
   const roll = new CombatCommandController();
@@ -181,6 +192,95 @@ function verifyGuardRollExhaustionAndRecovery() {
     input({ basicAttack: true, basicAttackSequence: 2, strongAttackSequence: 1 }),
   );
   assert.equal(state.id, 'slash');
+}
+
+function prepareJustGuard(controller) {
+  controller.trySpendAction('strongAttack');
+  controller.trySpendAction('strongAttack');
+  const guardState = tick(controller, input({ guard: true }));
+  assert.equal(guardState.stamina, 46);
+  return controller.applyGuardContact({ staminaDamage: 24, justGuardEligible: true });
+}
+
+function verifyJustGuardTimingRecoveryAndCounterLock() {
+  const justGuard = new CombatCommandController();
+  assert.deepEqual(prepareJustGuard(justGuard), {
+    broken: false,
+    drain: 0,
+    recovery: 36,
+    justGuard: true,
+    stamina: 82,
+  });
+  let state = justGuard.snapshot();
+  assert.equal(state.justGuardCounterReady, true);
+  assert.equal(state.lastCommandTransition.kind, 'just-guard');
+
+  state = tick(
+    justGuard,
+    input({ right: true, jump: true, strongAttack: true, strongAttackSequence: 1 }),
+  );
+  assert.equal(state.id, 'guard', 'counter window의 Strong은 실행하지 않아야 한다.');
+  assert.equal(state.stamina, 82);
+  state = tick(
+    justGuard,
+    input({ basicAttack: true, basicAttackSequence: 1, strongAttackSequence: 1 }),
+  );
+  assert.equal(state.id, 'shieldBash');
+  assert.equal(state.stamina, 82, '전용 방패 반격은 just guard 보상을 다시 소비하지 않는다.');
+  assert.equal(state.lastCommandTransition.action, 'guardCounter');
+  state = tick(
+    justGuard,
+    input({ strongAttack: true, basicAttackSequence: 1, strongAttackSequence: 2 }),
+  );
+  assert.equal(state.queuedMotion, null, '방패 반격은 다른 공격으로 cancel/queue되지 않아야 한다.');
+  state = runTicks(
+    justGuard,
+    44,
+    input({ right: true, jump: true, basicAttackSequence: 1, strongAttackSequence: 2 }),
+  );
+  assert.equal(state.id, 'shieldBash');
+  assert.equal(state.movementScale, 0, '방패 반격 중 이동을 섞을 수 없어야 한다.');
+  assert.equal(state.canJump, false, '방패 반격 recovery도 jump로 cancel할 수 없어야 한다.');
+
+  const insideBoundary = new CombatCommandController();
+  tick(insideBoundary, input({ guard: true }));
+  runTicks(insideBoundary, 14, input({ guard: true }));
+  assert.equal(
+    insideBoundary.applyGuardContact({ staminaDamage: 24 }).justGuard,
+    true,
+    '7 frame just-guard 경계 안쪽 contact는 성공해야 한다.',
+  );
+  const outsideBoundary = new CombatCommandController();
+  tick(outsideBoundary, input({ guard: true }));
+  runTicks(outsideBoundary, 15, input({ guard: true }));
+  assert.equal(
+    outsideBoundary.applyGuardContact({ staminaDamage: 24 }).justGuard,
+    false,
+    'just-guard 경계 밖 contact는 일반 block이어야 한다.',
+  );
+
+  const expired = new CombatCommandController();
+  prepareJustGuard(expired);
+  tick(expired, input({ strongAttack: true, strongAttackSequence: 1 }));
+  state = runTicks(expired, 50, input({ strongAttackSequence: 1 }));
+  assert.equal(state.justGuardCounterReady, false);
+  assert.equal(state.id, 'idle', 'lock 중 소비한 Strong sequence를 만료 뒤 재생하면 안 된다.');
+
+  const keyboard = new KeyboardInputAdapter({ target: null, documentTarget: null });
+  const mobile = new MobileInputAdapter();
+  keyboard.onKeyDown({ code: 'KeyA', preventDefault() {} });
+  mobile.press('basicAttack', 7);
+  const keyboardController = new CombatCommandController();
+  const mobileController = new CombatCommandController();
+  prepareJustGuard(keyboardController);
+  prepareJustGuard(mobileController);
+  const keyboardCounter = tick(keyboardController, keyboard.snapshot());
+  const mobileCounter = tick(mobileController, mobile.snapshot());
+  assert.deepEqual(
+    { id: keyboardCounter.id, stamina: keyboardCounter.stamina },
+    { id: mobileCounter.id, stamina: mobileCounter.stamina },
+    'Keyboard와 touch Basic은 같은 just-guard counter를 실행해야 한다.',
+  );
 }
 
 function verifyStrongTransitions() {
@@ -291,6 +391,59 @@ function verifyStrongTransitions() {
   assert.equal(interruptedEnemy.enemy.aiState, 'hitstun');
 }
 
+function verifyShieldCounterContactAuthority() {
+  const encounter = createEncounter();
+  const enemyGeometry = sampleTrainingEnemyCombatGeometry(
+    encounter.enemy,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+  );
+  const shield = Object.freeze({ part: 'shield', points: enemyGeometry.hurt[0].points });
+  const events = [];
+  encounter.combatEventOccurred.connect((event) => events.push(event));
+  encounter.resolvePlayerAttack(
+    Object.freeze({
+      combatState: Object.freeze({
+        id: 'shieldBash',
+        phase: 'active',
+        progress: 0.5,
+        sequence: 1,
+        comboCycle: 1,
+        queuedMotion: null,
+      }),
+      attackProfile: Object.freeze({
+        start: 0.3,
+        end: 0.7,
+        range: 80,
+        damage: 16,
+        launchY: -90,
+        contactPart: 'shield',
+      }),
+      playerGeometry: Object.freeze({
+        weapon: null,
+        sweep: shield,
+        shield,
+        hurt: Object.freeze([]),
+      }),
+      player: Object.freeze({
+        position: Object.freeze({ x: 600, y: 338 }),
+        facing: 1,
+        isGrounded: true,
+        health: 100,
+        hitstunSeconds: 0,
+        blockstunSeconds: 0,
+        invulnerableSeconds: 0,
+        rollProgress: null,
+        rollDirection: null,
+        airComboFacing: 0,
+      }),
+    }),
+  );
+  const counterEvent = events.find(({ type }) => type === COMBAT_EVENT_TYPE.COUNTER);
+  assert.ok(counterEvent, '방패 반격은 dedicated counter event를 기록해야 한다.');
+  assert.equal(encounter.lastVisualContact.weaponPart, 'shield');
+  assert.deepEqual(counterEvent.payload.position, encounter.lastVisualContact.position);
+}
+
 function verifyGameSceneStaminaBoundary() {
   const rollScene = createGameScene();
   assert.equal(rollScene.tryStartRoll(1), true);
@@ -307,15 +460,48 @@ function verifyGameSceneStaminaBoundary() {
 
   const guardScene = createGameScene();
   guardScene.combatCommands.update(0, input({ guard: true }));
+  guardScene.combatCommands.update(0.2, input({ guard: true }));
   guardScene.applyTrainingEncounterPlayerResult({
     kind: 'guard',
+    attackId: 'light',
+    contactPosition: { x: 620, y: 350 },
+    contactDirection: 1,
+    guardStaminaDamage: 24,
+    justGuardEligible: true,
     blockImpactSeconds: 0.14,
     blockImpactStrength: 0.55,
     blockstunSeconds: 7 / 60,
     hitStopSeconds: 0.04,
   });
-  assert.equal(guardScene.getPlayerStatus().stamina, 60);
+  assert.equal(guardScene.getPlayerStatus().stamina, 68);
   assert.equal(guardScene.getPlayerStatus().lastCommandTransition.kind, 'guard-contact');
+
+  const justGuardScene = createGameScene();
+  justGuardScene.combatCommands.trySpendAction('strongAttack');
+  justGuardScene.combatCommands.trySpendAction('strongAttack');
+  justGuardScene.combatCommands.update(0, input({ guard: true }));
+  justGuardScene.applyTrainingEncounterPlayerResult({
+    kind: 'guard',
+    attackId: 'light',
+    contactPosition: { x: 620, y: 350 },
+    contactDirection: 1,
+    guardStaminaDamage: 24,
+    justGuardEligible: true,
+    blockImpactSeconds: 0.14,
+    blockImpactStrength: 0.55,
+    blockstunSeconds: 7 / 60,
+    hitStopSeconds: 0.04,
+  });
+  assert.equal(justGuardScene.getPlayerStatus().stamina, 82);
+  assert.equal(justGuardScene.getPlayerStatus().justGuardCounterReady, true);
+  assert.ok(
+    justGuardScene.combatEvents
+      .snapshot()
+      .some(
+        ({ type, staminaDelta }) => type === COMBAT_EVENT_TYPE.JUST_GUARD && staminaDelta === 36,
+      ),
+    'GameScene은 immutable just-guard stamina recovery event를 기록해야 한다.',
+  );
 
   const breakScene = createGameScene();
   breakScene.combatCommands.update(0, input({ guard: true }));
@@ -333,7 +519,9 @@ function verifyGameSceneStaminaBoundary() {
 
 verifyActionCostsAndParity();
 verifyGuardRollExhaustionAndRecovery();
+verifyJustGuardTimingRecoveryAndCounterLock();
 verifyStrongTransitions();
+verifyShieldCounterContactAuthority();
 verifyGameSceneStaminaBoundary();
 
 const trace = {
@@ -343,13 +531,16 @@ const trace = {
   outcomes: [
     'basic-cost',
     'strong-cost',
-    'guard-hold-and-block-drain',
+    'guard-hold-and-power-weighted-block-drain',
+    'just-guard-window-recovery-and-basic-only-counter',
+    'shield-counter-noncancel-and-keyboard-touch-parity',
     'roll-cost',
     'exhausted-rejection-and-recovery',
     'keyboard-touch-parity',
     'game-scene-status-boundary',
     'player-and-enemy-guard-break',
     'player-and-enemy-strong-startup-interrupt',
+    'actual-shield-counter-contact-authority',
   ],
 };
 

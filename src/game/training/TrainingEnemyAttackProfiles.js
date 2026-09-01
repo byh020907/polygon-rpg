@@ -52,6 +52,7 @@ export const TRAINING_ENEMY_ATTACK_PROFILES = Object.freeze({
     knockbackVelocity: 110,
     knockbackDecayRate: 0.0067,
     blockStrength: 0.55,
+    guardStaminaDamage: 24,
     weaponLength: 96,
   }),
   heavy: enemyAttackProfile({
@@ -69,6 +70,7 @@ export const TRAINING_ENEMY_ATTACK_PROFILES = Object.freeze({
     knockbackVelocity: 220,
     knockbackDecayRate: 0.015,
     blockStrength: 1,
+    guardStaminaDamage: 48,
     weaponLength: 110,
   }),
   antiAir: enemyAttackProfile({
@@ -101,6 +103,7 @@ export const TRAINING_ENEMY_ATTACK_PROFILES = Object.freeze({
     knockbackVelocity: 175,
     knockbackDecayRate: 0.011,
     blockStrength: 0.9,
+    guardStaminaDamage: 40,
     weaponLength: 195,
   }),
 });

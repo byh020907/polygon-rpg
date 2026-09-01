@@ -676,6 +676,104 @@ function createBlockImpactItems(event, facing, impactSeconds, impactStrength, re
   return items.map((item, index) => Object.freeze({ ...item, renderOrder, order: 100 + index }));
 }
 
+function createJustGuardImpactItems(event, shield, position, renderOrder) {
+  if (!event?.position || !shield?.points) return [];
+  const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
+  const opacity = 1 - progress;
+  const center = event.position;
+  const waveRadius = lerp(12, 58, smoothStep(progress));
+  const recoveryY = position.y - 112 - progress * 18;
+  const items = [
+    polygon('player-just-guard-shield-flash', shield.points, { x: 0, y: 0 }, '#effffb', {
+      stroke: '#63f4df',
+      lineWidth: 4,
+      opacity: Math.max(0.62, opacity),
+    }),
+    polygon(
+      'player-just-guard-wave',
+      arcRibbonPoints(center, 0, Math.PI * 2, Math.max(1, waveRadius - 6), waveRadius, 16),
+      { x: 0, y: 0 },
+      '#7ff7e4',
+      { opacity: opacity * 0.88 },
+    ),
+    polygon(
+      'player-just-guard-stamina-recovery',
+      [
+        { x: -6, y: -18 },
+        { x: 6, y: -18 },
+        { x: 6, y: -6 },
+        { x: 18, y: -6 },
+        { x: 18, y: 6 },
+        { x: 6, y: 6 },
+        { x: 6, y: 18 },
+        { x: -6, y: 18 },
+        { x: -6, y: 6 },
+        { x: -18, y: 6 },
+        { x: -18, y: -6 },
+        { x: -6, y: -6 },
+      ],
+      { x: position.x, y: recoveryY },
+      '#69f0a8',
+      { stroke: '#effffb', lineWidth: 2.5, opacity: opacity * 0.95 },
+    ),
+  ];
+  items.push(
+    ...Array.from({ length: 8 }, (_, index) => {
+      const angle = (index / 8) * Math.PI * 2 + Math.PI / 8;
+      return limbSegment(
+        `player-just-guard-spark-${index}`,
+        {
+          x: center.x + Math.cos(angle) * lerp(4, 15, progress),
+          y: center.y + Math.sin(angle) * lerp(4, 15, progress),
+        },
+        {
+          x: center.x + Math.cos(angle) * lerp(24, 64, progress),
+          y: center.y + Math.sin(angle) * lerp(24, 64, progress),
+        },
+        6,
+        index % 2 === 0 ? '#fff3a6' : '#8ffff0',
+        { opacity: opacity * 0.96 },
+      );
+    }),
+  );
+  return items.map((item, index) => Object.freeze({ ...item, renderOrder, order: 130 + index }));
+}
+
+function createShieldCounterImpactItems(event, renderOrder) {
+  if (!event?.position) return [];
+  const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
+  const opacity = 1 - progress;
+  const center = event.position;
+  const radius = lerp(9, 34, smoothStep(progress));
+  const items = [
+    polygon(
+      'player-shield-counter-ring',
+      arcRibbonPoints(center, 0, Math.PI * 2, Math.max(1, radius - 6), radius, 12),
+      { x: 0, y: 0 },
+      '#ffd46b',
+      { opacity: opacity * 0.9 },
+    ),
+  ];
+  items.push(
+    ...Array.from({ length: 6 }, (_, index) => {
+      const angle = -0.95 + index * 0.38;
+      const direction = event.direction < 0 ? Math.PI - angle : angle;
+      return limbSegment(
+        `player-shield-counter-spark-${index}`,
+        center,
+        {
+          x: center.x + Math.cos(direction) * lerp(22, 54, progress),
+          y: center.y + Math.sin(direction) * lerp(22, 54, progress),
+        },
+        5,
+        index % 2 === 0 ? '#fff0b3' : '#f79b55',
+        { opacity },
+      );
+    }),
+  );
+  return items.map((item, index) => Object.freeze({ ...item, renderOrder, order: 140 + index }));
+}
+
 function createRetaliationAuraItems(position, seconds, idPrefix, renderOrder) {
   if (seconds <= 0) return [];
   const pulse = 0.5 + Math.sin(seconds * 34) * 0.5;
@@ -875,13 +973,23 @@ export function createPlayerCombatPresentation({
         : item,
     ),
   );
-  const playerGuardEvent =
-    latestCombatEvent(
-      combatEvents,
-      COMBAT_EVENT_TYPE.GUARD_BREAK,
-      (event) => event.actor === 'player',
-    ) ??
-    latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.GUARD, (event) => event.actor === 'player');
+  const justGuardEvent = latestCombatEvent(
+    combatEvents,
+    COMBAT_EVENT_TYPE.JUST_GUARD,
+    (event) => event.actor === 'player',
+  );
+  const playerGuardEvent = justGuardEvent
+    ? null
+    : (latestCombatEvent(
+        combatEvents,
+        COMBAT_EVENT_TYPE.GUARD_BREAK,
+        (event) => event.actor === 'player',
+      ) ??
+      latestCombatEvent(
+        combatEvents,
+        COMBAT_EVENT_TYPE.GUARD,
+        (event) => event.actor === 'player',
+      ));
   const playerHitEvent = latestCombatEvent(
     combatEvents,
     COMBAT_EVENT_TYPE.HIT,
@@ -889,6 +997,11 @@ export function createPlayerCombatPresentation({
   );
   const evadeEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.EVADE);
   const punishEvent = latestCombatEvent(combatEvents, COMBAT_EVENT_TYPE.PUNISH);
+  const counterEvent = latestCombatEvent(
+    combatEvents,
+    COMBAT_EVENT_TYPE.COUNTER,
+    (event) => event.actor === 'player',
+  );
   const enemyHitEvent =
     latestCombatEvent(
       combatEvents,
@@ -913,6 +1026,17 @@ export function createPlayerCombatPresentation({
       renderOrder + 0.01,
     ),
   );
+  const justGuardImpactItems = Object.freeze(
+    createJustGuardImpactItems(
+      justGuardEvent,
+      combatGeometry?.shield,
+      position,
+      renderOrder + 0.04,
+    ),
+  );
+  const shieldCounterImpactItems = Object.freeze(
+    createShieldCounterImpactItems(counterEvent, enemyRenderOrder - 0.005),
+  );
   const playerHitFeedbackItems = Object.freeze(
     createHitFeedbackItems(playerHitEvent, 'player', 'player', renderOrder + 0.03),
   );
@@ -928,6 +1052,8 @@ export function createPlayerCombatPresentation({
   const combatEffectItems = Object.freeze([
     ...retaliationItems,
     ...blockImpactItems,
+    ...justGuardImpactItems,
+    ...shieldCounterImpactItems,
     ...playerHitFeedbackItems,
     ...enemyHitFeedbackItems,
     ...evadeFeedbackItems,
@@ -942,6 +1068,8 @@ export function createPlayerCombatPresentation({
     effects: Object.freeze({
       retaliationItems,
       blockImpactItems,
+      justGuardImpactItems,
+      shieldCounterImpactItems,
       playerHitFeedbackItems,
       enemyHitFeedbackItems,
       evadeFeedbackItems,

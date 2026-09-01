@@ -70,7 +70,7 @@ Mobile ───────┘                              │
 - Map runtime만 active Region/Room, available Portal, spawn, collision/entity source와 pending transition을 쓴다.
 - Active Room subtree가 Room-local entity lifecycle을, Encounter owner가 enemy/AI/juggle state를 쓴다. Encounter는 Player mutable state를 직접 소유하지 않고 완료 result를 root에 전달한다.
 - Combat command owner가 startup/active/recovery, buffer, cancel과 combo cycle을 결정한다. Animation module은 normalized motion state를 읽을 뿐 command timing을 바꾸지 않는다.
-- Combat command owner가 stamina 잔량·회복과 action별 비용을 결정하며 guard contact result가 큰 stamina drain을 한 번만 적용한다. Strong startup의 guard-break와 피격 interrupt도 같은 command transition에서 기록한다.
+- Combat command owner가 stamina 잔량·회복, action별 비용, guard 유지 drain과 guard 시작 경과 시간을 결정한다. Guard contact result의 authored attack 위력별 drain은 한 번만 적용하고, 짧은 just-guard window 안의 guardable contact는 drain 대신 회복과 Basic-only counter window를 하나의 command transition으로 기록한다. Counter window 중 다른 action sequence는 소비하되 실행하지 않고 새 Basic만 전용 shield-counter motion으로 전환한다. Strong startup의 guard-break와 피격 interrupt도 같은 command transition에서 기록한다.
 - Shared Combat Geometry는 gameplay와 RenderFrame builder가 함께 읽는 neutral contract다. Gameplay가 renderer/presentation module을 import해 판정을 계산하거나 renderer가 별도 contact geometry를 만들지 않는다.
 - Story interaction owner가 현재 대화 speaker·line·world anchor·순차 reveal 진행도·advance 가능 여부와 story transition을 쓴다. UI presentation은 immutable dialogue DTO와 camera read model로 화자 위 bubble을 투영하되 gameplay state를 쓰지 않는다. 같은 jump action의 이동, 현재 줄 완성 또는 다음 대화 진행 우선순위는 game domain이 현재 interaction context에서 한 번 결정한다.
 - Progression owner가 route, checkpoint, boss, reward, equipment와 unlock transition을 쓴다. Storage adapter는 versioned snapshot을 검증·직렬화할 뿐 rule을 결정하지 않는다.
@@ -98,6 +98,7 @@ Immutable status + RenderFrame
 - Weapon hit는 current and recent swept blade geometry와 hurt geometry의 접촉으로 승인한다. Visual trail과 effect opacity는 damage authority가 아니다.
 - Guard, roll invulnerability, hit/block stun, retaliation protection, juggle limit과 landing reset은 각 owner가 단일 state transition으로 기록한다.
 - Combat event는 원인 ID, contact position과 bounded presentation lifetime을 가진 immutable result다. Renderer가 이를 재해석하거나 중복 소비하지 않는다.
+- Guard result는 authored stamina damage와 just-guard eligibility를 command owner에 전달하고, just guard와 shield counter event는 실제 shield/target contact와 stamina delta를 immutable result로 보존한다. Presentation은 이 event에서 방패 섬광·원형 파동·spark·회복 표시를 만들며 combat 판정을 다시 계산하지 않는다.
 - Camera feedback과 render interpolation은 gameplay position과 collider를 변경하지 않는다.
 
 ## World and Map Contracts
@@ -126,6 +127,7 @@ Immutable status + RenderFrame
 - Pointer ID별 held state, capture, cancel, blur/visibility cleanup은 adapter가 소유하고 release는 idempotent다.
 - Map context와 command priority는 game domain이 결정하며 adapter가 Portal이나 combat state를 알지 않는다.
 - Jump action이 현재 상호작용을 시작하거나 대화를 진행한 fixed-step에는 같은 sequence로 Player jump를 시작하지 않는다.
+- Just-guard counter window 중 이동·jump·roll·guard·Strong은 game domain이 억제하고 입력 sequence 기준선을 갱신한다. 새 Basic sequence만 command owner가 전용 shield counter로 소비한다.
 - UI screen state와 presentation settings는 gameplay input snapshot에 섞지 않는다.
 - UI는 declarative binding과 accessible text/name을 사용하고 implicit browser globals나 element-name globals에 의존하지 않는다.
 - World-anchored dialogue UI는 authored interaction anchor와 camera read model을 screen-space로 투영하고 viewport safe area에서 clamp한다. 글자별 시각 reveal은 screen reader에 partial text를 반복 announce하지 않으며 full line을 별도 accessible status로 제공한다.
@@ -151,7 +153,7 @@ Immutable status + RenderFrame
 ## Verification Direction
 
 - Syntax, lint와 formatting은 `npm run check`, patch whitespace는 `git diff --check`로 검사한다.
-- Pure combat, map patch, progression과 input rule은 DOM 없는 deterministic fixtures로 검증한다.
+- Pure combat, map patch, progression과 input rule은 DOM 없는 deterministic fixtures로 검증한다. Guard 유지 drain, 공격 위력별 단일 contact drain, just-guard 경계·회복, Basic-only lock과 keyboard/touch parity를 120Hz trace로 고정한다.
 - Browser flow는 실제 menu → game → journey/encounter path, resize, keyboard/mobile adapter와 console error를 확인한다.
 - Visual 변경은 stable scenario와 frame에서 실제 browser viewport PNG를 만들고 직접 판독한다. Polygon/Retro, desktop/narrow viewport와 relevant pose/state를 같은 acceptance 기준으로 비교한다.
 - Persistence는 versioned round-trip, corrupt payload, failure result와 idempotent reward recovery를 검증한다.

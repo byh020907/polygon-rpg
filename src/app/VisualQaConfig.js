@@ -58,6 +58,21 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
     expectedAnchor: 'event-contact',
     expectedStamina: 0,
   }),
+  'combat-just-guard': Object.freeze({
+    expectedEvent: 'just-guard',
+    expectedMotion: 'guard',
+    expectedItem: 'player-just-guard-wave',
+    expectedContact: true,
+    expectedAnchor: 'event-contact',
+    expectedStamina: 82,
+  }),
+  'combat-guard-counter': Object.freeze({
+    expectedEvent: 'counter',
+    expectedMotion: 'shieldBash',
+    expectedItem: 'player-shield-counter-ring',
+    expectedContact: true,
+    expectedAnchor: 'event-contact',
+  }),
 });
 
 const POSE_VISUAL_QA_SCENARIOS = Object.freeze({

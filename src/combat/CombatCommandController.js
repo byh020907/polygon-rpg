@@ -11,6 +11,10 @@ export const DEFAULT_COMBAT_STAMINA_PROFILE = Object.freeze({
   maximum: 100,
   recoveryPerSecond: 24,
   recoveryDelaySeconds: 0.45,
+  guardHoldPerSecond: 10,
+  justGuardWindowSeconds: 7 / 60,
+  justGuardRecovery: 36,
+  counterWindowSeconds: 22 / 60,
   costs: Object.freeze({
     basicAttack: 12,
     strongAttack: 24,
@@ -110,6 +114,7 @@ const BASE_COMBAT_MOTION_POLICIES = Object.freeze({
   airReturn: motionPolicy('공중 되베기', 24, 1, { chainStartFrame: 15 }),
   airSpin: motionPolicy('공중 회전', 41, 1, { chainStartFrame: 29 }),
   airCross: motionPolicy('공중 교차 베기', 30, 1, { chainStartFrame: 22 }),
+  shieldBash: motionPolicy('저스트 가드 방패 반격', 26, 0, { chainStartFrame: 22 }),
   guard: motionPolicy('방어', 0, 0.22),
 });
 
@@ -155,6 +160,15 @@ function normalizeStaminaProfile(staminaProfile = {}) {
       staminaProfile.recoveryPerSecond ?? DEFAULT_COMBAT_STAMINA_PROFILE.recoveryPerSecond,
     recoveryDelaySeconds:
       staminaProfile.recoveryDelaySeconds ?? DEFAULT_COMBAT_STAMINA_PROFILE.recoveryDelaySeconds,
+    guardHoldPerSecond:
+      staminaProfile.guardHoldPerSecond ?? DEFAULT_COMBAT_STAMINA_PROFILE.guardHoldPerSecond,
+    justGuardWindowSeconds:
+      staminaProfile.justGuardWindowSeconds ??
+      DEFAULT_COMBAT_STAMINA_PROFILE.justGuardWindowSeconds,
+    justGuardRecovery:
+      staminaProfile.justGuardRecovery ?? DEFAULT_COMBAT_STAMINA_PROFILE.justGuardRecovery,
+    counterWindowSeconds:
+      staminaProfile.counterWindowSeconds ?? DEFAULT_COMBAT_STAMINA_PROFILE.counterWindowSeconds,
     costs,
   };
   for (const [key, value] of Object.entries(normalized)) {
@@ -258,6 +272,8 @@ export class CombatCommandController {
     this.lastStaminaAction = null;
     this.lastCommandTransition = null;
     this.continueNextStarterInCombo = false;
+    this.guardElapsedSeconds = 0;
+    this.justGuardCounterWindowSeconds = 0;
     this.previousGuardInput = Boolean(inputSnapshot?.guard);
     this.previousInputs = Object.fromEntries(
       INPUT_NAMES.map((name) => [name, Boolean(inputSnapshot?.[name])]),
@@ -281,11 +297,20 @@ export class CombatCommandController {
     } = {},
   ) {
     if (!isAirborne) this.airActions = 0;
+    const counterWindowWasActive = this.justGuardCounterWindowSeconds > 0;
+    this.justGuardCounterWindowSeconds = Math.max(
+      0,
+      this.justGuardCounterWindowSeconds - deltaSeconds,
+    );
     this.advanceStamina(staminaDeltaSeconds, {
-      canRecover: !this.active && this.heldPose !== 'guard' && !inputSnapshot.guard,
+      canRecover:
+        !this.active &&
+        this.heldPose !== 'guard' &&
+        !inputSnapshot.guard &&
+        this.justGuardCounterWindowSeconds === 0,
     });
     const issuedCommand = acceptCommands
-      ? this.readIssuedMotion(inputSnapshot, { isAirborne })
+      ? this.readIssuedMotion(inputSnapshot, { isAirborne, counterOnly: counterWindowWasActive })
       : null;
     if (this.active) {
       this.active.elapsedSeconds += deltaSeconds;
@@ -319,17 +344,27 @@ export class CombatCommandController {
       this.continueNextStarterInCombo = false;
     }
 
-    const wantsGuard = acceptCommands && allowGuard && !this.active && Boolean(inputSnapshot.guard);
-    if (wantsGuard && this.heldPose === 'guard') {
+    const wantsGuard =
+      acceptCommands &&
+      allowGuard &&
+      !this.active &&
+      this.justGuardCounterWindowSeconds === 0 &&
+      Boolean(inputSnapshot.guard);
+    if (this.justGuardCounterWindowSeconds > 0 && !this.active) {
       this.heldPose = 'guard';
+    } else if (wantsGuard && this.heldPose === 'guard') {
+      this.guardElapsedSeconds += staminaDeltaSeconds;
+      if (!this.applyGuardHoldDrain(staminaDeltaSeconds)) this.heldPose = 'idle';
     } else if (
       wantsGuard &&
       !this.previousGuardInput &&
       this.trySpendStamina('guard', { transitionKind: 'guard-started' })
     ) {
       this.heldPose = 'guard';
+      this.guardElapsedSeconds = 0;
     } else {
       this.heldPose = 'idle';
+      this.guardElapsedSeconds = 0;
     }
     this.previousGuardInput = Boolean(inputSnapshot.guard);
     for (const inputName of INPUT_NAMES) {
@@ -340,7 +375,20 @@ export class CombatCommandController {
     return this.snapshot();
   }
 
-  readIssuedMotion(inputSnapshot, { isAirborne = false } = {}) {
+  readIssuedMotion(inputSnapshot, { isAirborne = false, counterOnly = false } = {}) {
+    if (this.active?.id === 'shieldBash') return null;
+    if (counterOnly && !this.active) {
+      const sequence = inputSnapshot.basicAttackSequence;
+      const sequenceIssued =
+        Number.isSafeInteger(sequence) && sequence > this.previousSequences.basicAttack;
+      const booleanEdgeIssued =
+        !Number.isSafeInteger(sequence) &&
+        inputSnapshot.basicAttack &&
+        !this.previousInputs.basicAttack;
+      return sequenceIssued || booleanEdgeIssued
+        ? Object.freeze({ motionId: 'shieldBash', action: 'guardCounter', costless: true })
+        : null;
+    }
     for (const command of COMMAND_INPUTS) {
       const sequence = inputSnapshot[`${command.input}Sequence`];
       const sequenceIssued =
@@ -449,9 +497,81 @@ export class CombatCommandController {
     return this.trySpendStamina(action);
   }
 
-  applyGuardContact({ guardBreak = false } = {}) {
+  applyGuardHoldDrain(deltaSeconds) {
+    const requestedDrain = this.staminaProfile.guardHoldPerSecond * deltaSeconds;
+    if (requestedDrain <= 0) return true;
     const before = this.stamina;
-    const requestedDrain = guardBreak ? before : this.staminaProfile.costs.block;
+    const drain = Math.min(before, requestedDrain);
+    this.stamina = Math.max(0, before - drain);
+    this.staminaRecoveryDelaySeconds = this.staminaProfile.recoveryDelaySeconds;
+    if (this.stamina > 0) return true;
+    this.lastStaminaAction = Object.freeze({
+      action: 'guard-hold',
+      accepted: true,
+      reason: 'guard-broken',
+      cost: drain,
+      before,
+      after: this.stamina,
+    });
+    this.lastCommandTransition = Object.freeze({
+      kind: 'guard-broken',
+      action: 'guard',
+      reason: 'guard-hold',
+      staminaBefore: before,
+      staminaAfter: this.stamina,
+    });
+    return false;
+  }
+
+  applyGuardContact({
+    guardBreak = false,
+    staminaDamage = this.staminaProfile.costs.block,
+    justGuardEligible = true,
+  } = {}) {
+    if (!Number.isFinite(staminaDamage) || staminaDamage < 0) {
+      throw new RangeError('guard contact staminaDamage는 0 이상의 유한한 숫자여야 합니다.');
+    }
+    const before = this.stamina;
+    const justGuard =
+      !guardBreak &&
+      justGuardEligible &&
+      this.heldPose === 'guard' &&
+      this.guardElapsedSeconds <= this.staminaProfile.justGuardWindowSeconds;
+    if (justGuard) {
+      const stamina = Math.min(
+        this.staminaProfile.maximum,
+        before + this.staminaProfile.justGuardRecovery,
+      );
+      const recovery = stamina - before;
+      this.stamina = stamina;
+      this.staminaRecoveryDelaySeconds = this.staminaProfile.recoveryDelaySeconds;
+      this.justGuardCounterWindowSeconds = this.staminaProfile.counterWindowSeconds;
+      this.heldPose = 'guard';
+      this.lastStaminaAction = Object.freeze({
+        action: 'just-guard',
+        accepted: true,
+        reason: null,
+        cost: 0,
+        recovery,
+        before,
+        after: this.stamina,
+      });
+      this.lastCommandTransition = Object.freeze({
+        kind: 'just-guard',
+        action: 'guard',
+        staminaBefore: before,
+        staminaAfter: this.stamina,
+        recovery,
+      });
+      return Object.freeze({
+        broken: false,
+        drain: 0,
+        recovery,
+        justGuard: true,
+        stamina: this.stamina,
+      });
+    }
+    const requestedDrain = guardBreak ? before : staminaDamage;
     const drain = Math.min(before, requestedDrain);
     this.stamina = Math.max(0, before - drain);
     this.staminaRecoveryDelaySeconds = this.staminaProfile.recoveryDelaySeconds;
@@ -471,11 +591,13 @@ export class CombatCommandController {
       staminaBefore: before,
       staminaAfter: this.stamina,
     });
-    return Object.freeze({ broken, drain, stamina: this.stamina });
+    this.justGuardCounterWindowSeconds = 0;
+    return Object.freeze({ broken, drain, recovery: 0, justGuard: false, stamina: this.stamina });
   }
 
   startIssuedCommand(command, transitionFrom = null, options = {}) {
-    if (!this.trySpendStamina(command.action)) return false;
+    if (!command.costless && !this.trySpendStamina(command.action)) return false;
+    if (command.motionId === 'shieldBash') this.justGuardCounterWindowSeconds = 0;
     this.start(command.motionId, transitionFrom, options);
     return true;
   }
@@ -502,7 +624,12 @@ export class CombatCommandController {
     };
     this.lastCommandTransition = Object.freeze({
       kind: 'motion-started',
-      action: isStrongCombatMotion(motionId) ? 'strongAttack' : 'basicAttack',
+      action:
+        motionId === 'shieldBash'
+          ? 'guardCounter'
+          : isStrongCombatMotion(motionId)
+            ? 'strongAttack'
+            : 'basicAttack',
       motionId,
       sequence: this.sequence,
       phase: 'startup',
@@ -530,6 +657,7 @@ export class CombatCommandController {
   }
 
   interruptForHit() {
+    this.justGuardCounterWindowSeconds = 0;
     if (!this.active) return Object.freeze({ interrupted: false, strongStartup: false });
     const interrupted = this.snapshot();
     const strongStartup = isStrongCombatMotion(interrupted.id) && interrupted.phase === 'windup';
@@ -569,6 +697,9 @@ export class CombatCommandController {
       staminaRecoveryDelaySeconds: this.staminaRecoveryDelaySeconds,
       lastStaminaAction: this.lastStaminaAction,
       lastCommandTransition: this.lastCommandTransition,
+      guardElapsedSeconds: this.guardElapsedSeconds,
+      justGuardCounterWindowSeconds: this.justGuardCounterWindowSeconds,
+      justGuardCounterReady: this.justGuardCounterWindowSeconds > 0,
     };
     if (!this.active) {
       const motionPolicy = combatMotionPolicy(this.heldPose, this.timingProfile);
@@ -596,7 +727,10 @@ export class CombatCommandController {
       phase: frame.phase,
       frame,
       movementScale: motionPolicy.movementScale,
-      canJump: !AIR_MOTION_IDS.has(this.active.id) && frame.index >= frame.chainStart,
+      canJump:
+        this.active.id !== 'shieldBash' &&
+        !AIR_MOTION_IDS.has(this.active.id) &&
+        frame.index >= frame.chainStart,
       sequence: this.active.sequence,
       comboCycle: this.active.comboCycle,
       airActions: this.airActions,

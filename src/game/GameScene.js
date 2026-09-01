@@ -162,6 +162,14 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     launchY: 250,
     juggleRole: 'finisher',
   }),
+  shieldBash: attackHitProfile('shieldBash', {
+    startFrame: 8,
+    endFrame: 17,
+    damage: 16,
+    range: 34,
+    launchY: -90,
+    contactPart: 'shield',
+  }),
 });
 const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 const CHARACTER_CELL_SIZE = 48;
@@ -501,6 +509,8 @@ export class GameScene extends SceneNode {
         'combat-retaliation',
         'combat-strong-windup',
         'combat-guard-break',
+        'combat-just-guard',
+        'combat-guard-counter',
       ].includes(scenarioId)
     ) {
       throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
@@ -634,6 +644,54 @@ export class GameScene extends SceneNode {
             actor: 'player',
             target: 'enemy',
             position: encounter.lastVisualContact.position,
+            strength: 2,
+          });
+        }
+        break;
+      case 'combat-just-guard':
+        this.combatCommands.trySpendAction('strongAttack');
+        this.combatCommands.trySpendAction('strongAttack');
+        this.combatCommands.update(0, { guard: true });
+        encounter.lastVisualContact = Object.freeze({
+          ...encounter.lastVisualContact,
+          attacker: 'enemy',
+          weaponItemId: 'combat-enemy-weapon',
+          hurtItemId: 'shield',
+          position: Object.freeze({ x: playerX + 25, y: groundY - 70 }),
+        });
+        encounter.contactSeconds = active ? 0.18 : 0;
+        if (active) {
+          this.applyTrainingEncounterPlayerResult({
+            kind: 'guard',
+            attackId: 'light',
+            contactPosition: encounter.lastVisualContact.position,
+            contactDirection: 1,
+            guardStaminaDamage: 24,
+            justGuardEligible: true,
+            blockImpactSeconds: 0.14,
+            blockImpactStrength: 0.55,
+            blockstunSeconds: combatFramesToSeconds(7),
+            hitStopSeconds: 0.04,
+          });
+        }
+        break;
+      case 'combat-guard-counter':
+        startMotion('shieldBash', active ? 0.19 : 0.04);
+        encounter.lastVisualContact = Object.freeze({
+          ...encounter.lastVisualContact,
+          attacker: 'player',
+          weaponItemId: 'shield',
+          hurtItemId: 'combat-enemy-body',
+          position: Object.freeze({ x: playerX + 57, y: groundY - 63 }),
+        });
+        encounter.contactSeconds = active ? 0.18 : 0;
+        if (active) {
+          enemy.aiState = 'hitstun';
+          enemy.hitstunSeconds = 0.2;
+          enemy.hitFlashSeconds = 0.13;
+          emit(COMBAT_EVENT_TYPE.COUNTER, {
+            attackId: 'shieldBash',
+            outcome: 'just-guard-counter',
             strength: 2,
           });
         }
@@ -1236,18 +1294,38 @@ export class GameScene extends SceneNode {
     if (result.kind === 'guard' || result.kind === 'guard-break') {
       const staminaResult = this.combatCommands.applyGuardContact({
         guardBreak: result.kind === 'guard-break',
+        staminaDamage: result.guardStaminaDamage,
+        justGuardEligible: result.justGuardEligible,
       });
-      this.playerBlockImpactSeconds = result.blockImpactSeconds;
-      this.playerBlockImpactStrength =
-        result.blockImpactStrength * this.equipmentProfile.guard.impactScale;
+      this.playerBlockImpactSeconds = staminaResult.justGuard ? 0.18 : result.blockImpactSeconds;
+      this.playerBlockImpactStrength = staminaResult.justGuard
+        ? 1.8
+        : result.blockImpactStrength * this.equipmentProfile.guard.impactScale;
       const authoredBlockstunSeconds =
         result.blockstunSeconds * this.equipmentProfile.guard.blockstunScale;
-      const blockstunSeconds = staminaResult.broken
-        ? Math.max(authoredBlockstunSeconds, combatFramesToSeconds(28))
-        : authoredBlockstunSeconds;
+      const blockstunSeconds = staminaResult.justGuard
+        ? 0
+        : staminaResult.broken
+          ? Math.max(authoredBlockstunSeconds, combatFramesToSeconds(28))
+          : authoredBlockstunSeconds;
       this.playerBlockstunSeconds = Math.max(this.playerBlockstunSeconds, blockstunSeconds);
       this.playerBlockstunDurationSeconds = blockstunSeconds;
-      this.hitStopSeconds = Math.max(this.hitStopSeconds, result.hitStopSeconds);
+      this.hitStopSeconds = Math.max(
+        this.hitStopSeconds,
+        staminaResult.justGuard ? 0.075 : result.hitStopSeconds,
+      );
+      if (staminaResult.justGuard) {
+        this.combatEvents.emit(COMBAT_EVENT_TYPE.JUST_GUARD, {
+          actor: 'player',
+          target: 'enemy',
+          attackId: result.attackId ?? null,
+          position: result.contactPosition ?? null,
+          direction: result.contactDirection ?? this.facing,
+          strength: 2,
+          staminaDelta: staminaResult.recovery,
+          durationSeconds: 0.2,
+        });
+      }
       if (staminaResult.broken) this.rollState = null;
       return;
     }
@@ -1351,7 +1429,7 @@ export class GameScene extends SceneNode {
       this.playerWeaponContactHistory = [];
     }
     const swept = createSweptWeaponGeometry({
-      current: geometry.weapon,
+      current: combatState.id === 'shieldBash' ? geometry.shield : geometry.weapon,
       history: this.playerWeaponContactHistory,
     });
     this.playerWeaponContactHistory = [...swept.history];
@@ -1440,16 +1518,20 @@ export class GameScene extends SceneNode {
       this.playerHitstunSeconds > 0 ||
       this.playerBlockstunSeconds > 0 ||
       this.playerHealth === 0;
+    const preUpdateCombatState = this.combatCommands.snapshot();
+    const counterInputLocked =
+      preUpdateCombatState.justGuardCounterReady || preUpdateCombatState.id === 'shieldBash';
+    const navigationLocked = controlsLocked || counterInputLocked;
     const rawJumpPressed = Boolean(inputSnapshot.jump);
     const rawGuardPressed = Boolean(inputSnapshot.guard);
-    const horizontal = controlsLocked
+    const horizontal = navigationLocked
       ? 0
       : Number(inputSnapshot.right) - Number(inputSnapshot.left);
-    const jumpPressed = controlsLocked ? false : rawJumpPressed;
-    const guardPressed = controlsLocked ? false : rawGuardPressed;
+    const jumpPressed = navigationLocked ? false : rawJumpPressed;
+    const guardPressed = navigationLocked ? false : rawGuardPressed;
     const guardEdge = guardPressed && !this.guardWasPressed;
     const jumpSequence = inputSnapshot.jumpSequence;
-    const jumpIssued = controlsLocked
+    const jumpIssued = navigationLocked
       ? false
       : Number.isSafeInteger(jumpSequence)
         ? jumpSequence > this.lastJumpSequence
@@ -1889,6 +1971,8 @@ export class GameScene extends SceneNode {
       stamina: combatStatus.stamina,
       maxStamina: combatStatus.maxStamina,
       staminaExhausted: combatStatus.exhausted,
+      justGuardCounterReady: combatStatus.justGuardCounterReady,
+      justGuardCounterWindowSeconds: combatStatus.justGuardCounterWindowSeconds,
       lastStaminaAction: combatStatus.lastStaminaAction,
       lastCommandTransition: combatStatus.lastCommandTransition,
       gold: getAvailableGold(this.progressionSnapshot),
@@ -2072,6 +2156,8 @@ export class GameScene extends SceneNode {
         stamina: combatState.stamina,
         maxStamina: combatState.maxStamina,
         staminaExhausted: combatState.exhausted,
+        justGuardCounterReady: combatState.justGuardCounterReady,
+        justGuardCounterWindowSeconds: combatState.justGuardCounterWindowSeconds,
         lastStaminaAction: combatState.lastStaminaAction,
         lastCommandTransition: combatState.lastCommandTransition,
         hitstunSeconds: this.playerHitstunSeconds,

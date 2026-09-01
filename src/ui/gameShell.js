@@ -294,12 +294,17 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     get combatStatusAnnouncement() {
       const transitionLabels = Object.freeze({
         'guard-contact': '방어 성공',
+        'just-guard': '저스트 가드 · Basic 방패 반격 가능',
         'guard-broken': 'Player 방어 파괴',
         'guard-break': '상대 방어 파괴',
         'strong-startup-interrupted': '강한 공격 준비 취소',
         'action-rejected': '스태미나 부족으로 행동 불가',
       });
-      const transition = transitionLabels[this.lastCommandTransition?.kind];
+      const transition =
+        this.lastCommandTransition?.kind === 'motion-started' &&
+        this.lastCommandTransition?.action === 'guardCounter'
+          ? '저스트 가드 방패 반격'
+          : transitionLabels[this.lastCommandTransition?.kind];
       const encounter = this.encounterHint
         ? `${this.encounterHint} ${this.encounterHealthLabel}`.trim()
         : '현재 조우 없음';

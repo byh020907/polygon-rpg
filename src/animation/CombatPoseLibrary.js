@@ -304,6 +304,34 @@ export const COMBAT_POSE_DEFINITIONS = Object.freeze({
     ),
     keyframe(1),
   ]),
+  shieldBash: definition([
+    keyframe(0, {
+      handTarget: { x: 24, y: -46 },
+      shieldTarget: { x: 31, y: -8 },
+      swordAngle: -1.4,
+      bodyOffset: { x: -5, y: 2 },
+      bodyLean: -0.08,
+    }),
+    keyframe(
+      0.48,
+      {
+        handTarget: { x: 10, y: -54 },
+        shieldTarget: { x: 70, y: -9 },
+        swordAngle: -1.62,
+        bodyOffset: { x: 14, y: 1 },
+        bodyLean: 0.18,
+      },
+      'overshoot',
+    ),
+    keyframe(0.72, {
+      handTarget: { x: 18, y: -48 },
+      shieldTarget: { x: 61, y: -8 },
+      swordAngle: -1.5,
+      bodyOffset: { x: 9, y: 2 },
+      bodyLean: 0.1,
+    }),
+    keyframe(1),
+  ]),
   guard: definition([
     keyframe(0, {
       handTarget: { x: 31, y: -38 },
