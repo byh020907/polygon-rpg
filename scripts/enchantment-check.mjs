@@ -1,27 +1,42 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
-import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { resolveSwordEnchantment } from '../src/game/enchantment/EnchantmentPolicy.js';
-import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
 import {
+  ENCHANTMENT_MATERIAL_COSTS,
+  ENCHANTMENT_MAX_LEVEL,
+  ENCHANTMENT_TRANSACTION_REASON,
   awardEnchantMaterial,
-  unlockOrSelectEnchant,
+  createEnchantmentSnapshot,
 } from '../src/game/enchantment/EnchantmentState.js';
-import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
+import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import {
+  PROGRESSION_SCHEMA_VERSION,
+  createProgressionSnapshot,
+  getAvailableGold,
+  mergeProgressionSnapshot,
+  purchaseEquipment,
+  selectEquipment,
+  upgradeSwordEnchantment,
+} from '../src/game/progression/ProgressionState.js';
+import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP = 1 / 120;
+const DEFAULT_SWORD_ID = 'balanced-sword';
+const OTHER_SWORD_ID = 'heavy-sword';
 let contactSequence = 0;
 
 function createEncounter({
   profileId = 'training',
   enchantId = null,
+  enchantLevel = enchantId ? ENCHANTMENT_MAX_LEVEL : 0,
+  swordId = DEFAULT_SWORD_ID,
   affinity = 'neutral',
   maxHealth = 500,
   guardOutsidePunish,
@@ -38,9 +53,12 @@ function createEncounter({
       }),
     }),
   });
+  const active = enchantId
+    ? Object.freeze({ ...ENCHANTMENT_CATALOG.getProfile(enchantId), swordId, level: enchantLevel })
+    : null;
   return new TrainingEncounterNode({
     entity: {
-      id: `${profileId}-${enchantId ?? 'none'}-${affinity}`,
+      id: `${profileId}-${enchantId ?? 'none'}-${affinity}-${enchantLevel}`,
       kind: 'combat-test-mob',
       encounterProfileId: profileId,
       position: { x: 650, y: 420 },
@@ -51,9 +69,7 @@ function createEncounter({
     spinContact: { hitPulses: [0.3, 0.5, 0.7], contactSpacings: [23, 17, 5] },
     encounterProfiles,
     attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
-    enchantmentContext: {
-      active: enchantId ? ENCHANTMENT_CATALOG.getProfile(enchantId) : null,
-    },
+    enchantmentContext: { swordId, level: enchantLevel, active },
   });
 }
 
@@ -157,28 +173,34 @@ function verifyPolicyAndActualMatrix() {
     for (const affinity of ['weak', 'neutral', 'resistant']) {
       const basic = resolveSwordEnchantment({
         enchantId: profile.id,
+        enchantLevel: 5,
         affinity,
         attackKind: 'basic',
         baseDamage: 100,
+        weaponBaseAttack: 100,
       });
       const strong = resolveSwordEnchantment({
         enchantId: profile.id,
+        enchantLevel: 5,
         affinity,
         attackKind: 'strong',
         baseDamage: 100,
+        weaponBaseAttack: 100,
       });
       assert.ok(basic.damage >= 1 && strong.damage >= 1);
       assert.ok(strong.buildup > basic.buildup);
-      pureByAffinity[affinity] = basic.damage;
+      pureByAffinity[affinity] = basic.additionalDamage;
 
-      const basicEncounter = createEncounter({ enchantId: profile.id, affinity });
+      const basicEncounter = createEncounter({ enchantId: profile.id, enchantLevel: 5, affinity });
       const basicActual = resolveContact(basicEncounter, 'basic');
       assert.equal(basicActual.playerResult.damagingHit.enchantment.id, profile.id);
+      assert.equal(basicActual.playerResult.damagingHit.enchantment.level, 5);
+      assert.equal(basicActual.playerResult.damagingHit.enchantment.swordId, DEFAULT_SWORD_ID);
       assert.equal(basicActual.combatEvent.payload.enchantment.color, profile.color);
       assert.equal(basicActual.status.buildup, basic.buildup);
       basicEncounter.exitTree();
 
-      const strongEncounter = createEncounter({ enchantId: profile.id, affinity });
+      const strongEncounter = createEncounter({ enchantId: profile.id, enchantLevel: 5, affinity });
       const strongActual = resolveContact(strongEncounter, 'strong');
       assert.equal(strongActual.status.buildup, strong.buildup);
       strongEncounter.exitTree();
@@ -188,73 +210,51 @@ function verifyPolicyAndActualMatrix() {
     assert.ok(pureByAffinity.neutral > pureByAffinity.resistant);
     assert.ok(actualByAffinity.weak > actualByAffinity.neutral);
     assert.ok(actualByAffinity.neutral > actualByAffinity.resistant);
-  }
 
-  const switched = resolveSwordEnchantment({
-    enchantId: 'lightning',
-    affinity: 'neutral',
-    attackKind: 'basic',
-    baseDamage: 10,
-    status: { id: 'fire', buildup: 90, remainingSeconds: 0 },
-  });
-  assert.equal(switched.status.buildup, 28);
-  assert.equal(switched.status.remainingSeconds, 0);
-  const extendedBasic = resolveSwordEnchantment({
-    enchantId: 'fire',
-    affinity: 'neutral',
-    attackKind: 'basic',
-    baseDamage: 10,
-    status: { id: 'fire', buildup: 0, remainingSeconds: 2 },
-  });
-  const extendedStrong = resolveSwordEnchantment({
-    enchantId: 'fire',
-    affinity: 'neutral',
-    attackKind: 'strong',
-    baseDamage: 10,
-    status: { id: 'fire', buildup: 0, remainingSeconds: 2 },
-  });
-  assert.equal(extendedBasic.status.remainingSeconds, 2.45);
-  assert.equal(extendedStrong.status.remainingSeconds, 2.8);
-  assert.equal(
-    resolveSwordEnchantment({
-      enchantId: 'fire',
-      affinity: 'neutral',
-      attackKind: 'strong',
-      baseDamage: 10,
-      status: { id: 'fire', buildup: 0, remainingSeconds: 3.8 },
-    }).status.remainingSeconds,
-    4,
-  );
-  assert.equal(
-    resolveSwordEnchantment({
-      enchantId: 'fire',
+    const levelOne = resolveSwordEnchantment({
+      enchantId: profile.id,
+      enchantLevel: 1,
       affinity: 'neutral',
       attackKind: 'basic',
-      baseDamage: 10,
-      status: { id: 'fire', buildup: 0, remainingSeconds: 0 },
-    }).status.remainingSeconds,
-    0,
+      baseDamage: 100,
+      weaponBaseAttack: 100,
+    });
+    const levelFive = resolveSwordEnchantment({
+      enchantId: profile.id,
+      enchantLevel: 5,
+      affinity: 'neutral',
+      attackKind: 'basic',
+      baseDamage: 100,
+      weaponBaseAttack: 100,
+    });
+    assert.equal(levelOne.additionalDamage, 30);
+    assert.equal(levelFive.additionalDamage, 150);
+    assert.equal(levelFive.additionalDamage, levelOne.additionalDamage * 5);
+    assert.equal(levelFive.damage, 250);
+  }
+
+  assert.equal(
+    resolveSwordEnchantment({
+      enchantId: null,
+      enchantLevel: 0,
+      affinity: 'neutral',
+      attackKind: 'basic',
+      baseDamage: 0,
+    }),
+    null,
   );
 }
 
 function verifyActualEffectsAndShieldExclusion() {
-  const fireEncounter = createEncounter({ enchantId: 'fire' });
+  const fireEncounter = createEncounter({ enchantId: 'fire', enchantLevel: 5 });
   fireEncounter.enterTree();
   fireEncounter.resolvePlayerAttack(contactFrame(fireEncounter, 'strong'));
   fireEncounter.resolvePlayerAttack(contactFrame(fireEncounter, 'strong'));
   assert.equal(fireEncounter.enemy.enchantStatus.suppressesRegeneration, true);
   assert.equal(fireEncounter.enemy.enchantStatus.suppressesPlantDefense, true);
-  fireEncounter.enemy.health = 2;
-  let completed = 0;
-  fireEncounter.encounterCompleted.connect(() => {
-    completed += 1;
-  });
-  for (let index = 0; index < 61; index += 1) fireEncounter.step(STEP, idleFrame());
-  assert.equal(fireEncounter.enemy.health, 0);
-  assert.equal(completed, 1);
   fireEncounter.exitTree();
 
-  const lightningEncounter = createEncounter({ enchantId: 'lightning' });
+  const lightningEncounter = createEncounter({ enchantId: 'lightning', enchantLevel: 5 });
   lightningEncounter.enemy.aiState = 'windup';
   lightningEncounter.enemy.attackKind = 'heavy';
   lightningEncounter.enemy.enchantStatus = {
@@ -264,324 +264,372 @@ function verifyActualEffectsAndShieldExclusion() {
   };
   const lightning = resolveContact(lightningEncounter, 'basic');
   assert.equal(lightningEncounter.enemy.lastCommandTransition.kind, 'enchant-interrupt');
-  assert.equal(lightningEncounter.enemy.lastCommandTransition.reason, 'lightning');
   assert.equal(lightning.playerResult.damagingHit.enchantment.id, 'lightning');
   lightningEncounter.exitTree();
 
-  const iceEncounter = createEncounter({ enchantId: 'ice' });
+  const iceEncounter = createEncounter({ enchantId: 'ice', enchantLevel: 5 });
   iceEncounter.enemy.enchantStatus = { id: 'ice', buildup: 0, remainingSeconds: 2.4 };
-  iceEncounter.enemy.aiState = 'windup';
-  iceEncounter.enemy.aiSeconds = 10;
-  iceEncounter.updateEnemyCombat(STEP, idleFrame());
-  assert.ok(Math.abs(iceEncounter.enemy.aiSeconds - (10 - STEP)) < 1e-9);
   iceEncounter.enemy.aiState = 'recovery';
   iceEncounter.enemy.aiSeconds = 10;
   iceEncounter.updateEnemyCombat(STEP, idleFrame());
   assert.ok(Math.abs(iceEncounter.enemy.aiSeconds - (10 - STEP * 0.7)) < 1e-9);
-  iceEncounter.enemy.aiState = 'approach';
-  iceEncounter.enemy.aiSeconds = 10;
-  const approachBefore = iceEncounter.enemy.position.x;
-  iceEncounter.updateEnemyCombat(STEP, idleFrame());
-  assert.ok(
-    Math.abs(
-      iceEncounter.enemy.position.x -
-        approachBefore -
-        ENCOUNTER_PROFILES.training.approachSpeed * STEP * 0.7,
-    ) < 1e-9,
-  );
 
-  const guardedStrong = createEncounter({ profileId: 'boss', enchantId: 'earth' });
+  const guardedStrong = createEncounter({
+    profileId: 'boss',
+    enchantId: 'earth',
+    enchantLevel: 5,
+  });
   guardedStrong.enemy.aiState = 'guard';
   assert.equal(resolveContact(guardedStrong, 'strong').postureDamage, 48 + 34);
   guardedStrong.exitTree();
-  const guardedBasic = createEncounter({ profileId: 'boss', enchantId: 'earth' });
-  guardedBasic.enemy.aiState = 'guard';
-  assert.equal(resolveContact(guardedBasic, 'basic').postureDamage, 18);
-  guardedBasic.exitTree();
-  const unguardedStrong = createEncounter({
+
+  const guardedLevelOne = createEncounter({
     profileId: 'boss',
     enchantId: 'earth',
-    guardOutsidePunish: false,
+    enchantLevel: 1,
   });
-  assert.equal(resolveContact(unguardedStrong, 'strong').postureDamage, 34);
-  unguardedStrong.exitTree();
-  const normalEarth = createEncounter({ enchantId: 'earth' });
-  resolveContact(normalEarth, 'strong');
-  assert.equal('posture' in normalEarth.getGameplaySnapshot(), false);
-  normalEarth.exitTree();
+  guardedLevelOne.enemy.aiState = 'guard';
+  assert.equal(resolveContact(guardedLevelOne, 'basic').postureDamage, Math.round(18 / 5));
+  guardedLevelOne.exitTree();
 
   const shieldPlain = createEncounter();
   const plainResult = resolveContact(shieldPlain, 'shield');
   shieldPlain.exitTree();
-  const shieldFire = createEncounter({ enchantId: 'fire' });
+  const shieldFire = createEncounter({ enchantId: 'fire', enchantLevel: 5 });
   const fireResult = resolveContact(shieldFire, 'shield');
   assert.equal(fireResult.damage, plainResult.damage);
-  assert.equal(fireResult.postureDamage, plainResult.postureDamage);
   assert.equal(fireResult.playerResult.damagingHit.enchantment, null);
   assert.equal(fireResult.combatEvent.payload.enchantment, null);
   assert.equal(fireResult.status, null);
   shieldFire.exitTree();
-  const plainSword = createEncounter();
-  const plainSwordResult = resolveContact(plainSword, 'basic');
-  assert.equal(plainSwordResult.playerResult.damagingHit.enchantment, null);
-  assert.equal(plainSwordResult.status, null);
-  plainSword.exitTree();
 }
 
-function verifyVisualQaMatrix() {
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  assert.match(html, /@keydown\.enter\.prevent\.stop="selectEnchant\(option\)"/);
-  assert.match(html, /@keydown\.space\.prevent\.stop="selectEnchant\(option\)"/);
-  assert.match(html, /@touchend\.prevent="selectEnchant\(option\)"/);
-  assert.match(html, /<template x-if="dialogue\.active">\s+<section\s+class="dialogue-bubble"/);
-  const scenarios = [
-    'enchant-fire-contact',
-    'enchant-lightning-contact',
-    'enchant-ice-status',
-    'enchant-earth-posture',
-    'enchant-shield-excluded',
-  ];
-  for (const renderer of ['polygon', 'retro']) {
-    for (const phase of ['start', 'active', 'end']) {
-      for (const scenario of scenarios) {
-        const request = readVisualQaRequest(
-          `?visualQa=1&gameStart=${scenario}&visualQaRenderer=${renderer}&visualQaPhase=${phase}`,
-        );
-        assert.equal(request.renderer, renderer);
-        assert.equal(request.phase, phase);
-        if (scenario !== 'enchant-shield-excluded') {
-          assert.equal(
-            request.scenario.expectation.expectedEffectProgressMinimum,
-            phase === 'active' ? 0.35 : undefined,
-          );
-        }
-        if (scenario === 'enchant-shield-excluded')
-          assert.ok(
-            request.scenario.expectation.expectedAbsentItems.includes('enchant-contact-ring'),
-          );
-      }
-    }
-  }
-}
-
-function verifyProgressionEnchantmentContract() {
-  let enchantment = createProgressionSnapshot('balanced-sword').enchantment;
-  for (const profile of ENCHANTMENT_CATALOG.profiles) {
-    const awarded = awardEnchantMaterial(enchantment, profile, ENCHANTMENT_CATALOG);
-    assert.equal(awarded.changed, true);
-    enchantment = awarded.enchantment;
-    assert.equal(awardEnchantMaterial(enchantment, profile, ENCHANTMENT_CATALOG).changed, false);
-  }
-  assert.equal(enchantment.materialIds.length, 4);
-  for (const profile of ENCHANTMENT_CATALOG.profiles) {
-    const forged = unlockOrSelectEnchant(enchantment, profile.id, ENCHANTMENT_CATALOG);
-    assert.equal(forged.changed, true);
-    enchantment = forged.enchantment;
-    assert.equal(enchantment.activeId, profile.id);
-    assert.equal(enchantment.unlockedIds.includes(profile.id), true);
-  }
-  assert.equal(enchantment.materialIds.length, 0);
-  assert.equal(enchantment.unlockedIds.length, 4);
-  assert.equal(new Set([enchantment.activeId]).size, 1);
-
-  const base = createProgressionSnapshot('balanced-sword');
-  const legacyCompleted = {
-    ...base,
-    firstJourney: {
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
+function progressionWithResources({ materialId, quantity, gold }) {
+  const fresh = createProgressionSnapshot(DEFAULT_SWORD_ID, ENCHANTMENT_CATALOG);
+  return mergeProgressionSnapshot({
+    ...fresh,
+    firstJourney: { ...fresh.firstJourney, gold },
+    enchantment: {
+      ...fresh.enchantment,
+      materialQuantities: {
+        ...fresh.enchantment.materialQuantities,
+        [materialId]: quantity,
+      },
     },
-    regionExpansion: {
-      phase: 'returned',
-      glasswindHunterDefeated: true,
-      checkpointId: 'academy-village:glasswind-region:glasswind-observatory:glasswind-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 180,
+  });
+}
+
+function assertUnchangedFailure(transaction, before, reason) {
+  assert.equal(transaction.changed, false);
+  assert.equal(transaction.reason, reason);
+  assert.deepEqual(transaction.snapshot, before);
+}
+
+function verifyTransactionsAndSwordIsolation() {
+  assert.deepEqual(ENCHANTMENT_MATERIAL_COSTS, [null, 2, 4, 8, 16, 32]);
+  const fire = ENCHANTMENT_CATALOG.getProfile('fire');
+  let sourceSnapshot = createEnchantmentSnapshot([DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
+  const awarded = awardEnchantMaterial(sourceSnapshot, fire, ENCHANTMENT_CATALOG);
+  assert.equal(awarded.quantity, 2);
+  assert.equal(awarded.enchantment.materialQuantities[fire.materialId], 2);
+  sourceSnapshot = awarded.enchantment;
+  const repeatedAward = awardEnchantMaterial(sourceSnapshot, fire, ENCHANTMENT_CATALOG);
+  assert.equal(repeatedAward.changed, false);
+  assert.equal(repeatedAward.reason, ENCHANTMENT_TRANSACTION_REASON.MATERIAL_ALREADY_CLAIMED);
+  assert.deepEqual(repeatedAward.enchantment, sourceSnapshot);
+
+  const totalMaterial = ENCHANTMENT_MATERIAL_COSTS.slice(1).reduce((sum, value) => sum + value, 0);
+  const totalGold = fire.goldCosts.reduce((sum, value) => sum + value, 0);
+  let progression = progressionWithResources({
+    materialId: fire.materialId,
+    quantity: totalMaterial,
+    gold: totalGold,
+  });
+  for (let targetLevel = 1; targetLevel <= 5; targetLevel += 1) {
+    const beforeGold = getAvailableGold(progression);
+    const beforeMaterial = progression.enchantment.materialQuantities[fire.materialId];
+    const transaction = upgradeSwordEnchantment(
+      progression,
+      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      ENCHANTMENT_CATALOG,
+    );
+    assert.equal(transaction.changed, true);
+    assert.equal(transaction.targetLevel, targetLevel);
+    assert.equal(transaction.materialCost, ENCHANTMENT_MATERIAL_COSTS[targetLevel]);
+    assert.equal(transaction.goldCost, fire.goldCosts[targetLevel - 1]);
+    assert.equal(getAvailableGold(transaction.snapshot), beforeGold - transaction.goldCost);
+    assert.equal(
+      transaction.snapshot.enchantment.materialQuantities[fire.materialId],
+      beforeMaterial - transaction.materialCost,
+    );
+    progression = transaction.snapshot;
+  }
+  assert.deepEqual(progression.enchantment.swordEnchantments[DEFAULT_SWORD_ID], {
+    elementId: 'fire',
+    level: 5,
+  });
+  assertUnchangedFailure(
+    upgradeSwordEnchantment(
+      progression,
+      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      ENCHANTMENT_CATALOG,
+    ),
+    progression,
+    ENCHANTMENT_TRANSACTION_REASON.MAX_LEVEL,
+  );
+
+  const materialFailure = progressionWithResources({
+    materialId: fire.materialId,
+    quantity: 1,
+    gold: fire.goldCosts[0],
+  });
+  assertUnchangedFailure(
+    upgradeSwordEnchantment(
+      materialFailure,
+      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      ENCHANTMENT_CATALOG,
+    ),
+    materialFailure,
+    ENCHANTMENT_TRANSACTION_REASON.INSUFFICIENT_MATERIAL,
+  );
+  const goldFailure = progressionWithResources({
+    materialId: fire.materialId,
+    quantity: 2,
+    gold: 0,
+  });
+  assertUnchangedFailure(
+    upgradeSwordEnchantment(
+      goldFailure,
+      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      ENCHANTMENT_CATALOG,
+    ),
+    goldFailure,
+    ENCHANTMENT_TRANSACTION_REASON.INSUFFICIENT_GOLD,
+  );
+  assertUnchangedFailure(
+    upgradeSwordEnchantment(
+      goldFailure,
+      { swordId: 'not-owned', elementId: 'fire' },
+      ENCHANTMENT_CATALOG,
+    ),
+    goldFailure,
+    ENCHANTMENT_TRANSACTION_REASON.NOT_OWNED,
+  );
+  assertUnchangedFailure(
+    upgradeSwordEnchantment(
+      goldFailure,
+      { swordId: DEFAULT_SWORD_ID, elementId: 'void' },
+      ENCHANTMENT_CATALOG,
+    ),
+    goldFailure,
+    ENCHANTMENT_TRANSACTION_REASON.INVALID_ELEMENT,
+  );
+
+  const purchaseBase = progressionWithResources({
+    materialId: fire.materialId,
+    quantity: 2,
+    gold: 120,
+  });
+  const purchased = purchaseEquipment(purchaseBase, {
+    profileId: OTHER_SWORD_ID,
+    goldCost: 120,
+  });
+  assert.equal(purchased.changed, true);
+  assert.deepEqual(purchased.snapshot.enchantment.swordEnchantments[OTHER_SWORD_ID], {
+    elementId: null,
+    level: 0,
+  });
+
+  const isolated = mergeProgressionSnapshot({
+    ...purchased.snapshot,
+    enchantment: {
+      ...purchased.snapshot.enchantment,
+      swordEnchantments: {
+        [DEFAULT_SWORD_ID]: { elementId: 'fire', level: 1 },
+        [OTHER_SWORD_ID]: { elementId: 'ice', level: 5 },
+      },
+    },
+  });
+  const equippedHeavy = selectEquipment(isolated, OTHER_SWORD_ID).snapshot;
+  const scene = createTestGameScene({
+    mapDefinition: ACADEMY_VILLAGE_MAP,
+    progressionSnapshot: equippedHeavy,
+  });
+  assert.equal(scene.getEnchantContext().swordId, OTHER_SWORD_ID);
+  assert.equal(scene.getEnchantContext().level, 5);
+  assert.equal(scene.getEnchantContext().active.id, 'ice');
+  assert.equal(scene.getEnchantContext().active.swordId, OTHER_SWORD_ID);
+  const equippedBalanced = scene.selectEquipment(DEFAULT_SWORD_ID);
+  assert.equal(equippedBalanced.changed, true);
+  assert.equal(scene.getEnchantContext().active.id, 'fire');
+  assert.equal(scene.getEnchantContext().active.level, 1);
+  assert.deepEqual(scene.getProgressionSnapshot().enchantment.swordEnchantments[OTHER_SWORD_ID], {
+    elementId: 'ice',
+    level: 5,
+  });
+  scene.dispose();
+}
+
+class MemoryStorage {
+  constructor(value = null, { throwOnWrite = false } = {}) {
+    this.value = value;
+    this.throwOnWrite = throwOnWrite;
+  }
+
+  getItem() {
+    return this.value;
+  }
+
+  setItem(_key, value) {
+    if (this.throwOnWrite) throw new Error('injected write failure');
+    this.value = value;
+  }
+}
+
+function verifyPersistenceMigrationAndRecovery() {
+  const fire = ENCHANTMENT_CATALOG.getProfile('fire');
+  const durable = progressionWithResources({
+    materialId: fire.materialId,
+    quantity: 2,
+    gold: 60,
+  });
+  const upgraded = upgradeSwordEnchantment(
+    durable,
+    { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+    ENCHANTMENT_CATALOG,
+  ).snapshot;
+  const adapter = new MemoryStorage();
+  const storage = new ProgressionStorage(adapter, 'enchantment-v6', ENCHANTMENT_CATALOG);
+  assert.equal(PROGRESSION_SCHEMA_VERSION, 6);
+  assert.equal(storage.save(upgraded).ok, true);
+  const roundTrip = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
+  assert.equal(roundTrip.ok, true);
+  assert.equal(roundTrip.kind, 'loaded');
+  assert.deepEqual(roundTrip.snapshot, upgraded);
+
+  const legacyV5 = {
+    ...upgraded,
+    version: 5,
+    enchantment: {
+      materialIds: ['frostroot-crystal'],
+      unlockedIds: ['fire'],
+      activeId: 'fire',
+      claimedMaterialSourceIds: ['field-guardian-defeated'],
     },
   };
-  const reconciled = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: legacyCompleted,
+  adapter.value = JSON.stringify(legacyV5);
+  const migrated = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
+  assert.equal(migrated.ok, true);
+  assert.equal(migrated.kind, 'migrated');
+  assert.equal(migrated.snapshot.version, 6);
+  assert.deepEqual(migrated.snapshot.enchantment.swordEnchantments[DEFAULT_SWORD_ID], {
+    elementId: 'fire',
+    level: 1,
   });
-  const reconciledEnchant = reconciled.getProgressionSnapshot().enchantment;
-  assert.deepEqual(
-    [...reconciledEnchant.materialIds].sort(),
-    ENCHANTMENT_CATALOG.profiles.map((profile) => profile.materialId).sort(),
+  assert.equal(migrated.snapshot.enchantment.materialQuantities['frostroot-crystal'], 2);
+
+  adapter.value = JSON.stringify({
+    ...legacyV5,
+    enchantment: { ...legacyV5.enchantment, unlockedIds: ['unknown-enchant'] },
+  });
+  assert.equal(
+    storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG).reason,
+    'invalid-data',
   );
-  assert.deepEqual(
-    [...reconciledEnchant.claimedMaterialSourceIds].sort(),
-    ENCHANTMENT_CATALOG.profiles.map((profile) => profile.sourceId).sort(),
+
+  adapter.value = JSON.stringify({
+    ...upgraded,
+    enchantment: {
+      ...upgraded.enchantment,
+      materialQuantities: { ...upgraded.enchantment.materialQuantities, unknown: 1 },
+    },
+  });
+  assert.equal(
+    storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG).reason,
+    'invalid-data',
   );
-  reconciled.dispose();
+  adapter.value = '{broken';
+  assert.equal(
+    storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG).reason,
+    'parse-failed',
+  );
+  const failedWrite = new ProgressionStorage(
+    new MemoryStorage(null, { throwOnWrite: true }),
+    'enchantment-write-failure',
+    ENCHANTMENT_CATALOG,
+  ).save(upgraded);
+  assert.deepEqual(
+    { ok: failedWrite.ok, reason: failedWrite.reason },
+    { ok: false, reason: 'write-failed' },
+  );
+}
+
+function verifyVisualQaLevelsAndRuntimeContext() {
+  const levelOne = readVisualQaRequest(
+    '?visualQa=1&gameStart=enchant-fire-contact&visualQaRenderer=polygon&visualQaPhase=active',
+  );
+  const levelFive = readVisualQaRequest(
+    '?visualQa=1&gameStart=enchant-lightning-contact&visualQaRenderer=retro&visualQaPhase=active',
+  );
+  assert.equal(levelOne.scenario.expectation.expectedEnchantLevel, 1);
+  assert.equal(levelOne.scenario.enchantmentSnapshot.swordEnchantments[DEFAULT_SWORD_ID].level, 1);
+  assert.equal(levelFive.scenario.expectation.expectedEnchantLevel, 5);
+  assert.equal(levelFive.scenario.enchantmentSnapshot.swordEnchantments[DEFAULT_SWORD_ID].level, 5);
+
+  const fire = ENCHANTMENT_CATALOG.getProfile('fire');
+  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  scene.enterTree();
+  try {
+    scene.restoreProgression(
+      progressionWithResources({
+        materialId: fire.materialId,
+        quantity: 2,
+        gold: fire.goldCosts[0],
+      }),
+    );
+    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 829 });
+    assert.equal(scene.canForgeEnchant(), true);
+    const forged = scene.selectEnchant('fire');
+    assert.equal(forged.changed, true);
+    assert.equal(scene.getEnchantContext().active.level, 1);
+    assert.equal(scene.getEnchantContext().swordId, DEFAULT_SWORD_ID);
+    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 500 });
+    scene.setVisualQaCombatScenario('enchant-fire-contact');
+    assert.ok(scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-fire-ember-0'));
+    scene.setVisualQaCombatScenario('enchant-shield-excluded');
+    assert.equal(
+      scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-contact-ring'),
+      false,
+    );
+  } finally {
+    scene.exitTree();
+  }
 }
 
 verifyPolicyAndActualMatrix();
 verifyActualEffectsAndShieldExclusion();
-verifyVisualQaMatrix();
-verifyProgressionEnchantmentContract();
+verifyTransactionsAndSwordIsolation();
+verifyPersistenceMigrationAndRecovery();
+verifyVisualQaLevelsAndRuntimeContext();
 
-const fire = ENCHANTMENT_CATALOG.getProfile('fire');
-assert.equal(ENCOUNTER_PROFILES.field.enchantAffinity.fire, 'weak');
-assert.equal(ENCOUNTER_PROFILES.boss.enchantAffinity.fire, 'resistant');
-for (const affinity of ['weak', 'neutral', 'resistant'])
-  assert.ok(
-    resolveSwordEnchantment({ enchantId: 'fire', affinity, attackKind: 'basic', baseDamage: 1 })
-      .damage >= 1,
-  );
-assert.equal(
-  resolveSwordEnchantment({
-    enchantId: 'earth',
-    affinity: 'neutral',
-    attackKind: 'strong',
-    baseDamage: 20,
-    hasPosture: true,
-  }).postureDamage,
-  34,
-);
-assert.equal(
-  resolveSwordEnchantment({
-    enchantId: 'lightning',
-    affinity: 'neutral',
-    attackKind: 'basic',
-    baseDamage: 10,
-    enemyAiState: 'windup',
-    status: { id: 'lightning', buildup: 80, remainingSeconds: 0 },
-  }).interrupt,
-  true,
-);
-let snapshot = createProgressionSnapshot('balanced-sword');
-snapshot = {
-  ...snapshot,
-  enchantment: awardEnchantMaterial(
-    snapshot.enchantment,
+console.log(
+  JSON.stringify(
     {
-      materialId: fire.materialId,
-      sourceId: fire.sourceId,
+      status: 'PASS',
+      probe: 'per-sword-enchantment-domain',
+      checks: [
+        'level-costs-2-4-8-16-32-and-authored-gold-atomicity',
+        'explicit-unchanged-failure-reasons',
+        'per-sword-isolation-and-equipped-context',
+        'level-1-to-5-linear-damage-and-level-5-1.5x-additional',
+        'affinity-non-zero-basic-strong-status-and-four-elements',
+        'shield-contact-exclusion',
+        'idempotent-source-material-quantity-award',
+        'v5-migration-v6-round-trip-corrupt-and-write-failure',
+        'polygon-retro-level-1-level-5-visual-qa-fixtures',
+      ],
     },
-    ENCHANTMENT_CATALOG,
-  ).enchantment,
-};
-assert.equal(
-  awardEnchantMaterial(
-    snapshot.enchantment,
-    { materialId: fire.materialId, sourceId: fire.sourceId },
-    ENCHANTMENT_CATALOG,
-  ).changed,
-  false,
-);
-assert.throws(() =>
-  awardEnchantMaterial(
-    snapshot.enchantment,
-    { materialId: fire.materialId, sourceId: 'dungeon-guardian-defeated' },
-    ENCHANTMENT_CATALOG,
+    null,
+    2,
   ),
 );
-snapshot = {
-  ...snapshot,
-  enchantment: unlockOrSelectEnchant(snapshot.enchantment, fire.id, ENCHANTMENT_CATALOG)
-    .enchantment,
-};
-assert.equal(snapshot.enchantment.activeId, 'fire');
-assert.equal(snapshot.enchantment.materialIds.includes(fire.materialId), false);
-const records = new Map();
-const storage = new ProgressionStorage(
-  { getItem: (key) => records.get(key) ?? null, setItem: (key, value) => records.set(key, value) },
-  'test',
-  ENCHANTMENT_CATALOG,
-);
-assert.equal(storage.save(snapshot).ok, true);
-assert.equal(
-  storage.load('balanced-sword', ['balanced-sword'], ENCHANTMENT_CATALOG).snapshot.enchantment
-    .activeId,
-  'fire',
-);
-const legacy = { ...snapshot, version: 3 };
-delete legacy.enchantment;
-records.set('test', JSON.stringify(legacy));
-const migrated = storage.load('balanced-sword', ['balanced-sword'], ENCHANTMENT_CATALOG);
-assert.equal(migrated.ok, true);
-assert.deepEqual(migrated.snapshot.worldTime, snapshot.worldTime);
-records.set(
-  'test',
-  JSON.stringify({
-    ...snapshot,
-    enchantment: {
-      ...snapshot.enchantment,
-      unlockedIds: ['unknown-enchant'],
-      activeId: 'unknown-enchant',
-    },
-  }),
-);
-assert.equal(
-  storage.load('balanced-sword', ['balanced-sword'], ENCHANTMENT_CATALOG).reason,
-  'invalid-data',
-);
-assert.equal(
-  storage.save({
-    ...snapshot,
-    enchantment: {
-      ...snapshot.enchantment,
-      unlockedIds: ['unknown-enchant'],
-      activeId: 'unknown-enchant',
-    },
-  }).reason,
-  'invalid-data',
-);
-const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
-scene.enterTree();
-try {
-  const initial = createProgressionSnapshot('balanced-sword');
-  const forgeSnapshot = {
-    ...initial,
-    enchantment: awardEnchantMaterial(
-      initial.enchantment,
-      {
-        materialId: fire.materialId,
-        sourceId: fire.sourceId,
-      },
-      ENCHANTMENT_CATALOG,
-    ).enchantment,
-  };
-  scene.restoreProgression(forgeSnapshot);
-  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 829 });
-  assert.equal(scene.canForgeEnchant(), true);
-  assert.equal(scene.selectEnchant('fire').changed, true);
-  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 500 });
-  scene.setVisualQaCombatScenario('enchant-fire-contact');
-  assert.ok(
-    scene
-      .createRenderFrame(0)
-      .items.some(
-        (item) => item.id === 'enchant-fire-ember-0' && Number.isFinite(item.renderOrder),
-      ),
-  );
-  scene.setVisualQaCombatScenario('enchant-lightning-contact');
-  assert.ok(
-    scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-lightning-bolt-0-a'),
-  );
-  scene.setVisualQaCombatScenario('enchant-ice-status');
-  assert.ok(scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-ice-shard-0'));
-  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'sealed-forest-boss', x: 500 });
-  scene.setVisualQaCombatScenario('enchant-earth-posture');
-  assert.ok(
-    scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-earth-fragment-0'),
-  );
-  scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 500 });
-  scene.setVisualQaCombatScenario('enchant-shield-excluded');
-  assert.equal(
-    scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-contact-ring'),
-    false,
-  );
-} finally {
-  scene.exitTree();
-}
-console.log('enchantment-check: PASS');

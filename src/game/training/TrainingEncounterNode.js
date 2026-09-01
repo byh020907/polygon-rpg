@@ -122,7 +122,11 @@ export class TrainingEncounterNode extends SceneNode {
       hitPulses: spinContact.hitPulses,
       contactSpacings: spinContact.contactSpacings,
     });
-    this.enchantmentContext = Object.freeze({ active: enchantmentContext?.active ?? null });
+    this.enchantmentContext = Object.freeze({
+      swordId: enchantmentContext?.swordId ?? null,
+      level: enchantmentContext?.level ?? 0,
+      active: enchantmentContext?.active ?? null,
+    });
     this.playerResultResolved = this.ownSignal(new Signal('playerResultResolved'));
     this.combatEventOccurred = this.ownSignal(new Signal('combatEventOccurred'));
     this.cameraFeedbackOccurred = this.ownSignal(new Signal('cameraFeedbackOccurred'));
@@ -199,7 +203,11 @@ export class TrainingEncounterNode extends SceneNode {
   }
 
   setEnchantmentContext(context) {
-    this.enchantmentContext = Object.freeze({ active: context?.active ?? null });
+    this.enchantmentContext = Object.freeze({
+      swordId: context?.swordId ?? null,
+      level: context?.level ?? 0,
+      active: context?.active ?? null,
+    });
   }
 
   onExitTree() {
@@ -914,9 +922,7 @@ export class TrainingEncounterNode extends SceneNode {
       this.enchantmentContext.active?.id === 'earth' &&
       combatState.id !== 'shieldBash' &&
       enemy.posture
-        ? profile.guardBreak
-          ? 34
-          : 18
+        ? Math.round((profile.guardBreak ? 34 : 18) * (this.enchantmentContext.active.level / 5))
         : 0;
     let earthPostureApplied = false;
     const breaksEnemyGuard =
@@ -1013,11 +1019,13 @@ export class TrainingEncounterNode extends SceneNode {
         ? null
         : resolveSwordEnchantment({
             enchantId: this.enchantmentContext.active?.id,
+            enchantLevel: this.enchantmentContext.active?.level ?? 0,
             affinity:
               this.entity.encounterProfile.enchantAffinity?.[this.enchantmentContext.active?.id] ??
               'neutral',
             attackKind: profile.guardBreak ? 'strong' : 'basic',
             baseDamage,
+            weaponBaseAttack: profile.damage,
             status: enemy.enchantStatus,
             enemyAiState: enemy.aiState,
             hasPosture: Boolean(enemy.posture),
@@ -1076,7 +1084,10 @@ export class TrainingEncounterNode extends SceneNode {
         enchantment: enchantment
           ? {
               id: this.enchantmentContext.active.id,
+              swordId: this.enchantmentContext.swordId,
+              level: this.enchantmentContext.active.level,
               affinity: enchantment.affinity,
+              additionalDamage: enchantment.additionalDamage,
               label: this.enchantmentContext.active.label,
               color: this.enchantmentContext.active.color,
               highlightColor: this.enchantmentContext.active.highlightColor,
@@ -1213,10 +1224,13 @@ export class TrainingEncounterNode extends SceneNode {
           enchantment: enchantment
             ? Object.freeze({
                 id: this.enchantmentContext.active.id,
+                swordId: this.enchantmentContext.swordId,
+                level: this.enchantmentContext.active.level,
                 affinity: enchantment.affinity,
+                additionalDamage: enchantment.additionalDamage,
                 status: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
-                suppressesRegeneration: this.enchantmentContext.active.id === 'fire',
-                suppressesPlantDefense: this.enchantmentContext.active.id === 'fire',
+                suppressesRegeneration: enemy.enchantStatus?.suppressesRegeneration === true,
+                suppressesPlantDefense: enemy.enchantStatus?.suppressesPlantDefense === true,
               })
             : null,
         }),

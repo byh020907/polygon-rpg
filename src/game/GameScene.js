@@ -30,8 +30,13 @@ import {
   purchaseEquipment as purchaseProgressionEquipment,
   selectEquipment as selectProgressionEquipment,
   trainCombatSkill as trainProgressionCombatSkill,
+  upgradeSwordEnchantment as upgradeProgressionSwordEnchantment,
 } from './progression/ProgressionState.js';
-import { awardEnchantMaterial, unlockOrSelectEnchant } from './enchantment/EnchantmentState.js';
+import {
+  ENCHANTMENT_MATERIAL_COSTS,
+  awardEnchantMaterial,
+  canonicalizeEnchantmentSnapshot,
+} from './enchantment/EnchantmentState.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
 import { resolveFirstJourneyStory } from './story/FirstJourneyStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
@@ -307,8 +312,15 @@ export class GameScene extends SceneNode {
     this.worldTimeProfile = assertWorldTimeProfile(worldTimeProfile);
     this.enchantmentCatalog = assertEnchantmentCatalog(enchantmentCatalog);
     const initialProgression =
-      progressionSnapshot ?? createProgressionSnapshot(this.equipmentCatalog.defaultProfileId);
-    this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
+      progressionSnapshot ??
+      createProgressionSnapshot(this.equipmentCatalog.defaultProfileId, this.enchantmentCatalog);
+    this.progressionSnapshot = mergeProgressionSnapshot(initialProgression, {
+      enchantment: canonicalizeEnchantmentSnapshot(
+        initialProgression.enchantment,
+        this.enchantmentCatalog,
+        initialProgression.ownedEquipmentIds,
+      ),
+    });
     this.equipmentProfile = this.equipmentCatalog.getProfile(
       this.progressionSnapshot.equippedEquipmentId,
     );
@@ -359,11 +371,16 @@ export class GameScene extends SceneNode {
   }
 
   getEnchantContext() {
-    const activeId = this.progressionSnapshot.enchantment.activeId;
-    const profile = activeId ? this.enchantmentCatalog.getProfile(activeId) : null;
+    const swordId = this.progressionSnapshot.equippedEquipmentId;
+    const sword = this.progressionSnapshot.enchantment.swordEnchantments[swordId];
+    const profile = sword?.elementId ? this.enchantmentCatalog.getProfile(sword.elementId) : null;
     return Object.freeze({
+      swordId,
+      level: sword?.level ?? 0,
       active: profile
         ? Object.freeze({
+            swordId,
+            level: sword.level,
             id: profile.id,
             label: profile.label,
             color: profile.color,
@@ -376,7 +393,13 @@ export class GameScene extends SceneNode {
 
   restoreProgression(snapshot) {
     assertProgressionSnapshot(snapshot);
-    const nextSnapshot = mergeProgressionSnapshot(snapshot);
+    const nextSnapshot = mergeProgressionSnapshot(snapshot, {
+      enchantment: canonicalizeEnchantmentSnapshot(
+        snapshot.enchantment,
+        this.enchantmentCatalog,
+        snapshot.ownedEquipmentIds,
+      ),
+    });
     const nextEquipment = this.equipmentCatalog.getProfile(nextSnapshot.equippedEquipmentId);
     const nextJourney = new FirstJourneyProgress(nextSnapshot.firstJourney);
     const nextRegionExpansion = new RegionExpansionProgress(nextSnapshot.regionExpansion);
@@ -619,11 +642,14 @@ export class GameScene extends SceneNode {
           };
         }
         if (active) {
+          const activeEnchant = this.getEnchantContext().active;
           emit(COMBAT_EVENT_TYPE.HIT, {
             attackId: id === 'earth' ? 'heavy' : 'slash',
             durationSeconds: 0.22,
             enchantment: {
               id,
+              swordId: activeEnchant?.id === id ? activeEnchant.swordId : null,
+              level: activeEnchant?.id === id ? activeEnchant.level : 0,
               affinity: 'neutral',
               ...this.enchantmentCatalog.getProfile(id),
             },
@@ -1135,6 +1161,7 @@ export class GameScene extends SceneNode {
           snapshot.enchantment,
           profile,
           this.enchantmentCatalog,
+          snapshot.ownedEquipmentIds,
         );
         if (material.changed)
           snapshot = mergeProgressionSnapshot(snapshot, { enchantment: material.enchantment });
@@ -1146,24 +1173,26 @@ export class GameScene extends SceneNode {
 
   selectEnchant(enchantId) {
     if (!this.canForgeEnchant()) return this.unavailableProgressionTransaction();
-    const profile = this.enchantmentCatalog.getProfile(enchantId);
-    const enchantmentTransaction = unlockOrSelectEnchant(
-      this.progressionSnapshot.enchantment,
-      profile.id,
+    const transaction = upgradeProgressionSwordEnchantment(
+      this.progressionSnapshot,
+      {
+        swordId: this.progressionSnapshot.equippedEquipmentId,
+        elementId: enchantId,
+      },
       this.enchantmentCatalog,
     );
-    const transaction = Object.freeze({
-      changed: enchantmentTransaction.changed,
-      reason: enchantmentTransaction.reason,
-      snapshot: mergeProgressionSnapshot(this.progressionSnapshot, {
-        enchantment: enchantmentTransaction.enchantment,
-      }),
-    });
+    const profile = this.enchantmentCatalog.profiles.find(
+      (candidate) => candidate.id === enchantId,
+    );
     this.progressionNotice = transaction.changed
-      ? `${profile.label} 검 인챈트 활성`
-      : transaction.reason === PROGRESSION_TRANSACTION_REASON.NOT_OWNED
-        ? `${profile.materialLabel}이 필요합니다.`
-        : `${profile.label} 인챈트가 이미 활성입니다.`;
+      ? `${profile.label} ${this.equipmentProfile.shortLabel} 인챈트 Lv.${transaction.targetLevel}`
+      : transaction.reason === 'insufficient-material'
+        ? `${profile?.materialLabel ?? '인챈트 재료'}이 부족합니다.`
+        : transaction.reason === 'insufficient-gold'
+          ? `인챈트 Gold가 부족합니다.`
+          : transaction.reason === 'max-level'
+            ? `${profile?.label ?? '검'} 인챈트가 이미 최고 단계입니다.`
+            : '이 검에는 해당 속성을 적용할 수 없습니다.';
     return this.commitProgression(transaction);
   }
 
@@ -2204,30 +2233,51 @@ export class GameScene extends SceneNode {
       canSelectEquipment: this.canManageProgression(),
       canManageProgression: this.canManageProgression(),
       canForgeEnchant: this.canForgeEnchant(),
-      activeEnchantId: progression.enchantment.activeId,
-      activeEnchantLabel: progression.enchantment.activeId
-        ? this.enchantmentCatalog.getProfile(progression.enchantment.activeId).label
-        : '미활성',
+      activeEnchantId:
+        progression.enchantment.swordEnchantments[progression.equippedEquipmentId].elementId,
+      activeEnchantLevel:
+        progression.enchantment.swordEnchantments[progression.equippedEquipmentId].level,
+      activeEnchantLabel: (() => {
+        const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
+        return record.elementId
+          ? `${this.enchantmentCatalog.getProfile(record.elementId).label} Lv.${record.level}`
+          : '미활성';
+      })(),
       enchantOptions: Object.freeze(
         this.enchantmentCatalog.profiles.map((profile) => {
-          const unlocked = progression.enchantment.unlockedIds.includes(profile.id);
-          const active = progression.enchantment.activeId === profile.id;
-          const hasMaterial = progression.enchantment.materialIds.includes(profile.materialId);
+          const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
+          const active = record.elementId === profile.id;
+          const lockedToOtherElement = record.elementId !== null && !active;
+          const targetLevel = record.level + 1;
+          const materialCost = ENCHANTMENT_MATERIAL_COSTS[targetLevel] ?? null;
+          const goldCost = profile.goldCosts[targetLevel - 1] ?? null;
+          const materialQuantity = progression.enchantment.materialQuantities[profile.materialId];
+          const hasMaterial = materialCost !== null && materialQuantity >= materialCost;
+          const maxLevel = record.level >= 5;
           return Object.freeze({
             id: profile.id,
             label: profile.label,
             materialLabel: profile.materialLabel,
-            unlocked,
+            swordId: progression.equippedEquipmentId,
+            level: active ? record.level : 0,
+            targetLevel,
+            materialQuantity,
+            materialCost,
+            goldCost,
+            unlocked: active,
             active,
             hasMaterial,
-            canChoose: this.canForgeEnchant() && !active && (unlocked || hasMaterial),
-            actionLabel: active
-              ? '활성'
-              : unlocked
-                ? '선택'
-                : hasMaterial
-                  ? '해금·활성'
-                  : `${profile.materialLabel} 필요`,
+            canChoose:
+              this.canForgeEnchant() &&
+              !lockedToOtherElement &&
+              !maxLevel &&
+              hasMaterial &&
+              availableGold >= goldCost,
+            actionLabel: lockedToOtherElement
+              ? '다른 속성 적용됨'
+              : maxLevel
+                ? 'Lv.5 최고'
+                : `Lv.${targetLevel} · ${materialCost}개 + ${goldCost} Gold`,
           });
         }),
       ),
@@ -2300,9 +2350,15 @@ export class GameScene extends SceneNode {
       lastCommandTransition: combatStatus.lastCommandTransition,
       gold: getAvailableGold(this.progressionSnapshot),
       trainingMarks: this.progressionSnapshot.trainingMarks,
-      activeEnchantLabel: this.progressionSnapshot.enchantment.activeId
-        ? this.enchantmentCatalog.getProfile(this.progressionSnapshot.enchantment.activeId).label
-        : '인챈트 없음',
+      activeEnchantLabel: (() => {
+        const record =
+          this.progressionSnapshot.enchantment.swordEnchantments[
+            this.progressionSnapshot.equippedEquipmentId
+          ];
+        return record.elementId
+          ? `${this.enchantmentCatalog.getProfile(record.elementId).label} Lv.${record.level}`
+          : '인챈트 없음';
+      })(),
     });
   }
 
@@ -2385,9 +2441,7 @@ export class GameScene extends SceneNode {
         blockImpactStrength: this.playerBlockImpactStrength,
         retaliationSeconds: this.playerRetaliationSeconds,
         enemyRenderOrder: activeRoom.renderOrder + 0.49,
-        activeEnchant: this.progressionSnapshot.enchantment.activeId
-          ? this.enchantmentCatalog.getProfile(this.progressionSnapshot.enchantment.activeId)
-          : null,
+        activeEnchant: this.getEnchantContext().active,
       }),
     );
     const { characterItems, combatEffectItems } = playerPresentation;

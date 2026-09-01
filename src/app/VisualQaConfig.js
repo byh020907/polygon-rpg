@@ -219,10 +219,12 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-plaza',
     x: 829,
+    firstJourneySnapshot: Object.freeze({ gold: 120 }),
     enchantmentSnapshot: Object.freeze({
-      materialIds: Object.freeze(['cinderbloom-seed']),
-      unlockedIds: Object.freeze([]),
-      activeId: null,
+      materialQuantities: Object.freeze({ 'cinderbloom-seed': 2 }),
+      swordEnchantments: Object.freeze({
+        'balanced-sword': Object.freeze({ elementId: null, level: 0 }),
+      }),
       claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
     expectation: Object.freeze({ expectedItem: 'shop-story-sign' }),
@@ -233,9 +235,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     x: 500,
     combatScenarioId: 'enchant-fire-contact',
     enchantmentSnapshot: Object.freeze({
-      materialIds: Object.freeze([]),
-      unlockedIds: Object.freeze(['fire']),
-      activeId: 'fire',
+      materialQuantities: Object.freeze({}),
+      swordEnchantments: Object.freeze({
+        'balanced-sword': Object.freeze({ elementId: 'fire', level: 1 }),
+      }),
       claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
     expectation: Object.freeze({
@@ -246,6 +249,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedEffectProgressMinimum: 0.35,
       expectedContact: true,
       expectedAnchor: 'event-contact',
+      expectedEnchantLevel: 1,
     }),
   }),
   'enchant-lightning-contact': Object.freeze({
@@ -254,9 +258,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     x: 500,
     combatScenarioId: 'enchant-lightning-contact',
     enchantmentSnapshot: Object.freeze({
-      materialIds: Object.freeze([]),
-      unlockedIds: Object.freeze(['lightning']),
-      activeId: 'lightning',
+      materialQuantities: Object.freeze({}),
+      swordEnchantments: Object.freeze({
+        'balanced-sword': Object.freeze({ elementId: 'lightning', level: 5 }),
+      }),
       claimedMaterialSourceIds: Object.freeze(['glasswind-reward-claimed']),
     }),
     expectation: Object.freeze({
@@ -267,6 +272,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedEffectProgressMinimum: 0.35,
       expectedContact: true,
       expectedAnchor: 'event-contact',
+      expectedEnchantLevel: 5,
     }),
   }),
   'enchant-ice-status': Object.freeze({
@@ -275,9 +281,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     x: 500,
     combatScenarioId: 'enchant-ice-status',
     enchantmentSnapshot: Object.freeze({
-      materialIds: Object.freeze([]),
-      unlockedIds: Object.freeze(['ice']),
-      activeId: 'ice',
+      materialQuantities: Object.freeze({}),
+      swordEnchantments: Object.freeze({
+        'balanced-sword': Object.freeze({ elementId: 'ice', level: 3 }),
+      }),
       claimedMaterialSourceIds: Object.freeze(['dungeon-guardian-defeated']),
     }),
     expectation: Object.freeze({
@@ -288,6 +295,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedEffectProgressMinimum: 0.35,
       expectedContact: true,
       expectedAnchor: 'event-contact',
+      expectedEnchantLevel: 3,
     }),
   }),
   'enchant-earth-posture': Object.freeze({
@@ -296,9 +304,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     x: 500,
     combatScenarioId: 'enchant-earth-posture',
     enchantmentSnapshot: Object.freeze({
-      materialIds: Object.freeze([]),
-      unlockedIds: Object.freeze(['earth']),
-      activeId: 'earth',
+      materialQuantities: Object.freeze({}),
+      swordEnchantments: Object.freeze({
+        'balanced-sword': Object.freeze({ elementId: 'earth', level: 5 }),
+      }),
       claimedMaterialSourceIds: Object.freeze(['boss-reward-claimed']),
     }),
     expectation: Object.freeze({
@@ -310,6 +319,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedEffectProgressMinimum: 0.35,
       expectedContact: true,
       expectedAnchor: 'event-contact',
+      expectedEnchantLevel: 5,
     }),
   }),
   'enchant-shield-excluded': Object.freeze({
@@ -318,9 +328,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     x: 500,
     combatScenarioId: 'enchant-shield-excluded',
     enchantmentSnapshot: Object.freeze({
-      materialIds: Object.freeze([]),
-      unlockedIds: Object.freeze(['fire']),
-      activeId: 'fire',
+      materialQuantities: Object.freeze({}),
+      swordEnchantments: Object.freeze({
+        'balanced-sword': Object.freeze({ elementId: 'fire', level: 5 }),
+      }),
       claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
     expectation: Object.freeze({

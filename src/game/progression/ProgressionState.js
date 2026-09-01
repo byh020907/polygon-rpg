@@ -7,8 +7,12 @@ import {
   toRegionExpansionProgressSnapshot,
 } from '../encounter/RegionExpansionProgress.js';
 import { createWorldTimeSnapshot, toWorldTimeSnapshot } from '../world/WorldTimeState.js';
+import {
+  createEnchantmentSnapshot,
+  upgradeSwordEnchantment as upgradeEnchantment,
+} from '../enchantment/EnchantmentState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 5;
+export const PROGRESSION_SCHEMA_VERSION = 6;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -50,7 +54,11 @@ function freezeSnapshot({
   firstJourney,
   regionExpansion,
   worldTime,
-  enchantment = { materialIds: [], unlockedIds: [], activeId: null, claimedMaterialSourceIds: [] },
+  enchantment = {
+    materialQuantities: {},
+    swordEnchantments: {},
+    claimedMaterialSourceIds: [],
+  },
 }) {
   return Object.freeze({
     version: PROGRESSION_SCHEMA_VERSION,
@@ -62,15 +70,21 @@ function freezeSnapshot({
     regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
     worldTime: toWorldTimeSnapshot(worldTime),
     enchantment: Object.freeze({
-      materialIds: Object.freeze([...enchantment.materialIds]),
-      unlockedIds: Object.freeze([...enchantment.unlockedIds]),
-      activeId: enchantment.activeId,
+      materialQuantities: Object.freeze({ ...enchantment.materialQuantities }),
+      swordEnchantments: Object.freeze(
+        Object.fromEntries(
+          Object.entries(enchantment.swordEnchantments).map(([swordId, record]) => [
+            swordId,
+            Object.freeze({ elementId: record.elementId, level: record.level }),
+          ]),
+        ),
+      ),
       claimedMaterialSourceIds: Object.freeze([...enchantment.claimedMaterialSourceIds]),
     }),
   });
 }
 
-export function createProgressionSnapshot(defaultEquipmentId) {
+export function createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog = null) {
   assertEquipmentId(defaultEquipmentId, '기본 장비 ID');
   return freezeSnapshot({
     trainingMarks: 0,
@@ -80,7 +94,13 @@ export function createProgressionSnapshot(defaultEquipmentId) {
     firstJourney: createFirstJourneyProgressSnapshot(),
     regionExpansion: createRegionExpansionProgressSnapshot(),
     worldTime: createWorldTimeSnapshot(),
-    enchantment: { materialIds: [], unlockedIds: [], activeId: null, claimedMaterialSourceIds: [] },
+    enchantment: enchantmentCatalog
+      ? createEnchantmentSnapshot([defaultEquipmentId], enchantmentCatalog)
+      : {
+          materialQuantities: {},
+          swordEnchantments: { [defaultEquipmentId]: { elementId: null, level: 0 } },
+          claimedMaterialSourceIds: [],
+        },
   });
 }
 
@@ -120,20 +140,47 @@ export function assertProgressionSnapshot(snapshot) {
   const enchantment = snapshot.enchantment;
   if (!enchantment || typeof enchantment !== 'object')
     throw new TypeError('enchantment 진행이 필요합니다.');
-  for (const field of ['materialIds', 'unlockedIds', 'claimedMaterialSourceIds']) {
-    if (
-      !Array.isArray(enchantment[field]) ||
-      enchantment[field].some((id) => typeof id !== 'string' || id.length === 0) ||
-      new Set(enchantment[field]).size !== enchantment[field].length
-    )
-      throw new TypeError(`enchantment ${field}가 올바르지 않습니다.`);
+  if (
+    !enchantment.materialQuantities ||
+    typeof enchantment.materialQuantities !== 'object' ||
+    Array.isArray(enchantment.materialQuantities)
+  ) {
+    throw new TypeError('enchantment material 수량이 올바르지 않습니다.');
+  }
+  for (const [materialId, quantity] of Object.entries(enchantment.materialQuantities)) {
+    assertEquipmentId(materialId, 'enchantment material ID');
+    assertNonNegativeInteger(quantity, `${materialId} 수량`);
   }
   if (
-    enchantment.activeId !== null &&
-    (!enchantment.unlockedIds.includes(enchantment.activeId) ||
-      typeof enchantment.activeId !== 'string')
-  )
-    throw new TypeError('active enchant는 해금된 ID 또는 null이어야 합니다.');
+    !enchantment.swordEnchantments ||
+    typeof enchantment.swordEnchantments !== 'object' ||
+    Array.isArray(enchantment.swordEnchantments) ||
+    Object.keys(enchantment.swordEnchantments).length !== ownedIds.size
+  ) {
+    throw new TypeError('검별 enchantment 기록이 올바르지 않습니다.');
+  }
+  for (const [swordId, record] of Object.entries(enchantment.swordEnchantments)) {
+    if (!ownedIds.has(swordId) || !record || typeof record !== 'object' || Array.isArray(record)) {
+      throw new TypeError('소유 검과 enchantment 기록이 일치해야 합니다.');
+    }
+    if (!Number.isInteger(record.level) || record.level < 0 || record.level > 5) {
+      throw new TypeError('검 enchantment level은 0..5여야 합니다.');
+    }
+    if (
+      (record.level === 0 && record.elementId !== null) ||
+      (record.level > 0 && (typeof record.elementId !== 'string' || record.elementId.length === 0))
+    ) {
+      throw new TypeError('검 enchantment element/level 조합이 올바르지 않습니다.');
+    }
+  }
+  if (
+    !Array.isArray(enchantment.claimedMaterialSourceIds) ||
+    enchantment.claimedMaterialSourceIds.some((id) => typeof id !== 'string' || id.length === 0) ||
+    new Set(enchantment.claimedMaterialSourceIds).size !==
+      enchantment.claimedMaterialSourceIds.length
+  ) {
+    throw new TypeError('enchantment claimed source가 올바르지 않습니다.');
+  }
   return snapshot;
 }
 
@@ -224,6 +271,13 @@ export function purchaseEquipment(
     freezeSnapshot({
       ...paidSnapshot,
       ownedEquipmentIds: [...paidSnapshot.ownedEquipmentIds, profileId],
+      enchantment: {
+        ...paidSnapshot.enchantment,
+        swordEnchantments: {
+          ...paidSnapshot.enchantment.swordEnchantments,
+          [profileId]: { elementId: null, level: 0 },
+        },
+      },
     }),
   );
 }
@@ -266,4 +320,32 @@ export function trainCombatSkill(snapshot, { goldCost, trainingMarkRequirement =
       combatSkillLevel: snapshot.combatSkillLevel + 1,
     }),
   );
+}
+
+export function upgradeSwordEnchantment(snapshot, { swordId, elementId } = {}, catalog) {
+  assertProgressionSnapshot(snapshot);
+  const enchantmentTransaction = upgradeEnchantment(
+    snapshot.enchantment,
+    { swordId, elementId, availableGold: getAvailableGold(snapshot) },
+    catalog,
+    snapshot.ownedEquipmentIds,
+  );
+  if (!enchantmentTransaction.changed) {
+    return Object.freeze({
+      ...enchantmentTransaction,
+      snapshot: freezeSnapshot(snapshot),
+    });
+  }
+  const paidSnapshot = spendGold(snapshot, enchantmentTransaction.goldCost);
+  return Object.freeze({
+    changed: true,
+    reason: enchantmentTransaction.reason,
+    targetLevel: enchantmentTransaction.targetLevel,
+    materialCost: enchantmentTransaction.materialCost,
+    goldCost: enchantmentTransaction.goldCost,
+    snapshot: freezeSnapshot({
+      ...paidSnapshot,
+      enchantment: enchantmentTransaction.enchantment,
+    }),
+  });
 }

@@ -6,7 +6,7 @@ import {
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4]);
+const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -58,9 +58,77 @@ function createAllowedEquipmentIds(value, defaultEquipmentId) {
   return ids;
 }
 
+function migrateLegacyEnchantment(value, ownedEquipmentIds, equippedEquipmentId, catalog) {
+  if (!isRecord(value)) throw new TypeError('legacy enchantment 진행이 필요합니다.');
+  if (isRecord(value.materialQuantities) || isRecord(value.swordEnchantments)) {
+    return canonicalizeEnchantmentSnapshot(value, catalog, ownedEquipmentIds);
+  }
+  const knownEnchantIds = new Set(catalog.profiles.map((profile) => profile.id));
+  const knownMaterialIds = new Set(catalog.profiles.map((profile) => profile.materialId));
+  const knownSourceIds = new Set(catalog.profiles.map((profile) => profile.sourceId));
+  for (const [field, knownIds] of [
+    ['materialIds', knownMaterialIds],
+    ['unlockedIds', knownEnchantIds],
+    ['claimedMaterialSourceIds', knownSourceIds],
+  ]) {
+    if (
+      !Array.isArray(value[field]) ||
+      new Set(value[field]).size !== value[field].length ||
+      value[field].some((id) => !knownIds.has(id))
+    ) {
+      throw new TypeError(`legacy enchantment ${field}가 올바르지 않습니다.`);
+    }
+  }
+  if (value.activeId !== null && !value.unlockedIds.includes(value.activeId)) {
+    throw new TypeError('legacy active enchant가 해금 목록과 일치하지 않습니다.');
+  }
+  return canonicalizeEnchantmentSnapshot(
+    {
+      materialQuantities: Object.fromEntries(
+        catalog.profiles.map((profile) => {
+          const preservesLegacyReward =
+            value.materialIds.includes(profile.materialId) ||
+            (value.unlockedIds.includes(profile.id) && value.activeId !== profile.id);
+          return [profile.materialId, preservesLegacyReward ? profile.sourceAwardQuantity : 0];
+        }),
+      ),
+      swordEnchantments: Object.fromEntries(
+        ownedEquipmentIds.map((swordId) => [
+          swordId,
+          swordId === equippedEquipmentId && value.activeId
+            ? { elementId: value.activeId, level: 1 }
+            : { elementId: null, level: 0 },
+        ]),
+      ),
+      claimedMaterialSourceIds: value.claimedMaterialSourceIds,
+    },
+    catalog,
+    ownedEquipmentIds,
+  );
+}
+
 function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds, enchantmentCatalog) {
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
-  const fresh = createProgressionSnapshot(defaultEquipmentId);
+  const fresh = createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog);
+  const emptyEnchantment = canonicalizeEnchantmentSnapshot(
+    {
+      ...fresh.enchantment,
+      swordEnchantments: Object.fromEntries(
+        value.ownedEquipmentIds.map((swordId) => [swordId, { elementId: null, level: 0 }]),
+      ),
+    },
+    enchantmentCatalog,
+    value.ownedEquipmentIds,
+  );
+  const legacyEnchantment =
+    value.version >= 4 && value.enchantment
+      ? migrateLegacyEnchantment(
+          value.enchantment,
+          value.ownedEquipmentIds,
+          value.equippedEquipmentId,
+          enchantmentCatalog,
+        )
+      : emptyEnchantment;
   return mergeProgressionSnapshot({
     ...fresh,
     trainingMarks: value.trainingMarks,
@@ -74,12 +142,8 @@ function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds, e
         }
       : {}),
     ...(value.version === 3 && value.worldTime ? { worldTime: value.worldTime } : {}),
-    ...(value.version >= 4
-      ? {
-          worldTime: value.worldTime,
-          enchantment: canonicalizeEnchantmentSnapshot(value.enchantment, enchantmentCatalog),
-        }
-      : {}),
+    ...(value.version >= 4 ? { worldTime: value.worldTime } : {}),
+    enchantment: legacyEnchantment,
   });
 }
 
@@ -98,7 +162,11 @@ function validateCurrentSnapshot(
   assertProgressionSnapshot(value);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
   return mergeProgressionSnapshot(value, {
-    enchantment: canonicalizeEnchantmentSnapshot(value.enchantment, enchantmentCatalog),
+    enchantment: canonicalizeEnchantmentSnapshot(
+      value.enchantment,
+      enchantmentCatalog,
+      value.ownedEquipmentIds,
+    ),
   });
 }
 
@@ -159,7 +227,7 @@ export class ProgressionStorage {
       return Object.freeze({
         ok: true,
         kind: 'fresh',
-        snapshot: createProgressionSnapshot(defaultEquipmentId),
+        snapshot: createProgressionSnapshot(defaultEquipmentId, enchantmentCatalog),
       });
     }
     if (typeof serialized !== 'string') {
@@ -220,7 +288,11 @@ export class ProgressionStorage {
       assertProgressionSnapshot(snapshot);
       if (!this.enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
       validated = mergeProgressionSnapshot(snapshot, {
-        enchantment: canonicalizeEnchantmentSnapshot(snapshot.enchantment, this.enchantmentCatalog),
+        enchantment: canonicalizeEnchantmentSnapshot(
+          snapshot.enchantment,
+          this.enchantmentCatalog,
+          snapshot.ownedEquipmentIds,
+        ),
       });
     } catch {
       return failure('invalid-data', '현재 진행 값이 올바르지 않아 저장하지 못했습니다.');
