@@ -198,8 +198,8 @@
               </header>
 
               <p>
-                Stable game state를 저장 진행과 분리해 다시 엽니다. 아래 설정과 URL query는 같은
-                상태를 나타냅니다.
+                Stable game state를 저장 진행과 분리해 현재 화면에 적용합니다. 아래 설정과 URL
+                query는 같은 상태를 나타냅니다.
               </p>
 
               <form class="debug-panel-form" @submit.prevent="applyDebugConfiguration">
@@ -260,8 +260,8 @@
                 </label>
 
                 <div class="debug-panel-actions debug-field--wide">
-                  <button class="debug-primary-action" type="submit">E2E URL 적용</button>
-                  <button type="button" @click="returnToPlayerGame">일반 게임 URL</button>
+                  <button class="debug-primary-action" type="submit">현재 화면에 적용</button>
+                  <button type="button" @click="returnToPlayerGame">일반 게임으로 돌아가기</button>
                   <button
                     id="menu-render-lab-control"
                     type="button"

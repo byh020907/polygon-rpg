@@ -65,15 +65,37 @@ export function buildPlayerGameUrl(currentHref) {
 export function createDebugConfigurationAdapter(
   browserLocation = globalThis.location,
   initialRequest = readDebugQaRequest(browserLocation?.search ?? ''),
+  {
+    browserHistory = globalThis.history,
+    requestReconfiguration = () => {
+      throw new Error('Debug reconfiguration request port가 연결되지 않았습니다.');
+    },
+  } = {},
 ) {
   if (
     !browserLocation ||
     typeof browserLocation.href !== 'string' ||
-    typeof browserLocation.assign !== 'function'
+    !browserHistory ||
+    typeof browserHistory.replaceState !== 'function' ||
+    typeof requestReconfiguration !== 'function'
   ) {
     throw new TypeError(
-      'Debug Configuration Adapter에는 href와 assign을 가진 location이 필요합니다.',
+      'Debug Configuration Adapter에는 location, history와 reconfiguration port가 필요합니다.',
     );
+  }
+  let currentHref = browserLocation.href;
+
+  function replaceHistoryAndRequest(href, request) {
+    const previousHref = currentHref;
+    const previousState = browserHistory.state ?? null;
+    browserHistory.replaceState(previousState, '', href);
+    try {
+      requestReconfiguration(request);
+    } catch (error) {
+      browserHistory.replaceState(previousState, '', previousHref);
+      throw error;
+    }
+    currentHref = href;
   }
 
   return Object.freeze({
@@ -86,17 +108,18 @@ export function createDebugConfigurationAdapter(
       new URLSearchParams(browserLocation.search).get('debugPanel') === '1',
 
     apply(configuration) {
-      const result = buildDebugQaUrl(browserLocation.href, configuration);
+      const result = buildDebugQaUrl(currentHref, configuration);
       const url = new URL(result.href);
       url.searchParams.set('debugPanel', '1');
-      const appliedResult = Object.freeze({ ...result, href: url.href });
-      browserLocation.assign(appliedResult.href);
+      const request = readDebugQaRequest(url.search);
+      const appliedResult = Object.freeze({ ...result, href: url.href, request });
+      replaceHistoryAndRequest(appliedResult.href, request);
       return appliedResult;
     },
 
     returnToPlayerGame() {
-      const href = buildPlayerGameUrl(browserLocation.href);
-      browserLocation.assign(href);
+      const href = buildPlayerGameUrl(currentHref);
+      replaceHistoryAndRequest(href, null);
       return href;
     },
   });

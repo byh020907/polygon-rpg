@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+import { GameApplication } from '../src/app/GameApplication.js';
 import { GAME_SCREEN, resolveReducedMotionPreference } from '../src/app/GameApp.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -137,6 +138,9 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(shell, /setDebugBackgroundInert\(globalThis\.document, true\)/);
   assert.match(shell, /addEventListener\('blur', \(\) => debugMenuHold\?\.interrupt\(\)/);
   assert.match(shell, /visibilitychange[\s\S]*document\.hidden\) debugMenuHold\?\.interrupt\(\)/);
+  assert.match(html, /현재 화면에 적용/);
+  assert.match(shell, /gameApp\.applyDebugConfiguration\(request\)/);
+  assert.doesNotMatch(shell, /location\.assign/);
 }
 
 function verifyDebugConfigurationRoundTrip() {
@@ -206,21 +210,174 @@ function verifyDebugConfigurationRoundTrip() {
     /0~120000 정수/,
   );
 
-  const navigations = [];
   const fakeLocation = {
     href: source,
     search: new URL(source).search,
-    assign(href) {
-      navigations.push(href);
+  };
+  const replacements = [];
+  const fakeHistory = {
+    state: Object.freeze({ source: 'fixture' }),
+    replaceState(state, _title, href) {
+      replacements.push({ state, href });
+      fakeLocation.href = href;
+      fakeLocation.search = new URL(href).search;
     },
   };
-  const adapter = createDebugConfigurationAdapter(fakeLocation, request);
-  adapter.apply(serialized.configuration);
+  const reconfigurationRequests = [];
+  const adapter = createDebugConfigurationAdapter(fakeLocation, request, {
+    browserHistory: fakeHistory,
+    requestReconfiguration(reconfigurationRequest) {
+      reconfigurationRequests.push(reconfigurationRequest);
+    },
+  });
+  const applied = adapter.apply(serialized.configuration);
   adapter.returnToPlayerGame();
-  assert.equal(navigations.length, 2);
-  assert.equal(new URL(navigations[0]).searchParams.get('gameStart'), 'academy-dialogue');
-  assert.equal(new URL(navigations[0]).searchParams.get('debugPanel'), '1');
-  assert.equal(new URL(navigations[1]).searchParams.has('visualQa'), false);
+  assert.equal(replacements.length, 2);
+  assert.equal(new URL(replacements[0].href).searchParams.get('gameStart'), 'academy-dialogue');
+  assert.equal(new URL(replacements[0].href).searchParams.get('debugPanel'), '1');
+  assert.equal(new URL(replacements[1].href).searchParams.has('visualQa'), false);
+  assert.equal(applied.request.start, 'academy-dialogue');
+  assert.equal(reconfigurationRequests[0].start, 'academy-dialogue');
+  assert.equal(reconfigurationRequests[1], null);
+
+  const rollbackLocation = { href: source, search: new URL(source).search };
+  const rollbackReplacements = [];
+  const rollbackHistory = {
+    state: Object.freeze({ source: 'rollback-fixture' }),
+    replaceState(state, _title, href) {
+      rollbackReplacements.push({ state, href });
+      rollbackLocation.href = href;
+      rollbackLocation.search = new URL(href).search;
+    },
+  };
+  const failingAdapter = createDebugConfigurationAdapter(rollbackLocation, request, {
+    browserHistory: rollbackHistory,
+    requestReconfiguration() {
+      throw new Error('fixture replacement failure');
+    },
+  });
+  assert.throws(
+    () => failingAdapter.apply(serialized.configuration),
+    /fixture replacement failure/,
+  );
+  assert.equal(rollbackReplacements.length, 2);
+  assert.equal(rollbackLocation.href, source, 'candidate 실패 시 이전 URL을 복원해야 한다.');
+
+  let historyFailureRequestCount = 0;
+  const historyFailingAdapter = createDebugConfigurationAdapter(fakeLocation, request, {
+    browserHistory: {
+      replaceState() {
+        throw new Error('fixture history failure');
+      },
+    },
+    requestReconfiguration() {
+      historyFailureRequestCount += 1;
+    },
+  });
+  assert.throws(
+    () => historyFailingAdapter.apply(serialized.configuration),
+    /fixture history failure/,
+  );
+  assert.equal(historyFailureRequestCount, 0, 'URL 변경 실패 뒤 Game resource를 바꾸면 안 된다.');
+}
+
+function verifySamePageGameApplicationReplacement() {
+  const apps = [];
+  const uiWrites = [];
+  let failNextVisualQa = false;
+  const canvasDocument = {
+    createElement(tagName) {
+      assert.equal(tagName, 'canvas');
+      return createCanvas('');
+    },
+  };
+  function createCanvas(pixel) {
+    const canvas = {
+      width: 320,
+      height: 180,
+      ownerDocument: canvasDocument,
+      pixel,
+      getContext(contextId) {
+        assert.equal(contextId, '2d');
+        return {
+          drawImage(source) {
+            canvas.pixel = source.pixel;
+          },
+        };
+      },
+    };
+    return canvas;
+  }
+  const gameCanvas = createCanvas('current-game-frame');
+  const polygonCanvas = createCanvas('current-polygon-frame');
+  const retroCanvas = createCanvas('current-retro-frame');
+  const createGameApp = (options) => {
+    const app = {
+      options,
+      destroyed: false,
+      connectUi(uiBridge) {
+        this.uiBridge = uiBridge;
+      },
+      start() {
+        this.started = true;
+        this.uiBridge.setSaveStatus('player-game-started');
+      },
+      runVisualQa(request) {
+        this.uiBridge.setSaveStatus(`visual-qa:${request.start}`);
+        options.gameCanvas.pixel = failNextVisualQa ? 'failed-candidate-frame' : 'next-game-frame';
+        if (failNextVisualQa) throw new Error('fixture visual QA failure');
+        return Object.freeze({ ready: true, start: request.start });
+      },
+      destroy() {
+        this.destroyed = true;
+      },
+    };
+    apps.push(app);
+    return app;
+  };
+  const application = new GameApplication({
+    gameCanvas,
+    polygonCanvas,
+    retroCanvas,
+    createGameApp,
+  });
+  const uiBridge = {
+    snapshot: () => Object.freeze({ screen: GAME_SCREEN.GAME, debugPanelOpen: true }),
+    setRenderStats: (value) => uiWrites.push(['render', value]),
+    setGameStats: (value) => uiWrites.push(['game', value]),
+    setPlayerStatus: (value) => uiWrites.push(['player', value]),
+    setWorldStatus: (value) => uiWrites.push(['world', value]),
+    setDialoguePresentation: (value) => uiWrites.push(['dialogue', value]),
+    setSaveStatus: (value) => uiWrites.push(['save', value]),
+  };
+  application.connectUi(uiBridge);
+
+  const academyRequest = readVisualQaRequest(
+    '?visualQa=1&gameStart=academy-dialogue&gameFrame=72&visualQaRenderer=polygon',
+  );
+  const result = application.applyDebugConfiguration(academyRequest);
+  assert.equal(result.ready, true);
+  assert.equal(apps[0].destroyed, true);
+  assert.equal(application.currentApp, apps[1]);
+  assert.deepEqual(uiWrites, [['save', 'visual-qa:academy-dialogue']]);
+
+  failNextVisualQa = true;
+  const previousApp = application.currentApp;
+  const failedWriteCount = uiWrites.length;
+  assert.throws(
+    () => application.applyDebugConfiguration(academyRequest),
+    /fixture visual QA failure/,
+  );
+  assert.equal(application.currentApp, previousApp, '실패 시 기존 Game resource를 유지해야 한다.');
+  assert.equal(apps[2].destroyed, true);
+  assert.equal(uiWrites.length, failedWriteCount, '실패한 후보의 UI write를 노출하면 안 된다.');
+  assert.equal(gameCanvas.pixel, 'next-game-frame', '실패한 후보의 canvas도 복원해야 한다.');
+
+  failNextVisualQa = false;
+  application.returnToPlayerGame();
+  assert.equal(previousApp.destroyed, true);
+  assert.equal(application.currentApp, apps[3]);
+  assert.deepEqual(uiWrites.at(-1), ['save', 'player-game-started']);
 }
 
 function verifyDebugMenuHoldBoundary() {
@@ -436,6 +593,7 @@ verifyScreenFocusTransitions();
 verifyFocusPortAndNoFocusSteal();
 verifySemanticStatusAndFocusTargets();
 verifyDebugConfigurationRoundTrip();
+verifySamePageGameApplicationReplacement();
 verifyDebugMenuHoldBoundary();
 verifyVisualQaReducedMotionOverride();
 verifyInteractiveControlKeyboardBoundary();
@@ -458,6 +616,11 @@ console.log(
         'release-at-threshold-rAF-race',
         'blur-visibility-pointer-loss-hold-interruption',
         'debug-url-panel-round-trip',
+        'debug-same-page-atomic-game-resource-replacement',
+        'debug-history-replace-without-navigation',
+        'debug-failed-candidate-keeps-current-game',
+        'debug-failed-candidate-restores-canvas-and-url',
+        'debug-history-failure-keeps-current-game',
         'debug-configuration-rejection-boundaries',
         'debug-panel-gameplay-input-suspension',
         'game-footer-debug-stats-removed',

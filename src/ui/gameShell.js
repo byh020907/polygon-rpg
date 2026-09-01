@@ -124,6 +124,13 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
     globalThis.location,
     visualQaRequest,
+    {
+      browserHistory: globalThis.history,
+      requestReconfiguration: (request) => {
+        if (request) gameApp.applyDebugConfiguration(request);
+        else gameApp.returnToPlayerGame();
+      },
+    },
   );
   const initialDebugConfiguration = debugConfigurationAdapter.initialConfiguration;
   let debugMenuHold = null;
@@ -500,7 +507,11 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           phase: this.debugPhase,
           reducedMotion: Boolean(this.debugReducedMotion),
         });
-        this.debugConfigurationStatus = `E2E URL로 이동합니다: ${result.configuration.start}`;
+        this.visualQa = true;
+        this.screen = GAME_SCREEN.GAME;
+        this.isPlaying = false;
+        this.reducedMotion = gameApp.prefersReducedMotion();
+        this.debugConfigurationStatus = `현재 화면에 적용됨 · ${result.configuration.start}`;
       } catch (error) {
         this.debugConfigurationStatus = `설정 오류 · ${
           error instanceof Error ? error.message : String(error)
@@ -509,7 +520,27 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     },
 
     returnToPlayerGame() {
-      debugConfigurationAdapter.returnToPlayerGame();
+      try {
+        debugConfigurationAdapter.returnToPlayerGame();
+        this.visualQa = false;
+        this.debugPanelOpen = false;
+        this.screen = GAME_SCREEN.GAME;
+        this.isPlaying = true;
+        this.reducedMotion = gameApp.prefersReducedMotion();
+        setDebugBackgroundInert(globalThis.document, false);
+        this.debugConfigurationStatus = '일반 게임으로 돌아왔습니다.';
+        this.$nextTick(() =>
+          applyFocusAfterPaint(
+            screenFocusOwner.transitionTo(GAME_SCREEN.GAME, {
+              menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_START,
+            }),
+          ),
+        );
+      } catch (error) {
+        this.debugConfigurationStatus = `전환 오류 · ${
+          error instanceof Error ? error.message : String(error)
+        }`;
+      }
     },
 
     openRenderLab() {
