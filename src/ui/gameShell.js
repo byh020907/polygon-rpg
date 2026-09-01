@@ -193,6 +193,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       visibleLine: '',
       revealComplete: false,
       screenAnchor: null,
+      commands: Object.freeze([]),
     }),
     objective: '장비를 고른 뒤 오른쪽 황금 문에서 ↑로 실습림 첫 원정을 시작하세요.',
     journeyLabel: '학원촌 준비',
@@ -203,10 +204,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     deadlineLabel: 'Deadline 12:00',
     canSelectEquipment: true,
     canManageProgression: true,
-    canForgeEnchant: false,
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
-    enchantOptions: Object.freeze([]),
     selectedEquipmentId: '',
     selectedEquipmentLabel: '장비 정보 불러오는 중',
     equipmentOptions: Object.freeze([]),
@@ -305,10 +304,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.deadlineLabel = status.deadlineLabel;
           this.canSelectEquipment = status.canSelectEquipment;
           this.canManageProgression = status.canManageProgression;
-          this.canForgeEnchant = status.canForgeEnchant;
           this.activeEnchantId = status.activeEnchantId;
           this.activeEnchantLabel = status.activeEnchantLabel;
-          this.enchantOptions = status.enchantOptions;
           this.selectedEquipmentId = status.equipmentId;
           this.selectedEquipmentLabel = status.equipmentLabel;
           this.equipmentOptions = status.equipmentOptions;
@@ -597,8 +594,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       gameApp.trainCombatSkill();
     },
 
-    selectEnchant(option) {
-      gameApp.selectEnchant(option.id);
+    executeDialogueCommand(command) {
+      gameApp.executeDialogueCommand(this.dialogue.interactionId, command.id);
     },
 
     destroy() {

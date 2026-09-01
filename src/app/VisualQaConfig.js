@@ -219,6 +219,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-plaza',
     x: 829,
+    dialogueScenarioId: 'enchanter-lio-interaction',
     firstJourneySnapshot: Object.freeze({ gold: 120 }),
     enchantmentSnapshot: Object.freeze({
       materialQuantities: Object.freeze({ 'cinderbloom-seed': 2 }),
@@ -227,7 +228,11 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       }),
       claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
-    expectation: Object.freeze({ expectedItem: 'shop-story-sign' }),
+    expectation: Object.freeze({
+      expectedItem: 'enchanter-lio-coat',
+      expectedDialogueTarget: 'enchanter-lio-interaction',
+      expectedDialogueSpeaker: '리오 인챈터',
+    }),
   }),
   'enchant-fire-contact': Object.freeze({
     regionId: 'academy-region',

@@ -226,10 +226,15 @@ function verifyInteractionRangeAndTargets() {
 
   const facility = createAcademyScene(790);
   const facilityResult = jump(facility, 1);
-  assertJumpSuppressed(facility, facilityResult.before, '시설 안내판 상호작용 시작');
-  assert.equal(facilityResult.after.speaker, '장비 공방 안내판');
-  assert.equal(facilityResult.after.interactionId, 'academy-workshop-sign-interaction');
-  assert.deepEqual(facilityResult.after.worldAnchor, { x: 829, y: 358 });
+  assertJumpSuppressed(facility, facilityResult.before, '리오 인챈터 대화 시작');
+  assert.equal(facilityResult.after.speaker, '리오 인챈터');
+  assert.equal(facilityResult.after.interactionId, 'enchanter-lio-interaction');
+  assert.deepEqual(facilityResult.after.worldAnchor, { x: 829, y: 352 });
+  assert.deepEqual(
+    facilityResult.after.commands.map((command) => command.id),
+    ['enchant-fire', 'enchant-lightning', 'enchant-ice', 'enchant-earth'],
+  );
+  assert.ok(Object.isFrozen(facilityResult.after.commands));
 
   const fieldGate = createAcademyScene(910);
   fieldGate.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
@@ -657,6 +662,7 @@ console.log(
       outcomes: [
         'interaction-range',
         'person-and-facility-targets',
+        'named-enchanter-command-surface',
         'field-portal-remains-reachable',
         'named-line-progression-and-close',
         'same-sequence-single-consumption',

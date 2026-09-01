@@ -1,3 +1,5 @@
+const EMPTY_COMMANDS = Object.freeze([]);
+
 const EMPTY_DIALOGUE = Object.freeze({
   active: false,
   available: false,
@@ -12,6 +14,7 @@ const EMPTY_DIALOGUE = Object.freeze({
   worldAnchor: null,
   visibleLine: '',
   revealComplete: false,
+  commands: EMPTY_COMMANDS,
 });
 
 const REVEAL_CHARACTERS_PER_SECOND = 28;
@@ -36,6 +39,7 @@ function revealPrefix(line, characterCount) {
 }
 
 function isStoryInteraction(entity) {
+  const commands = entity?.commands ?? EMPTY_COMMANDS;
   return (
     entity?.kind === 'story-interaction' &&
     typeof entity.id === 'string' &&
@@ -46,8 +50,21 @@ function isStoryInteraction(entity) {
     Number.isFinite(entity.position?.x) &&
     Number.isFinite(entity.position?.y) &&
     Number.isFinite(entity.interactionRange) &&
-    entity.interactionRange > 0
+    entity.interactionRange > 0 &&
+    Array.isArray(commands) &&
+    commands.every(
+      (command) =>
+        command &&
+        typeof command.id === 'string' &&
+        command.id.length > 0 &&
+        typeof command.type === 'string' &&
+        command.type.length > 0,
+    )
   );
+}
+
+function interactionCommands(interaction) {
+  return interaction?.commands ?? EMPTY_COMMANDS;
 }
 
 function distanceBetween(left, right) {
@@ -148,6 +165,13 @@ export class StoryInteractionOwner {
     return Object.freeze({ consumed: true, transition: 'started' });
   }
 
+  authorizeCommand({ entities = [] } = {}, interactionId, commandId) {
+    if (this.activeInteractionId !== interactionId) return null;
+    const interaction = findInteraction(entities, interactionId);
+    if (!interaction) return null;
+    return interactionCommands(interaction).find((command) => command.id === commandId) ?? null;
+  }
+
   snapshot({ entities = [], playerPosition = null } = {}) {
     const activeInteraction = this.activeInteractionId
       ? findInteraction(entities, this.activeInteractionId)
@@ -172,6 +196,7 @@ export class StoryInteractionOwner {
         revealComplete,
         prompt: revealComplete ? (canAdvance ? '↑ 다음 대사' : '↑ 대화 마치기') : '↑ 대사 완성',
         worldAnchor: dialogueWorldAnchor(activeInteraction),
+        commands: interactionCommands(activeInteraction),
       });
     }
 

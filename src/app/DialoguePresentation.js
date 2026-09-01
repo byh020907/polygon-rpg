@@ -9,9 +9,10 @@ export function dialogueSafeBounds(dialogue, viewport) {
   const landscape = width <= 900;
   const mobileLandscape = landscape && width > height;
   const active = dialogue.active === true;
+  const hasCommands = active && Array.isArray(dialogue.commands) && dialogue.commands.length > 0;
   const preferredHalfWidth = active ? (landscape ? 150 : 168) : 105;
   const halfWidth = Math.min(preferredHalfWidth, Math.max(0, (width - inset * 2) / 2));
-  const bodyHeight = active ? (landscape ? 108 : 124) : 42;
+  const bodyHeight = active ? (hasCommands ? (landscape ? 212 : 238) : landscape ? 108 : 124) : 42;
   const bottomInset = mobileLandscape ? 110 : inset;
   const maximumY = height - bottomInset;
   const minimumY = Math.min(maximumY, inset + bodyHeight + 12);

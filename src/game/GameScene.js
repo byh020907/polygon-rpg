@@ -1134,18 +1134,6 @@ export class GameScene extends SceneNode {
     );
   }
 
-  canForgeEnchant() {
-    if (!this.canManageProgression()) return false;
-    const workshop = this.mapRuntime
-      .getResolvedSnapshot()
-      .entities.find((entity) => entity.id === 'academy-workshop-sign-interaction');
-    return Boolean(
-      workshop &&
-      Math.hypot(this.position.x - workshop.position.x, this.position.y - workshop.position.y) <=
-        workshop.interactionRange,
-    );
-  }
-
   reconcileEnchantMaterials() {
     const journey = this.journeyProgress.snapshot();
     const region = this.regionExpansionProgress.snapshot();
@@ -1171,18 +1159,67 @@ export class GameScene extends SceneNode {
     return snapshot;
   }
 
-  selectEnchant(enchantId) {
-    if (!this.canForgeEnchant()) return this.unavailableProgressionTransaction();
+  resolveDialogueStatus() {
+    const dialogue = this.storyInteractionOwner.snapshot(this.getStoryInteractionContext());
+    if (!dialogue.active || dialogue.commands.length === 0) return dialogue;
+    const progression = this.progressionSnapshot;
+    const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
+    const availableGold = getAvailableGold(progression);
+    const commands = dialogue.commands.map((command) => {
+      if (command.type !== 'upgrade-sword-enchantment') return command;
+      const profile = this.enchantmentCatalog.getProfile(command.enchantId);
+      const active = record.elementId === profile.id;
+      const lockedToOtherElement = record.elementId !== null && !active;
+      const targetLevel = record.level + 1;
+      const materialCost = ENCHANTMENT_MATERIAL_COSTS[targetLevel] ?? null;
+      const goldCost = profile.goldCosts[targetLevel - 1] ?? null;
+      const materialQuantity = progression.enchantment.materialQuantities[profile.materialId];
+      const hasMaterial = materialCost !== null && materialQuantity >= materialCost;
+      const maxLevel = record.level >= 5;
+      return Object.freeze({
+        id: command.id,
+        type: command.type,
+        enchantId: profile.id,
+        label: profile.label,
+        materialLabel: profile.materialLabel,
+        swordId: progression.equippedEquipmentId,
+        level: active ? record.level : 0,
+        targetLevel,
+        materialQuantity,
+        materialCost,
+        goldCost,
+        active,
+        hasMaterial,
+        canChoose: !lockedToOtherElement && !maxLevel && hasMaterial && availableGold >= goldCost,
+        actionLabel: lockedToOtherElement
+          ? '다른 속성 적용됨'
+          : maxLevel
+            ? 'Lv.5 최고'
+            : `Lv.${targetLevel} · ${materialCost}개 + ${goldCost} Gold`,
+      });
+    });
+    return Object.freeze({ ...dialogue, commands: Object.freeze(commands) });
+  }
+
+  executeDialogueCommand(interactionId, commandId) {
+    const command = this.storyInteractionOwner.authorizeCommand(
+      this.getStoryInteractionContext(),
+      interactionId,
+      commandId,
+    );
+    if (!command || command.type !== 'upgrade-sword-enchantment') {
+      return this.unavailableProgressionTransaction();
+    }
     const transaction = upgradeProgressionSwordEnchantment(
       this.progressionSnapshot,
       {
         swordId: this.progressionSnapshot.equippedEquipmentId,
-        elementId: enchantId,
+        elementId: command.enchantId,
       },
       this.enchantmentCatalog,
     );
     const profile = this.enchantmentCatalog.profiles.find(
-      (candidate) => candidate.id === enchantId,
+      (candidate) => candidate.id === command.enchantId,
     );
     this.progressionNotice = transaction.changed
       ? `${profile.label} ${this.equipmentProfile.shortLabel} 인챈트 Lv.${transaction.targetLevel}`
@@ -1193,6 +1230,10 @@ export class GameScene extends SceneNode {
           : transaction.reason === 'max-level'
             ? `${profile?.label ?? '검'} 인챈트가 이미 최고 단계입니다.`
             : '이 검에는 해당 속성을 적용할 수 없습니다.';
+    if (!transaction.changed) {
+      this.statusNode.publish({ force: true });
+      return transaction;
+    }
     return this.commitProgression(transaction);
   }
 
@@ -2048,7 +2089,7 @@ export class GameScene extends SceneNode {
       regionExpansion,
       activeRoomId: roomId,
     });
-    const dialogue = this.storyInteractionOwner.snapshot(this.getStoryInteractionContext());
+    const dialogue = this.resolveDialogueStatus();
     let objective = story.nextObjective;
     let encounterHint = '';
 
@@ -2232,7 +2273,6 @@ export class GameScene extends SceneNode {
       roomId,
       canSelectEquipment: this.canManageProgression(),
       canManageProgression: this.canManageProgression(),
-      canForgeEnchant: this.canForgeEnchant(),
       activeEnchantId:
         progression.enchantment.swordEnchantments[progression.equippedEquipmentId].elementId,
       activeEnchantLevel:
@@ -2243,44 +2283,6 @@ export class GameScene extends SceneNode {
           ? `${this.enchantmentCatalog.getProfile(record.elementId).label} Lv.${record.level}`
           : '미활성';
       })(),
-      enchantOptions: Object.freeze(
-        this.enchantmentCatalog.profiles.map((profile) => {
-          const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
-          const active = record.elementId === profile.id;
-          const lockedToOtherElement = record.elementId !== null && !active;
-          const targetLevel = record.level + 1;
-          const materialCost = ENCHANTMENT_MATERIAL_COSTS[targetLevel] ?? null;
-          const goldCost = profile.goldCosts[targetLevel - 1] ?? null;
-          const materialQuantity = progression.enchantment.materialQuantities[profile.materialId];
-          const hasMaterial = materialCost !== null && materialQuantity >= materialCost;
-          const maxLevel = record.level >= 5;
-          return Object.freeze({
-            id: profile.id,
-            label: profile.label,
-            materialLabel: profile.materialLabel,
-            swordId: progression.equippedEquipmentId,
-            level: active ? record.level : 0,
-            targetLevel,
-            materialQuantity,
-            materialCost,
-            goldCost,
-            unlocked: active,
-            active,
-            hasMaterial,
-            canChoose:
-              this.canForgeEnchant() &&
-              !lockedToOtherElement &&
-              !maxLevel &&
-              hasMaterial &&
-              availableGold >= goldCost,
-            actionLabel: lockedToOtherElement
-              ? '다른 속성 적용됨'
-              : maxLevel
-                ? 'Lv.5 최고'
-                : `Lv.${targetLevel} · ${materialCost}개 + ${goldCost} Gold`,
-          });
-        }),
-      ),
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
       equipmentOptions: Object.freeze(

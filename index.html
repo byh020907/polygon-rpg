@@ -308,7 +308,7 @@
 
           <section
             class="growth-panel"
-            x-show="canManageProgression"
+            x-show="canManageProgression && !dialogue.active"
             aria-label="장비와 command 성장"
           >
             <header>
@@ -355,36 +355,6 @@
                 </button>
               </template>
             </div>
-            <article class="enchant-forge" x-bind:data-forge-ready="String(canForgeEnchant)">
-              <header>
-                <small>SWORD ENCHANT</small>
-                <strong x-text="`현재 검: ${activeEnchantLabel}`"></strong>
-              </header>
-              <p x-show="!canForgeEnchant">
-                공방 표지 앞에서 인챈트를 해금하거나 교체할 수 있습니다.
-              </p>
-              <div class="enchant-options" aria-label="검 인챈트 공방">
-                <template x-for="option in enchantOptions" x-bind:key="option.id">
-                  <button
-                    type="button"
-                    class="enchant-option"
-                    x-bind:disabled="!option.canChoose"
-                    x-bind:aria-pressed="option.active"
-                    x-bind:data-enchant="option.id"
-                    @click="selectEnchant(option)"
-                    @touchend.prevent="selectEnchant(option)"
-                    @keydown.enter.prevent.stop="selectEnchant(option)"
-                    @keydown.space.prevent.stop="selectEnchant(option)"
-                  >
-                    <strong x-text="option.label"></strong>
-                    <span x-text="option.actionLabel"></span>
-                    <small
-                      x-text="option.unlocked ? '해금됨' : option.hasMaterial ? `${option.materialLabel} 보유` : `${option.materialLabel} 미보유`"
-                    ></small>
-                  </button>
-                </template>
-              </div>
-            </article>
             <p class="growth-notice" x-text="progressionNotice" aria-live="polite"></p>
           </section>
 
@@ -428,6 +398,33 @@
                 <strong id="dialogue-speaker" x-text="dialogue.speaker"></strong>
               </header>
               <p id="dialogue-visible-line" aria-hidden="true" x-text="dialogue.visibleLine"></p>
+              <nav
+                class="dialogue-command-surface"
+                x-show="dialogue.commands.length > 0"
+                aria-label="인챈터 대화 선택"
+              >
+                <p>
+                  <strong x-text="`현재 검 · ${activeEnchantLabel}`"></strong>
+                  <span x-text="progressionNotice" aria-live="polite"></span>
+                </p>
+                <div>
+                  <template x-for="command in dialogue.commands" x-bind:key="command.id">
+                    <button
+                      type="button"
+                      x-bind:disabled="!command.canChoose"
+                      x-bind:aria-pressed="command.active"
+                      x-bind:data-dialogue-command="command.id"
+                      @click="executeDialogueCommand(command)"
+                    >
+                      <strong x-text="command.label"></strong>
+                      <span x-text="command.actionLabel"></span>
+                      <small
+                        x-text="`${command.materialLabel} ${command.materialQuantity}/${command.materialCost ?? 0}`"
+                      ></small>
+                    </button>
+                  </template>
+                </div>
+              </nav>
               <footer>
                 <span x-text="`${dialogue.lineIndex + 1}/${dialogue.lineCount}`"></span>
                 <strong id="dialogue-prompt" x-text="dialogue.prompt"></strong>

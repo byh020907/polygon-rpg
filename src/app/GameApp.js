@@ -628,8 +628,10 @@ export class GameApp extends SceneNode {
     return this.scene.trainCombatSkill();
   }
 
-  selectEnchant(enchantId) {
-    return this.scene.selectEnchant(enchantId);
+  executeDialogueCommand(interactionId, commandId) {
+    const result = this.scene.executeDialogueCommand(interactionId, commandId);
+    if (this.isVisualQa) this.scene.createRenderFrame(0);
+    return result;
   }
 
   resize() {

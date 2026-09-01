@@ -187,8 +187,8 @@ export class GameApplication {
     return this.currentApp.trainCombatSkill();
   }
 
-  selectEnchant(enchantId) {
-    return this.currentApp.selectEnchant(enchantId);
+  executeDialogueCommand(interactionId, commandId) {
+    return this.currentApp.executeDialogueCommand(interactionId, commandId);
   }
 
   pressMobileAction(actionId, pointerId) {

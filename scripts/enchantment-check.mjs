@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
@@ -588,8 +589,39 @@ function verifyVisualQaLevelsAndRuntimeContext() {
       }),
     );
     scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'academy-plaza', x: 829 });
-    assert.equal(scene.canForgeEnchant(), true);
-    const forged = scene.selectEnchant('fire');
+    const inactive = scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-fire');
+    assert.equal(inactive.changed, false);
+    assert.equal(inactive.reason, 'unavailable');
+    scene.update(
+      STEP,
+      Object.freeze({
+        left: false,
+        right: false,
+        jump: true,
+        guard: false,
+        basicAttack: false,
+        strongAttack: false,
+        jumpSequence: 1,
+        basicAttackSequence: 0,
+        strongAttackSequence: 0,
+      }),
+    );
+    const dialogue = scene.getWorldStatus().dialogue;
+    assert.equal(dialogue.active, true);
+    assert.equal(dialogue.interactionId, 'enchanter-lio-interaction');
+    assert.equal(
+      dialogue.commands.find((command) => command.id === 'enchant-fire').canChoose,
+      true,
+    );
+    assert.equal(
+      scene.executeDialogueCommand('mentor-sera-interaction', 'enchant-fire').reason,
+      'unavailable',
+    );
+    assert.equal(
+      scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-unknown').reason,
+      'unavailable',
+    );
+    const forged = scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-fire');
     assert.equal(forged.changed, true);
     assert.equal(scene.getEnchantContext().active.level, 1);
     assert.equal(scene.getEnchantContext().swordId, DEFAULT_SWORD_ID);
@@ -604,6 +636,12 @@ function verifyVisualQaLevelsAndRuntimeContext() {
   } finally {
     scene.exitTree();
   }
+
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.doesNotMatch(html, /class="enchant-forge"/, '상시 growth HUD에 forge가 남으면 안 된다.');
+  assert.match(html, /class="dialogue-command-surface"/);
+  assert.match(html, /x-show="dialogue\.commands\.length > 0"/);
+  assert.match(html, /x-show="canManageProgression && !dialogue\.active"/);
 }
 
 verifyPolicyAndActualMatrix();
@@ -627,6 +665,7 @@ console.log(
         'idempotent-source-material-quantity-award',
         'v5-migration-v6-round-trip-corrupt-and-write-failure',
         'polygon-retro-level-1-level-5-visual-qa-fixtures',
+        'active-npc-conversation-command-only-and-static-hud-removal',
       ],
     },
     null,
