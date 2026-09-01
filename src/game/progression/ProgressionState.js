@@ -8,6 +8,7 @@ import {
 } from '../encounter/RegionExpansionProgress.js';
 import { createWorldTimeSnapshot, toWorldTimeSnapshot } from '../world/WorldTimeState.js';
 import {
+  awardRepeatableEnchantMaterial,
   createEnchantmentSnapshot,
   upgradeSwordEnchantment as upgradeEnchantment,
 } from '../enchantment/EnchantmentState.js';
@@ -245,6 +246,26 @@ export function awardTrainingMarks(snapshot, amount) {
     PROGRESSION_TRANSACTION_REASON.AWARDED,
     freezeSnapshot({ ...snapshot, trainingMarks }),
   );
+}
+
+export function awardEnemyEnchantMaterial(snapshot, reward, catalog) {
+  assertProgressionSnapshot(snapshot);
+  const material = awardRepeatableEnchantMaterial(
+    snapshot.enchantment,
+    reward,
+    catalog,
+    snapshot.ownedEquipmentIds,
+  );
+  return Object.freeze({
+    changed: true,
+    reason: material.reason,
+    elementId: material.elementId,
+    materialId: material.materialId,
+    materialLabel: material.materialLabel,
+    quantity: material.quantity,
+    totalQuantity: material.totalQuantity,
+    snapshot: freezeSnapshot({ ...snapshot, enchantment: material.enchantment }),
+  });
 }
 
 export function purchaseEquipment(

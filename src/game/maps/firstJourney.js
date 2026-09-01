@@ -348,7 +348,16 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
         order: 36,
       }),
     ],
-    entities: [],
+    entities: [
+      {
+        id: 'fire-material-field-echo',
+        kind: 'combat-enemy',
+        encounterProfileId: 'fire-material-echo',
+        position: { x: 620, y: fieldGroundY },
+        maxHealth: 72,
+        enabled: false,
+      },
+    ],
     triggers: [],
     portals: ['field-bypass-portal', 'bypass-dungeon-portal'],
   },
@@ -753,6 +762,14 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
     ],
     entities: [
       {
+        id: 'ice-material-dungeon-echo',
+        kind: 'combat-enemy',
+        encounterProfileId: 'ice-material-echo',
+        position: { x: 560, y: resonanceVaultGroundY },
+        maxHealth: 78,
+        enabled: false,
+      },
+      {
         id: 'sealed-resonance-hidden-record-interaction',
         kind: 'story-interaction',
         position: { x: 420, y: resonanceVaultGroundY - 88 },
@@ -1072,6 +1089,7 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
     when: { flag: 'fieldGuardianDefeated' },
     operations: [
       { op: 'set-enabled', target: 'field-guardian', value: false },
+      { op: 'set-enabled', target: 'fire-material-field-echo', value: true },
       { op: 'set-enabled', target: 'field-guardian-bloom', value: true },
       { op: 'set-enabled', target: 'field-dungeon-portal', value: true },
       { op: 'set-enabled', target: 'field-dungeon-locked-seal', value: false },
@@ -1094,6 +1112,7 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
     when: { flag: 'dungeonGuardianDefeated' },
     operations: [
       { op: 'set-enabled', target: 'sealed-dungeon-guardian', value: false },
+      { op: 'set-enabled', target: 'ice-material-dungeon-echo', value: true },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-seal', value: false },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-seal-core', value: false },
       { op: 'set-enabled', target: 'sealed-dungeon-guardian-open', value: true },
@@ -1180,6 +1199,8 @@ export const FIRST_JOURNEY_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'boss-reward-trigger', value: false },
       { op: 'set-enabled', target: 'boss-reward-crystal', value: false },
       { op: 'set-enabled', target: 'boss-reward-aura', value: false },
+      { op: 'set-enabled', target: 'combat-test-mob', value: false },
+      { op: 'set-enabled', target: 'earth-material-training-echo', value: true },
       {
         op: 'set',
         target: 'boss-result-echo-interaction',

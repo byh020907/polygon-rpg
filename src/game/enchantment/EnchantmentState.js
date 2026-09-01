@@ -143,6 +143,41 @@ export function awardEnchantMaterial(
   );
 }
 
+export function awardRepeatableEnchantMaterial(
+  enchantment,
+  { elementId, quantity = 1 } = {},
+  catalog,
+  swordIds = Object.keys(enchantment?.swordEnchantments ?? {}),
+) {
+  const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, swordIds);
+  const profile = catalog.getProfile(elementId);
+  if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+    throw new TypeError('반복 material award 수량은 양의 안전한 정수여야 합니다.');
+  }
+  const nextQuantity = current.materialQuantities[profile.materialId] + quantity;
+  if (!Number.isSafeInteger(nextQuantity)) {
+    throw new RangeError('material 수량이 안전한 범위를 넘습니다.');
+  }
+  return transaction(
+    true,
+    ENCHANTMENT_TRANSACTION_REASON.MATERIAL_AWARDED,
+    Object.freeze({
+      ...current,
+      materialQuantities: Object.freeze({
+        ...current.materialQuantities,
+        [profile.materialId]: nextQuantity,
+      }),
+    }),
+    {
+      elementId: profile.id,
+      materialId: profile.materialId,
+      materialLabel: profile.materialLabel,
+      quantity,
+      totalQuantity: nextQuantity,
+    },
+  );
+}
+
 export function upgradeSwordEnchantment(
   enchantment,
   { swordId, elementId, availableGold } = {},

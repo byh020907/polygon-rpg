@@ -76,6 +76,20 @@ function postureSnapshot(posture) {
   });
 }
 
+function freezeMaterialReward(reward) {
+  if (reward === null || reward === undefined) return null;
+  if (
+    typeof reward !== 'object' ||
+    typeof reward.elementId !== 'string' ||
+    reward.elementId.trim().length === 0 ||
+    !Number.isSafeInteger(reward.quantity) ||
+    reward.quantity <= 0
+  ) {
+    throw new TypeError('Encounter material reward는 elementId와 양의 정수 quantity가 필요합니다.');
+  }
+  return Object.freeze({ elementId: reward.elementId, quantity: reward.quantity });
+}
+
 export class TrainingEncounterNode extends SceneNode {
   constructor({
     entity,
@@ -115,6 +129,7 @@ export class TrainingEncounterNode extends SceneNode {
       position: freezePosition(entity.position ?? { x: 680, y: groundY }),
       maxHealth: Number.isFinite(entity.maxHealth) ? Math.max(1, entity.maxHealth) : 100,
       encounterProfile,
+      materialReward: freezeMaterialReward(encounterProfile.materialReward),
     });
     this.groundY = groundY;
     this.movementBounds = Object.freeze({ ...movementBounds });
@@ -265,6 +280,7 @@ export class TrainingEncounterNode extends SceneNode {
       role: enemy.role,
       species: enemy.species,
       label: enemy.label,
+      materialReward: this.entity.materialReward,
       aiState: enemy.aiState,
       attackKind: enemy.attackKind,
       recoverySource: enemy.recoverySource,
@@ -279,6 +295,27 @@ export class TrainingEncounterNode extends SceneNode {
       enchantStatus: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
       ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
     });
+  }
+
+  createCompletionResult() {
+    return Object.freeze({
+      entityId: this.enemy.id,
+      profileId: this.enemy.profileId,
+      role: this.enemy.role,
+      materialReward: this.entity.materialReward,
+    });
+  }
+
+  completeForVisualQa() {
+    if (this.completionEmitted || this.enemy.health <= 0) {
+      throw new Error('Visual QA completion은 active enemy life에 한 번만 적용할 수 있습니다.');
+    }
+    this.enemy.health = 0;
+    this.completionEmitted = true;
+    if (this.entity.encounterProfile.respawns) this.enemy.resetSeconds = RESET_SECONDS;
+    const result = this.createCompletionResult();
+    this.encounterCompleted.emit(result);
+    return result;
   }
 
   createRenderSnapshot(renderOrder) {
@@ -362,9 +399,7 @@ export class TrainingEncounterNode extends SceneNode {
     if (enemy.health === 0 && !this.completionEmitted) {
       this.completionEmitted = true;
       if (this.entity.encounterProfile.respawns) enemy.resetSeconds = RESET_SECONDS;
-      this.encounterCompleted.emit(
-        Object.freeze({ entityId: enemy.id, profileId: enemy.profileId, role: enemy.role }),
-      );
+      this.encounterCompleted.emit(this.createCompletionResult());
     }
   }
 
@@ -1099,13 +1134,7 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.health = Math.max(0, enemy.health - damage);
     if (enemy.health === 0 && !this.completionEmitted) {
       this.completionEmitted = true;
-      this.encounterCompleted.emit(
-        Object.freeze({
-          entityId: enemy.id,
-          profileId: enemy.profileId,
-          role: enemy.role,
-        }),
-      );
+      this.encounterCompleted.emit(this.createCompletionResult());
     }
     this.confirmedComboCycle = combatState.comboCycle;
     enemy.comboCycleHitPending = enemy.health > 0;

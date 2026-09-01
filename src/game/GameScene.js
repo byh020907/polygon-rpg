@@ -23,6 +23,7 @@ import { MapRuntime } from './map/MapRuntime.js';
 import {
   PROGRESSION_TRANSACTION_REASON,
   assertProgressionSnapshot,
+  awardEnemyEnchantMaterial,
   awardTrainingMarks,
   createProgressionSnapshot,
   getAvailableGold,
@@ -841,6 +842,22 @@ export class GameScene extends SceneNode {
     this.statusNode.publish({ force: true });
   }
 
+  setVisualQaMaterialEchoDefeats(defeats) {
+    if (!Number.isInteger(defeats) || defeats < 1 || defeats > 62) {
+      throw new RangeError('Material echo Visual QA 격파 횟수는 1~62 정수여야 합니다.');
+    }
+    const encounter = this.roomSceneNode?.encounter;
+    if (!encounter?.getGameplaySnapshot()?.materialReward) {
+      throw new Error('Material echo Visual QA에는 material reward encounter가 필요합니다.');
+    }
+    for (let count = 0; count < defeats; count += 1) {
+      encounter.completeForVisualQa();
+      if (count + 1 < defeats) encounter.reset();
+    }
+    this.statusNode.publish({ force: true });
+    return this.progressionSnapshot;
+  }
+
   setVisualQaPoseScenario(scenarioId) {
     const groundY = this.mapRuntime.getActiveRoom().groundY;
     this.position = { x: this.position.x, y: groundY - CHARACTER_FOOT_OFFSET };
@@ -1503,6 +1520,30 @@ export class GameScene extends SceneNode {
         snapshot: transaction.snapshot,
       });
     }
+    if (result.materialReward) {
+      const transaction = awardEnemyEnchantMaterial(
+        this.progressionSnapshot,
+        result.materialReward,
+        this.enchantmentCatalog,
+      );
+      this.progressionSnapshot = transaction.snapshot;
+      this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
+      this.applyWorldAction(
+        'event:material-echo-defeated',
+        this.worldTimeProfile.getCoreEventAction('material-echo-defeated'),
+        { repeatable: true },
+      );
+      this.progressionNotice = `${transaction.materialLabel} 확정 +${transaction.quantity} · 보유 ${transaction.totalQuantity}`;
+      this.emitDurableProgressionChanged();
+      this.statusNode.publish({ force: true });
+      return Object.freeze({
+        ...transaction,
+        kind: 'material-echo-defeated',
+        profileId: result.profileId,
+        entityId: result.entityId,
+        snapshot: this.progressionSnapshot,
+      });
+    }
     const regionExpansionEncounter = result.profileId.startsWith('glasswind-');
     const resolution = regionExpansionEncounter
       ? this.regionExpansionProgress.resolveEncounter(result.profileId)
@@ -2133,17 +2174,25 @@ export class GameScene extends SceneNode {
       activeRoomId: roomId,
     });
     const dialogue = this.resolveDialogueStatus();
+    const encounterMaterial = encounter?.materialReward
+      ? this.enchantmentCatalog.getProfile(encounter.materialReward.elementId)
+      : null;
     let objective = story.nextObjective;
     let encounterHint = '';
 
     if (roomId === 'training-room') {
-      objective = `훈련 골렘을 처치해 인장 +${this.combatProgressionProfile.trainingClearReward}. 귀환 후 같은 A/S command route를 성장시키세요.`;
+      objective = encounterMaterial
+        ? `${encounter.label}을 처치해 ${encounterMaterial.materialLabel}을 확정 획득하세요. 1초 뒤 다시 나타납니다.`
+        : `훈련 골렘을 처치해 인장 +${this.combatProgressionProfile.trainingClearReward}. 귀환 후 같은 A/S command route를 성장시키세요.`;
       encounterHint = `${this.progressionNotice} · 현재 인장 ${progression.trainingMarks}`;
     }
     if (roomId === 'field-crossing') {
       if (!journey.fieldGuardianDefeated) {
         encounterHint = '일반 조우 보상: 수호 수액 · 최대 HP +20';
       }
+    }
+    if (roomId === 'field-canopy' && encounterMaterial) {
+      encounterHint = `선택 우회 조우 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`;
     }
     if (roomId === 'sealed-forest-dungeon') {
       if (!journey.dungeonGuardianDefeated) {
@@ -2158,18 +2207,23 @@ export class GameScene extends SceneNode {
       } else if (!journey.checkpointActivated) {
         encounterHint = '봉인 공명 3/4 · 숨은 잔향 활성 · Checkpoint를 확보하세요.';
       } else if (journey.returnedWithReward) {
-        objective = '정리된 봉인 회랑을 강제 전투 없이 살펴보고 열린 길로 이동하세요.';
-        encounterHint = 'CLEARED REVISIT · guardian 없음 · 숨은 분기와 Boss 문 유지';
+        objective =
+          '정리된 봉인 회랑의 열린 필수 경로로 이동하거나 숨은 잔향실의 선택적 적을 상대하세요.';
+        encounterHint = encounterMaterial
+          ? `CLEARED REVISIT · 핵심 guardian 없음 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`
+          : 'CLEARED REVISIT · 핵심 guardian 없음 · 숨은 분기와 Boss 문 유지';
       } else {
         encounterHint = '봉인 공명 3/4 · 오른쪽 Boss Portal에서 마지막 시험';
       }
     }
     if (roomId === 'sealed-resonance-vault') {
-      encounterHint = journey.dungeonSignatureStageIds.includes(
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
-      )
-        ? '봉인 공명 3/4 · 숨은 분기 적용 완료'
-        : '봉인 공명 2/4 · 붉은 기록석에 접근';
+      encounterHint = encounterMaterial
+        ? `선택 숨은 조우 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`
+        : journey.dungeonSignatureStageIds.includes(
+              FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
+            )
+          ? '봉인 공명 3/4 · 숨은 분기 적용 완료'
+          : '봉인 공명 2/4 · 붉은 기록석에 접근';
     }
     if (roomId === 'sealed-forest-boss') {
       if (journey.bossRewardClaimed) {
@@ -2219,8 +2273,12 @@ export class GameScene extends SceneNode {
     }
     if (roomId === 'glasswind-storm-eye') {
       if (regionExpansion.bossRewardClaimed) {
-        objective = '프리즘 회수 완료. 오른쪽 황금 shortcut Portal에서 ↑로 학원촌에 귀환하세요.';
-        encounterHint = '+180 Gold · 학원촌 영구 shortcut 해금';
+        objective = encounterMaterial
+          ? '프리즘 회수 완료. 잔향 사냥꾼과 싸우거나 오른쪽 shortcut으로 귀환하세요.'
+          : '프리즘 회수 완료. 오른쪽 황금 shortcut Portal에서 ↑로 학원촌에 귀환하세요.';
+        encounterHint = encounterMaterial
+          ? `선택 Boss arena 조우 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`
+          : '+180 Gold · 학원촌 영구 shortcut 해금';
       } else if (regionExpansion.bossDefeated) {
         objective = '폭풍 유리핵이 남긴 황금 프리즘에 접근해 보상과 shortcut을 여세요.';
         encounterHint = '보상 프리즘이 귀환 Portal을 영구 활성화합니다.';

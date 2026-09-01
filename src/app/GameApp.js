@@ -350,6 +350,9 @@ export class GameApp extends SceneNode {
     }
     if (scenario.timePhase) this.scene.setVisualQaTimePhase(scenario.timePhase);
     this.scene.setVisualQaLocation(scenario);
+    if (scenario.materialEchoDefeats) {
+      this.scene.setVisualQaMaterialEchoDefeats(scenario.materialEchoDefeats);
+    }
     this.resize();
 
     const inputSnapshot = this.createInputSnapshot();
@@ -418,7 +421,12 @@ export class GameApp extends SceneNode {
     const expectedTimePhase = expectation.expectedTimePhase;
     const expectedPatchIds = expectation.expectedPatchIds ?? [];
     const expectedPortalIds = expectation.expectedPortalIds;
+    const expectedMaterialId = expectation.expectedMaterialId;
+    const expectedMaterialQuantity = expectation.expectedMaterialQuantity;
+    const expectedProgressionNotice = expectation.expectedProgressionNotice;
     const portalIds = renderFrame.map.portalIds;
+    const progression = this.scene.getProgressionSnapshot();
+    const worldStatus = this.scene.getWorldStatus();
     const expectedCombatEvent = renderFrame.combatEvents.find(
       (event) => event.type === expectedEvent,
     );
@@ -520,6 +528,11 @@ export class GameApp extends SceneNode {
       portalIdsMatch:
         !expectedPortalIds ||
         JSON.stringify(portalIds) === JSON.stringify([...expectedPortalIds].sort()),
+      materialQuantityMatches:
+        !expectedMaterialId ||
+        progression.enchantment.materialQuantities[expectedMaterialId] === expectedMaterialQuantity,
+      progressionNoticeMatches:
+        !expectedProgressionNotice || worldStatus.progressionNotice === expectedProgressionNotice,
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -539,7 +552,9 @@ export class GameApp extends SceneNode {
         assertionEvidence.spatialItemsAbsent &&
         assertionEvidence.timePhaseMatches &&
         assertionEvidence.patchIdsMatch &&
-        assertionEvidence.portalIdsMatch,
+        assertionEvidence.portalIdsMatch &&
+        assertionEvidence.materialQuantityMatches &&
+        assertionEvidence.progressionNoticeMatches,
     });
     if (!assertion.passed) {
       const failedChecks = Object.entries(assertionEvidence)
@@ -568,6 +583,8 @@ export class GameApp extends SceneNode {
       combatEvents: renderFrame.combatEvents,
       combatContact: renderFrame.combatContact,
       dialogue,
+      progressionNotice: worldStatus.progressionNotice,
+      materialQuantities: progression.enchantment.materialQuantities,
       player: renderFrame.player,
       combatEnemy: renderFrame.combatEnemy,
       keyItems: Object.freeze(

@@ -10,12 +10,20 @@ import {
   ENCHANTMENT_MAX_LEVEL,
   ENCHANTMENT_TRANSACTION_REASON,
   awardEnchantMaterial,
+  awardRepeatableEnchantMaterial,
   createEnchantmentSnapshot,
 } from '../src/game/enchantment/EnchantmentState.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
+import {
+  FIRST_JOURNEY_CHECKPOINT_ID,
+  JOURNEY_PHASE,
+  JOURNEY_ROUTE,
+} from '../src/game/encounter/FirstJourneyProgress.js';
+import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../src/game/journey/FirstJourneyDungeonSignature.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import {
   PROGRESSION_SCHEMA_VERSION,
+  awardEnemyEnchantMaterial,
   createProgressionSnapshot,
   getAvailableGold,
   mergeProgressionSnapshot,
@@ -472,6 +480,158 @@ function verifyTransactionsAndSwordIsolation() {
   scene.dispose();
 }
 
+function completedFirstJourneyProgression() {
+  const fresh = createProgressionSnapshot(DEFAULT_SWORD_ID, ENCHANTMENT_CATALOG);
+  return mergeProgressionSnapshot({
+    ...fresh,
+    firstJourney: {
+      ...fresh.firstJourney,
+      phase: JOURNEY_PHASE.RETURNED,
+      routeChoice: JOURNEY_ROUTE.GUARDIAN,
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+      dungeonSignatureStageIds: Object.freeze([
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+      ]),
+    },
+  });
+}
+
+function verifyRepeatableEnemyMaterialRewards() {
+  const expectedRewards = new Map([
+    ['earth-material-echo', 'earth'],
+    ['fire-material-echo', 'fire'],
+    ['ice-material-echo', 'ice'],
+    ['glasswind-material-echo', 'lightning'],
+  ]);
+  for (const [profileId, elementId] of expectedRewards) {
+    const profile = ENCOUNTER_PROFILES[profileId];
+    assert.equal(profile.respawns, true);
+    assert.deepEqual(profile.materialReward, { elementId, quantity: 1 });
+  }
+
+  const authoredEntityIds = new Set(
+    ACADEMY_VILLAGE_MAP.regions.flatMap((region) =>
+      region.rooms.flatMap((room) => room.entities.map((entity) => entity.id)),
+    ),
+  );
+  for (const entityId of [
+    'earth-material-training-echo',
+    'fire-material-field-echo',
+    'ice-material-dungeon-echo',
+    'lightning-material-glasswind-echo',
+  ]) {
+    assert.equal(
+      authoredEntityIds.has(entityId),
+      true,
+      `${entityId} authored source가 필요합니다.`,
+    );
+    assert.equal(
+      ACADEMY_VILLAGE_MAP.patches.some((patch) =>
+        patch.operations.some(
+          (operation) =>
+            operation.op === 'set-enabled' && operation.target === entityId && operation.value,
+        ),
+      ),
+      true,
+      `${entityId}는 대응 첫 클리어 뒤 열려야 합니다.`,
+    );
+  }
+
+  const fire = ENCHANTMENT_CATALOG.getProfile('fire');
+  let repeatable = createEnchantmentSnapshot([DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
+  for (let count = 1; count <= 62; count += 1) {
+    const awarded = awardRepeatableEnchantMaterial(
+      repeatable,
+      { elementId: 'fire', quantity: 1 },
+      ENCHANTMENT_CATALOG,
+    );
+    assert.equal(awarded.totalQuantity, count);
+    repeatable = awarded.enchantment;
+  }
+  assert.equal(repeatable.materialQuantities[fire.materialId], 62);
+  assert.deepEqual(repeatable.claimedMaterialSourceIds, []);
+
+  const progressionAward = awardEnemyEnchantMaterial(
+    createProgressionSnapshot(DEFAULT_SWORD_ID, ENCHANTMENT_CATALOG),
+    { elementId: 'ice', quantity: 1 },
+    ENCHANTMENT_CATALOG,
+  );
+  assert.equal(progressionAward.totalQuantity, 1);
+  assert.equal(progressionAward.snapshot.enchantment.materialQuantities['frostroot-crystal'], 1);
+
+  const scene = createTestGameScene({
+    mapDefinition: ACADEMY_VILLAGE_MAP,
+    progressionSnapshot: completedFirstJourneyProgression(),
+  });
+  const progressionEvents = [];
+  scene.progressionChanged.connect((snapshot) => progressionEvents.push(snapshot));
+  scene.enterTree();
+  try {
+    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 500 });
+    const encounter = scene.roomSceneNode.encounter;
+    assert.equal(encounter.getGameplaySnapshot().profileId, 'earth-material-echo');
+    assert.deepEqual(encounter.getGameplaySnapshot().materialReward, {
+      elementId: 'earth',
+      quantity: 1,
+    });
+    const initialClock = scene.getProgressionSnapshot().worldTime.clockMinutes;
+    const initialMaterial =
+      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'];
+    encounter.enemy.position.x = 650;
+    encounter.enemy.health = 1;
+    assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), true);
+    assert.equal(
+      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'],
+      initialMaterial + 1,
+    );
+    assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), false);
+    assert.equal(
+      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'],
+      initialMaterial + 1,
+      '같은 enemy life는 completion을 중복 지급하면 안 됩니다.',
+    );
+    for (let tick = 0; tick < 125; tick += 1) encounter.step(STEP, idleFrame(650));
+    assert.equal(encounter.getGameplaySnapshot().health, 80);
+    encounter.enemy.position.x = 650;
+    encounter.enemy.health = 1;
+    assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), true);
+    assert.equal(
+      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'],
+      initialMaterial + 2,
+    );
+    assert.equal(scene.getProgressionSnapshot().worldTime.clockMinutes, initialClock + 40);
+    assert.equal(
+      progressionEvents.length,
+      2,
+      '한 life completion마다 durable snapshot 한 번만 내보낸다.',
+    );
+    assert.match(
+      scene.getWorldStatus().progressionNotice,
+      new RegExp(`봉인석 심장 확정 \\+1 · 보유 ${initialMaterial + 2}`),
+    );
+
+    const adapter = new MemoryStorage();
+    const storage = new ProgressionStorage(adapter, 'repeatable-material-v6', ENCHANTMENT_CATALOG);
+    assert.equal(storage.save(scene.getProgressionSnapshot()).ok, true);
+    const loaded = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
+    assert.equal(loaded.ok, true);
+    assert.equal(
+      loaded.snapshot.enchantment.materialQuantities['sealstone-heart'],
+      initialMaterial + 2,
+    );
+  } finally {
+    scene.exitTree();
+  }
+}
+
 class MemoryStorage {
   constructor(value = null, { throwOnWrite = false } = {}) {
     this.value = value;
@@ -577,6 +737,12 @@ function verifyVisualQaLevelsAndRuntimeContext() {
   assert.equal(levelOne.scenario.enchantmentSnapshot.swordEnchantments[DEFAULT_SWORD_ID].level, 1);
   assert.equal(levelFive.scenario.expectation.expectedEnchantLevel, 5);
   assert.equal(levelFive.scenario.enchantmentSnapshot.swordEnchantments[DEFAULT_SWORD_ID].level, 5);
+  const repeatableMaterial = readVisualQaRequest(
+    '?visualQa=1&gameStart=enchant-material-repeat&visualQaRenderer=polygon&visualQaPhase=active',
+  );
+  assert.equal(repeatableMaterial.scenario.materialEchoDefeats, 2);
+  assert.equal(repeatableMaterial.scenario.expectation.expectedMaterialId, 'sealstone-heart');
+  assert.equal(repeatableMaterial.scenario.expectation.expectedMaterialQuantity, 4);
 
   const fire = ENCHANTMENT_CATALOG.getProfile('fire');
   const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
@@ -648,6 +814,7 @@ function verifyVisualQaLevelsAndRuntimeContext() {
 verifyPolicyAndActualMatrix();
 verifyActualEffectsAndShieldExclusion();
 verifyTransactionsAndSwordIsolation();
+verifyRepeatableEnemyMaterialRewards();
 verifyPersistenceMigrationAndRecovery();
 verifyVisualQaLevelsAndRuntimeContext();
 
@@ -664,6 +831,8 @@ console.log(
         'affinity-non-zero-basic-strong-status-and-four-elements',
         'shield-contact-exclusion',
         'idempotent-source-material-quantity-award',
+        'four-authored-repeatable-enemies-and-one-award-per-life',
+        'repeatable-material-quantity-v6-round-trip',
         'v5-migration-v6-round-trip-corrupt-and-write-failure',
         'polygon-retro-level-1-level-5-visual-qa-fixtures',
         'active-npc-conversation-command-only-and-static-hud-removal',

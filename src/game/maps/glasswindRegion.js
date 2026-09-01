@@ -505,6 +505,14 @@ const bossRoom = {
       position: { x: 655, y: bossGroundY },
       maxHealth: 100,
     },
+    {
+      id: 'lightning-material-glasswind-echo',
+      kind: 'combat-enemy',
+      encounterProfileId: 'glasswind-material-echo',
+      position: { x: 520, y: bossGroundY },
+      maxHealth: 70,
+      enabled: false,
+    },
   ],
   triggers: [
     {
@@ -663,6 +671,7 @@ export const GLASSWIND_PATCHES = Object.freeze([
       { op: 'set-enabled', target: 'glasswind-boss-reward', value: false },
       { op: 'set-enabled', target: 'glasswind-reward-prism', value: false },
       { op: 'set-enabled', target: 'glasswind-reward-aura', value: false },
+      { op: 'set-enabled', target: 'lightning-material-glasswind-echo', value: true },
       { op: 'set-enabled', target: 'glasswind-shortcut-portal', value: true },
       { op: 'set-enabled', target: 'glasswind-shortcut-gate-outer', value: true },
       { op: 'set-enabled', target: 'glasswind-shortcut-gate-inner', value: true },

@@ -246,6 +246,33 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedDialogueSpeaker: '리오 인챈터',
     }),
   }),
+  'enchant-material-repeat': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'training-room',
+    x: 500,
+    materialEchoDefeats: 2,
+    firstJourneySnapshot: Object.freeze({
+      phase: 'returned',
+      routeChoice: 'guardian-route',
+      fieldGuardianDefeated: true,
+      dungeonGuardianDefeated: true,
+      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
+      bossDefeated: true,
+      bossRewardClaimed: true,
+      returnedWithReward: true,
+      gold: 120,
+      dungeonSignatureStageIds: Object.freeze([
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
+        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
+      ]),
+    }),
+    expectation: Object.freeze({
+      expectedMaterialId: 'sealstone-heart',
+      expectedMaterialQuantity: 4,
+      expectedProgressionNotice: '봉인석 심장 확정 +1 · 보유 4',
+    }),
+  }),
   'enchant-fire-contact': Object.freeze({
     regionId: 'academy-region',
     roomId: 'training-room',

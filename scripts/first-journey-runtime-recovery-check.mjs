@@ -507,7 +507,13 @@ function verifySignaturePersistenceAndClearedRevisit(completedProgression) {
   assert.equal(
     scene.roomSceneNode.getEncounterGameplaySnapshot(),
     null,
-    'cleared Dungeon은 guardian encounter를 다시 만들면 안 됩니다.',
+    'cleared Dungeon 필수 경로는 핵심 guardian과 material 적을 다시 만들면 안 됩니다.',
+  );
+  assert.ok(
+    scene.mapRuntime
+      .getResolvedSnapshot()
+      .portals.some((portal) => portal.id === 'dungeon-boss-portal'),
+    '선택적 material echo는 cleared Boss 경로를 막으면 안 됩니다.',
   );
   assert.match(scene.getWorldStatus().encounterHint, /CLEARED REVISIT/);
   assert.deepEqual(
@@ -526,7 +532,10 @@ function verifySignaturePersistenceAndClearedRevisit(completedProgression) {
     'sealed-resonance-vault',
     'cleared 숨은 분기 재방문',
   );
-  assert.equal(scene.roomSceneNode.getEncounterGameplaySnapshot(), null);
+  const optionalMaterialEncounter = scene.roomSceneNode.getEncounterGameplaySnapshot();
+  assert.equal(optionalMaterialEncounter.profileId, 'ice-material-echo');
+  assert.equal(optionalMaterialEncounter.role, 'material-echo');
+  assert.deepEqual(optionalMaterialEncounter.materialReward, { elementId: 'ice', quantity: 1 });
   driver.usePortal(
     'dungeon-resonance-branch-portal',
     'sealed-forest-dungeon',

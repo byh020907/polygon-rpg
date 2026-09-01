@@ -52,6 +52,12 @@ const CORE_EVENT_ACTIONS = Object.freeze({
     deadlineCostMinutes: 45,
     repeatable: true,
   }),
+  'material-echo-defeated': freezeAction({
+    label: '속성 잔향 사냥',
+    clockCostMinutes: 20,
+    deadlineCostMinutes: 20,
+    repeatable: true,
+  }),
   'player-ko': freezeAction({
     label: 'KO 후 Checkpoint 회복',
     clockCostMinutes: 60,
