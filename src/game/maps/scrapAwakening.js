@@ -17,6 +17,13 @@ export const SCRAPYARD_WALL_MAP_ENTITY_ID = 'scrapyard-wall-operation-map';
 export const SCRAP_MINE_ROAD_PORTAL_ID = 'scrapyard-abandoned-mine-road';
 export const SCRAP_MINE_ROAD_REGION_ID = 'abandoned-mine';
 export const SCRAP_MINE_ROAD_ROOM_ID = 'abandoned-mine-roadhead';
+export const SCRAP_MINE_TUNNEL_ROOM_ID = 'abandoned-mine-rescue-tunnel';
+export const SCRAP_MINE_MACHINE_ROOM_ID = 'abandoned-mine-machine-yard';
+export const SCRAP_MINE_FOREMAN_CONVERSATION_ID = 'abandoned-mine:foreman-briefing';
+export const SCRAP_MINE_FACILITY_CONVERSATION_ID = 'abandoned-mine:facility-observed';
+export const SCRAP_MINE_REPLACEMENT_CONVERSATION_ID = 'abandoned-mine:replacement-complete';
+export const SCRAP_MINE_SEPARATION_CONVERSATION_ID = 'abandoned-mine:machine-separated';
+export const SCRAP_MINE_PART_CONVERSATION_ID = 'abandoned-mine:part-claimed';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -276,6 +283,30 @@ const renderItems = [
     label: 'ROBOT 0% · 0/5 PARTS',
     role: 'completion-zero',
   }),
+  item('garage-robot-walker-leg-left', rectangle(440, 340, 30, 80), '#8a6b4d', {
+    stroke: '#2e241c',
+    lineWidth: 4,
+    order: 24,
+    enabled: false,
+    label: '굴착기 다리 모듈 왼쪽',
+    role: 'walker-drive-module',
+  }),
+  item('garage-robot-walker-leg-right', rectangle(494, 340, 30, 80), '#8a6b4d', {
+    stroke: '#2e241c',
+    lineWidth: 4,
+    order: 24,
+    enabled: false,
+    label: '굴착기 다리 모듈 오른쪽',
+    role: 'walker-drive-module',
+  }),
+  item('garage-robot-twenty-label', rectangle(424, 190, 116, 16), '#e3a64f', {
+    stroke: '#5a4624',
+    lineWidth: 2,
+    order: 25,
+    enabled: false,
+    label: 'ROBOT 20% · 1/5 PARTS · 다리',
+    role: 'completion-twenty',
+  }),
   item('wreck-hull-lower', polygon(986, 374, 206, 72, 10, Math.PI / 10), '#504d49', {
     stroke: '#252729',
     lineWidth: 4,
@@ -454,6 +485,201 @@ const mineRoadheadRenderItems = [
     label: '보행식 굴착기 작업장 진입부',
     role: 'industrial-machine-landmark',
   }),
+  item('mine-foreman-workwear', rectangle(650, 334, 34, 92), '#57493e', {
+    stroke: '#241e1a',
+    lineWidth: 3,
+    order: 18,
+    label: '폐광 작업반장 · 분진 작업복',
+    role: 'mine-worker',
+  }),
+  item('mine-foreman-helmet', polygon(667, 320, 20, 15, 8, Math.PI / 8), '#d5a24c', {
+    stroke: '#3c2c1d',
+    lineWidth: 3,
+    order: 20,
+    role: 'mining-helmet',
+  }),
+  item('mine-foreman-lamp', polygon(667, 316, 6, 6, 8), '#f7e7aa', {
+    stroke: '#5f4a24',
+    lineWidth: 2,
+    order: 21,
+    role: 'helmet-lamp',
+  }),
+  item(
+    'mine-foreman-pickaxe',
+    [
+      { x: 688, y: 342 },
+      { x: 695, y: 337 },
+      { x: 728, y: 404 },
+      { x: 720, y: 408 },
+    ],
+    '#9b8c73',
+    { stroke: '#2b2822', lineWidth: 2, order: 20, role: 'pickaxe' },
+  ),
+  item('mine-shaft-status-console', rectangle(848, 338, 82, 88), '#5e584e', {
+    stroke: '#24211d',
+    lineWidth: 4,
+    order: 16,
+    label: '붕괴 광산 구조 현황판',
+    role: 'facility-status',
+  }),
+  item('mine-shaft-status-signal', rectangle(862, 352, 54, 12), '#e7a64c', {
+    stroke: '#5d3c1c',
+    lineWidth: 2,
+    order: 17,
+    role: 'facility-warning-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('mine-rescue-tunnel-gate', 1346, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('mine-rescue-tunnel-sign', rectangle(1278, 320, 126, 42), '#6d5138', {
+    stroke: '#2b2019',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '구조 갱도 · 지역 내 이동 무료',
+    role: 'local-mine-route',
+  }),
+];
+
+const mineTunnelRenderItems = [
+  item('mine-tunnel-backdrop', rectangle(0, 0, 1440, 540), '#1d1b19', {
+    stroke: '#0e0d0c',
+    order: -100,
+    label: '붕괴 광산 내부 갱도',
+  }),
+  item('mine-tunnel-ground', rectangle(0, 426, 1440, 114), '#3e342b', {
+    stroke: '#181411',
+    order: 0,
+  }),
+  item('mine-tunnel-ceiling', rectangle(0, 82, 1440, 38), '#4c4035', {
+    stroke: '#1e1915',
+    order: -10,
+  }),
+  item('mine-tunnel-brace-left', rectangle(340, 118, 34, 308), '#785d42', {
+    stroke: '#2a2119',
+    lineWidth: 4,
+    order: 5,
+  }),
+  item('mine-tunnel-brace-right', rectangle(1030, 118, 34, 308), '#785d42', {
+    stroke: '#2a2119',
+    lineWidth: 4,
+    order: 5,
+  }),
+  item('mine-tunnel-warning-cable', rectangle(370, 170, 660, 8), '#d09a43', {
+    stroke: '#49331a',
+    lineWidth: 2,
+    order: 6,
+  }),
+  item('mine-trapped-worker-signal', rectangle(748, 356, 92, 18), '#75d6c4', {
+    stroke: '#245e5b',
+    lineWidth: 2,
+    order: 12,
+    label: '갇힌 작업자 생존 신호',
+    role: 'rescue-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('mine-tunnel-roadhead-gate', 74, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+  ...createEnvironmentPortalLandmarkItems('mine-tunnel-machine-gate', 1366, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('mine-tunnel-machine-sign', rectangle(1272, 320, 132, 42), '#6d5138', {
+    stroke: '#2b2019',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '굴착기 작업장 · Boss',
+    role: 'boss-route-sign',
+  }),
+];
+
+const mineMachineRenderItems = [
+  item('mine-machine-skyline', rectangle(0, 0, 1440, 540), '#252320', {
+    stroke: '#11100e',
+    order: -100,
+    label: '보행식 굴착기 작업장',
+  }),
+  item('mine-machine-ground', rectangle(0, 426, 1440, 114), '#40372f', {
+    stroke: '#1a1613',
+    order: 0,
+  }),
+  item('mine-machine-rail', rectangle(120, 398, 1190, 24), '#6c6254', {
+    stroke: '#28241f',
+    order: 2,
+  }),
+  item('mine-replacement-brace', rectangle(360, 226, 44, 200), '#8b6b49', {
+    stroke: '#30251b',
+    lineWidth: 4,
+    order: 12,
+    enabled: false,
+    label: '새 갱도 지지대 · 구조 작업 완료',
+    role: 'replacement-facility',
+  }),
+  item('mine-replacement-signal', rectangle(340, 202, 84, 18), '#75d6c4', {
+    stroke: '#245e5b',
+    lineWidth: 2,
+    order: 14,
+    enabled: false,
+    role: 'replacement-complete-signal',
+  }),
+  item('mine-walker-chassis', rectangle(760, 258, 220, 116), '#675446', {
+    stroke: '#251f1a',
+    lineWidth: 5,
+    order: 15,
+    label: '보행식 대형 굴착기 본체',
+    role: 'industrial-machine',
+  }),
+  item('mine-walker-leg-left', rectangle(746, 360, 58, 66), '#8a6b4d', {
+    stroke: '#2e241c',
+    lineWidth: 4,
+    order: 16,
+    role: 'walker-drive-leg',
+  }),
+  item('mine-walker-leg-right', rectangle(936, 360, 58, 66), '#8a6b4d', {
+    stroke: '#2e241c',
+    lineWidth: 4,
+    order: 16,
+    role: 'walker-drive-leg',
+  }),
+  item('mine-walker-warning-lamp', polygon(870, 246, 18, 14, 8), '#e3a64f', {
+    stroke: '#4d3419',
+    lineWidth: 3,
+    order: 18,
+    role: 'boss-warning-lamp',
+  }),
+  item('mine-walker-separated-chassis', rectangle(760, 294, 220, 80), '#4d4943', {
+    stroke: '#22201d',
+    lineWidth: 4,
+    order: 15,
+    enabled: false,
+    label: '분리 완료된 굴착기 상부',
+    role: 'machine-separated',
+  }),
+  item('mine-walker-part-cradle', rectangle(1030, 348, 176, 78), '#57493e', {
+    stroke: '#211c18',
+    lineWidth: 4,
+    order: 14,
+    enabled: false,
+    label: '굴착기 하체·구동부 회수대',
+    role: 'part-ready',
+  }),
+  item('mine-walker-part-signal', rectangle(1050, 362, 136, 18), '#e4bd64', {
+    stroke: '#5a4624',
+    lineWidth: 2,
+    order: 16,
+    enabled: false,
+    label: 'WALKER DRIVE · 회수 가능',
+    role: 'part-ready-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('mine-machine-tunnel-gate', 74, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
 ];
 
 const activatedStages = [
@@ -586,9 +812,162 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             },
           ],
           renderItems: mineRoadheadRenderItems,
-          entities: [],
+          entities: [
+            {
+              id: 'mine-foreman-briefing',
+              kind: 'story-interaction',
+              position: { x: 667, y: 354 },
+              interactionRange: 84,
+              speaker: '폐광 작업반장',
+              conversationId: SCRAP_MINE_FOREMAN_CONVERSATION_ID,
+              conversationTitle: '붕괴 광산 구조 요청',
+              lines: [
+                '갱도 안 작업자 셋은 살아 있어. 문제는 수거 유닛이 구조 레일을 뜯고 있다는 거야.',
+                '보행식 굴착기로 마지막 버팀목을 세우면 모두 빼낼 수 있어. 그 뒤 기계 하체는 네가 가져가.',
+                '먼저 오른쪽 현황판에서 붕괴 범위와 작업 시간을 확인해 줘.',
+              ],
+              presentationProfileId: 'mine-worker',
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: 'mine-facility-inspection',
+              kind: 'story-interaction',
+              position: { x: 889, y: 354 },
+              interactionRange: 78,
+              speaker: '붕괴 광산 구조 현황판',
+              conversationId: SCRAP_MINE_FACILITY_CONVERSATION_ID,
+              conversationTitle: '시설 상태와 작업 시간 확인',
+              lines: [
+                '구조 레일 단선. 내부 이동, 수거 유닛 제거, 굴착기 제압과 새 버팀목 설치까지 10구간 예상.',
+                '성공하면 고철 대왕은 막힌 산길을 우회해 수도 도착이 2일 늦어진다.',
+              ],
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'facility-observed',
+              requestCampaignEventStart: true,
+              enabled: false,
+            },
+          ],
           triggers: [],
-          portals: [SCRAP_MINE_ROAD_PORTAL_ID],
+          portals: [SCRAP_MINE_ROAD_PORTAL_ID, 'mine-roadhead-tunnel-portal'],
+        },
+        {
+          id: SCRAP_MINE_TUNNEL_ROOM_ID,
+          label: '폐광 산촌 · 구조 갱도',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'mine-tunnel-ground-surface',
+              kind: 'solid',
+              material: 'collapsed-mine-earth',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: mineTunnelRenderItems,
+          entities: [
+            {
+              id: 'mine-tunnel-collector-unit',
+              kind: 'combat-enemy',
+              encounterProfileId: 'mine-tunnel-collector',
+              position: { x: 820, y: 426 },
+              maxHealth: 78,
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'journey-combat',
+            },
+          ],
+          triggers: [],
+          portals: ['mine-roadhead-tunnel-portal', 'mine-tunnel-machine-portal'],
+        },
+        {
+          id: SCRAP_MINE_MACHINE_ROOM_ID,
+          label: '폐광 산촌 · 보행식 굴착기 작업장',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'mine-machine-ground-surface',
+              kind: 'solid',
+              material: 'mine-machine-yard',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: mineMachineRenderItems,
+          entities: [
+            {
+              id: 'mine-collapse-walker-boss',
+              kind: 'combat-enemy',
+              encounterProfileId: 'mine-collapse-boss',
+              position: { x: 850, y: 426 },
+              maxHealth: 118,
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'boss-defeated',
+            },
+            {
+              id: 'mine-replacement-work',
+              kind: 'story-interaction',
+              position: { x: 382, y: 354 },
+              interactionRange: 78,
+              speaker: '폐광 작업반장',
+              conversationId: SCRAP_MINE_REPLACEMENT_CONVERSATION_ID,
+              conversationTitle: '마지막 버팀목 설치',
+              lines: [
+                '수거 유닛도 굴착기도 멈췄어. 이 새 버팀목만 체결하면 갇힌 작업자들이 나온다.',
+                '좋아, 구조 완료. 이제 폐광 예정인 굴착기의 하체 구동부를 안전하게 떼자.',
+              ],
+              presentationProfileId: 'mine-worker',
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'replacement-complete',
+              enabled: false,
+            },
+            {
+              id: 'mine-machine-separation',
+              kind: 'story-interaction',
+              position: { x: 870, y: 354 },
+              interactionRange: 90,
+              speaker: '보행식 대형 굴착기',
+              conversationId: SCRAP_MINE_SEPARATION_CONVERSATION_ID,
+              conversationTitle: '하체·구동부 분리',
+              lines: [
+                '상부 굴착 장치의 압력을 제거했다. 좌우 유압 다리 잠금핀을 해제한다.',
+                '굴착기 하체·구동부가 회수대에 고정됐다. 차고 로봇의 다리로 사용할 수 있다.',
+              ],
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'machine-separated',
+              enabled: false,
+            },
+            {
+              id: 'mine-walker-part-claim',
+              kind: 'story-interaction',
+              position: { x: 1110, y: 354 },
+              interactionRange: 88,
+              speaker: '굴착기 하체 회수대',
+              conversationId: SCRAP_MINE_PART_CONVERSATION_ID,
+              conversationTitle: '굴착기 다리 부품 회수',
+              lines: [
+                '굴착기 하체·구동부를 확보했다. 차고 조립식 로봇 완성도 20%.',
+                '고철 대왕은 막힌 산길을 우회한다. D-DAY +2일, 다음 지역은 자유롭게 선택할 수 있다.',
+              ],
+              campaignRegionId: 'abandoned-mine',
+              campaignStageKind: 'part-claimed',
+              completeCampaignRegion: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: ['mine-tunnel-machine-portal'],
         },
       ],
     },
@@ -618,6 +997,46 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         toLocationId: 'abandoned-mine',
       },
       transition: { durationSeconds: 0.48 },
+    },
+    {
+      id: 'mine-roadhead-tunnel-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_MINE_ROAD_REGION_ID,
+        roomId: SCRAP_MINE_ROAD_ROOM_ID,
+        anchor: { x: 1346, y: 426 },
+        spawn: { x: 1288, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_MINE_ROAD_REGION_ID,
+        roomId: SCRAP_MINE_TUNNEL_ROOM_ID,
+        anchor: { x: 74, y: 426 },
+        spawn: { x: 132, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: 'mine-tunnel-machine-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_MINE_ROAD_REGION_ID,
+        roomId: SCRAP_MINE_TUNNEL_ROOM_ID,
+        anchor: { x: 1366, y: 426 },
+        spawn: { x: 1308, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_MINE_ROAD_REGION_ID,
+        roomId: SCRAP_MINE_MACHINE_ROOM_ID,
+        anchor: { x: 74, y: 426 },
+        spawn: { x: 132, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
     },
   ],
   patches: [
@@ -745,6 +1164,162 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           value: true,
         },
         { op: 'set-enabled', target: 'mine-roadhead-return-sign', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-walker-drive-installed',
+      priority: 110,
+      when: { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-frame-leg-left', value: false },
+        { op: 'set-enabled', target: 'garage-robot-frame-leg-right', value: false },
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-walker-leg-left', value: true },
+        { op: 'set-enabled', target: 'garage-robot-walker-leg-right', value: true },
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: true },
+      ],
+    },
+    {
+      id: 'mine-briefing-complete',
+      priority: 120,
+      when: {
+        all: [
+          {
+            fact: 'scrapRegionStageIds.abandoned-mine',
+            in: ['abandoned-mine:npc-briefing', 'abandoned-mine:facility-observed'],
+          },
+          { fact: 'scrapRegionStatuses.abandoned-mine', eq: 'available' },
+        ],
+      },
+      operations: [{ op: 'set-enabled', target: 'mine-facility-inspection', value: true }],
+    },
+    {
+      id: 'mine-core-event-started',
+      priority: 130,
+      when: { fact: 'scrapRegionStatuses.abandoned-mine', in: ['in-progress', 'resolved'] },
+      operations: [
+        { op: 'set-enabled', target: 'mine-facility-inspection', value: false },
+        { op: 'set-enabled', target: SCRAP_MINE_ROAD_PORTAL_ID, value: false },
+        { op: 'set-enabled', target: 'mine-roadhead-tunnel-portal', value: true },
+        {
+          op: 'set-enabled',
+          target: 'mine-rescue-tunnel-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'mine-rescue-tunnel-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'mine-rescue-tunnel-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'mine-rescue-tunnel-sign', value: true },
+      ],
+    },
+    {
+      id: 'mine-journey-combat-complete',
+      priority: 140,
+      when: {
+        fact: 'scrapRegionStageIds.abandoned-mine',
+        in: [
+          'abandoned-mine:journey-combat',
+          'abandoned-mine:boss-defeated',
+          'abandoned-mine:replacement-complete',
+          'abandoned-mine:machine-separated',
+          'abandoned-mine:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'mine-tunnel-collector-unit', value: false },
+        { op: 'set-enabled', target: 'mine-tunnel-machine-portal', value: true },
+        {
+          op: 'set-enabled',
+          target: 'mine-tunnel-machine-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'mine-tunnel-machine-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'mine-tunnel-machine-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'mine-tunnel-machine-sign', value: true },
+      ],
+    },
+    {
+      id: 'mine-boss-defeated',
+      priority: 150,
+      when: {
+        fact: 'scrapRegionStageIds.abandoned-mine',
+        in: [
+          'abandoned-mine:boss-defeated',
+          'abandoned-mine:replacement-complete',
+          'abandoned-mine:machine-separated',
+          'abandoned-mine:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'mine-collapse-walker-boss', value: false },
+        { op: 'set-enabled', target: 'mine-replacement-work', value: true },
+      ],
+    },
+    {
+      id: 'mine-replacement-complete',
+      priority: 160,
+      when: {
+        fact: 'scrapRegionStageIds.abandoned-mine',
+        in: [
+          'abandoned-mine:replacement-complete',
+          'abandoned-mine:machine-separated',
+          'abandoned-mine:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'mine-replacement-work', value: false },
+        { op: 'set-enabled', target: 'mine-replacement-brace', value: true },
+        { op: 'set-enabled', target: 'mine-replacement-signal', value: true },
+        { op: 'set-enabled', target: 'mine-machine-separation', value: true },
+      ],
+    },
+    {
+      id: 'mine-machine-separated',
+      priority: 170,
+      when: {
+        fact: 'scrapRegionStageIds.abandoned-mine',
+        in: ['abandoned-mine:machine-separated', 'abandoned-mine:campaign-updated'],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'mine-machine-separation', value: false },
+        { op: 'set-enabled', target: 'mine-walker-chassis', value: false },
+        { op: 'set-enabled', target: 'mine-walker-leg-left', value: false },
+        { op: 'set-enabled', target: 'mine-walker-leg-right', value: false },
+        { op: 'set-enabled', target: 'mine-walker-warning-lamp', value: false },
+        { op: 'set-enabled', target: 'mine-walker-separated-chassis', value: true },
+        { op: 'set-enabled', target: 'mine-walker-part-cradle', value: true },
+        { op: 'set-enabled', target: 'mine-walker-part-signal', value: true },
+        { op: 'set-enabled', target: 'mine-walker-part-claim', value: true },
+      ],
+    },
+    {
+      id: 'mine-campaign-updated',
+      priority: 180,
+      when: { fact: 'scrapRegionStageIds.abandoned-mine', eq: 'abandoned-mine:campaign-updated' },
+      operations: [
+        { op: 'set-enabled', target: 'mine-walker-part-claim', value: false },
+        { op: 'set-enabled', target: SCRAP_MINE_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set',
+          target: 'mine-walker-part-signal',
+          property: 'label',
+          value: 'WALKER DRIVE · 차고 수송 완료',
+        },
       ],
     },
   ],

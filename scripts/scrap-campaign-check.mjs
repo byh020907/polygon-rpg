@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
-import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
+import {
+  assertProgressionSnapshot,
+  createProgressionSnapshot,
+} from '../src/game/progression/ProgressionState.js';
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import {
   SCRAP_CAMPAIGN_ACTION_KIND,
@@ -54,9 +57,53 @@ function regionSuccessAction(regionId) {
     kind: SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS,
     label: region.event.label,
     targetRegionId: regionId,
-    costSegments: region.event.costSegments,
+    costSegments: 0,
     extensionSegments: region.event.extensionSegments,
   };
+}
+
+function regionStageAction(regionId, stageKind) {
+  const region = SCRAP_CAMPAIGN_PROFILE.getRegion(regionId);
+  const stage = region.eventStages.find((candidate) => candidate.kind === stageKind);
+  return {
+    actionId: `region-stage:${stage.id}`,
+    kind: SCRAP_CAMPAIGN_ACTION_KIND.REGION_STAGE,
+    label: `${region.label} · ${stage.label}`,
+    targetRegionId: regionId,
+    targetStageId: stage.id,
+    costSegments: 0,
+  };
+}
+
+function regionEventStartAction(regionId) {
+  const region = SCRAP_CAMPAIGN_PROFILE.getRegion(regionId);
+  return {
+    actionId: `region:${regionId}:event-start`,
+    kind: SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START,
+    label: `핵심 사건 시작 · ${region.event.label}`,
+    targetRegionId: regionId,
+    costSegments: region.event.costSegments,
+  };
+}
+
+function resolveRegion(snapshot, regionId) {
+  let current = toScrapCampaignSnapshot(
+    { ...snapshot, currentLocationId: regionId },
+    SCRAP_CAMPAIGN_PROFILE,
+  );
+  for (const stageKind of ['npc-briefing', 'facility-observed']) {
+    current = commit(current, regionStageAction(regionId, stageKind));
+  }
+  current = commit(current, regionEventStartAction(regionId));
+  for (const stageKind of [
+    'journey-combat',
+    'boss-defeated',
+    'replacement-complete',
+    'machine-separated',
+  ]) {
+    current = commit(current, regionStageAction(regionId, stageKind));
+  }
+  return commit(current, regionSuccessAction(regionId));
 }
 
 function convoyAction(regionId) {
@@ -153,7 +200,7 @@ const legacyCampaign = { ...fresh, version: 1 };
 delete legacyCampaign.awakeningStageId;
 delete legacyCampaign.garageRevealStageId;
 const migratedCampaign = toScrapCampaignSnapshot(legacyCampaign, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedCampaign.version, 3);
+assert.equal(migratedCampaign.version, 4);
 assert.equal(migratedCampaign.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(migratedCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.LOCKED);
 
@@ -225,11 +272,47 @@ assert.equal(nextMorning.day, 2);
 assert.equal(nextMorning.phaseId, 'morning');
 
 const mineProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('abandoned-mine');
-const mineSuccess = commit(fresh, regionSuccessAction('abandoned-mine'));
+let mineStarted = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'abandoned-mine' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+mineStarted = commit(mineStarted, regionStageAction('abandoned-mine', 'npc-briefing'));
+mineStarted = commit(mineStarted, regionStageAction('abandoned-mine', 'facility-observed'));
+const mineEventPreview = previewScrapCampaignAction(
+  mineStarted,
+  regionEventStartAction('abandoned-mine'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(mineEventPreview.costSegments, 10);
+assert.equal(mineEventPreview.extensionSegments, 0);
+assert.equal(mineEventPreview.successExtensionDays, 2);
+mineStarted = commit(mineStarted, regionEventStartAction('abandoned-mine'));
+assert.equal(mineStarted.regionStates['abandoned-mine'], 'in-progress');
+assert.equal(mineStarted.deadlineSegments, 110);
+let mineSuccess = mineStarted;
+for (const stageKind of [
+  'journey-combat',
+  'boss-defeated',
+  'replacement-complete',
+  'machine-separated',
+]) {
+  mineSuccess = commit(mineSuccess, regionStageAction('abandoned-mine', stageKind));
+}
+mineSuccess = commit(mineSuccess, regionSuccessAction('abandoned-mine'));
 assert.equal(mineSuccess.regionStates['abandoned-mine'], 'resolved');
 assert.equal(mineSuccess.collectedPartIds.includes(mineProfile.part.id), true);
 assert.equal(mineSuccess.deadlineSegments, 120 - 10 + 8);
 assert.equal(mineSuccess.rivalDelaySegments, 8);
+assert.equal(mineSuccess.regionEventStageIds['abandoned-mine'], 'abandoned-mine:campaign-updated');
+const versionThreeMine = { ...mineSuccess, version: 3 };
+delete versionThreeMine.regionEventStageIds;
+const migratedVersionThreeMine = toScrapCampaignSnapshot(versionThreeMine, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(migratedVersionThreeMine.version, 4);
+assert.equal(
+  migratedVersionThreeMine.regionEventStageIds['abandoned-mine'],
+  'abandoned-mine:campaign-updated',
+  'v3에서 이미 해결된 region은 최종 campaign-updated stage로 이관되어야 합니다.',
+);
 
 let rivalFirst = fresh;
 for (let index = 0; index < mineProfile.route.rivalArrivalSegment; index += 1) {
@@ -252,7 +335,7 @@ assert.equal(
 
 let completeCampaign = fresh;
 for (const regionId of ['red-quarry', 'snow-trade-road', 'greenhouse-plains']) {
-  completeCampaign = commit(completeCampaign, regionSuccessAction(regionId));
+  completeCampaign = resolveRegion(completeCampaign, regionId);
 }
 assert.equal(completeCampaign.regionStates['abandoned-mine'], 'convoy');
 assert.equal(completeCampaign.regionStates['harbor-shipyard'], 'convoy');
@@ -308,7 +391,9 @@ const progression = {
   ),
   scrapCampaign: completeCampaign,
 };
-assert.equal(persistence.save(progression).ok, true);
+assertProgressionSnapshot(progression, SCRAP_CAMPAIGN_PROFILE);
+const saveResult = persistence.save(progression);
+assert.equal(saveResult.ok, true, JSON.stringify(saveResult));
 const loaded = persistence.load(
   DEFAULT_EQUIPMENT_PROFILE_ID,
   [DEFAULT_EQUIPMENT_PROFILE_ID],
@@ -347,7 +432,8 @@ console.log(
       'bidirectional-authored-route-and-rival-preview',
       'four-segment-day-rollover',
       'stable-action-idempotence',
-      'player-first-event-cost-and-2-to-5-day-detour',
+      'ordered-region-stages-event-start-cost-and-success-detour',
+      'v3-region-stage-migration-to-v4',
       'rival-first-convoy-two-segment-no-extension-recovery',
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',

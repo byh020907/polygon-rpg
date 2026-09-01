@@ -179,8 +179,12 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     campaignActionPreviewOpen: false,
     campaignActionPreview: Object.freeze({
       label: '',
+      kind: 'travel',
+      title: '장거리 이동을 확정할까요?',
+      detailLabel: '',
       targetLocationLabel: '',
       costSegments: 0,
+      successExtensionDays: 0,
       requiresDeadlineWarning: false,
       before: Object.freeze({ day: 1, phaseLabel: '아침', deadlineLabel: 'D-30' }),
       after: Object.freeze({ day: 1, phaseLabel: '아침', deadlineLabel: 'D-30' }),

@@ -4,11 +4,12 @@ import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterP
 import { createCharacterDesignBoard } from '../src/game/character/CharacterDesignBoard.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
-assert.equal(profiles.length, 10);
+assert.equal(profiles.length, 11);
 assert.equal(new Set(profiles.map((profile) => profile.id)).size, profiles.length);
 assert.deepEqual(CHARACTER_PRESENTATION_PROFILE.comparisonViews, [
   'front',
@@ -31,6 +32,7 @@ const requiredRoleIds = [
   'collector-unit',
   'industrial-creature',
   'regional-boss',
+  'mine-collapse-boss',
 ];
 assert.deepEqual(
   profiles.map((profile) => profile.id),
@@ -182,10 +184,19 @@ for (const scenario of [
     profileId: 'regional-boss',
     landmarkId: 'combat-enemy-conveyor-ram-plate',
   },
+  {
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    regionId: 'abandoned-mine',
+    roomId: 'abandoned-mine-machine-yard',
+    profileId: 'mine-collapse-boss',
+    landmarkId: 'combat-enemy-conveyor-ram-plate',
+  },
 ]) {
-  const scenarioScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scenarioScene = createTestGameScene({
+    mapDefinition: scenario.mapDefinition ?? ACADEMY_VILLAGE_MAP,
+  });
   scenarioScene.setVisualQaLocation({
-    regionId: 'academy-region',
+    regionId: scenario.regionId ?? 'academy-region',
     roomId: scenario.roomId,
     x: 500,
   });

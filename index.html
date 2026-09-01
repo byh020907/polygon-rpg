@@ -344,24 +344,30 @@
               aria-describedby="campaign-action-summary"
             >
               <header>
-                <small>LONG-DISTANCE ROAD · CONFIRM</small>
-                <h2 id="campaign-action-title" tabindex="-1">장거리 이동을 확정할까요?</h2>
+                <small
+                  x-text="campaignActionPreview.kind === 'region-event-start' ? 'CORE EVENT · CONFIRM' : 'LONG-DISTANCE ROAD · CONFIRM'"
+                ></small>
+                <h2
+                  id="campaign-action-title"
+                  tabindex="-1"
+                  x-text="campaignActionPreview.title"
+                ></h2>
               </header>
               <p id="campaign-action-summary">
-                <strong x-text="campaignActionPreview.targetLocationLabel"></strong>
+                <strong x-text="campaignActionPreview.detailLabel"></strong>
                 <span
-                  x-text="`${campaignActionPreview.costSegments}구간을 소비하는 실제 연결로입니다.`"
+                  x-text="campaignActionPreview.kind === 'region-event-start' ? `${campaignActionPreview.costSegments}구간을 소비합니다. 성공 시 D-DAY +${campaignActionPreview.successExtensionDays}일.` : `${campaignActionPreview.costSegments}구간을 소비하는 실제 연결로입니다.`"
                 ></span>
               </p>
               <dl class="campaign-action-time-grid">
                 <div>
-                  <dt>출발</dt>
+                  <dt>확정 전</dt>
                   <dd
                     x-text="`Day ${campaignActionPreview.before.day} · ${campaignActionPreview.before.phaseLabel} · ${campaignActionPreview.before.deadlineLabel}`"
                   ></dd>
                 </div>
                 <div>
-                  <dt>도착</dt>
+                  <dt>확정 후</dt>
                   <dd
                     x-text="`Day ${campaignActionPreview.after.day} · ${campaignActionPreview.after.phaseLabel} · ${campaignActionPreview.after.deadlineLabel}`"
                   ></dd>
@@ -377,7 +383,7 @@
                 class="campaign-action-warning"
                 x-show="campaignActionPreview.requiresDeadlineWarning"
               >
-                이 이동을 확정하면 D-DAY 0에 도달해 수도 파괴가 시작됩니다.
+                이 행동을 확정하면 D-DAY 0에 도달해 수도 파괴가 시작됩니다.
               </p>
               <footer>
                 <button type="button" @click="cancelCampaignActionPreview">취소 · 시간 유지</button>
@@ -387,7 +393,9 @@
                   type="button"
                   @click="confirmCampaignActionPreview"
                 >
-                  이동 확정 · 1구간
+                  <span
+                    x-text="`${campaignActionPreview.kind === 'region-event-start' ? '사건 시작' : '이동 확정'} · ${campaignActionPreview.costSegments}구간`"
+                  ></span>
                 </button>
               </footer>
             </section>

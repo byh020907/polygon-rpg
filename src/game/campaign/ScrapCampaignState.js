@@ -24,8 +24,9 @@ import {
   nextScrapGarageRevealStage,
 } from './ScrapGarageRevealState.js';
 
-export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 3;
-const PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 2;
+export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 4;
+const PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 3;
+const GARAGE_REVEAL_SCRAP_CAMPAIGN_SCHEMA_VERSION = 2;
 const LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION = 1;
 
 export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
@@ -33,6 +34,8 @@ export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
   TRAVEL: 'travel',
   REST: 'rest',
   KO_RETURN: 'ko-return',
+  REGION_STAGE: 'region-stage',
+  REGION_EVENT_START: 'region-event-start',
   REGION_SUCCESS: 'region-success',
   CONVOY_CHASE: 'convoy-chase',
 });
@@ -83,6 +86,7 @@ function freezeSnapshot({
   rivalDelaySegments,
   currentLocationId,
   regionStates,
+  regionEventStageIds,
   collectedPartIds,
   committedActionIds,
   awakeningStageId,
@@ -98,6 +102,7 @@ function freezeSnapshot({
     rivalDelaySegments,
     currentLocationId,
     regionStates: Object.freeze({ ...regionStates }),
+    regionEventStageIds: Object.freeze({ ...regionEventStageIds }),
     collectedPartIds: Object.freeze([...collectedPartIds]),
     committedActionIds: Object.freeze([...committedActionIds]),
     awakeningStageId: assertScrapAwakeningStageId(awakeningStageId),
@@ -121,6 +126,9 @@ export function createScrapCampaignSnapshot(profile) {
         SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE,
       ]),
     ),
+    regionEventStageIds: Object.fromEntries(
+      SCRAP_CAMPAIGN_REGION_IDS.map((regionId) => [regionId, null]),
+    ),
     collectedPartIds: [],
     committedActionIds: [],
     awakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
@@ -138,6 +146,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (
     value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION &&
     value.version !== PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
+    value.version !== GARAGE_REVEAL_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
     value.version !== LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
   ) {
     throw new Error(`지원하지 않는 scrap campaign schema version입니다: ${value.version}`);
@@ -177,6 +186,43 @@ export function toScrapCampaignSnapshot(value, profile) {
   ) {
     throw new TypeError('campaign region state가 stable region contract와 일치하지 않습니다.');
   }
+  const regionEventStageIds =
+    value.version === SCRAP_CAMPAIGN_SCHEMA_VERSION
+      ? value.regionEventStageIds
+      : Object.fromEntries(
+          SCRAP_CAMPAIGN_REGION_IDS.map((regionId) => [
+            regionId,
+            [
+              SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED,
+              SCRAP_CAMPAIGN_REGION_STATUS.RECOVERED,
+            ].includes(value.regionStates[regionId])
+              ? (authored?.getRegion(regionId)?.eventStages.at(-1)?.id ?? null)
+              : null,
+          ]),
+        );
+  if (
+    !regionEventStageIds ||
+    typeof regionEventStageIds !== 'object' ||
+    Array.isArray(regionEventStageIds)
+  ) {
+    throw new TypeError('campaign region event stage가 필요합니다.');
+  }
+  const regionStageEntries = Object.entries(regionEventStageIds);
+  if (
+    regionStageEntries.length !== SCRAP_CAMPAIGN_REGION_IDS.length ||
+    regionStageEntries.some(([regionId, stageId]) => {
+      if (!SCRAP_CAMPAIGN_REGION_IDS.includes(regionId)) return true;
+      if (stageId === null) return false;
+      const region = authored?.getRegion(regionId);
+      return region
+        ? !region.eventStages.some((stage) => stage.id === stageId)
+        : typeof stageId !== 'string' || !stageId.startsWith(`${regionId}:`);
+    })
+  ) {
+    throw new TypeError(
+      'campaign region event stage가 authored stage contract와 일치하지 않습니다.',
+    );
+  }
   for (const [field, label] of [
     ['collectedPartIds', '회수 part ID'],
     ['committedActionIds', '확정 campaign action ID'],
@@ -205,12 +251,14 @@ export function toScrapCampaignSnapshot(value, profile) {
     value.version === LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
       ? SCRAP_AWAKENING_STAGE.COMMISSION
       : value.awakeningStageId;
-  const garageRevealStageId =
-    value.version === SCRAP_CAMPAIGN_SCHEMA_VERSION
-      ? assertScrapGarageRevealStageId(value.garageRevealStageId)
-      : awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-        ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
-        : SCRAP_GARAGE_REVEAL_STAGE.LOCKED;
+  const garageRevealStageId = [
+    SCRAP_CAMPAIGN_SCHEMA_VERSION,
+    PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
+  ].includes(value.version)
+    ? assertScrapGarageRevealStageId(value.garageRevealStageId)
+    : awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+      ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+      : SCRAP_GARAGE_REVEAL_STAGE.LOCKED;
   if (
     awakeningStageId !== SCRAP_AWAKENING_STAGE.COMPLETE &&
     garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.LOCKED
@@ -227,6 +275,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   return freezeSnapshot({
     ...value,
+    regionEventStageIds,
     awakeningStageId,
     garageRevealStageId,
   });
@@ -356,17 +405,33 @@ function validateAction(action, profile) {
   if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL && targetLocationId === undefined) {
     throw new Error('장거리 이동에는 target location이 필요합니다.');
   }
+  if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_STAGE) {
+    const region = profile.getRegion(action.targetRegionId);
+    if (
+      !region ||
+      action.costSegments !== 0 ||
+      extensionSegments !== 0 ||
+      !region.eventStages.some((stage) => stage.id === action.targetStageId)
+    ) {
+      throw new Error('지역 stage action은 authored stage와 0구간 비용을 사용해야 합니다.');
+    }
+  }
+  if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START) {
+    const region = profile.getRegion(action.targetRegionId);
+    if (!region || action.costSegments !== region.event.costSegments || extensionSegments !== 0) {
+      throw new Error('지역 사건 시작 action은 authored 사건 비용과 0 연장을 사용해야 합니다.');
+    }
+  }
   if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS) {
     const region = profile.getRegion(action.targetRegionId);
     if (
       !region ||
-      action.costSegments !== region.event.costSegments ||
+      action.costSegments !== 0 ||
       extensionSegments !== region.event.extensionSegments ||
       extensionSegments < CAMPAIGN_SEGMENTS_PER_DAY * 2 ||
-      extensionSegments > CAMPAIGN_SEGMENTS_PER_DAY * 5 ||
-      action.costSegments <= extensionSegments
+      extensionSegments > CAMPAIGN_SEGMENTS_PER_DAY * 5
     ) {
-      throw new Error('지역 성공 action은 authored 사건 비용·2~5일 연장과 일치해야 합니다.');
+      throw new Error('지역 성공 action은 0구간 비용·authored 2~5일 연장과 일치해야 합니다.');
     }
   }
   return Object.freeze({ ...action, targetLocationId, extensionSegments });
@@ -426,6 +491,9 @@ function timeReadModel(elapsedSegments, deadlineSegments) {
 export function previewScrapCampaignAction(snapshot, action, profile) {
   const current = toScrapCampaignSnapshot(snapshot, profile);
   const authoredAction = validateAction(action, profile);
+  const targetRegion = authoredAction.targetRegionId
+    ? profile.getRegion(authoredAction.targetRegionId)
+    : null;
   const alreadyCommitted = current.committedActionIds.includes(authoredAction.actionId);
   const travelRoute =
     authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL
@@ -457,8 +525,24 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
     actionId: authoredAction.actionId,
     label: authoredAction.label,
     kind: authoredAction.kind,
+    title:
+      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START
+        ? '지역 핵심 사건을 시작할까요?'
+        : '장거리 이동을 확정할까요?',
+    detailLabel:
+      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START
+        ? (targetRegion?.event.label ?? authoredAction.label)
+        : locationLabel(authoredAction.targetLocationId, profile),
     costSegments: authoredAction.costSegments,
     extensionSegments: authoredAction.extensionSegments,
+    successExtensionSegments:
+      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START
+        ? targetRegion.event.extensionSegments
+        : authoredAction.extensionSegments,
+    successExtensionDays:
+      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START
+        ? targetRegion.event.extensionSegments / CAMPAIGN_SEGMENTS_PER_DAY
+        : authoredAction.extensionSegments / CAMPAIGN_SEGMENTS_PER_DAY,
     routeId: travelRoute?.id ?? null,
     targetLocationId: authoredAction.targetLocationId ?? null,
     targetLocationLabel:
@@ -495,6 +579,19 @@ function progressRival(regionStates, rivalProgressSegments, profile) {
   return nextStates;
 }
 
+function assertNextRegionStage(currentStageId, targetStageId, region) {
+  const currentIndex = currentStageId
+    ? region.eventStages.findIndex((stage) => stage.id === currentStageId)
+    : -1;
+  const targetIndex = region.eventStages.findIndex((stage) => stage.id === targetStageId);
+  if (targetIndex !== currentIndex + 1) {
+    throw new Error(
+      `지역 사건 stage는 authored 순서로만 진행할 수 있습니다: ${currentStageId ?? 'start'} → ${targetStageId}`,
+    );
+  }
+  return region.eventStages[targetIndex];
+}
+
 export function commitScrapCampaignAction(snapshot, action, profile) {
   const current = toScrapCampaignSnapshot(snapshot, profile);
   const authoredAction = validateAction(action, profile);
@@ -515,6 +612,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     current.rivalProgressSegments + authoredAction.costSegments - existingDelayUsed;
   let rivalDelaySegments = current.rivalDelaySegments - existingDelayUsed;
   let regionStates = { ...current.regionStates };
+  let regionEventStageIds = { ...current.regionEventStageIds };
   let collectedPartIds = [...current.collectedPartIds];
   let currentLocationId = current.currentLocationId;
 
@@ -525,13 +623,53 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL) {
       currentLocationId = authoredAction.targetLocationId;
     }
+    if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_STAGE) {
+      if (current.currentLocationId !== region.id) {
+        throw new Error('현재 위치의 region stage만 진행할 수 있습니다.');
+      }
+      const targetStage = assertNextRegionStage(
+        regionEventStageIds[region.id],
+        authoredAction.targetStageId,
+        region,
+      );
+      if (['part-claimed', 'campaign-updated'].includes(targetStage.kind)) {
+        throw new Error('부품 회수와 campaign 갱신 stage는 지역 성공 transaction이 소유합니다.');
+      }
+      const earlyStage = ['npc-briefing', 'facility-observed'].includes(targetStage.kind);
+      const expectedStatus = earlyStage
+        ? SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE
+        : SCRAP_CAMPAIGN_REGION_STATUS.IN_PROGRESS;
+      if (regionStates[region.id] !== expectedStatus) {
+        throw new Error(`${targetStage.label} stage와 지역 사건 상태가 일치하지 않습니다.`);
+      }
+      regionEventStageIds[region.id] = targetStage.id;
+    }
+    if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START) {
+      const facilityStage = region.eventStages.find((stage) => stage.kind === 'facility-observed');
+      if (
+        current.currentLocationId !== region.id ||
+        regionStates[region.id] !== SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE ||
+        regionEventStageIds[region.id] !== facilityStage.id
+      ) {
+        throw new Error('현장에서 시설 상태를 확인한 available region 사건만 시작할 수 있습니다.');
+      }
+      regionStates[region.id] = SCRAP_CAMPAIGN_REGION_STATUS.IN_PROGRESS;
+    }
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS) {
-      if (regionStates[region.id] !== SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE) {
-        throw new Error('고철 대왕보다 먼저 도착한 available region만 해결할 수 있습니다.');
+      const machineSeparatedStage = region.eventStages.find(
+        (stage) => stage.kind === 'machine-separated',
+      );
+      if (
+        current.currentLocationId !== region.id ||
+        regionStates[region.id] !== SCRAP_CAMPAIGN_REGION_STATUS.IN_PROGRESS ||
+        regionEventStageIds[region.id] !== machineSeparatedStage.id
+      ) {
+        throw new Error('기계를 분리한 진행 중 region만 성공 처리할 수 있습니다.');
       }
       regionStates[region.id] = SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED;
       if (!collectedPartIds.includes(region.part.id)) collectedPartIds.push(region.part.id);
       rivalDelaySegments += authoredAction.extensionSegments;
+      regionEventStageIds[region.id] = region.eventStages.at(-1).id;
     }
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.CONVOY_CHASE) {
       if (!region || regionStates[region.id] !== SCRAP_CAMPAIGN_REGION_STATUS.CONVOY) {
@@ -539,6 +677,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
       }
       regionStates[region.id] = SCRAP_CAMPAIGN_REGION_STATUS.RECOVERED;
       if (!collectedPartIds.includes(region.part.id)) collectedPartIds.push(region.part.id);
+      regionEventStageIds[region.id] = region.eventStages.at(-1).id;
     }
     regionStates = progressRival(regionStates, rivalProgressSegments, profile);
   }
@@ -550,6 +689,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     rivalDelaySegments,
     currentLocationId,
     regionStates,
+    regionEventStageIds,
     collectedPartIds,
     committedActionIds: [...current.committedActionIds, authoredAction.actionId],
     awakeningStageId: current.awakeningStageId,
@@ -572,6 +712,8 @@ export function getScrapCampaignReadModel(snapshot, profile) {
   const time = timeReadModel(current.elapsedSegments, current.deadlineSegments);
   const regions = profile.regions.map((region) => {
     const status = current.regionStates[region.id];
+    const eventStageId = current.regionEventStageIds[region.id];
+    const eventStage = region.eventStages.find((stage) => stage.id === eventStageId) ?? null;
     return Object.freeze({
       id: region.id,
       label: region.label,
@@ -583,7 +725,11 @@ export function getScrapCampaignReadModel(snapshot, profile) {
             ? '수송대 추격 · 부품 회수'
             : status === SCRAP_CAMPAIGN_REGION_STATUS.CONVOY
               ? '시설 파괴 · 수송대 추격 가능'
-              : '사건 대기',
+              : status === SCRAP_CAMPAIGN_REGION_STATUS.IN_PROGRESS
+                ? `현장 작업 진행 · ${eventStage?.label ?? '핵심 사건'}`
+                : eventStage
+                  ? `현장 확인 · ${eventStage.label}`
+                  : '사건 대기',
       travelSegments: region.route.travelSegments,
       eventSegments: region.event.costSegments,
       extensionDays: region.event.extensionSegments / CAMPAIGN_SEGMENTS_PER_DAY,
@@ -595,13 +741,18 @@ export function getScrapCampaignReadModel(snapshot, profile) {
       color: region.visual.color,
       material: region.visual.material,
       eventStageIds: Object.freeze(region.eventStages.map((stage) => stage.id)),
+      eventStageId,
+      eventStageKind: eventStage?.kind ?? null,
+      eventStageLabel: eventStage?.label ?? '현장 도착 전',
       mapPatchId:
         status === SCRAP_CAMPAIGN_REGION_STATUS.CONVOY
           ? region.mapPatches.convoy
           : status === SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED ||
               status === SCRAP_CAMPAIGN_REGION_STATUS.RECOVERED
             ? region.mapPatches.resolved
-            : region.mapPatches.before,
+            : eventStage?.kind === 'machine-separated'
+              ? region.mapPatches.partReady
+              : region.mapPatches.before,
     });
   });
   const rivalRoute = rivalRouteReadModel(current.rivalProgressSegments, profile);

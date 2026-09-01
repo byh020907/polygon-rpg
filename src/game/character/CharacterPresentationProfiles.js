@@ -135,6 +135,19 @@ const RAW_PROFILES = [
     landmarks: ['회전 경고등', '가동식 압착판', '노출 동력축'],
     representativePose: '압착판을 뒤로 당겨 큰 공격 범위를 예고하는 자세',
   },
+  {
+    id: 'mine-collapse-boss',
+    label: '붕괴 광산 보행 굴착기',
+    roleLabel: '폐광 산촌 Boss',
+    family: 'machine',
+    accent: '#e3a64f',
+    material: '#675446',
+    toolKind: 'conveyor-ram',
+    minimumViewportHeight: 86,
+    proportions: { shoulder: 32, hip: 24, head: 7, sideDepth: 19 },
+    landmarks: ['황색 회전 경고등', '좌우 유압 다리', '노출된 편심 구동축'],
+    representativePose: '한쪽 굴착 다리를 들어 지면 강타 범위를 예고하는 자세',
+  },
 ];
 
 function validateProfile(profile) {

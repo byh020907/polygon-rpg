@@ -390,6 +390,9 @@ export class GameApp extends SceneNode {
     if (scenario.scrapGarageRevealStageId) {
       this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
     }
+    if (scenario.scrapRegionState) {
+      this.scene.setVisualQaScrapRegionState(scenario.scrapRegionState);
+    }
     this.scene.setVisualQaLocation(scenario);
     if (scenario.materialEchoDefeats) {
       this.scene.setVisualQaMaterialEchoDefeats(scenario.materialEchoDefeats);
@@ -443,6 +446,9 @@ export class GameApp extends SceneNode {
     }
     if (scenario.scrapGarageRevealStageId) {
       this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
+    }
+    if (scenario.scrapRegionState) {
+      this.scene.setVisualQaScrapRegionState(scenario.scrapRegionState);
     }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);
@@ -720,11 +726,11 @@ export class GameApp extends SceneNode {
   }
 
   confirmCampaignActionPreview() {
-    return this.scene.confirmScrapCampaignTravel();
+    return this.scene.confirmScrapCampaignAction();
   }
 
   cancelCampaignActionPreview() {
-    return this.scene.cancelScrapCampaignTravel();
+    return this.scene.cancelScrapCampaignAction();
   }
 
   resize() {

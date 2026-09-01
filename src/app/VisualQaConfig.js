@@ -263,6 +263,75 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
     }),
   }),
+  'scrap-mine-boss': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: 'abandoned-mine',
+    roomId: 'abandoned-mine-machine-yard',
+    x: 620,
+    scrapRegionState: Object.freeze({
+      regionId: 'abandoned-mine',
+      stageKind: 'journey-combat',
+      status: 'in-progress',
+    }),
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'combat-enemy-conveyor-ram-plate',
+        'combat-enemy-scrap-front-plate',
+        'mine-walker-chassis',
+      ]),
+      expectedAbsentItems: Object.freeze(['mine-replacement-brace', 'mine-walker-part-signal']),
+    }),
+  }),
+  'scrap-mine-resolved': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: 'abandoned-mine',
+    roomId: 'abandoned-mine-machine-yard',
+    x: 980,
+    scrapRegionState: Object.freeze({
+      regionId: 'abandoned-mine',
+      stageKind: 'campaign-updated',
+      status: 'resolved',
+      collected: true,
+    }),
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'mine-replacement-brace',
+        'mine-walker-separated-chassis',
+        'mine-walker-part-cradle',
+        'mine-walker-part-signal',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'combat-enemy-conveyor-ram-plate',
+        'mine-walker-leg-left',
+      ]),
+    }),
+  }),
+  'scrap-garage-20': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 480,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    scrapRegionState: Object.freeze({
+      regionId: 'abandoned-mine',
+      stageKind: 'campaign-updated',
+      status: 'resolved',
+      collected: true,
+      currentLocationId: 'neighborhood-scrapyard',
+    }),
+    expectation: Object.freeze({
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+      expectedItems: Object.freeze([
+        'garage-robot-walker-leg-left',
+        'garage-robot-walker-leg-right',
+        'garage-robot-twenty-label',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'garage-robot-frame-leg-left',
+        'garage-robot-zero-label',
+      ]),
+    }),
+  }),
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
   'scrap-character-board': Object.freeze({
     regionId: 'academy-region',

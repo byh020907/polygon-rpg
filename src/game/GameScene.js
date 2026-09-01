@@ -392,6 +392,22 @@ function assertEnchantmentCatalog(catalog) {
   return catalog;
 }
 
+function scrapCampaignWorldFacts(campaign) {
+  return Object.freeze({
+    scrapAwakeningStageId: campaign.awakeningStageId,
+    scrapGarageRevealStageId: campaign.garageRevealStageId,
+    scrapRegionStatuses: Object.freeze(
+      Object.fromEntries(campaign.regions.map((region) => [region.id, region.status])),
+    ),
+    scrapRegionStageIds: Object.freeze(
+      Object.fromEntries(campaign.regions.map((region) => [region.id, region.eventStageId])),
+    ),
+    scrapCollectedPartIds: Object.freeze(
+      campaign.regions.filter((region) => region.collected).map((region) => region.partId),
+    ),
+  });
+}
+
 export class GameScene extends SceneNode {
   constructor({
     mapDefinition,
@@ -456,6 +472,10 @@ export class GameScene extends SceneNode {
     );
     this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
     this.storyInteractionOwner = new StoryInteractionOwner();
+    const initialScrapCampaign = getScrapCampaignReadModel(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: {
         timePhase: 'day',
@@ -466,14 +486,7 @@ export class GameScene extends SceneNode {
           ...this.journeyProgress.snapshot().storyFlags,
           ...this.regionExpansionProgress.snapshot().storyFlags,
         },
-        scrapAwakeningStageId: getScrapCampaignReadModel(
-          this.progressionSnapshot.scrapCampaign,
-          this.scrapCampaignProfile,
-        ).awakeningStageId,
-        scrapGarageRevealStageId: getScrapCampaignReadModel(
-          this.progressionSnapshot.scrapCampaign,
-          this.scrapCampaignProfile,
-        ).garageRevealStageId,
+        ...scrapCampaignWorldFacts(initialScrapCampaign),
       },
     });
     this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
@@ -572,8 +585,7 @@ export class GameScene extends SceneNode {
       crisis: this.worldTimeSnapshot.crisis,
       weather: 'clear',
       storyFlags: { ...journey.storyFlags, ...regionExpansion.storyFlags },
-      scrapAwakeningStageId: scrapCampaign.awakeningStageId,
-      scrapGarageRevealStageId: scrapCampaign.garageRevealStageId,
+      ...scrapCampaignWorldFacts(scrapCampaign),
     });
     let mapSnapshot = this.mapRuntime.reset();
     if (scrapCampaign.currentLocationId !== this.scrapCampaignProfile.startLocation.id) {
@@ -629,7 +641,7 @@ export class GameScene extends SceneNode {
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
     this.portalTransitionPresentation = null;
-    this.pendingScrapCampaignTravel = null;
+    this.pendingScrapCampaignAction = null;
     this.cameraPosition = { ...mapSnapshot.cameraPosition };
     this.previousCameraPosition = { ...this.cameraPosition };
     this.equipmentProfile = this.equipmentCatalog.getProfile(
@@ -731,6 +743,48 @@ export class GameScene extends SceneNode {
       scrapCampaign,
     });
     this.scrapGarageRevealElapsedSeconds = 0;
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return scrapCampaign;
+  }
+
+  setVisualQaScrapRegionState({
+    regionId,
+    stageKind,
+    status,
+    collected = false,
+    currentLocationId = regionId,
+  }) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    const stage = region?.eventStages.find((candidate) => candidate.kind === stageKind);
+    if (!region || !stage) {
+      throw new Error(`지원하지 않는 Scrap region QA stage입니다: ${regionId}:${stageKind}`);
+    }
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...current,
+        currentLocationId,
+        awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+        garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+        regionStates: { ...current.regionStates, [region.id]: status },
+        regionEventStageIds: {
+          ...current.regionEventStageIds,
+          [region.id]: stage.id,
+        },
+        collectedPartIds: collected
+          ? [...new Set([...current.collectedPartIds, region.part.id])]
+          : current.collectedPartIds.filter((partId) => partId !== region.part.id),
+        lastChangeLabel: `${region.label} · ${stage.label}`,
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
     this.syncScrapAwakeningWorldContext();
     this.statusNode.publish({ force: true });
     return scrapCampaign;
@@ -1203,8 +1257,7 @@ export class GameScene extends SceneNode {
     const campaign = this.getScrapAwakeningReadModel();
     this.mapRuntime.setWorldContext({
       ...this.mapRuntime.getWorldContext(),
-      scrapAwakeningStageId: campaign.awakeningStageId,
-      scrapGarageRevealStageId: campaign.garageRevealStageId,
+      ...scrapCampaignWorldFacts(campaign),
     });
   }
 
@@ -1414,15 +1467,77 @@ export class GameScene extends SceneNode {
     });
   }
 
+  createScrapCampaignRegionStageAction(regionId, stageKind) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    const stage = region?.eventStages.find((candidate) => candidate.kind === stageKind);
+    if (!region || !stage)
+      throw new Error(`지원하지 않는 지역 사건 stage입니다: ${regionId}:${stageKind}`);
+    return Object.freeze({
+      actionId: `region-stage:${stage.id}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.REGION_STAGE,
+      label: `${region.label} · ${stage.label}`,
+      targetRegionId: region.id,
+      targetStageId: stage.id,
+      costSegments: 0,
+    });
+  }
+
+  createScrapCampaignRegionEventStartAction(regionId) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    if (!region) throw new Error(`지원하지 않는 지역 사건입니다: ${regionId}`);
+    return Object.freeze({
+      actionId: `region:${region.id}:event-start`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START,
+      label: `핵심 사건 시작 · ${region.event.label}`,
+      targetRegionId: region.id,
+      costSegments: region.event.costSegments,
+    });
+  }
+
+  createScrapCampaignRegionSuccessAction(regionId) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    if (!region) throw new Error(`지원하지 않는 지역 성공 action입니다: ${regionId}`);
+    return Object.freeze({
+      actionId: `region:${region.id}:resolved`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS,
+      label: `지역 해결 · ${region.part.label} 회수`,
+      targetRegionId: region.id,
+      costSegments: 0,
+      extensionSegments: region.event.extensionSegments,
+    });
+  }
+
+  commitScrapCampaignDomainAction(action) {
+    const transaction = commitScrapCampaignAction(
+      this.progressionSnapshot.scrapCampaign,
+      action,
+      this.scrapCampaignProfile,
+    );
+    if (!transaction.changed) return transaction;
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign: transaction.snapshot,
+    });
+    this.progressionNotice = `${transaction.preview.label} · ${transaction.preview.after.phaseLabel} · ${transaction.preview.after.deadlineLabel}`;
+    this.syncScrapAwakeningWorldContext();
+    this.emitDurableProgressionChanged();
+    this.statusNode.publish({ force: true });
+    return Object.freeze({ ...transaction, progressionSnapshot: this.progressionSnapshot });
+  }
+
   requestScrapCampaignTravel(portal) {
-    if (this.pendingScrapCampaignTravel || !this.canStartPortalTransition()) return false;
+    if (this.pendingScrapCampaignAction || !this.canStartPortalTransition()) return false;
     const action = this.createScrapCampaignTravelAction(portal);
     const preview = previewScrapCampaignAction(
       this.progressionSnapshot.scrapCampaign,
       action,
       this.scrapCampaignProfile,
     );
-    this.pendingScrapCampaignTravel = Object.freeze({ portalId: portal.id, action, preview });
+    this.pendingScrapCampaignAction = Object.freeze({
+      type: 'travel',
+      portalId: portal.id,
+      action,
+      preview,
+    });
     this.combatCommands.reset();
     this.rollState = null;
     this.campaignActionPreviewRequested.emit(
@@ -1435,31 +1550,70 @@ export class GameScene extends SceneNode {
     return true;
   }
 
-  confirmScrapCampaignTravel() {
-    const pending = this.pendingScrapCampaignTravel;
+  requestScrapCampaignRegionEventStart(regionId) {
+    if (this.pendingScrapCampaignAction || this.mapRuntime.getTransition()) return false;
+    const action = this.createScrapCampaignRegionEventStartAction(regionId);
+    const preview = previewScrapCampaignAction(
+      this.progressionSnapshot.scrapCampaign,
+      action,
+      this.scrapCampaignProfile,
+    );
+    this.pendingScrapCampaignAction = Object.freeze({
+      type: 'region-event-start',
+      action,
+      preview,
+    });
+    this.combatCommands.reset();
+    this.rollState = null;
+    this.campaignActionPreviewRequested.emit(
+      Object.freeze({ source: 'region-core-event', regionId, preview }),
+    );
+    return true;
+  }
+
+  confirmScrapCampaignAction() {
+    const pending = this.pendingScrapCampaignAction;
     if (!pending) return Object.freeze({ started: false, reason: 'no-pending-preview' });
-    const portal = this.mapRuntime.getPortal(pending.portalId);
-    if (!portal) {
-      this.pendingScrapCampaignTravel = null;
-      return Object.freeze({ started: false, reason: 'portal-unavailable' });
-    }
     previewScrapCampaignAction(
       this.progressionSnapshot.scrapCampaign,
       pending.action,
       this.scrapCampaignProfile,
     );
-    this.beginPortalTransition(portal, { campaignAction: pending.action });
-    this.pendingScrapCampaignTravel = null;
-    return Object.freeze({ started: true, reason: 'confirmed', preview: pending.preview });
+    if (pending.type === 'travel') {
+      const portal = this.mapRuntime.getPortal(pending.portalId);
+      if (!portal) {
+        this.pendingScrapCampaignAction = null;
+        return Object.freeze({ started: false, reason: 'portal-unavailable' });
+      }
+      this.beginPortalTransition(portal, { campaignAction: pending.action });
+      this.pendingScrapCampaignAction = null;
+      return Object.freeze({ started: true, reason: 'confirmed', preview: pending.preview });
+    }
+    const transaction = this.commitScrapCampaignDomainAction(pending.action);
+    this.pendingScrapCampaignAction = null;
+    return Object.freeze({
+      started: transaction.changed,
+      reason: transaction.changed ? 'confirmed' : transaction.reason,
+      preview: pending.preview,
+      transaction,
+    });
+  }
+
+  cancelScrapCampaignAction() {
+    if (!this.pendingScrapCampaignAction) {
+      return Object.freeze({ cancelled: false, reason: 'no-pending-preview' });
+    }
+    const preview = this.pendingScrapCampaignAction.preview;
+    this.pendingScrapCampaignAction = null;
+    return Object.freeze({ cancelled: true, reason: 'cancelled', preview });
+  }
+
+  confirmScrapCampaignTravel() {
+    return this.confirmScrapCampaignAction();
   }
 
   cancelScrapCampaignTravel() {
-    if (!this.pendingScrapCampaignTravel) {
-      return Object.freeze({ cancelled: false, reason: 'no-pending-preview' });
-    }
-    const preview = this.pendingScrapCampaignTravel.preview;
-    this.pendingScrapCampaignTravel = null;
-    return Object.freeze({ cancelled: true, reason: 'cancelled', preview });
+    return this.cancelScrapCampaignAction();
   }
 
   emitDurableProgressionChanged() {
@@ -1492,7 +1646,7 @@ export class GameScene extends SceneNode {
   }
 
   canStartPortalTransition() {
-    if (this.mapRuntime.getTransition() || this.pendingScrapCampaignTravel) return false;
+    if (this.mapRuntime.getTransition() || this.pendingScrapCampaignAction) return false;
     const combatState = this.combatCommands.snapshot();
     return this.isGrounded && !this.rollState && combatState.id === 'idle';
   }
@@ -1536,6 +1690,24 @@ export class GameScene extends SceneNode {
         this.progressionSnapshot.viewedConversationIds,
       ),
     });
+  }
+
+  resolveScrapCampaignStoryInteraction(conversationId) {
+    const interaction = this.mapRuntime
+      .getResolvedSnapshot()
+      .entities.find((entity) => entity.conversationId === conversationId);
+    if (!interaction?.campaignRegionId || !interaction.campaignStageKind) return null;
+    const action = interaction.completeCampaignRegion
+      ? this.createScrapCampaignRegionSuccessAction(interaction.campaignRegionId)
+      : this.createScrapCampaignRegionStageAction(
+          interaction.campaignRegionId,
+          interaction.campaignStageKind,
+        );
+    const transaction = this.commitScrapCampaignDomainAction(action);
+    if (interaction.requestCampaignEventStart) {
+      this.requestScrapCampaignRegionEventStart(interaction.campaignRegionId);
+    }
+    return transaction;
   }
 
   updatePortalTransition(deltaSeconds) {
@@ -1617,6 +1789,7 @@ export class GameScene extends SceneNode {
       campaignTransaction.changed
     ) {
       this.syncJourneyWorldContext();
+      if (campaignTransaction.changed) this.syncScrapAwakeningWorldContext();
       this.emitDurableProgressionChanged();
       this.statusNode.publish({ force: true });
     }
@@ -2167,6 +2340,19 @@ export class GameScene extends SceneNode {
   }
 
   resolveJourneyEncounter(result) {
+    if (result.campaignProgress) {
+      const action = this.createScrapCampaignRegionStageAction(
+        result.campaignProgress.regionId,
+        result.campaignProgress.stageKind,
+      );
+      const transaction = this.commitScrapCampaignDomainAction(action);
+      return Object.freeze({
+        ...transaction,
+        kind: 'scrap-campaign-region-stage',
+        regionId: result.campaignProgress.regionId,
+        stageKind: result.campaignProgress.stageKind,
+      });
+    }
     if (result.profileId === 'training') {
       const reward = this.combatProgressionProfile.trainingClearReward;
       const transaction = awardTrainingMarks(this.progressionSnapshot, reward);
@@ -2625,6 +2811,7 @@ export class GameScene extends SceneNode {
       if (dialogueResult.conversationId === this.scrapAwakeningProfile.ownerConversationId) {
         this.tryStartScrapGarageReveal();
       }
+      this.resolveScrapCampaignStoryInteraction(dialogueResult.conversationId);
       const transcript = resolveFirstJourneyConversationTranscripts([
         dialogueResult.conversationId,
       ])[0];
@@ -2895,9 +3082,40 @@ export class GameScene extends SceneNode {
       scrapCampaignRegion && location.regionId === scrapCampaignRegion.id,
     );
     const scrapIntroPresentation =
-      scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-        ? scrapCampaign.garageReveal
-        : scrapCampaign.awakening;
+      scrapCampaign.garageRevealComplete && scrapCampaign.collectedPartCount > 0
+        ? Object.freeze({
+            title: `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`,
+            briefing: `${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} 부품이 원래 산업기계 형태를 유지한 채 조립식 로봇에 장착됐습니다.`,
+            objective: '벽 지도에서 다음 지역과 고철 대왕의 현재 진로를 확인하세요.',
+            cue: `5 REGIONS · ${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} PARTS · ROBOT ${scrapCampaign.completionPercent}%`,
+          })
+        : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+          ? scrapCampaign.garageReveal
+          : scrapCampaign.awakening;
+    const scrapRegionObjective = (() => {
+      if (!scrapCampaignRegionReadModel) return '';
+      if (scrapCampaignRegionReadModel.status === 'resolved') {
+        return '굴착기 다리 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 차고 20%를 확인하세요.';
+      }
+      if (
+        scrapCampaignRegionReadModel.status === 'in-progress' &&
+        scrapCampaignRegionReadModel.eventStageKind === 'facility-observed'
+      ) {
+        return '오른쪽 구조 갱도로 들어가 수거 유닛을 제거하고 작업자 길을 확보하세요.';
+      }
+      return (
+        {
+          'npc-briefing': '오른쪽 구조 현황판에서 붕괴 범위, 10구간 비용과 성공 연장을 확인하세요.',
+          'facility-observed': '핵심 사건을 확정해 10구간 구조 작업을 시작하세요.',
+          'journey-combat': '확보한 갱도 오른쪽에서 굴착기 작업장으로 이동해 Boss를 제압하세요.',
+          'boss-defeated': '작업장 왼쪽에서 광부와 새 갱도 버팀목을 체결하세요.',
+          'replacement-complete': '보행식 굴착기 본체를 조사해 하체·구동부를 분리하세요.',
+          'machine-separated': '오른쪽 회수대에서 굴착기 하체·구동부를 수령하세요.',
+          'campaign-updated': '굴착기 다리 수송 완료. 고물상 차고와 다음 지역을 확인하세요.',
+        }[scrapCampaignRegionReadModel.eventStageKind] ??
+        '광부 작업반장에게 붕괴 광산의 구조 상황을 들으세요.'
+      );
+    })();
     const story = scrapAwakeningLocation
       ? Object.freeze({
           beatId:
@@ -2910,11 +3128,13 @@ export class GameScene extends SceneNode {
         })
       : scrapCampaignRegionLocation
         ? Object.freeze({
-            beatId: `scrap-region:${scrapCampaignRegion.id}:roadhead`,
-            title: `${scrapCampaignRegion.label} 연결로 도착`,
-            briefing: `${scrapCampaignRegion.visual.material} 지대 너머에서 ${scrapCampaignRegion.machineLabel} 작업 신호가 잡힙니다.`,
-            nextObjective:
-              '왼쪽 실제 연결로에서 ↑로 고물상에 돌아가거나 MAP에서 사건 시간과 성공 연장을 비교하세요.',
+            beatId: `scrap-region:${scrapCampaignRegion.id}:${scrapCampaignRegionReadModel.eventStageKind ?? 'roadhead'}`,
+            title:
+              scrapCampaignRegionReadModel.status === 'resolved'
+                ? `${scrapCampaignRegion.label} 해결 · ${scrapCampaignRegion.part.label}`
+                : `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.eventStageLabel}`,
+            briefing: `${scrapCampaignRegion.visual.material} 지대의 ${scrapCampaignRegion.machineLabel}. ${scrapCampaignRegionReadModel.statusLabel}`,
+            nextObjective: scrapRegionObjective,
           })
         : characterBoardActive
           ? Object.freeze({
@@ -3085,7 +3305,19 @@ export class GameScene extends SceneNode {
     }
     if (scrapCampaignRegionLocation) {
       objective = story.nextObjective;
-      encounterHint = `ROADHEAD · ${scrapCampaignRegion.event.label} · ${scrapCampaignRegionReadModel.eventSegments}구간 / D-DAY +${scrapCampaignRegionReadModel.extensionDays}일`;
+      if (roomId === 'abandoned-mine-machine-yard' && encounter?.health > 0) {
+        if (encounter.weakPoint?.exposed) {
+          objective = `${encounter.weakPoint.label}이 노출되었습니다. 강공격 뒤 같은 검·방패 연계로 공격하세요.`;
+        } else if (encounter.punishWindowOpen) {
+          objective = '굴착기 자세가 무너졌습니다. 회복 전에 검 연계를 적중시키세요.';
+        } else if (encounter.attackKind === 'heavy' && encounter.aiState === 'windup') {
+          objective =
+            '들어 올린 굴착 다리의 지면 강타는 막을 수 없습니다. 방향 구르기로 통과하세요.';
+        } else if (encounter.attackKind === 'light' && encounter.aiState === 'windup') {
+          objective = '짧은 유압 밀치기는 방패로 막고 방패 반격을 준비하세요.';
+        }
+      }
+      encounterHint = `${scrapCampaignRegionReadModel.statusLabel} · ${scrapCampaignRegion.event.label} · ${scrapCampaignRegionReadModel.eventSegments}구간 / 성공 D-DAY +${scrapCampaignRegionReadModel.extensionDays}일`;
     }
     if (this.recoveryNotice) encounterHint = this.recoveryNotice;
 
@@ -3139,26 +3371,32 @@ export class GameScene extends SceneNode {
             : scrapCampaign.garageRevealActive
               ? '고물상 분석 · 차고 개방'
               : scrapCampaign.garageRevealComplete
-                ? '작전 준비 완료 · 로봇 0%'
+                ? scrapCampaign.collectedPartCount > 0
+                  ? `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`
+                  : '작전 준비 완료 · 로봇 0%'
                 : scrapCampaign.deadlineRevealed
                   ? '각성 완료 · D-30 · 고물상 복귀'
                   : '첫 고철 수거 의뢰'
           : scrapCampaignRegionLocation
-            ? `${scrapCampaignRegion.label} 도착 · 사건 대기`
+            ? `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.statusLabel}`
             : location.regionId === 'glasswind-region' ||
                 (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
               ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
               : (phaseLabels[journey.phase] ?? journey.phase),
       wardLabel: scrapAwakeningLocation
         ? scrapCampaign.garageRevealComplete
-          ? '제어장치 · 우리 로봇 두뇌 장착'
+          ? scrapCampaign.collectedPartCount > 0
+            ? `${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} 부품 · 로봇 ${scrapCampaign.completionPercent}%`
+            : '제어장치 · 우리 로봇 두뇌 장착'
           : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
             ? '회수한 제어장치 · 고물상 분석 대기'
             : scrapCampaign.deadlineRevealed
               ? '회수한 제어장치 · 보유 중'
               : '제어장치 · 폐병기 흉곽 안'
         : scrapCampaignRegionLocation
-          ? `${scrapCampaignRegion.machineLabel} · 현장 신호 확인`
+          ? scrapCampaignRegionReadModel.collected
+            ? `${scrapCampaignRegionReadModel.partLabel} · 차고 로봇 ${scrapCampaign.completionPercent}%`
+            : `${scrapCampaignRegion.machineLabel} · ${scrapCampaignRegionReadModel.eventStageLabel}`
           : location.regionId === 'glasswind-region' ||
               (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
             ? regionExpansion.glasswindBridgeStable

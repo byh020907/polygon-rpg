@@ -185,6 +185,13 @@ export class TrainingEncounterNode extends SceneNode {
       maxHealth: Number.isFinite(entity.maxHealth) ? Math.max(1, entity.maxHealth) : 100,
       encounterProfile,
       materialReward: freezeMaterialReward(encounterProfile.materialReward),
+      campaignProgress:
+        typeof entity.campaignRegionId === 'string' && typeof entity.campaignStageKind === 'string'
+          ? Object.freeze({
+              regionId: entity.campaignRegionId,
+              stageKind: entity.campaignStageKind,
+            })
+          : null,
     });
     this.groundY = groundY;
     this.movementBounds = Object.freeze({ ...movementBounds });
@@ -363,6 +370,7 @@ export class TrainingEncounterNode extends SceneNode {
       profileId: this.enemy.profileId,
       role: this.enemy.role,
       materialReward: this.entity.materialReward,
+      campaignProgress: this.entity.campaignProgress,
     });
   }
 

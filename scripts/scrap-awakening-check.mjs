@@ -9,6 +9,8 @@ import {
   SCRAP_MINE_ROAD_PORTAL_ID,
   SCRAP_MINE_ROAD_REGION_ID,
   SCRAP_MINE_ROAD_ROOM_ID,
+  SCRAP_MINE_TUNNEL_ROOM_ID,
+  SCRAP_MINE_MACHINE_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -55,6 +57,29 @@ function stage(scene) {
 
 function garageStage(scene) {
   return scene.getWorldStatus().campaign.garageRevealStageId;
+}
+
+function finishPortalTransition(scene) {
+  for (let tick = 0; tick < 160 && scene.mapRuntime.getTransition(); tick += 1) {
+    scene.update(STEP_SECONDS, EMPTY_INPUT);
+  }
+  assert.equal(
+    scene.mapRuntime.getTransition(),
+    null,
+    'fixture portal transition이 완료되어야 합니다.',
+  );
+}
+
+function completeDialogue(scene, sequence) {
+  scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: sequence }));
+  sequence += 1;
+  assert.equal(scene.getWorldStatus().dialogue.active, true, '상호작용 대화가 시작되어야 합니다.');
+  for (let safety = 0; safety < 20 && scene.getWorldStatus().dialogue.active; safety += 1) {
+    scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: sequence }));
+    sequence += 1;
+  }
+  assert.equal(scene.getWorldStatus().dialogue.active, false, '상호작용 대화가 끝나야 합니다.');
+  return sequence;
 }
 
 const scene = createAwakeningScene();
@@ -369,7 +394,7 @@ assert.equal(afterMineTravel.phaseLabel, '낮');
 assert.equal(afterMineTravel.deadlineLabel, 'D-30');
 assert.equal(afterMineTravel.lastChangeLabel, '장거리 이동 · 폐광 산촌');
 assert.equal(mineRoadheadStatus.story.beatId, 'scrap-region:abandoned-mine:roadhead');
-assert.equal(mineRoadheadStatus.journeyLabel, '폐광 산촌 도착 · 사건 대기');
+assert.equal(mineRoadheadStatus.journeyLabel, '폐광 산촌 · 사건 대기');
 assert.match(mineRoadheadStatus.encounterHint, /붕괴 광산 구조와 굴착기 인수/);
 assert.doesNotMatch(
   `${mineRoadheadStatus.story.title} ${mineRoadheadStatus.objective} ${mineRoadheadStatus.wardLabel}`,
@@ -377,6 +402,162 @@ assert.doesNotMatch(
   '고철 캠페인 목적지에서 Academy story fallback이 노출되면 안 됩니다.',
 );
 assert.ok(itemIds(travelScene).includes('mine-roadhead-warning-post'));
+
+const mineFlowScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: travelScene.getProgressionSnapshot(),
+});
+let mineJumpSequence = 30;
+let mineEventRequest = null;
+mineFlowScene.campaignActionPreviewRequested.connect((request) => {
+  if (request.source === 'region-core-event') mineEventRequest = request;
+});
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 667,
+});
+mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
+let mineRegion = mineFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(mineRegion.eventStageKind, 'npc-briefing');
+assert.ok(
+  mineFlowScene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'mine-facility-inspection'),
+);
+
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 889,
+});
+const beforeMineEventPreview = mineFlowScene.getProgressionSnapshot().scrapCampaign;
+mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
+assert.equal(mineEventRequest?.source, 'region-core-event');
+assert.equal(mineEventRequest?.preview.costSegments, 10);
+assert.equal(mineEventRequest?.preview.successExtensionDays, 2);
+assert.equal(mineEventRequest?.preview.before.phaseLabel, '낮');
+assert.deepEqual(
+  mineFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
+  beforeMineEventPreview.elapsedSegments,
+  '지역 사건 preview는 시간을 소비하면 안 됩니다.',
+);
+assert.equal(mineFlowScene.cancelScrapCampaignAction().cancelled, true);
+
+mineEventRequest = null;
+mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
+assert.equal(mineEventRequest?.preview.costSegments, 10);
+assert.equal(mineFlowScene.confirmScrapCampaignAction().started, true);
+mineRegion = mineFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(mineRegion.status, 'in-progress');
+assert.equal(mineFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(mineFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-28');
+assert.ok(
+  mineFlowScene.mapRuntime
+    .getResolvedSnapshot()
+    .portals.some((portal) => portal.id === 'mine-roadhead-tunnel-portal'),
+);
+
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 1346,
+});
+mineFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: mineJumpSequence }));
+mineJumpSequence += 1;
+finishPortalTransition(mineFlowScene);
+assert.deepEqual(mineFlowScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_TUNNEL_ROOM_ID,
+});
+assert.equal(
+  mineFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'mine-tunnel-collector',
+);
+mineFlowScene.enterTree();
+mineFlowScene.roomSceneNode.encounter.completeForVisualQa();
+mineRegion = mineFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(mineRegion.eventStageKind, 'journey-combat');
+
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_TUNNEL_ROOM_ID,
+  x: 1366,
+});
+mineFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: mineJumpSequence }));
+mineJumpSequence += 1;
+finishPortalTransition(mineFlowScene);
+assert.deepEqual(mineFlowScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_MACHINE_ROOM_ID,
+});
+const mineBoss = mineFlowScene.roomSceneNode.getEncounterGameplaySnapshot();
+assert.equal(mineBoss.profileId, 'mine-collapse-boss');
+assert.equal(mineBoss.presentationProfileId, 'mine-collapse-boss');
+assert.equal(mineBoss.weakPoint.label, '노출된 편심 구동축');
+mineFlowScene.roomSceneNode.encounter.completeForVisualQa();
+
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_MACHINE_ROOM_ID,
+  x: 382,
+});
+mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
+assert.ok(itemIds(mineFlowScene).includes('mine-replacement-brace'));
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_MACHINE_ROOM_ID,
+  x: 870,
+});
+mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
+assert.ok(itemIds(mineFlowScene).includes('mine-walker-part-signal'));
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_MACHINE_ROOM_ID,
+  x: 1110,
+});
+completeDialogue(mineFlowScene, mineJumpSequence);
+const mineCompleteCampaign = mineFlowScene.getWorldStatus().campaign;
+mineRegion = mineCompleteCampaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(mineRegion.status, 'resolved');
+assert.equal(mineRegion.eventStageKind, 'campaign-updated');
+assert.equal(mineRegion.collected, true);
+assert.equal(mineCompleteCampaign.collectedPartCount, 1);
+assert.equal(mineCompleteCampaign.completionPercent, 20);
+assert.equal(mineCompleteCampaign.phaseLabel, '밤');
+assert.equal(mineCompleteCampaign.deadlineLabel, 'D-30');
+assert.equal(mineCompleteCampaign.rivalDelaySegments, 8);
+assert.match(mineFlowScene.getWorldStatus().objective, /고물상.*20%/);
+const completedMineProgression = mineFlowScene.getProgressionSnapshot();
+mineFlowScene.exitTree();
+
+const completedMineReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedMineProgression,
+});
+const reloadedMineRegion = completedMineReload
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(reloadedMineRegion.status, 'resolved');
+assert.equal(reloadedMineRegion.collected, true);
+assert.equal(completedMineReload.getWorldStatus().campaign.collectedPartCount, 1);
+completedMineReload.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 480,
+});
+assert.ok(itemIds(completedMineReload).includes('garage-robot-walker-leg-left'));
+assert.ok(itemIds(completedMineReload).includes('garage-robot-twenty-label'));
+assert.ok(!itemIds(completedMineReload).includes('garage-robot-zero-label'));
+assert.equal(completedMineReload.getWorldStatus().journeyLabel, '차고 조립 갱신 · 로봇 20%');
+assert.match(completedMineReload.getWorldStatus().encounterHint, /1\/5 PARTS · ROBOT 20%/);
+assert.equal(completedMineReload.getWorldStatus().wardLabel, '1/5 부품 · 로봇 20%');
 
 const mineReload = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
@@ -449,6 +630,9 @@ console.log(
       'wall-map-operation-command-and-completed-reload',
       'failed-campaign-room-transition-zero-time-rollback',
       'road-end-preview-cancel-confirm-and-bidirectional-campaign-commit',
+      'mine-eight-stage-npc-facility-combat-boss-machine-part-flow',
+      'mine-event-preview-cost-success-extension-and-cancel-zero-cost',
+      'mine-part-reload-idempotence-and-garage-twenty-percent',
       'keyboard-touch-interaction-parity',
     ],
   }),
