@@ -4,8 +4,9 @@ import {
   createProgressionSnapshot,
   mergeProgressionSnapshot,
 } from './ProgressionState.js';
+import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2]);
+const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -66,19 +67,27 @@ function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
     ownedEquipmentIds: value.ownedEquipmentIds,
     equippedEquipmentId: value.equippedEquipmentId,
     combatSkillLevel: value.combatSkillLevel,
-    ...(value.version === 2
+    ...(value.version >= 2
       ? {
           firstJourney: value.firstJourney,
           regionExpansion: value.regionExpansion,
         }
       : {}),
+    ...(value.version === 3 && value.worldTime ? { worldTime: value.worldTime } : {}),
   });
 }
 
-function validateCurrentSnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
+function validateCurrentSnapshot(
+  value,
+  defaultEquipmentId,
+  allowedEquipmentIds,
+  enchantmentCatalog,
+) {
   assertProgressionSnapshot(value);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
-  return mergeProgressionSnapshot(value);
+  return mergeProgressionSnapshot(value, {
+    enchantment: canonicalizeEnchantmentSnapshot(value.enchantment, enchantmentCatalog),
+  });
 }
 
 function createStoredRecord(snapshot) {
@@ -91,6 +100,7 @@ function createStoredRecord(snapshot) {
     firstJourney: snapshot.firstJourney,
     regionExpansion: snapshot.regionExpansion,
     worldTime: snapshot.worldTime,
+    enchantment: snapshot.enchantment,
   };
 }
 
@@ -99,7 +109,7 @@ function failure(reason, message) {
 }
 
 export class ProgressionStorage {
-  constructor(storage, key) {
+  constructor(storage, key, enchantmentCatalog = null) {
     if (
       !storage ||
       typeof storage.getItem !== 'function' ||
@@ -114,9 +124,14 @@ export class ProgressionStorage {
     }
     this.storage = storage;
     this.key = key;
+    this.enchantmentCatalog = enchantmentCatalog;
   }
 
-  load(defaultEquipmentId, allowedEquipmentIds = [defaultEquipmentId]) {
+  load(
+    defaultEquipmentId,
+    allowedEquipmentIds = [defaultEquipmentId],
+    enchantmentCatalog = this.enchantmentCatalog,
+  ) {
     const allowedIds = createAllowedEquipmentIds(allowedEquipmentIds, defaultEquipmentId);
     let serialized;
     try {
@@ -168,9 +183,12 @@ export class ProgressionStorage {
     }
 
     try {
+      if (!enchantmentCatalog || !Array.isArray(enchantmentCatalog.profiles)) {
+        throw new TypeError('저장 enchantment catalog이 필요합니다.');
+      }
       const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
         ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds)
-        : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds);
+        : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds, enchantmentCatalog);
       return Object.freeze({
         ok: true,
         kind: LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ? 'migrated' : 'loaded',
@@ -188,7 +206,10 @@ export class ProgressionStorage {
     let validated;
     try {
       assertProgressionSnapshot(snapshot);
-      validated = mergeProgressionSnapshot(snapshot);
+      if (!this.enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
+      validated = mergeProgressionSnapshot(snapshot, {
+        enchantment: canonicalizeEnchantmentSnapshot(snapshot.enchantment, this.enchantmentCatalog),
+      });
     } catch {
       return failure('invalid-data', '현재 진행 값이 올바르지 않아 저장하지 못했습니다.');
     }

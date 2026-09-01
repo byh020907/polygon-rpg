@@ -766,6 +766,60 @@ dd {
   border-color: rgb(199 154 82 / 35%);
 }
 
+.enchant-forge {
+  display: grid;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(114 168 162 / 32%);
+}
+
+.enchant-forge > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.enchant-forge > p {
+  margin: 0;
+  color: #9caea8;
+  font-size: 0.42rem;
+  line-height: 1.25;
+}
+.enchant-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.enchant-option {
+  display: grid;
+  gap: 1px;
+  min-height: 44px;
+  padding: 4px;
+  border: 1px solid rgb(107 160 158 / 48%);
+  color: #e7eee9;
+  background: rgb(8 20 25 / 78%);
+  text-align: left;
+}
+.enchant-option strong {
+  font-size: 0.52rem;
+}
+.enchant-option span {
+  color: #d8bc78;
+  font-size: 0.4rem;
+  font-weight: 800;
+}
+.enchant-option small {
+  color: #8ea5a0;
+  font-size: 0.38rem;
+}
+.enchant-forge[data-forge-ready='true'] {
+  border-color: #d8bc78;
+}
+
+.game-screen:has(.enchant-forge[data-forge-ready='true'])
+  .dialogue-bubble[data-dialogue-active='false'][data-dialogue-target='academy-workshop-sign-interaction'] {
+  display: none !important;
+}
+
 .growth-panel button:disabled {
   cursor: not-allowed;
   filter: saturate(0.35);
@@ -1392,6 +1446,13 @@ kbd {
 
   .equipment-grid button {
     min-height: 36px;
+  }
+
+  .enchant-forge > p {
+    display: none;
+  }
+  .enchant-option {
+    min-height: 32px;
   }
 
   .skill-growth p,

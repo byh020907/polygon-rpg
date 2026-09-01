@@ -3,6 +3,7 @@ import { SceneNode } from '../core/SceneNode.js';
 import { GameScene } from '../game/GameScene.js';
 import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
 import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
+import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
@@ -67,7 +68,11 @@ function createProgressionStorage() {
   try {
     return Object.freeze({
       ok: true,
-      storage: new ProgressionStorage(window.localStorage, PROGRESSION_STORAGE_KEY),
+      storage: new ProgressionStorage(
+        window.localStorage,
+        PROGRESSION_STORAGE_KEY,
+        ENCHANTMENT_CATALOG,
+      ),
     });
   } catch {
     return Object.freeze({
@@ -107,6 +112,7 @@ export class GameApp extends SceneNode {
         this.progressionLoadResult = this.progressionStorage.load(
           EQUIPMENT_CATALOG.defaultProfileId,
           equipmentIds,
+          ENCHANTMENT_CATALOG,
         );
       } else {
         this.progressionLoadResult = storageResult;
@@ -126,6 +132,7 @@ export class GameApp extends SceneNode {
         encounterFactory: createTrainingEncounter,
         encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
         worldTimeProfile: WORLD_TIME_PROFILE,
+        enchantmentCatalog: ENCHANTMENT_CATALOG,
         progressionSnapshot,
       }),
     );
@@ -312,7 +319,11 @@ export class GameApp extends SceneNode {
     }
     this.start({ manual: true });
     this.scene.reset();
-    if (scenario.progressionSnapshot || scenario.firstJourneySnapshot) {
+    if (
+      scenario.progressionSnapshot ||
+      scenario.firstJourneySnapshot ||
+      scenario.enchantmentSnapshot
+    ) {
       const progression = this.scene.getProgressionSnapshot();
       this.scene.restoreProgression(
         Object.freeze({
@@ -324,6 +335,9 @@ export class GameApp extends SceneNode {
                 ...scenario.firstJourneySnapshot,
               })
             : progression.firstJourney,
+          enchantment: scenario.enchantmentSnapshot
+            ? Object.freeze({ ...progression.enchantment, ...scenario.enchantmentSnapshot })
+            : progression.enchantment,
         }),
       );
     }
@@ -368,6 +382,7 @@ export class GameApp extends SceneNode {
     const expectedContact = scenario.expectation?.expectedContact;
     const expectedRetaliation = scenario.expectation?.expectedRetaliation;
     const expectedAnchor = scenario.expectation?.expectedAnchor;
+    const expectedEffectProgressMinimum = scenario.expectation?.expectedEffectProgressMinimum;
     const expectedStamina = scenario.expectation?.expectedStamina;
     const dialogue = this.scene.getWorldStatus().dialogue;
     const expectedDialogueTarget = scenario.expectation?.expectedDialogueTarget;
@@ -443,6 +458,11 @@ export class GameApp extends SceneNode {
           ? (renderFrame.combatEnemy?.retaliationSeconds ?? 0) > 0
           : true,
       anchorMatches,
+      effectProgressMatches:
+        expectedEffectProgressMinimum === undefined ||
+        (expectedCombatEvent !== undefined &&
+          1 - expectedCombatEvent.remainingSeconds / expectedCombatEvent.durationSeconds >=
+            expectedEffectProgressMinimum),
       staminaMatches:
         expectedStamina === undefined || renderFrame.player.stamina === expectedStamina,
       dialogueMatches:
@@ -475,6 +495,7 @@ export class GameApp extends SceneNode {
         assertionEvidence.contactPresent &&
         assertionEvidence.retaliationPresent &&
         assertionEvidence.anchorMatches &&
+        assertionEvidence.effectProgressMatches &&
         assertionEvidence.staminaMatches &&
         assertionEvidence.dialogueMatches &&
         assertionEvidence.spatialItemsPresent &&
@@ -484,7 +505,11 @@ export class GameApp extends SceneNode {
         assertionEvidence.portalIdsMatch,
     });
     if (!assertion.passed) {
-      throw new Error(`Visual QA scenario assertion failed: ${start}`);
+      const failedChecks = Object.entries(assertionEvidence)
+        .filter(([, passed]) => passed === false)
+        .map(([check]) => check)
+        .join(', ');
+      throw new Error(`Visual QA scenario assertion failed: ${start} (${failedChecks})`);
     }
     const result = Object.freeze({
       ready: true,
@@ -564,6 +589,10 @@ export class GameApp extends SceneNode {
 
   trainCombatSkill() {
     return this.scene.trainCombatSkill();
+  }
+
+  selectEnchant(enchantId) {
+    return this.scene.selectEnchant(enchantId);
   }
 
   resize() {

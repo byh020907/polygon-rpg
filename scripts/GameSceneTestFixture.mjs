@@ -1,6 +1,7 @@
 import { GameScene } from '../src/game/GameScene.js';
 import { EQUIPMENT_CATALOG } from '../src/game/equipment/EquipmentProfiles.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
+import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../src/game/progression/ProgressionProfiles.js';
 import { TRAINING_ENCOUNTER_SCENE } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
@@ -22,5 +23,6 @@ export function createTestGameScene(options = {}) {
     encounterFactory: createTrainingEncounter,
     encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
     worldTimeProfile: WORLD_TIME_PROFILE,
+    enchantmentCatalog: ENCHANTMENT_CATALOG,
   });
 }

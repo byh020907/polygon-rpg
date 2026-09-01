@@ -3,7 +3,7 @@ import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
 
 export class RoomNode extends SceneNode {
-  constructor({ snapshot, spinContact, encounterFactory }) {
+  constructor({ snapshot, spinContact, encounterFactory, enchantmentContext = null }) {
     super(`Room:${snapshot?.active?.roomId ?? 'unknown'}`);
     if (!snapshot?.room || !snapshot?.active) {
       throw new TypeError('Room Scene에는 resolved Room snapshot이 필요합니다.');
@@ -29,6 +29,7 @@ export class RoomNode extends SceneNode {
         groundY: snapshot.room.groundY,
         movementBounds: snapshot.room.movementBounds,
         spinContact,
+        enchantmentContext,
       }),
     );
   }
@@ -51,6 +52,10 @@ export class RoomNode extends SceneNode {
 
   resetEncounter() {
     this.encounter?.reset();
+  }
+
+  setEnchantmentContext(context) {
+    this.encounter?.setEnchantmentContext(context);
   }
 
   stepEncounter(deltaSeconds, frame) {

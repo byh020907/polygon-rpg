@@ -8,7 +8,7 @@ import {
 } from '../encounter/RegionExpansionProgress.js';
 import { createWorldTimeSnapshot, toWorldTimeSnapshot } from '../world/WorldTimeState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 3;
+export const PROGRESSION_SCHEMA_VERSION = 4;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -50,6 +50,7 @@ function freezeSnapshot({
   firstJourney,
   regionExpansion,
   worldTime,
+  enchantment = { materialIds: [], unlockedIds: [], activeId: null, claimedMaterialSourceIds: [] },
 }) {
   return Object.freeze({
     version: PROGRESSION_SCHEMA_VERSION,
@@ -60,6 +61,12 @@ function freezeSnapshot({
     firstJourney: toFirstJourneyProgressSnapshot(firstJourney),
     regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
     worldTime: toWorldTimeSnapshot(worldTime),
+    enchantment: Object.freeze({
+      materialIds: Object.freeze([...enchantment.materialIds]),
+      unlockedIds: Object.freeze([...enchantment.unlockedIds]),
+      activeId: enchantment.activeId,
+      claimedMaterialSourceIds: Object.freeze([...enchantment.claimedMaterialSourceIds]),
+    }),
   });
 }
 
@@ -73,6 +80,7 @@ export function createProgressionSnapshot(defaultEquipmentId) {
     firstJourney: createFirstJourneyProgressSnapshot(),
     regionExpansion: createRegionExpansionProgressSnapshot(),
     worldTime: createWorldTimeSnapshot(),
+    enchantment: { materialIds: [], unlockedIds: [], activeId: null, claimedMaterialSourceIds: [] },
   });
 }
 
@@ -109,6 +117,23 @@ export function assertProgressionSnapshot(snapshot) {
   toFirstJourneyProgressSnapshot(snapshot.firstJourney);
   toRegionExpansionProgressSnapshot(snapshot.regionExpansion);
   toWorldTimeSnapshot(snapshot.worldTime);
+  const enchantment = snapshot.enchantment;
+  if (!enchantment || typeof enchantment !== 'object')
+    throw new TypeError('enchantment 진행이 필요합니다.');
+  for (const field of ['materialIds', 'unlockedIds', 'claimedMaterialSourceIds']) {
+    if (
+      !Array.isArray(enchantment[field]) ||
+      enchantment[field].some((id) => typeof id !== 'string' || id.length === 0) ||
+      new Set(enchantment[field]).size !== enchantment[field].length
+    )
+      throw new TypeError(`enchantment ${field}가 올바르지 않습니다.`);
+  }
+  if (
+    enchantment.activeId !== null &&
+    (!enchantment.unlockedIds.includes(enchantment.activeId) ||
+      typeof enchantment.activeId !== 'string')
+  )
+    throw new TypeError('active enchant는 해금된 ID 또는 null이어야 합니다.');
   return snapshot;
 }
 
@@ -118,6 +143,7 @@ export function mergeProgressionSnapshot(
     firstJourney = snapshot?.firstJourney,
     regionExpansion = snapshot?.regionExpansion,
     worldTime = snapshot?.worldTime,
+    enchantment = snapshot?.enchantment,
   } = {},
 ) {
   assertProgressionSnapshot(snapshot);
@@ -126,6 +152,7 @@ export function mergeProgressionSnapshot(
     firstJourney,
     regionExpansion,
     worldTime,
+    enchantment,
   });
 }
 

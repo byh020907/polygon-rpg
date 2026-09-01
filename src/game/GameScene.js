@@ -30,6 +30,7 @@ import {
   selectEquipment as selectProgressionEquipment,
   trainCombatSkill as trainProgressionCombatSkill,
 } from './progression/ProgressionState.js';
+import { awardEnchantMaterial, unlockOrSelectEnchant } from './enchantment/EnchantmentState.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
 import { resolveFirstJourneyStory } from './story/FirstJourneyStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
@@ -278,6 +279,12 @@ function assertWorldTimeProfile(profile) {
   return profile;
 }
 
+function assertEnchantmentCatalog(catalog) {
+  if (!catalog || !Array.isArray(catalog.profiles) || typeof catalog.getProfile !== 'function')
+    throw new TypeError('GameScene에는 authored enchantment catalog 주입이 필요합니다.');
+  return catalog;
+}
+
 export class GameScene extends SceneNode {
   constructor({
     mapDefinition,
@@ -286,6 +293,7 @@ export class GameScene extends SceneNode {
     encounterFactory,
     encounterAttackProfiles,
     worldTimeProfile,
+    enchantmentCatalog,
     progressionSnapshot = null,
   } = {}) {
     super('GameScene');
@@ -296,6 +304,7 @@ export class GameScene extends SceneNode {
     this.encounterFactory = assertEncounterFactory(encounterFactory);
     this.encounterAttackProfiles = assertEncounterAttackProfiles(encounterAttackProfiles);
     this.worldTimeProfile = assertWorldTimeProfile(worldTimeProfile);
+    this.enchantmentCatalog = assertEnchantmentCatalog(enchantmentCatalog);
     const initialProgression =
       progressionSnapshot ?? createProgressionSnapshot(this.equipmentCatalog.defaultProfileId);
     this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
@@ -348,6 +357,22 @@ export class GameScene extends SceneNode {
     return this.progressionSnapshot;
   }
 
+  getEnchantContext() {
+    const activeId = this.progressionSnapshot.enchantment.activeId;
+    const profile = activeId ? this.enchantmentCatalog.getProfile(activeId) : null;
+    return Object.freeze({
+      active: profile
+        ? Object.freeze({
+            id: profile.id,
+            label: profile.label,
+            color: profile.color,
+            highlightColor: profile.highlightColor,
+            shape: profile.shape,
+          })
+        : null,
+    });
+  }
+
   restoreProgression(snapshot) {
     assertProgressionSnapshot(snapshot);
     const nextSnapshot = mergeProgressionSnapshot(snapshot);
@@ -379,6 +404,7 @@ export class GameScene extends SceneNode {
       this.progressionSnapshot.regionExpansion,
     );
     this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
+    this.reconcileEnchantMaterials();
     this.timePhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
@@ -511,9 +537,16 @@ export class GameScene extends SceneNode {
     });
     encounter.contactSeconds =
       phase === 'active' &&
-      ['combat-hit', 'combat-block', 'combat-evade', 'combat-punish', 'combat-launch'].includes(
+      (['combat-hit', 'combat-block', 'combat-evade', 'combat-punish', 'combat-launch'].includes(
         scenarioId,
-      )
+      ) ||
+        [
+          'enchant-fire-contact',
+          'enchant-lightning-contact',
+          'enchant-ice-status',
+          'enchant-earth-posture',
+          'enchant-shield-excluded',
+        ].includes(scenarioId))
         ? 0.18
         : 0;
 
@@ -534,6 +567,11 @@ export class GameScene extends SceneNode {
         'posture-reduced',
         'posture-groggy',
         'posture-normal-enemy',
+        'enchant-fire-contact',
+        'enchant-lightning-contact',
+        'enchant-ice-status',
+        'enchant-earth-posture',
+        'enchant-shield-excluded',
       ].includes(scenarioId)
     ) {
       throw new Error(`지원하지 않는 Combat Visual QA scenario입니다: ${scenarioId}`);
@@ -560,6 +598,43 @@ export class GameScene extends SceneNode {
     };
 
     switch (scenarioId) {
+      case 'enchant-fire-contact':
+      case 'enchant-lightning-contact':
+      case 'enchant-ice-status':
+      case 'enchant-earth-posture': {
+        const id = scenarioId.split('-')[1];
+        startMotion(id === 'earth' ? 'heavy' : 'slash', active ? 0.25 : 0.04);
+        if (id === 'earth' && enemy.posture)
+          enemy.posture.current = Math.max(1, enemy.posture.current - 18);
+        if (scenarioId === 'enchant-ice-status') {
+          const profile = this.enchantmentCatalog.getProfile(id);
+          enemy.enchantStatus = {
+            id,
+            label: profile.label,
+            color: profile.color,
+            shape: profile.shape,
+            remainingSeconds: active ? 2.4 : 0.2,
+            buildup: 0,
+          };
+        }
+        if (active) {
+          emit(COMBAT_EVENT_TYPE.HIT, {
+            attackId: id === 'earth' ? 'heavy' : 'slash',
+            durationSeconds: 0.22,
+            enchantment: {
+              id,
+              affinity: 'neutral',
+              ...this.enchantmentCatalog.getProfile(id),
+            },
+          });
+          this.combatEvents.update(0.09);
+        }
+        break;
+      }
+      case 'enchant-shield-excluded':
+        startMotion('shieldBash', active ? 0.19 : 0.04);
+        if (active) emit(COMBAT_EVENT_TYPE.COUNTER, { attackId: 'shieldBash' });
+        break;
       case 'posture-full':
         encounter.setVisualQaPostureScenario('full');
         break;
@@ -1032,6 +1107,65 @@ export class GameScene extends SceneNode {
     );
   }
 
+  canForgeEnchant() {
+    if (!this.canManageProgression()) return false;
+    const workshop = this.mapRuntime
+      .getResolvedSnapshot()
+      .entities.find((entity) => entity.id === 'academy-workshop-sign-interaction');
+    return Boolean(
+      workshop &&
+      Math.hypot(this.position.x - workshop.position.x, this.position.y - workshop.position.y) <=
+        workshop.interactionRange,
+    );
+  }
+
+  reconcileEnchantMaterials() {
+    const journey = this.journeyProgress.snapshot();
+    const region = this.regionExpansionProgress.snapshot();
+    let snapshot = this.progressionSnapshot;
+    for (const profile of this.enchantmentCatalog.profiles) {
+      const sourceReady =
+        (profile.sourceId === 'field-guardian-defeated' && journey.fieldGuardianDefeated) ||
+        (profile.sourceId === 'dungeon-guardian-defeated' && journey.dungeonGuardianDefeated) ||
+        (profile.sourceId === 'boss-reward-claimed' && journey.bossRewardClaimed) ||
+        (profile.sourceId === 'glasswind-reward-claimed' && region.bossRewardClaimed);
+      if (sourceReady) {
+        const material = awardEnchantMaterial(
+          snapshot.enchantment,
+          profile,
+          this.enchantmentCatalog,
+        );
+        if (material.changed)
+          snapshot = mergeProgressionSnapshot(snapshot, { enchantment: material.enchantment });
+      }
+    }
+    if (snapshot !== this.progressionSnapshot) this.progressionSnapshot = snapshot;
+    return snapshot;
+  }
+
+  selectEnchant(enchantId) {
+    if (!this.canForgeEnchant()) return this.unavailableProgressionTransaction();
+    const profile = this.enchantmentCatalog.getProfile(enchantId);
+    const enchantmentTransaction = unlockOrSelectEnchant(
+      this.progressionSnapshot.enchantment,
+      profile.id,
+      this.enchantmentCatalog,
+    );
+    const transaction = Object.freeze({
+      changed: enchantmentTransaction.changed,
+      reason: enchantmentTransaction.reason,
+      snapshot: mergeProgressionSnapshot(this.progressionSnapshot, {
+        enchantment: enchantmentTransaction.enchantment,
+      }),
+    });
+    this.progressionNotice = transaction.changed
+      ? `${profile.label} 검 인챈트 활성`
+      : transaction.reason === PROGRESSION_TRANSACTION_REASON.NOT_OWNED
+        ? `${profile.materialLabel}이 필요합니다.`
+        : `${profile.label} 인챈트가 이미 활성입니다.`;
+    return this.commitProgression(transaction);
+  }
+
   commitProgression(transaction, { equipmentChanged = false, skillChanged = false } = {}) {
     if (!transaction.changed) return transaction;
     const nextSnapshot = transaction.snapshot;
@@ -1042,6 +1176,7 @@ export class GameScene extends SceneNode {
     if (equipmentChanged) this.combatCommands.setTimingProfile(nextEquipment.combatTiming);
     if (skillChanged) this.combatCommands.setCommandProfile(nextSkill);
     this.progressionSnapshot = nextSnapshot;
+    this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
     this.equipmentProfile = nextEquipment;
     this.journeyProgress.restore(nextSnapshot.firstJourney);
     this.regionExpansionProgress.restore(nextSnapshot.regionExpansion);
@@ -1180,6 +1315,7 @@ export class GameScene extends SceneNode {
       activeRoomScene.location.regionId === snapshot.active.regionId &&
       activeRoomScene.location.roomId === snapshot.active.roomId
     ) {
+      activeRoomScene.setEnchantmentContext(this.getEnchantContext());
       if (resetExisting) activeRoomScene.resetEncounter();
       return activeRoomScene;
     }
@@ -1192,6 +1328,7 @@ export class GameScene extends SceneNode {
         hitPulses: spinProfile.hitPulses,
         contactSpacings: spinProfile.contactSpacings,
       },
+      enchantmentContext: this.getEnchantContext(),
     });
     this.addChild(roomScene);
     try {
@@ -1269,6 +1406,7 @@ export class GameScene extends SceneNode {
       this.worldTimeProfile.getCoreEventAction(resolution.kind),
     );
     this.syncJourneyWorldContext();
+    this.reconcileEnchantMaterials();
     this.emitDurableProgressionChanged();
     this.statusNode.publish({ force: true });
     return resolution;
@@ -1297,6 +1435,7 @@ export class GameScene extends SceneNode {
         const result = this.journeyProgress.claimBossReward(trigger.gold);
         if (!result.changed) continue;
         this.syncJourneyWorldContext();
+        this.reconcileEnchantMaterials();
         this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
@@ -1314,6 +1453,7 @@ export class GameScene extends SceneNode {
         const result = this.regionExpansionProgress.claimBossReward(trigger.gold);
         if (!result.changed) continue;
         this.syncJourneyWorldContext();
+        this.reconcileEnchantMaterials();
         this.emitDurableProgressionChanged();
         this.statusNode.publish({ force: true });
       }
@@ -1991,6 +2131,10 @@ export class GameScene extends SceneNode {
               encounter.posture
                 ? ` · ${encounter.posture.groggy ? 'GROGGY' : 'Posture'} ${Math.ceil(encounter.posture.current)}/${encounter.posture.maximum}`
                 : ''
+            }${
+              encounter.enchantStatus
+                ? ` · ${this.enchantmentCatalog.getProfile(encounter.enchantStatus.id).label} 상태 ${encounter.enchantStatus.remainingSeconds.toFixed(1)}s`
+                : ''
             }`
           : '',
       journeyLabel:
@@ -2017,6 +2161,34 @@ export class GameScene extends SceneNode {
       roomId,
       canSelectEquipment: this.canManageProgression(),
       canManageProgression: this.canManageProgression(),
+      canForgeEnchant: this.canForgeEnchant(),
+      activeEnchantId: progression.enchantment.activeId,
+      activeEnchantLabel: progression.enchantment.activeId
+        ? this.enchantmentCatalog.getProfile(progression.enchantment.activeId).label
+        : '미활성',
+      enchantOptions: Object.freeze(
+        this.enchantmentCatalog.profiles.map((profile) => {
+          const unlocked = progression.enchantment.unlockedIds.includes(profile.id);
+          const active = progression.enchantment.activeId === profile.id;
+          const hasMaterial = progression.enchantment.materialIds.includes(profile.materialId);
+          return Object.freeze({
+            id: profile.id,
+            label: profile.label,
+            materialLabel: profile.materialLabel,
+            unlocked,
+            active,
+            hasMaterial,
+            canChoose: this.canForgeEnchant() && !active && (unlocked || hasMaterial),
+            actionLabel: active
+              ? '활성'
+              : unlocked
+                ? '선택'
+                : hasMaterial
+                  ? '해금·활성'
+                  : `${profile.materialLabel} 필요`,
+          });
+        }),
+      ),
       equipmentId: this.equipmentProfile.id,
       equipmentLabel: this.equipmentProfile.label,
       equipmentOptions: Object.freeze(
@@ -2086,6 +2258,9 @@ export class GameScene extends SceneNode {
       lastCommandTransition: combatStatus.lastCommandTransition,
       gold: getAvailableGold(this.progressionSnapshot),
       trainingMarks: this.progressionSnapshot.trainingMarks,
+      activeEnchantLabel: this.progressionSnapshot.enchantment.activeId
+        ? this.enchantmentCatalog.getProfile(this.progressionSnapshot.enchantment.activeId).label
+        : '인챈트 없음',
     });
   }
 
@@ -2168,6 +2343,9 @@ export class GameScene extends SceneNode {
         blockImpactStrength: this.playerBlockImpactStrength,
         retaliationSeconds: this.playerRetaliationSeconds,
         enemyRenderOrder: activeRoom.renderOrder + 0.49,
+        activeEnchant: this.progressionSnapshot.enchantment.activeId
+          ? this.enchantmentCatalog.getProfile(this.progressionSnapshot.enchantment.activeId)
+          : null,
       }),
     );
     const { characterItems, combatEffectItems } = playerPresentation;

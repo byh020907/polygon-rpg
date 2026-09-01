@@ -46,6 +46,7 @@ export class CombatEventBuffer {
       strength = 1,
       staminaDelta = 0,
       durationSeconds = 0.18,
+      enchantment = null,
     } = {},
   ) {
     if (!COMBAT_EVENT_TYPES.has(type))
@@ -82,6 +83,7 @@ export class CombatEventBuffer {
       staminaDelta,
       durationSeconds,
       remainingSeconds: durationSeconds,
+      enchantment: enchantment ? Object.freeze({ ...enchantment }) : null,
     });
     const retained = this.capacity === 1 ? [] : this.active.slice(-(this.capacity - 1));
     this.active = [...retained, event];

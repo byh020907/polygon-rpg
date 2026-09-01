@@ -156,6 +156,21 @@ export function createTrainingEnemyItems(
           : roleColor;
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
   const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
+  const enchant = enemy.enchantStatus;
+  const enchantAura = enchant
+    ? polygon(
+        `combat-enemy-enchant-aura-${enchant.id}`,
+        regularPolygon(42, 58, enchant.shape === 'fragment' ? 4 : 8, Math.PI / 8),
+        { x, y: y - 62 },
+        enchant.color ?? '#ffffff',
+        {
+          opacity: 0.42,
+          stroke: enchant.highlightColor ?? enchant.color ?? '#ffffff',
+          lineWidth: 2,
+          order: -0.6,
+        },
+      )
+    : null;
   const presentationScale = enemy.presentationScale ?? TRAINING_ENEMY_PRESENTATION_SCALE;
   const attackProfile = profiles[enemy.attackKind];
   const attackProgress =
@@ -211,6 +226,7 @@ export function createTrainingEnemyItems(
       ? Math.max(0, Math.min(0.42, ((weaponLength - profiles.light.weaponLength) / 134) * 0.42))
       : 0;
   const items = [
+    ...(enchantAura ? [enchantAura] : []),
     polygon(
       'combat-enemy-shadow',
       regularPolygon(25, 7, 10),

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
   getEquipmentProfile,
@@ -257,13 +258,14 @@ function verifyPersistenceAndFailure() {
   });
   assert.equal(scene.purchaseEquipment(HEAVY_PROFILE_ID).changed, true);
   const storageAdapter = new MemoryStorage();
-  const storage = new ProgressionStorage(storageAdapter, 'growth-check');
+  const storage = new ProgressionStorage(storageAdapter, 'growth-check', ENCHANTMENT_CATALOG);
   const saved = storage.save(scene.getProgressionSnapshot());
   assert.equal(saved.ok, true);
-  const loaded = storage.load(DEFAULT_EQUIPMENT_PROFILE_ID, [
+  const loaded = storage.load(
     DEFAULT_EQUIPMENT_PROFILE_ID,
-    HEAVY_PROFILE_ID,
-  ]);
+    [DEFAULT_EQUIPMENT_PROFILE_ID, HEAVY_PROFILE_ID],
+    ENCHANTMENT_CATALOG,
+  );
   assert.equal(loaded.ok, true);
   assert.equal(loaded.snapshot.equippedEquipmentId, HEAVY_PROFILE_ID);
   assert.equal(getAvailableGold(loaded.snapshot), 0);
@@ -278,6 +280,7 @@ function verifyPersistenceAndFailure() {
   const failingStorage = new ProgressionStorage(
     new MemoryStorage(null, { throwOnWrite: true }),
     'growth-check-failure',
+    ENCHANTMENT_CATALOG,
   );
   const failedSave = failingStorage.save(loaded.snapshot);
   assert.deepEqual(
@@ -286,9 +289,14 @@ function verifyPersistenceAndFailure() {
   );
   assert.ok(Object.isFrozen(failedSave), '저장 실패 결과는 immutable이어야 한다.');
 
-  const corrupt = new ProgressionStorage(new MemoryStorage('{broken'), 'growth-corrupt').load(
+  const corrupt = new ProgressionStorage(
+    new MemoryStorage('{broken'),
+    'growth-corrupt',
+    ENCHANTMENT_CATALOG,
+  ).load(
     DEFAULT_EQUIPMENT_PROFILE_ID,
     [DEFAULT_EQUIPMENT_PROFILE_ID, HEAVY_PROFILE_ID],
+    ENCHANTMENT_CATALOG,
   );
   assert.equal(corrupt.ok, false);
   assert.equal(corrupt.reason, 'parse-failed');

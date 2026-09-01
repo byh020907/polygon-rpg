@@ -82,6 +82,7 @@ function polygon(id, points, transform, fill, options = {}) {
     stroke: options.stroke ?? null,
     lineWidth: options.lineWidth ?? 1,
     opacity: options.opacity ?? 1,
+    renderOrder: options.renderOrder,
     order: options.order,
   });
 }
@@ -796,6 +797,7 @@ function createHitFeedbackItems(event, target, idPrefix, renderOrder) {
   if (!event?.position || event.target !== target) return [];
   const progress = Math.max(0, Math.min(1, 1 - event.remainingSeconds / event.durationSeconds));
   const opacity = 1 - progress;
+  const genericOpacityScale = event.enchantment ? 0 : 1;
   const center = event.position;
   const strength = Math.max(0.8, event.strength);
   const radius = lerp(7 + strength * 2, 20 + strength * 5, smoothStep(progress));
@@ -808,7 +810,11 @@ function createHitFeedbackItems(event, target, idPrefix, renderOrder) {
         regularPolygon(radius, radius, 10, Math.PI / 10),
         center,
         '#fff0d2',
-        { stroke: '#e05252', lineWidth: 2.5, opacity: opacity * 0.64 },
+        {
+          stroke: '#e05252',
+          lineWidth: 2.5,
+          opacity: opacity * 0.64 * genericOpacityScale,
+        },
       ),
       renderOrder,
       order: 120,
@@ -832,7 +838,7 @@ function createHitFeedbackItems(event, target, idPrefix, renderOrder) {
           },
           3.5,
           index % 2 === 0 ? '#fff0d2' : '#f06a5f',
-          { opacity },
+          { opacity: opacity * genericOpacityScale },
         ),
         renderOrder,
         order: 121 + index,
@@ -916,6 +922,103 @@ function latestCombatEvent(events, type, predicate = () => true) {
   return null;
 }
 
+function createEnchantContactItems(events, renderOrder) {
+  const event = [...events]
+    .reverse()
+    .find((candidate) => candidate.enchantment && candidate.position);
+  if (!event) return [];
+  const progress = 1 - event.remainingSeconds / event.durationSeconds;
+  const color = event.enchantment.color ?? '#ffffff';
+  const highlightColor = event.enchantment.highlightColor ?? color;
+  const radius = 10 + 22 * progress;
+  const opacity = Math.max(0, 0.85 * (1 - progress * progress));
+  const center = event.position;
+  const shape = event.enchantment.shape;
+  const primitiveItems = (() => {
+    if (shape === 'bolt') {
+      return Array.from({ length: 3 }, (_, index) => {
+        const angle = (index / 3) * Math.PI * 2 + 0.2;
+        const inner = 10 + progress * 7;
+        const middle = 20 + progress * 16;
+        const outer = 32 + progress * 40;
+        const bend = angle + (index % 2 === 0 ? 0.38 : -0.38);
+        const midpoint = {
+          x: center.x + Math.cos(angle) * middle,
+          y: center.y + Math.sin(angle) * middle,
+        };
+        return [
+          limbSegment(
+            `enchant-lightning-bolt-${index}-a`,
+            {
+              x: center.x + Math.cos(angle) * inner,
+              y: center.y + Math.sin(angle) * inner,
+            },
+            midpoint,
+            4,
+            highlightColor,
+            { opacity, renderOrder, order: 161 + index * 2 },
+          ),
+          limbSegment(
+            `enchant-lightning-bolt-${index}-b`,
+            midpoint,
+            {
+              x: center.x + Math.cos(bend) * outer,
+              y: center.y + Math.sin(bend) * outer,
+            },
+            4,
+            highlightColor,
+            { opacity, renderOrder, order: 162 + index * 2 },
+          ),
+        ];
+      }).flat();
+    }
+    if (shape === 'shard' || shape === 'fragment') {
+      return Array.from({ length: 5 }, (_, index) => {
+        const angle = (index / 5) * Math.PI * 2;
+        const distance = 18 + progress * 30;
+        return polygon(
+          shape === 'shard' ? `enchant-ice-shard-${index}` : `enchant-earth-fragment-${index}`,
+          regularPolygon(shape === 'shard' ? 5 : 7, shape === 'shard' ? 12 : 7, 4, Math.PI / 4),
+          {
+            x: center.x + Math.cos(angle) * distance,
+            y: center.y + Math.sin(angle) * distance,
+          },
+          highlightColor,
+          {
+            opacity,
+            stroke: color,
+            lineWidth: 1.5,
+            renderOrder,
+            order: 161 + index,
+          },
+        );
+      });
+    }
+    return Array.from({ length: 5 }, (_, index) => {
+      const offsetX = (index - 2) * 4;
+      const rise = 30 + progress * (35 + index * 3);
+      return limbSegment(
+        `enchant-fire-ember-${index}`,
+        { x: center.x + offsetX * 0.4, y: center.y + 3 },
+        { x: center.x + offsetX, y: center.y - rise },
+        4,
+        highlightColor,
+        { opacity, renderOrder, order: 161 + index },
+      );
+    });
+  })();
+  return [
+    polygon(
+      'enchant-contact-ring',
+      regularPolygon(radius, radius, 10, Math.PI / 10),
+      center,
+      color,
+      { opacity, stroke: highlightColor, lineWidth: 4, renderOrder, order: 160 },
+    ),
+    ...primitiveItems,
+  ];
+}
+
 export function createPlayerCombatPresentation({
   position,
   facing,
@@ -933,6 +1036,7 @@ export function createPlayerCombatPresentation({
   blockImpactStrength = 0,
   retaliationSeconds = 0,
   enemyRenderOrder,
+  activeEnchant = null,
 }) {
   const sampledCharacterItems = createCharacterItems(
     position,
@@ -970,7 +1074,14 @@ export function createPlayerCombatPresentation({
               ),
             ),
           })
-        : item,
+        : item.id === 'sword-blade' && activeEnchant
+          ? Object.freeze({
+              ...item,
+              stroke: activeEnchant.color,
+              lineWidth: 3,
+              opacity: Math.max(item.opacity ?? 1, 0.92),
+            })
+          : item,
     ),
   );
   const justGuardEvent = latestCombatEvent(
@@ -1054,6 +1165,9 @@ export function createPlayerCombatPresentation({
   const punishFeedbackItems = Object.freeze(
     createPunishFeedbackItems(punishEvent, enemyRenderOrder),
   );
+  const enchantContactItems = Object.freeze(
+    createEnchantContactItems(combatEvents, enemyRenderOrder + 0.02),
+  );
   const combatEffectItems = Object.freeze([
     ...retaliationItems,
     ...blockImpactItems,
@@ -1063,6 +1177,7 @@ export function createPlayerCombatPresentation({
     ...enemyHitFeedbackItems,
     ...evadeFeedbackItems,
     ...punishFeedbackItems,
+    ...enchantContactItems,
   ]);
   return Object.freeze({
     targetPose,
@@ -1079,6 +1194,7 @@ export function createPlayerCombatPresentation({
       enemyHitFeedbackItems,
       evadeFeedbackItems,
       punishFeedbackItems,
+      enchantContactItems,
     }),
   });
 }

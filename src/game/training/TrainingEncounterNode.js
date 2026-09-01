@@ -10,6 +10,7 @@ import {
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
+import { resolveSwordEnchantment } from '../enchantment/EnchantmentPolicy.js';
 
 const GRAVITY = 1180;
 const RESET_SECONDS = combatFramesToSeconds(60);
@@ -76,7 +77,15 @@ function postureSnapshot(posture) {
 }
 
 export class TrainingEncounterNode extends SceneNode {
-  constructor({ entity, groundY, movementBounds, spinContact, encounterProfiles, attackProfiles }) {
+  constructor({
+    entity,
+    groundY,
+    movementBounds,
+    spinContact,
+    encounterProfiles,
+    attackProfiles,
+    enchantmentContext = null,
+  }) {
     super('TrainingEncounter');
     if (!entity || !['combat-test-mob', 'combat-enemy'].includes(entity.kind)) {
       throw new TypeError('Encounter Scene에는 지원하는 combat enemy entity가 필요합니다.');
@@ -113,6 +122,7 @@ export class TrainingEncounterNode extends SceneNode {
       hitPulses: spinContact.hitPulses,
       contactSpacings: spinContact.contactSpacings,
     });
+    this.enchantmentContext = Object.freeze({ active: enchantmentContext?.active ?? null });
     this.playerResultResolved = this.ownSignal(new Signal('playerResultResolved'));
     this.combatEventOccurred = this.ownSignal(new Signal('combatEventOccurred'));
     this.cameraFeedbackOccurred = this.ownSignal(new Signal('cameraFeedbackOccurred'));
@@ -175,6 +185,8 @@ export class TrainingEncounterNode extends SceneNode {
       punishWindowOrigin: null,
       punishComboCycle: 0,
       lastCommandTransition: null,
+      enchantStatus: null,
+      enchantTickSeconds: 0,
       ...(posture ? { posture } : {}),
     };
     this.completionEmitted = false;
@@ -184,6 +196,10 @@ export class TrainingEncounterNode extends SceneNode {
     this.confirmedComboCycle = 0;
     this.slamAttackerBouncePending = false;
     this.spinContactConstraint = new SpinContactConstraint(this.spinContactOptions);
+  }
+
+  setEnchantmentContext(context) {
+    this.enchantmentContext = Object.freeze({ active: context?.active ?? null });
   }
 
   onExitTree() {
@@ -252,6 +268,7 @@ export class TrainingEncounterNode extends SceneNode {
       groundBounceDelaySeconds: enemy.groundBounceDelaySeconds,
       slamAttackerBouncePending: this.slamAttackerBouncePending,
       lastCommandTransition: enemy.lastCommandTransition,
+      enchantStatus: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
       ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
     });
   }
@@ -270,6 +287,7 @@ export class TrainingEncounterNode extends SceneNode {
       ...enemy,
       position: freezePosition(enemy.position),
       ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
+      enchantStatus: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
     });
     return Object.freeze({
       enemy: Object.freeze({
@@ -306,12 +324,40 @@ export class TrainingEncounterNode extends SceneNode {
   step(deltaSeconds, frame) {
     if (!this.isInsideTree) return;
     this.contactSeconds = Math.max(0, this.contactSeconds - deltaSeconds);
+    this.updateEnchantStatus(deltaSeconds);
     this.updateEnemyPhysics(deltaSeconds, frame.player);
     this.updateSpinContact(frame.combatState, frame.player, deltaSeconds);
     this.updateEnemyCombat(deltaSeconds, frame);
     this.finishComboCycle(frame.combatState);
     this.updateRetaliationProtection(frame.combatState);
     this.resolvePlayerAttack(frame);
+  }
+
+  updateEnchantStatus(deltaSeconds) {
+    const enemy = this.enemy;
+    if (!enemy.enchantStatus || enemy.enchantStatus.remainingSeconds <= 0) return;
+    enemy.enchantStatus.remainingSeconds = Math.max(
+      0,
+      enemy.enchantStatus.remainingSeconds - deltaSeconds,
+    );
+    if (enemy.enchantStatus.id === 'fire') {
+      enemy.enchantTickSeconds += deltaSeconds;
+      while (enemy.enchantTickSeconds >= 0.5 && enemy.health > 0) {
+        enemy.enchantTickSeconds -= 0.5;
+        enemy.health = Math.max(0, enemy.health - 2);
+      }
+    }
+    if (enemy.enchantStatus.remainingSeconds === 0) {
+      enemy.enchantStatus = null;
+      enemy.enchantTickSeconds = 0;
+    }
+    if (enemy.health === 0 && !this.completionEmitted) {
+      this.completionEmitted = true;
+      if (this.entity.encounterProfile.respawns) enemy.resetSeconds = RESET_SECONDS;
+      this.encounterCompleted.emit(
+        Object.freeze({ entityId: enemy.id, profileId: enemy.profileId, role: enemy.role }),
+      );
+    }
   }
 
   startRecovery({
@@ -476,6 +522,7 @@ export class TrainingEncounterNode extends SceneNode {
   updateEnemyCombat(deltaSeconds, frame) {
     const enemy = this.enemy;
     const player = frame.player;
+    const iceSlow = enemy.enchantStatus?.id === 'ice' ? 0.7 : 1;
     if (
       enemy.health <= 0 ||
       enemy.position.y < enemy.groundY ||
@@ -499,7 +546,10 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.recoveryAdvanceDeferred = false;
       return;
     }
-    enemy.aiSeconds = Math.max(0, enemy.aiSeconds - deltaSeconds);
+    enemy.aiSeconds = Math.max(
+      0,
+      enemy.aiSeconds - deltaSeconds * (enemy.aiState === 'recovery' ? iceSlow : 1),
+    );
     if (distance !== 0) enemy.facing = Math.sign(distance);
     if (enemy.aiState === 'approach') {
       enemy.punishWindowOpen = false;
@@ -520,7 +570,7 @@ export class TrainingEncounterNode extends SceneNode {
         enemy.attackConnected = false;
       } else {
         enemy.position.x +=
-          Math.sign(distance) * this.entity.encounterProfile.approachSpeed * deltaSeconds;
+          Math.sign(distance) * this.entity.encounterProfile.approachSpeed * iceSlow * deltaSeconds;
       }
       return;
     }
@@ -860,6 +910,15 @@ export class TrainingEncounterNode extends SceneNode {
         : profile.guardBreak
           ? (this.entity.encounterProfile.posture?.strongDamage ?? 0)
           : 0;
+    const earthContactPostureDamage =
+      this.enchantmentContext.active?.id === 'earth' &&
+      combatState.id !== 'shieldBash' &&
+      enemy.posture
+        ? profile.guardBreak
+          ? 34
+          : 18
+        : 0;
+    let earthPostureApplied = false;
     const breaksEnemyGuard =
       profile.guardBreak === true &&
       !interruptsStrongStartup &&
@@ -883,9 +942,10 @@ export class TrainingEncounterNode extends SceneNode {
       this.applyPostureDamage({
         combatState,
         visualContact,
-        damage: postureDamage,
+        damage: postureDamage + earthContactPostureDamage,
         direction: player.facing,
       });
+      earthPostureApplied = earthContactPostureDamage > 0;
     }
     if (
       this.entity.encounterProfile.guardOutsidePunish &&
@@ -905,7 +965,7 @@ export class TrainingEncounterNode extends SceneNode {
       this.applyPostureDamage({
         combatState,
         visualContact,
-        damage: postureDamage,
+        damage: postureDamage + earthContactPostureDamage,
         direction: player.facing,
       });
       this.cameraFeedbackOccurred.emit(
@@ -926,7 +986,7 @@ export class TrainingEncounterNode extends SceneNode {
       this.applyPostureDamage({
         combatState,
         visualContact,
-        damage: postureDamage,
+        damage: postureDamage + earthContactPostureDamage,
         direction: player.facing,
       });
       this.startRecovery({
@@ -947,7 +1007,48 @@ export class TrainingEncounterNode extends SceneNode {
     const juggleRole =
       profile.juggleRole ?? (enemyAirborne ? 'sustain' : finalPulse ? 'launcher' : null);
     const damageScale = enemyAirborne ? Math.max(0.4, 1 - enemy.juggleHits * 0.1) : 1;
-    const damage = Math.max(1, Math.round(profile.damage * damageScale));
+    const baseDamage = Math.max(1, Math.round(profile.damage * damageScale));
+    const enchantment =
+      combatState.id === 'shieldBash' || profile.contactPart === 'shield'
+        ? null
+        : resolveSwordEnchantment({
+            enchantId: this.enchantmentContext.active?.id,
+            affinity:
+              this.entity.encounterProfile.enchantAffinity?.[this.enchantmentContext.active?.id] ??
+              'neutral',
+            attackKind: profile.guardBreak ? 'strong' : 'basic',
+            baseDamage,
+            status: enemy.enchantStatus,
+            enemyAiState: enemy.aiState,
+            hasPosture: Boolean(enemy.posture),
+          });
+    const damage = enchantment?.damage ?? baseDamage;
+    if (enchantment?.status) {
+      enemy.enchantStatus = {
+        ...enchantment.status,
+        label: this.enchantmentContext.active.label,
+        color: this.enchantmentContext.active.color,
+        highlightColor: this.enchantmentContext.active.highlightColor,
+        shape: this.enchantmentContext.active.shape,
+      };
+      if (enchantment.interrupt) {
+        enemy.aiState = 'recovery';
+        enemy.aiSeconds = 0.18;
+        enemy.lastCommandTransition = Object.freeze({
+          kind: 'enchant-interrupt',
+          attackKind: enemy.attackKind,
+          phase: 'windup',
+          reason: 'lightning',
+        });
+      }
+      if (enchantment.postureDamage > 0 && !earthPostureApplied)
+        this.applyPostureDamage({
+          combatState,
+          visualContact,
+          damage: enchantment.postureDamage,
+          direction: player.facing,
+        });
+    }
     this.emitCombatEvent(
       combatState.id === 'shieldBash'
         ? COMBAT_EVENT_TYPE.COUNTER
@@ -971,6 +1072,17 @@ export class TrainingEncounterNode extends SceneNode {
                 ? 'back-punish'
                 : undefined,
         strength: 1 + Math.min(2.5, damage * 0.08) + (punishHit ? 0.5 : 0),
+        durationSeconds: enchantment ? 0.22 : undefined,
+        enchantment: enchantment
+          ? {
+              id: this.enchantmentContext.active.id,
+              affinity: enchantment.affinity,
+              label: this.enchantmentContext.active.label,
+              color: this.enchantmentContext.active.color,
+              highlightColor: this.enchantmentContext.active.highlightColor,
+              shape: this.enchantmentContext.active.shape,
+            }
+          : null,
       },
     );
     enemy.health = Math.max(0, enemy.health - damage);
@@ -994,7 +1106,7 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.hitReactionWeaponLength = sampleTrainingEnemyWeaponLength(enemy, this.attackProfiles);
     enemy.hitReactionWeaponAngle =
       profile.damage >= 22 ? 0.35 : profile.launchY < -300 ? -1.1 : 0.2;
-    if (interruptsStrongStartup) {
+    if (interruptsStrongStartup && !enchantment?.interrupt) {
       enemy.lastCommandTransition = Object.freeze({
         kind: 'strong-startup-interrupted',
         attackKind: enemy.attackKind,
@@ -1098,6 +1210,15 @@ export class TrainingEncounterNode extends SceneNode {
           target: enemy.id,
           outcome: backPunish ? 'punish' : 'hit',
           damage,
+          enchantment: enchantment
+            ? Object.freeze({
+                id: this.enchantmentContext.active.id,
+                affinity: enchantment.affinity,
+                status: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
+                suppressesRegeneration: this.enchantmentContext.active.id === 'fire',
+                suppressesPlantDefense: this.enchantmentContext.active.id === 'fire',
+              })
+            : null,
         }),
         hitStopSeconds: profile.damage >= 20 || juggleRole === 'finisher' ? 0.05 : 0.035,
         playerMotion: Object.freeze(playerMotion),

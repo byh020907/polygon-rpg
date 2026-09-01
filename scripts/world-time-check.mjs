@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
+import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import {
@@ -164,13 +165,17 @@ assert.deepEqual(
 );
 
 const storage = new MemoryStorage();
-const persistence = new ProgressionStorage(storage, 'world-time-test');
+const persistence = new ProgressionStorage(storage, 'world-time-test', ENCHANTMENT_CATALOG);
 const durable = {
   ...createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID),
   worldTime: afterTravel,
 };
 assert.equal(persistence.save(durable).ok, true);
-const loaded = persistence.load(DEFAULT_EQUIPMENT_PROFILE_ID);
+const loaded = persistence.load(
+  DEFAULT_EQUIPMENT_PROFILE_ID,
+  [DEFAULT_EQUIPMENT_PROFILE_ID],
+  ENCHANTMENT_CATALOG,
+);
 assert.equal(loaded.ok, true);
 assert.deepEqual(loaded.snapshot.worldTime, afterTravel);
 
@@ -184,7 +189,11 @@ storage.value = JSON.stringify({
   firstJourney: legacyV2.firstJourney,
   regionExpansion: legacyV2.regionExpansion,
 });
-const migrated = persistence.load(DEFAULT_EQUIPMENT_PROFILE_ID);
+const migrated = persistence.load(
+  DEFAULT_EQUIPMENT_PROFILE_ID,
+  [DEFAULT_EQUIPMENT_PROFILE_ID],
+  ENCHANTMENT_CATALOG,
+);
 assert.equal(migrated.ok, true);
 assert.equal(migrated.kind, 'migrated');
 assert.deepEqual(migrated.snapshot.worldTime, createWorldTimeSnapshot());

@@ -9,6 +9,7 @@ const ENCOUNTER_PROFILES = Object.freeze({
     presentationScale: 0.48,
     attackPatterns: Object.freeze([Object.freeze(['light', 'heavy'])]),
     guardOutsidePunish: false,
+    enchantAffinity: Object.freeze({}),
   }),
   field: Object.freeze({
     id: 'field',
@@ -21,6 +22,7 @@ const ENCOUNTER_PROFILES = Object.freeze({
     presentationScale: 0.46,
     attackPatterns: Object.freeze([Object.freeze(['light', 'heavy'])]),
     guardOutsidePunish: false,
+    enchantAffinity: Object.freeze({ fire: 'weak', earth: 'resistant' }),
   }),
   boss: Object.freeze({
     id: 'boss',
@@ -35,6 +37,7 @@ const ENCOUNTER_PROFILES = Object.freeze({
       Object.freeze(['light', 'heavy', 'heavy']),
     ]),
     guardOutsidePunish: true,
+    enchantAffinity: Object.freeze({ earth: 'weak', fire: 'resistant' }),
     posture: Object.freeze({
       maximum: 100,
       groggySeconds: 1.1,
@@ -54,6 +57,7 @@ const ENCOUNTER_PROFILES = Object.freeze({
     presentationScale: 0.5,
     attackPatterns: Object.freeze([Object.freeze(['sweep', 'light', 'sweep'])]),
     guardOutsidePunish: false,
+    enchantAffinity: Object.freeze({ ice: 'weak', lightning: 'resistant' }),
   }),
   'glasswind-boss': Object.freeze({
     id: 'glasswind-boss',
@@ -69,6 +73,7 @@ const ENCOUNTER_PROFILES = Object.freeze({
       Object.freeze(['sweep', 'heavy', 'sweep']),
     ]),
     guardOutsidePunish: true,
+    enchantAffinity: Object.freeze({ lightning: 'weak', ice: 'resistant' }),
     posture: Object.freeze({
       maximum: 120,
       groggySeconds: 1.2,
