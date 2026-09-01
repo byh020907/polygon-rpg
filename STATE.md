@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`gap-analysis`
+`inbox-processing`
 
 ## Product Desired State Comparison
 
@@ -42,12 +42,12 @@
 
 ## Active Execution Goal
 
-`EG-WORLD-CLOCK-CRISIS-REWIND`
+`EG-EXPANDED-GOCKGANG-PRINCIPLES-INBOX`
 
-- Mapping: `PG-WORLD-TIME`, Architecture의 World Time Domain·World/Map·Persistence/Recovery 계약.
-- Current Gap: World Clock·Deadline action ledger와 deterministic Chunk context는 구현됐지만 Deadline 0에서 모든 Chunk의 Crisis 대응 상태, 핵심 방어 사건, 실패 시 최근 핵심 사건 직후 rewind와 meta progression/미귀환 보상 분리 evidence가 없다.
-- Scope: Crisis context의 NPC·시설·elite·필수 route patch와 side activity 차단, 핵심 방어 encounter, stable rewind point·retry-aware NPC flag·unreturned expedition reward rollback을 구현한다. 검 인챈트는 다음 독립 Goal로 남긴다.
-- Verification: Deadline 경계 전후 deterministic Chunk matrix, actual keyboard/touch Crisis defense flow, 실패 주입·reload·rewind invariant, Polygon/Retro desktop/844×390과 fresh independent verifier를 사용한다.
+- Mapping: 병렬 INBOX로 확장 등록된 guard/posture, hit-confirm cancel, Dungeon signature·재방문, Boss cycle, 무기 archetype, NPC story와 낮밤 보상 원칙을 다음 fresh tick에서 먼저 Product·Engineering Desired State에 반영한다.
+- Current Gap: 이번 tick은 기존 INBOX의 검 인챈트·World Clock 원칙을 Desired State에 반영하고 사건 기반 Clock 수직 slice를 완료했지만, 최종 통합 직전에 `origin/main`의 동일 feedback 항목에 새 제품 원칙이 추가됐다. 새 원문은 보존했으며 아직 Desired State나 구현에 반영하지 않았다.
+- Scope: 새 feedback을 기존 Desired State gap/clear change/engineering implication으로 재분류하고 현재형 Product/Architecture 계약으로 확정한다. 그 뒤 dependency와 제품 가치에 따라 Crisis rewind, 검 인챈트 또는 combat/world 확장 중 하나의 단일 Execution Goal을 선택한다.
+- Verification: 새 acceptance에 대응하는 deterministic combat/world/progression fixtures, actual keyboard/touch journey, Polygon/Retro desktop/844×390과 fresh independent verifier를 사용한다.
 
 ## Blockers
 
