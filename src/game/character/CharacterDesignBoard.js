@@ -333,6 +333,33 @@ function toolItems(profile, view, toolBaseX, toolBaseY, action, order) {
       ),
     ];
   }
+  if (profile.toolKind === 'hydraulic-crane') {
+    return [
+      item(
+        id,
+        [
+          { x: toolBaseX - 4, y: toolBaseY + 10 },
+          { x: toolBaseX + 23, y: toolBaseY - (action ? 10 : 3) },
+          { x: toolBaseX + 29, y: toolBaseY - (action ? 5 : 0) },
+          { x: toolBaseX + 2, y: toolBaseY + 16 },
+        ],
+        accent,
+        { order },
+      ),
+      item(
+        `${id}-second-boom`,
+        slantedBar(toolBaseX - 8, toolBaseY + 5, 25, 5, action ? -8 : -2),
+        profile.material,
+        { stroke: accent, order: order - 1 },
+      ),
+      item(
+        `${id}-cross-cable`,
+        slantedBar(toolBaseX - 3, toolBaseY - 1, 27, 2, action ? 1 : -5),
+        '#1b292c',
+        { stroke: accent, order: order + 1 },
+      ),
+    ];
+  }
   return [
     item(
       id,
@@ -452,7 +479,7 @@ function silhouetteItems(profile, view, centerX, floorY, order) {
 
 export function createCharacterDesignBoard(profileCatalog) {
   const profiles = profileCatalog.profiles;
-  const cellWidth = 92;
+  const cellWidth = 920 / profiles.length;
   const startX = 20;
   const floorY = 424;
   const items = [
@@ -482,7 +509,7 @@ export function createCharacterDesignBoard(profileCatalog) {
         { stroke: profile.accent, order: -4 },
       ),
     );
-    const centers = [cellX + 17, cellX + 43, cellX + 69];
+    const centers = [cellX + cellWidth * 0.18, cellX + cellWidth * 0.48, cellX + cellWidth * 0.78];
     for (const [viewIndex, view] of profileCatalog.comparisonViews.entries()) {
       items.push(...silhouetteItems(profile, view, centers[viewIndex], floorY, profileIndex * 20));
     }

@@ -11,6 +11,11 @@ import {
   SCRAP_MINE_ROAD_ROOM_ID,
   SCRAP_MINE_TUNNEL_ROOM_ID,
   SCRAP_MINE_MACHINE_ROOM_ID,
+  SCRAP_SHIPYARD_ROAD_PORTAL_ID,
+  SCRAP_SHIPYARD_REGION_ID,
+  SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+  SCRAP_SHIPYARD_CRANE_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -80,6 +85,38 @@ function completeDialogue(scene, sequence) {
   }
   assert.equal(scene.getWorldStatus().dialogue.active, false, '상호작용 대화가 끝나야 합니다.');
   return sequence;
+}
+
+function setAtCampaignInteraction(scene, roomId, stageKind) {
+  const interaction = scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.find((entity) => entity.campaignStageKind === stageKind);
+  assert.ok(interaction, `${roomId}에는 ${stageKind} interaction이 필요합니다.`);
+  scene.setVisualQaLocation({
+    regionId: interaction.campaignRegionId,
+    roomId,
+    x: interaction.position.x,
+  });
+  return interaction;
+}
+
+function setAtPortalToRoom(scene, sourceRoomId, destinationRoomId) {
+  const active = scene.mapRuntime.getActiveLocation();
+  assert.equal(active.roomId, sourceRoomId);
+  const portal = scene.mapRuntime
+    .getResolvedSnapshot()
+    .portals.find(
+      (candidate) =>
+        candidate.from.roomId === destinationRoomId || candidate.to.roomId === destinationRoomId,
+    );
+  assert.ok(portal, `${sourceRoomId}에서 ${destinationRoomId}(으)로 가는 portal이 필요합니다.`);
+  const endpoint = portal.from.roomId === sourceRoomId ? portal.from : portal.to;
+  scene.setVisualQaLocation({
+    regionId: active.regionId,
+    roomId: sourceRoomId,
+    x: endpoint.anchor.x,
+  });
+  return portal;
 }
 
 const scene = createAwakeningScene();
@@ -559,6 +596,184 @@ assert.equal(completedMineReload.getWorldStatus().journeyLabel, '차고 조립 �
 assert.match(completedMineReload.getWorldStatus().encounterHint, /1\/5 PARTS · ROBOT 20%/);
 assert.equal(completedMineReload.getWorldStatus().wardLabel, '1/5 부품 · 로봇 20%');
 
+const shipyardFlowScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedMineProgression,
+});
+let shipyardJumpSequence = 100;
+let shipyardCampaignRequest = null;
+shipyardFlowScene.campaignActionPreviewRequested.connect((request) => {
+  shipyardCampaignRequest = request;
+});
+setAtPortalToRoom(shipyardFlowScene, SCRAP_MINE_ROAD_ROOM_ID, SCRAP_AWAKENING_ROOM_ID);
+shipyardFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: shipyardJumpSequence }));
+shipyardJumpSequence += 1;
+assert.equal(shipyardCampaignRequest?.preview.targetLocationLabel, '동네 고물상');
+assert.equal(shipyardFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(shipyardFlowScene);
+assert.equal(
+  shipyardFlowScene.getWorldStatus().campaign.currentLocationId,
+  'neighborhood-scrapyard',
+);
+
+shipyardCampaignRequest = null;
+setAtPortalToRoom(shipyardFlowScene, SCRAP_AWAKENING_ROOM_ID, SCRAP_SHIPYARD_ROAD_ROOM_ID);
+shipyardFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: shipyardJumpSequence }));
+shipyardJumpSequence += 1;
+assert.equal(shipyardCampaignRequest?.portalId, SCRAP_SHIPYARD_ROAD_PORTAL_ID);
+assert.equal(shipyardCampaignRequest?.preview.targetLocationLabel, '항구 조선소');
+assert.equal(shipyardCampaignRequest?.preview.costSegments, 1);
+assert.equal(shipyardFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(shipyardFlowScene);
+assert.deepEqual(shipyardFlowScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+});
+assert.equal(shipyardFlowScene.getWorldStatus().campaign.currentLocationId, 'harbor-shipyard');
+assert.match(shipyardFlowScene.getWorldStatus().objective, /조선소 용접공/);
+assert.doesNotMatch(
+  `${shipyardFlowScene.getWorldStatus().story.title} ${shipyardFlowScene.getWorldStatus().objective}`,
+  /학원|교관|마법 생물/,
+);
+
+setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, 'npc-briefing');
+shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+let shipyardRegion = shipyardFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+assert.equal(shipyardRegion.eventStageKind, 'npc-briefing');
+assert.match(shipyardFlowScene.getWorldStatus().objective, /14구간/);
+
+setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, 'facility-observed');
+const beforeShipyardEvent = shipyardFlowScene.getProgressionSnapshot().scrapCampaign;
+shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+assert.equal(shipyardCampaignRequest?.source, 'region-core-event');
+assert.equal(shipyardCampaignRequest?.preview.costSegments, 14);
+assert.equal(shipyardCampaignRequest?.preview.successExtensionDays, 3);
+assert.equal(
+  shipyardFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
+  beforeShipyardEvent.elapsedSegments,
+  '항구 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
+);
+assert.equal(shipyardFlowScene.cancelScrapCampaignAction().cancelled, true);
+
+shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+assert.equal(shipyardFlowScene.confirmScrapCampaignAction().started, true);
+shipyardRegion = shipyardFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+assert.equal(shipyardRegion.status, 'in-progress');
+assert.equal(shipyardFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(shipyardFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-26');
+
+setAtPortalToRoom(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, SCRAP_SHIPYARD_DRYDOCK_ROOM_ID);
+shipyardFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: shipyardJumpSequence }));
+shipyardJumpSequence += 1;
+finishPortalTransition(shipyardFlowScene);
+assert.equal(
+  shipyardFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'shipyard-drydock-collector',
+);
+shipyardFlowScene.enterTree();
+shipyardFlowScene.roomSceneNode.encounter.completeForVisualQa();
+shipyardRegion = shipyardFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+assert.equal(shipyardRegion.eventStageKind, 'journey-combat');
+const shipyardMidReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: shipyardFlowScene.getProgressionSnapshot(),
+});
+shipyardMidReload.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+  x: 800,
+});
+assert.equal(
+  shipyardMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'shipyard-drydock-collector-unit'),
+  false,
+  '건선거 전투 완료 reload는 수거 유닛을 되살리면 안 됩니다.',
+);
+assert.ok(
+  shipyardMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .portals.some((portal) => portal.to.roomId === SCRAP_SHIPYARD_CRANE_ROOM_ID),
+);
+
+setAtPortalToRoom(shipyardFlowScene, SCRAP_SHIPYARD_DRYDOCK_ROOM_ID, SCRAP_SHIPYARD_CRANE_ROOM_ID);
+shipyardFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: shipyardJumpSequence }));
+shipyardJumpSequence += 1;
+finishPortalTransition(shipyardFlowScene);
+const shipyardBoss = shipyardFlowScene.roomSceneNode.getEncounterGameplaySnapshot();
+assert.equal(shipyardBoss.profileId, 'shipyard-twin-crane-boss');
+assert.equal(shipyardBoss.presentationProfileId, 'shipyard-twin-crane-boss');
+assert.match(shipyardBoss.weakPoint.label, /유압|회전축|케이블/);
+shipyardFlowScene.roomSceneNode.encounter.completeForVisualQa();
+
+setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_CRANE_ROOM_ID, 'replacement-complete');
+shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-last-ship-patch'));
+setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_CRANE_ROOM_ID, 'machine-separated');
+shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-hydraulics-signal'));
+setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_CRANE_ROOM_ID, 'part-claimed');
+completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+
+const shipyardCompleteCampaign = shipyardFlowScene.getWorldStatus().campaign;
+shipyardRegion = shipyardCompleteCampaign.regions.find(
+  (region) => region.id === SCRAP_SHIPYARD_REGION_ID,
+);
+assert.equal(shipyardRegion.status, 'resolved');
+assert.equal(shipyardRegion.eventStageKind, 'campaign-updated');
+assert.equal(shipyardRegion.collected, true);
+assert.equal(shipyardCompleteCampaign.collectedPartCount, 2);
+assert.equal(shipyardCompleteCampaign.completionPercent, 40);
+assert.equal(shipyardCompleteCampaign.deadlineLabel, 'D-29');
+assert.equal(shipyardCompleteCampaign.rivalDelaySegments, 12);
+const completedShipyardProgression = shipyardFlowScene.getProgressionSnapshot();
+shipyardFlowScene.exitTree();
+
+const completedShipyardReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedShipyardProgression,
+});
+completedShipyardReload.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 480,
+});
+for (const expectedItemId of [
+  'garage-robot-walker-leg-left',
+  'garage-robot-crane-arm-left',
+  'garage-robot-crane-arm-right',
+  'garage-robot-forty-label',
+]) {
+  assert.ok(itemIds(completedShipyardReload).includes(expectedItemId), expectedItemId);
+}
+assert.ok(!itemIds(completedShipyardReload).includes('garage-robot-twenty-label'));
+assert.equal(completedShipyardReload.getWorldStatus().wardLabel, '2/5 부품 · 로봇 40%');
+const beforeRepeatedShipyardClaim = completedShipyardReload.getProgressionSnapshot();
+completedShipyardReload.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_CRANE_ROOM_ID,
+  x: 1120,
+});
+assert.equal(
+  completedShipyardReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'shipyard-hydraulics-part-claim'),
+  false,
+  '완료 reload 뒤 부품 회수 trigger는 다시 활성화되면 안 됩니다.',
+);
+completedShipyardReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1_000 }));
+assert.deepEqual(
+  completedShipyardReload.getProgressionSnapshot(),
+  beforeRepeatedShipyardClaim,
+  '완료 reload의 반복 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
 const mineReload = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: travelScene.getProgressionSnapshot(),
@@ -633,6 +848,9 @@ console.log(
       'mine-eight-stage-npc-facility-combat-boss-machine-part-flow',
       'mine-event-preview-cost-success-extension-and-cancel-zero-cost',
       'mine-part-reload-idempotence-and-garage-twenty-percent',
+      'shipyard-eight-stage-worker-drydock-crane-machine-part-flow',
+      'shipyard-event-preview-fourteen-segments-three-day-extension-and-cancel',
+      'shipyard-midstage-and-part-reload-idempotence-and-garage-forty-percent',
       'keyboard-touch-interaction-parity',
     ],
   }),

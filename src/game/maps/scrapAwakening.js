@@ -24,6 +24,16 @@ export const SCRAP_MINE_FACILITY_CONVERSATION_ID = 'abandoned-mine:facility-obse
 export const SCRAP_MINE_REPLACEMENT_CONVERSATION_ID = 'abandoned-mine:replacement-complete';
 export const SCRAP_MINE_SEPARATION_CONVERSATION_ID = 'abandoned-mine:machine-separated';
 export const SCRAP_MINE_PART_CONVERSATION_ID = 'abandoned-mine:part-claimed';
+export const SCRAP_SHIPYARD_ROAD_PORTAL_ID = 'scrapyard-harbor-shipyard-road';
+export const SCRAP_SHIPYARD_REGION_ID = 'harbor-shipyard';
+export const SCRAP_SHIPYARD_ROAD_ROOM_ID = 'harbor-shipyard-roadhead';
+export const SCRAP_SHIPYARD_DRYDOCK_ROOM_ID = 'harbor-shipyard-occupied-drydock';
+export const SCRAP_SHIPYARD_CRANE_ROOM_ID = 'harbor-shipyard-twin-crane-pier';
+export const SCRAP_SHIPYARD_WORKER_CONVERSATION_ID = 'harbor-shipyard:worker-briefing';
+export const SCRAP_SHIPYARD_FACILITY_CONVERSATION_ID = 'harbor-shipyard:facility-observed';
+export const SCRAP_SHIPYARD_REPLACEMENT_CONVERSATION_ID = 'harbor-shipyard:replacement-complete';
+export const SCRAP_SHIPYARD_SEPARATION_CONVERSATION_ID = 'harbor-shipyard:machine-separated';
+export const SCRAP_SHIPYARD_PART_CONVERSATION_ID = 'harbor-shipyard:part-claimed';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -307,6 +317,66 @@ const renderItems = [
     label: 'ROBOT 20% · 1/5 PARTS · 다리',
     role: 'completion-twenty',
   }),
+  item(
+    'garage-robot-crane-arm-left',
+    [
+      { x: 428, y: 276 },
+      { x: 448, y: 264 },
+      { x: 458, y: 338 },
+      { x: 438, y: 344 },
+    ],
+    '#4fa7ad',
+    {
+      stroke: '#183e42',
+      lineWidth: 4,
+      order: 25,
+      enabled: false,
+      label: '쌍둥이 크레인 유압 팔 모듈 왼쪽',
+      role: 'crane-hydraulic-arm-module',
+    },
+  ),
+  item(
+    'garage-robot-crane-arm-right',
+    [
+      { x: 516, y: 264 },
+      { x: 536, y: 276 },
+      { x: 526, y: 344 },
+      { x: 506, y: 338 },
+    ],
+    '#4fa7ad',
+    {
+      stroke: '#183e42',
+      lineWidth: 4,
+      order: 25,
+      enabled: false,
+      label: '쌍둥이 크레인 유압 팔 모듈 오른쪽',
+      role: 'crane-hydraulic-arm-module',
+    },
+  ),
+  item('garage-robot-crane-cable', rectangle(476, 292, 12, 72), '#202e31', {
+    stroke: '#56c3c7',
+    lineWidth: 3,
+    order: 26,
+    enabled: false,
+    label: '크레인 팔 굵은 유압 케이블',
+    role: 'crane-hydraulic-cable',
+  }),
+  item('garage-robot-crane-twenty-label', rectangle(424, 190, 116, 16), '#4fa7ad', {
+    stroke: '#183e42',
+    lineWidth: 2,
+    order: 26,
+    enabled: false,
+    label: 'ROBOT 20% · 1/5 PARTS · 팔',
+    role: 'completion-twenty',
+  }),
+  item('garage-robot-forty-label', rectangle(420, 186, 124, 20), '#59c3c6', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 27,
+    enabled: false,
+    label: 'ROBOT 40% · 2/5 PARTS · 다리+팔',
+    role: 'completion-forty',
+  }),
   item('wreck-hull-lower', polygon(986, 374, 206, 72, 10, Math.PI / 10), '#504d49', {
     stroke: '#252729',
     lineWidth: 4,
@@ -428,6 +498,19 @@ const renderItems = [
     order: 24,
     enabled: false,
     label: '폐광 산촌 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  ...createEnvironmentPortalLandmarkItems('scrapyard-shipyard-road-gate', 68, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 26,
+  }),
+  item('scrapyard-shipyard-road-sign', rectangle(18, 320, 118, 42), '#3f6f75', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 28,
+    enabled: false,
+    label: '항구 조선소 연결로 · 1구간',
     role: 'long-distance-road-sign',
   }),
 ];
@@ -682,6 +765,264 @@ const mineMachineRenderItems = [
   }),
 ];
 
+const shipyardRoadheadRenderItems = [
+  item('shipyard-roadhead-sky', rectangle(0, 0, 1440, 426), '#20363e', {
+    stroke: '#102126',
+    order: -100,
+    label: '항구 조선소 해안선',
+  }),
+  item('shipyard-roadhead-water', rectangle(0, 352, 1440, 74), '#285b65', {
+    stroke: '#15383e',
+    order: -10,
+    label: '조선소 내항',
+  }),
+  item('shipyard-roadhead-ground', rectangle(0, 426, 1440, 114), '#46565a', {
+    stroke: '#182427',
+    order: 0,
+  }),
+  item('shipyard-roadhead-road', rectangle(0, 438, 1440, 30), '#64777a', {
+    stroke: '#273437',
+    order: 1,
+  }),
+  ...createEnvironmentPortalLandmarkItems('shipyard-roadhead-return-gate', 68, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 22,
+  }),
+  item('shipyard-roadhead-return-sign', rectangle(18, 320, 116, 42), '#3f6f75', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '동네 고물상 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  item('shipyard-worker-apron', rectangle(603, 330, 34, 96), '#3f5661', {
+    stroke: '#17282e',
+    lineWidth: 3,
+    order: 18,
+    label: '조선소 용접공 · 방열 앞치마',
+    role: 'shipyard-worker',
+  }),
+  item('shipyard-worker-mask', polygon(620, 316, 20, 17, 6, Math.PI / 6), '#56b7c9', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 20,
+    role: 'welding-mask',
+  }),
+  item('shipyard-worker-rivet-gun', rectangle(638, 354, 44, 13), '#81989b', {
+    stroke: '#1e2d30',
+    lineWidth: 2,
+    order: 20,
+    role: 'rivet-gun',
+  }),
+  item('shipyard-occupation-board', rectangle(822, 326, 80, 100), '#42636a', {
+    stroke: '#17282e',
+    lineWidth: 4,
+    order: 16,
+    label: '건선거 점거·선박 수리 현황판',
+    role: 'facility-status',
+  }),
+  item('shipyard-occupation-warning', rectangle(836, 342, 52, 14), '#e77754', {
+    stroke: '#57291f',
+    lineWidth: 2,
+    order: 17,
+    role: 'facility-warning-signal',
+  }),
+  item('shipyard-distant-hull', polygon(1040, 330, 190, 52, 8), '#6d8589', {
+    stroke: '#23363a',
+    lineWidth: 4,
+    order: 8,
+    label: '수리 대기 중인 마지막 선박',
+    role: 'ship-repair-landmark',
+  }),
+  ...createEnvironmentPortalLandmarkItems('shipyard-drydock-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('shipyard-drydock-sign', rectangle(1278, 316, 126, 46), '#3f6f75', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '점거된 건선거 · 지역 내 이동 무료',
+    role: 'local-shipyard-route',
+  }),
+];
+
+const shipyardDrydockRenderItems = [
+  item('shipyard-drydock-backdrop', rectangle(0, 0, 1440, 540), '#18282d', {
+    stroke: '#0b1417',
+    order: -100,
+    label: '수거 유닛이 점거한 건선거',
+  }),
+  item('shipyard-drydock-wall', rectangle(0, 92, 1440, 42), '#405a60', {
+    stroke: '#17282d',
+    lineWidth: 4,
+    order: -10,
+  }),
+  item('shipyard-drydock-ground', rectangle(0, 426, 1440, 114), '#3e4a4d', {
+    stroke: '#172124',
+    order: 0,
+  }),
+  item('shipyard-drydock-keel-rail-left', rectangle(316, 382, 18, 44), '#6a8387', {
+    stroke: '#203337',
+    order: 5,
+  }),
+  item('shipyard-drydock-keel-rail-right', rectangle(1080, 382, 18, 44), '#6a8387', {
+    stroke: '#203337',
+    order: 5,
+  }),
+  item('shipyard-drydock-collector-chain', rectangle(760, 150, 12, 112), '#243033', {
+    stroke: '#56b7c9',
+    lineWidth: 2,
+    order: 7,
+    label: '수거 유닛 점거 케이블',
+    role: 'occupation-cable',
+  }),
+  item('shipyard-drydock-ship-hull', polygon(690, 338, 260, 62, 10, Math.PI / 10), '#536b70', {
+    stroke: '#1d3034',
+    lineWidth: 5,
+    order: 9,
+    label: '마지막 수리 선박 외판',
+    role: 'last-ship-hull',
+  }),
+  ...createEnvironmentPortalLandmarkItems('shipyard-drydock-roadhead-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+  ...createEnvironmentPortalLandmarkItems('shipyard-drydock-crane-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('shipyard-crane-pier-sign', rectangle(1278, 316, 126, 46), '#3f6f75', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '쌍둥이 크레인 부두 · Boss',
+    role: 'boss-route-sign',
+  }),
+];
+
+const shipyardCraneRenderItems = [
+  item('shipyard-crane-sky', rectangle(0, 0, 1440, 540), '#1d333a', {
+    stroke: '#0b171a',
+    order: -100,
+    label: '쌍둥이 크레인 부두',
+  }),
+  item('shipyard-crane-water', rectangle(0, 350, 1440, 76), '#235661', {
+    stroke: '#12333a',
+    order: -10,
+  }),
+  item('shipyard-crane-ground', rectangle(0, 426, 1440, 114), '#435357', {
+    stroke: '#172326',
+    order: 0,
+  }),
+  item('shipyard-twin-crane-left-tower', rectangle(710, 190, 44, 236), '#3f7f83', {
+    stroke: '#183e42',
+    lineWidth: 5,
+    order: 12,
+    label: '쌍둥이 크레인 왼쪽 기둥',
+    role: 'twin-crane-painted-steel',
+  }),
+  item('shipyard-twin-crane-right-tower', rectangle(954, 190, 44, 236), '#438b8f', {
+    stroke: '#183e42',
+    lineWidth: 5,
+    order: 12,
+    label: '쌍둥이 크레인 오른쪽 기둥',
+    role: 'twin-crane-painted-steel',
+  }),
+  item(
+    'shipyard-twin-crane-left-arm',
+    [
+      { x: 728, y: 206 },
+      { x: 830, y: 138 },
+      { x: 846, y: 154 },
+      { x: 750, y: 230 },
+    ],
+    '#4fa7ad',
+    { stroke: '#183e42', lineWidth: 5, order: 14, role: 'moving-crane-arm' },
+  ),
+  item(
+    'shipyard-twin-crane-right-arm',
+    [
+      { x: 974, y: 206 },
+      { x: 872, y: 138 },
+      { x: 856, y: 154 },
+      { x: 952, y: 230 },
+    ],
+    '#4fa7ad',
+    { stroke: '#183e42', lineWidth: 5, order: 14, role: 'moving-crane-arm' },
+  ),
+  item('shipyard-twin-crane-left-cylinder', rectangle(772, 202, 18, 112), '#86d1d0', {
+    stroke: '#234d50',
+    lineWidth: 3,
+    order: 15,
+    label: '왼쪽 유압 실린더',
+    role: 'hydraulic-moving-part',
+  }),
+  item('shipyard-twin-crane-right-cylinder', rectangle(918, 202, 18, 112), '#86d1d0', {
+    stroke: '#234d50',
+    lineWidth: 3,
+    order: 15,
+    label: '오른쪽 유압 실린더',
+    role: 'hydraulic-moving-part',
+  }),
+  item('shipyard-twin-crane-thick-cable', rectangle(842, 148, 18, 194), '#1b292c', {
+    stroke: '#56c3c7',
+    lineWidth: 3,
+    order: 16,
+    label: '쌍둥이 크레인 굵은 유압 케이블',
+    role: 'thick-hydraulic-cable',
+  }),
+  item('shipyard-last-ship-patch', rectangle(300, 292, 220, 92), '#6b8589', {
+    stroke: '#23363a',
+    lineWidth: 5,
+    order: 12,
+    enabled: false,
+    label: '마지막 선박 교체 외판 · 수리 완료',
+    role: 'replacement-facility',
+  }),
+  item('shipyard-last-ship-weld', rectangle(330, 310, 160, 12), '#75d6c4', {
+    stroke: '#245e5b',
+    lineWidth: 2,
+    order: 13,
+    enabled: false,
+    role: 'replacement-complete-signal',
+  }),
+  item('shipyard-separated-crane-towers', rectangle(710, 282, 288, 144), '#36595d', {
+    stroke: '#172d30',
+    lineWidth: 5,
+    order: 12,
+    enabled: false,
+    label: '유압 장치 분리 완료된 쌍둥이 크레인',
+    role: 'machine-separated',
+  }),
+  item('shipyard-hydraulics-cradle', rectangle(1040, 346, 176, 80), '#345156', {
+    stroke: '#17282c',
+    lineWidth: 4,
+    order: 14,
+    enabled: false,
+    label: '크레인 유압 장치 회수대',
+    role: 'part-ready',
+  }),
+  item('shipyard-hydraulics-signal', rectangle(1054, 360, 148, 20), '#59c3c6', {
+    stroke: '#183e42',
+    lineWidth: 2,
+    order: 16,
+    enabled: false,
+    label: 'CRANE HYDRAULICS · 회수 가능',
+    role: 'part-ready-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('shipyard-crane-drydock-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+];
+
 const activatedStages = [
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
@@ -784,7 +1125,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             },
           ],
           triggers: [],
-          portals: [SCRAP_MINE_ROAD_PORTAL_ID],
+          portals: [SCRAP_MINE_ROAD_PORTAL_ID, SCRAP_SHIPYARD_ROAD_PORTAL_ID],
         },
       ],
     },
@@ -971,6 +1312,189 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         },
       ],
     },
+    {
+      id: SCRAP_SHIPYARD_REGION_ID,
+      label: '항구 조선소',
+      rooms: [
+        {
+          id: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+          label: '항구 조선소 · 연결로 진입부',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'shipyard-roadhead-ground-surface',
+              kind: 'solid',
+              material: 'harbor-painted-steel-road',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: shipyardRoadheadRenderItems,
+          entities: [
+            {
+              id: 'shipyard-worker-briefing',
+              kind: 'story-interaction',
+              position: { x: 620, y: 354 },
+              interactionRange: 84,
+              speaker: '조선소 용접공',
+              conversationId: SCRAP_SHIPYARD_WORKER_CONVERSATION_ID,
+              conversationTitle: '점거된 조선소 탈환 요청',
+              lines: [
+                '수거 유닛이 건선거를 점거해 마지막 선박의 외판 수리가 멈췄어.',
+                '도크를 되찾아 수리를 끝내면 퇴역할 쌍둥이 크레인의 유압 장치를 넘겨줄게.',
+                '왼쪽 현황판에서 점거 범위와 작업 시간을 먼저 확인해 줘.',
+              ],
+              presentationProfileId: 'shipyard-worker',
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: 'shipyard-facility-inspection',
+              kind: 'story-interaction',
+              position: { x: 862, y: 354 },
+              interactionRange: 78,
+              speaker: '조선소 도크 현황판',
+              conversationId: SCRAP_SHIPYARD_FACILITY_CONVERSATION_ID,
+              conversationTitle: '점거 범위와 선박 수리 시간 확인',
+              lines: [
+                '건선거 점거 해제, 수거 유닛 제거, 크레인 제압과 마지막 선박 외판 수리까지 14구간 예상.',
+                '성공하면 고철 대왕은 막힌 해안 운송로를 우회해 수도 도착이 3일 늦어진다.',
+              ],
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'facility-observed',
+              requestCampaignEventStart: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: [SCRAP_SHIPYARD_ROAD_PORTAL_ID, 'shipyard-roadhead-drydock-portal'],
+        },
+        {
+          id: SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+          label: '항구 조선소 · 점거된 건선거',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'shipyard-drydock-ground-surface',
+              kind: 'solid',
+              material: 'occupied-drydock-steel',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: shipyardDrydockRenderItems,
+          entities: [
+            {
+              id: 'shipyard-drydock-collector-unit',
+              kind: 'combat-enemy',
+              encounterProfileId: 'shipyard-drydock-collector',
+              position: { x: 800, y: 426 },
+              maxHealth: 84,
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'journey-combat',
+            },
+          ],
+          triggers: [],
+          portals: ['shipyard-roadhead-drydock-portal', 'shipyard-drydock-crane-portal'],
+        },
+        {
+          id: SCRAP_SHIPYARD_CRANE_ROOM_ID,
+          label: '항구 조선소 · 쌍둥이 크레인 부두',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'shipyard-crane-ground-surface',
+              kind: 'solid',
+              material: 'twin-crane-pier-steel',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: shipyardCraneRenderItems,
+          entities: [
+            {
+              id: 'shipyard-twin-crane-boss',
+              kind: 'combat-enemy',
+              encounterProfileId: 'shipyard-twin-crane-boss',
+              position: { x: 850, y: 426 },
+              maxHealth: 126,
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'boss-defeated',
+            },
+            {
+              id: 'shipyard-last-ship-repair',
+              kind: 'story-interaction',
+              position: { x: 360, y: 354 },
+              interactionRange: 82,
+              speaker: '조선소 용접공',
+              conversationId: SCRAP_SHIPYARD_REPLACEMENT_CONVERSATION_ID,
+              conversationTitle: '마지막 선박 외판 수리',
+              lines: [
+                '건선거와 크레인을 되찾았어. 이 교체 외판만 용접하면 마지막 선박이 출항할 수 있어.',
+                '수리 완료. 이제 퇴역할 쌍둥이 크레인의 압력을 빼고 유압 장치를 분리하자.',
+              ],
+              presentationProfileId: 'shipyard-worker',
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'replacement-complete',
+              enabled: false,
+            },
+            {
+              id: 'shipyard-crane-separation',
+              kind: 'story-interaction',
+              position: { x: 860, y: 354 },
+              interactionRange: 92,
+              speaker: '쌍둥이 소형 크레인',
+              conversationId: SCRAP_SHIPYARD_SEPARATION_CONVERSATION_ID,
+              conversationTitle: '쌍둥이 크레인 유압 장치 분리',
+              lines: [
+                '좌우 붐의 잔압을 제거했다. 굵은 케이블과 유압 실린더 잠금핀을 차례로 해제한다.',
+                '청록 도장강 팔과 유압 장치가 회수대에 고정됐다. 차고 로봇의 팔로 사용할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'machine-separated',
+              enabled: false,
+            },
+            {
+              id: 'shipyard-hydraulics-part-claim',
+              kind: 'story-interaction',
+              position: { x: 1120, y: 354 },
+              interactionRange: 88,
+              speaker: '크레인 유압 장치 회수대',
+              conversationId: SCRAP_SHIPYARD_PART_CONVERSATION_ID,
+              conversationTitle: '크레인 팔 부품 회수',
+              lines: [
+                '쌍둥이 크레인 유압 장치를 확보했다. 차고 조립식 로봇의 팔이 누적 조립된다.',
+                '고철 대왕은 해안 운송로를 우회한다. D-DAY +3일, 다음 지역은 자유롭게 선택할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
+              campaignStageKind: 'part-claimed',
+              completeCampaignRegion: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: ['shipyard-drydock-crane-portal'],
+        },
+      ],
+    },
   ],
   portals: [
     {
@@ -1034,6 +1558,71 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         roomId: SCRAP_MINE_MACHINE_ROOM_ID,
         anchor: { x: 74, y: 426 },
         spawn: { x: 132, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: SCRAP_SHIPYARD_ROAD_PORTAL_ID,
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_AWAKENING_REGION_ID,
+        roomId: SCRAP_AWAKENING_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 122, y: 350 },
+        radius: 76,
+      },
+      to: {
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 122, y: 350 },
+        radius: 76,
+      },
+      campaignTravel: {
+        routeId: 'road:neighborhood-scrapyard:harbor-shipyard',
+        fromLocationId: 'neighborhood-scrapyard',
+        toLocationId: SCRAP_SHIPYARD_REGION_ID,
+      },
+      transition: { durationSeconds: 0.48 },
+    },
+    {
+      id: 'shipyard-roadhead-drydock-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        roomId: SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: 'shipyard-drydock-crane-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        roomId: SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        roomId: SCRAP_SHIPYARD_CRANE_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
         radius: 74,
       },
       transition: { durationSeconds: 0.36 },
@@ -1167,6 +1756,46 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
+      id: 'scrapyard-shipyard-road-open',
+      priority: 105,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-shipyard-road-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-shipyard-road-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-shipyard-road-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'scrapyard-shipyard-road-sign', value: true },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-roadhead-return-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-roadhead-return-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-roadhead-return-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'shipyard-roadhead-return-sign', value: true },
+      ],
+    },
+    {
       id: 'scrapyard-walker-drive-installed',
       priority: 110,
       when: { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
@@ -1177,6 +1806,33 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-walker-leg-left', value: true },
         { op: 'set-enabled', target: 'garage-robot-walker-leg-right', value: true },
         { op: 'set-enabled', target: 'garage-robot-twenty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-crane-hydraulics-installed',
+      priority: 112,
+      when: { fact: 'scrapCollectedPartIds', includes: 'crane-hydraulics' },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-arm-left', value: true },
+        { op: 'set-enabled', target: 'garage-robot-crane-arm-right', value: true },
+        { op: 'set-enabled', target: 'garage-robot-crane-cable', value: true },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-walker-crane-forty-percent',
+      priority: 114,
+      when: {
+        all: [
+          { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
+          { fact: 'scrapCollectedPartIds', includes: 'crane-hydraulics' },
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: true },
       ],
     },
     {
@@ -1319,6 +1975,155 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           target: 'mine-walker-part-signal',
           property: 'label',
           value: 'WALKER DRIVE · 차고 수송 완료',
+        },
+      ],
+    },
+    {
+      id: 'shipyard-briefing-complete',
+      priority: 190,
+      when: {
+        all: [
+          {
+            fact: 'scrapRegionStageIds.harbor-shipyard',
+            in: ['harbor-shipyard:npc-briefing', 'harbor-shipyard:facility-observed'],
+          },
+          { fact: 'scrapRegionStatuses.harbor-shipyard', eq: 'available' },
+        ],
+      },
+      operations: [{ op: 'set-enabled', target: 'shipyard-facility-inspection', value: true }],
+    },
+    {
+      id: 'shipyard-core-event-started',
+      priority: 200,
+      when: { fact: 'scrapRegionStatuses.harbor-shipyard', in: ['in-progress', 'resolved'] },
+      operations: [
+        { op: 'set-enabled', target: 'shipyard-facility-inspection', value: false },
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_ROAD_PORTAL_ID, value: false },
+        { op: 'set-enabled', target: 'shipyard-roadhead-drydock-portal', value: true },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-drydock-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-drydock-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-drydock-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'shipyard-drydock-sign', value: true },
+      ],
+    },
+    {
+      id: 'shipyard-journey-combat-complete',
+      priority: 210,
+      when: {
+        fact: 'scrapRegionStageIds.harbor-shipyard',
+        in: [
+          'harbor-shipyard:journey-combat',
+          'harbor-shipyard:boss-defeated',
+          'harbor-shipyard:replacement-complete',
+          'harbor-shipyard:machine-separated',
+          'harbor-shipyard:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'shipyard-drydock-collector-unit', value: false },
+        { op: 'set-enabled', target: 'shipyard-drydock-crane-portal', value: true },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-drydock-crane-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-drydock-crane-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'shipyard-drydock-crane-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'shipyard-crane-pier-sign', value: true },
+      ],
+    },
+    {
+      id: 'shipyard-boss-defeated',
+      priority: 220,
+      when: {
+        fact: 'scrapRegionStageIds.harbor-shipyard',
+        in: [
+          'harbor-shipyard:boss-defeated',
+          'harbor-shipyard:replacement-complete',
+          'harbor-shipyard:machine-separated',
+          'harbor-shipyard:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'shipyard-twin-crane-boss', value: false },
+        { op: 'set-enabled', target: 'shipyard-last-ship-repair', value: true },
+      ],
+    },
+    {
+      id: 'shipyard-replacement-complete',
+      priority: 230,
+      when: {
+        fact: 'scrapRegionStageIds.harbor-shipyard',
+        in: [
+          'harbor-shipyard:replacement-complete',
+          'harbor-shipyard:machine-separated',
+          'harbor-shipyard:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'shipyard-last-ship-repair', value: false },
+        { op: 'set-enabled', target: 'shipyard-last-ship-patch', value: true },
+        { op: 'set-enabled', target: 'shipyard-last-ship-weld', value: true },
+        { op: 'set-enabled', target: 'shipyard-crane-separation', value: true },
+      ],
+    },
+    {
+      id: 'shipyard-machine-separated',
+      priority: 240,
+      when: {
+        fact: 'scrapRegionStageIds.harbor-shipyard',
+        in: ['harbor-shipyard:machine-separated', 'harbor-shipyard:campaign-updated'],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'shipyard-crane-separation', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-left-tower', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-right-tower', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-left-arm', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-right-arm', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-left-cylinder', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-right-cylinder', value: false },
+        { op: 'set-enabled', target: 'shipyard-twin-crane-thick-cable', value: false },
+        { op: 'set-enabled', target: 'shipyard-separated-crane-towers', value: true },
+        { op: 'set-enabled', target: 'shipyard-hydraulics-cradle', value: true },
+        { op: 'set-enabled', target: 'shipyard-hydraulics-signal', value: true },
+        { op: 'set-enabled', target: 'shipyard-hydraulics-part-claim', value: true },
+      ],
+    },
+    {
+      id: 'shipyard-campaign-updated',
+      priority: 250,
+      when: {
+        fact: 'scrapRegionStageIds.harbor-shipyard',
+        eq: 'harbor-shipyard:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: 'shipyard-hydraulics-part-claim', value: false },
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set',
+          target: 'shipyard-hydraulics-signal',
+          property: 'label',
+          value: 'CRANE HYDRAULICS · 차고 수송 완료',
         },
       ],
     },

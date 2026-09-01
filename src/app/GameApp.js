@@ -390,8 +390,9 @@ export class GameApp extends SceneNode {
     if (scenario.scrapGarageRevealStageId) {
       this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
     }
-    if (scenario.scrapRegionState) {
-      this.scene.setVisualQaScrapRegionState(scenario.scrapRegionState);
+    for (const scrapRegionState of scenario.scrapRegionStates ??
+      (scenario.scrapRegionState ? [scenario.scrapRegionState] : [])) {
+      this.scene.setVisualQaScrapRegionState(scrapRegionState);
     }
     this.scene.setVisualQaLocation(scenario);
     if (scenario.materialEchoDefeats) {
@@ -447,8 +448,9 @@ export class GameApp extends SceneNode {
     if (scenario.scrapGarageRevealStageId) {
       this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
     }
-    if (scenario.scrapRegionState) {
-      this.scene.setVisualQaScrapRegionState(scenario.scrapRegionState);
+    for (const scrapRegionState of scenario.scrapRegionStates ??
+      (scenario.scrapRegionState ? [scenario.scrapRegionState] : [])) {
+      this.scene.setVisualQaScrapRegionState(scrapRegionState);
     }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);

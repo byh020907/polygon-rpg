@@ -134,6 +134,10 @@ assert.deepEqual(
 for (const region of SCRAP_CAMPAIGN_PROFILE.regions) {
   assert.equal(region.eventStages.length, 8);
   assert.equal(new Set(region.eventStages.map((stage) => stage.id)).size, 8);
+  assert.ok(
+    region.eventStages.every((stage) => stage.nextObjective.length > 0),
+    `${region.id}의 모든 stage는 authored 다음 목표를 제공해야 합니다.`,
+  );
   assert.deepEqual(Object.keys(region.mapPatches), ['before', 'partReady', 'resolved', 'convoy']);
 }
 assert.equal(initial.completionPercent, 0);
@@ -304,6 +308,42 @@ assert.equal(mineSuccess.collectedPartIds.includes(mineProfile.part.id), true);
 assert.equal(mineSuccess.deadlineSegments, 120 - 10 + 8);
 assert.equal(mineSuccess.rivalDelaySegments, 8);
 assert.equal(mineSuccess.regionEventStageIds['abandoned-mine'], 'abandoned-mine:campaign-updated');
+
+const harborProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('harbor-shipyard');
+let harborStarted = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'harbor-shipyard' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+harborStarted = commit(harborStarted, regionStageAction('harbor-shipyard', 'npc-briefing'));
+harborStarted = commit(harborStarted, regionStageAction('harbor-shipyard', 'facility-observed'));
+const harborEventPreview = previewScrapCampaignAction(
+  harborStarted,
+  regionEventStartAction('harbor-shipyard'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(harborEventPreview.costSegments, 14);
+assert.equal(harborEventPreview.successExtensionDays, 3);
+const harborSuccess = resolveRegion(fresh, 'harbor-shipyard');
+assert.equal(harborSuccess.regionStates['harbor-shipyard'], 'resolved');
+assert.equal(harborSuccess.collectedPartIds.includes(harborProfile.part.id), true);
+assert.equal(harborSuccess.deadlineSegments, 120 - 14 + 12);
+assert.equal(harborSuccess.rivalDelaySegments, 12);
+assert.equal(
+  harborSuccess.regionEventStageIds['harbor-shipyard'],
+  'harbor-shipyard:campaign-updated',
+);
+for (const orderedSnapshot of [
+  resolveRegion(resolveRegion(fresh, 'abandoned-mine'), 'harbor-shipyard'),
+  commit(resolveRegion(fresh, 'harbor-shipyard'), convoyAction('abandoned-mine')),
+]) {
+  const orderedReadModel = getScrapCampaignReadModel(orderedSnapshot, SCRAP_CAMPAIGN_PROFILE);
+  assert.equal(orderedReadModel.collectedPartCount, 2);
+  assert.equal(orderedReadModel.completionPercent, 40);
+  assert.deepEqual(
+    orderedReadModel.regions.filter((region) => region.collected).map((region) => region.id),
+    ['abandoned-mine', 'harbor-shipyard'],
+  );
+}
 const versionThreeMine = { ...mineSuccess, version: 3 };
 delete versionThreeMine.regionEventStageIds;
 const migratedVersionThreeMine = toScrapCampaignSnapshot(versionThreeMine, SCRAP_CAMPAIGN_PROFILE);
@@ -433,6 +473,8 @@ console.log(
       'four-segment-day-rollover',
       'stable-action-idempotence',
       'ordered-region-stages-event-start-cost-and-success-detour',
+      'harbor-fourteen-segment-three-day-detour-and-crane-part',
+      'mine-harbor-order-or-convoy-two-part-forty-percent',
       'v3-region-stage-migration-to-v4',
       'rival-first-convoy-two-segment-no-extension-recovery',
       'five-part-order-independent-final-battle-unlock',

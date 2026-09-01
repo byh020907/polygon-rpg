@@ -148,6 +148,19 @@ const RAW_PROFILES = [
     landmarks: ['황색 회전 경고등', '좌우 유압 다리', '노출된 편심 구동축'],
     representativePose: '한쪽 굴착 다리를 들어 지면 강타 범위를 예고하는 자세',
   },
+  {
+    id: 'shipyard-twin-crane-boss',
+    label: '점거된 쌍둥이 소형 크레인',
+    roleLabel: '항구 조선소 Boss',
+    family: 'machine',
+    accent: '#59c3c6',
+    material: '#3f7f83',
+    toolKind: 'hydraulic-crane',
+    minimumViewportHeight: 88,
+    proportions: { shoulder: 34, hip: 25, head: 7, sideDepth: 20 },
+    landmarks: ['좌우 유압 붐', '청록 도장강 기둥', '굵은 교차 유압 케이블'],
+    representativePose: '한쪽 붐을 뒤로 당기고 다른 붐의 압착 범위를 케이블 장력으로 예고하는 자세',
+  },
 ];
 
 function validateProfile(profile) {

@@ -15,7 +15,12 @@ function assertAttackProfiles(profiles) {
   return profiles;
 }
 
-const SCRAP_ENEMY_TOOL_KINDS = Object.freeze(['magnet-claw', 'drill-maw', 'conveyor-ram']);
+const SCRAP_ENEMY_TOOL_KINDS = Object.freeze([
+  'magnet-claw',
+  'drill-maw',
+  'conveyor-ram',
+  'hydraulic-crane',
+]);
 
 function assertCharacterPresentationProfile(profile) {
   if (!profile || typeof profile !== 'object') {
@@ -409,6 +414,90 @@ function createScrapEnemyAppearanceItems({
           stroke: accent,
           lineWidth: 2,
           order: headOrder + 0.16,
+        },
+      ),
+    ];
+  }
+
+  if (toolKind === 'hydraulic-crane') {
+    const boomLength = Math.max(weaponLength - 10, 58);
+    const rearBoomStart = { x: x - shoulderWidth + 4, y: y - 62 };
+    const rearBoomEnd = { x: x - shoulderWidth - 42, y: y - 94 };
+    return [
+      ...commonItems,
+      polygon(
+        'combat-enemy-hydraulic-crane-boom',
+        [
+          { x: -8, y: -9 },
+          { x: boomLength - 8, y: -8 },
+          { x: boomLength + 8, y: -2 },
+          { x: boomLength + 8, y: 8 },
+          { x: -8, y: 10 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        material,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 3.5,
+          order: weaponOrder + 0.24,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-hydraulic-crane-rear-boom',
+        rearBoomStart,
+        rearBoomEnd,
+        15,
+        material,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 3,
+          order: bodyOrder - 0.12,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-hydraulic-crane-cylinder',
+        { x: weaponHand.x - 4, y: weaponHand.y + 8 },
+        {
+          x: weaponHand.x + Math.cos(weaponAngle) * (boomLength * 0.72),
+          y: weaponHand.y + Math.sin(weaponAngle) * (boomLength * 0.72) + 8,
+        },
+        6,
+        plateEdge,
+        {
+          ...presentation,
+          stroke: '#dfffff',
+          lineWidth: 1.5,
+          order: weaponOrder + 0.28,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-hydraulic-crane-cross-cable',
+        rearBoomEnd,
+        {
+          x: weaponHand.x + Math.cos(weaponAngle) * Math.min(boomLength, 70),
+          y: weaponHand.y + Math.sin(weaponAngle) * Math.min(boomLength, 70),
+        },
+        6,
+        cableFill,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2,
+          order: bodyOrder + 0.08,
+        },
+      ),
+      polygon(
+        'combat-enemy-hydraulic-crane-warning-light',
+        regularPolygon(headRadius + 2, Math.max(6, headRadius * 0.78), 8, Math.PI / 8),
+        { x: x - 3, y: y - 106 },
+        accent,
+        {
+          ...presentation,
+          stroke: '#dfffff',
+          lineWidth: 2.5,
+          order: headOrder + 0.3,
         },
       ),
     ];

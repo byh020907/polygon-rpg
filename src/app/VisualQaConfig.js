@@ -6,6 +6,8 @@ import {
   SCRAP_AWAKENING_MAP_ID,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
+  SCRAP_SHIPYARD_CRANE_ROOM_ID,
+  SCRAP_SHIPYARD_REGION_ID,
 } from '../game/maps/scrapAwakening.js';
 
 export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
@@ -306,6 +308,55 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
     }),
   }),
+  'scrap-shipyard-boss': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_SHIPYARD_REGION_ID,
+    roomId: SCRAP_SHIPYARD_CRANE_ROOM_ID,
+    x: 620,
+    scrapRegionState: Object.freeze({
+      regionId: SCRAP_SHIPYARD_REGION_ID,
+      stageKind: 'journey-combat',
+      status: 'in-progress',
+    }),
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'combat-enemy-hydraulic-crane-boom',
+        'combat-enemy-hydraulic-crane-cross-cable',
+        'shipyard-twin-crane-left-arm',
+        'shipyard-twin-crane-thick-cable',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'shipyard-last-ship-patch',
+        'shipyard-hydraulics-signal',
+      ]),
+    }),
+  }),
+  'scrap-shipyard-resolved': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_SHIPYARD_REGION_ID,
+    roomId: SCRAP_SHIPYARD_CRANE_ROOM_ID,
+    x: 990,
+    scrapRegionState: Object.freeze({
+      regionId: SCRAP_SHIPYARD_REGION_ID,
+      stageKind: 'campaign-updated',
+      status: 'resolved',
+      collected: true,
+    }),
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'shipyard-last-ship-patch',
+        'shipyard-last-ship-weld',
+        'shipyard-separated-crane-towers',
+        'shipyard-hydraulics-cradle',
+        'shipyard-hydraulics-signal',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'combat-enemy-hydraulic-crane-boom',
+        'shipyard-twin-crane-left-arm',
+        'shipyard-twin-crane-thick-cable',
+      ]),
+    }),
+  }),
   'scrap-garage-20': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
@@ -332,6 +383,44 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
     }),
   }),
+  'scrap-garage-40': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 480,
+    scrapRegionStates: Object.freeze([
+      Object.freeze({
+        regionId: 'abandoned-mine',
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+    ]),
+    expectation: Object.freeze({
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+      expectedItems: Object.freeze([
+        'garage-robot-walker-leg-left',
+        'garage-robot-walker-leg-right',
+        'garage-robot-crane-arm-left',
+        'garage-robot-crane-arm-right',
+        'garage-robot-crane-cable',
+        'garage-robot-forty-label',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'garage-robot-zero-label',
+        'garage-robot-twenty-label',
+        'garage-robot-crane-twenty-label',
+      ]),
+    }),
+  }),
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
   'scrap-character-board': Object.freeze({
     regionId: 'academy-region',
@@ -349,7 +438,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'character-board-cell-collector-unit',
         'character-board-cell-industrial-creature',
         'character-board-cell-regional-boss',
+        'character-board-cell-mine-collapse-boss',
+        'character-board-cell-shipyard-twin-crane-boss',
         'regional-boss-representative-pose-tool-conveyor-ram',
+        'shipyard-twin-crane-boss-representative-pose-tool-hydraulic-crane',
       ]),
       expectedAbsentItems: Object.freeze(['shield', 'sword-blade']),
     }),

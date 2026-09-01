@@ -3095,25 +3095,31 @@ export class GameScene extends SceneNode {
     const scrapRegionObjective = (() => {
       if (!scrapCampaignRegionReadModel) return '';
       if (scrapCampaignRegionReadModel.status === 'resolved') {
-        return '굴착기 다리 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 차고 20%를 확인하세요.';
+        return (
+          scrapCampaignRegion.objectives.resolved ??
+          `${scrapCampaignRegion.part.label} 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 차고와 작전 지도를 확인하세요.`
+        );
       }
       if (
-        scrapCampaignRegionReadModel.status === 'in-progress' &&
+        scrapCampaignRegionReadModel.status === 'available' &&
         scrapCampaignRegionReadModel.eventStageKind === 'facility-observed'
       ) {
-        return '오른쪽 구조 갱도로 들어가 수거 유닛을 제거하고 작업자 길을 확보하세요.';
+        return (
+          scrapCampaignRegion.objectives.eventStart ??
+          `핵심 사건을 확정해 ${scrapCampaignRegionReadModel.eventSegments}구간 작업을 시작하세요.`
+        );
       }
+      if (!scrapCampaignRegionReadModel.eventStageKind) {
+        return (
+          scrapCampaignRegion.objectives.arrival ??
+          `${scrapCampaignRegion.label} 현장 책임자에게 시설 상황을 들으세요.`
+        );
+      }
+      const activeStage = scrapCampaignRegion.eventStages.find(
+        (stage) => stage.kind === scrapCampaignRegionReadModel.eventStageKind,
+      );
       return (
-        {
-          'npc-briefing': '오른쪽 구조 현황판에서 붕괴 범위, 10구간 비용과 성공 연장을 확인하세요.',
-          'facility-observed': '핵심 사건을 확정해 10구간 구조 작업을 시작하세요.',
-          'journey-combat': '확보한 갱도 오른쪽에서 굴착기 작업장으로 이동해 Boss를 제압하세요.',
-          'boss-defeated': '작업장 왼쪽에서 광부와 새 갱도 버팀목을 체결하세요.',
-          'replacement-complete': '보행식 굴착기 본체를 조사해 하체·구동부를 분리하세요.',
-          'machine-separated': '오른쪽 회수대에서 굴착기 하체·구동부를 수령하세요.',
-          'campaign-updated': '굴착기 다리 수송 완료. 고물상 차고와 다음 지역을 확인하세요.',
-        }[scrapCampaignRegionReadModel.eventStageKind] ??
-        '광부 작업반장에게 붕괴 광산의 구조 상황을 들으세요.'
+        activeStage?.nextObjective ?? `${scrapCampaignRegion.label}의 다음 현장 단계를 확인하세요.`
       );
     })();
     const story = scrapAwakeningLocation
@@ -3305,16 +3311,15 @@ export class GameScene extends SceneNode {
     }
     if (scrapCampaignRegionLocation) {
       objective = story.nextObjective;
-      if (roomId === 'abandoned-mine-machine-yard' && encounter?.health > 0) {
+      if (encounter?.role === 'boss' && encounter.health > 0) {
         if (encounter.weakPoint?.exposed) {
-          objective = `${encounter.weakPoint.label}이 노출되었습니다. 강공격 뒤 같은 검·방패 연계로 공격하세요.`;
+          objective = `${encounter.weakPoint.label}이 노출되었습니다. 같은 검·방패 연계로 회복 전에 공격하세요.`;
         } else if (encounter.punishWindowOpen) {
-          objective = '굴착기 자세가 무너졌습니다. 회복 전에 검 연계를 적중시키세요.';
+          objective = `${encounter.label}의 자세가 무너졌습니다. 회복 전에 검 연계를 적중시키세요.`;
         } else if (encounter.attackKind === 'heavy' && encounter.aiState === 'windup') {
-          objective =
-            '들어 올린 굴착 다리의 지면 강타는 막을 수 없습니다. 방향 구르기로 통과하세요.';
+          objective = `${encounter.label}의 큰 가동부 공격은 막을 수 없습니다. 방향 구르기로 통과하세요.`;
         } else if (encounter.attackKind === 'light' && encounter.aiState === 'windup') {
-          objective = '짧은 유압 밀치기는 방패로 막고 방패 반격을 준비하세요.';
+          objective = `${encounter.label}의 짧은 기계 공격은 방패로 막고 방패 반격을 준비하세요.`;
         }
       }
       encounterHint = `${scrapCampaignRegionReadModel.statusLabel} · ${scrapCampaignRegion.event.label} · ${scrapCampaignRegionReadModel.eventSegments}구간 / 성공 D-DAY +${scrapCampaignRegionReadModel.extensionDays}일`;

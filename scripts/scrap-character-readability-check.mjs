@@ -9,7 +9,7 @@ import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
-assert.equal(profiles.length, 11);
+assert.equal(profiles.length, 12);
 assert.equal(new Set(profiles.map((profile) => profile.id)).size, profiles.length);
 assert.deepEqual(CHARACTER_PRESENTATION_PROFILE.comparisonViews, [
   'front',
@@ -33,6 +33,7 @@ const requiredRoleIds = [
   'industrial-creature',
   'regional-boss',
   'mine-collapse-boss',
+  'shipyard-twin-crane-boss',
 ];
 assert.deepEqual(
   profiles.map((profile) => profile.id),
@@ -191,6 +192,13 @@ for (const scenario of [
     profileId: 'mine-collapse-boss',
     landmarkId: 'combat-enemy-conveyor-ram-plate',
   },
+  {
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    regionId: 'harbor-shipyard',
+    roomId: 'harbor-shipyard-twin-crane-pier',
+    profileId: 'shipyard-twin-crane-boss',
+    landmarkId: 'combat-enemy-hydraulic-crane-boom',
+  },
 ]) {
   const scenarioScene = createTestGameScene({
     mapDefinition: scenario.mapDefinition ?? ACADEMY_VILLAGE_MAP,
@@ -238,6 +246,7 @@ process.stdout.write(
       'semantic-board-manifest',
       'composition-injected-player-and-encounter-profile-ids',
       'actual-gameplay-scrap-landmarks-without-fantasy-fallback',
+      'shipyard-worker-and-twin-crane-boss-distinct-job-machine-silhouettes',
       'renderer-read-only-presentation-items-and-combat-geometry-preserved',
     ],
   })}\n`,
