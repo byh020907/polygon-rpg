@@ -1001,11 +1001,6 @@ dd {
   border-color: #d8bc78;
 }
 
-.game-screen:has(.enchant-forge[data-forge-ready='true'])
-  .dialogue-bubble[data-dialogue-active='false'][data-dialogue-target='academy-workshop-sign-interaction'] {
-  display: none !important;
-}
-
 .growth-panel button:disabled {
   cursor: not-allowed;
   filter: saturate(0.35);
@@ -1166,19 +1161,6 @@ dd {
   border-bottom: 0;
   content: '';
   transform: translateX(-50%);
-}
-
-.dialogue-bubble[data-dialogue-active='false'] {
-  width: max-content;
-  max-width: min(210px, calc(100% - 36px));
-  padding: 5px 8px;
-  border-color: rgb(243 212 154 / 62%);
-  border-radius: 999px;
-}
-
-.dialogue-bubble[data-dialogue-active='false'] header small,
-.dialogue-bubble[data-dialogue-active='false'] footer {
-  display: none;
 }
 
 .dialogue-bubble header,

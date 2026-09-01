@@ -333,7 +333,7 @@ function verifyVisualQaMatrix() {
   assert.match(html, /@keydown\.enter\.prevent\.stop="selectEnchant\(option\)"/);
   assert.match(html, /@keydown\.space\.prevent\.stop="selectEnchant\(option\)"/);
   assert.match(html, /@touchend\.prevent="selectEnchant\(option\)"/);
-  assert.match(html, /canForgeEnchant && !dialogue\.active/);
+  assert.match(html, /<template x-if="dialogue\.active">\s+<section\s+class="dialogue-bubble"/);
   const scenarios = [
     'enchant-fire-contact',
     'enchant-lightning-contact',

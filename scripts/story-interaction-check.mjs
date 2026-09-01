@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
 import { dialogueSafeBounds, projectDialogue } from '../src/app/DialoguePresentation.js';
@@ -320,12 +321,12 @@ function verifyDialoguePresentationSafeBounds() {
   assert.ok(active.screenAnchor.x >= 18 && active.screenAnchor.x <= 302);
   assert.ok(active.screenAnchor.y >= 18 && active.screenAnchor.y <= 162);
 
-  const availableBounds = dialogueSafeBounds(availableDialogue, viewport);
   const available = projectDialogue(availableDialogue, frame, viewport, cameraWorldSize);
-  assert.equal(available.screenAnchor.x, availableBounds.maxX);
-  assert.equal(available.screenAnchor.y, availableBounds.minY);
-  assert.ok(available.screenAnchor.x >= 18 && available.screenAnchor.x <= 302);
-  assert.ok(available.screenAnchor.y >= 18 && available.screenAnchor.y <= 162);
+  assert.equal(
+    available.screenAnchor,
+    undefined,
+    '대화를 시작하지 않은 available interaction은 bubble geometry를 만들면 안 된다.',
+  );
 
   const mobileLandscapeViewport = Object.freeze({ cssWidth: 844, cssHeight: 390 });
   const bottomExtreme = projectDialogue(
@@ -353,6 +354,22 @@ function verifyDialoguePresentationSafeBounds() {
     cameraWorldSize,
   );
   assert.deepEqual(centered.screenAnchor, { x: 720, y: 405 });
+}
+
+function verifyDialogueBubbleActiveLifetime() {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  assert.match(html, /<template x-if="dialogue\.active">\s+<section\s+class="dialogue-bubble"/);
+  assert.doesNotMatch(
+    html,
+    /class="dialogue-bubble"\s+x-show=/,
+    'available-only interaction이 bubble을 표시하면 안 된다.',
+  );
+  assert.doesNotMatch(
+    styles,
+    /dialogue-bubble\[data-dialogue-active='false'\]/,
+    'inactive bubble presentation style을 남기면 안 된다.',
+  );
 }
 
 function verifyKeyboardTouchParity() {
@@ -628,6 +645,7 @@ verifyInteractionRangeAndTargets();
 verifyDialogueProgressionAndSequenceConsumption();
 verifyTypewriterRevealAndCompletionJump();
 verifyDialoguePresentationSafeBounds();
+verifyDialogueBubbleActiveLifetime();
 verifyKeyboardTouchParity();
 verifyFirstJourneyStoryChain();
 verifyStaleDialogueConsumesOneJump();
@@ -647,6 +665,7 @@ console.log(
         'immutable-dialogue-dto',
         'world-anchor-and-typewriter-reveal',
         'dialogue-bubble-safe-projection',
+        'dialogue-bubble-active-only-lifetime',
         'first-journey-stage-dialogue-matrix',
         'locked-and-obsolete-targets',
         'story-objective-journey-label-alignment',

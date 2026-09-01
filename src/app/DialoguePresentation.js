@@ -24,7 +24,7 @@ export function dialogueSafeBounds(dialogue, viewport) {
 }
 
 export function projectDialogue(dialogue, renderFrame, viewport, cameraWorldSize) {
-  if (!dialogue?.available || !dialogue.worldAnchor) return dialogue;
+  if (!dialogue?.active || !dialogue.worldAnchor) return dialogue;
   const width = viewport.cssWidth;
   const height = viewport.cssHeight;
   const scale = Math.min(width / cameraWorldSize.width, height / cameraWorldSize.height);
