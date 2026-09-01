@@ -667,6 +667,7 @@ export const FIRST_JOURNEY_ROOMS = Object.freeze([
 export const FIRST_JOURNEY_PORTALS = Object.freeze([
   {
     id: 'academy-field-portal',
+    travelSegmentId: 'academy-sealed-road',
     bidirectional: true,
     from: {
       regionId: 'academy-region',
@@ -686,6 +687,7 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
   },
   {
     id: 'field-bypass-portal',
+    travelSegmentId: 'sealed-canopy-detour',
     bidirectional: true,
     from: {
       regionId: 'academy-region',
@@ -705,6 +707,7 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
   },
   {
     id: 'field-dungeon-portal',
+    travelSegmentId: 'cleared-sealed-road',
     bidirectional: true,
     enabled: false,
     from: {
@@ -725,6 +728,7 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
   },
   {
     id: 'bypass-dungeon-portal',
+    travelSegmentId: 'canopy-dungeon-trail',
     bidirectional: true,
     from: {
       regionId: 'academy-region',
@@ -764,6 +768,7 @@ export const FIRST_JOURNEY_PORTALS = Object.freeze([
   },
   {
     id: 'boss-shortcut-portal',
+    travelSegmentId: 'sealed-shortcut-return',
     bidirectional: false,
     enabled: false,
     from: {

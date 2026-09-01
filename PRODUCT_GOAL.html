@@ -440,6 +440,34 @@
               </ul>
             </article>
 
+            <article class="requirement" id="PG-COMBAT-ENCHANT">
+              <p class="requirement-id">PG-COMBAT-ENCHANT</p>
+              <h3>검 인챈트 하나로 적과 지역에 맞는 공략을 준비한다</h3>
+              <ul>
+                <li>
+                  Player는 마법을 직접 시전하지 않고 현재 검에 화염·전기·냉기·대지 중 인챈트 하나만
+                  활성화한다. 방패치기에는 검 인챈트가 적용되지 않는다.
+                </li>
+                <li>
+                  속성 피해와 상태 축적은 약점에서 증가하고 중립에서는 기준값을 유지하며 내성에서는
+                  감소하지만, 어떤 적도 속성 때문에 피해가 0이 되거나 공략이 불가능해지지 않는다.
+                </li>
+                <li>
+                  화염은 재생과 식물 방어를 태우고, 전기는 읽을 수 있는 준비 동작을 interrupt하며,
+                  냉기는 이동과 회복을 늦추고, 대지는 guard와 posture를 크게 무너뜨린다.
+                </li>
+                <li>
+                  Basic은 빠른 타격으로 현재 속성 상태를 유지·연장하고 Strong은 더 큰 속성 축적과
+                  posture 피해를 준다. 속성 결과는 같은 command grammar와 contact 판정 위에서
+                  동작한다.
+                </li>
+                <li>
+                  지역 사건과 Boss가 주는 확정 재료로 학원촌 대장간에서 인챈트를 해금·교체한다. 낮은
+                  확률 제작 결과나 반복 farming을 핵심 공략의 전제로 삼지 않는다.
+                </li>
+              </ul>
+            </article>
+
             <article class="requirement" id="PG-WORLD-JOURNEY">
               <p class="requirement-id">PG-WORLD-JOURNEY</p>
               <h3>마을에서 출발하는 하나의 완전한 원정을 경험한다</h3>
@@ -496,6 +524,43 @@
                 <li>
                   낮밤, story와 local event 변화는 기존 공간의 의미를 바꾸되 필수 경로를 끊지
                   않는다.
+                </li>
+              </ul>
+            </article>
+
+            <article class="requirement" id="PG-WORLD-TIME">
+              <p class="requirement-id">PG-WORLD-TIME</p>
+              <h3>의미 있는 행동으로만 세계의 위기 시간이 흐른다</h3>
+              <ul>
+                <li>
+                  전역 World Clock과 하나의 Deadline은 실제 여행, 중요한 encounter 완료,
+                  채집·제작·훈련, 휴식·야영, KO와 원정 포기처럼 의미 있는 행동에서만 정해진 양만큼
+                  진행한다. 메뉴, 대화, Chunk load/unload, 접속 종료와 offline 시간에는 흐르지
+                  않는다.
+                </li>
+                <li>
+                  여행 시간은 작은 Chunk 경계가 아니라 도로·숲길·협곡처럼 authored Travel Segment를
+                  완주했을 때 확정된다. 열린 shortcut과 정리한 도로는 이후 같은 이동의 시간 비용을
+                  줄인다.
+                </li>
+                <li>
+                  각 Chunk는 load될 때 현재 전역 시간과 stable event flag만 읽어 낮밤, NPC 반응,
+                  적·elite 배치, 시설, 열린 길과 붕괴 단계를 결정적으로 재구성하며, load되지 않은
+                  Chunk를 background simulation하지 않는다.
+                </li>
+                <li>
+                  작은 사건, guardian, Dungeon 핵심 장치와 Boss 같은 핵심 사건은 Deadline을 정해진
+                  양만큼 연장하되 최대치로 초기화하지 않는다. HUD와 인물·환경 반응은 남은 시간과
+                  원인을 함께 전달한다.
+                </li>
+                <li>
+                  Deadline이 0이면 모든 Chunk가 Crisis 상태를 재구성하고 NPC·시설·적 배치가 최종
+                  대응 상태가 되며 side activity 대신 핵심 방어 사건이 열린다.
+                </li>
+                <li>
+                  핵심 방어 사건 실패는 최근 핵심 사건 직후의 안정 지점으로 되감는다. 장비, 인챈트와
+                  command 해금은 보존하고 귀환하지 않은 원정 보상만 잃으며, 다음 시도에는 위기
+                  원인을 아는 NPC 반응이 추가된다.
                 </li>
               </ul>
             </article>
@@ -624,8 +689,8 @@
               제품은 별도 설치나 계정 없이 current desktop/mobile browser에서 핵심 흐름을 실행한다.
             </li>
             <li>
-              Player는 마법을 직접 사용하지 않으며 검, 방패, 장비와 신체 동작으로 마법 생물을
-              공략한다.
+              Player는 마법을 직접 시전하지 않으며 검 하나에 활성화한 인챈트 하나, 방패, 장비와 신체
+              동작으로 마법 생물을 공략한다.
             </li>
             <li>
               Polygon 제작 효율과 Retro Pixel 가독성을 함께 유지하며 asset·character·story를
@@ -698,6 +763,15 @@
                   <td>고정 frame Polygon/Retro capture와 event/contact metadata</td>
                 </tr>
                 <tr>
+                  <th scope="row">PG-COMBAT-ENCHANT</th>
+                  <td>
+                    확정 재료로 대장간에서 검 인챈트 하나를 교체하고 같은 Basic/Strong을 약점·중립·
+                    내성 적에게 적중시켜 피해와 상태 축적 차이, 각 속성 부가효과와 방패치기 제외를
+                    확인한다. 내성 공략에서도 피해는 0이 되지 않는다.
+                  </td>
+                  <td>120Hz 속성 combat trace, forge transaction과 Polygon/Retro 상태 판독</td>
+                </tr>
+                <tr>
                   <th scope="row">PG-WORLD-JOURNEY</th>
                   <td>
                     마을 준비부터 Field·Dungeon·Boss·보상·shortcut 귀환과 새 목표까지 debug 조작
@@ -713,6 +787,18 @@
                     각 Room과 출입구가 환경별 landmark와 사람 크기로 구분되고 필수 경로가 유지된다.
                   </td>
                   <td>각 stable scene의 desktop/mobile capture와 map validation</td>
+                </tr>
+                <tr>
+                  <th scope="row">PG-WORLD-TIME</th>
+                  <td>
+                    메뉴·대화·대기·reload와 작은 Chunk 전환은 시간을 바꾸지 않고 authored Travel
+                    Segment와 의미 있는 사건만 Clock/Deadline을 한 번 갱신한다. 낮밤·shortcut 비용·
+                    Deadline 연장·Crisis Chunk 재구성과 방어 실패 되감기를 연속 원정에서 확인한다.
+                  </td>
+                  <td>
+                    결정적 action ledger, persistence round-trip, Chunk rebuild와 Crisis recovery
+                    trace
+                  </td>
                 </tr>
                 <tr>
                   <th scope="row">PG-GROWTH-CHOICE</th>

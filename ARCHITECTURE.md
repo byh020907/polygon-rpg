@@ -32,6 +32,8 @@
 | Map Domain                        | Region/Room/Portal definition, active snapshot, stable-ID patch와 atomic transition                        | Renderer mutation, input device event, story UI 직접 작성           |
 | Encounter / Combat Domain         | Enemy state, command phase, weapon↔hurt contact, juggle, guard/evade와 combat result                       | DOM, Canvas API, persistence adapter, Player mutable object 공유    |
 | Progression Domain / Storage Port | Reward·unlock·route state transition과 versioned load/save contract                                        | UI layout, map geometry, direct browser-global dependency in policy |
+| Enchantment Domain                | 단일 active sword enchant, affinity·상태 축적·부가효과와 확정 material transaction                         | Input adapter, Canvas effect, shield attack 변형                    |
+| World Time Domain                 | 의미 있는 action ledger, World Clock·Deadline·Crisis와 stable rewind checkpoint                            | Render delta 기반 시간 진행, Chunk background simulation            |
 | Shared Combat Geometry            | Pose와 gameplay dimensions에서 weapon, shield, hurt와 swept-contact geometry 계산                          | Canvas style, effect color, damage state write                      |
 | Animation / Presentation Geometry | Gameplay motion state에서 target pose, IK와 read-only geometry 계산                                        | Hit 승인, physics state write, frame clock ownership                |
 | Renderers                         | 같은 immutable RenderFrame을 Polygon/Retro surface에 투영                                                  | Simulation 진행, hit 재판정, effect lifetime 또는 map state write   |
@@ -71,9 +73,11 @@ Mobile ───────┘                              │
 - Active Room subtree가 Room-local entity lifecycle을, Encounter owner가 enemy/AI/juggle state를 쓴다. Encounter는 Player mutable state를 직접 소유하지 않고 완료 result를 root에 전달한다.
 - Combat command owner가 startup/active/recovery, buffer, cancel과 combo cycle을 결정한다. Animation module은 normalized motion state를 읽을 뿐 command timing을 바꾸지 않는다.
 - Combat command owner가 stamina 잔량·회복, action별 비용, guard 유지 drain과 guard 시작 경과 시간을 결정한다. Guard contact result의 authored attack 위력별 drain은 한 번만 적용하고, 짧은 just-guard window 안의 guardable contact는 drain 대신 회복과 Basic-only counter window를 하나의 command transition으로 기록한다. Counter window 중 다른 action sequence는 소비하되 실행하지 않고 새 Basic만 전용 shield-counter motion으로 전환한다. Strong startup의 guard-break와 피격 interrupt도 같은 command transition에서 기록한다.
+- Enchantment owner가 단일 active sword enchant, 확정 material unlock, 적 affinity, attack별 속성 축적·상태 지속과 부가효과 transition을 기록한다. Combat contact는 neutral enchant result를 적용하지만 shield contact에는 이를 요청하지 않는다.
 - Shared Combat Geometry는 gameplay와 RenderFrame builder가 함께 읽는 neutral contract다. Gameplay가 renderer/presentation module을 import해 판정을 계산하거나 renderer가 별도 contact geometry를 만들지 않는다.
 - Story interaction owner가 현재 대화 speaker·line·world anchor·순차 reveal 진행도·advance 가능 여부와 story transition을 쓴다. UI presentation은 immutable dialogue DTO와 camera read model로 화자 위 bubble을 투영하되 gameplay state를 쓰지 않는다. 같은 jump action의 이동, 현재 줄 완성 또는 다음 대화 진행 우선순위는 game domain이 현재 interaction context에서 한 번 결정한다.
 - Progression owner가 route, checkpoint, boss, reward, equipment와 unlock transition을 쓴다. Storage adapter는 versioned snapshot을 검증·직렬화할 뿐 rule을 결정하지 않는다.
+- World Time owner가 authored action ID별 Clock 비용·Deadline 비용/연장과 Crisis 진입을 idempotent ledger로 쓴다. Map Runtime은 현재 world snapshot을 읽어 active Chunk를 resolve할 뿐 시간을 진행하거나 unloaded Chunk를 simulation하지 않는다.
 - UI는 status DTO를 표시하고 public command만 호출한다. Renderer는 RenderFrame을 읽기만 한다.
 
 ```text
@@ -99,6 +103,7 @@ Immutable status + RenderFrame
 - Guard, roll invulnerability, hit/block stun, retaliation protection, juggle limit과 landing reset은 각 owner가 단일 state transition으로 기록한다.
 - Combat event는 원인 ID, contact position과 bounded presentation lifetime을 가진 immutable result다. Renderer가 이를 재해석하거나 중복 소비하지 않는다.
 - Guard result는 authored stamina damage와 just-guard eligibility를 command owner에 전달하고, just guard와 shield counter event는 실제 shield/target contact와 stamina delta를 immutable result로 보존한다. Presentation은 이 event에서 방패 섬광·원형 파동·spark·회복 표시를 만들며 combat 판정을 다시 계산하지 않는다.
+- Sword contact는 attack kind, active enchant와 target affinity를 neutral enchant policy에 전달한다. Policy는 non-zero damage multiplier, 상태 축적·연장, posture와 interrupt/slow/burn result를 반환하며 Combat owner가 단 한 번 적용한다. Shield contact는 enchant policy를 호출하지 않는다.
 - Camera feedback과 render interpolation은 gameplay position과 collider를 변경하지 않는다.
 
 ## World and Map Contracts
@@ -110,6 +115,9 @@ Immutable status + RenderFrame
 - Conditional world 변화는 base map 복제가 아니라 stable object ID를 대상으로 한 deterministic patch로 적용한다.
 - 같은 우선순위에서 같은 target/property를 중복 쓰거나 필수 이동 경로를 끊는 patch는 invalid다.
 - Renderer는 active Room, Portal availability와 patch를 해석하지 않고 resolved read model만 소비한다.
+- Portal/trigger/interaction authored content는 작은 Chunk 이동과 구분되는 stable Travel Segment 또는 의미 있는 world action ID·비용을 제공한다. World Time owner는 완료된 action만 commit하며 transition 실패나 같은 event 재진입에 이중 청구하지 않는다.
+- Chunk resolve context는 World Clock phase, remaining Deadline, Crisis와 stable event flags로 제한한다. 이 context가 같으면 unload/reload 뒤 같은 NPC·facility·encounter·route patch를 만들고 offline 경과 시간은 context에 섞지 않는다.
+- Deadline 0의 Crisis 전환과 최근 핵심 사건 직후 rewind snapshot은 World Time/Progression coordinator가 원자 적용한다. Meta progression은 보존하고 unreturned expedition reward만 폐기하며 retry-aware stable flag를 추가한다.
 
 ## Rendering and Presentation Contracts
 
@@ -138,6 +146,7 @@ Immutable status + RenderFrame
 - Progression storage는 schema version과 typed fields를 검증하고 unknown/corrupt payload를 정상 state로 위장하지 않는다.
 - Load/save failure는 explicit result로 application에 전달하며 domain state를 부분 적용하지 않는다.
 - Reward, checkpoint, boss와 shortcut transition은 idempotent하게 해석되어 reload나 repeated trigger가 보상을 중복 지급하지 않는다.
+- World Clock, Deadline, active enchant, material unlock, committed world-action ID와 stable rewind point는 versioned progression snapshot에 포함한다. Menu/dialogue/real-time delta와 wall clock은 저장 data를 암묵적으로 변경하지 않는다.
 - Room transition, input sequence와 encounter reset은 interruption 뒤 숨은 command나 stale entity를 다음 Room으로 넘기지 않는다.
 - Development Loop State는 Desired State가 아니며 root sources와 current code/evidence에서 재구성한다.
 
@@ -154,6 +163,8 @@ Immutable status + RenderFrame
 
 - Syntax, lint와 formatting은 `npm run check`, patch whitespace는 `git diff --check`로 검사한다.
 - Pure combat, map patch, progression과 input rule은 DOM 없는 deterministic fixtures로 검증한다. Guard 유지 drain, 공격 위력별 단일 contact drain, just-guard 경계·회복, Basic-only lock과 keyboard/touch parity를 120Hz trace로 고정한다.
+- Enchantment fixture는 Basic/Strong·shield contact, 네 속성, 약점/중립/내성의 non-zero damage, 상태 축적·지속과 확정 material transaction을 120Hz trace로 고정한다.
+- World Time fixture는 menu/dialogue/idle/load 0비용, Travel Segment와 core event의 단일 commit, shortcut 비용 감소, Deadline 가산/차감·Crisis, deterministic Chunk rebuild, reload와 rewind invariant를 고정한다.
 - Browser flow는 실제 menu → game → journey/encounter path, resize, keyboard/mobile adapter와 console error를 확인한다.
 - Visual 변경은 stable scenario와 frame에서 실제 browser viewport PNG를 만들고 직접 판독한다. Polygon/Retro, desktop/narrow viewport와 relevant pose/state를 같은 acceptance 기준으로 비교한다.
 - Persistence는 versioned round-trip, corrupt payload, failure result와 idempotent reward recovery를 검증한다.

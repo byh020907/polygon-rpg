@@ -528,6 +528,7 @@ export const GLASSWIND_REGION = Object.freeze({
 export const GLASSWIND_PORTALS = Object.freeze([
   {
     id: 'academy-glasswind-portal',
+    travelSegmentId: 'academy-glasswind-canyon',
     bidirectional: true,
     from: {
       regionId: 'academy-region',
@@ -547,6 +548,7 @@ export const GLASSWIND_PORTALS = Object.freeze([
   },
   {
     id: 'glasswind-dungeon-portal',
+    travelSegmentId: 'glasswind-observatory-climb',
     bidirectional: true,
     enabled: false,
     from: {
@@ -587,6 +589,7 @@ export const GLASSWIND_PORTALS = Object.freeze([
   },
   {
     id: 'glasswind-shortcut-portal',
+    travelSegmentId: 'glasswind-shortcut-return',
     bidirectional: false,
     enabled: false,
     from: {

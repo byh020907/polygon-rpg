@@ -9,6 +9,7 @@ import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
 import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
+import { WORLD_TIME_PROFILE } from '../game/world/WorldTimeProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -124,6 +125,7 @@ export class GameApp extends SceneNode {
         combatProgressionProfile: COMBAT_PROGRESSION_PROFILE,
         encounterFactory: createTrainingEncounter,
         encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
+        worldTimeProfile: WORLD_TIME_PROFILE,
         progressionSnapshot,
       }),
     );

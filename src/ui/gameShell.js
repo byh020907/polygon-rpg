@@ -151,6 +151,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     encounterHealthLabel: '',
     wardLabel: '수호 수액 미획득',
     timeLabel: '낮',
+    deadlineLabel: 'Deadline 12:00',
     canSelectEquipment: true,
     canManageProgression: true,
     selectedEquipmentId: '',
@@ -228,6 +229,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.dialogue = status.dialogue;
           this.objective = status.objective;
           this.timeLabel = status.timeLabel;
+          this.deadlineLabel = status.deadlineLabel;
           this.canSelectEquipment = status.canSelectEquipment;
           this.canManageProgression = status.canManageProgression;
           this.selectedEquipmentId = status.equipmentId;

@@ -6,8 +6,9 @@ import {
   createRegionExpansionProgressSnapshot,
   toRegionExpansionProgressSnapshot,
 } from '../encounter/RegionExpansionProgress.js';
+import { createWorldTimeSnapshot, toWorldTimeSnapshot } from '../world/WorldTimeState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 2;
+export const PROGRESSION_SCHEMA_VERSION = 3;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -48,6 +49,7 @@ function freezeSnapshot({
   combatSkillLevel,
   firstJourney,
   regionExpansion,
+  worldTime,
 }) {
   return Object.freeze({
     version: PROGRESSION_SCHEMA_VERSION,
@@ -57,6 +59,7 @@ function freezeSnapshot({
     combatSkillLevel,
     firstJourney: toFirstJourneyProgressSnapshot(firstJourney),
     regionExpansion: toRegionExpansionProgressSnapshot(regionExpansion),
+    worldTime: toWorldTimeSnapshot(worldTime),
   });
 }
 
@@ -69,6 +72,7 @@ export function createProgressionSnapshot(defaultEquipmentId) {
     combatSkillLevel: 0,
     firstJourney: createFirstJourneyProgressSnapshot(),
     regionExpansion: createRegionExpansionProgressSnapshot(),
+    worldTime: createWorldTimeSnapshot(),
   });
 }
 
@@ -104,18 +108,24 @@ export function assertProgressionSnapshot(snapshot) {
   }
   toFirstJourneyProgressSnapshot(snapshot.firstJourney);
   toRegionExpansionProgressSnapshot(snapshot.regionExpansion);
+  toWorldTimeSnapshot(snapshot.worldTime);
   return snapshot;
 }
 
 export function mergeProgressionSnapshot(
   snapshot,
-  { firstJourney = snapshot?.firstJourney, regionExpansion = snapshot?.regionExpansion } = {},
+  {
+    firstJourney = snapshot?.firstJourney,
+    regionExpansion = snapshot?.regionExpansion,
+    worldTime = snapshot?.worldTime,
+  } = {},
 ) {
   assertProgressionSnapshot(snapshot);
   return freezeSnapshot({
     ...snapshot,
     firstJourney,
     regionExpansion,
+    worldTime,
   });
 }
 

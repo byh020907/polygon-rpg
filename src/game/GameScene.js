@@ -37,6 +37,11 @@ import {
   createTrainingEnemyItems,
   sampleTrainingEnemyCombatFrame,
 } from './training/TrainingEncounterPresentation.js';
+import {
+  commitWorldAction as commitWorldTimeAction,
+  getWorldClockReadModel,
+  toWorldTimeSnapshot,
+} from './world/WorldTimeState.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -175,7 +180,6 @@ const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 const CHARACTER_CELL_SIZE = 48;
 const CHARACTER_BOUNDARY_HALF_WIDTH = CHARACTER_CELL_SIZE / 2;
 const CHARACTER_FOOT_OFFSET = PLAYER_CHARACTER_FOOT_OFFSET;
-const WORLD_HOURS_PER_SECOND = 0.04;
 
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
@@ -223,10 +227,6 @@ function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, 
   });
 }
 
-function timePhaseForHour(hour) {
-  return hour >= 6 && hour < 18 ? 'day' : 'night';
-}
-
 function assertEquipmentCatalog(catalog) {
   if (
     !catalog ||
@@ -267,6 +267,17 @@ function assertEncounterAttackProfiles(profiles) {
   return profiles;
 }
 
+function assertWorldTimeProfile(profile) {
+  if (
+    !profile ||
+    typeof profile.getTravelAction !== 'function' ||
+    typeof profile.getCoreEventAction !== 'function'
+  ) {
+    throw new TypeError('GameScene에는 authored world time profile 주입이 필요합니다.');
+  }
+  return profile;
+}
+
 export class GameScene extends SceneNode {
   constructor({
     mapDefinition,
@@ -274,6 +285,7 @@ export class GameScene extends SceneNode {
     combatProgressionProfile,
     encounterFactory,
     encounterAttackProfiles,
+    worldTimeProfile,
     progressionSnapshot = null,
   } = {}) {
     super('GameScene');
@@ -283,6 +295,7 @@ export class GameScene extends SceneNode {
     this.combatProgressionProfile = assertCombatProgressionProfile(combatProgressionProfile);
     this.encounterFactory = assertEncounterFactory(encounterFactory);
     this.encounterAttackProfiles = assertEncounterAttackProfiles(encounterAttackProfiles);
+    this.worldTimeProfile = assertWorldTimeProfile(worldTimeProfile);
     const initialProgression =
       progressionSnapshot ?? createProgressionSnapshot(this.equipmentCatalog.defaultProfileId);
     this.progressionSnapshot = mergeProgressionSnapshot(initialProgression);
@@ -300,10 +313,13 @@ export class GameScene extends SceneNode {
     this.regionExpansionProgress = new RegionExpansionProgress(
       this.progressionSnapshot.regionExpansion,
     );
+    this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
     this.storyInteractionOwner = new StoryInteractionOwner();
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: {
         timePhase: 'day',
+        deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
+        crisis: this.worldTimeSnapshot.crisis,
         weather: 'clear',
         storyFlags: {
           ...this.journeyProgress.snapshot().storyFlags,
@@ -343,6 +359,7 @@ export class GameScene extends SceneNode {
     this.equipmentProfile = nextEquipment;
     this.journeyProgress = nextJourney;
     this.regionExpansionProgress = nextRegionExpansion;
+    this.worldTimeSnapshot = toWorldTimeSnapshot(nextSnapshot.worldTime);
     this.reset();
     return this.progressionSnapshot;
   }
@@ -361,10 +378,12 @@ export class GameScene extends SceneNode {
     const regionExpansion = this.regionExpansionProgress.restore(
       this.progressionSnapshot.regionExpansion,
     );
-    this.worldTimeHours = 10;
-    this.timePhase = timePhaseForHour(this.worldTimeHours);
+    this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
+    this.timePhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
+      deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
+      crisis: this.worldTimeSnapshot.crisis,
       weather: 'clear',
       storyFlags: { ...journey.storyFlags, ...regionExpansion.storyFlags },
     });
@@ -752,7 +771,15 @@ export class GameScene extends SceneNode {
   }
 
   toggleTimePhase() {
-    this.worldTimeHours = this.timePhase === 'night' ? 10 : 21;
+    const current = getWorldClockReadModel(this.worldTimeSnapshot);
+    this.worldTimeSnapshot = toWorldTimeSnapshot({
+      ...this.worldTimeSnapshot,
+      clockMinutes:
+        this.worldTimeSnapshot.clockMinutes -
+        current.hour * 60 -
+        current.minute +
+        (this.timePhase === 'night' ? 10 * 60 : 21 * 60),
+    });
     this.updateTimePhase();
     const status = this.getWorldStatus();
     this.statusNode.publish({ force: true });
@@ -763,14 +790,22 @@ export class GameScene extends SceneNode {
     if (timePhase !== 'day' && timePhase !== 'night') {
       throw new Error(`지원하지 않는 Visual QA time phase입니다: ${timePhase}`);
     }
-    this.worldTimeHours = timePhase === 'night' ? 21 : 10;
+    const current = getWorldClockReadModel(this.worldTimeSnapshot);
+    this.worldTimeSnapshot = toWorldTimeSnapshot({
+      ...this.worldTimeSnapshot,
+      clockMinutes:
+        this.worldTimeSnapshot.clockMinutes -
+        current.hour * 60 -
+        current.minute +
+        (timePhase === 'night' ? 21 * 60 : 10 * 60),
+    });
     this.updateTimePhase();
     this.statusNode.publish({ force: true });
     return this.getWorldStatus();
   }
 
   updateTimePhase() {
-    const nextPhase = timePhaseForHour(this.worldTimeHours);
+    const nextPhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
     if (nextPhase === this.timePhase) return;
     this.timePhase = nextPhase;
     this.mapRuntime.setWorldContext({
@@ -793,14 +828,29 @@ export class GameScene extends SceneNode {
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       firstJourney: this.journeyProgress.persistenceSnapshot(),
       regionExpansion: this.regionExpansionProgress.persistenceSnapshot(),
+      worldTime: this.worldTimeSnapshot,
     });
     this.progressionChanged.emit(this.progressionSnapshot);
     return this.progressionSnapshot;
   }
 
-  advanceWorldTime(deltaSeconds) {
-    this.worldTimeHours = (this.worldTimeHours + deltaSeconds * WORLD_HOURS_PER_SECOND + 24) % 24;
+  applyWorldAction(actionId, action, { repeatable = action?.repeatable === true } = {}) {
+    if (!action) return Object.freeze({ changed: false, snapshot: this.worldTimeSnapshot });
+    const transaction = commitWorldTimeAction(this.worldTimeSnapshot, {
+      actionId,
+      ...action,
+      repeatable,
+    });
+    if (!transaction.changed) return transaction;
+    this.worldTimeSnapshot = transaction.snapshot;
     this.updateTimePhase();
+    this.mapRuntime.setWorldContext({
+      ...this.mapRuntime.getWorldContext(),
+      deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
+      crisis: this.worldTimeSnapshot.crisis,
+    });
+    this.progressionNotice = `${action.label} · World Clock ${action.clockCostMinutes}분 · Deadline ${this.worldTimeSnapshot.deadlineMinutes}분`;
+    return transaction;
   }
 
   canStartPortalTransition() {
@@ -894,7 +944,17 @@ export class GameScene extends SceneNode {
     const regionExpansionTransition = this.regionExpansionProgress.recordPortal(
       completion.portalId,
     );
-    if (journeyTransition.changed || regionExpansionTransition.changed) {
+    const travelAction = this.worldTimeProfile.getTravelAction(completion.travelSegmentId);
+    const travelTransaction = this.applyWorldAction(
+      `travel:${completion.travelSegmentId ?? completion.portalId}`,
+      travelAction,
+      { repeatable: true },
+    );
+    if (
+      journeyTransition.changed ||
+      regionExpansionTransition.changed ||
+      travelTransaction.changed
+    ) {
       this.syncJourneyWorldContext();
       this.emitDurableProgressionChanged();
       this.statusNode.publish({ force: true });
@@ -1158,6 +1218,15 @@ export class GameScene extends SceneNode {
       const transaction = awardTrainingMarks(this.progressionSnapshot, reward);
       this.progressionNotice = `훈련 골렘 격파 · 인장 +${reward}`;
       this.commitProgression(transaction);
+      const timeTransaction = this.applyWorldAction(
+        'event:training-cleared',
+        this.worldTimeProfile.getCoreEventAction('training-cleared'),
+        { repeatable: true },
+      );
+      if (timeTransaction.changed) {
+        this.emitDurableProgressionChanged();
+        this.statusNode.publish({ force: true });
+      }
       return Object.freeze({
         changed: true,
         kind: 'training-cleared',
@@ -1177,6 +1246,10 @@ export class GameScene extends SceneNode {
         this.playerHealth + resolution.maxHealthBonus,
       );
     }
+    this.applyWorldAction(
+      `event:${resolution.kind}`,
+      this.worldTimeProfile.getCoreEventAction(resolution.kind),
+    );
     this.syncJourneyWorldContext();
     this.emitDurableProgressionChanged();
     this.statusNode.publish({ force: true });
@@ -1230,6 +1303,13 @@ export class GameScene extends SceneNode {
   }
 
   respawnPlayerAfterKo(inputSnapshot = {}) {
+    this.applyWorldAction(
+      'event:player-ko',
+      this.worldTimeProfile.getCoreEventAction('player-ko'),
+      {
+        repeatable: true,
+      },
+    );
     const journey = this.journeyProgress.snapshot();
     const regionExpansion = this.regionExpansionProgress.snapshot();
     const activeRegionId = this.mapRuntime.getActiveLocation().regionId;
@@ -1288,6 +1368,8 @@ export class GameScene extends SceneNode {
       this.lastJumpSequence = inputSnapshot.jumpSequence;
     }
     this.isGrounded = true;
+    this.emitDurableProgressionChanged();
+    this.statusNode.publish({ force: true });
   }
 
   applyTrainingEncounterPlayerResult(result) {
@@ -1486,7 +1568,6 @@ export class GameScene extends SceneNode {
       }
       return;
     }
-    this.advanceWorldTime(deltaSeconds);
     const previousPlayerHitstunSeconds = this.playerHitstunSeconds;
     this.playerHitstunSeconds = Math.max(0, this.playerHitstunSeconds - deltaSeconds);
     this.playerInvulnerableSeconds = Math.max(0, this.playerInvulnerableSeconds - deltaSeconds);
@@ -1725,6 +1806,7 @@ export class GameScene extends SceneNode {
     const progression = this.progressionSnapshot;
     const skill = this.getCombatSkillProfile();
     const encounter = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
+    const worldTime = getWorldClockReadModel(this.worldTimeSnapshot);
     const phaseLabels = {
       prepare: '학원촌 준비',
       field: 'Field 탐험',
@@ -1903,8 +1985,11 @@ export class GameScene extends SceneNode {
             : journey.routeChoice === 'bypass'
               ? '우회 · 수액 없음'
               : '수호 수액 미획득',
-      timePhase: this.timePhase,
-      timeLabel: this.timePhase === 'night' ? '밤' : '낮',
+      timePhase: worldTime.timePhase,
+      timeLabel: `${worldTime.timePhase === 'night' ? '밤' : '낮'} · D${worldTime.day} ${worldTime.timeLabel}`,
+      deadlineLabel: worldTime.crisis
+        ? 'CRISIS · 핵심 방어 사건'
+        : `Deadline ${Math.floor(worldTime.deadlineMinutes / 60)}:${String(worldTime.deadlineMinutes % 60).padStart(2, '0')}`,
       roomId,
       canSelectEquipment: this.canManageProgression(),
       canManageProgression: this.canManageProgression(),

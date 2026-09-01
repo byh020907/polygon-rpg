@@ -5,7 +5,7 @@ import {
   mergeProgressionSnapshot,
 } from './ProgressionState.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSION = 1;
+const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2]);
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -66,6 +66,12 @@ function migrateLegacySnapshot(value, defaultEquipmentId, allowedEquipmentIds) {
     ownedEquipmentIds: value.ownedEquipmentIds,
     equippedEquipmentId: value.equippedEquipmentId,
     combatSkillLevel: value.combatSkillLevel,
+    ...(value.version === 2
+      ? {
+          firstJourney: value.firstJourney,
+          regionExpansion: value.regionExpansion,
+        }
+      : {}),
   });
 }
 
@@ -84,6 +90,7 @@ function createStoredRecord(snapshot) {
     combatSkillLevel: snapshot.combatSkillLevel,
     firstJourney: snapshot.firstJourney,
     regionExpansion: snapshot.regionExpansion,
+    worldTime: snapshot.worldTime,
   };
 }
 
@@ -151,7 +158,7 @@ export class ProgressionStorage {
       );
     }
     if (
-      parsed.version !== LEGACY_PROGRESSION_SCHEMA_VERSION &&
+      !LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) &&
       parsed.version !== PROGRESSION_SCHEMA_VERSION
     ) {
       return failure(
@@ -161,13 +168,12 @@ export class ProgressionStorage {
     }
 
     try {
-      const snapshot =
-        parsed.version === LEGACY_PROGRESSION_SCHEMA_VERSION
-          ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds)
-          : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds);
+      const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
+        ? migrateLegacySnapshot(parsed, defaultEquipmentId, allowedIds)
+        : validateCurrentSnapshot(parsed, defaultEquipmentId, allowedIds);
       return Object.freeze({
         ok: true,
-        kind: parsed.version === LEGACY_PROGRESSION_SCHEMA_VERSION ? 'migrated' : 'loaded',
+        kind: LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ? 'migrated' : 'loaded',
         snapshot,
       });
     } catch {

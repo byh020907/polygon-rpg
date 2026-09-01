@@ -137,6 +137,9 @@ function normalizePortal(portal, mapId, index) {
   normalized.transition = normalized.transition ?? { durationSeconds: 0.32 };
   assertRecord(normalized.transition, `${normalized.qualifiedId}.transition`);
   normalized.transition.durationSeconds = normalized.transition.durationSeconds ?? 0.32;
+  if (normalized.travelSegmentId !== undefined) {
+    assertId(normalized.travelSegmentId, `${normalized.qualifiedId}.travelSegmentId`);
+  }
   assertFinite(
     normalized.transition.durationSeconds,
     `${normalized.qualifiedId}.transition.durationSeconds`,

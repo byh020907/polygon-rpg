@@ -281,6 +281,7 @@ export class MapRuntime {
     const destinationRoom = worldRoom(destinationRoomDefinition);
     const intent = deepFreeze({
       portalId: portal.id,
+      travelSegmentId: portal.travelSegmentId ?? null,
       from: { ...this.active },
       to: { regionId: destination.regionId, roomId: destination.roomId },
       destinationPosition: endpointSpawn(destination, destinationRoomDefinition),
@@ -334,6 +335,7 @@ export class MapRuntime {
     const snapshot = this.getResolvedSnapshot();
     return deepFreeze({
       portalId: result.portalId,
+      travelSegmentId: result.travelSegmentId,
       active: { ...this.active },
       position: { ...result.destinationPosition },
       facing: this.activeSpawn.facing,
