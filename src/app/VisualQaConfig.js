@@ -129,6 +129,27 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 
 const VISUAL_QA_SCENARIOS = Object.freeze({
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
+  'scrap-character-board': Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'scrap-character-design-board',
+    x: 480,
+    expectation: Object.freeze({
+      expectedItems: Object.freeze([
+        'character-board-cell-scrapyard-apprentice',
+        'character-board-cell-scrapyard-owner',
+        'character-board-cell-mine-worker',
+        'character-board-cell-shipyard-worker',
+        'character-board-cell-greenhouse-technician',
+        'character-board-cell-snow-train-crew',
+        'character-board-cell-quarry-worker',
+        'character-board-cell-collector-unit',
+        'character-board-cell-industrial-creature',
+        'character-board-cell-regional-boss',
+        'regional-boss-representative-pose-tool-conveyor-ram',
+      ]),
+      expectedAbsentItems: Object.freeze(['shield', 'sword-blade']),
+    }),
+  }),
   'academy-space-day': Object.freeze({
     regionId: 'academy-region',
     roomId: 'academy-plaza',

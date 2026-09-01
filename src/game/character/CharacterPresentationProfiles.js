@@ -1,0 +1,169 @@
+function deepFreeze(value) {
+  if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  for (const entry of Object.values(value)) deepFreeze(entry);
+  return Object.freeze(value);
+}
+
+const RAW_PROFILES = [
+  {
+    id: 'scrapyard-apprentice',
+    label: '고물상 견습생',
+    roleLabel: '주인공',
+    family: 'human',
+    accent: '#f2a65a',
+    material: '#4d6670',
+    toolKind: 'tool-bag',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 15, hip: 10, head: 8, sideDepth: 8 },
+    landmarks: ['고글', '공구 가방', '소매 수리 붕대'],
+    representativePose: '가방을 뒤로 두고 검을 뽑는 준비 자세',
+  },
+  {
+    id: 'scrapyard-owner',
+    label: '고물상 주인',
+    roleLabel: '핵심 NPC',
+    family: 'human',
+    accent: '#dfc37a',
+    material: '#635748',
+    toolKind: 'ledger-wrench',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 18, hip: 12, head: 8, sideDepth: 9 },
+    landmarks: ['용접 고글', '장부', '큰 스패너'],
+    representativePose: '장부를 들고 스패너로 차고를 가리키는 자세',
+  },
+  {
+    id: 'mine-worker',
+    label: '폐광 광부',
+    roleLabel: '직업 NPC',
+    family: 'human',
+    accent: '#d5a24c',
+    material: '#57493e',
+    toolKind: 'pickaxe',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 18, hip: 11, head: 8, sideDepth: 9 },
+    landmarks: ['광부등', '분진 작업복', '곡괭이'],
+    representativePose: '낮은 천장을 확인하며 곡괭이를 지지하는 자세',
+  },
+  {
+    id: 'shipyard-worker',
+    label: '조선소 용접공',
+    roleLabel: '직업 NPC',
+    family: 'human',
+    accent: '#56b7c9',
+    material: '#3f5661',
+    toolKind: 'rivet-gun',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 17, hip: 11, head: 8, sideDepth: 9 },
+    landmarks: ['용접면', '방열 앞치마', '리벳 건'],
+    representativePose: '불꽃을 피해 몸을 틀고 리벳 건을 고정하는 자세',
+  },
+  {
+    id: 'greenhouse-technician',
+    label: '온실 기술자',
+    roleLabel: '직업 NPC',
+    family: 'human',
+    accent: '#7fcf7a',
+    material: '#426052',
+    toolKind: 'sensor-wand',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 14, hip: 12, head: 8, sideDepth: 8 },
+    landmarks: ['보안경', '필터 조끼', '지열 센서'],
+    representativePose: '센서를 땅에 대고 압력계를 읽는 자세',
+  },
+  {
+    id: 'snow-train-crew',
+    label: '제설 열차 승무원',
+    roleLabel: '직업 NPC',
+    family: 'human',
+    accent: '#b9d7ec',
+    material: '#506070',
+    toolKind: 'signal-lamp',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 19, hip: 13, head: 8, sideDepth: 10 },
+    landmarks: ['방한모', '두꺼운 외투', '신호등'],
+    representativePose: '눈바람을 등지고 신호등을 높이 드는 자세',
+  },
+  {
+    id: 'quarry-worker',
+    label: '채석장 작업자',
+    roleLabel: '직업 NPC',
+    family: 'human',
+    accent: '#d66b54',
+    material: '#644942',
+    toolKind: 'rock-cutter',
+    minimumViewportHeight: 72,
+    proportions: { shoulder: 20, hip: 13, head: 8, sideDepth: 10 },
+    landmarks: ['안면 보호구', '절단 방호복', '휴대 절단기'],
+    representativePose: '절단 반동을 버티며 양손 공구를 낮추는 자세',
+  },
+  {
+    id: 'collector-unit',
+    label: '수거 유닛',
+    roleLabel: '고철 대왕 소속',
+    family: 'machine',
+    accent: '#e25f47',
+    material: '#4b4f53',
+    toolKind: 'magnet-claw',
+    minimumViewportHeight: 68,
+    proportions: { shoulder: 21, hip: 15, head: 6, sideDepth: 12 },
+    landmarks: ['단안 신호등', '자석 집게', '케이블 꼬리'],
+    representativePose: '집게를 벌리고 회수 대상을 끌어당기는 준비 자세',
+  },
+  {
+    id: 'industrial-creature',
+    label: '설비 기생 기계',
+    roleLabel: '산업기계 적',
+    family: 'machine',
+    accent: '#8ed5bc',
+    material: '#40565a',
+    toolKind: 'drill-maw',
+    minimumViewportHeight: 64,
+    proportions: { shoulder: 24, hip: 18, head: 7, sideDepth: 15 },
+    landmarks: ['굴착 주둥이', '네 개의 고정 다리', '압력 케이블'],
+    representativePose: '앞다리를 고정하고 드릴을 밀어 넣는 예고 자세',
+  },
+  {
+    id: 'regional-boss',
+    label: '지역 산업기계 Boss',
+    roleLabel: '지역 Boss',
+    family: 'machine',
+    accent: '#c987e8',
+    material: '#51485d',
+    toolKind: 'conveyor-ram',
+    minimumViewportHeight: 82,
+    proportions: { shoulder: 29, hip: 20, head: 8, sideDepth: 17 },
+    landmarks: ['회전 경고등', '가동식 압착판', '노출 동력축'],
+    representativePose: '압착판을 뒤로 당겨 큰 공격 범위를 예고하는 자세',
+  },
+];
+
+function validateProfile(profile) {
+  if (!profile.id || !profile.label || !profile.roleLabel) {
+    throw new TypeError('Character Presentation Profile에는 stable ID와 label이 필요합니다.');
+  }
+  if (!['human', 'machine'].includes(profile.family)) {
+    throw new TypeError(`지원하지 않는 character family입니다: ${profile.family}`);
+  }
+  if (!Number.isFinite(profile.minimumViewportHeight) || profile.minimumViewportHeight < 48) {
+    throw new RangeError(`${profile.id}의 minimum viewport height가 너무 작습니다.`);
+  }
+  if (!Array.isArray(profile.landmarks) || profile.landmarks.length < 3) {
+    throw new TypeError(`${profile.id}에는 최소 세 개의 silhouette landmark가 필요합니다.`);
+  }
+  if (!profile.representativePose) {
+    throw new TypeError(`${profile.id}에는 representative pose가 필요합니다.`);
+  }
+  return profile;
+}
+
+const profiles = RAW_PROFILES.map((profile) => deepFreeze(validateProfile(profile)));
+const byId = new Map(profiles.map((profile) => [profile.id, profile]));
+
+export const CHARACTER_PRESENTATION_PROFILE = deepFreeze({
+  profiles,
+  comparisonViews: ['front', 'side', 'representative-pose'],
+  actualGameplayScaleLabel: '64~82 logical px · 960×540 gameplay viewport',
+  getProfile(profileId) {
+    return byId.get(profileId) ?? null;
+  },
+});

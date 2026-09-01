@@ -17,6 +17,10 @@ import {
   GLASSWIND_REGION,
 } from './glasswindRegion.js';
 import { FIRST_JOURNEY_CONVERSATION } from '../story/FirstJourneyStory.js';
+import { CHARACTER_PRESENTATION_PROFILE } from '../character/CharacterPresentationProfiles.js';
+import { createCharacterDesignBoard } from '../character/CharacterDesignBoard.js';
+
+const SCRAP_CHARACTER_DESIGN_BOARD = createCharacterDesignBoard(CHARACTER_PRESENTATION_PROFILE);
 
 const DAY_PALETTE = Object.freeze({
   background: '#18333b',
@@ -928,6 +932,32 @@ export const ACADEMY_VILLAGE_MAP = defineMap({
             'academy-weapon-shop-portal',
             'academy-enchanter-shop-portal',
           ],
+        },
+        {
+          id: 'scrap-character-design-board',
+          label: '고철 캐릭터 실루엣 비교 보드',
+          bounds: { x: 0, y: 0, width: 960, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 936 },
+          renderOrder: 30,
+          presentationOnly: true,
+          characterBoardManifest: SCRAP_CHARACTER_DESIGN_BOARD.manifest,
+          surfaces: [
+            {
+              id: 'scrap-character-board-floor',
+              kind: 'solid',
+              material: 'design-grid',
+              points: [
+                { x: 0, y: 426 },
+                { x: 960, y: 426 },
+              ],
+            },
+          ],
+          renderItems: SCRAP_CHARACTER_DESIGN_BOARD.items,
+          entities: [],
+          triggers: [],
+          portals: [],
         },
         {
           id: 'academy-weapon-shop',

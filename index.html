@@ -149,6 +149,29 @@
           <div class="game-area-label">
             <small x-text="`REGION · ${timeLabel}`"></small><strong x-text="areaName"></strong>
           </div>
+          <section
+            class="character-design-board-legend"
+            x-show="characterBoard.active"
+            aria-labelledby="character-design-board-title"
+          >
+            <header>
+              <span>
+                <small>CHARACTER READABILITY · FRONT / SIDE / ACTION</small>
+                <strong id="character-design-board-title" x-text="characterBoard.title"></strong>
+              </span>
+              <em x-text="characterBoard.scaleLabel"></em>
+            </header>
+            <ol>
+              <template x-for="entry in characterBoard.entries" x-bind:key="entry.id">
+                <li x-bind:style="`--character-role-accent: ${entry.accent}`">
+                  <strong x-text="entry.label"></strong>
+                  <small x-text="entry.roleLabel"></small>
+                  <span x-text="entry.landmarks.join(' · ')"></span>
+                  <em x-text="entry.representativePose"></em>
+                </li>
+              </template>
+            </ol>
+          </section>
           <button
             id="game-menu-control"
             class="game-menu-button"
@@ -537,7 +560,11 @@
             x-text="dialogue.active ? dialogue.line : ''"
           ></p>
 
-          <section class="mobile-controls" aria-label="모바일 게임 조작">
+          <section
+            class="mobile-controls"
+            x-show="!characterBoard.active"
+            aria-label="모바일 게임 조작"
+          >
             <div class="mobile-direction-pad" aria-label="이동과 자세">
               <template x-for="control in mobileDirections" x-bind:key="control.id">
                 <button

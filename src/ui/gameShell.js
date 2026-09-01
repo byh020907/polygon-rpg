@@ -235,6 +235,13 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       routeEdges: Object.freeze([]),
       regions: Object.freeze([]),
     }),
+    characterBoard: Object.freeze({
+      active: false,
+      title: '',
+      scaleLabel: '',
+      views: Object.freeze([]),
+      entries: Object.freeze([]),
+    }),
     canManageProgression: true,
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
@@ -335,6 +342,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.timeLabel = status.timeLabel;
           this.deadlineLabel = status.deadlineLabel;
           this.campaign = status.campaign;
+          this.characterBoard = status.characterBoard;
           this.canManageProgression = status.canManageProgression;
           this.activeEnchantId = status.activeEnchantId;
           this.activeEnchantLabel = status.activeEnchantLabel;

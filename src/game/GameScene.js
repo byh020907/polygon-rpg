@@ -2393,16 +2393,24 @@ export class GameScene extends SceneNode {
           this.combatProgressionProfile.weaponForge.choiceGroupId
         ],
       );
-    const story = resolveFirstJourneyStory({
-      equipment: {
-        id: this.equipmentProfile.id,
-        label: this.equipmentProfile.label,
-        progressionComplete,
-      },
-      journey,
-      regionExpansion,
-      activeRoomId: roomId,
-    });
+    const characterBoardActive = Boolean(room.characterBoardManifest);
+    const story = characterBoardActive
+      ? Object.freeze({
+          beatId: 'scrap-character-readability',
+          title: '고철 생활권 캐릭터 설계 비교',
+          briefing:
+            '정면·측면·대표 pose에서 직업 도구, 작업복과 공격 가동부를 실제 gameplay 크기로 비교합니다.',
+        })
+      : resolveFirstJourneyStory({
+          equipment: {
+            id: this.equipmentProfile.id,
+            label: this.equipmentProfile.label,
+            progressionComplete,
+          },
+          journey,
+          regionExpansion,
+          activeRoomId: roomId,
+        });
     const dialogue = this.resolveDialogueStatus();
     const encounterMaterial = encounter?.materialReward
       ? this.enchantmentCatalog.getProfile(encounter.materialReward.elementId)
@@ -2546,6 +2554,10 @@ export class GameScene extends SceneNode {
       encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
     }
     if (this.recoveryNotice) encounterHint = this.recoveryNotice;
+    if (characterBoardActive) {
+      objective = '각 열의 정면·측면·대표 pose에서 복장과 공구 silhouette를 비교하세요.';
+      encounterHint = 'DESIGN COMPARISON · FRONT / SIDE / ACTION';
+    }
 
     const nextSkillLevel = Math.min(
       this.combatProgressionProfile.maxSkillLevel,
@@ -2569,7 +2581,7 @@ export class GameScene extends SceneNode {
           : 'A/S starter · 공중 starter 1회';
 
     return Object.freeze({
-      areaName: `${map.name} · ${room.label}`,
+      areaName: characterBoardActive ? room.label : `${map.name} · ${room.label}`,
       story,
       dialogue,
       objective,
@@ -2586,9 +2598,10 @@ export class GameScene extends SceneNode {
                 : ''
             }`
           : '',
-      journeyLabel:
-        location.regionId === 'glasswind-region' ||
-        (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
+      journeyLabel: characterBoardActive
+        ? '고철 캐릭터 설계 비교'
+        : location.regionId === 'glasswind-region' ||
+            (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
           ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
           : (phaseLabels[journey.phase] ?? journey.phase),
       wardLabel:
@@ -2606,8 +2619,17 @@ export class GameScene extends SceneNode {
       timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
       deadlineLabel: scrapCampaign.deadlineLabel,
       campaign: scrapCampaign,
+      characterBoard: room.characterBoardManifest
+        ? Object.freeze({ active: true, ...room.characterBoardManifest })
+        : Object.freeze({
+            active: false,
+            title: '',
+            scaleLabel: '',
+            views: Object.freeze([]),
+            entries: Object.freeze([]),
+          }),
       roomId,
-      canManageProgression: this.canManageProgression(),
+      canManageProgression: !characterBoardActive && this.canManageProgression(),
       activeEnchantId:
         progression.enchantment.swordEnchantments[progression.equippedEquipmentId].elementId,
       activeEnchantLevel:
@@ -2790,8 +2812,9 @@ export class GameScene extends SceneNode {
           }),
         })
       : null;
+    const playerItems = activeRoom.presentationOnly ? [] : characterItems;
     const items = Object.freeze(
-      [...mapSnapshot.renderItems, ...encounterItems, ...characterItems, ...combatEffectItems]
+      [...mapSnapshot.renderItems, ...encounterItems, ...playerItems, ...combatEffectItems]
         .filter((item) => item.enabled !== false)
         .sort(
           (left, right) =>
