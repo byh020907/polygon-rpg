@@ -31,7 +31,7 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
   'posture-normal-enemy': Object.freeze({
     expectedEvent: null,
     expectedMotion: 'idle',
-    expectedItem: 'combat-enemy-training-mask',
+    expectedItem: 'combat-enemy-collector-eye',
     expectedContact: false,
     expectedPosture: 'absent',
   }),
@@ -897,7 +897,7 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
             ? scenario.expectation.expectedItem
             : scenario.expectation.expectedPosture === 'absent' ||
                 scenario.expectation.expectedPosture === undefined
-              ? 'combat-enemy-training-mask'
+              ? 'combat-enemy-collector-eye'
               : phase === 'start' && scenario.expectation.expectedPosture === 'groggy'
                 ? 'combat-enemy-posture-break'
                 : 'combat-enemy-posture-fill',

@@ -326,6 +326,26 @@ function assertScrapCampaignProfile(profile) {
   return profile;
 }
 
+function assertCharacterPresentationCatalog(catalog) {
+  if (!catalog || !Array.isArray(catalog.profiles) || typeof catalog.getProfile !== 'function') {
+    throw new TypeError('GameScene에는 authored character presentation catalog 주입이 필요합니다.');
+  }
+  return catalog;
+}
+
+function resolveCharacterPresentationProfile(catalog, profileId, ownerLabel) {
+  if (typeof profileId !== 'string' || profileId.trim().length === 0) {
+    throw new TypeError(`${ownerLabel}에는 character presentation profile ID가 필요합니다.`);
+  }
+  const profile = catalog.getProfile(profileId);
+  if (!profile) {
+    throw new Error(
+      `${ownerLabel}의 character presentation profile을 찾을 수 없습니다: ${profileId}`,
+    );
+  }
+  return profile;
+}
+
 function assertEnchantmentCatalog(catalog) {
   if (!catalog || !Array.isArray(catalog.profiles) || typeof catalog.getProfile !== 'function')
     throw new TypeError('GameScene에는 authored enchantment catalog 주입이 필요합니다.');
@@ -341,6 +361,8 @@ export class GameScene extends SceneNode {
     encounterAttackProfiles,
     worldTimeProfile,
     scrapCampaignProfile,
+    characterPresentationCatalog,
+    playerPresentationProfileId,
     enchantmentCatalog,
     progressionSnapshot = null,
   } = {}) {
@@ -353,6 +375,14 @@ export class GameScene extends SceneNode {
     this.encounterAttackProfiles = assertEncounterAttackProfiles(encounterAttackProfiles);
     this.worldTimeProfile = assertWorldTimeProfile(worldTimeProfile);
     this.scrapCampaignProfile = assertScrapCampaignProfile(scrapCampaignProfile);
+    this.characterPresentationCatalog = assertCharacterPresentationCatalog(
+      characterPresentationCatalog,
+    );
+    this.playerPresentationProfile = resolveCharacterPresentationProfile(
+      this.characterPresentationCatalog,
+      playerPresentationProfileId,
+      'Player',
+    );
     this.enchantmentCatalog = assertEnchantmentCatalog(enchantmentCatalog);
     const initialProgression =
       progressionSnapshot ??
@@ -614,7 +644,7 @@ export class GameScene extends SceneNode {
       gap: 0,
       simulationGap: 0,
       weaponItemId: 'sword-blade',
-      hurtItemId: 'combat-enemy-training-mask',
+      hurtItemId: 'combat-enemy-collector-eye',
       position: Object.freeze({ x: playerX + 62, y: groundY - 72 }),
     });
     encounter.contactSeconds =
@@ -2786,6 +2816,7 @@ export class GameScene extends SceneNode {
         retaliationSeconds: this.playerRetaliationSeconds,
         enemyRenderOrder: activeRoom.renderOrder + 0.49,
         activeEnchant: this.getEnchantContext().active,
+        appearanceProfile: this.playerPresentationProfile,
       }),
     );
     const { characterItems, combatEffectItems } = playerPresentation;
@@ -2798,6 +2829,11 @@ export class GameScene extends SceneNode {
           activeRoom.renderOrder + 0.45,
           this.encounterAttackProfiles,
           encounterRender.geometry,
+          resolveCharacterPresentationProfile(
+            this.characterPresentationCatalog,
+            encounterRender.presentationState.presentationProfileId,
+            encounterRender.presentationState.label,
+          ),
         )
       : [];
     const combatEnemy = encounterRender.enemy
@@ -2877,6 +2913,7 @@ export class GameScene extends SceneNode {
       combatEvents,
       combatContact: encounterRender.contact,
       player: Object.freeze({
+        presentationProfileId: this.playerPresentationProfile.id,
         position: renderPosition,
         isGrounded: this.isGrounded,
         health: this.playerHealth,

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 import { createCharacterDesignBoard } from '../src/game/character/CharacterDesignBoard.js';
+import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
@@ -109,6 +110,93 @@ assert.equal(
   false,
 );
 
+const gameplayScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const playerFrame = gameplayScene.createRenderFrame(1);
+assert.equal(playerFrame.player.presentationProfileId, 'scrapyard-apprentice');
+for (const itemId of [
+  'tool-bag',
+  'goggles-lenses',
+  'workwear-repair-patch',
+  'shield-sleeve-repair-bandage',
+]) {
+  assert.ok(
+    playerFrame.items.some((item) => item.id === itemId),
+    `실제 Player frame에는 ${itemId} landmark가 필요합니다.`,
+  );
+}
+for (const obsoleteItemId of ['cape', 'scarf-tail', 'uniform-coat-tail', 'helmet']) {
+  assert.equal(
+    playerFrame.items.some((item) => item.id === obsoleteItemId),
+    false,
+    `실제 Player frame에 ${obsoleteItemId} fantasy fallback이 남으면 안 됩니다.`,
+  );
+}
+
+for (const encounterProfile of Object.values(ENCOUNTER_PROFILES)) {
+  const appearanceProfile = CHARACTER_PRESENTATION_PROFILE.getProfile(
+    encounterProfile.presentationProfileId,
+  );
+  assert.ok(
+    appearanceProfile?.family === 'machine',
+    `${encounterProfile.id} encounter는 authored machine appearance profile을 가져야 합니다.`,
+  );
+}
+gameplayScene.setVisualQaLocation({
+  regionId: 'academy-region',
+  roomId: 'training-room',
+  x: 500,
+});
+const trainingFrame = gameplayScene.createRenderFrame(1);
+assert.equal(trainingFrame.combatEnemy.presentationProfileId, 'collector-unit');
+for (const itemId of [
+  'combat-enemy-collector-eye',
+  'combat-enemy-scrap-front-plate',
+  'combat-enemy-scrap-cable',
+  'combat-enemy-scrap-repair-mark',
+]) {
+  assert.ok(
+    trainingFrame.items.some((item) => item.id === itemId),
+    `실제 encounter frame에는 ${itemId} landmark가 필요합니다.`,
+  );
+}
+assert.equal(
+  trainingFrame.items.some((item) =>
+    ['combat-enemy-training-mask', 'combat-enemy-glasswind-wing-back'].includes(item.id),
+  ),
+  false,
+);
+assert.ok(
+  trainingFrame.items
+    .filter((item) => item.id.startsWith('combat-enemy-scrap-'))
+    .every((item) => item.presentationOnly === true),
+);
+
+for (const scenario of [
+  {
+    roomId: 'field-crossing',
+    profileId: 'industrial-creature',
+    landmarkId: 'combat-enemy-drill-maw',
+  },
+  {
+    roomId: 'sealed-forest-boss',
+    profileId: 'regional-boss',
+    landmarkId: 'combat-enemy-conveyor-ram-plate',
+  },
+]) {
+  const scenarioScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  scenarioScene.setVisualQaLocation({
+    regionId: 'academy-region',
+    roomId: scenario.roomId,
+    x: 500,
+  });
+  const scenarioFrame = scenarioScene.createRenderFrame(1);
+  assert.equal(scenarioFrame.combatEnemy.presentationProfileId, scenario.profileId);
+  assert.ok(
+    scenarioFrame.items.some((item) => item.id === scenario.landmarkId),
+    `${scenario.profileId} 실제 encounter에는 ${scenario.landmarkId}가 필요합니다.`,
+  );
+}
+
 for (const renderer of ['polygon', 'retro']) {
   const request = readVisualQaRequest(
     `?visualQa=1&gameStart=scrap-character-board&visualQaRenderer=${renderer}&visualQaPhase=active&gameFrame=0`,
@@ -137,6 +225,9 @@ process.stdout.write(
       'presentation-room-hides-touch-controls-and-academy-context',
       'polygon-retro-stable-visual-qa-scenario',
       'semantic-board-manifest',
+      'composition-injected-player-and-encounter-profile-ids',
+      'actual-gameplay-scrap-landmarks-without-fantasy-fallback',
+      'renderer-read-only-presentation-items-and-combat-geometry-preserved',
     ],
   })}\n`,
 );

@@ -11,69 +11,85 @@ import {
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
+function deepFreezeFixture(value) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreezeFixture(child);
+  return Object.freeze(value);
+}
+
+const SCRAPYARD_APPRENTICE_FIXTURE = deepFreezeFixture({
+  id: 'fixture-scrapyard-apprentice',
+  family: 'human',
+  accent: '#f2a65a',
+  material: '#4d6670',
+  toolKind: 'tool-bag',
+  proportions: { shoulder: 15, hip: 10, head: 8, sideDepth: 8 },
+  landmarks: ['고글', '공구 가방', '소매 수리 붕대'],
+});
+
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
-    count: 33,
-    digest: 'ad9ce126dd64156238c9aa116391bf3c567dc496aecc81573f5117a8df1a7ea0',
+    count: 37,
+    digest: 'e809b93113bd428394a17ca5f4330f313565715a83d3bd1de382397dd85c680f',
   }),
   'pose-move': Object.freeze({
-    count: 33,
-    digest: '8757620a73ac13a52b690f2df3208a6afee98290000b8a22357496176552f4ea',
+    count: 37,
+    digest: 'a304808db2a15633b8ad1d08b779e3e7cb08d98b3a3c70f96362ff5790036d7c',
   }),
   'pose-guard': Object.freeze({
-    count: 33,
-    digest: '022d222d7a5bae37775ae918de9f08243a4bc7ba29339d487c8ccd1906b1bc06',
+    count: 37,
+    digest: '013b5277c4ec49b62ccf6cfdf3932cd2117cd177176be4fb9f071e9c43ddb02b',
   }),
   'pose-roll': Object.freeze({
-    count: 33,
-    digest: 'ef7dc928718b0c96a11c1628a5f0728fd4fce7abc91d040c6205c90417dccda5',
+    count: 37,
+    digest: 'c3e6822b45b630a71f97e7006548b39b8e17b9fb2afb4b33fb03e20afefa2bc6',
   }),
   'pose-ground-attack': Object.freeze({
-    count: 33,
-    digest: '38c2efbb480deab4cf4e90606fa8c2d2af3738b93798c3d52694dd7c36944004',
+    count: 37,
+    digest: 'fba17783e824e00d2feaf98799737b3e0268a0d9efcebffe1c72b4945e9940fa',
   }),
   'pose-air-attack': Object.freeze({
-    count: 33,
-    digest: '5fd5ce665ea81d443e7a12ab5bb2d5bfd1a20b42bfa777ecf5b329f4274698ca',
+    count: 37,
+    digest: '4ae9e742e6baabab2bcd4b90312d76faa993e3b529912da89811a3a67e81a093',
   }),
   'pose-hit': Object.freeze({
-    count: 33,
-    digest: '6420077414e7f98e49763dc5be45e0da4417638b01ea164499cd32e1a3096ebc',
+    count: 37,
+    digest: 'd5ba01de87f6e709de305a06e9fb84eea5cbb75acff0b10c32a877014b4c4113',
   }),
 });
 
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
-    count: 40,
-    digest: '52e1581b9ea3447ae6edf26eba60775e5360c54bc4ed572f5371e4795ca46d39',
+    count: 44,
+    digest: '3e0b05d281bd66fe49deaa3a2a5f9f06397a8d87b4710363d31b1d3654b9b65e',
   }),
   'combat-block': Object.freeze({
-    count: 39,
-    digest: '96dbab1cbd194a2d43595662b19e36ff53e9f0bc9ed87161925e920754cc84ed',
+    count: 43,
+    digest: 'cf5474a74c06c8837a25b31fed4d54bbf8bae86e184f28fd666e4f933649fbcd',
   }),
   'combat-evade': Object.freeze({
-    count: 36,
-    digest: '38738765278faa464cbfc56ff6b23c8ac85fdc605e667022c23a13d3afa769ec',
+    count: 40,
+    digest: 'ce447546c166b366b3c16f8acd339feef5ca1d47b105740f378914bdcbeea5b1',
   }),
   'combat-punish': Object.freeze({
-    count: 39,
-    digest: '9a781f919bc7cd87d87c488a84ba75cda9081833397e781b7af23e63716273a6',
+    count: 43,
+    digest: '4502e07ee72b5883081363bb2396b53f3ef4a3edc2d1900a44d5894f822b95f0',
   }),
   'combat-launch': Object.freeze({
-    count: 40,
-    digest: '2657cd36e1789aa95bb2a458566ee1a329163341f0bc891b9fae375f91a46d72',
+    count: 44,
+    digest: '453c5ec7505cd3087734a83db4af7ffd3433c89d5b40268fef3f1a6889e0b241',
   }),
   'combat-guard-break': Object.freeze({
-    count: 39,
-    digest: 'a26321ee35034ecad95f1a3b1f0212e8ba0b443e56172a44546e295bbeb4804c',
+    count: 43,
+    digest: 'bc4ed9e7298e91fb8b6729876f725373b612ca6516caccc30dd5cd24a2a25568',
   }),
   'combat-just-guard': Object.freeze({
-    count: 44,
-    digest: '297f783916df14edbb4d2ccd4b998306bd074b9d7fbc6ec6faf6d55e14aaf243',
+    count: 48,
+    digest: '0916760a4f605751fbbe1ec7f0496fd56fbc925744ef85f5a3ef0e4c637e8ab8',
   }),
   'combat-guard-counter': Object.freeze({
-    count: 40,
-    digest: '757d99dd6e0be9346b45ca00909f89db2bfba265ce6ab04c0107ed8b247e3669',
+    count: 44,
+    digest: 'bc86b39e18eeed5fa05f28b3ee01e768c05ffc05e79a6f705e17510d4740126b',
   }),
 });
 
@@ -168,20 +184,20 @@ const fixedCombatGeometry = samplePlayerCombatGeometry({
   geometryScale: CHARACTER_RENDER_SCALE,
   weaponLengthScale: 1,
 });
-const fixedOutput = createPlayerCombatPresentation(
-  Object.freeze({
-    position: fixedPosition,
-    facing: 1,
-    targetPose: fixedPose.targetPose,
-    bonePose: fixedPose.bonePose,
-    combatGeometry: fixedCombatGeometry,
-    renderScale: CHARACTER_RENDER_SCALE,
-    renderOrder: 30.5,
-    weaponLengthScale: 1,
-    combatEvents: Object.freeze([]),
-    enemyRenderOrder: 30.49,
-  }),
-);
+const fixedPresentationInput = Object.freeze({
+  appearanceProfile: SCRAPYARD_APPRENTICE_FIXTURE,
+  position: fixedPosition,
+  facing: 1,
+  targetPose: fixedPose.targetPose,
+  bonePose: fixedPose.bonePose,
+  combatGeometry: fixedCombatGeometry,
+  renderScale: CHARACTER_RENDER_SCALE,
+  renderOrder: 30.5,
+  weaponLengthScale: 1,
+  combatEvents: Object.freeze([]),
+  enemyRenderOrder: 30.49,
+});
+const fixedOutput = createPlayerCombatPresentation(fixedPresentationInput);
 
 function assertDeepFrozen(value, seen = new Set()) {
   if (!value || typeof value !== 'object' || seen.has(value)) return;
@@ -194,7 +210,53 @@ assertDeepFrozen(fixedOutput);
 const bladeItem = fixedOutput.characterItems.find((item) => item.id === 'sword-blade');
 const shieldItem = fixedOutput.characterItems.find((item) => item.id === 'shield');
 const torsoItem = fixedOutput.characterItems.find((item) => item.id === 'torso');
+const headItem = fixedOutput.characterItems.find((item) => item.id === 'head');
 const hiltItem = fixedOutput.characterItems.find((item) => item.id === 'sword-hilt');
+const characterItemIds = new Set(fixedOutput.characterItems.map(({ id }) => id));
+for (const forbiddenId of [
+  'cape',
+  'scarf-tail',
+  'uniform-coat-tail',
+  'uniform-front-panel',
+  'helmet',
+  'helmet-highlight',
+  'shield-pauldron',
+  'sword-pauldron',
+]) {
+  assert.ok(!characterItemIds.has(forbiddenId), `fantasy landmark must be absent: ${forbiddenId}`);
+}
+for (const scrapLandmarkId of [
+  'tool-bag',
+  'tool-bag-cable',
+  'goggles-band',
+  'goggles-lenses',
+  'patched-chest-plate',
+  'workwear-front-panel',
+  'workwear-repair-patch',
+  'workwear-rivet-0',
+  'shield-sleeve-repair-bandage',
+  'sword-sleeve-repair-bandage',
+]) {
+  assert.ok(
+    characterItemIds.has(scrapLandmarkId),
+    `scrap landmark must be present: ${scrapLandmarkId}`,
+  );
+}
+assert.equal(torsoItem.fill, SCRAPYARD_APPRENTICE_FIXTURE.material, 'profile material color');
+assert.equal(
+  fixedOutput.characterItems.find(({ id }) => id === 'workwear-front-panel').fill,
+  SCRAPYARD_APPRENTICE_FIXTURE.accent,
+  'profile accent color',
+);
+assert.throws(
+  () =>
+    createPlayerCombatPresentation({
+      ...fixedPresentationInput,
+      appearanceProfile: { ...SCRAPYARD_APPRENTICE_FIXTURE },
+    }),
+  /immutable object/,
+  'mutable appearance profile must be rejected',
+);
 assert.strictEqual(
   bladeItem.points,
   fixedOutput.combatGeometry.weapon.points,
@@ -205,10 +267,15 @@ assert.strictEqual(
   fixedOutput.combatGeometry.shield.points,
   'rendered shield must reuse shared gameplay geometry exactly',
 );
-assert.deepEqual(
+assert.strictEqual(
   torsoItem.points,
   fixedOutput.combatGeometry.hurt.find(({ part }) => part === 'torso').points,
-  'rendered torso and gameplay hurt polygon must share the same posed foot pivot',
+  'rendered torso must reuse shared gameplay hurt geometry exactly',
+);
+assert.strictEqual(
+  headItem.points,
+  fixedOutput.combatGeometry.hurt.find(({ part }) => part === 'head').points,
+  'rendered head must reuse shared gameplay hurt geometry exactly',
 );
 function pointSegmentDistance(point, start, end) {
   const deltaX = end.x - start.x;
@@ -261,6 +328,11 @@ assert.doesNotMatch(
   /\b(window|document|navigator|HTMLElement|SceneNode|GameScene|CombatCommandController|MapRuntime|CombatEventBuffer)\b/,
   'plain presentation owner must not know browser, scene graph, or mutable gameplay owners',
 );
+assert.doesNotMatch(
+  presentationSource,
+  /CharacterPresentationProfiles|CHARACTER_PRESENTATION_PROFILE|scrapyard-apprentice/,
+  'plain presentation owner must receive appearance profiles rather than importing concrete catalog data',
+);
 
 console.log(
   JSON.stringify({
@@ -271,8 +343,11 @@ console.log(
     invariants: [
       'fixed-public-item-parity',
       'deep-frozen-output',
-      'shared-sword-shield-geometry-identity',
+      'shared-sword-shield-torso-head-geometry-identity',
       'shared-body-foot-pivot-and-connected-sword',
+      'immutable-injected-profile-validation',
+      'scrap-workwear-landmark-ids-and-profile-colors',
+      'fantasy-landmark-removal',
       'plain-owner-boundary',
     ],
   }),

@@ -15,6 +15,55 @@ function assertAttackProfiles(profiles) {
   return profiles;
 }
 
+const SCRAP_ENEMY_TOOL_KINDS = Object.freeze(['magnet-claw', 'drill-maw', 'conveyor-ram']);
+
+function assertCharacterPresentationProfile(profile) {
+  if (!profile || typeof profile !== 'object') {
+    throw new TypeError(
+      'Training encounter enemy에는 immutable Character Presentation Profile 주입이 필요합니다.',
+    );
+  }
+  if (!Object.isFrozen(profile)) {
+    throw new TypeError(
+      `${profile.id ?? 'unknown'} Character Presentation Profile은 immutable이어야 합니다.`,
+    );
+  }
+  for (const field of ['id', 'family', 'accent', 'material', 'toolKind']) {
+    if (typeof profile[field] !== 'string' || profile[field].length === 0) {
+      throw new TypeError(`Character Presentation Profile의 ${field} 값이 필요합니다.`);
+    }
+  }
+  if (profile.family !== 'machine') {
+    throw new TypeError(
+      `Training encounter enemy는 machine profile이어야 합니다: ${profile.family}`,
+    );
+  }
+  if (!SCRAP_ENEMY_TOOL_KINDS.includes(profile.toolKind)) {
+    throw new TypeError(`지원하지 않는 scrap enemy toolKind입니다: ${profile.toolKind}`);
+  }
+  if (!profile.proportions || typeof profile.proportions !== 'object') {
+    throw new TypeError(`${profile.id}에는 proportions가 필요합니다.`);
+  }
+  for (const field of ['shoulder', 'hip', 'head', 'sideDepth']) {
+    if (!Number.isFinite(profile.proportions[field]) || profile.proportions[field] <= 0) {
+      throw new TypeError(`${profile.id} proportions.${field}는 양의 수여야 합니다.`);
+    }
+  }
+  if (
+    !Array.isArray(profile.landmarks) ||
+    profile.landmarks.length < 3 ||
+    profile.landmarks.some((landmark) => typeof landmark !== 'string' || landmark.length === 0)
+  ) {
+    throw new TypeError(`${profile.id}에는 최소 세 개의 silhouette landmark가 필요합니다.`);
+  }
+  if (!Object.isFrozen(profile.proportions) || !Object.isFrozen(profile.landmarks)) {
+    throw new TypeError(
+      `${profile.id} Character Presentation Profile은 deep immutable이어야 합니다.`,
+    );
+  }
+  return profile;
+}
+
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
 }
@@ -100,6 +149,331 @@ function rectangle(x, y, width, height) {
   ];
 }
 
+function createScrapEnemyAppearanceItems({
+  profile,
+  x,
+  y,
+  weaponHand,
+  weaponAngle,
+  weaponLength,
+  orderNear,
+}) {
+  const { accent, material, proportions, toolKind } = profile;
+  const outline = '#20272b';
+  const plateEdge = '#8b9795';
+  const cableFill = '#252c2f';
+  const bodyOrder = orderNear('combat-enemy-body', 0);
+  const headOrder = orderNear('combat-enemy-head', 0);
+  const weaponOrder = orderNear('combat-enemy-weapon', 0);
+  const shoulderWidth = Math.max(18, proportions.shoulder);
+  const hipWidth = Math.max(14, proportions.hip);
+  const headRadius = Math.max(5, proportions.head);
+  const presentation = { presentationOnly: true };
+  const commonItems = [
+    polygon(
+      'combat-enemy-scrap-back-plate',
+      [
+        { x: -shoulderWidth - 4, y: -26 },
+        { x: -9, y: -34 },
+        { x: -8, y: 11 },
+        { x: -hipWidth - 5, y: 19 },
+      ],
+      { x, y: y - 31 },
+      material,
+      {
+        ...presentation,
+        stroke: outline,
+        lineWidth: 3,
+        order: bodyOrder - 0.35,
+      },
+    ),
+    polygon(
+      'combat-enemy-scrap-front-plate',
+      [
+        { x: -13, y: -22 },
+        { x: 15, y: -24 },
+        { x: 17, y: 5 },
+        { x: 9, y: 17 },
+        { x: -11, y: 15 },
+        { x: -16, y: 1 },
+      ],
+      { x, y: y - 31 },
+      material,
+      {
+        ...presentation,
+        stroke: plateEdge,
+        lineWidth: 2.5,
+        order: bodyOrder + 0.12,
+      },
+    ),
+    polygon(
+      'combat-enemy-scrap-rivet-left',
+      regularPolygon(3.5, 3.5, 8, Math.PI / 8),
+      { x: x - 10, y: y - 67 },
+      accent,
+      {
+        ...presentation,
+        stroke: outline,
+        lineWidth: 1.5,
+        order: bodyOrder + 0.2,
+      },
+    ),
+    polygon(
+      'combat-enemy-scrap-rivet-right',
+      regularPolygon(3.5, 3.5, 8, Math.PI / 8),
+      { x: x + 10, y: y - 67 },
+      accent,
+      {
+        ...presentation,
+        stroke: outline,
+        lineWidth: 1.5,
+        order: bodyOrder + 0.2,
+      },
+    ),
+    limbSegment(
+      'combat-enemy-scrap-cable',
+      { x: x - shoulderWidth - 2, y: y - 53 },
+      { x: x - hipWidth - 13, y: y - 17 },
+      5,
+      cableFill,
+      {
+        ...presentation,
+        stroke: accent,
+        lineWidth: 1.5,
+        order: bodyOrder - 0.28,
+      },
+    ),
+    polygon(
+      'combat-enemy-scrap-repair-mark',
+      [
+        { x: -13, y: -2 },
+        { x: -4, y: -6 },
+        { x: 2, y: -1 },
+        { x: 11, y: -7 },
+        { x: 14, y: -3 },
+        { x: 2, y: 5 },
+        { x: -5, y: 0 },
+        { x: -11, y: 3 },
+      ],
+      { x: x + 1, y: y - 42 },
+      accent,
+      {
+        ...presentation,
+        stroke: outline,
+        lineWidth: 1.5,
+        order: bodyOrder + 0.24,
+      },
+    ),
+  ];
+
+  if (toolKind === 'magnet-claw') {
+    const jawBase = Math.max(weaponLength - 24, 44);
+    return [
+      ...commonItems,
+      polygon(
+        'combat-enemy-collector-eye',
+        regularPolygon(headRadius * 0.72, Math.max(4, headRadius * 0.48), 8, Math.PI / 8),
+        { x: x + 2, y: y - 79 },
+        accent,
+        {
+          ...presentation,
+          stroke: '#fff1c7',
+          lineWidth: 2,
+          order: headOrder + 0.3,
+        },
+      ),
+      polygon(
+        'combat-enemy-magnet-claw-upper-jaw',
+        [
+          { x: jawBase - 9, y: -8 },
+          { x: jawBase + 12, y: -18 },
+          { x: jawBase + 6, y: -5 },
+          { x: jawBase - 3, y: 1 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        accent,
+        {
+          ...presentation,
+          stroke: outline,
+          lineWidth: 2.5,
+          order: weaponOrder + 0.2,
+        },
+      ),
+      polygon(
+        'combat-enemy-magnet-claw-lower-jaw',
+        [
+          { x: jawBase - 3, y: 2 },
+          { x: jawBase + 7, y: 8 },
+          { x: jawBase + 14, y: 20 },
+          { x: jawBase - 9, y: 9 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        accent,
+        {
+          ...presentation,
+          stroke: outline,
+          lineWidth: 2.5,
+          order: weaponOrder + 0.2,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-collector-cable-tail',
+        { x: x - shoulderWidth, y: y - 58 },
+        { x: x - shoulderWidth - 24, y: y - 9 },
+        6,
+        cableFill,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2,
+          order: bodyOrder - 0.3,
+        },
+      ),
+    ];
+  }
+
+  if (toolKind === 'drill-maw') {
+    return [
+      ...commonItems,
+      polygon(
+        'combat-enemy-drill-maw',
+        [
+          { x: -4, y: -12 },
+          { x: 14, y: -9 },
+          { x: 42, y: 0 },
+          { x: 14, y: 10 },
+          { x: -5, y: 13 },
+        ],
+        { x: x + headRadius, y: y - 77 },
+        accent,
+        {
+          ...presentation,
+          stroke: outline,
+          lineWidth: 2.5,
+          order: headOrder + 0.28,
+        },
+      ),
+      polygon(
+        'combat-enemy-drill-maw-ridge',
+        [
+          { x: 2, y: -9 },
+          { x: 13, y: -5 },
+          { x: 5, y: 0 },
+          { x: 16, y: 5 },
+          { x: 2, y: 9 },
+          { x: -3, y: 0 },
+        ],
+        { x: x + headRadius + 8, y: y - 77 },
+        plateEdge,
+        {
+          ...presentation,
+          stroke: outline,
+          lineWidth: 1.5,
+          order: headOrder + 0.32,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-drill-rear-support-leg',
+        { x: x - shoulderWidth, y: y - 46 },
+        { x: x - hipWidth - 20, y },
+        8,
+        material,
+        {
+          ...presentation,
+          stroke: outline,
+          lineWidth: 2,
+          order: bodyOrder - 0.18,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-drill-front-support-leg',
+        { x: x + shoulderWidth, y: y - 45 },
+        { x: x + hipWidth + 22, y },
+        8,
+        material,
+        {
+          ...presentation,
+          stroke: outline,
+          lineWidth: 2,
+          order: bodyOrder + 0.08,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-drill-pressure-cable',
+        { x: x - shoulderWidth + 4, y: y - 69 },
+        { x: x + headRadius + 18, y: y - 83 },
+        6,
+        cableFill,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2,
+          order: headOrder + 0.16,
+        },
+      ),
+    ];
+  }
+
+  return [
+    ...commonItems,
+    polygon(
+      'combat-enemy-conveyor-ram-plate',
+      [
+        { x: -7, y: -24 },
+        { x: 27, y: -20 },
+        { x: 35, y: -10 },
+        { x: 35, y: 12 },
+        { x: 26, y: 22 },
+        { x: -8, y: 25 },
+      ],
+      { x: x + shoulderWidth - 3, y: y - 48 },
+      material,
+      {
+        ...presentation,
+        stroke: accent,
+        lineWidth: 3.5,
+        order: bodyOrder + 0.3,
+      },
+    ),
+    polygon(
+      'combat-enemy-conveyor-warning-light',
+      regularPolygon(headRadius + 2, Math.max(6, headRadius * 0.78), 8, Math.PI / 8),
+      { x: x - 3, y: y - 104 },
+      accent,
+      {
+        ...presentation,
+        stroke: '#fff2b6',
+        lineWidth: 2.5,
+        order: headOrder + 0.3,
+      },
+    ),
+    polygon(
+      'combat-enemy-conveyor-power-shaft',
+      regularPolygon(18, 18, 12, Math.PI / 12),
+      { x: x - shoulderWidth, y: y - 47 },
+      plateEdge,
+      {
+        ...presentation,
+        stroke: outline,
+        lineWidth: 3,
+        order: bodyOrder + 0.22,
+      },
+    ),
+    polygon(
+      'combat-enemy-conveyor-power-shaft-hub',
+      regularPolygon(7, 7, 8, Math.PI / 8),
+      { x: x - shoulderWidth, y: y - 47 },
+      accent,
+      {
+        ...presentation,
+        stroke: outline,
+        lineWidth: 2,
+        order: bodyOrder + 0.26,
+      },
+    ),
+  ];
+}
+
 export function sampleTrainingEnemyCombatFrame(enemy, attackProfiles) {
   if (!enemy || !['windup', 'attack', 'recovery'].includes(enemy.aiState)) return null;
   const profiles = assertAttackProfiles(attackProfiles);
@@ -126,9 +500,11 @@ export function createTrainingEnemyItems(
   renderOrder,
   attackProfiles,
   combatGeometry = null,
+  characterPresentationProfile = null,
 ) {
   if (!enemy) return [];
   const profiles = assertAttackProfiles(attackProfiles);
+  const presentationProfile = assertCharacterPresentationProfile(characterPresentationProfile);
   const resolvedCombatGeometry =
     combatGeometry ?? sampleTrainingEnemyCombatGeometry(enemy, profiles);
   const { x, y } = enemy.position;
@@ -136,24 +512,15 @@ export function createTrainingEnemyItems(
   const groggy = enemy.posture?.groggy === true;
   const groggyPulse = groggy ? 0.72 + 0.28 * Math.sin(enemy.posture.groggySeconds * 30) : 1;
   const glasswind = enemy.species === 'glasswind';
-  const roleColor = glasswind
-    ? enemy.role === 'boss'
-      ? '#66528f'
-      : '#397f89'
-    : enemy.role === 'boss'
-      ? '#71436f'
-      : enemy.role === 'field'
-        ? '#7f6341'
-        : '#a74651';
   const bodyFill = groggy
     ? '#bff8ed'
     : flash
       ? '#f4e3ce'
       : enemy.aiState === 'windup'
-        ? '#e28b45'
+        ? presentationProfile.accent
         : enemy.aiState === 'guard'
           ? '#4f7f9d'
-          : roleColor;
+          : presentationProfile.material;
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
   const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
   const enchant = enemy.enchantStatus;
@@ -331,42 +698,28 @@ export function createTrainingEnemyItems(
           ),
         ]
       : []),
-    limbSegment('combat-enemy-back-leg', { x: x - 7, y: y - 29 }, { x: x - 9, y }, 8, '#552c3a', {
-      stroke: '#251824',
-      lineWidth: 1.5,
-    }),
-    ...(glasswind
-      ? [
-          polygon(
-            'combat-enemy-glasswind-wing-back',
-            [
-              { x: -10, y: 0 },
-              { x: -70, y: -46 },
-              { x: -82, y: 4 },
-              { x: -34, y: 28 },
-            ],
-            { x: x - 2, y: y - 58, rotation: poseRotation * 0.45 },
-            enemy.role === 'boss' ? '#755eb0' : '#4ba5ad',
-            { stroke: '#b8f6ef', lineWidth: 2, opacity: 0.72 },
-          ),
-          polygon(
-            'combat-enemy-glasswind-wing-front',
-            [
-              { x: 8, y: -2 },
-              { x: 72, y: -40 },
-              { x: 80, y: 10 },
-              { x: 32, y: 30 },
-            ],
-            { x: x + 2, y: y - 58, rotation: -poseRotation * 0.35 },
-            enemy.role === 'boss' ? '#9a76c2' : '#63c5c2',
-            { stroke: '#d8fffa', lineWidth: 2, opacity: 0.76 },
-          ),
-        ]
-      : []),
-    limbSegment('combat-enemy-front-leg', { x: x + 7, y: y - 29 }, { x: x + 10, y }, 8, '#783342', {
-      stroke: '#251824',
-      lineWidth: 1.5,
-    }),
+    limbSegment(
+      'combat-enemy-back-leg',
+      { x: x - 7, y: y - 29 },
+      { x: x - 9, y },
+      8,
+      presentationProfile.material,
+      {
+        stroke: '#20272b',
+        lineWidth: 1.5,
+      },
+    ),
+    limbSegment(
+      'combat-enemy-front-leg',
+      { x: x + 7, y: y - 29 },
+      { x: x + 10, y },
+      8,
+      presentationProfile.material,
+      {
+        stroke: '#20272b',
+        lineWidth: 1.5,
+      },
+    ),
     polygon(
       'combat-enemy-body',
       [
@@ -379,25 +732,31 @@ export function createTrainingEnemyItems(
       ],
       { x, y: y - 31 },
       bodyFill,
-      { stroke: '#321c29', lineWidth: 2 },
+      { stroke: '#20272b', lineWidth: 2 },
     ),
-    polygon('combat-enemy-head', regularPolygon(15, 18, 8), { x, y: y - 79 }, '#c77865', {
-      stroke: '#321c29',
-      lineWidth: 2,
-    }),
+    polygon(
+      'combat-enemy-head',
+      regularPolygon(15, 18, 8),
+      { x, y: y - 79 },
+      presentationProfile.material,
+      {
+        stroke: '#20272b',
+        lineWidth: 2,
+      },
+    ),
     polygon(
       'combat-enemy-core-glow',
       regularPolygon(20, 20, 10, Math.PI / 10),
       { x, y: y - 42 },
-      '#46bfb5',
+      presentationProfile.accent,
       { opacity: flash ? 0.5 : 0.22 },
     ),
     polygon(
       'combat-enemy-core',
       regularPolygon(15, 15, 6, Math.PI / 6),
       { x, y: y - 42 },
-      flash ? '#ffffff' : '#56e0cf',
-      { stroke: '#5d342e', lineWidth: 1.5 },
+      flash ? '#ffffff' : presentationProfile.accent,
+      { stroke: '#20272b', lineWidth: 1.5 },
     ),
     ...(enemy.weakPoint?.exposed
       ? [
@@ -440,7 +799,7 @@ export function createTrainingEnemyItems(
         { x: 0, y: 4 },
       ],
       { ...weaponHand, rotation: weaponAngle },
-      glasswind ? '#b9fff6' : '#dce5e6',
+      presentationProfile.accent,
       { stroke: '#37434b', lineWidth: 2 },
     ),
     ...(antiAirGlowOpacity > 0
@@ -471,14 +830,28 @@ export function createTrainingEnemyItems(
             : []),
         ]
       : []),
-    limbSegment('combat-enemy-upper-weapon-arm', weaponShoulder, weaponElbow, 11, '#9c514d', {
-      stroke: '#321c29',
-      lineWidth: 2,
-    }),
-    limbSegment('combat-enemy-lower-weapon-arm', weaponElbow, weaponHand, 10, '#bd6c5f', {
-      stroke: '#321c29',
-      lineWidth: 2,
-    }),
+    limbSegment(
+      'combat-enemy-upper-weapon-arm',
+      weaponShoulder,
+      weaponElbow,
+      11,
+      presentationProfile.material,
+      {
+        stroke: '#20272b',
+        lineWidth: 2,
+      },
+    ),
+    limbSegment(
+      'combat-enemy-lower-weapon-arm',
+      weaponElbow,
+      weaponHand,
+      10,
+      presentationProfile.accent,
+      {
+        stroke: '#20272b',
+        lineWidth: 2,
+      },
+    ),
     polygon('combat-enemy-health-back', rectangle(-34, -3, 68, 6), { x, y: y - 112 }, '#201822', {
       stroke: '#09070b',
       lineWidth: 1,
@@ -520,120 +893,18 @@ export function createTrainingEnemyItems(
       : []),
   ];
 
-  if (enemy.profileId === 'training') {
-    const orderNear = (itemId, offset) => items.findIndex((item) => item.id === itemId) + offset;
-    items.push(
-      polygon(
-        'combat-enemy-training-waist-cloth',
-        [
-          { x: -18, y: 12 },
-          { x: 18, y: 11 },
-          { x: 17, y: 27 },
-          { x: 7, y: 42 },
-          { x: -2, y: 35 },
-          { x: -11, y: 43 },
-          { x: -18, y: 27 },
-        ],
-        { x, y: y - 31 },
-        '#c89045',
-        {
-          stroke: '#513147',
-          lineWidth: 2,
-          order: orderNear('combat-enemy-body', 0.25),
-        },
-      ),
-      polygon(
-        'combat-enemy-training-shoulder-plate',
-        [
-          { x: -12, y: -7 },
-          { x: 0, y: -13 },
-          { x: 13, y: -7 },
-          { x: 15, y: 3 },
-          { x: 5, y: 10 },
-          { x: -10, y: 7 },
-        ],
-        weaponShoulder,
-        '#4d294b',
-        {
-          stroke: '#e6cf9f',
-          lineWidth: 2,
-          order: orderNear('combat-enemy-upper-weapon-arm', 0.25),
-        },
-      ),
-      polygon(
-        'combat-enemy-training-mask',
-        [
-          { x: -15, y: -5 },
-          { x: 12, y: -8 },
-          { x: 18, y: 0 },
-          { x: 9, y: 11 },
-          { x: -10, y: 9 },
-          { x: -17, y: 2 },
-        ],
-        { x, y: y - 79 },
-        '#f0ddb4',
-        {
-          stroke: '#4d294b',
-          lineWidth: 2,
-          order: orderNear('combat-enemy-head', 0.25),
-        },
-      ),
-      polygon(
-        'combat-enemy-training-gauntlet',
-        [
-          { x: -8, y: -7 },
-          { x: 8, y: -7 },
-          { x: 12, y: 0 },
-          { x: 6, y: 8 },
-          { x: -8, y: 7 },
-          { x: -11, y: 0 },
-        ],
-        { ...weaponHand, rotation: weaponAngle },
-        '#603257',
-        {
-          stroke: '#2a172b',
-          lineWidth: 2,
-          order: orderNear('combat-enemy-lower-weapon-arm', 0.25),
-        },
-      ),
-      polygon(
-        'combat-enemy-training-back-boot',
-        [
-          { x: -9, y: -8 },
-          { x: 7, y: -8 },
-          { x: 15, y: -3 },
-          { x: 16, y: 5 },
-          { x: 3, y: 9 },
-          { x: -10, y: 6 },
-        ],
-        { x: x - 9, y },
-        '#492542',
-        {
-          stroke: '#211321',
-          lineWidth: 1.5,
-          order: orderNear('combat-enemy-back-leg', 0.25),
-        },
-      ),
-      polygon(
-        'combat-enemy-training-front-boot',
-        [
-          { x: -9, y: -8 },
-          { x: 8, y: -8 },
-          { x: 17, y: -3 },
-          { x: 18, y: 5 },
-          { x: 4, y: 9 },
-          { x: -10, y: 6 },
-        ],
-        { x: x + 10, y },
-        '#633052',
-        {
-          stroke: '#281427',
-          lineWidth: 1.5,
-          order: orderNear('combat-enemy-front-leg', 0.25),
-        },
-      ),
-    );
-  }
+  const orderNear = (itemId, offset) => items.findIndex((item) => item.id === itemId) + offset;
+  items.push(
+    ...createScrapEnemyAppearanceItems({
+      profile: presentationProfile,
+      x,
+      y,
+      weaponHand,
+      weaponAngle,
+      weaponLength,
+      orderNear,
+    }),
+  );
 
   return items.map((item, index) => {
     const geometryPoints =

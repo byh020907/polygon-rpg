@@ -43,6 +43,14 @@ function assertAttackProfiles(profiles) {
 function resolveEncounterProfile(profiles, profileId = 'training') {
   const profile = profiles[profileId];
   if (!profile) throw new Error(`알 수 없는 encounter profile입니다: ${profileId}`);
+  if (
+    typeof profile.presentationProfileId !== 'string' ||
+    profile.presentationProfileId.trim().length === 0
+  ) {
+    throw new TypeError(
+      `${profileId} encounter에는 character presentation profile ID가 필요합니다.`,
+    );
+  }
   return profile;
 }
 
@@ -205,6 +213,7 @@ export class TrainingEncounterNode extends SceneNode {
     this.enemy = {
       id: this.entity.id,
       profileId: encounterProfile.id,
+      presentationProfileId: encounterProfile.presentationProfileId,
       role: encounterProfile.role,
       species: encounterProfile.species ?? 'golem',
       label: encounterProfile.label,
@@ -326,6 +335,7 @@ export class TrainingEncounterNode extends SceneNode {
       health: enemy.health,
       maxHealth: enemy.maxHealth,
       profileId: enemy.profileId,
+      presentationProfileId: enemy.presentationProfileId,
       role: enemy.role,
       species: enemy.species,
       label: enemy.label,
@@ -397,6 +407,7 @@ export class TrainingEncounterNode extends SceneNode {
         juggleLocked: enemy.juggleLocked,
         retaliationSeconds: enemy.retaliationInvulnerableSeconds,
         role: enemy.role,
+        presentationProfileId: enemy.presentationProfileId,
         species: enemy.species,
         label: enemy.label,
         punishWindowOpen: enemy.punishWindowOpen,

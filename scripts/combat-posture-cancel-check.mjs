@@ -438,7 +438,7 @@ function assertPostureVisualQaExpectationMatrix() {
         );
         assert.notEqual(
           request.scenario.expectation.expectedItem,
-          'combat-enemy-training-mask',
+          'combat-enemy-collector-eye',
           `${renderer} ${scenario} ${phase}는 Boss posture item을 기대해야 한다.`,
         );
         assert.deepEqual(
@@ -452,7 +452,7 @@ function assertPostureVisualQaExpectationMatrix() {
   const normalEnd = readVisualQaRequest(
     '?visualQa=1&gameStart=posture-normal-enemy&visualQaRenderer=retro&visualQaPhase=end',
   );
-  assert.equal(normalEnd.scenario.expectation.expectedItem, 'combat-enemy-training-mask');
+  assert.equal(normalEnd.scenario.expectation.expectedItem, 'combat-enemy-collector-eye');
 
   for (const renderer of ['polygon', 'retro']) {
     const active = readVisualQaRequest(

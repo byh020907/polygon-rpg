@@ -9,14 +9,14 @@ export const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 
 const ARM_IK_SOLVER = new TwoBoneIKSolver();
 const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
-  'shield-pauldron': 9.5,
+  'shield-sleeve-repair-bandage': 9.5,
   'shield-upper-arm': 10,
   'shield-forearm': 11,
   'shield-glove': 11.5,
   shield: 12,
-  'shield-mark': 13,
+  'shield-rivet-plate': 13,
   'sword-trail': 16.5,
-  'sword-pauldron': 16.75,
+  'sword-sleeve-repair-bandage': 16.75,
   'sword-upper-arm': 17,
   'sword-forearm': 18,
   'sword-glove': 18.5,
@@ -26,6 +26,46 @@ const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
 });
 const SCALED_HEX_COLOR_CACHE = new Map();
 const MAX_SCALED_HEX_COLOR_CACHE_ENTRIES = 512;
+const REQUIRED_PROPORTIONS = Object.freeze(['shoulder', 'hip', 'head', 'sideDepth']);
+
+function validateAppearanceProfile(profile) {
+  if (!profile || typeof profile !== 'object' || !Object.isFrozen(profile)) {
+    throw new TypeError('Player appearanceProfile must be an immutable object.');
+  }
+  for (const field of ['id', 'family', 'accent', 'material', 'toolKind']) {
+    if (typeof profile[field] !== 'string' || profile[field].trim().length === 0) {
+      throw new TypeError(`Player appearanceProfile.${field} must be a non-empty string.`);
+    }
+  }
+  for (const field of ['accent', 'material']) {
+    if (!/^#[0-9a-f]{6}$/i.test(profile[field])) {
+      throw new TypeError(`Player appearanceProfile.${field} must be a six-digit hex color.`);
+    }
+  }
+  if (
+    !profile.proportions ||
+    typeof profile.proportions !== 'object' ||
+    !Object.isFrozen(profile.proportions)
+  ) {
+    throw new TypeError('Player appearanceProfile.proportions must be immutable.');
+  }
+  for (const field of REQUIRED_PROPORTIONS) {
+    if (!Number.isFinite(profile.proportions[field]) || profile.proportions[field] <= 0) {
+      throw new TypeError(`Player appearanceProfile.proportions.${field} must be positive.`);
+    }
+  }
+  if (
+    !Array.isArray(profile.landmarks) ||
+    !Object.isFrozen(profile.landmarks) ||
+    profile.landmarks.length < 3 ||
+    profile.landmarks.some((landmark) => typeof landmark !== 'string' || !landmark.trim())
+  ) {
+    throw new TypeError(
+      'Player appearanceProfile.landmarks must be an immutable array with at least three labels.',
+    );
+  }
+  return profile;
+}
 
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
@@ -133,6 +173,7 @@ function regularPolygon(radiusX, radiusY, sides, angleOffset = 0) {
 }
 
 function createCharacterItems(
+  appearanceProfile,
   position,
   facing,
   targetPose,
@@ -142,6 +183,11 @@ function createCharacterItems(
   weaponLengthScale = 1,
   combatGeometry = null,
 ) {
+  const accentColor = appearanceProfile.accent;
+  const materialColor = appearanceProfile.material;
+  const materialShadow = scaleHexColor(materialColor, 0.58);
+  const materialEdge = scaleHexColor(materialColor, 0.42);
+  const accentShadow = scaleHexColor(accentColor, 0.58);
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const swordRotation = targetPose.swordAngle;
@@ -209,35 +255,36 @@ function createCharacterItems(
       opacity: 0.62,
     }),
     polygon(
-      'cape',
+      'tool-bag',
       [
-        { x: -16, y: -37 },
-        { x: 12, y: -34 },
-        { x: 18, y: 15 },
-        { x: 8, y: 56 },
-        { x: -3, y: 47 },
-        { x: -14, y: 60 },
-        { x: -20, y: 12 },
+        { x: -15, y: -2 },
+        { x: 5, y: -4 },
+        { x: 10, y: 8 },
+        { x: 8, y: 40 },
+        { x: -11, y: 45 },
+        { x: -16, y: 31 },
       ],
       {
-        x: bodyX - 5,
-        y: bodyY,
-        rotation: -bonePose.capeLift * 0.045,
+        x: bodyX - 9,
+        y: bodyY + 13,
+        rotation: -bonePose.capeLift * 0.025,
       },
-      '#6d3043',
-      { stroke: '#311b2b', lineWidth: 2 },
+      materialShadow,
+      { stroke: materialEdge, lineWidth: 2 },
     ),
     polygon(
-      'scarf-tail',
+      'tool-bag-cable',
       [
-        { x: 3, y: -4 },
-        { x: -22 - bonePose.capeLift * 16, y: -1 - bonePose.capeLift * 5 },
-        { x: -12, y: 7 },
-        { x: 4, y: 5 },
+        { x: -2, y: -3 },
+        { x: -19 - bonePose.capeLift * 8, y: 2 },
+        { x: -24 - bonePose.capeLift * 7, y: 17 },
+        { x: -20, y: 20 },
+        { x: -14, y: 7 },
+        { x: 2, y: 3 },
       ],
-      { x: bodyX - 8, y: bodyY - 35 },
-      '#9d5261',
-      { stroke: '#3f2432', lineWidth: 1.5 },
+      { x: bodyX - 10, y: bodyY + 10 },
+      accentShadow,
+      { stroke: materialEdge, lineWidth: 1.5 },
     ),
     limbSegment('back-thigh', rearLeg.root, rearLeg.elbow, 11, '#27364d', {
       stroke: '#121a29',
@@ -266,11 +313,11 @@ function createCharacterItems(
         { x: -25, y: 9 },
       ],
       { x: bodyX, y: bodyY },
-      '#47698f',
-      { stroke: '#182538', lineWidth: 2 },
+      materialColor,
+      { stroke: materialEdge, lineWidth: 2 },
     ),
     polygon(
-      'chest-plate',
+      'patched-chest-plate',
       [
         { x: -14, y: -28 },
         { x: 13, y: -30 },
@@ -279,11 +326,11 @@ function createCharacterItems(
         { x: -12, y: 17 },
       ],
       { x: bodyX, y: bodyY },
-      '#7198b8',
-      { stroke: '#29445f', lineWidth: 1.5 },
+      scaleHexColor(materialColor, 0.82),
+      { stroke: materialEdge, lineWidth: 1.5 },
     ),
     polygon(
-      'belt',
+      'work-belt',
       [
         { x: -20, y: -4 },
         { x: 20, y: -5 },
@@ -291,8 +338,8 @@ function createCharacterItems(
         { x: -20, y: 7 },
       ],
       { x: bodyX, y: bodyY + 27 },
-      '#2a2130',
-      { stroke: '#171525', lineWidth: 1.5 },
+      materialShadow,
+      { stroke: materialEdge, lineWidth: 1.5 },
     ),
     limbSegment('shield-upper-arm', leftArm.root, leftArm.elbow, 10, '#b77b67', {
       stroke: '#442a30',
@@ -313,11 +360,11 @@ function createCharacterItems(
         { x: -17, y: 0 },
       ],
       { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1 },
-      '#9d5261',
-      { stroke: '#342033', lineWidth: 3 },
+      materialColor,
+      { stroke: materialEdge, lineWidth: 3 },
     ),
     polygon(
-      'shield-mark',
+      'shield-rivet-plate',
       [
         { x: 0, y: -17 },
         { x: 5, y: -5 },
@@ -329,8 +376,8 @@ function createCharacterItems(
         { x: -5, y: -5 },
       ],
       { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1 },
-      '#d69a75',
-      { stroke: '#5b3343', lineWidth: 1.5 },
+      accentColor,
+      { stroke: accentShadow, lineWidth: 1.5 },
     ),
     polygon(
       'head',
@@ -340,31 +387,35 @@ function createCharacterItems(
       { stroke: '#3d2832', lineWidth: 2 },
     ),
     polygon(
-      'helmet',
+      'goggles-band',
       [
-        { x: -18, y: 5 },
-        { x: -16, y: -16 },
-        { x: -2, y: -24 },
-        { x: 15, y: -18 },
-        { x: 19, y: -3 },
-        { x: 11, y: 4 },
-        { x: -3, y: -1 },
+        { x: -18, y: -7 },
+        { x: -13, y: -13 },
+        { x: 13, y: -13 },
+        { x: 18, y: -7 },
+        { x: 15, y: -2 },
+        { x: -15, y: -2 },
       ],
-      { x: bodyX - 1, y: bodyY - 66, rotation: bonePose.headTilt },
-      '#374c68',
-      { stroke: '#182538', lineWidth: 2 },
+      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      materialShadow,
+      { stroke: materialEdge, lineWidth: 2 },
     ),
     polygon(
-      'helmet-highlight',
+      'goggles-lenses',
       [
-        { x: -1, y: -20 },
-        { x: 9, y: -16 },
-        { x: 14, y: -7 },
-        { x: 5, y: -9 },
+        { x: -13, y: -12 },
+        { x: -2, y: -12 },
+        { x: -1, y: -3 },
+        { x: -12, y: -3 },
+        { x: -13, y: -12 },
+        { x: 2, y: -12 },
+        { x: 13, y: -12 },
+        { x: 12, y: -3 },
+        { x: 1, y: -3 },
       ],
-      { x: bodyX - 1, y: bodyY - 66, rotation: bonePose.headTilt },
-      '#7ea2bd',
-      { opacity: 0.9 },
+      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      accentColor,
+      { stroke: accentShadow, lineWidth: 1.25, opacity: 0.94 },
     ),
     ...trailItems,
     limbSegment('sword-upper-arm', rightArm.root, rightArm.elbow, 10, '#ba7665', {
@@ -416,7 +467,7 @@ function createCharacterItems(
 
   items.push(
     polygon(
-      'hair-back',
+      'worker-hair-back',
       [
         { x: -17, y: -8 },
         { x: -14, y: -20 },
@@ -429,11 +480,11 @@ function createCharacterItems(
         { x: -15, y: 8 },
       ],
       { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
-      '#241b2c',
-      { stroke: '#120e19', lineWidth: 2, order: 13.75 },
+      materialEdge,
+      { stroke: scaleHexColor(materialColor, 0.25), lineWidth: 2, order: 13.75 },
     ),
     polygon(
-      'hair-fringe',
+      'worker-hair-fringe',
       [
         { x: -11, y: -13 },
         { x: -2, y: -22 },
@@ -446,31 +497,31 @@ function createCharacterItems(
         { x: -9, y: -1 },
       ],
       { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
-      '#2f2238',
-      { stroke: '#120e19', lineWidth: 1.5, order: 16.25 },
+      materialShadow,
+      { stroke: scaleHexColor(materialColor, 0.25), lineWidth: 1.5, order: 16.25 },
     ),
     polygon(
-      'uniform-coat-tail',
+      'workwear-back-panel',
       [
-        { x: -18, y: 4 },
-        { x: 15, y: 5 },
-        { x: 20, y: 20 },
-        { x: 12, y: 55 },
-        { x: 2, y: 47 },
-        { x: -7, y: 60 },
-        { x: -18, y: 48 },
-        { x: -22, y: 17 },
+        { x: -18, y: 3 },
+        { x: 15, y: 4 },
+        { x: 19, y: 18 },
+        { x: 12, y: 41 },
+        { x: 1, y: 38 },
+        { x: -10, y: 43 },
+        { x: -18, y: 35 },
+        { x: -21, y: 15 },
       ],
       {
         x: bodyX - 1,
         y: bodyY + 8,
         rotation: -bonePose.capeLift * 0.035,
       },
-      '#315f91',
-      { stroke: '#132b48', lineWidth: 2, order: 2.75 },
+      materialColor,
+      { stroke: materialEdge, lineWidth: 2, order: 2.75 },
     ),
     polygon(
-      'uniform-front-panel',
+      'workwear-front-panel',
       [
         { x: -13, y: -25 },
         { x: 11, y: -27 },
@@ -480,36 +531,57 @@ function createCharacterItems(
         { x: -16, y: 4 },
       ],
       { x: bodyX + 1, y: bodyY },
-      '#4f80b3',
-      { stroke: '#173653', lineWidth: 1.5, order: 9.25 },
+      accentColor,
+      { stroke: accentShadow, lineWidth: 1.5, order: 9.25 },
     ),
     polygon(
-      'shield-pauldron',
+      'workwear-repair-patch',
       [
-        { x: -12, y: -6 },
-        { x: -2, y: -13 },
-        { x: 11, y: -9 },
-        { x: 14, y: 2 },
-        { x: 5, y: 9 },
-        { x: -10, y: 6 },
+        { x: -10, y: -7 },
+        { x: 5, y: -9 },
+        { x: 9, y: 6 },
+        { x: -7, y: 9 },
       ],
-      leftShoulder,
-      '#91a7b2',
-      { stroke: '#2d3b49', lineWidth: 2 },
+      { x: bodyX + 7, y: bodyY + 12, rotation: -0.08 },
+      accentShadow,
+      { stroke: materialEdge, lineWidth: 1.5, order: 9.4 },
     ),
-    polygon(
-      'sword-pauldron',
-      [
-        { x: -11, y: -7 },
-        { x: 1, y: -13 },
-        { x: 13, y: -7 },
-        { x: 14, y: 4 },
-        { x: 3, y: 9 },
-        { x: -10, y: 5 },
-      ],
-      rightShoulder,
-      '#b2c0c5',
-      { stroke: '#34434d', lineWidth: 2 },
+    limbSegment(
+      'shield-sleeve-repair-bandage',
+      {
+        x: lerp(leftArm.root.x, leftArm.elbow.x, 0.18),
+        y: lerp(leftArm.root.y, leftArm.elbow.y, 0.18),
+      },
+      {
+        x: lerp(leftArm.root.x, leftArm.elbow.x, 0.48),
+        y: lerp(leftArm.root.y, leftArm.elbow.y, 0.48),
+      },
+      12,
+      '#d7c8a5',
+      { stroke: '#71644e', lineWidth: 1.5 },
+    ),
+    limbSegment(
+      'sword-sleeve-repair-bandage',
+      {
+        x: lerp(rightArm.root.x, rightArm.elbow.x, 0.18),
+        y: lerp(rightArm.root.y, rightArm.elbow.y, 0.18),
+      },
+      {
+        x: lerp(rightArm.root.x, rightArm.elbow.x, 0.48),
+        y: lerp(rightArm.root.y, rightArm.elbow.y, 0.48),
+      },
+      12,
+      '#d7c8a5',
+      { stroke: '#71644e', lineWidth: 1.5 },
+    ),
+    ...[-7, 0, 7].map((offset, index) =>
+      polygon(
+        `workwear-rivet-${index}`,
+        regularPolygon(2.2, 2.2, 6, Math.PI / 6),
+        { x: bodyX + offset, y: bodyY - 15 },
+        accentColor,
+        { stroke: accentShadow, lineWidth: 0.75, order: 9.6 + index * 0.01 },
+      ),
     ),
     polygon(
       'shield-glove',
@@ -606,7 +678,9 @@ function createCharacterItems(
         ? combatGeometry?.weapon?.points
         : item.id === 'shield'
           ? combatGeometry?.shield?.points
-          : null;
+          : item.id === 'torso' || item.id === 'head'
+            ? combatGeometry?.hurt?.find(({ part }) => part === item.id)?.points
+            : null;
     return Object.freeze({
       ...item,
       renderOrder,
@@ -1020,6 +1094,7 @@ function createEnchantContactItems(events, renderOrder) {
 }
 
 export function createPlayerCombatPresentation({
+  appearanceProfile,
   position,
   facing,
   targetPose,
@@ -1038,7 +1113,9 @@ export function createPlayerCombatPresentation({
   enemyRenderOrder,
   activeEnchant = null,
 }) {
+  const validatedAppearanceProfile = validateAppearanceProfile(appearanceProfile);
   const sampledCharacterItems = createCharacterItems(
+    validatedAppearanceProfile,
     position,
     facing,
     targetPose,

@@ -12,6 +12,7 @@ import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
 import { WORLD_TIME_PROFILE } from '../game/world/WorldTimeProfiles.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
+import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPresentationProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -144,6 +145,8 @@ export class GameApp extends SceneNode {
         encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
         worldTimeProfile: WORLD_TIME_PROFILE,
         scrapCampaignProfile: SCRAP_CAMPAIGN_PROFILE,
+        characterPresentationCatalog: CHARACTER_PRESENTATION_PROFILE,
+        playerPresentationProfileId: 'scrapyard-apprentice',
         enchantmentCatalog: ENCHANTMENT_CATALOG,
         progressionSnapshot,
       }),
@@ -607,12 +610,13 @@ export class GameApp extends SceneNode {
         renderFrame.items
           .filter((item) =>
             [
-              'hair-fringe',
-              'uniform-front-panel',
+              'goggles-lenses',
+              'tool-bag',
+              'workwear-repair-patch',
               'shield',
               'sword-blade',
               'front-boot',
-              'combat-enemy-training-mask',
+              'combat-enemy-collector-eye',
               expectedItem,
               ...expectedItems,
             ].includes(item.id),

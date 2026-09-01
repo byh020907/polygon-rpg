@@ -11,6 +11,7 @@ import {
   sampleTrainingEnemyWeaponLength,
 } from '../src/combat/SharedCombatGeometry.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
@@ -98,6 +99,7 @@ for (const attackKind of ['light', 'heavy', 'antiAir', 'sweep']) {
     0,
     TRAINING_ENEMY_ATTACK_PROFILES,
     geometry,
+    CHARACTER_PRESENTATION_PROFILE.getProfile('collector-unit'),
   ).find(({ id }) => id === 'combat-enemy-weapon');
   assert.deepEqual(
     renderedWeapon.points,
