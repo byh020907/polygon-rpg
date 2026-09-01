@@ -285,6 +285,150 @@ function assertPostureContract() {
   assert.equal(enemy.punishWindowOrigin, null);
 }
 
+function createFrontContactFrame(encounter, { sequence = 1, damage = 20 } = {}) {
+  const enemyGeometry = sampleTrainingEnemyCombatGeometry(
+    encounter.enemy,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+  );
+  const contactPart = Object.freeze({
+    part: 'weapon',
+    points: enemyGeometry.hurt[0].points,
+  });
+  return Object.freeze({
+    combatState: Object.freeze({
+      id: 'slash',
+      phase: 'active',
+      progress: 0.5,
+      sequence,
+      comboCycle: sequence,
+    }),
+    attackProfile: Object.freeze({
+      start: 0.3,
+      end: 0.7,
+      range: 80,
+      damage,
+      launchY: -90,
+      guardBreak: false,
+      contactPart: 'weapon',
+    }),
+    playerGeometry: Object.freeze({
+      weapon: contactPart,
+      sweep: contactPart,
+      shield: contactPart,
+    }),
+    player: Object.freeze({
+      position: Object.freeze({ x: 600, y: 338 }),
+      facing: 1,
+      health: 100,
+      hitstunSeconds: 0,
+      blockstunSeconds: 0,
+      invulnerableSeconds: 0,
+      airComboFacing: 0,
+      isGrounded: true,
+    }),
+  });
+}
+
+function assertBossWeakPointExposureContract() {
+  for (const profileId of ['training', 'field', 'glasswind-field']) {
+    assert.equal(
+      'weakPoint' in createEncounter(profileId).getGameplaySnapshot(),
+      false,
+      `${profileId} 일반 적은 weak point part를 가지면 안 된다.`,
+    );
+  }
+
+  for (const profileId of ['boss', 'glasswind-boss']) {
+    const profile = ENCOUNTER_PROFILES[profileId];
+    const triggerAttackKind = profile.weakPoint.triggerAttackKinds[0];
+    const boss = createEncounter(profileId);
+    const combatEvents = [];
+    const playerResults = [];
+    boss.combatEventOccurred.connect((event) => combatEvents.push(event));
+    boss.playerResultResolved.connect((result) => playerResults.push(result));
+    boss.enemy.attackKind = triggerAttackKind;
+    boss.enemy.attackFacing = -1;
+    boss.startRecovery({
+      source: 'attack',
+      durationSeconds: 0.5,
+      weaponStartAngle: triggerAttackKind === 'sweep' ? -0.3 : 0.6,
+      bodyStartRotation: 0.28,
+    });
+    assert.deepEqual(
+      boss.getGameplaySnapshot().weakPoint,
+      Object.freeze({
+        id: profile.weakPoint.id,
+        label: profile.weakPoint.label,
+        damageMultiplier: profile.weakPoint.damageMultiplier,
+        presentation: profile.weakPoint.presentation,
+        exposed: true,
+        exposureAttackKind: triggerAttackKind,
+      }),
+      `${profileId} authored trigger recovery는 weak point를 노출해야 한다.`,
+    );
+    const healthBefore = boss.enemy.health;
+    assert.equal(boss.resolvePlayerAttack(createFrontContactFrame(boss)), true);
+    assert.equal(
+      boss.enemy.health,
+      healthBefore - Math.round(20 * profile.weakPoint.damageMultiplier),
+      `${profileId} 정면 weak point hit는 authored damage 배율을 적용해야 한다.`,
+    );
+    assert.equal(combatEvents.at(-1).type, 'punish');
+    assert.equal(combatEvents.at(-1).payload.outcome, 'weak-point-punish');
+    assert.equal(playerResults.at(-1).damagingHit.outcome, 'punish');
+    assert.deepEqual(playerResults.at(-1).damagingHit.weakPoint, {
+      id: profile.weakPoint.id,
+      label: profile.weakPoint.label,
+      damageMultiplier: profile.weakPoint.damageMultiplier,
+    });
+    assert.equal(
+      boss.getGameplaySnapshot().weakPoint.exposed,
+      false,
+      'weak point는 한 번의 damaging hit 뒤 닫혀야 한다.',
+    );
+
+    const ordinaryRecovery = createEncounter(profileId);
+    ordinaryRecovery.enemy.attackKind = triggerAttackKind === 'light' ? 'heavy' : 'light';
+    ordinaryRecovery.enemy.attackFacing = -1;
+    ordinaryRecovery.startRecovery({
+      source: 'attack',
+      durationSeconds: 0.5,
+      weaponStartAngle: 0.6,
+      bodyStartRotation: 0.28,
+    });
+    assert.equal(ordinaryRecovery.getGameplaySnapshot().weakPoint.exposed, false);
+    const ordinaryHealth = ordinaryRecovery.enemy.health;
+    assert.equal(
+      ordinaryRecovery.resolvePlayerAttack(createFrontContactFrame(ordinaryRecovery)),
+      true,
+    );
+    assert.equal(
+      ordinaryRecovery.enemy.health,
+      ordinaryHealth,
+      `${profileId} 일반 recovery의 정면 contact는 기존 guard를 우회하면 안 된다.`,
+    );
+
+    const expired = createEncounter(profileId);
+    expired.enemy.attackKind = triggerAttackKind;
+    expired.enemy.attackFacing = -1;
+    expired.startRecovery({
+      source: 'attack',
+      durationSeconds: 0.5,
+      weaponStartAngle: 0.6,
+      bodyStartRotation: 0.28,
+    });
+    expired.updateEnemyCombat(0.5, {
+      player: createFrontContactFrame(expired).player,
+      combatState: Object.freeze({ id: 'idle' }),
+    });
+    assert.equal(
+      expired.getGameplaySnapshot().weakPoint.exposed,
+      false,
+      `${profileId} recovery 종료는 미사용 weak point도 닫아야 한다.`,
+    );
+  }
+}
+
 function assertPostureVisualQaExpectationMatrix() {
   for (const renderer of ['polygon', 'retro']) {
     for (const phase of ['start', 'end']) {
@@ -309,10 +453,27 @@ function assertPostureVisualQaExpectationMatrix() {
     '?visualQa=1&gameStart=posture-normal-enemy&visualQaRenderer=retro&visualQaPhase=end',
   );
   assert.equal(normalEnd.scenario.expectation.expectedItem, 'combat-enemy-training-mask');
+
+  for (const renderer of ['polygon', 'retro']) {
+    const active = readVisualQaRequest(
+      `?visualQa=1&gameStart=boss-weak-point-exposed&visualQaRenderer=${renderer}&visualQaPhase=active`,
+    );
+    assert.equal(active.scenario.roomId, 'sealed-forest-boss');
+    assert.equal(active.scenario.expectation.expectedItem, 'combat-enemy-weak-point-aura');
+    assert.deepEqual(active.scenario.expectation.expectedItems, ['combat-enemy-weak-point-core']);
+    for (const phase of ['start', 'end']) {
+      const inactive = readVisualQaRequest(
+        `?visualQa=1&gameStart=boss-weak-point-exposed&visualQaRenderer=${renderer}&visualQaPhase=${phase}`,
+      );
+      assert.equal(inactive.scenario.expectation.expectedItem, 'combat-enemy-posture-fill');
+      assert.deepEqual(inactive.scenario.expectation.expectedItems, []);
+    }
+  }
 }
 
 assertHitConfirmAndGuardCancel();
 assertPostureContract();
+assertBossWeakPointExposureContract();
 assertPostureVisualQaExpectationMatrix();
 
 console.log(
@@ -326,7 +487,10 @@ console.log(
       'guard-cancel-stamina-rejection',
       'normal-enemy-no-posture-and-boss-only-profile-matrix',
       'boss-strong-shield-counter-posture-groggy-recovery',
+      'boss-authored-trigger-front-exposure-multiplier-and-one-hit-close',
+      'boss-non-trigger-front-guard-and-recovery-expiry-close',
       'posture-visual-qa-start-end-expectation-matrix',
+      'boss-weak-point-polygon-retro-visual-qa-matrix',
     ],
   }),
 );

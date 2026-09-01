@@ -76,6 +76,53 @@ function postureSnapshot(posture) {
   });
 }
 
+function createWeakPointState(profile) {
+  const weakPoint = profile.weakPoint;
+  if (!weakPoint) return null;
+  if (
+    profile.role !== 'boss' ||
+    typeof weakPoint.id !== 'string' ||
+    weakPoint.id.trim().length === 0 ||
+    typeof weakPoint.label !== 'string' ||
+    weakPoint.label.trim().length === 0 ||
+    !Array.isArray(weakPoint.triggerAttackKinds) ||
+    weakPoint.triggerAttackKinds.length === 0 ||
+    weakPoint.triggerAttackKinds.some(
+      (attackKind) => typeof attackKind !== 'string' || attackKind.trim().length === 0,
+    ) ||
+    !Number.isFinite(weakPoint.damageMultiplier) ||
+    weakPoint.damageMultiplier <= 1 ||
+    !weakPoint.presentation ||
+    !Number.isFinite(weakPoint.presentation.offsetX) ||
+    !Number.isFinite(weakPoint.presentation.offsetY) ||
+    typeof weakPoint.presentation.color !== 'string' ||
+    typeof weakPoint.presentation.highlightColor !== 'string'
+  ) {
+    throw new TypeError('Boss weak point는 trigger 공격, 1 초과 배율과 presentation이 필요합니다.');
+  }
+  return {
+    id: weakPoint.id,
+    label: weakPoint.label,
+    triggerAttackKinds: Object.freeze([...weakPoint.triggerAttackKinds]),
+    damageMultiplier: weakPoint.damageMultiplier,
+    presentation: Object.freeze({ ...weakPoint.presentation }),
+    exposed: false,
+    exposureAttackKind: null,
+  };
+}
+
+function weakPointSnapshot(weakPoint) {
+  if (!weakPoint) return undefined;
+  return Object.freeze({
+    id: weakPoint.id,
+    label: weakPoint.label,
+    damageMultiplier: weakPoint.damageMultiplier,
+    presentation: weakPoint.presentation,
+    exposed: weakPoint.exposed,
+    exposureAttackKind: weakPoint.exposureAttackKind,
+  });
+}
+
 function freezeMaterialReward(reward) {
   if (reward === null || reward === undefined) return null;
   if (
@@ -154,6 +201,7 @@ export class TrainingEncounterNode extends SceneNode {
     const maxHealth = this.entity.maxHealth;
     const encounterProfile = this.entity.encounterProfile;
     const posture = createPostureState(encounterProfile);
+    const weakPoint = createWeakPointState(encounterProfile);
     this.enemy = {
       id: this.entity.id,
       profileId: encounterProfile.id,
@@ -207,6 +255,7 @@ export class TrainingEncounterNode extends SceneNode {
       enchantStatus: null,
       enchantTickSeconds: 0,
       ...(posture ? { posture } : {}),
+      ...(weakPoint ? { weakPoint } : {}),
     };
     this.completionEmitted = false;
     this.lastHitMotionSequence = '';
@@ -294,6 +343,7 @@ export class TrainingEncounterNode extends SceneNode {
       lastCommandTransition: enemy.lastCommandTransition,
       enchantStatus: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
       ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
+      ...(enemy.weakPoint ? { weakPoint: weakPointSnapshot(enemy.weakPoint) } : {}),
     });
   }
 
@@ -332,6 +382,7 @@ export class TrainingEncounterNode extends SceneNode {
       ...enemy,
       position: freezePosition(enemy.position),
       ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
+      ...(enemy.weakPoint ? { weakPoint: weakPointSnapshot(enemy.weakPoint) } : {}),
       enchantStatus: enemy.enchantStatus ? Object.freeze({ ...enemy.enchantStatus }) : null,
     });
     return Object.freeze({
@@ -355,6 +406,7 @@ export class TrainingEncounterNode extends SceneNode {
         }),
         lastCommandTransition: enemy.lastCommandTransition,
         ...(enemy.posture ? { posture: postureSnapshot(enemy.posture) } : {}),
+        ...(enemy.weakPoint ? { weakPoint: weakPointSnapshot(enemy.weakPoint) } : {}),
       }),
       presentationState,
       geometry: sampleTrainingEnemyCombatGeometry(presentationState, this.attackProfiles),
@@ -419,6 +471,10 @@ export class TrainingEncounterNode extends SceneNode {
     enemy.recoveryBodyStartRotation = bodyStartRotation;
     enemy.recoveryAdvanceDeferred = deferAdvance;
     enemy.recoveryCompletionPending = false;
+    this.setWeakPointExposure(
+      source === 'attack' && enemy.weakPoint?.triggerAttackKinds.includes(enemy.attackKind),
+      enemy.attackKind,
+    );
     const posturePunishActive =
       enemy.punishWindowOrigin === 'posture' && enemy.posture?.groggySeconds > 0;
     if (!posturePunishActive) {
@@ -426,6 +482,37 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.punishWindowOrigin = enemy.punishWindowOpen ? 'recovery' : null;
       if (!enemy.punishWindowOpen) enemy.punishComboCycle = 0;
     }
+  }
+
+  setWeakPointExposure(exposed, attackKind = null) {
+    const weakPoint = this.enemy.weakPoint;
+    if (!weakPoint) return null;
+    weakPoint.exposed = exposed === true;
+    weakPoint.exposureAttackKind = weakPoint.exposed ? attackKind : null;
+    return weakPointSnapshot(weakPoint);
+  }
+
+  setVisualQaWeakPointExposure(exposed = true) {
+    const weakPoint = this.enemy.weakPoint;
+    if (!weakPoint) throw new Error('Weak point QA에는 authored Boss weak point가 필요합니다.');
+    const attackKind = weakPoint.triggerAttackKinds[0];
+    this.enemy.attackKind = attackKind;
+    this.enemy.attackFacing = -1;
+    if (exposed) {
+      this.startRecovery({
+        source: 'attack',
+        durationSeconds: 0.54,
+        weaponStartAngle: attackKind === 'sweep' ? -0.3 : 0.6,
+        bodyStartRotation: 0.28,
+      });
+    } else {
+      this.enemy.aiState = 'idle';
+      this.enemy.aiSeconds = 0;
+      this.enemy.punishWindowOpen = false;
+      this.enemy.punishWindowOrigin = null;
+      this.setWeakPointExposure(false);
+    }
+    return weakPointSnapshot(weakPoint);
   }
 
   updateEnemyPhysics(deltaSeconds, player) {
@@ -639,6 +726,7 @@ export class TrainingEncounterNode extends SceneNode {
     if (enemy.aiState === 'guard' || enemy.aiState === 'evade' || enemy.aiState === 'recovery') {
       if (enemy.aiState === 'evade') enemy.position.x -= Math.sign(distance) * 110 * deltaSeconds;
       if (enemy.aiSeconds > 0) return;
+      if (enemy.aiState === 'recovery') this.setWeakPointExposure(false);
       if (enemy.aiState === 'recovery' && !enemy.recoveryCompletionPending) {
         enemy.recoveryCompletionPending = true;
         return;
@@ -945,7 +1033,9 @@ export class TrainingEncounterNode extends SceneNode {
     });
     const posturePunishAccepted =
       enemy.punishWindowOrigin === 'posture' && enemy.posture?.groggySeconds > 0;
-    const punishAccepted = posturePunishAccepted || recoveryPunish.accepted;
+    const weakPointPunishAccepted = enemy.weakPoint?.exposed === true;
+    const punishAccepted =
+      posturePunishAccepted || weakPointPunishAccepted || recoveryPunish.accepted;
     const interruptsStrongStartup = enemy.aiState === 'windup' && enemy.attackKind === 'heavy';
     const postureDamage =
       combatState.id === 'shieldBash'
@@ -1040,7 +1130,7 @@ export class TrainingEncounterNode extends SceneNode {
     }
     const enemyAirborne = enemy.position.y < enemy.groundY;
     const backPunish = recoveryPunish.opens;
-    const punishHit = posturePunishAccepted || backPunish;
+    const punishHit = posturePunishAccepted || weakPointPunishAccepted || backPunish;
     if (recoveryPunish.opens && enemy.role === 'boss') {
       enemy.punishComboCycle = combatState.comboCycle;
     }
@@ -1065,7 +1155,10 @@ export class TrainingEncounterNode extends SceneNode {
             enemyAiState: enemy.aiState,
             hasPosture: Boolean(enemy.posture),
           });
-    const damage = enchantment?.damage ?? baseDamage;
+    const damageBeforeWeakPoint = enchantment?.damage ?? baseDamage;
+    const damage = weakPointPunishAccepted
+      ? Math.max(1, Math.round(damageBeforeWeakPoint * enemy.weakPoint.damageMultiplier))
+      : damageBeforeWeakPoint;
     if (enchantment?.status) {
       enemy.enchantStatus = {
         ...enchantment.status,
@@ -1111,9 +1204,11 @@ export class TrainingEncounterNode extends SceneNode {
             ? 'just-guard-counter'
             : posturePunishAccepted
               ? 'posture-groggy-punish'
-              : backPunish
-                ? 'back-punish'
-                : undefined,
+              : weakPointPunishAccepted
+                ? 'weak-point-punish'
+                : backPunish
+                  ? 'back-punish'
+                  : undefined,
         strength: 1 + Math.min(2.5, damage * 0.08) + (punishHit ? 0.5 : 0),
         durationSeconds: enchantment ? 0.22 : undefined,
         enchantment: enchantment
@@ -1132,6 +1227,7 @@ export class TrainingEncounterNode extends SceneNode {
       },
     );
     enemy.health = Math.max(0, enemy.health - damage);
+    if (weakPointPunishAccepted) this.setWeakPointExposure(false);
     if (enemy.health === 0 && !this.completionEmitted) {
       this.completionEmitted = true;
       this.encounterCompleted.emit(this.createCompletionResult());
@@ -1248,8 +1344,15 @@ export class TrainingEncounterNode extends SceneNode {
           sequence: combatState.sequence,
           motionId: combatState.id,
           target: enemy.id,
-          outcome: backPunish ? 'punish' : 'hit',
+          outcome: punishHit ? 'punish' : 'hit',
           damage,
+          weakPoint: weakPointPunishAccepted
+            ? Object.freeze({
+                id: enemy.weakPoint.id,
+                label: enemy.weakPoint.label,
+                damageMultiplier: enemy.weakPoint.damageMultiplier,
+              })
+            : null,
           enchantment: enchantment
             ? Object.freeze({
                 id: this.enchantmentContext.active.id,

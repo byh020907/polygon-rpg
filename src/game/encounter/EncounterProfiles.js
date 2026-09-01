@@ -100,6 +100,18 @@ const ENCOUNTER_PROFILES = Object.freeze({
       strongDamage: 48,
       shieldCounterDamage: 62,
     }),
+    weakPoint: Object.freeze({
+      id: 'sealed-instructor-core',
+      label: '봉인 교관의 흉갑 핵',
+      triggerAttackKinds: Object.freeze(['heavy']),
+      damageMultiplier: 1.5,
+      presentation: Object.freeze({
+        offsetX: 0,
+        offsetY: -42,
+        color: '#63ead5',
+        highlightColor: '#effffb',
+      }),
+    }),
   }),
   'glasswind-field': Object.freeze({
     id: 'glasswind-field',
@@ -135,6 +147,18 @@ const ENCOUNTER_PROFILES = Object.freeze({
       groggySeconds: 1.2,
       strongDamage: 52,
       shieldCounterDamage: 68,
+    }),
+    weakPoint: Object.freeze({
+      id: 'storm-glass-core',
+      label: '폭풍 유리핵',
+      triggerAttackKinds: Object.freeze(['sweep']),
+      damageMultiplier: 1.4,
+      presentation: Object.freeze({
+        offsetX: 0,
+        offsetY: -42,
+        color: '#8ff5ef',
+        highlightColor: '#ffffff',
+      }),
     }),
   }),
 });

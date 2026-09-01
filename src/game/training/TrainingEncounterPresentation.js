@@ -399,6 +399,37 @@ export function createTrainingEnemyItems(
       flash ? '#ffffff' : '#56e0cf',
       { stroke: '#5d342e', lineWidth: 1.5 },
     ),
+    ...(enemy.weakPoint?.exposed
+      ? [
+          polygon(
+            'combat-enemy-weak-point-aura',
+            regularPolygon(29, 29, 12, Math.PI / 12),
+            {
+              x: x + enemy.weakPoint.presentation.offsetX * renderFacing,
+              y: y + enemy.weakPoint.presentation.offsetY,
+            },
+            enemy.weakPoint.presentation.color,
+            {
+              stroke: enemy.weakPoint.presentation.highlightColor,
+              lineWidth: 3,
+              opacity: 0.3 + 0.1 * Math.cos(enemy.aiSeconds * 30),
+            },
+          ),
+          polygon(
+            'combat-enemy-weak-point-core',
+            regularPolygon(11, 11, 8, Math.PI / 8),
+            {
+              x: x + enemy.weakPoint.presentation.offsetX * renderFacing,
+              y: y + enemy.weakPoint.presentation.offsetY,
+            },
+            enemy.weakPoint.presentation.highlightColor,
+            {
+              stroke: enemy.weakPoint.presentation.color,
+              lineWidth: 2,
+            },
+          ),
+        ]
+      : []),
     polygon(
       'combat-enemy-weapon',
       [

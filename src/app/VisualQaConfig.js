@@ -84,6 +84,14 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
     expectedItem: 'combat-enemy-heavy-warning',
     expectedContact: false,
   }),
+  'boss-weak-point-exposed': Object.freeze({
+    expectedEvent: null,
+    expectedMotion: 'idle',
+    expectedItem: 'combat-enemy-weak-point-aura',
+    expectedItems: Object.freeze(['combat-enemy-weak-point-core']),
+    expectedContact: false,
+    expectedPosture: 'full',
+  }),
   'combat-guard-break': Object.freeze({
     expectedEvent: 'guard-break',
     expectedMotion: 'idle',
@@ -780,7 +788,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       Object.freeze({
         regionId: 'academy-region',
         roomId:
-          id.startsWith('posture-') && id !== 'posture-normal-enemy'
+          (id.startsWith('posture-') && id !== 'posture-normal-enemy') ||
+          id === 'boss-weak-point-exposed'
             ? 'sealed-forest-boss'
             : 'training-room',
         x: 500,

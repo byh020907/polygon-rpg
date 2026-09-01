@@ -571,6 +571,7 @@ export class GameScene extends SceneNode {
     enemy.hitstunSeconds = 0;
     enemy.punishWindowOpen = false;
     enemy.retaliationInvulnerableSeconds = 0;
+    encounter.setWeakPointExposure(false);
     encounter.lastVisualContact = Object.freeze({
       attacker: 'player',
       sequence: 1,
@@ -607,6 +608,7 @@ export class GameScene extends SceneNode {
         'combat-landing',
         'combat-retaliation',
         'combat-strong-windup',
+        'boss-weak-point-exposed',
         'combat-guard-break',
         'combat-just-guard',
         'combat-guard-counter',
@@ -785,6 +787,9 @@ export class GameScene extends SceneNode {
         enemy.attackKind = 'heavy';
         enemy.attackFacing = -1;
         enemy.aiSeconds = active ? combatFramesToSeconds(8) : combatFramesToSeconds(28);
+        break;
+      case 'boss-weak-point-exposed':
+        encounter.setVisualQaWeakPointExposure(active);
         break;
       case 'combat-guard-break':
         if (active) {
@@ -2290,6 +2295,9 @@ export class GameScene extends SceneNode {
       } else if (journey.bossDefeated) {
         objective = 'Boss가 남긴 황금 결정에 접근해 보상을 회수하세요.';
         encounterHint = '보상 결정이 shortcut Portal을 활성화합니다.';
+      } else if (encounter?.weakPoint?.exposed) {
+        objective = `${encounter.weakPoint.label}이 노출되었습니다. 정면에서도 지금 공격하세요.`;
+        encounterHint = `WEAK POINT · ${encounter.weakPoint.damageMultiplier.toFixed(1)}× DAMAGE`;
       } else if (encounter?.punishWindowOpen) {
         objective = '청록 틈이 열렸습니다. 지금 공격해 Punish를 이어가세요.';
         encounterHint = 'PUNISH WINDOW · 공격 가능';
@@ -2340,6 +2348,9 @@ export class GameScene extends SceneNode {
       } else if (regionExpansion.bossDefeated) {
         objective = '폭풍 유리핵이 남긴 황금 프리즘에 접근해 보상과 shortcut을 여세요.';
         encounterHint = '보상 프리즘이 귀환 Portal을 영구 활성화합니다.';
+      } else if (encounter?.weakPoint?.exposed) {
+        objective = `${encounter.weakPoint.label}이 노출되었습니다. 정면에서도 회복 전에 공격하세요.`;
+        encounterHint = `WEAK POINT · ${encounter.weakPoint.damageMultiplier.toFixed(1)}× DAMAGE`;
       } else if (encounter?.punishWindowOpen) {
         objective = '청록 균열이 열렸습니다. 회복이 끝나기 전에 command 연계를 적중시키세요.';
         encounterHint = 'PUNISH WINDOW · ATTACK NOW';
