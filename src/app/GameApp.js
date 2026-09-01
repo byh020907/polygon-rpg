@@ -16,7 +16,6 @@ import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
 import { CanvasRetroRenderer } from '../rendering/CanvasRetroRenderer.js';
-import { readVisualQaRequest } from './VisualQaConfig.js';
 import { projectDialogue } from './DialoguePresentation.js';
 
 export const GAME_SCREEN = Object.freeze({
@@ -36,6 +35,11 @@ const GAME_RENDER_SETTINGS = Object.freeze({
   showPixelGrid: false,
   showWorldGrid: false,
 });
+
+export function resolveReducedMotionPreference({ visualQaRequest, systemMatches }) {
+  if (visualQaRequest) return Boolean(visualQaRequest.reducedMotion);
+  return Boolean(systemMatches);
+}
 
 function assertCanvas(canvas, label) {
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -92,11 +96,11 @@ function createTrainingEncounter(options) {
 }
 
 export class GameApp extends SceneNode {
-  constructor({ gameCanvas, polygonCanvas, retroCanvas }) {
+  constructor({ gameCanvas, polygonCanvas, retroCanvas, visualQaRequest = null }) {
     super('GameApp');
     const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
     const freshProgression = createProgressionSnapshot(EQUIPMENT_CATALOG.defaultProfileId);
-    this.visualQaRequest = readVisualQaRequest();
+    this.visualQaRequest = visualQaRequest;
     this.isVisualQa = Boolean(this.visualQaRequest);
     this.progressionStorage = null;
     if (this.isVisualQa) {
@@ -150,7 +154,10 @@ export class GameApp extends SceneNode {
     this.uiBridge = null;
     this.manualMode = false;
     this.input = new GameInputController({
-      isActive: () => this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU,
+      isActive: () => {
+        const uiState = this.uiBridge?.snapshot();
+        return uiState?.screen !== GAME_SCREEN.MENU && uiState?.debugPanelOpen !== true;
+      },
     });
     this.animationFrameId = null;
     this.abortController = null;
@@ -613,7 +620,10 @@ export class GameApp extends SceneNode {
   }
 
   prefersReducedMotion() {
-    return Boolean(this.visualQaRequest?.reducedMotion || this.reducedMotionQuery.matches);
+    return resolveReducedMotionPreference({
+      visualQaRequest: this.visualQaRequest,
+      systemMatches: this.reducedMotionQuery.matches,
+    });
   }
 
   pressMobileAction(actionId, pointerId) {
@@ -628,7 +638,7 @@ export class GameApp extends SceneNode {
   update(deltaSeconds, inputSnapshot) {
     const uiState = this.uiBridge.snapshot();
     const active =
-      uiState.screen === GAME_SCREEN.GAME ||
+      (uiState.screen === GAME_SCREEN.GAME && uiState.debugPanelOpen !== true) ||
       (uiState.screen === GAME_SCREEN.RENDER_LAB && uiState.isPlaying);
     if (!active) return;
     this.fixedProcess(deltaSeconds, {

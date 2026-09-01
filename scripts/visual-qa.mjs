@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { buildDebugQaUrl } from '../src/ui/DebugConfigurationAdapter.js';
 import { createStaticServer } from './serve.mjs';
 
 function parseArgs(argv) {
@@ -158,12 +159,6 @@ async function run() {
   const frame = Number(values.get('frame') ?? 0);
   const renderer = values.get('renderer') ?? 'retro';
   const phase = values.get('phase') ?? 'active';
-  if (!['polygon', 'retro'].includes(renderer)) {
-    throw new Error(`renderer는 polygon 또는 retro여야 합니다: ${renderer}`);
-  }
-  if (!['start', 'active', 'end'].includes(phase)) {
-    throw new Error(`phase는 start, active 또는 end여야 합니다: ${phase}`);
-  }
   const outputDirectory = resolve(values.get('output') ?? join(repo, 'artifacts', 'visual-qa'));
   const width = positiveInteger(values.get('width') ?? 1440, 'width');
   const height = positiveInteger(values.get('height') ?? 810, 'height');
@@ -182,7 +177,13 @@ async function run() {
   try {
     const port = await listen(server);
     const pageOrigin = `http://127.0.0.1:${port}`;
-    const pageUrl = `${pageOrigin}/?visualQa=1&gameStart=${encodeURIComponent(start)}&gameFrame=${frame}&visualQaRenderer=${renderer}&visualQaPhase=${phase}`;
+    const pageUrl = buildDebugQaUrl(`${pageOrigin}/`, {
+      start,
+      frame,
+      renderer,
+      phase,
+      reducedMotion: false,
+    }).href;
     browser = spawn(
       browserPath,
       [

@@ -1,4 +1,6 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
+import { createDebugConfigurationAdapter } from './DebugConfigurationAdapter.js';
+import { HoldActivationController } from './HoldActivationController.js';
 import {
   createDocumentFocusPort,
   ScreenFocusOwner,
@@ -97,8 +99,35 @@ function createMobileViewportController(browserDocument, browserScreen) {
   });
 }
 
+const DEBUG_PANEL_FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  'select:not([disabled])',
+  'input:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+function setDebugBackgroundInert(browserDocument, isInert) {
+  const backdrop = browserDocument.querySelector('.debug-panel-backdrop');
+  const viewport = backdrop?.parentElement;
+  if (!viewport) return;
+  for (const child of viewport.children) {
+    if (child !== backdrop) child.inert = isInert;
+  }
+}
+
+function focusDebugPanel(browserDocument) {
+  browserDocument.getElementById('debug-panel-title')?.focus();
+}
+
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
+  const debugConfigurationAdapter = createDebugConfigurationAdapter(
+    globalThis.location,
+    visualQaRequest,
+  );
+  const initialDebugConfiguration = debugConfigurationAdapter.initialConfiguration;
+  let debugMenuHold = null;
+  let debugHoldAbortController = null;
   const initialScreen = visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU;
   const screenFocusOwner = new ScreenFocusOwner({
     initialScreen,
@@ -111,6 +140,19 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
   Alpine.data('gameShell', () => ({
     screen: initialScreen,
     visualQa: Boolean(visualQaRequest),
+    debugPanelOpen: debugConfigurationAdapter.panelRequested,
+    debugMenuHoldProgress: 0,
+    debugScenarioIds: debugConfigurationAdapter.scenarioIds,
+    debugRendererIds: debugConfigurationAdapter.rendererIds,
+    debugPhaseIds: debugConfigurationAdapter.phaseIds,
+    debugStart: initialDebugConfiguration.start,
+    debugFrame: initialDebugConfiguration.frame,
+    debugRenderer: initialDebugConfiguration.renderer,
+    debugPhase: initialDebugConfiguration.phase,
+    debugReducedMotion: initialDebugConfiguration.reducedMotion,
+    debugConfigurationStatus: visualQaRequest
+      ? 'URL의 E2E 설정을 불러왔습니다.'
+      : '현재 화면은 저장 진행과 분리된 E2E URL로 다시 열립니다.',
     reducedMotion: gameApp.prefersReducedMotion(),
     forceMobileControls: false,
     isPlaying: true,
@@ -193,10 +235,30 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     ]),
 
     init() {
+      debugMenuHold = new HoldActivationController({
+        onProgress: (progress) => {
+          this.debugMenuHoldProgress = progress;
+        },
+        onComplete: () => {
+          this.openDebugPanel();
+        },
+      });
+      debugHoldAbortController = new AbortController();
+      globalThis.addEventListener('blur', () => debugMenuHold?.interrupt(), {
+        signal: debugHoldAbortController.signal,
+      });
+      globalThis.document.addEventListener(
+        'visibilitychange',
+        () => {
+          if (globalThis.document.hidden) debugMenuHold?.interrupt();
+        },
+        { signal: debugHoldAbortController.signal },
+      );
       gameApp.connectUi({
         snapshot: () =>
           Object.freeze({
             screen: this.screen,
+            debugPanelOpen: this.debugPanelOpen,
             reducedMotion: this.reducedMotion,
             isPlaying: this.isPlaying,
             pixelSize: Number(this.pixelSize),
@@ -279,9 +341,13 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
             });
             throw error;
           }
-          return;
+        } else {
+          gameApp.start();
         }
-        gameApp.start();
+        if (this.debugPanelOpen) {
+          setDebugBackgroundInert(globalThis.document, true);
+          globalThis.requestAnimationFrame(() => focusDebugPanel(globalThis.document));
+        }
       });
     },
 
@@ -299,6 +365,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     get staminaLabel() {
       return `${Math.floor(this.stamina)}/${this.maxStamina}`;
+    },
+
+    get debugMenuHoldPercent() {
+      return `${Math.round(this.debugMenuHoldProgress * 100)}%`;
     },
 
     get combatStatusAnnouncement() {
@@ -350,10 +420,105 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       return gameApp.resetSavedProgress();
     },
 
+    startDebugMenuHold(event) {
+      if (event?.repeat) return;
+      debugMenuHold?.begin();
+    },
+
+    releaseDebugMenuHold() {
+      debugMenuHold?.release();
+    },
+
+    cancelDebugMenuHold() {
+      debugMenuHold?.cancel();
+    },
+
+    interruptDebugMenuHold() {
+      debugMenuHold?.interrupt();
+    },
+
+    releaseDebugMenuKeyboardHold() {
+      const result = debugMenuHold?.release();
+      if (result?.interrupted) {
+        debugMenuHold.consumePrimaryActivation();
+        return;
+      }
+      if (result && !result.completed) this.showMenu();
+    },
+
+    activateGameMenu() {
+      if (!debugMenuHold?.consumePrimaryActivation()) return;
+      this.showMenu();
+    },
+
+    openDebugPanel() {
+      this.debugPanelOpen = true;
+      setDebugBackgroundInert(globalThis.document, true);
+      gameApp.onScreenChanged();
+      this.$nextTick(() => focusDebugPanel(globalThis.document));
+    },
+
+    trapDebugPanelFocus(event) {
+      const panel = globalThis.document.querySelector('.debug-panel');
+      if (!panel) return;
+      const focusable = [...panel.querySelectorAll(DEBUG_PANEL_FOCUSABLE_SELECTOR)].filter(
+        (element) => element.getClientRects().length > 0,
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        focusDebugPanel(globalThis.document);
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && !focusable.includes(event.target)) {
+        event.preventDefault();
+        last.focus();
+      } else if (event.shiftKey && event.target === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && event.target === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    },
+
+    closeDebugPanel() {
+      this.debugPanelOpen = false;
+      debugMenuHold?.cancel();
+      setDebugBackgroundInert(globalThis.document, false);
+      gameApp.onScreenChanged();
+      this.$nextTick(() => globalThis.document.getElementById('game-menu-control')?.focus());
+    },
+
+    applyDebugConfiguration() {
+      try {
+        const result = debugConfigurationAdapter.apply({
+          start: this.debugStart,
+          frame: Number(this.debugFrame),
+          renderer: this.debugRenderer,
+          phase: this.debugPhase,
+          reducedMotion: Boolean(this.debugReducedMotion),
+        });
+        this.debugConfigurationStatus = `E2E URL로 이동합니다: ${result.configuration.start}`;
+      } catch (error) {
+        this.debugConfigurationStatus = `설정 오류 · ${
+          error instanceof Error ? error.message : String(error)
+        }`;
+      }
+    },
+
+    returnToPlayerGame() {
+      debugConfigurationAdapter.returnToPlayerGame();
+    },
+
     openRenderLab() {
       mobileViewport.leaveLandscape();
+      this.debugPanelOpen = false;
+      debugMenuHold?.cancel();
+      setDebugBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.RENDER_LAB, {
-        menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_RENDER_LAB,
+        menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_START,
       });
       this.screen = focusRequest.screen;
       this.isPlaying = true;
@@ -365,6 +530,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     showMenu() {
       mobileViewport.leaveLandscape();
+      this.debugPanelOpen = false;
+      debugMenuHold?.cancel();
+      setDebugBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.MENU);
       this.screen = focusRequest.screen;
       this.isPlaying = false;
@@ -403,6 +571,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     },
 
     destroy() {
+      debugHoldAbortController?.abort();
+      debugHoldAbortController = null;
+      debugMenuHold?.cancel();
+      setDebugBackgroundInert(globalThis.document, false);
       mobileViewport.leaveLandscape();
       gameApp.destroy();
     },

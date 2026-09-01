@@ -24,6 +24,7 @@
 | Boundary                          | Responsibility                                                                                             | Must Not Know or Do                                                 |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | Browser Bootstrap / UI Adapter    | Screen state, semantic controls, accessible interaction, UI intent와 status render                         | Mutable gameplay internals, map patch, combat frame 계산            |
+| Debug Configuration Adapter       | Explicit hold gesture 뒤 개발자 panel을 열고 stable QA 설정을 URL query와 양방향 변환                      | 기본 user flow 노출, gameplay state 직접 쓰기, 저장 진행 재사용     |
 | Application Composition           | Browser resource lifecycle, input/render/UI adapter 조립, one-frame orchestration                          | Domain rule 재구현, renderer별 gameplay 분기                        |
 | Scene Runtime                     | Tree-owned enter/ready/fixed/exit/dispose lifecycle와 scoped completion signal                             | Global service lookup, implicit mutable singleton                   |
 | Input Adapters                    | Keyboard/pointer lifecycle을 frozen common intent와 monotonic command sequence로 변환                      | Map, combat outcome, animation 또는 UI screen policy                |
@@ -142,6 +143,12 @@ Immutable status + RenderFrame
 - Just-guard counter window 중 이동·jump·roll·guard·Strong은 game domain이 억제하고 입력 sequence 기준선을 갱신한다. 새 Basic sequence만 command owner가 전용 shield counter로 소비한다.
 - UI screen state와 presentation settings는 gameplay input snapshot에 섞지 않는다.
 - UI는 declarative binding과 accessible text/name을 사용하고 implicit browser globals나 element-name globals에 의존하지 않는다.
+- 기본 menu는 실제 player flow만 제공하고 개발자 control을 노출하지 않는다. Game MENU의 짧은
+  activation은 menu transition으로, 1초 연속 hold는 진행률이 보이는 debug panel activation으로 UI
+  adapter가 구분하며 완료된 hold가 뒤이은 click을 menu transition으로 중복 소비하지 않게 한다.
+- Debug Configuration Adapter는 stable scenario·renderer·phase·frame·reduced-motion DTO를 URL query로
+  serialize하고 같은 query를 panel DTO로 parse하는 유일한 owner다. UI 적용은 explicit QA URL로
+  재진입해 fresh non-persistent progression boundary를 사용하며 gameplay owner를 직접 변형하지 않는다.
 - World-anchored dialogue UI는 authored interaction anchor와 camera read model을 screen-space로 투영하고 viewport safe area에서 clamp한다. 글자별 시각 reveal은 screen reader에 partial text를 반복 announce하지 않으며 full line을 별도 accessible status로 제공한다.
 - Story owner는 NPC가 시작·완료한 핵심 대화의 stable conversation ID를 completion result로 내보내고 Progression owner가 viewed/completed ID의 final writer가 된다. Story는 current reaction과 별개로 이 snapshot에서 다시 읽을 수 있는 immutable transcript DTO를 resolve한다.
 - Mobile/desktop은 같은 gameplay simulation과 world framing을 공유하고 layout만 presentation adapter가 조정한다.
@@ -173,6 +180,9 @@ Immutable status + RenderFrame
 - World Time fixture는 menu/dialogue/idle/load 0비용, Travel Segment와 core event의 단일 commit, shortcut 비용 감소, Deadline 가산/차감·Crisis, deterministic Chunk rebuild, reload와 rewind invariant를 고정한다.
 - Journey fixture는 Dungeon signature stage, first-clear gate, cleared revisit shortcut, Boss cycle, NPC transcript와 night elite 확정 보상을 stable ID와 persistence round-trip으로 고정한다.
 - Browser flow는 실제 menu → game → journey/encounter path, resize, keyboard/mobile adapter와 console error를 확인한다.
+- Debug fixture는 short activation·1초 hold threshold·completed-hold click suppression, URL→panel과
+  panel→URL round-trip, unknown scenario/renderer/phase와 frame range rejection을 고정한다. Browser에서는
+  기본 menu의 debug-free 상태, hold progress, desktop/mobile panel, URL reload 복원을 확인한다.
 - Visual 변경은 stable scenario와 frame에서 실제 browser viewport PNG를 만들고 직접 판독한다. Polygon/Retro, desktop/narrow viewport와 relevant pose/state를 같은 acceptance 기준으로 비교한다.
 - Persistence는 versioned round-trip, corrupt payload, failure result와 idempotent reward recovery를 검증한다.
 - Architecture verification은 import direction, state writer uniqueness, renderer read-only boundary와 forbidden direct dependency를 검사한다.

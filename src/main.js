@@ -1,6 +1,6 @@
 import Alpine from './vendor/alpine.esm.js';
 import { GameApp } from './app/GameApp.js';
-import { readVisualQaRequest } from './app/VisualQaConfig.js';
+import { readDebugQaRequest } from './ui/DebugConfigurationAdapter.js';
 import { registerGameShell } from './ui/gameShell.js';
 
 function requireCanvas(id) {
@@ -11,13 +11,15 @@ function requireCanvas(id) {
   return canvas;
 }
 
+const visualQaRequest = readDebugQaRequest();
 const gameApp = new GameApp({
   gameCanvas: requireCanvas('game-canvas'),
   polygonCanvas: requireCanvas('polygon-canvas'),
   retroCanvas: requireCanvas('retro-canvas'),
+  visualQaRequest,
 });
 
-registerGameShell(Alpine, gameApp, { visualQaRequest: readVisualQaRequest() });
+registerGameShell(Alpine, gameApp, { visualQaRequest });
 globalThis.Alpine = Alpine;
 Alpine.start();
 globalThis.addEventListener('pagehide', () => gameApp.destroy(), { once: true });

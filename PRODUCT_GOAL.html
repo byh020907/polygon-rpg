@@ -658,6 +658,16 @@
                   메뉴와 화면 전환 control은 text 또는 accessible name으로 목적을 식별하고
                   keyboard로 사용할 수 있다.
                 </li>
+                <li>
+                  기본 메뉴와 플레이 화면에는 실제 게임 흐름만 보인다. 게임 안의 MENU control을 1초
+                  동안 계속 누르면 누르는 동안 control 아래 진행 bar가 차오른 뒤 개발자 debug
+                  panel이 열리고, 짧게 누르면 평소처럼 메뉴로 돌아간다.
+                </li>
+                <li>
+                  개발자 debug panel은 stable 시작 장면, renderer, phase, frame과 reduced-motion을
+                  선택해 같은 게임 화면에서 E2E 상태를 재현한다. Panel에서 만든 설정은 공유 가능한
+                  URL에 반영되고, 같은 URL로 열면 panel control과 화면이 동일한 설정을 복원한다.
+                </li>
                 <li>Reduced-motion 환경에서도 판정 이해에 필요한 feedback은 유지된다.</li>
               </ul>
             </article>
@@ -867,6 +877,10 @@
                   <td>
                     Desktop keyboard와 mobile touch에서 같은 원정·전투 흐름을 수행하고 control과
                     focus를 식별하며, 화자·Player·control을 가리지 않는 같은 대화 흐름을 읽는다.
+                    기본 메뉴에는 실제 게임 control만 보이고, 게임 MENU를 짧게 누르면 메뉴로
+                    돌아가지만 1초 hold하면 채워지는 진행 bar 뒤 개발자 panel이 열린다. Panel에서
+                    선택한 E2E 설정이 URL에 반영되고 해당 URL을 다시 열었을 때 같은 control 값과
+                    game state가 복원되는지 확인한다.
                   </td>
                   <td>desktop/mobile/keyboard flow와 accessible-name inspection</td>
                 </tr>

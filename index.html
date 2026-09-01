@@ -58,16 +58,6 @@
                 <small>ORCA REMOTE CONTROLS</small>
               </button>
               <button
-                id="menu-render-lab-control"
-                class="menu-button"
-                type="button"
-                @click="openRenderLab"
-                @touchend.prevent="openRenderLab"
-              >
-                <span>렌더 연구실</span>
-                <small>POLYGON / RETRO 비교</small>
-              </button>
-              <button
                 class="menu-button"
                 type="button"
                 @click="resetSavedProgress"
@@ -164,12 +154,134 @@
             id="game-menu-control"
             class="game-menu-button"
             type="button"
-            aria-label="메인 메뉴로 돌아가기"
-            @click="showMenu"
-            @touchend.prevent="showMenu"
+            aria-label="메인 메뉴. 1초 동안 누르면 개발자 디버그 패널 열기"
+            aria-describedby="game-menu-debug-hint"
+            x-bind:class="{ 'is-debug-holding': debugMenuHoldProgress > 0 }"
+            x-bind:style="`--debug-hold-progress: ${debugMenuHoldPercent}`"
+            @pointerdown="if ($event.isPrimary && $event.button === 0) { $el.setPointerCapture($event.pointerId); startDebugMenuHold($event) }"
+            @pointerup="releaseDebugMenuHold"
+            @pointercancel="cancelDebugMenuHold"
+            @lostpointercapture="interruptDebugMenuHold"
+            @keydown.enter.prevent="startDebugMenuHold($event)"
+            @keyup.enter.prevent="releaseDebugMenuKeyboardHold"
+            @keydown.space.prevent="startDebugMenuHold($event)"
+            @keyup.space.prevent="releaseDebugMenuKeyboardHold"
+            @click="activateGameMenu"
           >
             MENU
           </button>
+          <p id="game-menu-debug-hint" class="visually-hidden">
+            짧게 누르면 메인 메뉴로 돌아가고, 1초 동안 계속 누르면 개발자 디버그 패널이 열립니다.
+          </p>
+
+          <div
+            class="debug-panel-backdrop"
+            x-show="debugPanelOpen"
+            @click.self="closeDebugPanel"
+            @keydown.escape.stop.prevent="closeDebugPanel"
+            @keydown.tab="trapDebugPanelFocus($event)"
+          >
+            <aside
+              class="debug-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="debug-panel-title"
+            >
+              <header>
+                <span>
+                  <small>DEVELOPER E2E</small>
+                  <h2 id="debug-panel-title" tabindex="-1">디버그 패널</h2>
+                </span>
+                <button type="button" aria-label="디버그 패널 닫기" @click="closeDebugPanel">
+                  닫기
+                </button>
+              </header>
+
+              <p>
+                Stable game state를 저장 진행과 분리해 다시 엽니다. 아래 설정과 URL query는 같은
+                상태를 나타냅니다.
+              </p>
+
+              <form class="debug-panel-form" @submit.prevent="applyDebugConfiguration">
+                <label class="debug-field debug-field--wide" for="debug-start">
+                  <span>시작 장면</span>
+                  <select id="debug-start" x-model="debugStart">
+                    <template x-for="scenarioId in debugScenarioIds" x-bind:key="scenarioId">
+                      <option
+                        x-bind:value="scenarioId"
+                        x-bind:selected="scenarioId === debugStart"
+                        x-text="scenarioId"
+                      ></option>
+                    </template>
+                  </select>
+                </label>
+
+                <label class="debug-field" for="debug-renderer">
+                  <span>Renderer</span>
+                  <select id="debug-renderer" x-model="debugRenderer">
+                    <template x-for="rendererId in debugRendererIds" x-bind:key="rendererId">
+                      <option
+                        x-bind:value="rendererId"
+                        x-bind:selected="rendererId === debugRenderer"
+                        x-text="rendererId"
+                      ></option>
+                    </template>
+                  </select>
+                </label>
+
+                <label class="debug-field" for="debug-phase">
+                  <span>Phase</span>
+                  <select id="debug-phase" x-model="debugPhase">
+                    <template x-for="phaseId in debugPhaseIds" x-bind:key="phaseId">
+                      <option
+                        x-bind:value="phaseId"
+                        x-bind:selected="phaseId === debugPhase"
+                        x-text="phaseId"
+                      ></option>
+                    </template>
+                  </select>
+                </label>
+
+                <label class="debug-field" for="debug-frame">
+                  <span>Simulation frame</span>
+                  <input
+                    id="debug-frame"
+                    type="number"
+                    min="0"
+                    max="120000"
+                    step="1"
+                    x-model.number="debugFrame"
+                  />
+                </label>
+
+                <label class="debug-check" for="debug-reduced-motion">
+                  <input id="debug-reduced-motion" type="checkbox" x-model="debugReducedMotion" />
+                  Reduced motion
+                </label>
+
+                <div class="debug-panel-actions debug-field--wide">
+                  <button class="debug-primary-action" type="submit">E2E URL 적용</button>
+                  <button type="button" @click="returnToPlayerGame">일반 게임 URL</button>
+                  <button
+                    id="menu-render-lab-control"
+                    type="button"
+                    x-show="!visualQa"
+                    @click="openRenderLab"
+                  >
+                    렌더 연구실
+                  </button>
+                </div>
+              </form>
+
+              <p
+                class="debug-panel-status"
+                role="status"
+                aria-live="polite"
+                x-text="debugConfigurationStatus"
+              ></p>
+              <p class="debug-runtime-stats" x-text="gameStats"></p>
+            </aside>
+          </div>
 
           <section
             id="game-status-surface"
@@ -389,7 +501,6 @@
             <span><kbd>A</kbd> 기본 · <kbd>S</kbd> 강한 공격</span>
             <span x-text="combatCommandGuide"></span>
           </div>
-          <p x-text="gameStats"></p>
         </footer>
       </section>
 

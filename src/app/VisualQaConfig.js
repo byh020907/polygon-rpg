@@ -1,4 +1,5 @@
-const VISUAL_QA_PHASES = new Set(['start', 'active', 'end']);
+export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
+const VISUAL_QA_PHASES = new Set(VISUAL_QA_PHASE_IDS);
 
 const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
   'posture-full': Object.freeze({
@@ -497,7 +498,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   ),
 });
 
-const VISUAL_QA_RENDERERS = new Set(['polygon', 'retro']);
+export const VISUAL_QA_RENDERER_IDS = Object.freeze(['polygon', 'retro']);
+const VISUAL_QA_RENDERERS = new Set(VISUAL_QA_RENDERER_IDS);
 
 function parseFrame(value) {
   const frame = Number(value);
