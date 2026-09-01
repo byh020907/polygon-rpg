@@ -4,11 +4,11 @@
 
 ## Runtime Status
 
-`IMPLEMENTATION_COMPLETE`
+`RUNNING`
 
 ## Current Phase
 
-`human-review`
+`inbox-processing`
 
 ## Product Desired State Comparison
 
@@ -38,7 +38,12 @@
 
 ## Active Execution Goal
 
-없음. 새 Human dialogue feedback을 반영한 Product·Engineering Desired State까지 current execution, in-app Browser inspection과 독립 verifier evidence로 충족됐다.
+`EG-JUST-GUARD-STAMINA-COUNTER`
+
+- Mapping: 병렬 INBOX로 들어온 guard 유지 소모·공격 위력별 block drain·just guard 회복·전용 Basic 반격 feedback을 다음 fresh tick에서 `PG-COMBAT-CONTROL`, `PG-COMBAT-FEEDBACK`과 combat command/event ownership에 먼저 반영한다.
+- Current Gap: feedback은 이번 tick의 dialogue candidate가 검증된 뒤 `origin/main`에 도착했으므로 원문을 보존했으며 아직 Desired State나 제품에 반영하지 않았다.
+- Scope: reference를 원칙 수준으로 조사해 Product/Architecture를 현재형으로 갱신한 뒤 guard timing, stamina transition, locked counter action과 Polygon/Retro feedback을 하나의 검증 가능한 전투 단위로 구현한다. 기존 dialogue 결과는 비범위로 유지한다.
+- Verification: 120Hz guard timing·drain·recovery·input lock fixture, actual keyboard/touch combat, Polygon/Retro desktop/narrow start/active/end와 independent verifier를 사용한다.
 
 ## Blockers
 
