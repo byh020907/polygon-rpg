@@ -17,6 +17,15 @@
    - 작은 사건·guardian·Dungeon 핵심 장치·Boss처럼 핵심 사건을 해결할 때 Deadline을 정해진 양만큼 연장하고, 무조건 최대치로 초기화하지 않는다.
    - Deadline이 0이 되면 모든 Chunk가 Crisis 상태로 바뀌고 NPC·시설·적 배치가 최종 대응 상태가 되며, side activity 대신 핵심 방어 사건이 열린다.
    - 핵심 방어 사건에 실패하면 최근 핵심 사건 직후로 되감는다. 장비·인챈트·command 해금은 보존하고 귀환하지 않은 원정 보상만 잃으며, 다음 시도에는 위기 원인을 아는 NPC 반응을 추가한다.
+   - 방패형 적과 Boss만 읽을 수 있는 guard·posture 상태를 가진다. Strong과 저스트 가드 뒤 방패치기가 이를 크게 감소시키고, 소진되면 짧은 groggy가 열린다. 모든 적에게 두 번째 HP처럼 적용하지 않는다.
+   - 공격 cancel은 실제 적중이 확인됐을 때만 허용하고 같은 기술을 연속 cancel하지 못하게 한다. 공격 중 guard cancel에도 stamina 비용을 부과한다.
+   - Dungeon마다 signature 환경 규칙 하나를 정해 `입구에서 소개 → 전투와 결합 → 숨은 분기에서 응용 → Boss에서 시험`하는 공간 흐름을 만든다.
+   - 첫 방문에는 핵심 encounter만 통행을 막고 ambient 적은 무시할 수 있게 한다. 클리어 후 재방문에서는 강제 전투를 제거하고 cleared state와 shortcut으로 빠르게 이동한다.
+   - Boss는 단순한 HP 벽이 아니라 읽을 수 있는 attack cycle, arena 상호작용, 약점 노출이나 부위 변화 중 하나를 가진다.
+   - Boss와 지역의 첫 클리어 확정 재료를 학원촌 대장간의 상호배타적 무기 선택으로 연결한다. 첫 범위는 빠른 연계형, guard·posture 파쇄형, 긴 reach·배후 punish형의 세 archetype으로 한정하고 숫자만 높은 상위호환을 만들지 않는다.
+   - 주요 이야기는 게시판이 아니라 NPC 직접 대화로 시작·완료한다. 귀환 결과와 재도전이 NPC 대사, 대장간·교관 같은 시설, 열린 길과 환경 상태에 반영되고 이전 대화를 다시 확인할 수 있게 한다.
+   - 낮밤은 필수 경로를 막는 강제 시간표가 아니라 선택적 위험·보상으로 사용한다. 밤에는 optional elite와 새 pattern이 나타나고 낮은 확률 drop 대신 탐험·장비 성장으로 이어지는 확정 보상을 준다.
+   - 별도 Mental·Rage 게이지, Player 마법, 수치만 증가하는 강화 level, 일일 의뢰 제한, 반복 farming, 1000회식 업적, rank·NG+ 선행과 깊이 없는 Dungeon·도시 대량 추가는 현재 범위에 넣지 않는다.
    - 참고: https://namu.wiki/w/The%20Legend%20of%20Gockgang-E
 
 ## Feedback Guide
