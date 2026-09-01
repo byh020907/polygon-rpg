@@ -5,6 +5,7 @@ import {
   mergeProgressionSnapshot,
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
+import { toScrapCampaignSnapshot } from '../campaign/ScrapCampaignState.js';
 
 const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6, 7]);
 const PREVIOUS_PROGRESSION_SCHEMA_VERSION = 8;
@@ -207,6 +208,7 @@ function validateCurrentSnapshot(
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
   validateWeaponForgeSnapshot(value.weaponForge, weaponForgeProfile, value.ownedEquipmentIds);
   return mergeProgressionSnapshot(value, {
+    scrapCampaign: toScrapCampaignSnapshot(value.scrapCampaign, scrapCampaignProfile),
     enchantment: canonicalizeEnchantmentSnapshot(
       value.enchantment,
       enchantmentCatalog,
@@ -406,6 +408,7 @@ export class ProgressionStorage {
         snapshot.ownedEquipmentIds,
       );
       validated = mergeProgressionSnapshot(snapshot, {
+        scrapCampaign: toScrapCampaignSnapshot(snapshot.scrapCampaign, this.scrapCampaignProfile),
         enchantment: canonicalizeEnchantmentSnapshot(
           snapshot.enchantment,
           this.enchantmentCatalog,

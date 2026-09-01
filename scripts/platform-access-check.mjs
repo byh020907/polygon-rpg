@@ -105,6 +105,8 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /x-bind:data-camera-feedback-enabled="String\(!reducedMotion\)"/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /\.game-semantic-status|\.visually-hidden/);
+  assert.match(css, /@media \(min-width: 901px\)[\s\S]*height: 100dvh;[\s\S]*overflow: hidden;/);
+  assert.match(css, /calc\(\(100dvh - 78px\) \* 16 \/ 9\)/);
   assert.doesNotMatch(html, /MENTAL|정신력|vital-track--mental/);
   assert.doesNotMatch(shell, /\bmental(?:Percent)?\b|maxMental/);
   assert.doesNotMatch(css, /vital-track--mental/);
@@ -125,6 +127,9 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /x-for="edge in campaign\.routeEdges"/);
   assert.match(html, /수도 도착 예정/);
   assert.match(html, /x-text="campaign\.hudLabel"/);
+  assert.match(html, /class="scrap-awakening-deadline"[\s\S]*role="status"/);
+  assert.match(html, /x-show="campaign\.awakeningStageId === 'deadline-revealed'"/);
+  assert.match(html, /x-show="operationMapAvailable"/);
   assert.match(html, /id="debug-panel-title"/);
   assert.match(html, /class="debug-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
   assert.match(html, /@keydown\.tab="trapDebugPanelFocus\(\$event\)"/);
@@ -143,6 +148,8 @@ function verifySemanticStatusAndFocusTargets() {
   assert.doesNotMatch(gameFooterMarkup, /x-text="gameStats"|FPS|logical/);
   assert.match(shell, /debugPanelOpen: this\.debugPanelOpen/);
   assert.match(shell, /operationMapOpen: this\.operationMapOpen/);
+  assert.match(shell, /operationMapAvailable: false/);
+  assert.match(shell, /if \(!this\.operationMapAvailable\) return/);
   assert.match(shell, /this\.openOperationMap\(\)/);
   assert.match(shell, /this\.debugPanelOpen = true;[\s\S]*gameApp\.onScreenChanged\(\)/);
   assert.match(shell, /setDebugBackgroundInert\(globalThis\.document, true\)/);
@@ -151,6 +158,13 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /현재 화면에 적용/);
   assert.match(shell, /gameApp\.applyDebugConfiguration\(request\)/);
   assert.doesNotMatch(shell, /location\.assign/);
+
+  const gameApp = readFileSync(new URL('../src/app/GameApp.js', import.meta.url), 'utf8');
+  assert.match(
+    gameApp,
+    /uiState\.debugPanelOpen !== true &&\s*uiState\.operationMapOpen !== true/,
+    '작전 지도 modal 동안 fixed simulation도 멈춰야 한다.',
+  );
 }
 
 function verifyDebugConfigurationRoundTrip() {

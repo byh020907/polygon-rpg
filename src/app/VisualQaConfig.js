@@ -1,5 +1,11 @@
 import { FIRST_JOURNEY_CHECKPOINT_ID } from '../game/encounter/FirstJourneyProgress.js';
 import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../game/journey/FirstJourneyDungeonSignature.js';
+import { SCRAP_AWAKENING_STAGE } from '../game/campaign/ScrapAwakeningState.js';
+import {
+  SCRAP_AWAKENING_MAP_ID,
+  SCRAP_AWAKENING_REGION_ID,
+  SCRAP_AWAKENING_ROOM_ID,
+} from '../game/maps/scrapAwakening.js';
 
 export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
 const VISUAL_QA_PHASES = new Set(VISUAL_QA_PHASE_IDS);
@@ -128,6 +134,78 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 });
 
 const VISUAL_QA_SCENARIOS = Object.freeze({
+  'scrap-intro-before': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 730,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
+      expectedItems: Object.freeze(['scrap-device-core', 'scrap-device-glow-outer']),
+      expectedAbsentItems: Object.freeze([
+        'scrap-king-eye-left',
+        'scrap-king-shoulder-left',
+        'scrap-king-route-beacon',
+      ]),
+    }),
+  }),
+  'scrap-intro-awakening': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 740,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.EYES_LIT,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.EYES_LIT,
+      expectedAwakeningActive: true,
+      expectedPatchIds: Object.freeze(['scrap-device-recovered', 'scrap-king-eyes-lit']),
+      expectedItems: Object.freeze(['scrap-king-eye-left', 'scrap-king-eye-right']),
+      expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-king-shoulder-left']),
+    }),
+  }),
+  'scrap-intro-d30': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 740,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
+      expectedAwakeningActive: true,
+      expectedPatchIds: Object.freeze([
+        'scrap-device-recovered',
+        'scrap-king-eyes-lit',
+        'scrap-king-parts-assembled',
+        'scrap-king-deadline-revealed',
+      ]),
+      expectedItems: Object.freeze([
+        'scrap-king-eye-left',
+        'scrap-king-shoulder-left',
+        'scrap-king-shoulder-right',
+        'scrap-king-cable-bundle',
+        'scrap-king-route-beacon',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
+  'scrap-intro-after': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 740,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+      expectedAwakeningActive: false,
+      expectedItems: Object.freeze([
+        'scrap-king-eye-left',
+        'scrap-king-shoulder-left',
+        'scrap-king-route-beacon',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
   'scrap-character-board': Object.freeze({
     regionId: 'academy-region',

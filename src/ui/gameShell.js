@@ -161,6 +161,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     screen: initialScreen,
     visualQa: Boolean(visualQaRequest),
     operationMapOpen: false,
+    operationMapAvailable: false,
     debugPanelOpen: debugConfigurationAdapter.panelRequested,
     debugMenuHoldProgress: 0,
     debugScenarioIds: debugConfigurationAdapter.scenarioIds,
@@ -342,6 +343,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.timeLabel = status.timeLabel;
           this.deadlineLabel = status.deadlineLabel;
           this.campaign = status.campaign;
+          this.operationMapAvailable = status.operationMapAvailable;
           this.characterBoard = status.characterBoard;
           this.canManageProgression = status.canManageProgression;
           this.activeEnchantId = status.activeEnchantId;
@@ -491,6 +493,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     activateGameMenu() {
       if (!debugMenuHold?.consumePrimaryActivation()) return;
+      if (!this.operationMapAvailable) return;
       this.openOperationMap();
     },
 

@@ -5,12 +5,16 @@ import { createProgressionSnapshot } from '../src/game/progression/ProgressionSt
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import {
   SCRAP_CAMPAIGN_ACTION_KIND,
+  advanceScrapAwakening,
   commitScrapCampaignAction,
   createScrapCampaignSnapshot,
   getScrapCampaignReadModel,
   previewScrapCampaignAction,
+  startScrapAwakening,
+  toScrapCampaignSnapshot,
 } from '../src/game/campaign/ScrapCampaignState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
+import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
 
 class MemoryStorage {
   constructor(initial = null) {
@@ -64,7 +68,10 @@ function convoyAction(regionId) {
 
 const fresh = createScrapCampaignSnapshot(SCRAP_CAMPAIGN_PROFILE);
 const initial = getScrapCampaignReadModel(fresh, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(initial.hudLabel, 'Day 1 · 아침 · D-30');
+assert.equal(initial.hudLabel, '첫 수거 의뢰 · 고철 대왕 각성 전');
+assert.equal(initial.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
+assert.equal(initial.awakeningActive, false);
+assert.equal(initial.deadlineRevealed, false);
 assert.equal(initial.currentLocationLabel, '동네 고물상');
 assert.equal(initial.regions.length, 5);
 assert.equal(initial.routeEdges.length, 5);
@@ -80,6 +87,36 @@ for (const region of SCRAP_CAMPAIGN_PROFILE.regions) {
 }
 assert.equal(initial.completionPercent, 0);
 assert.equal(initial.finalBattleAvailable, false);
+
+let awakening = startScrapAwakening(fresh, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(awakening.changed, true);
+assert.equal(awakening.snapshot.awakeningStageId, SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
+assert.equal(
+  startScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE).changed,
+  false,
+  '제어장치 회수는 반복 trigger로 재시작되면 안 됩니다.',
+);
+for (const expectedStageId of [
+  SCRAP_AWAKENING_STAGE.EYES_LIT,
+  SCRAP_AWAKENING_STAGE.ASSEMBLED,
+  SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
+  SCRAP_AWAKENING_STAGE.COMPLETE,
+]) {
+  awakening = advanceScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE);
+  assert.equal(awakening.changed, true);
+  assert.equal(awakening.snapshot.awakeningStageId, expectedStageId);
+}
+const awakenedReadModel = getScrapCampaignReadModel(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(awakenedReadModel.hudLabel, 'Day 1 · 아침 · D-30');
+assert.equal(awakenedReadModel.awakeningActive, false);
+assert.equal(awakenedReadModel.deadlineRevealed, true);
+assert.equal(advanceScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE).changed, false);
+
+const legacyCampaign = { ...fresh, version: 1 };
+delete legacyCampaign.awakeningStageId;
+const migratedCampaign = toScrapCampaignSnapshot(legacyCampaign, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(migratedCampaign.version, 2);
+assert.equal(migratedCampaign.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
 
 const freeAction = {
   actionId: 'free:dialogue:mechanic-owner',
@@ -184,6 +221,10 @@ const persistence = new ProgressionStorage(
   null,
   SCRAP_CAMPAIGN_PROFILE,
 );
+completeCampaign = toScrapCampaignSnapshot(
+  { ...completeCampaign, awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE },
+  SCRAP_CAMPAIGN_PROFILE,
+);
 const progression = {
   ...createProgressionSnapshot(
     DEFAULT_EQUIPMENT_PROFILE_ID,
@@ -223,6 +264,8 @@ console.log(
     probe: 'scrap-campaign-domain',
     checks: [
       'day1-morning-d30-and-five-region-operation-map',
+      'playable-awakening-stage-order-and-d30-reveal',
+      'awakening-repeat-trigger-idempotence-and-v1-migration',
       'explicit-route-edges-rival-arrival-and-region-stage-patches',
       'free-actions-zero-cost-and-one-segment-travel',
       'four-segment-day-rollover',
@@ -232,6 +275,7 @@ console.log(
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',
       'schema-v9-round-trip-and-v8-migration',
+      'awakening-stage-storage-round-trip',
     ],
   }),
 );

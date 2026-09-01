@@ -7,6 +7,7 @@ import { TRAINING_ENCOUNTER_SCENE } from '../src/game/training/TrainingEncounter
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { WORLD_TIME_PROFILE } from '../src/game/world/WorldTimeProfiles.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
+import { SCRAP_AWAKENING_PROFILE } from '../src/game/campaign/ScrapAwakeningProfile.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 
 function createTrainingEncounter(options) {
@@ -26,6 +27,7 @@ export function createTestGameScene(options = {}) {
     encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
     worldTimeProfile: WORLD_TIME_PROFILE,
     scrapCampaignProfile: SCRAP_CAMPAIGN_PROFILE,
+    scrapAwakeningProfile: SCRAP_AWAKENING_PROFILE,
     characterPresentationCatalog: CHARACTER_PRESENTATION_PROFILE,
     playerPresentationProfileId: 'scrapyard-apprentice',
     enchantmentCatalog: ENCHANTMENT_CATALOG,

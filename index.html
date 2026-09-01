@@ -45,7 +45,7 @@
                 @touchend.prevent="startGame"
               >
                 <span>게임 시작 / 계속하기</span>
-                <small>D-30 · 동네 고물상</small>
+                <small>첫 수거 의뢰 · 왕국 외곽</small>
               </button>
               <button
                 id="menu-mobile-start-control"
@@ -73,7 +73,7 @@
           </section>
 
           <aside class="journey-card">
-            <p class="journey-index">CAMPAIGN · D-30</p>
+            <p class="journey-index">CAMPAIGN · AWAKENING</p>
             <div class="journey-mark" aria-hidden="true">◆</div>
             <h2>퇴직했는데 또 야근</h2>
             <p>
@@ -150,6 +150,17 @@
             <small x-text="`REGION · ${timeLabel}`"></small><strong x-text="areaName"></strong>
           </div>
           <section
+            class="scrap-awakening-deadline"
+            x-show="campaign.awakeningStageId === 'deadline-revealed'"
+            role="status"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
+            <small>고철 대왕 수도 진로 확정</small>
+            <strong>D-30</strong>
+            <span>수도 도착까지 30일</span>
+          </section>
+          <section
             class="character-design-board-legend"
             x-show="characterBoard.active"
             aria-labelledby="character-design-board-title"
@@ -175,6 +186,7 @@
           <button
             id="game-menu-control"
             class="game-menu-button"
+            x-show="operationMapAvailable"
             type="button"
             aria-label="작전 지도. 1초 동안 누르면 개발자 디버그 패널 열기"
             aria-describedby="game-menu-debug-hint"

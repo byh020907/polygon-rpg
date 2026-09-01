@@ -24,7 +24,9 @@ npm run dev
 - 게임: `http://127.0.0.1:5173/`
 - Product Goal 설계서: `http://127.0.0.1:5173/PRODUCT_GOAL.html`
 
-메인 메뉴에서 `새 게임 시작`을 선택하면 학원촌에서 시작합니다.
+메인 메뉴에서 `게임 시작 / 계속하기`를 선택하면 왕국 외곽의 첫 고철 수거 의뢰에서 시작합니다.
+폐병기 안 제어장치에 접근해 `↑`로 직접 회수하면 고철 대왕 각성과 D-30 고지가 실제 gameplay
+안에서 이어지고, 완료한 각성 stage는 browser-local 진행에 저장됩니다.
 
 | Action              | Keyboard             | Mobile         |
 | ------------------- | -------------------- | -------------- |
@@ -33,7 +35,9 @@ npm run dev
 | Basic / Strong      | `A / S`              | `X / Y`        |
 | Combo branch        | `AA / AS / SA`       | `XX / XY / YX` |
 
-Portal 범위에서 `↑`를 누르면 연결된 Room으로 이동합니다. 장비 선택, Field·Dungeon·Boss 원정, 보상과 shortcut 귀환은 같은 gameplay runtime에서 이어집니다.
+상호작용 범위에서 `↑`를 누르면 제어장치 회수나 대화를 우선 처리하고, Portal 범위에서는 연결된
+Room으로 이동합니다. 장비 선택, Field·Dungeon·Boss 원정, 보상과 shortcut 귀환은 같은 gameplay
+runtime에서 이어집니다.
 
 ## 모바일 검증
 
@@ -65,7 +69,14 @@ $env:BROWSER_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 npm run visual:qa -- --repo . --start combat-hit --phase active --renderer retro --frame 180 --output artifacts/visual-qa/combat-hit --width 1440 --height 810
 ```
 
-지원하는 stable start는 `academy`, `academy-space-day`, `academy-space-night`, `academy-space-story`, `academy-dialogue`, `training`, `field`, `field-space-day`, `field-space-night`, `field-space-cleared`, `dungeon`, `boss`, `glasswind-field`, `glasswind-dungeon`, `glasswind-boss`와 `combat-hit`, `combat-block`, `combat-evade`, `combat-punish`, `combat-launch`, `combat-landing`, `combat-retaliation`, `pose-idle`, `pose-move`, `pose-guard`, `pose-roll`, `pose-ground-attack`, `pose-air-attack`, `pose-hit`입니다. `--phase start|active|end`는 combat scenario의 원인·결과·정리 frame을 고정하며 생략 시 `active`입니다. `--renderer polygon|retro`로 같은 immutable RenderFrame의 투영을 선택하며 생략 시 기존 Retro capture를 유지합니다. Combat scenario는 event·pose·effect assertion과 player/enemy/contact metadata를 함께 남깁니다. 공간 scenario는 day/night/story patch, 환경형 출입구와 이용 가능한 Portal metadata를 함께 고정합니다. 결과를 직접 열어 화면 의도, clipping, Polygon/Retro parity와 console error를 확인합니다.
+지원하는 stable start에는 `scrap-intro-before`, `scrap-intro-awakening`, `scrap-intro-d30`,
+`scrap-intro-after`와 기존 academy·field·dungeon·boss·combat·pose scenario가 포함됩니다.
+`--phase start|active|end`는 combat scenario의 원인·결과·정리 frame을 고정하며 생략 시
+`active`입니다. `--renderer polygon|retro`로 같은 immutable RenderFrame의 투영을 선택하며 생략 시
+기존 Retro capture를 유지합니다. Combat scenario는 event·pose·effect assertion과
+player/enemy/contact metadata를 함께 남깁니다. 공간·도입 scenario는 stable patch, 제어장치·눈·결합
+부품·D-30와 이용 가능한 Portal metadata를 함께 고정합니다. 결과를 직접 열어 화면 의도, clipping,
+Polygon/Retro parity와 console error를 확인합니다.
 
 ## GitHub Pages
 

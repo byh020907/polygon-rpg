@@ -8,8 +8,17 @@ import {
   SCRAP_CAMPAIGN_REGION_STATUS,
   SCRAP_CAMPAIGN_START_LOCATION_ID,
 } from './ScrapCampaignContract.js';
+import {
+  SCRAP_AWAKENING_STAGE,
+  assertScrapAwakeningStageId,
+  getScrapAwakeningPresentation,
+  isScrapAwakeningActive,
+  isScrapAwakeningDeadlineRevealed,
+  nextScrapAwakeningStage,
+} from './ScrapAwakeningState.js';
 
-export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 1;
+export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 2;
+const LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION = 1;
 
 export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
   FREE: 'free',
@@ -68,6 +77,7 @@ function freezeSnapshot({
   regionStates,
   collectedPartIds,
   committedActionIds,
+  awakeningStageId,
   gameOver,
   lastChangeLabel,
 }) {
@@ -81,6 +91,7 @@ function freezeSnapshot({
     regionStates: Object.freeze({ ...regionStates }),
     collectedPartIds: Object.freeze([...collectedPartIds]),
     committedActionIds: Object.freeze([...committedActionIds]),
+    awakeningStageId: assertScrapAwakeningStageId(awakeningStageId),
     gameOver,
     lastChangeLabel,
   });
@@ -102,8 +113,9 @@ export function createScrapCampaignSnapshot(profile) {
     ),
     collectedPartIds: [],
     committedActionIds: [],
+    awakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
     gameOver: false,
-    lastChangeLabel: '고철 대왕 각성 · 수도 도착까지 D-30',
+    lastChangeLabel: '첫 수거 의뢰 · 제어장치 회수 전',
   });
 }
 
@@ -112,7 +124,10 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new TypeError('scrap campaign snapshot은 객체여야 합니다.');
   }
-  if (value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION) {
+  if (
+    value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION &&
+    value.version !== LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
+  ) {
     throw new Error(`지원하지 않는 scrap campaign schema version입니다: ${value.version}`);
   }
   for (const [field, label] of [
@@ -174,7 +189,48 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (typeof value.lastChangeLabel !== 'string') {
     throw new TypeError('campaign 최근 변화 label은 문자열이어야 합니다.');
   }
-  return freezeSnapshot(value);
+  return freezeSnapshot({
+    ...value,
+    awakeningStageId:
+      value.version === LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
+        ? SCRAP_AWAKENING_STAGE.COMMISSION
+        : value.awakeningStageId,
+  });
+}
+
+function awakeningTransaction(current, nextStageId) {
+  if (current.awakeningStageId === nextStageId) {
+    return Object.freeze({ changed: false, reason: 'already-at-stage', snapshot: current });
+  }
+  const presentation = getScrapAwakeningPresentation(nextStageId);
+  return Object.freeze({
+    changed: true,
+    reason: 'awakening-stage-advanced',
+    snapshot: freezeSnapshot({
+      ...current,
+      awakeningStageId: nextStageId,
+      lastChangeLabel: presentation.cue,
+    }),
+  });
+}
+
+export function startScrapAwakening(snapshot, profile) {
+  const current = toScrapCampaignSnapshot(snapshot, profile);
+  if (current.awakeningStageId !== SCRAP_AWAKENING_STAGE.COMMISSION) {
+    return Object.freeze({ changed: false, reason: 'already-started', snapshot: current });
+  }
+  return awakeningTransaction(current, SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
+}
+
+export function advanceScrapAwakening(snapshot, profile) {
+  const current = toScrapCampaignSnapshot(snapshot, profile);
+  if (
+    current.awakeningStageId === SCRAP_AWAKENING_STAGE.COMMISSION ||
+    current.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+  ) {
+    return Object.freeze({ changed: false, reason: 'not-advancing', snapshot: current });
+  }
+  return awakeningTransaction(current, nextScrapAwakeningStage(current.awakeningStageId));
 }
 
 function validateAction(action, profile) {
@@ -338,6 +394,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     regionStates,
     collectedPartIds,
     committedActionIds: [...current.committedActionIds, authoredAction.actionId],
+    awakeningStageId: current.awakeningStageId,
     gameOver: preview.willGameOver,
     lastChangeLabel: preview.willGameOver
       ? `${authoredAction.label} · 고철 대왕 수도 도착`
@@ -419,7 +476,13 @@ export function getScrapCampaignReadModel(snapshot, profile) {
   const rivalArrival = timeReadModel(current.elapsedSegments + current.deadlineSegments, 0);
   return Object.freeze({
     ...time,
-    hudLabel: `Day ${time.day} · ${time.phaseLabel} · ${time.deadlineLabel}`,
+    hudLabel: isScrapAwakeningDeadlineRevealed(current.awakeningStageId)
+      ? `Day ${time.day} · ${time.phaseLabel} · ${time.deadlineLabel}`
+      : '첫 수거 의뢰 · 고철 대왕 각성 전',
+    awakeningStageId: current.awakeningStageId,
+    awakeningActive: isScrapAwakeningActive(current.awakeningStageId),
+    deadlineRevealed: isScrapAwakeningDeadlineRevealed(current.awakeningStageId),
+    awakening: getScrapAwakeningPresentation(current.awakeningStageId),
     currentLocationId: current.currentLocationId,
     currentLocationLabel: currentLocation.label,
     rivalLocationLabel: rivalRegion?.label ?? '각성지',

@@ -542,6 +542,19 @@ dd {
   image-rendering: pixelated;
 }
 
+@media (min-width: 901px) {
+  .game-screen {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .game-viewport {
+    justify-self: center;
+    width: min(100%, calc((100dvh - 78px) * 16 / 9));
+  }
+}
+
 .hud-item-counter {
   position: absolute;
   z-index: 3;
@@ -578,6 +591,44 @@ dd {
   text-align: center;
   text-shadow: 0 2px 8px #000;
   transform: translateX(-50%);
+}
+
+.scrap-awakening-deadline {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  color: #fff6df;
+  background: radial-gradient(circle, rgb(29 15 10 / 18%), rgb(4 7 8 / 76%));
+  text-align: center;
+  text-shadow:
+    0 3px 0 #2b1510,
+    0 0 24px rgb(244 125 72 / 58%);
+  pointer-events: none;
+}
+
+.scrap-awakening-deadline small {
+  color: #e8c895;
+  font-size: clamp(0.55rem, 1vw, 0.82rem);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.scrap-awakening-deadline strong {
+  color: #ff9b5c;
+  font:
+    950 clamp(4rem, 13vw, 9.6rem) / 0.92 Arial,
+    sans-serif;
+  letter-spacing: -0.08em;
+}
+
+.scrap-awakening-deadline span {
+  margin-top: 10px;
+  color: #fff4dd;
+  font-size: clamp(0.82rem, 1.8vw, 1.32rem);
+  font-weight: 900;
 }
 
 .character-design-board-legend {

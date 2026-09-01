@@ -8,10 +8,12 @@ import { createProgressionSnapshot } from '../game/progression/ProgressionState.
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP, SCRAP_AWAKENING_MAP_ID } from '../game/maps/scrapAwakening.js';
 import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
 import { WORLD_TIME_PROFILE } from '../game/world/WorldTimeProfiles.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
+import { SCRAP_AWAKENING_PROFILE } from '../game/campaign/ScrapAwakeningProfile.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPresentationProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
@@ -136,15 +138,20 @@ export class GameApp extends SceneNode {
     const progressionSnapshot = this.progressionLoadResult.ok
       ? this.progressionLoadResult.snapshot
       : freshProgression;
+    const mapDefinition =
+      !this.isVisualQa || this.visualQaRequest?.scenario?.mapId === SCRAP_AWAKENING_MAP_ID
+        ? SCRAP_AWAKENING_MAP
+        : ACADEMY_VILLAGE_MAP;
     this.scene = this.addChild(
       new GameScene({
-        mapDefinition: ACADEMY_VILLAGE_MAP,
+        mapDefinition,
         equipmentCatalog: EQUIPMENT_CATALOG,
         combatProgressionProfile: COMBAT_PROGRESSION_PROFILE,
         encounterFactory: createTrainingEncounter,
         encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
         worldTimeProfile: WORLD_TIME_PROFILE,
         scrapCampaignProfile: SCRAP_CAMPAIGN_PROFILE,
+        scrapAwakeningProfile: SCRAP_AWAKENING_PROFILE,
         characterPresentationCatalog: CHARACTER_PRESENTATION_PROFILE,
         playerPresentationProfileId: 'scrapyard-apprentice',
         enchantmentCatalog: ENCHANTMENT_CATALOG,
@@ -368,6 +375,9 @@ export class GameApp extends SceneNode {
       );
     }
     if (scenario.timePhase) this.scene.setVisualQaTimePhase(scenario.timePhase);
+    if (scenario.scrapAwakeningStageId) {
+      this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
+    }
     this.scene.setVisualQaLocation(scenario);
     if (scenario.materialEchoDefeats) {
       this.scene.setVisualQaMaterialEchoDefeats(scenario.materialEchoDefeats);
@@ -416,6 +426,9 @@ export class GameApp extends SceneNode {
     if (scenario.combatScenarioId)
       this.scene.setVisualQaCombatScenario(scenario.combatScenarioId, phase);
     if (scenario.poseScenarioId) this.scene.setVisualQaPoseScenario(scenario.poseScenarioId);
+    if (scenario.scrapAwakeningStageId) {
+      this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
+    }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);
     const expectation = Object.freeze({
@@ -443,6 +456,8 @@ export class GameApp extends SceneNode {
     const expectedMaterialId = expectation.expectedMaterialId;
     const expectedMaterialQuantity = expectation.expectedMaterialQuantity;
     const expectedProgressionNotice = expectation.expectedProgressionNotice;
+    const expectedAwakeningStageId = expectation.expectedAwakeningStageId;
+    const expectedAwakeningActive = expectation.expectedAwakeningActive;
     const portalIds = renderFrame.map.portalIds;
     const progression = this.scene.getProgressionSnapshot();
     const worldStatus = this.scene.getWorldStatus();
@@ -552,6 +567,12 @@ export class GameApp extends SceneNode {
         progression.enchantment.materialQuantities[expectedMaterialId] === expectedMaterialQuantity,
       progressionNoticeMatches:
         !expectedProgressionNotice || worldStatus.progressionNotice === expectedProgressionNotice,
+      awakeningStageMatches:
+        !expectedAwakeningStageId ||
+        worldStatus.campaign.awakeningStageId === expectedAwakeningStageId,
+      awakeningActiveMatches:
+        expectedAwakeningActive === undefined ||
+        worldStatus.campaign.awakeningActive === expectedAwakeningActive,
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -573,7 +594,9 @@ export class GameApp extends SceneNode {
         assertionEvidence.patchIdsMatch &&
         assertionEvidence.portalIdsMatch &&
         assertionEvidence.materialQuantityMatches &&
-        assertionEvidence.progressionNoticeMatches,
+        assertionEvidence.progressionNoticeMatches &&
+        assertionEvidence.awakeningStageMatches &&
+        assertionEvidence.awakeningActiveMatches,
     });
     if (!assertion.passed) {
       const failedChecks = Object.entries(assertionEvidence)
@@ -603,6 +626,7 @@ export class GameApp extends SceneNode {
       combatContact: renderFrame.combatContact,
       dialogue,
       progressionNotice: worldStatus.progressionNotice,
+      awakeningStageId: worldStatus.campaign.awakeningStageId,
       materialQuantities: progression.enchantment.materialQuantities,
       player: renderFrame.player,
       combatEnemy: renderFrame.combatEnemy,
@@ -699,7 +723,9 @@ export class GameApp extends SceneNode {
   update(deltaSeconds, inputSnapshot) {
     const uiState = this.uiBridge.snapshot();
     const active =
-      (uiState.screen === GAME_SCREEN.GAME && uiState.debugPanelOpen !== true) ||
+      (uiState.screen === GAME_SCREEN.GAME &&
+        uiState.debugPanelOpen !== true &&
+        uiState.operationMapOpen !== true) ||
       (uiState.screen === GAME_SCREEN.RENDER_LAB && uiState.isPlaying);
     if (!active) return;
     this.fixedProcess(deltaSeconds, {
