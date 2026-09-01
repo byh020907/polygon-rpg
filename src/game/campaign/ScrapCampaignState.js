@@ -16,8 +16,16 @@ import {
   isScrapAwakeningDeadlineRevealed,
   nextScrapAwakeningStage,
 } from './ScrapAwakeningState.js';
+import {
+  SCRAP_GARAGE_REVEAL_STAGE,
+  assertScrapGarageRevealStageId,
+  getScrapGarageRevealPresentation,
+  isScrapGarageRevealActive,
+  nextScrapGarageRevealStage,
+} from './ScrapGarageRevealState.js';
 
-export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 2;
+export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 3;
+const PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 2;
 const LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION = 1;
 
 export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
@@ -78,6 +86,7 @@ function freezeSnapshot({
   collectedPartIds,
   committedActionIds,
   awakeningStageId,
+  garageRevealStageId,
   gameOver,
   lastChangeLabel,
 }) {
@@ -92,6 +101,7 @@ function freezeSnapshot({
     collectedPartIds: Object.freeze([...collectedPartIds]),
     committedActionIds: Object.freeze([...committedActionIds]),
     awakeningStageId: assertScrapAwakeningStageId(awakeningStageId),
+    garageRevealStageId: assertScrapGarageRevealStageId(garageRevealStageId),
     gameOver,
     lastChangeLabel,
   });
@@ -114,6 +124,7 @@ export function createScrapCampaignSnapshot(profile) {
     collectedPartIds: [],
     committedActionIds: [],
     awakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
+    garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.LOCKED,
     gameOver: false,
     lastChangeLabel: '첫 수거 의뢰 · 제어장치 회수 전',
   });
@@ -126,6 +137,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   if (
     value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION &&
+    value.version !== PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
     value.version !== LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
   ) {
     throw new Error(`지원하지 않는 scrap campaign schema version입니다: ${value.version}`);
@@ -189,12 +201,34 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (typeof value.lastChangeLabel !== 'string') {
     throw new TypeError('campaign 최근 변화 label은 문자열이어야 합니다.');
   }
+  const awakeningStageId =
+    value.version === LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
+      ? SCRAP_AWAKENING_STAGE.COMMISSION
+      : value.awakeningStageId;
+  const garageRevealStageId =
+    value.version === SCRAP_CAMPAIGN_SCHEMA_VERSION
+      ? assertScrapGarageRevealStageId(value.garageRevealStageId)
+      : awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+        ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+        : SCRAP_GARAGE_REVEAL_STAGE.LOCKED;
+  if (
+    awakeningStageId !== SCRAP_AWAKENING_STAGE.COMPLETE &&
+    garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.LOCKED
+  ) {
+    throw new TypeError('고물상 차고 reveal은 고철 대왕 각성 완료 뒤에만 진행할 수 있습니다.');
+  }
+  if (
+    awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE &&
+    garageRevealStageId === SCRAP_GARAGE_REVEAL_STAGE.LOCKED
+  ) {
+    throw new TypeError(
+      '각성 완료 snapshot에는 고물상 보고 가능한 차고 reveal stage가 필요합니다.',
+    );
+  }
   return freezeSnapshot({
     ...value,
-    awakeningStageId:
-      value.version === LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
-        ? SCRAP_AWAKENING_STAGE.COMMISSION
-        : value.awakeningStageId,
+    awakeningStageId,
+    garageRevealStageId,
   });
 }
 
@@ -209,6 +243,10 @@ function awakeningTransaction(current, nextStageId) {
     snapshot: freezeSnapshot({
       ...current,
       awakeningStageId: nextStageId,
+      garageRevealStageId:
+        nextStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+          ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+          : current.garageRevealStageId,
       lastChangeLabel: presentation.cue,
     }),
   });
@@ -231,6 +269,41 @@ export function advanceScrapAwakening(snapshot, profile) {
     return Object.freeze({ changed: false, reason: 'not-advancing', snapshot: current });
   }
   return awakeningTransaction(current, nextScrapAwakeningStage(current.awakeningStageId));
+}
+
+function garageRevealTransaction(current, nextStageId) {
+  if (current.garageRevealStageId === nextStageId) {
+    return Object.freeze({ changed: false, reason: 'already-at-stage', snapshot: current });
+  }
+  const presentation = getScrapGarageRevealPresentation(nextStageId);
+  return Object.freeze({
+    changed: true,
+    reason: 'garage-reveal-stage-advanced',
+    snapshot: freezeSnapshot({
+      ...current,
+      garageRevealStageId: nextStageId,
+      lastChangeLabel: presentation.cue,
+    }),
+  });
+}
+
+export function startScrapGarageReveal(snapshot, profile) {
+  const current = toScrapCampaignSnapshot(snapshot, profile);
+  if (
+    current.awakeningStageId !== SCRAP_AWAKENING_STAGE.COMPLETE ||
+    current.garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+  ) {
+    return Object.freeze({ changed: false, reason: 'not-ready', snapshot: current });
+  }
+  return garageRevealTransaction(current, SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS);
+}
+
+export function advanceScrapGarageReveal(snapshot, profile) {
+  const current = toScrapCampaignSnapshot(snapshot, profile);
+  if (!isScrapGarageRevealActive(current.garageRevealStageId)) {
+    return Object.freeze({ changed: false, reason: 'not-advancing', snapshot: current });
+  }
+  return garageRevealTransaction(current, nextScrapGarageRevealStage(current.garageRevealStageId));
 }
 
 function validateAction(action, profile) {
@@ -395,6 +468,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     collectedPartIds,
     committedActionIds: [...current.committedActionIds, authoredAction.actionId],
     awakeningStageId: current.awakeningStageId,
+    garageRevealStageId: current.garageRevealStageId,
     gameOver: preview.willGameOver,
     lastChangeLabel: preview.willGameOver
       ? `${authoredAction.label} · 고철 대왕 수도 도착`
@@ -483,6 +557,10 @@ export function getScrapCampaignReadModel(snapshot, profile) {
     awakeningActive: isScrapAwakeningActive(current.awakeningStageId),
     deadlineRevealed: isScrapAwakeningDeadlineRevealed(current.awakeningStageId),
     awakening: getScrapAwakeningPresentation(current.awakeningStageId),
+    garageRevealStageId: current.garageRevealStageId,
+    garageRevealActive: isScrapGarageRevealActive(current.garageRevealStageId),
+    garageRevealComplete: current.garageRevealStageId === SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    garageReveal: getScrapGarageRevealPresentation(current.garageRevealStageId),
     currentLocationId: current.currentLocationId,
     currentLocationLabel: currentLocation.label,
     rivalLocationLabel: rivalRegion?.label ?? '각성지',

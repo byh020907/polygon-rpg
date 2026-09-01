@@ -148,6 +148,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
   const initialDebugConfiguration = debugConfigurationAdapter.initialConfiguration;
   let debugMenuHold = null;
   let debugHoldAbortController = null;
+  let operationMapOpenerId = 'game-menu-control';
   const initialScreen = visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU;
   const screenFocusOwner = new ScreenFocusOwner({
     initialScreen,
@@ -222,6 +223,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     deadlineLabel: 'D-30',
     campaign: Object.freeze({
       hudLabel: 'Day 1 · 아침 · D-30',
+      awakeningStageId: 'commission',
+      garageRevealStageId: 'locked',
+      garageRevealActive: false,
+      garageRevealComplete: false,
       currentLocationLabel: '동네 고물상',
       rivalLocationLabel: '각성지',
       rivalDirectionLabel: '폐광 산촌',
@@ -373,6 +378,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         setSaveStatus: (status) => {
           this.saveStatus = status;
         },
+        requestOperationMap: () => {
+          this.openOperationMap('game-canvas');
+        },
       });
       this.$nextTick(() => {
         if (visualQaRequest) {
@@ -497,8 +505,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.openOperationMap();
     },
 
-    openOperationMap() {
+    openOperationMap(openerId = 'game-menu-control') {
       if (this.debugPanelOpen || this.operationMapOpen) return;
+      operationMapOpenerId = openerId;
       this.operationMapOpen = true;
       setOperationMapBackgroundInert(globalThis.document, true);
       gameApp.onScreenChanged();
@@ -512,7 +521,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.operationMapOpen = false;
       setOperationMapBackgroundInert(globalThis.document, false);
       gameApp.onScreenChanged();
-      this.$nextTick(() => globalThis.document.getElementById('game-menu-control')?.focus());
+      this.$nextTick(() => globalThis.document.getElementById(operationMapOpenerId)?.focus());
     },
 
     trapOperationMapFocus(event) {

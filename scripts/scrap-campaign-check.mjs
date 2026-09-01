@@ -5,16 +5,19 @@ import { createProgressionSnapshot } from '../src/game/progression/ProgressionSt
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import {
   SCRAP_CAMPAIGN_ACTION_KIND,
+  advanceScrapGarageReveal,
   advanceScrapAwakening,
   commitScrapCampaignAction,
   createScrapCampaignSnapshot,
   getScrapCampaignReadModel,
   previewScrapCampaignAction,
   startScrapAwakening,
+  startScrapGarageReveal,
   toScrapCampaignSnapshot,
 } from '../src/game/campaign/ScrapCampaignState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
 import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 
 class MemoryStorage {
   constructor(initial = null) {
@@ -72,6 +75,7 @@ assert.equal(initial.hudLabel, '첫 수거 의뢰 · 고철 대왕 각성 전');
 assert.equal(initial.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(initial.awakeningActive, false);
 assert.equal(initial.deadlineRevealed, false);
+assert.equal(initial.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.LOCKED);
 assert.equal(initial.currentLocationLabel, '동네 고물상');
 assert.equal(initial.regions.length, 5);
 assert.equal(initial.routeEdges.length, 5);
@@ -110,13 +114,66 @@ const awakenedReadModel = getScrapCampaignReadModel(awakening.snapshot, SCRAP_CA
 assert.equal(awakenedReadModel.hudLabel, 'Day 1 · 아침 · D-30');
 assert.equal(awakenedReadModel.awakeningActive, false);
 assert.equal(awakenedReadModel.deadlineRevealed, true);
+assert.equal(awakenedReadModel.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY);
 assert.equal(advanceScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE).changed, false);
+
+let garageReveal = startScrapGarageReveal(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(garageReveal.changed, true);
+assert.equal(garageReveal.snapshot.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS);
+for (const expectedStageId of [
+  SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
+  SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+  SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+]) {
+  garageReveal = advanceScrapGarageReveal(garageReveal.snapshot, SCRAP_CAMPAIGN_PROFILE);
+  assert.equal(garageReveal.changed, true);
+  assert.equal(garageReveal.snapshot.garageRevealStageId, expectedStageId);
+}
+const garageReadModel = getScrapCampaignReadModel(garageReveal.snapshot, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(garageReadModel.garageRevealComplete, true);
+assert.equal(garageReadModel.completionPercent, 0);
+for (const field of [
+  'elapsedSegments',
+  'deadlineSegments',
+  'rivalProgressSegments',
+  'committedActionIds',
+]) {
+  assert.deepEqual(
+    garageReveal.snapshot[field],
+    awakening.snapshot[field],
+    `고물상 대화·지도·차고 reveal은 ${field}을 바꾸면 안 됩니다.`,
+  );
+}
+assert.equal(
+  advanceScrapGarageReveal(garageReveal.snapshot, SCRAP_CAMPAIGN_PROFILE).changed,
+  false,
+);
 
 const legacyCampaign = { ...fresh, version: 1 };
 delete legacyCampaign.awakeningStageId;
+delete legacyCampaign.garageRevealStageId;
 const migratedCampaign = toScrapCampaignSnapshot(legacyCampaign, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedCampaign.version, 2);
+assert.equal(migratedCampaign.version, 3);
 assert.equal(migratedCampaign.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
+assert.equal(migratedCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.LOCKED);
+
+const previousCampaign = { ...awakening.snapshot, version: 2 };
+delete previousCampaign.garageRevealStageId;
+const migratedPreviousCampaign = toScrapCampaignSnapshot(previousCampaign, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(migratedPreviousCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY);
+assert.throws(
+  () =>
+    toScrapCampaignSnapshot(
+      {
+        ...fresh,
+        awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+        garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.LOCKED,
+      },
+      SCRAP_CAMPAIGN_PROFILE,
+    ),
+  /각성 완료 snapshot/,
+  '각성 완료와 잠긴 차고를 함께 가진 손상 snapshot은 거부해야 합니다.',
+);
 
 const freeAction = {
   actionId: 'free:dialogue:mechanic-owner',
@@ -222,7 +279,11 @@ const persistence = new ProgressionStorage(
   SCRAP_CAMPAIGN_PROFILE,
 );
 completeCampaign = toScrapCampaignSnapshot(
-  { ...completeCampaign, awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE },
+  {
+    ...completeCampaign,
+    awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+    garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+  },
   SCRAP_CAMPAIGN_PROFILE,
 );
 const progression = {
@@ -266,6 +327,7 @@ console.log(
       'day1-morning-d30-and-five-region-operation-map',
       'playable-awakening-stage-order-and-d30-reveal',
       'awakening-repeat-trigger-idempotence-and-v1-migration',
+      'owner-analysis-map-garage-stage-order-and-v2-migration',
       'explicit-route-edges-rival-arrival-and-region-stage-patches',
       'free-actions-zero-cost-and-one-segment-travel',
       'four-segment-day-rollover',
@@ -276,6 +338,7 @@ console.log(
       'last-segment-warning-and-terminal-game-over',
       'schema-v9-round-trip-and-v8-migration',
       'awakening-stage-storage-round-trip',
+      'garage-reveal-stage-storage-round-trip',
     ],
   }),
 );

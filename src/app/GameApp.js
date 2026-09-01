@@ -61,7 +61,8 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.setPlayerStatus !== 'function' ||
     typeof uiBridge.setWorldStatus !== 'function' ||
     typeof uiBridge.setDialoguePresentation !== 'function' ||
-    typeof uiBridge.setSaveStatus !== 'function'
+    typeof uiBridge.setSaveStatus !== 'function' ||
+    typeof uiBridge.requestOperationMap !== 'function'
   ) {
     throw new TypeError(
       'GameApp UI bridge에는 snapshot, stats와 world/dialogue status writer가 필요합니다.',
@@ -222,6 +223,9 @@ export class GameApp extends SceneNode {
     this.connectTo(this.scene.progressionChanged, (snapshot) => {
       this.saveProgression(snapshot);
     });
+    this.connectTo(this.scene.operationMapRequested, () => {
+      this.uiBridge.requestOperationMap();
+    });
     this.uiBridge.setSaveStatus(this.initialSaveStatus());
     if (this.progressionLoadResult.ok && this.progressionLoadResult.kind === 'migrated') {
       const migrationSave = this.saveProgression(this.scene.getProgressionSnapshot());
@@ -378,6 +382,9 @@ export class GameApp extends SceneNode {
     if (scenario.scrapAwakeningStageId) {
       this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
     }
+    if (scenario.scrapGarageRevealStageId) {
+      this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
+    }
     this.scene.setVisualQaLocation(scenario);
     if (scenario.materialEchoDefeats) {
       this.scene.setVisualQaMaterialEchoDefeats(scenario.materialEchoDefeats);
@@ -429,6 +436,9 @@ export class GameApp extends SceneNode {
     if (scenario.scrapAwakeningStageId) {
       this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
     }
+    if (scenario.scrapGarageRevealStageId) {
+      this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
+    }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);
     const expectation = Object.freeze({
@@ -458,6 +468,9 @@ export class GameApp extends SceneNode {
     const expectedProgressionNotice = expectation.expectedProgressionNotice;
     const expectedAwakeningStageId = expectation.expectedAwakeningStageId;
     const expectedAwakeningActive = expectation.expectedAwakeningActive;
+    const expectedGarageRevealStageId = expectation.expectedGarageRevealStageId;
+    const expectedGarageRevealActive = expectation.expectedGarageRevealActive;
+    const expectedLastChangeLabel = expectation.expectedLastChangeLabel;
     const portalIds = renderFrame.map.portalIds;
     const progression = this.scene.getProgressionSnapshot();
     const worldStatus = this.scene.getWorldStatus();
@@ -573,6 +586,15 @@ export class GameApp extends SceneNode {
       awakeningActiveMatches:
         expectedAwakeningActive === undefined ||
         worldStatus.campaign.awakeningActive === expectedAwakeningActive,
+      garageRevealStageMatches:
+        !expectedGarageRevealStageId ||
+        worldStatus.campaign.garageRevealStageId === expectedGarageRevealStageId,
+      garageRevealActiveMatches:
+        expectedGarageRevealActive === undefined ||
+        worldStatus.campaign.garageRevealActive === expectedGarageRevealActive,
+      lastChangeLabelMatches:
+        !expectedLastChangeLabel ||
+        worldStatus.campaign.lastChangeLabel === expectedLastChangeLabel,
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -596,7 +618,10 @@ export class GameApp extends SceneNode {
         assertionEvidence.materialQuantityMatches &&
         assertionEvidence.progressionNoticeMatches &&
         assertionEvidence.awakeningStageMatches &&
-        assertionEvidence.awakeningActiveMatches,
+        assertionEvidence.awakeningActiveMatches &&
+        assertionEvidence.garageRevealStageMatches &&
+        assertionEvidence.garageRevealActiveMatches &&
+        assertionEvidence.lastChangeLabelMatches,
     });
     if (!assertion.passed) {
       const failedChecks = Object.entries(assertionEvidence)
@@ -627,6 +652,8 @@ export class GameApp extends SceneNode {
       dialogue,
       progressionNotice: worldStatus.progressionNotice,
       awakeningStageId: worldStatus.campaign.awakeningStageId,
+      garageRevealStageId: worldStatus.campaign.garageRevealStageId,
+      lastChangeLabel: worldStatus.campaign.lastChangeLabel,
       materialQuantities: progression.enchantment.materialQuantities,
       player: renderFrame.player,
       combatEnemy: renderFrame.combatEnemy,

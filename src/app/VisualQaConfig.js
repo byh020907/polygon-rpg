@@ -1,6 +1,7 @@
 import { FIRST_JOURNEY_CHECKPOINT_ID } from '../game/encounter/FirstJourneyProgress.js';
 import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../game/journey/FirstJourneyDungeonSignature.js';
 import { SCRAP_AWAKENING_STAGE } from '../game/campaign/ScrapAwakeningState.js';
+import { SCRAP_GARAGE_REVEAL_STAGE } from '../game/campaign/ScrapGarageRevealState.js';
 import {
   SCRAP_AWAKENING_MAP_ID,
   SCRAP_AWAKENING_REGION_ID,
@@ -204,6 +205,62 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-king-route-beacon',
       ]),
       expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
+  'scrap-garage-analysis': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 250,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+      expectedGarageRevealActive: true,
+      expectedLastChangeLabel: 'DEVICE ANALYSIS · FIVE SIGNALS',
+      expectedPatchIds: Object.freeze([
+        'scrap-device-recovered',
+        'scrapyard-owner-returned',
+        'scrapyard-device-analysis',
+      ]),
+      expectedItems: Object.freeze([
+        'scrapyard-owner-goggles',
+        'scrapyard-owner-ledger',
+        'scrapyard-owner-wrench',
+        'scrapyard-device-analysis-beam',
+        'scrapyard-analysis-device-core',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrapyard-wall-map-frame', 'garage-robot-brain-core']),
+    }),
+  }),
+  'scrap-garage-0': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 300,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+      expectedGarageRevealActive: false,
+      expectedLastChangeLabel: '5 REGIONS · 0/5 PARTS · ROBOT 0%',
+      expectedPatchIds: Object.freeze([
+        'scrapyard-owner-returned',
+        'scrapyard-operation-map-revealed',
+        'scrapyard-garage-opened',
+        'scrapyard-wall-map-interactive',
+      ]),
+      expectedItems: Object.freeze([
+        'scrapyard-wall-map-frame',
+        'scrapyard-wall-map-route',
+        'garage-robot-frame-torso',
+        'garage-robot-brain-core',
+        'garage-robot-zero-label',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'scrapyard-garage-door-left',
+        'scrapyard-garage-door-right',
+      ]),
     }),
   }),
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),

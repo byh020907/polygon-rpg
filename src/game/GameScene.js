@@ -57,15 +57,23 @@ import {
   toWorldTimeSnapshot,
 } from './world/WorldTimeState.js';
 import {
+  advanceScrapGarageReveal,
   advanceScrapAwakening,
   getScrapCampaignReadModel,
+  startScrapGarageReveal,
   startScrapAwakening,
   toScrapCampaignSnapshot,
 } from './campaign/ScrapCampaignState.js';
 import {
   SCRAP_AWAKENING_STAGE,
   assertScrapAwakeningStageId,
+  getScrapAwakeningPresentation,
 } from './campaign/ScrapAwakeningState.js';
+import {
+  SCRAP_GARAGE_REVEAL_STAGE,
+  assertScrapGarageRevealStageId,
+  getScrapGarageRevealPresentation,
+} from './campaign/ScrapGarageRevealState.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -342,8 +350,13 @@ function assertScrapAwakeningProfile(profile) {
     typeof profile.regionId !== 'string' ||
     typeof profile.roomId !== 'string' ||
     typeof profile.deviceEntityId !== 'string' ||
+    typeof profile.ownerEntityId !== 'string' ||
+    typeof profile.ownerConversationId !== 'string' ||
+    typeof profile.wallMapEntityId !== 'string' ||
     !Number.isFinite(profile.focusX) ||
-    typeof profile.getStageDurationSeconds !== 'function'
+    !Number.isFinite(profile.garageFocusX) ||
+    typeof profile.getStageDurationSeconds !== 'function' ||
+    typeof profile.getGarageStageDurationSeconds !== 'function'
   ) {
     throw new TypeError('GameScene에는 authored scrap awakening profile 주입이 필요합니다.');
   }
@@ -454,11 +467,16 @@ export class GameScene extends SceneNode {
           this.progressionSnapshot.scrapCampaign,
           this.scrapCampaignProfile,
         ).awakeningStageId,
+        scrapGarageRevealStageId: getScrapCampaignReadModel(
+          this.progressionSnapshot.scrapCampaign,
+          this.scrapCampaignProfile,
+        ).garageRevealStageId,
       },
     });
     this.renderFrameCreated = this.ownSignal(new Signal('renderFrameCreated'));
     this.roomChanged = this.ownSignal(new Signal('roomChanged'));
     this.progressionChanged = this.ownSignal(new Signal('progressionChanged'));
+    this.operationMapRequested = this.ownSignal(new Signal('operationMapRequested'));
     this.roomSceneNode = null;
     this.roomSceneConnections = [];
     this.statusNode = this.addChild(new GameStatusNode(this));
@@ -548,6 +566,10 @@ export class GameScene extends SceneNode {
         this.progressionSnapshot.scrapCampaign,
         this.scrapCampaignProfile,
       ).awakeningStageId,
+      scrapGarageRevealStageId: getScrapCampaignReadModel(
+        this.progressionSnapshot.scrapCampaign,
+        this.scrapCampaignProfile,
+      ).garageRevealStageId,
     });
     const mapSnapshot = this.mapRuntime.reset();
     const spawn = mapSnapshot.spawn?.position ?? { x: 270, y: 350 };
@@ -589,6 +611,7 @@ export class GameScene extends SceneNode {
     this.progressionNotice = `훈련 인장은 학습 조건, 원정 Gold는 장비·command 성장 비용입니다.`;
     this.recoveryNotice = '';
     this.scrapAwakeningElapsedSeconds = 0;
+    this.scrapGarageRevealElapsedSeconds = 0;
     this.storyInteractionOwner.reset();
     this.lastJumpSequence = 0;
     this.facing = mapSnapshot.spawn?.facing ?? 1;
@@ -647,13 +670,45 @@ export class GameScene extends SceneNode {
       this.scrapCampaignProfile,
     );
     const scrapCampaign = toScrapCampaignSnapshot(
-      { ...current, awakeningStageId: stageId },
+      {
+        ...current,
+        awakeningStageId: stageId,
+        garageRevealStageId:
+          stageId === SCRAP_AWAKENING_STAGE.COMPLETE
+            ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+            : SCRAP_GARAGE_REVEAL_STAGE.LOCKED,
+        lastChangeLabel: getScrapAwakeningPresentation(stageId).cue,
+      },
       this.scrapCampaignProfile,
     );
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       scrapCampaign,
     });
     this.scrapAwakeningElapsedSeconds = 0;
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return scrapCampaign;
+  }
+
+  setVisualQaScrapGarageRevealStage(stageId) {
+    assertScrapGarageRevealStageId(stageId);
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...current,
+        awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+        garageRevealStageId: stageId,
+        lastChangeLabel: getScrapGarageRevealPresentation(stageId).cue,
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
+    this.scrapGarageRevealElapsedSeconds = 0;
     this.syncScrapAwakeningWorldContext();
     this.statusNode.publish({ force: true });
     return scrapCampaign;
@@ -1123,9 +1178,11 @@ export class GameScene extends SceneNode {
   }
 
   syncScrapAwakeningWorldContext() {
+    const campaign = this.getScrapAwakeningReadModel();
     this.mapRuntime.setWorldContext({
       ...this.mapRuntime.getWorldContext(),
-      scrapAwakeningStageId: this.getScrapAwakeningReadModel().awakeningStageId,
+      scrapAwakeningStageId: campaign.awakeningStageId,
+      scrapGarageRevealStageId: campaign.garageRevealStageId,
     });
   }
 
@@ -1207,6 +1264,98 @@ export class GameScene extends SceneNode {
       });
     }
     return nextStageId !== SCRAP_AWAKENING_STAGE.COMPLETE;
+  }
+
+  commitScrapGarageReveal(transaction) {
+    if (!transaction.changed) return transaction;
+    const progressionTransaction = Object.freeze({
+      ...transaction,
+      snapshot: mergeProgressionSnapshot(this.progressionSnapshot, {
+        scrapCampaign: transaction.snapshot,
+      }),
+    });
+    this.scrapGarageRevealElapsedSeconds = 0;
+    this.commitProgression(progressionTransaction);
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return Object.freeze({ ...transaction, progressionSnapshot: this.progressionSnapshot });
+  }
+
+  tryStartScrapGarageReveal() {
+    const campaign = this.getScrapAwakeningReadModel();
+    if (
+      !this.isScrapAwakeningLocation() ||
+      campaign.garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+    ) {
+      return false;
+    }
+    const transaction = startScrapGarageReveal(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    if (!transaction.changed) return false;
+    this.progressionNotice = '고물상 주인 · 제어장치 분석 시작';
+    this.combatCommands.reset();
+    this.rollState = null;
+    this.verticalVelocity = 0;
+    this.isGrounded = true;
+    this.commitScrapGarageReveal(transaction);
+    this.combatCameraFeedback.trigger({ direction: -1, strength: 2.2, durationSeconds: 0.12 });
+    return true;
+  }
+
+  advanceScrapGarageRevealRuntime(deltaSeconds) {
+    const campaign = this.getScrapAwakeningReadModel();
+    if (!this.isScrapAwakeningLocation() || !campaign.garageRevealActive) return false;
+    this.scrapGarageRevealElapsedSeconds += deltaSeconds;
+    const durationSeconds = this.scrapAwakeningProfile.getGarageStageDurationSeconds(
+      campaign.garageRevealStageId,
+    );
+    if (this.scrapGarageRevealElapsedSeconds < durationSeconds) return true;
+    const transaction = advanceScrapGarageReveal(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    if (!transaction.changed) return false;
+    const nextReadModel = getScrapCampaignReadModel(
+      transaction.snapshot,
+      this.scrapCampaignProfile,
+    );
+    this.progressionNotice = nextReadModel.garageReveal.cue;
+    this.commitScrapGarageReveal(transaction);
+    if (
+      nextReadModel.garageRevealStageId === SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED ||
+      nextReadModel.garageRevealStageId === SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED
+    ) {
+      this.combatCameraFeedback.trigger({
+        direction:
+          nextReadModel.garageRevealStageId === SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED ? -1 : 1,
+        strength:
+          nextReadModel.garageRevealStageId === SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED ? 2.8 : 4.2,
+        durationSeconds: 0.14,
+      });
+    }
+    return nextReadModel.garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.COMPLETE;
+  }
+
+  tryRequestOperationMapFromWorld() {
+    const campaign = this.getScrapAwakeningReadModel();
+    if (!this.isScrapAwakeningLocation() || !campaign.garageRevealComplete) return false;
+    const wallMap = this.mapRuntime
+      .getResolvedSnapshot()
+      .entities.find((entity) => entity.id === this.scrapAwakeningProfile.wallMapEntityId);
+    if (!wallMap?.position) return false;
+    const interactionRange = wallMap.interactionRange ?? 64;
+    if (
+      Math.hypot(this.position.x - wallMap.position.x, this.position.y - wallMap.position.y) >
+      interactionRange
+    ) {
+      return false;
+    }
+    this.operationMapRequested.emit(
+      Object.freeze({ source: 'scrapyard-wall-map', campaign: this.getScrapAwakeningReadModel() }),
+    );
+    return true;
   }
 
   emitDurableProgressionChanged() {
@@ -1390,7 +1539,9 @@ export class GameScene extends SceneNode {
     const desiredX =
       this.isScrapAwakeningLocation() && awakening.awakeningActive
         ? this.scrapAwakeningProfile.focusX
-        : this.position.x;
+        : this.isScrapAwakeningLocation() && awakening.garageRevealActive
+          ? this.scrapAwakeningProfile.garageFocusX
+          : this.position.x;
     const targetX = Math.max(minimumX, Math.min(maximumX, desiredX));
     const targetY = bounds.y + 270;
     const followAmount = 1 - Math.exp(-10 * deltaSeconds);
@@ -2279,6 +2430,7 @@ export class GameScene extends SceneNode {
     this.combatEvents.update(deltaSeconds);
     this.storyInteractionOwner.advance(deltaSeconds, this.getStoryInteractionContext());
     this.advanceScrapAwakeningRuntime(deltaSeconds);
+    this.advanceScrapGarageRevealRuntime(deltaSeconds);
     if (this.hitStopSeconds > 0) {
       this.hitStopSeconds = Math.max(0, this.hitStopSeconds - deltaSeconds);
       if (this.hitStopSeconds === 0 && this.pendingPlayerKnockbackX !== 0) {
@@ -2319,7 +2471,8 @@ export class GameScene extends SceneNode {
       this.playerHitstunSeconds > 0 ||
       this.playerBlockstunSeconds > 0 ||
       this.playerHealth === 0 ||
-      this.getScrapAwakeningReadModel().awakeningActive;
+      this.getScrapAwakeningReadModel().awakeningActive ||
+      this.getScrapAwakeningReadModel().garageRevealActive;
     const preUpdateCombatState = this.combatCommands.snapshot();
     const counterInputLocked =
       preUpdateCombatState.justGuardCounterReady || preUpdateCombatState.id === 'shieldBash';
@@ -2345,6 +2498,9 @@ export class GameScene extends SceneNode {
         ? this.storyInteractionOwner.handleJump(this.getStoryInteractionContext())
         : null;
     if (dialogueResult?.conversationId) {
+      if (dialogueResult.conversationId === this.scrapAwakeningProfile.ownerConversationId) {
+        this.tryStartScrapGarageReveal();
+      }
       const transcript = resolveFirstJourneyConversationTranscripts([
         dialogueResult.conversationId,
       ])[0];
@@ -2360,8 +2516,16 @@ export class GameScene extends SceneNode {
       }
     }
     const dialogueConsumed = dialogueResult?.consumed === true;
+    const wallMapConsumed =
+      jumpIssued && !awakeningConsumed && !dialogueConsumed
+        ? this.tryRequestOperationMapFromWorld()
+        : false;
     const portalStarted =
-      jumpIssued && !awakeningConsumed && !dialogueConsumed && this.tryPortalTransition();
+      jumpIssued &&
+      !awakeningConsumed &&
+      !dialogueConsumed &&
+      !wallMapConsumed &&
+      this.tryPortalTransition();
     if (this.mapRuntime.getTransition() === null && guardEdge) this.tryStartRoll(horizontal);
     const isTransitioning = this.mapRuntime.getTransition() !== null;
     const isRolling = this.rollState !== null;
@@ -2372,6 +2536,7 @@ export class GameScene extends SceneNode {
       !portalStarted &&
       !awakeningConsumed &&
       !dialogueConsumed &&
+      !wallMapConsumed &&
       jumpIssued &&
       this.isGrounded &&
       currentCombatState.canJump
@@ -2383,7 +2548,8 @@ export class GameScene extends SceneNode {
       this.isGrounded = false;
     }
     const combatState = this.combatCommands.update(deltaSeconds * animationSpeed, inputSnapshot, {
-      acceptCommands: !isTransitioning && !isRolling && !controlsLocked && !awakeningConsumed,
+      acceptCommands:
+        !isTransitioning && !isRolling && !controlsLocked && !awakeningConsumed && !wallMapConsumed,
       isAirborne: !this.isGrounded,
       allowGuard: this.isGrounded,
       staminaDeltaSeconds: deltaSeconds,
@@ -2595,12 +2761,19 @@ export class GameScene extends SceneNode {
     const characterBoardActive = Boolean(room.characterBoardManifest);
     const scrapAwakeningLocation =
       map.id === this.scrapAwakeningProfile.mapId && roomId === this.scrapAwakeningProfile.roomId;
+    const scrapIntroPresentation =
+      scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+        ? scrapCampaign.garageReveal
+        : scrapCampaign.awakening;
     const story = scrapAwakeningLocation
       ? Object.freeze({
-          beatId: `scrap-awakening:${scrapCampaign.awakeningStageId}`,
-          title: scrapCampaign.awakening.title,
-          briefing: scrapCampaign.awakening.briefing,
-          nextObjective: scrapCampaign.awakening.objective,
+          beatId:
+            scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+              ? `scrap-garage-reveal:${scrapCampaign.garageRevealStageId}`
+              : `scrap-awakening:${scrapCampaign.awakeningStageId}`,
+          title: scrapIntroPresentation.title,
+          briefing: scrapIntroPresentation.briefing,
+          nextObjective: scrapIntroPresentation.objective,
         })
       : characterBoardActive
         ? Object.freeze({
@@ -2767,8 +2940,8 @@ export class GameScene extends SceneNode {
       encounterHint = 'DESIGN COMPARISON · FRONT / SIDE / ACTION';
     }
     if (scrapAwakeningLocation) {
-      objective = scrapCampaign.awakening.objective;
-      encounterHint = scrapCampaign.awakening.cue;
+      objective = scrapIntroPresentation.objective;
+      encounterHint = scrapIntroPresentation.cue;
     }
 
     const nextSkillLevel = Math.min(
@@ -2815,17 +2988,25 @@ export class GameScene extends SceneNode {
         : scrapAwakeningLocation
           ? scrapCampaign.awakeningActive
             ? '고철 대왕 각성 연출'
-            : scrapCampaign.deadlineRevealed
-              ? '각성 완료 · D-30'
-              : '첫 고철 수거 의뢰'
+            : scrapCampaign.garageRevealActive
+              ? '고물상 분석 · 차고 개방'
+              : scrapCampaign.garageRevealComplete
+                ? '작전 준비 완료 · 로봇 0%'
+                : scrapCampaign.deadlineRevealed
+                  ? '각성 완료 · D-30 · 고물상 복귀'
+                  : '첫 고철 수거 의뢰'
           : location.regionId === 'glasswind-region' ||
               (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
             ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
             : (phaseLabels[journey.phase] ?? journey.phase),
       wardLabel: scrapAwakeningLocation
-        ? scrapCampaign.deadlineRevealed
-          ? '제어장치 · 고철 대왕 두뇌 결합'
-          : '제어장치 · 폐병기 흉곽 안'
+        ? scrapCampaign.garageRevealComplete
+          ? '제어장치 · 우리 로봇 두뇌 장착'
+          : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+            ? '회수한 제어장치 · 고물상 분석 대기'
+            : scrapCampaign.deadlineRevealed
+              ? '회수한 제어장치 · 보유 중'
+              : '제어장치 · 폐병기 흉곽 안'
         : location.regionId === 'glasswind-region' ||
             (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
           ? regionExpansion.glasswindBridgeStable
@@ -2840,7 +3021,7 @@ export class GameScene extends SceneNode {
       timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
       deadlineLabel: scrapCampaign.deadlineLabel,
       campaign: scrapCampaign,
-      operationMapAvailable: !scrapAwakeningLocation,
+      operationMapAvailable: !scrapAwakeningLocation || scrapCampaign.garageRevealComplete,
       characterBoard: room.characterBoardManifest
         ? Object.freeze({ active: true, ...room.characterBoardManifest })
         : Object.freeze({

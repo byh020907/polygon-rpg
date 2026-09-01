@@ -1,4 +1,8 @@
 import { SCRAP_AWAKENING_STAGE } from '../campaign/ScrapAwakeningState.js';
+import {
+  SCRAP_GARAGE_REVEAL_STAGE,
+  SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
+} from '../campaign/ScrapGarageRevealState.js';
 import { defineMap } from '../map/MapDefinition.js';
 
 export const SCRAP_AWAKENING_MAP_ID = 'scrap-awakening-commission';
@@ -6,6 +10,9 @@ export const SCRAP_AWAKENING_REGION_ID = 'scrap-waste-edge';
 export const SCRAP_AWAKENING_ROOM_ID = 'abandoned-weapon-yard';
 export const SCRAP_AWAKENING_DEVICE_ENTITY_ID = 'scrap-control-device';
 export const SCRAP_AWAKENING_FOCUS_X = 980;
+export const SCRAP_GARAGE_REVEAL_FOCUS_X = 300;
+export const SCRAPYARD_OWNER_ENTITY_ID = 'scrapyard-owner-analysis';
+export const SCRAPYARD_WALL_MAP_ENTITY_ID = 'scrapyard-wall-operation-map';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -101,6 +108,169 @@ const renderItems = [
   }),
   item('salvage-crane-hook', polygon(502, 265, 14, 18, 7, Math.PI / 2), '#c68443', {
     order: 4,
+  }),
+  item('scrapyard-workshop-wall', rectangle(18, 184, 550, 242), '#3b3731', {
+    stroke: '#171817',
+    lineWidth: 4,
+    order: 5,
+    label: '고물상 내부 작업장',
+    role: 'scrapyard-workshop',
+  }),
+  item('scrapyard-workshop-roof', rectangle(4, 164, 578, 26), '#7a553a', {
+    stroke: '#28201b',
+    lineWidth: 4,
+    order: 6,
+  }),
+  item('scrapyard-workbench', rectangle(74, 350, 188, 34), '#76553c', {
+    stroke: '#2d251f',
+    lineWidth: 3,
+    order: 12,
+    label: '제어장치 분석 작업대',
+  }),
+  item('scrapyard-owner-torso', rectangle(184, 286, 28, 72), '#635748', {
+    stroke: '#25201d',
+    lineWidth: 3,
+    order: 18,
+    enabled: false,
+    label: '고물상 주인',
+    role: 'scrapyard-owner',
+  }),
+  item('scrapyard-owner-head', polygon(198, 276, 14, 16, 8), '#c7a77e', {
+    stroke: '#332820',
+    lineWidth: 2,
+    order: 19,
+    enabled: false,
+    role: 'welding-goggles',
+  }),
+  item('scrapyard-owner-goggles', rectangle(185, 269, 27, 8), '#dfc37a', {
+    stroke: '#392e21',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    role: 'welding-goggles',
+  }),
+  item('scrapyard-owner-ledger', rectangle(157, 310, 22, 30), '#d2bc83', {
+    stroke: '#443a2c',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    role: 'ledger',
+  }),
+  item(
+    'scrapyard-owner-wrench',
+    [
+      { x: 218, y: 306 },
+      { x: 228, y: 300 },
+      { x: 254, y: 342 },
+      { x: 244, y: 348 },
+    ],
+    '#a8aaa5',
+    {
+      stroke: '#303331',
+      lineWidth: 2,
+      order: 20,
+      enabled: false,
+      role: 'large-wrench',
+    },
+  ),
+  item('scrapyard-device-analysis-beam', rectangle(104, 316, 66, 6), '#75d6c4', {
+    stroke: '#245e5b',
+    opacity: 0.76,
+    order: 22,
+    enabled: false,
+    label: '제어장치 분석 신호',
+    role: 'analysis-signal',
+  }),
+  item('scrapyard-analysis-device-core', polygon(132, 310, 12, 16, 6, Math.PI / 6), '#a7fff0', {
+    stroke: '#245e5b',
+    lineWidth: 3,
+    order: 23,
+    enabled: false,
+    label: '회수한 제어장치 · 분석 중',
+    role: 'control-device-analysis',
+  }),
+  item('scrapyard-wall-map-frame', rectangle(270, 214, 126, 92), '#d8c18a', {
+    stroke: '#563f2d',
+    lineWidth: 4,
+    order: 16,
+    enabled: false,
+    label: '왕국 작전 지도',
+    role: 'operation-map',
+  }),
+  item(
+    'scrapyard-wall-map-route',
+    [
+      { x: 286, y: 278 },
+      { x: 304, y: 242 },
+      { x: 330, y: 264 },
+      { x: 350, y: 232 },
+      { x: 378, y: 272 },
+      { x: 386, y: 288 },
+      { x: 360, y: 278 },
+      { x: 340, y: 248 },
+      { x: 314, y: 282 },
+    ],
+    '#e47f49',
+    {
+      stroke: '#7d3f2a',
+      lineWidth: 2,
+      order: 17,
+      enabled: false,
+      label: '다섯 지역과 수도 진로',
+      role: 'operation-route',
+    },
+  ),
+  item('scrapyard-garage-door-left', rectangle(410, 214, 72, 212), '#596166', {
+    stroke: '#24292b',
+    lineWidth: 4,
+    order: 24,
+    label: '차고문 왼쪽',
+    role: 'garage-door',
+  }),
+  item('scrapyard-garage-door-right', rectangle(482, 214, 72, 212), '#4c555a', {
+    stroke: '#24292b',
+    lineWidth: 4,
+    order: 24,
+    label: '차고문 오른쪽',
+    role: 'garage-door',
+  }),
+  item('garage-robot-frame-torso', polygon(482, 296, 40, 62, 8, Math.PI / 8), '#626b6d', {
+    stroke: '#252a2b',
+    lineWidth: 4,
+    order: 21,
+    enabled: false,
+    label: '미완성 거대 로봇 골격',
+    role: 'robot-frame-zero-percent',
+  }),
+  item('garage-robot-frame-leg-left', rectangle(448, 348, 18, 72), '#737b79', {
+    stroke: '#292d2c',
+    lineWidth: 3,
+    order: 21,
+    enabled: false,
+    role: 'empty-leg-mount',
+  }),
+  item('garage-robot-frame-leg-right', rectangle(498, 348, 18, 72), '#737b79', {
+    stroke: '#292d2c',
+    lineWidth: 3,
+    order: 21,
+    enabled: false,
+    role: 'empty-leg-mount',
+  }),
+  item('garage-robot-brain-core', polygon(482, 284, 14, 18, 6, Math.PI / 6), '#a7fff0', {
+    stroke: '#245e5b',
+    lineWidth: 3,
+    order: 23,
+    enabled: false,
+    label: '회수한 제어장치 · 거대 로봇 두뇌',
+    role: 'robot-brain',
+  }),
+  item('garage-robot-zero-label', rectangle(430, 194, 104, 12), '#e4bd64', {
+    stroke: '#5a4624',
+    lineWidth: 2,
+    order: 23,
+    enabled: false,
+    label: 'ROBOT 0% · 0/5 PARTS',
+    role: 'completion-zero',
   }),
   item('wreck-hull-lower', polygon(986, 374, 206, 72, 10, Math.PI / 10), '#504d49', {
     stroke: '#252729',
@@ -224,6 +394,20 @@ const activatedStages = [
 const eyeStages = activatedStages.slice(1);
 const assemblyStages = activatedStages.slice(2);
 const deadlineStages = activatedStages.slice(3);
+const ownerVisibleStages = [SCRAP_AWAKENING_STAGE.COMPLETE];
+const deviceAnalysisStages = [
+  SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+  SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
+];
+const operationMapVisibleStages = [
+  SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
+  SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+  SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+];
+const garageOpenStages = [
+  SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+  SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+];
 
 export const SCRAP_AWAKENING_MAP = defineMap({
   id: SCRAP_AWAKENING_MAP_ID,
@@ -276,6 +460,30 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               interactionRange: 72,
               label: '반짝이는 제어장치',
             },
+            {
+              id: SCRAPYARD_OWNER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 198, y: 354 },
+              interactionRange: 82,
+              speaker: '고물상 주인',
+              conversationId: SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
+              conversationTitle: '제어장치 분석과 차고 개방',
+              lines: [
+                '퇴직했는데 또 야근이라니. 그 반짝이는 장치부터 작업대에 올려 봐.',
+                '이건 고철 대왕의 부품이 아니라 왕국 전역 기계 신호를 읽는 제어 두뇌야.',
+                '벽 지도를 켜고 차고문도 열자. 빈 골격부터 채우면 아직 늦지 않았어.',
+              ],
+              presentationProfileId: 'scrapyard-owner',
+              enabled: false,
+            },
+            {
+              id: SCRAPYARD_WALL_MAP_ENTITY_ID,
+              kind: 'operation-map-interaction',
+              position: { x: 334, y: 354 },
+              interactionRange: 76,
+              label: '왕국 작전 지도',
+              enabled: false,
+            },
           ],
           triggers: [],
           portals: [],
@@ -319,6 +527,57 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       priority: 40,
       when: { fact: 'scrapAwakeningStageId', in: deadlineStages },
       operations: [{ op: 'set-enabled', target: 'scrap-king-route-beacon', value: true }],
+    },
+    {
+      id: 'scrapyard-owner-returned',
+      priority: 50,
+      when: { fact: 'scrapAwakeningStageId', in: ownerVisibleStages },
+      operations: [
+        { op: 'set-enabled', target: 'scrapyard-owner-torso', value: true },
+        { op: 'set-enabled', target: 'scrapyard-owner-head', value: true },
+        { op: 'set-enabled', target: 'scrapyard-owner-goggles', value: true },
+        { op: 'set-enabled', target: 'scrapyard-owner-ledger', value: true },
+        { op: 'set-enabled', target: 'scrapyard-owner-wrench', value: true },
+        { op: 'set-enabled', target: SCRAPYARD_OWNER_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-device-analysis',
+      priority: 60,
+      when: { fact: 'scrapGarageRevealStageId', in: deviceAnalysisStages },
+      operations: [
+        { op: 'set-enabled', target: 'scrapyard-device-analysis-beam', value: true },
+        { op: 'set-enabled', target: 'scrapyard-analysis-device-core', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-operation-map-revealed',
+      priority: 70,
+      when: { fact: 'scrapGarageRevealStageId', in: operationMapVisibleStages },
+      operations: [
+        { op: 'set-enabled', target: 'scrapyard-wall-map-frame', value: true },
+        { op: 'set-enabled', target: 'scrapyard-wall-map-route', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-garage-opened',
+      priority: 80,
+      when: { fact: 'scrapGarageRevealStageId', in: garageOpenStages },
+      operations: [
+        { op: 'set-enabled', target: 'scrapyard-garage-door-left', value: false },
+        { op: 'set-enabled', target: 'scrapyard-garage-door-right', value: false },
+        { op: 'set-enabled', target: 'garage-robot-frame-torso', value: true },
+        { op: 'set-enabled', target: 'garage-robot-frame-leg-left', value: true },
+        { op: 'set-enabled', target: 'garage-robot-frame-leg-right', value: true },
+        { op: 'set-enabled', target: 'garage-robot-brain-core', value: true },
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-wall-map-interactive',
+      priority: 90,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [{ op: 'set-enabled', target: SCRAPYARD_WALL_MAP_ENTITY_ID, value: true }],
     },
   ],
 });

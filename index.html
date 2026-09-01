@@ -109,6 +109,7 @@
         <div class="game-viewport">
           <canvas
             id="game-canvas"
+            tabindex="0"
             aria-label="고철 대왕 D-30 캠페인 게임 화면"
             aria-describedby="game-status-surface"
           ></canvas>
@@ -159,6 +160,17 @@
             <small>고철 대왕 수도 진로 확정</small>
             <strong>D-30</strong>
             <span>수도 도착까지 30일</span>
+          </section>
+          <section
+            class="scrap-garage-reveal"
+            x-show="campaign.garageRevealStageId === 'garage-opened'"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <small>GARAGE ASSEMBLY · 제어장치 두뇌 장착</small>
+            <strong>거대 로봇 완성도 0%</strong>
+            <span>0/5 필수 부품 · 벽 지도에서 첫 지역을 선택하세요</span>
           </section>
           <section
             class="character-design-board-legend"

@@ -88,7 +88,7 @@ export function getScrapAwakeningPresentation(stageId) {
     },
     [SCRAP_AWAKENING_STAGE.COMPLETE]: {
       title: '각성 직후',
-      briefing: '제어장치는 고철 대왕의 두뇌가 되었습니다. 고물상 주인에게 돌아가야 합니다.',
+      briefing: '회수한 제어장치가 고철 대왕을 깨웠습니다. 장치를 들고 고물상 주인에게 돌아갑니다.',
       objective: '조작 복귀 · 고물상 주인에게 제어장치와 고철 대왕을 보고하세요.',
       cue: 'CONTROL RESTORED · D-30',
     },

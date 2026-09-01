@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
@@ -47,6 +48,10 @@ function itemIds(scene) {
 
 function stage(scene) {
   return scene.getWorldStatus().campaign.awakeningStageId;
+}
+
+function garageStage(scene) {
+  return scene.getWorldStatus().campaign.garageRevealStageId;
 }
 
 const scene = createAwakeningScene();
@@ -112,8 +117,10 @@ assert.equal(shakeObserved, true, '눈 점등·부품 결합 경계는 camera sh
 const completeStatus = scene.getWorldStatus();
 assert.equal(completeStatus.campaign.deadlineRevealed, true);
 assert.equal(completeStatus.campaign.hudLabel, 'Day 1 · 아침 · D-30');
-assert.equal(completeStatus.journeyLabel, '각성 완료 · D-30');
-assert.match(completeStatus.objective, /조작 복귀/);
+assert.equal(completeStatus.journeyLabel, '각성 완료 · D-30 · 고물상 복귀');
+assert.equal(garageStage(scene), SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY);
+assert.match(completeStatus.objective, /왼쪽 고물상/);
+assert.match(completeStatus.wardLabel, /분석 대기/);
 assert.ok(itemIds(scene).includes('scrap-king-eye-left'));
 assert.ok(itemIds(scene).includes('scrap-king-shoulder-left'));
 assert.ok(itemIds(scene).includes('scrap-king-route-beacon'));
@@ -145,6 +152,141 @@ assert.ok(
 completedReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
 assert.equal(stage(completedReload), SCRAP_AWAKENING_STAGE.COMPLETE);
 assert.equal(completedReload.isGrounded, false, '완료 뒤 ↑는 다시 Player jump여야 합니다.');
+
+for (let tick = 0; tick < 300 && scene.position.x > 255; tick += 1) {
+  scene.update(STEP_SECONDS, input({ left: true }));
+}
+assert.ok(scene.position.x <= 255, '각성지에서 왼쪽 고물상 주인에게 직접 돌아갈 수 있어야 합니다.');
+const durableGarageStages = [];
+scene.progressionChanged.connect((snapshot) => {
+  durableGarageStages.push(snapshot.scrapCampaign.garageRevealStageId);
+});
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 2 }));
+let ownerDialogue = scene.getWorldStatus().dialogue;
+assert.equal(ownerDialogue.active, true);
+assert.equal(ownerDialogue.speaker, '고물상 주인');
+assert.equal(ownerDialogue.conversationId, 'scrapyard-owner-analysis');
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some(
+      (entity) =>
+        entity.id === 'scrapyard-owner-analysis' &&
+        entity.presentationProfileId === 'scrapyard-owner',
+    ),
+  '고물상 주인은 authored 직업 silhouette profile을 사용해야 합니다.',
+);
+for (let jumpSequence = 3; jumpSequence <= 8; jumpSequence += 1) {
+  scene.update(STEP_SECONDS, input({ jump: true, jumpSequence }));
+}
+assert.equal(garageStage(scene), SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS);
+assert.equal(scene.getWorldStatus().dialogue.active, false);
+assert.ok(itemIds(scene).includes('scrapyard-analysis-device-core'));
+assert.ok(itemIds(scene).includes('scrapyard-device-analysis-beam'));
+const garageRevealStartSnapshot = scene.getProgressionSnapshot();
+const garageLockedX = scene.position.x;
+for (let tick = 0; tick < 60; tick += 1) {
+  scene.update(STEP_SECONDS, input({ right: true, strongAttack: true, strongAttackSequence: 2 }));
+}
+assert.equal(scene.position.x, garageLockedX, '차고 reveal 중 이동 입력은 잠겨야 합니다.');
+assert.equal(
+  scene.combatCommands.snapshot().id,
+  'idle',
+  '차고 reveal 중 공격은 시작되면 안 됩니다.',
+);
+assert.ok(
+  scene.cameraPosition.x < 700,
+  '차고 reveal camera는 고물상 작업대 쪽으로 이동해야 합니다.',
+);
+
+const observedGarageStages = [garageStage(scene)];
+let garageShakeObserved = false;
+for (
+  let tick = 0;
+  tick < 1_200 && garageStage(scene) !== SCRAP_GARAGE_REVEAL_STAGE.COMPLETE;
+  tick += 1
+) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+  const currentStage = garageStage(scene);
+  if (observedGarageStages.at(-1) !== currentStage) observedGarageStages.push(currentStage);
+  const cameraOffset = scene.combatCameraFeedback.snapshot();
+  if (Math.abs(cameraOffset.x) > 0.01 || Math.abs(cameraOffset.y) > 0.01) {
+    garageShakeObserved = true;
+  }
+}
+assert.deepEqual(observedGarageStages, [
+  SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+  SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
+  SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+  SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+]);
+assert.deepEqual(
+  durableGarageStages,
+  [
+    SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+    SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
+    SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+    SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+  ],
+  '차고 reveal 각 stage 경계는 autosave용 durable progression event를 내야 합니다.',
+);
+assert.equal(garageShakeObserved, true, '지도 점등·차고 개방 경계는 camera shake를 남겨야 합니다.');
+const garageCompleteStatus = scene.getWorldStatus();
+assert.equal(garageCompleteStatus.operationMapAvailable, true);
+assert.equal(garageCompleteStatus.campaign.completionPercent, 0);
+assert.equal(garageCompleteStatus.journeyLabel, '작전 준비 완료 · 로봇 0%');
+assert.equal(garageCompleteStatus.wardLabel, '제어장치 · 우리 로봇 두뇌 장착');
+assert.match(garageCompleteStatus.objective, /벽 지도/);
+for (const itemId of [
+  'scrapyard-wall-map-frame',
+  'scrapyard-wall-map-route',
+  'garage-robot-frame-torso',
+  'garage-robot-brain-core',
+  'garage-robot-zero-label',
+]) {
+  assert.ok(itemIds(scene).includes(itemId), `${itemId}가 차고 reveal 뒤 보여야 합니다.`);
+}
+assert.ok(!itemIds(scene).includes('scrapyard-analysis-device-core'));
+assert.ok(!itemIds(scene).includes('scrapyard-garage-door-left'));
+
+let operationMapRequest = null;
+scene.operationMapRequested.connect((request) => {
+  operationMapRequest = request;
+});
+for (let tick = 0; tick < 40 && scene.position.x < 300; tick += 1) {
+  scene.update(STEP_SECONDS, input({ right: true }));
+}
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 9 }));
+assert.equal(operationMapRequest?.source, 'scrapyard-wall-map');
+assert.equal(operationMapRequest?.campaign.completionPercent, 0);
+assert.equal(scene.isGrounded, true, '벽 지도 상호작용은 Player jump를 억제해야 합니다.');
+
+const garageResumed = createAwakeningScene({
+  progressionSnapshot: garageRevealStartSnapshot,
+  x: 240,
+});
+assert.equal(garageStage(garageResumed), SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS);
+assert.ok(itemIds(garageResumed).includes('scrapyard-analysis-device-core'));
+for (let tick = 0; tick < 220; tick += 1) garageResumed.update(STEP_SECONDS, EMPTY_INPUT);
+assert.notEqual(
+  garageStage(garageResumed),
+  SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+  '저장된 차고 reveal stage는 reload 뒤 해당 경계부터 결정적으로 재생되어야 합니다.',
+);
+
+const garageCompletedReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+  x: 300,
+});
+assert.equal(garageStage(garageCompletedReload), SCRAP_GARAGE_REVEAL_STAGE.COMPLETE);
+assert.equal(garageCompletedReload.getWorldStatus().operationMapAvailable, true);
+assert.ok(itemIds(garageCompletedReload).includes('garage-robot-brain-core'));
+assert.ok(
+  garageCompletedReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrapyard-wall-operation-map'),
+  '완료 reload 뒤 벽 지도 interaction이 유지되어야 합니다.',
+);
 
 const keyboardScene = createAwakeningScene();
 const keyboard = new KeyboardInputAdapter({ isActive: () => true });
@@ -184,6 +326,9 @@ console.log(
       'control-restored-after-complete',
       'stage-boundary-reload-resume',
       'completed-reload-no-retrigger',
+      'owner-dialogue-analysis-map-garage-zero-percent-sequence',
+      'garage-reveal-input-lock-camera-and-reload-resume',
+      'wall-map-operation-command-and-completed-reload',
       'keyboard-touch-interaction-parity',
     ],
   }),

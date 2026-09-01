@@ -9,6 +9,7 @@ function createBufferedUiBridge(uiBridge) {
     'setWorldStatus',
     'setDialoguePresentation',
     'setSaveStatus',
+    'requestOperationMap',
   ]);
   const bridge = { snapshot: () => uiBridge.snapshot() };
   for (const name of writerNames) {

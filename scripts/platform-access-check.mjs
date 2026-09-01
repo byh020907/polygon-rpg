@@ -129,6 +129,9 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /x-text="campaign\.hudLabel"/);
   assert.match(html, /class="scrap-awakening-deadline"[\s\S]*role="status"/);
   assert.match(html, /x-show="campaign\.awakeningStageId === 'deadline-revealed'"/);
+  assert.match(html, /id="game-canvas"[\s\S]*tabindex="0"/);
+  assert.match(html, /class="scrap-garage-reveal"[\s\S]*role="status"/);
+  assert.match(html, /거대 로봇 완성도 0%/);
   assert.match(html, /x-show="operationMapAvailable"/);
   assert.match(html, /id="debug-panel-title"/);
   assert.match(html, /class="debug-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
@@ -373,6 +376,7 @@ function verifySamePageGameApplicationReplacement() {
     setWorldStatus: (value) => uiWrites.push(['world', value]),
     setDialoguePresentation: (value) => uiWrites.push(['dialogue', value]),
     setSaveStatus: (value) => uiWrites.push(['save', value]),
+    requestOperationMap: () => uiWrites.push(['operation-map-request']),
   };
   application.connectUi(uiBridge);
 
