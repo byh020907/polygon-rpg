@@ -64,7 +64,7 @@ const regions = [
     event: { costSegments: 9, extensionSegments: 8, label: '붕괴 광산 구조와 굴착기 인수' },
     eventStages: eventStages('abandoned-mine', {
       'npc-briefing': '오른쪽 구조 현황판에서 붕괴 범위, 9구간 비용과 성공 연장을 확인하세요.',
-      'facility-observed': '오른쪽 구조 갱도로 들어가 수거 유닛을 제거하고 작업자 길을 확보하세요.',
+      'facility-observed': '오른쪽 구조 갱도로 들어가 선점 수거반을 물리고 작업자 길을 확보하세요.',
       'journey-combat': '확보한 갱도 오른쪽에서 굴착기 작업장으로 이동해 Boss를 제압하세요.',
       'boss-defeated': '작업장 왼쪽에서 광부와 새 갱도 버팀목을 체결하세요.',
       'replacement-complete': '보행식 굴착기 본체를 조사해 하체·구동부를 분리하세요.',
@@ -90,7 +90,7 @@ const regions = [
     event: { costSegments: 13, extensionSegments: 12, label: '조선소 탈환과 마지막 선박 수리' },
     eventStages: eventStages('harbor-shipyard', {
       'npc-briefing': '오른쪽 도크 현황판에서 점거 범위, 13구간 비용과 성공 연장을 확인하세요.',
-      'facility-observed': '점거된 건선거로 들어가 수거 유닛을 제거하고 선박 수리선을 확보하세요.',
+      'facility-observed': '점거된 건선거로 들어가 선점 수거반을 물리고 선박 수리선을 확보하세요.',
       'journey-combat': '확보한 건선거 끝에서 쌍둥이 크레인 부두로 이동해 Boss를 제압하세요.',
       'boss-defeated': '조선공과 마지막 선박의 외판 수리를 끝내세요.',
       'replacement-complete': '쌍둥이 크레인의 압력을 빼고 유압 장치를 분리하세요.',
@@ -144,7 +144,7 @@ const regions = [
     eventStages: eventStages('snow-trade-road', {
       'npc-briefing': '오른쪽 운행 현황판에서 적설 구간, 13구간 비용과 성공 연장을 확인하세요.',
       'facility-observed':
-        '눈에 막힌 옛 터널로 들어가 열선 케이블을 훔치는 수거 유닛을 제거하세요.',
+        '눈에 막힌 옛 터널로 들어가 열선 케이블을 훔치는 길목 수거반을 물리세요.',
       'journey-combat':
         '개통 신호를 따라 제설 열차 대피선으로 이동해 폭주 기관차 Boss를 제압하세요.',
       'boss-defeated': '열차 승무원과 옛 터널의 열선·신호 설비를 복구해 산길을 대체하세요.',

@@ -687,7 +687,7 @@ assert.deepEqual(mineFlowScene.mapRuntime.getActiveLocation(), {
 });
 assert.equal(
   mineFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'mine-tunnel-collector',
+  'mine-claim-jacker',
 );
 mineFlowScene.enterTree();
 mineFlowScene.roomSceneNode.encounter.completeForVisualQa();
@@ -849,7 +849,7 @@ shipyardJumpSequence += 1;
 finishPortalTransition(shipyardFlowScene);
 assert.equal(
   shipyardFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'shipyard-drydock-collector',
+  'dock-salvage-raider',
 );
 shipyardFlowScene.enterTree();
 shipyardFlowScene.roomSceneNode.encounter.completeForVisualQa();
@@ -1258,7 +1258,7 @@ snowJumpSequence += 1;
 finishPortalTransition(snowFlowScene);
 assert.equal(
   snowFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'snow-tunnel-collector',
+  'snow-route-raider',
 );
 snowFlowScene.enterTree();
 snowFlowScene.roomSceneNode.encounter.completeForVisualQa();
@@ -1280,7 +1280,7 @@ assert.equal(
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'snow-tunnel-collector'),
   false,
-  '옛 터널 전투 완료 reload는 열선 수거 유닛을 되살리면 안 됩니다.',
+  '옛 터널 전투 완료 reload는 길목 수거반을 되살리면 안 됩니다.',
 );
 assert.ok(
   snowMidReload.mapRuntime

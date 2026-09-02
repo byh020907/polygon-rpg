@@ -97,7 +97,9 @@ assert.equal(qaRequest.scenario.combatScenarioId, 'combat-hit');
 assert.equal(qaRequest.scenario.x, 640);
 assert.equal(qaRequest.scenario.expectation.expectedEvent, 'hit');
 assert.ok(qaRequest.scenario.expectation.expectedItems.includes('mine-trapped-worker-coat'));
-assert.ok(qaRequest.scenario.expectation.expectedItems.includes('combat-enemy-collector-eye'));
+assert.ok(
+  qaRequest.scenario.expectation.expectedItems.includes('combat-enemy-human-salvage-cutter'),
+);
 
 assert.equal(
   createSceneArtDirectionReadModel(SCRAP_ART_DIRECTION_PROFILE, {

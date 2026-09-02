@@ -125,6 +125,32 @@ function headgearItems(profile, view, centerX, headY, headRadius, lean, order) {
       ),
     ];
   }
+  if (profile.id === 'mine-claim-jacker') {
+    return [
+      item(`${id}-hood`, rectangle(left - 2, top + 1, width + 4, 7), '#40332f', { order }),
+      item(`${id}-lamp`, octagon(cx - 2, top + 2, 2.5, 2.5), accent, { order: order + 1 }),
+    ];
+  }
+  if (profile.id === 'dock-salvage-raider') {
+    return [
+      item(`${id}-welding-visor`, rectangle(left - 2, top + 2, width + 4, 6), '#1f3139', {
+        stroke: accent,
+        order,
+      }),
+    ];
+  }
+  if (profile.id === 'snow-route-raider') {
+    return [
+      item(`${id}-respirator`, rectangle(left - 1, headY - 1, width + 2, 6), '#d6e4e6', {
+        stroke: accent,
+        order,
+      }),
+      item(`${id}-frost-hood`, rectangle(left - 3, top, width + 6, 5), profile.material, {
+        stroke: accent,
+        order: order + 1,
+      }),
+    ];
+  }
   return [
     item(
       `${id}-face-guard`,
@@ -348,6 +374,38 @@ function toolItems(profile, view, toolBaseX, toolBaseY, action, order) {
         ],
         '#c6c1b2',
         { stroke: '#332b27', order: order + 2 },
+      ),
+    ];
+  }
+  if (profile.toolKind === 'salvage-cutter') {
+    const nozzleSlope =
+      profile.id === 'mine-claim-jacker' ? -5 : profile.id === 'dock-salvage-raider' ? 2 : 7;
+    const hookTilt =
+      profile.id === 'snow-route-raider' ? -58 : profile.id === 'dock-salvage-raider' ? -34 : -48;
+    return [
+      item(`${id}-grip`, slantedBar(toolBaseX - 2, toolBaseY + 7, 18, 4, rise), profile.material, {
+        stroke: accent,
+        order,
+      }),
+      item(
+        id,
+        [
+          { x: toolBaseX + 12, y: toolBaseY + 5 - rise },
+          { x: toolBaseX + 30, y: toolBaseY - 1 - rise + nozzleSlope },
+          { x: toolBaseX + 33, y: toolBaseY + 5 - rise + nozzleSlope },
+          { x: toolBaseX + 17, y: toolBaseY + 12 - rise },
+        ],
+        accent,
+        { stroke: '#efe0b3', order: order + 1 },
+      ),
+      item(
+        `${id}-hook`,
+        slantedBar(toolBaseX + 25, toolBaseY + 7 - rise, 9, 2, hookTilt),
+        '#c9d5d2',
+        {
+          stroke: accent,
+          order: order + 2,
+        },
       ),
     ];
   }

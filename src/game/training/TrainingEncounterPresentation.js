@@ -23,6 +23,7 @@ const SCRAP_ENEMY_TOOL_KINDS = Object.freeze([
   'geothermal-manifold',
   'snowplow-train',
   'rock-cutting-machine',
+  'salvage-cutter',
 ]);
 
 function assertCharacterPresentationProfile(profile) {
@@ -41,9 +42,9 @@ function assertCharacterPresentationProfile(profile) {
       throw new TypeError(`Character Presentation Profile의 ${field} 값이 필요합니다.`);
     }
   }
-  if (profile.family !== 'machine') {
+  if (!['machine', 'human'].includes(profile.family)) {
     throw new TypeError(
-      `Training encounter enemy는 machine profile이어야 합니다: ${profile.family}`,
+      `Training encounter enemy는 machine 또는 human profile이어야 합니다: ${profile.family}`,
     );
   }
   if (!SCRAP_ENEMY_TOOL_KINDS.includes(profile.toolKind)) {
@@ -186,6 +187,87 @@ function createScrapEnemyAppearanceItems({
   const hipWidth = Math.max(14, proportions.hip);
   const headRadius = Math.max(5, proportions.head);
   const presentation = { presentationOnly: true };
+  if (profile.family === 'human') {
+    const headFill = '#b98669';
+    const hoodFill = '#252d32';
+    const cutterEnd = {
+      x: weaponHand.x + Math.cos(weaponAngle) * Math.max(weaponLength - 16, 44),
+      y: weaponHand.y + Math.sin(weaponAngle) * Math.max(weaponLength - 16, 44),
+    };
+    return [
+      polygon(
+        'combat-enemy-human-work-hood',
+        [
+          { x: -headRadius - 4, y: -10 },
+          { x: headRadius + 5, y: -10 },
+          { x: headRadius + 3, y: 13 },
+          { x: -headRadius - 3, y: 13 },
+        ],
+        { x, y: y - 80 },
+        hoodFill,
+        { ...presentation, stroke: accent, lineWidth: 2, order: headOrder + 0.18 },
+      ),
+      polygon(
+        'combat-enemy-human-face-guard',
+        regularPolygon(headRadius * 0.68, Math.max(4, headRadius * 0.48), 8, Math.PI / 8),
+        { x: x + 2, y: y - 78 },
+        headFill,
+        { ...presentation, stroke: '#e3d3bb', lineWidth: 1.5, order: headOrder + 0.3 },
+      ),
+      polygon(
+        'combat-enemy-human-salvage-vest',
+        [
+          { x: -shoulderWidth + 3, y: -22 },
+          { x: shoulderWidth - 3, y: -22 },
+          { x: hipWidth + 3, y: 17 },
+          { x: -hipWidth - 3, y: 17 },
+        ],
+        { x, y: y - 35 },
+        material,
+        { ...presentation, stroke: accent, lineWidth: 2, order: bodyOrder + 0.26 },
+      ),
+      polygon(
+        'combat-enemy-human-recovery-sling',
+        [
+          { x: -shoulderWidth + 2, y: -23 },
+          { x: -shoulderWidth + 6, y: -24 },
+          { x: hipWidth - 1, y: 16 },
+          { x: hipWidth - 5, y: 17 },
+        ],
+        { x, y: y - 35 },
+        '#d7c393',
+        { ...presentation, stroke: outline, lineWidth: 1.5, order: bodyOrder + 0.3 },
+      ),
+      limbSegment(
+        'combat-enemy-human-cutter-hose',
+        { x: x - shoulderWidth + 3, y: y - 51 },
+        { x: x - shoulderWidth - 17, y: y - 13 },
+        4,
+        '#20282e',
+        { ...presentation, stroke: accent, lineWidth: 1.5, order: bodyOrder - 0.3 },
+      ),
+      polygon(
+        'combat-enemy-human-salvage-cutter',
+        [
+          { x: 0, y: -5 },
+          { x: weaponLength - 13, y: -5 },
+          { x: weaponLength, y: 0 },
+          { x: weaponLength - 13, y: 6 },
+          { x: 0, y: 6 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        accent,
+        { ...presentation, stroke: '#f4e3b3', lineWidth: 2.5, order: weaponOrder + 0.26 },
+      ),
+      polygon(
+        'combat-enemy-human-cutter-spark',
+        regularPolygon(5, 5, 6, Math.PI / 6),
+        cutterEnd,
+        '#f6d56a',
+        { ...presentation, stroke: '#fff4cc', lineWidth: 1, order: weaponOrder + 0.3 },
+      ),
+    ];
+  }
   const commonItems = [
     polygon(
       'combat-enemy-scrap-back-plate',
@@ -1070,20 +1152,32 @@ export function createTrainingEnemyItems(
         lineWidth: 2,
       },
     ),
-    polygon(
-      'combat-enemy-core-glow',
-      regularPolygon(20, 20, 10, Math.PI / 10),
-      { x, y: y - 42 },
-      presentationProfile.accent,
-      { opacity: flash ? 0.5 : 0.22 },
-    ),
-    polygon(
-      'combat-enemy-core',
-      regularPolygon(15, 15, 6, Math.PI / 6),
-      { x, y: y - 42 },
-      flash ? '#ffffff' : presentationProfile.accent,
-      { stroke: '#20272b', lineWidth: 1.5 },
-    ),
+    ...(presentationProfile.family === 'machine'
+      ? [
+          polygon(
+            'combat-enemy-core-glow',
+            regularPolygon(20, 20, 10, Math.PI / 10),
+            { x, y: y - 42 },
+            presentationProfile.accent,
+            { opacity: flash ? 0.5 : 0.22 },
+          ),
+          polygon(
+            'combat-enemy-core',
+            regularPolygon(15, 15, 6, Math.PI / 6),
+            { x, y: y - 42 },
+            flash ? '#ffffff' : presentationProfile.accent,
+            { stroke: '#20272b', lineWidth: 1.5 },
+          ),
+        ]
+      : [
+          polygon(
+            'combat-enemy-human-buckle',
+            regularPolygon(8, 8, 6, Math.PI / 6),
+            { x, y: y - 42 },
+            flash ? '#ffffff' : presentationProfile.accent,
+            { stroke: '#20272b', lineWidth: 1.5 },
+          ),
+        ]),
     ...(enemy.weakPoint?.exposed
       ? [
           polygon(

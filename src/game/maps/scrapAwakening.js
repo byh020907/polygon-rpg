@@ -2812,7 +2812,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_MINE_FOREMAN_CONVERSATION_ID,
               conversationTitle: '붕괴 광산 구조 요청',
               lines: [
-                '갱도 안 작업자 셋은 살아 있어. 문제는 수거 유닛이 구조 레일을 뜯고 있다는 거야.',
+                '갱도 안 작업자 셋은 살아 있어. 문제는 선점 수거반이 구조 레일을 뜯어 자기 몫으로 챙긴다는 거야.',
                 '보행식 굴착기로 마지막 버팀목을 세우면 모두 빼낼 수 있어. 그 뒤 기계 하체는 네가 가져가.',
                 '먼저 오른쪽 현황판에서 붕괴 범위와 작업 시간을 확인해 줘.',
               ],
@@ -2829,7 +2829,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_MINE_FACILITY_CONVERSATION_ID,
               conversationTitle: '시설 상태와 작업 시간 확인',
               lines: [
-                '구조 레일 단선. 내부 이동, 수거 유닛 제거, 굴착기 제압과 새 버팀목 설치까지 9구간 예상.',
+                '구조 레일 단선. 내부 이동, 선점 수거반 격퇴, 굴착기 제압과 새 버팀목 설치까지 9구간 예상.',
                 '성공하면 고철 대왕은 막힌 산길을 우회해 수도 도착이 2일 늦어진다.',
               ],
               campaignRegionId: 'abandoned-mine',
@@ -2865,7 +2865,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             {
               id: 'mine-tunnel-collector-unit',
               kind: 'combat-enemy',
-              encounterProfileId: 'mine-tunnel-collector',
+              encounterProfileId: 'mine-claim-jacker',
               position: { x: 820, y: 426 },
               maxHealth: 78,
               campaignRegionId: 'abandoned-mine',
@@ -2914,7 +2914,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_MINE_REPLACEMENT_CONVERSATION_ID,
               conversationTitle: '마지막 버팀목 설치',
               lines: [
-                '수거 유닛도 굴착기도 멈췄어. 이 새 버팀목만 체결하면 갇힌 작업자들이 나온다.',
+                '선점 수거반도 굴착기도 물러났어. 이 새 버팀목만 체결하면 갇힌 작업자들이 나온다.',
                 '좋아, 구조 완료. 이제 폐광 예정인 굴착기의 하체 구동부를 안전하게 떼자.',
               ],
               presentationProfileId: 'mine-worker',
@@ -2995,7 +2995,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_SHIPYARD_WORKER_CONVERSATION_ID,
               conversationTitle: '점거된 조선소 탈환 요청',
               lines: [
-                '수거 유닛이 건선거를 점거해 마지막 선박의 외판 수리가 멈췄어.',
+                '부두 선점 수거반이 건선거를 점거해 마지막 선박의 외판 수리가 멈췄어.',
                 '도크를 되찾아 수리를 끝내면 퇴역할 쌍둥이 크레인의 유압 장치를 넘겨줄게.',
                 '왼쪽 현황판에서 점거 범위와 작업 시간을 먼저 확인해 줘.',
               ],
@@ -3012,7 +3012,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_SHIPYARD_FACILITY_CONVERSATION_ID,
               conversationTitle: '점거 범위와 선박 수리 시간 확인',
               lines: [
-                '건선거 점거 해제, 수거 유닛 제거, 크레인 제압과 마지막 선박 외판 수리까지 13구간 예상.',
+                '건선거 점거 해제, 선점 수거반 격퇴, 크레인 제압과 마지막 선박 외판 수리까지 13구간 예상.',
                 '성공하면 고철 대왕은 막힌 해안 운송로를 우회해 수도 도착이 3일 늦어진다.',
               ],
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
@@ -3048,7 +3048,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             {
               id: 'shipyard-drydock-collector-unit',
               kind: 'combat-enemy',
-              encounterProfileId: 'shipyard-drydock-collector',
+              encounterProfileId: 'dock-salvage-raider',
               position: { x: 800, y: 426 },
               maxHealth: 84,
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
@@ -3361,7 +3361,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_SNOW_CREW_CONVERSATION_ID,
               conversationTitle: '막힌 옛 터널 개통 요청',
               lines: [
-                '눈사태가 옛 터널을 막아 교역대가 다시 위험한 산길로 몰렸어. 열선 케이블도 수거 유닛이 뜯어 가고 있고.',
+                '눈사태가 옛 터널을 막아 교역대가 다시 위험한 산길로 몰렸어. 열선 케이블도 길목 수거반이 뜯어 가고 있고.',
                 '터널을 다시 열면 이 장갑 제설 열차는 더 이상 생활 노선을 지킬 필요가 없어.',
                 '오른쪽 운행 현황판에서 적설 범위와 개통 시간을 먼저 확인해 줘.',
               ],
@@ -3414,7 +3414,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             {
               id: 'snow-tunnel-collector',
               kind: 'combat-enemy',
-              encounterProfileId: 'snow-tunnel-collector',
+              encounterProfileId: 'snow-route-raider',
               position: { x: 808, y: 426 },
               maxHealth: 92,
               campaignRegionId: SCRAP_SNOW_REGION_ID,

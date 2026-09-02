@@ -9,7 +9,7 @@ import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
-assert.equal(profiles.length, 16);
+assert.equal(profiles.length, 19);
 assert.equal(new Set(profiles.map((profile) => profile.id)).size, profiles.length);
 assert.deepEqual(CHARACTER_PRESENTATION_PROFILE.comparisonViews, [
   'front',
@@ -30,6 +30,9 @@ const requiredRoleIds = [
   'greenhouse-technician',
   'snow-train-crew',
   'quarry-worker',
+  'mine-claim-jacker',
+  'dock-salvage-raider',
+  'snow-route-raider',
   'collector-unit',
   'industrial-creature',
   'regional-boss',
@@ -188,9 +191,37 @@ for (const encounterProfile of Object.values(ENCOUNTER_PROFILES)) {
     encounterProfile.presentationProfileId,
   );
   assert.ok(
-    appearanceProfile?.family === 'machine',
-    `${encounterProfile.id} encounter는 authored machine appearance profile을 가져야 합니다.`,
+    ['machine', 'human'].includes(appearanceProfile?.family),
+    `${encounterProfile.id} encounter는 authored machine 또는 human appearance profile을 가져야 합니다.`,
   );
+}
+for (const [encounterId, profileId, regionId, roomId] of [
+  ['mine-claim-jacker', 'mine-claim-jacker', 'abandoned-mine', 'abandoned-mine-rescue-tunnel'],
+  [
+    'dock-salvage-raider',
+    'dock-salvage-raider',
+    'harbor-shipyard',
+    'harbor-shipyard-occupied-drydock',
+  ],
+  ['snow-route-raider', 'snow-route-raider', 'snow-trade-road', 'snow-trade-road-old-tunnel'],
+]) {
+  const humanEncounter = ENCOUNTER_PROFILES[encounterId];
+  assert.equal(humanEncounter.presentationProfileId, profileId);
+  assert.equal(humanEncounter.species, 'human-salvager');
+  const humanScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+  humanScene.setVisualQaLocation({ regionId, roomId, x: 500 });
+  const humanFrame = humanScene.createRenderFrame(1);
+  assert.equal(humanFrame.combatEnemy.presentationProfileId, profileId);
+  for (const landmarkId of [
+    'combat-enemy-human-work-hood',
+    'combat-enemy-human-salvage-vest',
+    'combat-enemy-human-salvage-cutter',
+  ]) {
+    assert.ok(
+      humanFrame.items.some((item) => item.id === landmarkId),
+      `${encounterId}에는 ${landmarkId}가 필요합니다.`,
+    );
+  }
 }
 const quarryCollectorEncounter = ENCOUNTER_PROFILES['quarry-cut-collector'];
 assert.equal(quarryCollectorEncounter.presentationProfileId, 'collector-unit');
@@ -327,7 +358,7 @@ process.stdout.write(
     views: CHARACTER_PRESENTATION_PROFILE.comparisonViews,
     checks: [
       'immutable-character-presentation-profile',
-      'protagonist-owner-rival-five-job-families-and-three-enemy-families',
+      'protagonist-owner-rival-five-job-families-and-human-machine-boss-enemy-spectrum',
       'front-side-representative-pose-at-gameplay-scale',
       'tool-outfit-and-material-landmarks',
       'eight-human-tool-geometries-and-headgear-are-shape-distinct',

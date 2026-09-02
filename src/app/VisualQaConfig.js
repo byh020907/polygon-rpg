@@ -375,8 +375,9 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'mine-trapped-worker-coat',
         'mine-trapped-worker-helmet',
         'mine-trapped-worker-tool',
-        'combat-enemy-collector-eye',
+        'combat-enemy-human-salvage-cutter',
       ]),
+      idleExpectedItem: 'combat-enemy-human-face-guard',
     }),
   }),
   'scrap-mine-resolved': Object.freeze({
@@ -882,6 +883,9 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'character-board-cell-greenhouse-technician',
         'character-board-cell-snow-train-crew',
         'character-board-cell-quarry-worker',
+        'character-board-cell-mine-claim-jacker',
+        'character-board-cell-dock-salvage-raider',
+        'character-board-cell-snow-route-raider',
         'character-board-cell-collector-unit',
         'character-board-cell-industrial-creature',
         'character-board-cell-regional-boss',
@@ -1644,7 +1648,7 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
             ? scenario.expectation.expectedItem
             : scenario.expectation.expectedPosture === 'absent' ||
                 scenario.expectation.expectedPosture === undefined
-              ? 'combat-enemy-collector-eye'
+              ? (scenario.expectation.idleExpectedItem ?? 'combat-enemy-collector-eye')
               : phase === 'start' && scenario.expectation.expectedPosture === 'groggy'
                 ? 'combat-enemy-posture-break'
                 : 'combat-enemy-posture-fill',
