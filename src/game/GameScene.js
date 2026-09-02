@@ -2638,16 +2638,27 @@ export class GameScene extends SceneNode {
 
     const previousDistance = previousPositionX - enemy.position.x;
     const direction = Math.sign(distance || previousDistance || -this.facing) || 1;
-    const activeRoom = this.mapRuntime.getActiveRoom();
-    const movementBounds = activeRoom.movementBounds ?? {
-      minX: CHARACTER_BOUNDARY_HALF_WIDTH,
-      maxX: this.mapRuntime.definition.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
-    };
+    const movementBounds = this.getPlayerMovementBounds();
     this.position.x = Math.max(
       movementBounds.minX,
       Math.min(movementBounds.maxX, enemy.position.x + direction * separation),
     );
     return true;
+  }
+
+  getPlayerMovementBounds() {
+    const activeRoom = this.mapRuntime.getActiveRoom();
+    const authoredBounds = activeRoom.movementBounds ?? {
+      minX: 0,
+      maxX: this.mapRuntime.definition.worldSize.width,
+    };
+    const minimumX = authoredBounds.minX + CHARACTER_BOUNDARY_HALF_WIDTH;
+    const maximumX = authoredBounds.maxX - CHARACTER_BOUNDARY_HALF_WIDTH;
+    if (minimumX > maximumX) {
+      const centerX = (authoredBounds.minX + authoredBounds.maxX) / 2;
+      return Object.freeze({ minX: centerX, maxX: centerX });
+    }
+    return Object.freeze({ minX: minimumX, maxX: maximumX });
   }
 
   getAttackHitProfile(motionId) {
@@ -3353,11 +3364,7 @@ export class GameScene extends SceneNode {
     if (isRolling) {
       const rollStartX = this.position.x;
       this.updateRoll(deltaSeconds);
-      const activeRoom = this.mapRuntime.getActiveRoom();
-      const movementBounds = activeRoom.movementBounds ?? {
-        minX: CHARACTER_BOUNDARY_HALF_WIDTH,
-        maxX: this.mapRuntime.definition.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
-      };
+      const movementBounds = this.getPlayerMovementBounds();
       this.position.x = Math.max(
         movementBounds.minX,
         Math.min(movementBounds.maxX, this.position.x),
@@ -3379,7 +3386,6 @@ export class GameScene extends SceneNode {
       this.position.x = encounterAfterStep.position.x - comboFacing * 30;
       this.facing = comboFacing;
     }
-    const activeRoom = this.mapRuntime.getActiveRoom();
     this.airComboFloatSeconds = Math.max(0, this.airComboFloatSeconds - deltaSeconds);
     const playerGravityMultiplier =
       this.airComboFloatSeconds > 0 ? 0.08 : this.airComboGravityScale;
@@ -3434,10 +3440,7 @@ export class GameScene extends SceneNode {
       this.isGrounded = false;
     }
 
-    const movementBounds = activeRoom.movementBounds ?? {
-      minX: CHARACTER_BOUNDARY_HALF_WIDTH,
-      maxX: this.mapRuntime.definition.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
-    };
+    const movementBounds = this.getPlayerMovementBounds();
     this.position.x = Math.max(movementBounds.minX, Math.min(movementBounds.maxX, this.position.x));
     this.updateCameraFollow(deltaSeconds);
     this.animationTime +=

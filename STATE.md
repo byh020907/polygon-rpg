@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-feedback-priority · player-collision-and-transition-continuity`
+`verified-playable-frontier · scrap-awakening-playable-density`
 
 ## Project Direction Comparison
 
@@ -16,7 +16,6 @@
 | ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Persona                 | gap    | 정식 의뢰·동년배 rival·붕괴 구조 선택·각성 흐름과 폐광 combat의 고철 cutout 품질을 유지한다. 다섯 지역은 주목표 1개와 현장 확인형 연결 이슈 2개로 교차하며 작전 지도에서 한눈에 읽힌다. 그러나 20~30분 도입의 탐색·전투 밀도, 여러 지역 반복 정찰, 연결 이슈의 고유 encounter, final battle과 ending은 아직 없어 시작부터 결말까지 조작·서사·시각 개성이 완결되지 않았다.                                                                                                         |
 | Quality                 | gap    | 전체 `npm run check`, 실제 92/120구간 focused action trace, Codex in-app Browser desktop/mobile와 독립 verifier를 통과한 단일-owner issue window는 demo식 요청 나열보다 플레이 판단이 선명하다. 같은 수준의 cast·scene·combat polish가 약 10시간 전체 캠페인과 결말로 확장되지 않아 유료 완성 게임 수준에는 아직 Gap이 있다.                                                                                                                                                      |
-| Human Feedback Priority | gap    | `INBOX.md`의 전투 이동/전환과 animation feedback은 immutable local 3D pose → local retarget/import provenance → frame-authored clip → body/roll/landing/held-input 결합 순으로 구현한다. Player idle/run/jump/fall/landing/guard/hit와 roll·Basic·Strong·launcher·shield counter는 stable frame ID와 projected torso/head/limb/equipment, shared combat geometry를 함께 사용한다. `npm run test:combat`, focused lint/format, independent Terra verifier와 in-app Browser 1280×720·844×390(약 20% Player height, console warn/error 0)은 PASS. 남은 우선 Gap은 체급/공간부족 roll destination과 실제 전환 중 연속 playback의 Browser evidence다. |
 
 ## Product Desired State Comparison
 

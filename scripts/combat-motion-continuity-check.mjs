@@ -243,6 +243,34 @@ withScene((scene) => {
 });
 
 withScene((scene) => {
+  const enemy = scene.roomSceneNode.encounter.enemy;
+  enemy.role = 'boss';
+  enemy.position = { x: scene.position.x + 72, y: scene.mapRuntime.getActiveRoom().groundY };
+  scene.update(STEP, { ...EMPTY_INPUT, right: true, guard: true });
+  for (let tick = 0; tick < 55; tick += 1) scene.update(STEP, { ...EMPTY_INPUT, right: true });
+  assert.ok(
+    scene.position.x <= enemy.position.x - 66,
+    'roll must stop at a boss body rather than ending inside its larger collision volume',
+  );
+});
+
+withScene((scene) => {
+  const bounds = scene.getPlayerMovementBounds();
+  scene.position = {
+    x: bounds.maxX - 4,
+    y: scene.mapRuntime.getGroundYAt(bounds.maxX - 4) - 82,
+  };
+  scene.previousPosition = { ...scene.position };
+  scene.update(STEP, { ...EMPTY_INPUT, right: true, guard: true });
+  for (let tick = 0; tick < 55; tick += 1) scene.update(STEP, { ...EMPTY_INPUT, right: true });
+  assert.equal(
+    scene.position.x,
+    bounds.maxX,
+    'roll destination must keep the Player silhouette inside authored room clearance',
+  );
+});
+
+withScene((scene) => {
   const startX = scene.position.x;
   let jumpSequence = 1;
   scene.update(STEP, { ...EMPTY_INPUT, right: true, jump: true, jumpSequence });
@@ -310,6 +338,8 @@ console.log(
       'authored-idle-run-jump-fall-landing-guard-hit-pose-strips',
       'normal-enemy-body-collision',
       'normal-enemy-roll-through',
+      'boss-body-roll-destination',
+      'room-edge-roll-clearance',
       'jump-landing-held-movement-continuity',
       'jump-body-arc-clearance',
       'portal-held-input-continuity',
