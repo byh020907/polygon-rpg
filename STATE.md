@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-salvager-nonlethal-resolution-verified · mobile-install-device-qa-pending`
+`human-salvager-nonlethal-resolution-verified · high-priority-document-alignment-pending`
 
 ## Project Direction Comparison
 
