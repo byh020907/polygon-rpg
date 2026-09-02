@@ -38,6 +38,7 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/game/PlayerCombatPresentation.js',
   './src/game/ScrapArtDirectionProfiles.js',
   './src/game/campaign/ScrapAwakeningProfile.js',
+  './src/game/campaign/ScrapCastProfile.js',
   './src/game/campaign/ScrapAwakeningState.js',
   './src/game/campaign/ScrapCampaignContract.js',
   './src/game/campaign/ScrapCampaignProfiles.js',

@@ -75,6 +75,7 @@ import {
   assertScrapAwakeningStageId,
   getScrapAwakeningPresentation,
 } from './campaign/ScrapAwakeningState.js';
+import { SCRAP_CAST } from './campaign/ScrapCastProfile.js';
 import {
   SCRAP_GARAGE_REVEAL_STAGE,
   assertScrapGarageRevealStageId,
@@ -1498,10 +1499,25 @@ export class GameScene extends SceneNode {
 
   syncScrapAwakeningWorldContext() {
     const campaign = this.getScrapAwakeningReadModel();
+    const before = this.mapRuntime.getResolvedSnapshot();
+    const combatEntityIds = (snapshot) =>
+      snapshot.entities
+        .filter((entity) => ['combat-test-mob', 'combat-enemy'].includes(entity.kind))
+        .map((entity) => entity.id);
+    const beforeCombatEntityIds = combatEntityIds(before);
     this.mapRuntime.setWorldContext({
       ...this.mapRuntime.getWorldContext(),
       ...scrapCampaignWorldFacts(campaign),
     });
+    const after = this.mapRuntime.getResolvedSnapshot();
+    if (
+      this.roomSceneNode &&
+      before.active.regionId === after.active.regionId &&
+      before.active.roomId === after.active.roomId &&
+      JSON.stringify(beforeCombatEntityIds) !== JSON.stringify(combatEntityIds(after))
+    ) {
+      this.replaceRoomScene(after, { forceReplace: true });
+    }
   }
 
   commitScrapAwakening(transaction) {
@@ -1612,7 +1628,7 @@ export class GameScene extends SceneNode {
       this.scrapCampaignProfile,
     );
     if (!transaction.changed) return false;
-    this.progressionNotice = '고물상 주인 · 제어핵 분석 시작';
+    this.progressionNotice = `${SCRAP_CAST.SCRAPYARD_OWNER.name} · 제어핵 분석 시작`;
     this.combatCommands.reset();
     this.rollState = null;
     this.verticalVelocity = 0;
@@ -2788,6 +2804,33 @@ export class GameScene extends SceneNode {
   }
 
   resolveJourneyEncounter(result) {
+    if (result.scrapAwakeningNextStageId) {
+      assertScrapAwakeningStageId(result.scrapAwakeningNextStageId);
+      const transaction = advanceScrapAwakening(
+        this.progressionSnapshot.scrapCampaign,
+        this.scrapCampaignProfile,
+      );
+      if (
+        !transaction.changed ||
+        transaction.snapshot.awakeningStageId !== result.scrapAwakeningNextStageId
+      ) {
+        return Object.freeze({
+          ...transaction,
+          kind: 'scrap-awakening-combat-stage-rejected',
+          entityId: result.entityId,
+        });
+      }
+      this.progressionNotice = getScrapAwakeningPresentation(
+        transaction.snapshot.awakeningStageId,
+      ).cue;
+      this.commitScrapAwakening(transaction);
+      return Object.freeze({
+        ...transaction,
+        kind: 'scrap-awakening-combat-stage',
+        entityId: result.entityId,
+        stageId: transaction.snapshot.awakeningStageId,
+      });
+    }
     if (result.campaignProgress) {
       const action = this.createScrapCampaignRegionStageAction(
         result.campaignProgress.regionId,

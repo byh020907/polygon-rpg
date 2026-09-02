@@ -1,6 +1,9 @@
+import { SCRAP_CAST } from './ScrapCastProfile.js';
+
 export const SCRAP_AWAKENING_STAGE = Object.freeze({
   COMMISSION: 'commission',
   RIVAL_DEPARTURE: 'rival-departure',
+  YARD_CLEARANCE: 'yard-clearance',
   YARD_SEARCH: 'yard-search',
   COLLAPSE: 'collapse',
   RESCUE_REQUEST: 'rescue-request',
@@ -74,16 +77,21 @@ export function getScrapAwakeningPresentation(stageId) {
   const presentations = {
     [SCRAP_AWAKENING_STAGE.COMMISSION]: {
       title: '고물상 정식 수거 의뢰',
-      briefing: '고물상 주인이 두 견습생에게 왕국 외곽 폐병기 수거를 맡깁니다.',
-      objective: '고물상 주인에게 다가가 ↑로 의뢰를 받으세요.',
+      briefing: `${SCRAP_CAST.SCRAPYARD_OWNER.name}이 두 견습생에게 왕국 외곽 폐병기 수거를 맡깁니다.`,
+      objective: `${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 다가가 ↑로 의뢰를 받으세요.`,
       cue: '의뢰 받기 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE]: {
-      title: '라이벌 견습생 하린',
-      briefing:
-        '좋은 부품을 두고 늘 경쟁하던 하린이 이번 수거만큼은 먼저 현장을 보자고 재촉합니다.',
-      objective: '오른쪽의 하린에게 다가가 ↑로 출발하세요.',
-      cue: '하린과 출발 · 상호작용 ↑',
+      title: SCRAP_CAST.RIVAL.name,
+      briefing: `좋은 부품을 두고 늘 경쟁하던 ${SCRAP_CAST.RIVAL.name}이 이번 수거만큼은 먼저 현장을 보자고 재촉합니다.`,
+      objective: `오른쪽의 ${SCRAP_CAST.RIVAL.name}에게 다가가 ↑로 출발하세요.`,
+      cue: `${SCRAP_CAST.RIVAL.name}과 출발 · 상호작용 ↑`,
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_CLEARANCE]: {
+      title: '폐병기 수거장 진입',
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 수거 표식을 따라가자, 멈춰 있던 소형 수거 유닛이 통로를 막고 움직이기 시작합니다.`,
+      objective: '수거 유닛을 기본 공격과 방패로 막고 현장 표식까지 길을 여세요.',
+      cue: '수거 유닛 조우 · Basic / Guard',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: {
       title: '폐병기 수거장 탐색',
@@ -93,39 +101,37 @@ export function getScrapAwakeningPresentation(stageId) {
     },
     [SCRAP_AWAKENING_STAGE.COLLAPSE]: {
       title: '붕괴 사고',
-      briefing: '낡은 지지대가 무너지며 하린이 폐병기 잔해 아래에 갇힙니다.',
+      briefing: `낡은 지지대가 무너지며 ${SCRAP_CAST.RIVAL.name}이 폐병기 잔해 아래에 갇힙니다.`,
       objective: '붕괴가 멎을 때까지 기다리세요.',
       cue: 'INPUT LOCK · COLLAPSE',
     },
     [SCRAP_AWAKENING_STAGE.RESCUE_REQUEST]: {
       title: '잔해 아래 구조 요청',
-      briefing: '하린은 다친 몸으로 구조 winch의 전원이 끊겼다고 알립니다.',
-      objective: '오른쪽 잔해의 하린에게 다가가 ↑로 상태를 확인하세요.',
+      briefing: `${SCRAP_CAST.RIVAL.name}은 다친 몸으로 구조 winch의 전원이 끊겼다고 알립니다.`,
+      objective: `오른쪽 잔해의 ${SCRAP_CAST.RIVAL.name}에게 다가가 ↑로 상태를 확인하세요.`,
       cue: '구조 요청 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.PLAYER_DECISION]: {
       title: '구조 장치의 유일한 전원',
-      briefing: '하린을 끌고 간 회수팔의 직접 제어는 폐병기 흉곽의 제어핵에만 연결돼 있습니다.',
+      briefing: `${SCRAP_CAST.RIVAL.name}을 끌고 간 회수팔의 직접 제어는 폐병기 흉곽의 제어핵에만 연결돼 있습니다.`,
       objective: '청록 제어핵에 다가가 ↑로 조사하세요.',
       cue: '제어핵 조사 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED]: {
       title: '사람을 먼저 구한다',
-      briefing:
-        '제어핵을 떼면 비상 운용이 시작될 수 있지만, 회수팔을 멈춰 하린을 구할 다른 방법은 없습니다.',
+      briefing: `제어핵을 떼면 비상 운용이 시작될 수 있지만, 회수팔을 멈춰 ${SCRAP_CAST.RIVAL.name}을 구할 다른 방법은 없습니다.`,
       objective: '제어핵 앞에서 ↑를 눌러 회수팔의 정상 제어를 끊으세요.',
       cue: '구조용 제어핵 회수 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED]: {
       title: '회수팔 정상 제어 차단',
-      briefing: '제어핵이 빠지자 자동 회수팔이 풀리고 하린을 붙잡은 장력이 사라집니다.',
+      briefing: `제어핵이 빠지자 자동 회수팔이 풀리고 ${SCRAP_CAST.RIVAL.name}을 붙잡은 장력이 사라집니다.`,
       objective: '회수팔 정지가 끝날 때까지 기다리세요.',
       cue: 'INPUT LOCK · ARM RELEASE',
     },
     [SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED]: {
-      title: '하린 구조 성공',
-      briefing:
-        '하린이 빠져나온 순간 제어핵 접속부가 비상 장갑 안으로 봉쇄되고 폐병기가 비상 운용으로 전환됩니다.',
+      title: `${SCRAP_CAST.RIVAL.name} 구조 성공`,
+      briefing: `${SCRAP_CAST.RIVAL.name}이 빠져나온 순간 제어핵 접속부가 비상 장갑 안으로 봉쇄되고 폐병기가 비상 운용으로 전환됩니다.`,
       objective: '폐병기 반응이 끝날 때까지 기다리세요.',
       cue: 'RESCUE COMPLETE · SIGNAL RETURN',
     },
@@ -150,8 +156,8 @@ export function getScrapAwakeningPresentation(stageId) {
     },
     [SCRAP_AWAKENING_STAGE.COMPLETE]: {
       title: '각성 직후',
-      briefing: '하린을 구한 두 견습생은 자신들이 깨운 고대 병기보다 먼저 고물상으로 돌아갑니다.',
-      objective: '왼쪽 고물상 주인에게 돌아가 ↑로 사고를 보고하세요.',
+      briefing: `${SCRAP_CAST.RIVAL.name}을 구한 두 견습생은 자신들이 깨운 고대 병기보다 먼저 고물상으로 돌아갑니다.`,
+      objective: `왼쪽 ${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 돌아가 ↑로 사고를 보고하세요.`,
       cue: 'CONTROL RESTORED · D-30',
     },
   };

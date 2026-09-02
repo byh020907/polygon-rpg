@@ -252,12 +252,12 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     regionId: SCRAP_AWAKENING_REGION_ID,
     roomId: SCRAP_AWAKENING_ROOM_ID,
     x: 500,
-    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     inputTimelineByPhase: Object.freeze({
       active: Object.freeze([Object.freeze({ frames: 2, input: Object.freeze({ right: true }) })]),
     }),
     expectation: Object.freeze({
-      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     }),
   }),
   'scrap-intro-before': Object.freeze({

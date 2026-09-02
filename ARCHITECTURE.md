@@ -21,25 +21,25 @@
 
 ## Module Boundaries
 
-| Boundary                       | Responsibility                                                                                                                      | Must Not Know or Do                                     |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Browser Bootstrap / UI Adapter | Screen·modal state, semantic controls, accessible interaction, status render                                                        | Mutable gameplay internals, route·time rule 재구현      |
-| PWA Lifecycle Adapter          | Manifest/install prompt, Service Worker lifecycle, version-ready status와 명시적 apply 요청                                         | Campaign state·storage schema·gameplay input 직접 write |
-| Debug Configuration Adapter    | Hold 뒤 QA panel, stable campaign scenario와 URL 양방향 변환                                                                        | Player 저장 재사용, gameplay state 직접 쓰기            |
-| Application Composition        | Browser resource, input/render/UI/domain owner 조립                                                                                 | Domain rule 재구현, renderer별 gameplay 분기            |
-| Scene Runtime                  | Tree-owned lifecycle와 scoped signal                                                                                                | Global lookup, implicit mutable singleton               |
-| Input Adapters                 | Keyboard/pointer를 frozen common intent·sequence로 변환                                                                             | Map, combat, campaign time 또는 modal policy            |
-| Game Orchestrator              | Player·combat·map·story·progression coordination과 immutable RenderFrame/status                                                     | DOM, Canvas drawing, storage serialization              |
-| Authored Campaign Content      | 도입·반복 cast·다섯 region·교차 issue graph·route·사건 단계·시간·연장·part·map patch·robot·ending profile                           | Browser API, mutable runtime writer                     |
-| Campaign Domain                | 4구간 날짜, D-DAY, 고대 병기 route·우회 거리, primary/linked issue window, region result, part·대항 병기 completion과 action ledger | Render delta 시간, UI layout, unloaded Chunk simulation |
-| Map Domain                     | Region/Room/Chunk, active snapshot, stable-ID patch와 atomic transition                                                             | Campaign action 결정, renderer mutation                 |
-| Encounter / Combat Domain      | Command phase, enemy state, contact, guard/evade/posture와 result                                                                   | DOM, persistence, campaign route mutation               |
-| Progression Domain             | 장비·인챈트·command·회수 part와 campaign transaction coordination                                                                   | UI layout, concrete storage/browser API                 |
-| Story Interaction              | Blocking/ambient 말풍선, 독백, active speaker·line·anchor·reveal·대화 기록과 authored event request                                 | DOM bubble geometry, campaign state 직접 mutation       |
-| Storage Port                   | Versioned snapshot와 recovery slot validation·load/save result                                                                      | Gameplay rule, hidden fallback success                  |
-| Shared Combat Geometry         | Pose에서 weapon/shield/hurt/swept-contact geometry 계산                                                                             | Canvas style, damage write                              |
-| Art Direction Profiles         | 저채도 palette, depth layer, material, light, effect와 HUD presentation token의 immutable 정의                                      | Gameplay rule, Canvas/DOM 직접 write                    |
-| Renderers                      | 같은 immutable RenderFrame을 Polygon/Retro로 투영                                                                                   | Simulation, hit 재판정, state write                     |
+| Boundary                       | Responsibility                                                                                                                       | Must Not Know or Do                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Browser Bootstrap / UI Adapter | Screen·modal state, semantic controls, accessible interaction, status render                                                         | Mutable gameplay internals, route·time rule 재구현      |
+| PWA Lifecycle Adapter          | Manifest/install prompt, Service Worker lifecycle, version-ready status와 명시적 apply 요청                                          | Campaign state·storage schema·gameplay input 직접 write |
+| Debug Configuration Adapter    | Hold 뒤 QA panel, stable campaign scenario와 URL 양방향 변환                                                                         | Player 저장 재사용, gameplay state 직접 쓰기            |
+| Application Composition        | Browser resource, input/render/UI/domain owner 조립                                                                                  | Domain rule 재구현, renderer별 gameplay 분기            |
+| Scene Runtime                  | Tree-owned lifecycle와 scoped signal                                                                                                 | Global lookup, implicit mutable singleton               |
+| Input Adapters                 | Keyboard/pointer를 frozen common intent·sequence로 변환                                                                              | Map, combat, campaign time 또는 modal policy            |
+| Game Orchestrator              | Player·combat·map·story·progression coordination과 immutable RenderFrame/status                                                      | DOM, Canvas drawing, storage serialization              |
+| Authored Campaign Content      | 도입·반복 cast·다섯 region·교차 issue graph·route·사건 단계·시간·연장·part·map patch·robot·ending profile와 immutable 표시명 profile | Browser API, mutable runtime writer                     |
+| Campaign Domain                | 4구간 날짜, D-DAY, 고대 병기 route·우회 거리, primary/linked issue window, region result, part·대항 병기 completion과 action ledger  | Render delta 시간, UI layout, unloaded Chunk simulation |
+| Map Domain                     | Region/Room/Chunk, active snapshot, stable-ID patch와 atomic transition                                                              | Campaign action 결정, renderer mutation                 |
+| Encounter / Combat Domain      | Command phase, enemy state, contact, guard/evade/posture와 result                                                                    | DOM, persistence, campaign route mutation               |
+| Progression Domain             | 장비·인챈트·command·회수 part와 campaign transaction coordination                                                                    | UI layout, concrete storage/browser API                 |
+| Story Interaction              | Blocking/ambient 말풍선, 독백, active speaker·line·anchor·reveal·대화 기록과 authored event request                                  | DOM bubble geometry, campaign state 직접 mutation       |
+| Storage Port                   | Versioned snapshot와 recovery slot validation·load/save result                                                                       | Gameplay rule, hidden fallback success                  |
+| Shared Combat Geometry         | Pose에서 weapon/shield/hurt/swept-contact geometry 계산                                                                              | Canvas style, damage write                              |
+| Art Direction Profiles         | 저채도 palette, depth layer, material, light, effect와 HUD presentation token의 immutable 정의                                       | Gameplay rule, Canvas/DOM 직접 write                    |
+| Renderers                      | 같은 immutable RenderFrame을 Polygon/Retro로 투영                                                                                    | Simulation, hit 재판정, state write                     |
 
 Adapter는 policy를 호출하고 policy는 adapter를 import하지 않는다. Concrete map, campaign/equipment profile과 adapter는 composition root에서 주입한다.
 
@@ -125,7 +125,7 @@ Keyboard / Touch / DOM intent
 - Bottom objective DTO는 짧은 imperative action과 필요한 command hint만 제공하고 세계관·감정·사건 경위를 포함하지 않는다. 서사 문장은 bubble DTO와 transcript만 소유한다.
 - 완료된 중요 conversation은 immutable authored transcript catalog와 viewed conversation ID로 다시 열 수 있다. Transcript UI는 현재 scene beat를 진행시키거나 campaign event를 재실행하지 않는다.
 - Introduction awakening은 자동 회수팔에 붙잡힌 라이벌, 회수팔의 직접 제어를 끊는 제어핵 회수, 비상 장갑으로 봉쇄되는 접속부, 중앙 지휘소 좌표를 따르는 고대 병기의 비상 운용, 동원 신호, D-30 notice, 마을 귀환과 garage reveal을 saveable staged event로 기록한다. 제어핵은 위치를 송출하지 않는 수동 장치다.
-- Recurring cast profile은 고물상 주인·라이벌과 각 region의 결정권자/생활 당사자/연결 인물을 stable ID로 정의하고 before/in-progress/after location, work pose, damage state와 conversation을 map patch로 바꾼다.
+- Recurring cast profile은 고물상인·라이벌과 각 region의 결정권자/생활 당사자/연결 인물을 stable ID로 정의하고 before/in-progress/after location, work pose, damage state와 conversation을 map patch로 바꾼다. 사용자 노출 역할명은 별도 immutable cast/name profile이 단일 소유하며 stable ID·저장 schema와 분리한다.
 
 ## Rendering, Input and Accessibility
 

@@ -1,4 +1,5 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
+import { SCRAP_CAST } from '../game/campaign/ScrapCastProfile.js';
 import { createDebugConfigurationAdapter } from './DebugConfigurationAdapter.js';
 import { HoldActivationController } from './HoldActivationController.js';
 import { createPwaLifecycleAdapter, isStandalone } from '../pwa/PwaLifecycleAdapter.js';
@@ -220,7 +221,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     areaName: '동네 고물상',
     storyBeatId: 'scrap-awakening:commission',
     storyTitle: '고물상 정식 수거 의뢰',
-    storyBriefing: '고물상 주인이 두 견습생에게 왕국 외곽 폐병기 수거를 맡깁니다.',
+    storyBriefing: `${SCRAP_CAST.SCRAPYARD_OWNER.name}이 두 견습생에게 왕국 외곽 폐병기 수거를 맡깁니다.`,
     dialogue: Object.freeze({
       active: false,
       available: false,
@@ -242,7 +243,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       screenAnchor: null,
       commands: Object.freeze([]),
     }),
-    objective: '고물상 주인에게 다가가 ↑로 의뢰를 받으세요.',
+    objective: `${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 다가가 ↑로 의뢰를 받으세요.`,
     journeyLabel: '고대 병기 각성 전',
     encounterHint: '',
     encounterHealthLabel: '',

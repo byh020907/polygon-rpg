@@ -1,3 +1,5 @@
+import { SCRAP_CAST } from './ScrapCastProfile.js';
+
 export const SCRAP_GARAGE_REVEAL_STAGE = Object.freeze({
   LOCKED: 'locked',
   REPORT_READY: 'report-ready',
@@ -69,13 +71,13 @@ export function getScrapGarageRevealPresentation(stageId) {
     },
     [SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY]: {
       title: '고물상으로 복귀',
-      briefing: '회수한 제어핵을 고물상 주인에게 가져가 분석을 부탁합니다.',
+      briefing: `회수한 제어핵을 ${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 가져가 분석을 부탁합니다.`,
       objective: '왼쪽 고물상 작업대의 주인에게 돌아가 ↑로 보고하세요.',
-      cue: '고물상 주인 · 상호작용 ↑',
+      cue: `${SCRAP_CAST.SCRAPYARD_OWNER.name} · 상호작용 ↑`,
     },
     [SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS]: {
       title: '퇴직했는데 또 야근',
-      briefing: '고물상 주인이 제어핵과 동원 신호의 흔적을 분석합니다.',
+      briefing: `${SCRAP_CAST.SCRAPYARD_OWNER.name}이 제어핵과 동원 신호의 흔적을 분석합니다.`,
       objective: '제어핵 분석 중 · 조작이 잠시 멈춥니다.',
       cue: 'DEVICE ANALYSIS · FIVE SIGNALS',
     },

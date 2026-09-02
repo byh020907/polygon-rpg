@@ -4,6 +4,7 @@ import {
   SCRAP_AWAKENING_STAGE,
   getScrapAwakeningPresentation,
 } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_CAST } from '../src/game/campaign/ScrapCastProfile.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
 import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../src/game/story/ScrapPrologueStory.js';
@@ -195,8 +196,21 @@ assert.ok(itemIds(scene).includes('scrap-rival-departure-torso'));
 
 setAtStoryInteraction(scene, 'scrap-rival-departure');
 prologueSequence = completeDialogue(scene, prologueSequence);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_CLEARANCE);
 assert.ok(itemIds(scene).includes('scrap-rival-search-hook'));
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
+  `${SCRAP_CAST.RIVAL.name}과 수거장에 들어간 뒤에는 현장 조사를 막는 소형 수거 유닛이 필요합니다.`,
+);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  false,
+  '수거 유닛을 정리하기 전에는 붕괴를 일으키는 현장 조사를 시작하면 안 됩니다.',
+);
 
 scene.setVisualQaLocation({
   regionId: SCRAP_AWAKENING_REGION_ID,
@@ -236,6 +250,44 @@ const ambientQaRequest = readVisualQaRequest(
   '?visualQa=1&gameStart=scrap-intro-walk&visualQaRenderer=polygon&visualQaPhase=active',
 );
 assert.equal(ambientQaRequest.scenario.mapId, SCRAP_AWAKENING_MAP.id);
+
+scene.replaceRoomScene(scene.mapRuntime.getResolvedSnapshot(), { forceReplace: true });
+assert.equal(
+  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'yard-scout-collector',
+  '도입 수거장에는 기존 기본기 grammar를 배우는 산업 수거 유닛이 필요합니다.',
+);
+scene.resolveJourneyEncounter(
+  Object.freeze({
+    entityId: 'scrap-yard-scout-collector',
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  }),
+);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
+  false,
+  '전투 완료 뒤 수거 유닛은 같은 stage에서 다시 나타나면 안 됩니다.',
+);
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  `전투 완료 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+);
+const clearanceReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+});
+assert.equal(stage(clearanceReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  clearanceReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
+  false,
+  '도입 전투 완료 저장을 다시 열어도 조우를 반복해서 확정하면 안 됩니다.',
+);
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');
 prologueSequence = completeDialogue(scene, prologueSequence);
@@ -352,7 +404,7 @@ assert.equal(shakeObserved, true, '눈 점등·부품 결합 경계는 camera sh
 assert.equal(
   rescuedAfterStateObserved,
   true,
-  '구조 성공 직후 하린은 잔해 밖 standing after-state로 실제 장면에 남아야 합니다.',
+  `구조 성공 직후 ${SCRAP_CAST.RIVAL.name}은 잔해 밖 standing after-state로 실제 장면에 남아야 합니다.`,
 );
 for (const cinematicStageId of [
   SCRAP_AWAKENING_STAGE.COLLAPSE,
@@ -410,7 +462,10 @@ assert.equal(completedReload.isGrounded, false, '완료 뒤 ↑는 다시 Player
 for (let tick = 0; tick < 300 && scene.position.x > 255; tick += 1) {
   scene.update(STEP_SECONDS, input({ left: true }));
 }
-assert.ok(scene.position.x <= 255, '각성지에서 왼쪽 고물상 주인에게 직접 돌아갈 수 있어야 합니다.');
+assert.ok(
+  scene.position.x <= 255,
+  `각성지에서 왼쪽 ${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 직접 돌아갈 수 있어야 합니다.`,
+);
 const durableGarageStages = [];
 scene.progressionChanged.connect((snapshot) => {
   durableGarageStages.push(snapshot.scrapCampaign.garageRevealStageId);
@@ -418,7 +473,7 @@ scene.progressionChanged.connect((snapshot) => {
 scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 2 }));
 let ownerDialogue = scene.getWorldStatus().dialogue;
 assert.equal(ownerDialogue.active, true);
-assert.equal(ownerDialogue.speaker, '고물상 주인');
+assert.equal(ownerDialogue.speaker, SCRAP_CAST.SCRAPYARD_OWNER.name);
 assert.equal(ownerDialogue.conversationId, 'scrapyard-owner-analysis');
 assert.ok(
   scene.mapRuntime
@@ -428,7 +483,7 @@ assert.ok(
         entity.id === 'scrapyard-owner-analysis' &&
         entity.presentationProfileId === 'scrapyard-owner',
     ),
-  '고물상 주인은 authored 직업 silhouette profile을 사용해야 합니다.',
+  `${SCRAP_CAST.SCRAPYARD_OWNER.name}은 authored 직업 silhouette profile을 사용해야 합니다.`,
 );
 for (let jumpSequence = 3; jumpSequence <= 8; jumpSequence += 1) {
   scene.update(STEP_SECONDS, input({ jump: true, jumpSequence }));

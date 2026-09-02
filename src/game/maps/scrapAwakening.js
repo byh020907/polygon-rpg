@@ -1,4 +1,5 @@
 import { SCRAP_AWAKENING_STAGE } from '../campaign/ScrapAwakeningState.js';
+import { SCRAP_CAST } from '../campaign/ScrapCastProfile.js';
 import {
   SCRAP_GARAGE_REVEAL_STAGE,
   SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
@@ -280,7 +281,7 @@ const renderItems = [
     stroke: '#25201d',
     lineWidth: 3,
     order: 18,
-    label: '고물상 주인',
+    label: SCRAP_CAST.SCRAPYARD_OWNER.name,
     role: 'scrapyard-owner',
   }),
   item('scrapyard-owner-head', polygon(198, 276, 14, 16, 8), '#c7a77e', {
@@ -694,7 +695,7 @@ const renderItems = [
     lineWidth: 3,
     order: 18,
     enabled: false,
-    label: '라이벌 견습생 하린',
+    label: SCRAP_CAST.RIVAL.name,
     role: 'rival-apprentice',
   }),
   item('scrap-rival-departure-head', polygon(431, 283, 13, 15, 7), '#c69c76', {
@@ -716,7 +717,7 @@ const renderItems = [
     lineWidth: 3,
     order: 18,
     enabled: false,
-    label: '현장을 조사하는 하린',
+    label: `현장을 조사하는 ${SCRAP_CAST.RIVAL.name}`,
     role: 'rival-apprentice',
   }),
   item('scrap-rival-search-head', polygon(677, 283, 13, 15, 7), '#c69c76', {
@@ -738,7 +739,7 @@ const renderItems = [
     lineWidth: 3,
     order: 18,
     enabled: false,
-    label: '잔해에 갇힌 하린',
+    label: `잔해에 갇힌 ${SCRAP_CAST.RIVAL.name}`,
     role: 'rival-trapped',
   }),
   item('scrap-rival-trapped-head', polygon(1028, 335, 16, 14, 7), '#c69c76', {
@@ -762,7 +763,7 @@ const renderItems = [
       lineWidth: 3,
       order: 20,
       enabled: false,
-      label: '잔해 밖으로 뻗은 하린의 팔',
+      label: `잔해 밖으로 뻗은 ${SCRAP_CAST.RIVAL.name}의 팔`,
       role: 'rescue-request-arm',
     },
   ),
@@ -771,7 +772,7 @@ const renderItems = [
     lineWidth: 2,
     order: 20,
     enabled: false,
-    label: '하린의 청록 수거 표식띠',
+    label: `${SCRAP_CAST.RIVAL.name}의 청록 수거 표식띠`,
     role: 'rival-marker',
   }),
   item('scrap-rival-rescued-torso', rectangle(1016, 290, 28, 68), '#56666a', {
@@ -779,7 +780,7 @@ const renderItems = [
     lineWidth: 3,
     order: 18,
     enabled: false,
-    label: '구조된 라이벌 견습생 하린',
+    label: `구조된 ${SCRAP_CAST.RIVAL.name}`,
     role: 'rival-rescued',
   }),
   item('scrap-rival-rescued-head', polygon(1030, 278, 14, 16, 7), '#c69c76', {
@@ -801,7 +802,7 @@ const renderItems = [
     lineWidth: 2,
     order: 20,
     enabled: false,
-    label: '구조 뒤에도 남은 하린의 청록 수거 표식띠',
+    label: `구조 뒤에도 남은 ${SCRAP_CAST.RIVAL.name}의 청록 수거 표식띠`,
     role: 'rival-marker',
   }),
   item(
@@ -2655,9 +2656,9 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               kind: 'story-interaction',
               position: { x: 198, y: 354 },
               interactionRange: 82,
-              speaker: '고물상 주인',
+              speaker: SCRAP_CAST.SCRAPYARD_OWNER.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
-              conversationTitle: '고물상 주인의 정식 수거 의뢰',
+              conversationTitle: `${SCRAP_CAST.SCRAPYARD_OWNER.name}의 정식 수거 의뢰`,
               lines: [
                 '둘 다 정식 견습생이 됐으니 첫 공동 의뢰다. 외곽 폐병기의 동력 표식만 확인하고 와.',
                 '먼저 찾은 부품은 먼저 기록한다. 경쟁은 하되 안전 지지대부터 확인해.',
@@ -2672,16 +2673,16 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               kind: 'story-interaction',
               position: { x: 431, y: 354 },
               interactionRange: 82,
-              speaker: '하린',
+              speaker: SCRAP_CAST.RIVAL.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
-              conversationTitle: '라이벌 하린과 현장 출발',
+              conversationTitle: `${SCRAP_CAST.RIVAL.name}과 현장 출발`,
               lines: [
                 '공동 의뢰라도 좋은 부품은 먼저 표시한 사람이 가져가는 거다. 이번엔 내가 앞설게.',
                 '그래도 혼자 폐병기 안으로 들어가진 말자. 네 방패가 앞, 내 갈고리가 뒤다.',
                 '오른쪽 수거 표식까지 같이 가자. 이동하면서 작은 수거 유닛은 기본기로 정리하고.',
               ],
               presentationProfileId: 'rival-scout',
-              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
               enabled: false,
             },
             {
@@ -2691,7 +2692,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               interactionRange: 76,
               autoStart: true,
               autoStartRange: 96,
-              speaker: '하린',
+              speaker: SCRAP_CAST.RIVAL.name,
               lines: [
                 '왼쪽 발판은 얇아. 내 갈고리 표식 쪽으로 걸어. 작은 수거 유닛이 나오면 네 방패 뒤로 붙을게.',
               ],
@@ -2700,11 +2701,20 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: 'scrap-yard-scout-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'yard-scout-collector',
+              position: { x: 610, y: 426 },
+              maxHealth: 58,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+              enabled: false,
+            },
+            {
               id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
               kind: 'story-interaction',
               position: { x: 677, y: 354 },
               interactionRange: 88,
-              speaker: '하린',
+              speaker: SCRAP_CAST.RIVAL.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
               conversationTitle: '폐병기 내부 안전 조사',
               lines: [
@@ -2721,9 +2731,9 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               kind: 'story-interaction',
               position: { x: 1028, y: 354 },
               interactionRange: 92,
-              speaker: '하린',
+              speaker: SCRAP_CAST.RIVAL.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
-              conversationTitle: '잔해 아래 하린의 구조 요청',
+              conversationTitle: `잔해 아래 ${SCRAP_CAST.RIVAL.name}의 구조 요청`,
               lines: [
                 '나 여기 있어. 다리는 움직이는데 잔해가 허리 위를 눌렀어.',
                 '구조 winch가 바로 위야. 전원만 들어오면 cable로 이 판을 들 수 있어.',
@@ -2738,11 +2748,11 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               kind: 'story-interaction',
               position: { x: 774, y: 354 },
               interactionRange: 76,
-              speaker: '주인공 (독백)',
+              speaker: SCRAP_CAST.PROTAGONIST.monologueName,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
-              conversationTitle: '주인공의 구조 선택',
+              conversationTitle: `${SCRAP_CAST.PROTAGONIST.name}의 구조 선택`,
               lines: [
-                '이 장치를 winch에 연결하면 하린을 꺼낼 수 있다.',
+                `이 장치를 winch에 연결하면 ${SCRAP_CAST.RIVAL.name}을 꺼낼 수 있다.`,
                 '폐병기 신호가 살아날 위험은 있다. 그래도 사람을 두고 다른 전원을 찾으러 갈 시간은 없어.',
                 '먼저 구한다. 무슨 일이 깨어나든 그다음에 내가 책임진다.',
               ],
@@ -2766,7 +2776,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               kind: 'story-interaction',
               position: { x: 198, y: 354 },
               interactionRange: 82,
-              speaker: '고물상 주인',
+              speaker: SCRAP_CAST.SCRAPYARD_OWNER.name,
               conversationId: SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
               conversationTitle: '제어핵 분석과 차고 개방',
               lines: [
@@ -4083,8 +4093,20 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
-      id: 'scrap-prologue-yard-search',
+      id: 'scrap-prologue-yard-clearance',
       priority: 3,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-scout-collector', value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-search',
+      priority: 4,
       when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SEARCH },
       operations: [
         { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },

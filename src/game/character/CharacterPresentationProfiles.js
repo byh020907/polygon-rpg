@@ -1,3 +1,5 @@
+import { SCRAP_CAST } from '../campaign/ScrapCastProfile.js';
+
 function deepFreeze(value) {
   if (value === null || typeof value !== 'object' || Object.isFrozen(value)) return value;
   for (const entry of Object.values(value)) deepFreeze(entry);
@@ -7,8 +9,8 @@ function deepFreeze(value) {
 const RAW_PROFILES = [
   {
     id: 'scrapyard-apprentice',
-    label: '고물상 견습생',
-    roleLabel: '주인공',
+    label: SCRAP_CAST.PROTAGONIST.name,
+    roleLabel: SCRAP_CAST.PROTAGONIST.name,
     family: 'human',
     accent: '#f2a65a',
     material: '#4d6670',
@@ -20,7 +22,7 @@ const RAW_PROFILES = [
   },
   {
     id: 'scrapyard-owner',
-    label: '고물상 주인',
+    label: SCRAP_CAST.SCRAPYARD_OWNER.name,
     roleLabel: '핵심 NPC',
     family: 'human',
     accent: '#dfc37a',
@@ -33,7 +35,7 @@ const RAW_PROFILES = [
   },
   {
     id: 'rival-scout',
-    label: '라이벌 견습생 하린',
+    label: SCRAP_CAST.RIVAL.name,
     roleLabel: '반복 정찰 인물',
     family: 'human',
     accent: '#75d6c4',

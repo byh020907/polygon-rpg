@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { SCRAP_CAST } from '../src/game/campaign/ScrapCastProfile.js';
 import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import {
@@ -299,7 +300,7 @@ assert.throws(
 const freeAction = {
   actionId: 'free:dialogue:mechanic-owner',
   kind: SCRAP_CAMPAIGN_ACTION_KIND.FREE,
-  label: '고물상 주인과 대화',
+  label: `${SCRAP_CAST.SCRAPYARD_OWNER.name}과 대화`,
   costSegments: 0,
 };
 const afterFree = commit(fresh, freeAction);
