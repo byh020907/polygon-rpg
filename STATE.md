@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`final-battle-domain-verified`
+`final-battle-domain-verified · pwa-feedback-pending`
 
 ## Project Direction Comparison
 
@@ -55,8 +55,8 @@
 
 ## Active Execution Goal
 
-없음. 최신 verified snapshot은 final battle schema v6의 five-part gate, armor→weapon→control-core→core-reinstalled→epilogue ledger, v5 migration과 `scrap-final-epilogue` Browser projection을 포함한다.
+없음. 최신 verified snapshot은 final battle schema v6의 five-part gate, armor→weapon→control-core→core-reinstalled→epilogue ledger, v5 migration과 `scrap-final-epilogue` Browser projection을 포함한다. 새 PWA 설치·전체 offline feedback은 `INBOX.md` 원문으로 보존되어 다음 fresh tick이 Desired State 반영부터 처리한다.
 
 ## Blockers
 
-없음. 새 INBOX feedback의 현재형 Product/Engineering 반영, 20~30분 도입의 실제 탐색·전투·ambient 동행, linked issue 고유 encounter, 반복 cast 확장, actual convoy/route patch, giant final encounter·arena·지역 map patch와 전체 art 확장은 자율 구현 가능한 Gap이다.
+없음. 모바일 PWA 설치·전체 offline feedback은 아직 Product/Architecture에 반영하지 않았으므로 `INBOX.md`에서 보존한다. 그 밖에 20~30분 도입의 실제 탐색·전투·ambient 동행, linked issue 고유 encounter, 반복 cast 확장, actual convoy/route patch, giant final encounter·arena·지역 map patch와 전체 art 확장은 자율 구현 가능한 Gap이다.
