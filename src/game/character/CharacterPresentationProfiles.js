@@ -174,6 +174,19 @@ const RAW_PROFILES = [
     landmarks: ['황동 압력 밸브', '좌우 지열 배관', '과열 증기 배출관'],
     representativePose: '한쪽 배관을 들어 증기 분출선을 예고하고 압력 밸브를 노출하는 자세',
   },
+  {
+    id: 'snowplow-train-boss',
+    label: '폭주 장갑 제설 열차',
+    roleLabel: '설산 교역로 Boss',
+    family: 'machine',
+    accent: '#b9d7ec',
+    material: '#506b7b',
+    toolKind: 'snowplow-train',
+    minimumViewportHeight: 92,
+    proportions: { shoulder: 38, hip: 29, head: 7, sideDepth: 23 },
+    landmarks: ['쐐기형 제설판', '궤도형 구동륜', '청백 열선 리벳'],
+    representativePose: '차체를 낮추고 제설판의 넓은 돌진 범위와 노출 제동축을 예고하는 자세',
+  },
 ];
 
 function validateProfile(profile) {

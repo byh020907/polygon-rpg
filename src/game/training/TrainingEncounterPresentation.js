@@ -21,6 +21,7 @@ const SCRAP_ENEMY_TOOL_KINDS = Object.freeze([
   'conveyor-ram',
   'hydraulic-crane',
   'geothermal-manifold',
+  'snowplow-train',
 ]);
 
 function assertCharacterPresentationProfile(profile) {
@@ -570,6 +571,73 @@ function createScrapEnemyAppearanceItems({
           lineWidth: 2,
           opacity: 0.72,
           order: headOrder + 0.28,
+        },
+      ),
+    ];
+  }
+
+  if (toolKind === 'snowplow-train') {
+    const plowLength = Math.max(weaponLength - 8, 64);
+    return [
+      ...commonItems,
+      polygon(
+        'combat-enemy-snowplow-wedge',
+        [
+          { x: -10, y: -12 },
+          { x: plowLength - 18, y: -16 },
+          { x: plowLength + 12, y: -30 },
+          { x: plowLength + 18, y: 28 },
+          { x: plowLength - 18, y: 14 },
+          { x: -10, y: 12 },
+        ],
+        { ...weaponHand, rotation: weaponAngle },
+        material,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 4,
+          order: weaponOrder + 0.24,
+        },
+      ),
+      polygon(
+        'combat-enemy-snowplow-track',
+        [
+          { x: -shoulderWidth - 12, y: -12 },
+          { x: shoulderWidth + 14, y: -12 },
+          { x: shoulderWidth + 20, y: 8 },
+          { x: -shoulderWidth - 18, y: 8 },
+        ],
+        { x, y: y - 9 },
+        '#33454f',
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 3,
+          order: bodyOrder + 0.2,
+        },
+      ),
+      polygon(
+        'combat-enemy-snowplow-heater-rivet',
+        regularPolygon(16, 16, 10, Math.PI / 10),
+        { x: x - shoulderWidth + 2, y: y - 51 },
+        accent,
+        {
+          ...presentation,
+          stroke: '#f4fbff',
+          lineWidth: 3,
+          order: bodyOrder + 0.34,
+        },
+      ),
+      polygon(
+        'combat-enemy-snowplow-signal-lamp',
+        regularPolygon(headRadius + 5, Math.max(7, headRadius), 8, Math.PI / 8),
+        { x: x + 8, y: y - 111 },
+        '#d8efff',
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2.5,
+          order: headOrder + 0.3,
         },
       ),
     ];

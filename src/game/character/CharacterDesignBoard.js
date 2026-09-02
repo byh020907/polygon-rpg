@@ -389,6 +389,33 @@ function toolItems(profile, view, toolBaseX, toolBaseY, action, order) {
       ),
     ];
   }
+  if (profile.toolKind === 'snowplow-train') {
+    return [
+      item(
+        id,
+        [
+          { x: toolBaseX - 9, y: toolBaseY + 2 },
+          { x: toolBaseX + 16, y: toolBaseY - (action ? 12 : 4) },
+          { x: toolBaseX + 32, y: toolBaseY - (action ? 18 : 9) },
+          { x: toolBaseX + 35, y: toolBaseY + 16 },
+          { x: toolBaseX + 15, y: toolBaseY + 10 },
+          { x: toolBaseX - 8, y: toolBaseY + 13 },
+        ],
+        profile.material,
+        { stroke: accent, order },
+      ),
+      item(`${id}-track`, rectangle(toolBaseX - 13, toolBaseY + 14, 42, 8), '#33454f', {
+        stroke: accent,
+        order: order - 1,
+      }),
+      item(
+        `${id}-heater-rivet`,
+        octagon(toolBaseX + 8, toolBaseY - (action ? 10 : 2), 7, 7),
+        accent,
+        { stroke: '#f4fbff', order: order + 1 },
+      ),
+    ];
+  }
   return [
     item(
       id,

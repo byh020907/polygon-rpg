@@ -132,8 +132,24 @@ const regions = [
     label: '설산 교역로',
     route: { travelSegments: 1, rivalArrivalSegment: 58 },
     event: { costSegments: 16, extensionSegments: 12, label: '옛 터널 개통과 제설 열차 인수' },
-    eventStages: eventStages('snow-trade-road'),
-    objectives: {},
+    eventStages: eventStages('snow-trade-road', {
+      'npc-briefing': '오른쪽 운행 현황판에서 적설 구간, 16구간 비용과 성공 연장을 확인하세요.',
+      'facility-observed':
+        '눈에 막힌 옛 터널로 들어가 열선 케이블을 훔치는 수거 유닛을 제거하세요.',
+      'journey-combat':
+        '개통 신호를 따라 제설 열차 대피선으로 이동해 폭주 기관차 Boss를 제압하세요.',
+      'boss-defeated': '열차 승무원과 옛 터널의 열선·신호 설비를 복구해 산길을 대체하세요.',
+      'replacement-complete': '장갑 제설 열차의 제동을 잠그고 방한 차체를 분리하세요.',
+      'machine-separated': '대피선 회수대에서 제설 열차 장갑 차체를 수령하세요.',
+      'part-claimed': '고물상 차고와 작전 지도에서 새 장갑과 다음 지역을 확인하세요.',
+      'campaign-updated': '고물상 차고와 작전 지도에서 새 장갑과 다음 지역을 확인하세요.',
+    }),
+    objectives: {
+      arrival: '제설 열차 승무원에게 막힌 옛 터널과 고립된 교역로 상황을 들으세요.',
+      eventStart: '핵심 사건을 확정해 16구간 옛 터널 개통 작업을 시작하세요.',
+      resolved:
+        '제설 열차 장갑 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 누적 조립 상태를 확인하세요.',
+    },
     mapPatches: mapPatches('snow-trade-road'),
     machineLabel: '장갑 제설 열차',
     part: { id: 'snowplow-armor', label: '제설 열차 장갑 차체', robotModule: '장갑' },

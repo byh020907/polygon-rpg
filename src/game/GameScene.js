@@ -405,6 +405,8 @@ function scrapCampaignWorldFacts(campaign) {
     scrapCollectedPartIds: Object.freeze(
       campaign.regions.filter((region) => region.collected).map((region) => region.partId),
     ),
+    scrapCollectedPartCount: campaign.collectedPartCount,
+    scrapRobotCompletionPercent: campaign.completionPercent,
   });
 }
 

@@ -45,6 +45,16 @@ export const SCRAP_GREENHOUSE_REPLACEMENT_CONVERSATION_ID =
   'greenhouse-plains:replacement-complete';
 export const SCRAP_GREENHOUSE_SEPARATION_CONVERSATION_ID = 'greenhouse-plains:machine-separated';
 export const SCRAP_GREENHOUSE_PART_CONVERSATION_ID = 'greenhouse-plains:part-claimed';
+export const SCRAP_SNOW_ROAD_PORTAL_ID = 'scrapyard-snow-trade-road';
+export const SCRAP_SNOW_REGION_ID = 'snow-trade-road';
+export const SCRAP_SNOW_ROAD_ROOM_ID = 'snow-trade-road-roadhead';
+export const SCRAP_SNOW_TUNNEL_ROOM_ID = 'snow-trade-road-old-tunnel';
+export const SCRAP_SNOW_TRAIN_ROOM_ID = 'snow-trade-road-snowplow-siding';
+export const SCRAP_SNOW_CREW_CONVERSATION_ID = 'snow-trade-road:crew-briefing';
+export const SCRAP_SNOW_FACILITY_CONVERSATION_ID = 'snow-trade-road:facility-observed';
+export const SCRAP_SNOW_REPLACEMENT_CONVERSATION_ID = 'snow-trade-road:replacement-complete';
+export const SCRAP_SNOW_SEPARATION_CONVERSATION_ID = 'snow-trade-road:machine-separated';
+export const SCRAP_SNOW_PART_CONVERSATION_ID = 'snow-trade-road:part-claimed';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -426,6 +436,44 @@ const renderItems = [
     label: 'ROBOT 60% · 3/5 PARTS · 다리+팔+동력원',
     role: 'completion-sixty',
   }),
+  item('garage-robot-snow-armor-torso', polygon(482, 302, 51, 68, 8, Math.PI / 8), '#6f8796', {
+    stroke: '#273b48',
+    lineWidth: 5,
+    order: 24,
+    enabled: false,
+    label: '제설 열차 방한 장갑 차체 모듈',
+    role: 'snowplow-armor-module',
+  }),
+  item('garage-robot-snow-armor-rivet-left', polygon(454, 296, 6, 6, 8), '#b9d7ec', {
+    stroke: '#f4fbff',
+    lineWidth: 2,
+    order: 28,
+    enabled: false,
+    role: 'heated-armor-rivet',
+  }),
+  item('garage-robot-snow-armor-rivet-right', polygon(510, 296, 6, 6, 8), '#b9d7ec', {
+    stroke: '#f4fbff',
+    lineWidth: 2,
+    order: 28,
+    enabled: false,
+    role: 'heated-armor-rivet',
+  }),
+  item('garage-robot-snow-twenty-label', rectangle(424, 190, 116, 16), '#b9d7ec', {
+    stroke: '#273b48',
+    lineWidth: 2,
+    order: 31,
+    enabled: false,
+    label: 'ROBOT 20% · 1/5 PARTS · 장갑',
+    role: 'completion-twenty',
+  }),
+  item('garage-robot-eighty-label', rectangle(412, 178, 140, 28), '#d8efff', {
+    stroke: '#273b48',
+    lineWidth: 3,
+    order: 32,
+    enabled: false,
+    label: 'ROBOT 80% · 4/5 PARTS · 다리+팔+동력원+장갑',
+    role: 'completion-eighty',
+  }),
   item('wreck-hull-lower', polygon(986, 374, 206, 72, 10, Math.PI / 10), '#504d49', {
     stroke: '#252729',
     lineWidth: 4,
@@ -573,6 +621,19 @@ const renderItems = [
     order: 32,
     enabled: false,
     label: '온실 평원 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  ...createEnvironmentPortalLandmarkItems('scrapyard-snow-road-gate', 1030, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 34,
+  }),
+  item('scrapyard-snow-road-sign', rectangle(970, 308, 124, 54), '#70899a', {
+    stroke: '#273b48',
+    lineWidth: 3,
+    order: 36,
+    enabled: false,
+    label: '설산 교역로 연결로 · 1구간',
     role: 'long-distance-road-sign',
   }),
 ];
@@ -1313,6 +1374,235 @@ const greenhouseReactorRenderItems = [
   }),
 ];
 
+const snowRoadheadRenderItems = [
+  item('snow-roadhead-sky', rectangle(0, 0, 1440, 426), '#203442', {
+    stroke: '#0d1820',
+    order: -100,
+    label: '눈보라가 가라앉은 설산 교역로',
+  }),
+  item(
+    'snow-roadhead-ridge',
+    [
+      { x: 0, y: 360 },
+      { x: 210, y: 190 },
+      { x: 390, y: 320 },
+      { x: 650, y: 150 },
+      { x: 880, y: 322 },
+      { x: 1160, y: 174 },
+      { x: 1440, y: 334 },
+      { x: 1440, y: 426 },
+      { x: 0, y: 426 },
+    ],
+    '#61798a',
+    { stroke: '#b9d7ec', lineWidth: 4, order: -20, label: '설산 능선' },
+  ),
+  item('snow-roadhead-ground', rectangle(0, 426, 1440, 114), '#d6e5ec', {
+    stroke: '#425665',
+    order: 0,
+  }),
+  item('snow-roadhead-rail', rectangle(0, 446, 1440, 20), '#6b7b83', {
+    stroke: '#26343b',
+    order: 2,
+    label: '제설 열차 폐선',
+    role: 'snow-rail',
+  }),
+  ...createEnvironmentPortalLandmarkItems('snow-roadhead-return-gate', 68, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 22,
+  }),
+  item('snow-roadhead-return-sign', rectangle(18, 314, 118, 48), '#70899a', {
+    stroke: '#273b48',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '동네 고물상 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  item('snow-crew-coat', rectangle(596, 326, 38, 100), '#506070', {
+    stroke: '#202c34',
+    lineWidth: 3,
+    order: 18,
+    label: '제설 열차 승무원 · 방한 외투',
+    role: 'snow-train-crew',
+  }),
+  item('snow-crew-hat', rectangle(594, 310, 42, 14), '#b9d7ec', {
+    stroke: '#314655',
+    lineWidth: 2,
+    order: 20,
+    role: 'winter-cap',
+  }),
+  item('snow-crew-signal-lamp', polygon(650, 350, 12, 18, 8, Math.PI / 8), '#d8efff', {
+    stroke: '#70899a',
+    lineWidth: 2,
+    order: 20,
+    role: 'rail-signal-lamp',
+  }),
+  item('snow-tunnel-status-board', rectangle(790, 324, 92, 102), '#607684', {
+    stroke: '#273b48',
+    lineWidth: 4,
+    order: 16,
+    label: '옛 터널 적설·열선·개통 현황판',
+    role: 'facility-status',
+  }),
+  item('snow-tunnel-warning', rectangle(806, 342, 60, 14), '#e39a64', {
+    stroke: '#603925',
+    lineWidth: 2,
+    order: 17,
+    role: 'facility-warning-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('snow-tunnel-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('snow-tunnel-sign', rectangle(1266, 310, 138, 52), '#70899a', {
+    stroke: '#273b48',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '막힌 옛 터널 · 지역 내 이동 무료',
+    role: 'local-snow-route',
+  }),
+];
+
+const snowTunnelRenderItems = [
+  item('snow-tunnel-backdrop', rectangle(0, 0, 1440, 540), '#18252d', {
+    stroke: '#081015',
+    order: -100,
+    label: '눈에 막힌 옛 교역 터널',
+  }),
+  item('snow-tunnel-ground', rectangle(0, 426, 1440, 114), '#6d7d84', {
+    stroke: '#28353a',
+    order: 0,
+  }),
+  item('snow-tunnel-arch', polygon(720, 250, 540, 226, 10, Math.PI / 10), '#354954', {
+    stroke: '#8da9b9',
+    lineWidth: 6,
+    order: -8,
+    label: '옛 터널 석조 아치',
+    role: 'old-tunnel',
+  }),
+  item('snow-tunnel-drift', polygon(720, 410, 260, 66, 10), '#d9e9f0', {
+    stroke: '#8da9b9',
+    lineWidth: 3,
+    order: 8,
+    label: '열선 케이블을 덮은 눈더미',
+    role: 'snow-drift',
+  }),
+  item('snow-tunnel-heater-line', rectangle(420, 378, 600, 14), '#b9d7ec', {
+    stroke: '#f4fbff',
+    lineWidth: 2,
+    order: 10,
+    label: '옛 터널 열선 케이블',
+    role: 'tunnel-heater-line',
+  }),
+  ...createEnvironmentPortalLandmarkItems('snow-tunnel-roadhead-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+  ...createEnvironmentPortalLandmarkItems('snow-tunnel-siding-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('snow-siding-sign', rectangle(1266, 310, 138, 52), '#70899a', {
+    stroke: '#273b48',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '제설 열차 대피선 · Boss',
+    role: 'boss-route-sign',
+  }),
+];
+
+const snowTrainRenderItems = [
+  item('snow-siding-backdrop', rectangle(0, 0, 1440, 540), '#1d2e39', {
+    stroke: '#0a141a',
+    order: -100,
+    label: '장갑 제설 열차 대피선',
+  }),
+  item('snow-siding-ground', rectangle(0, 426, 1440, 114), '#8ba0aa', {
+    stroke: '#30414a',
+    order: 0,
+  }),
+  item('snow-open-tunnel-signal', rectangle(260, 236, 210, 30), '#75d6c4', {
+    stroke: '#245e5b',
+    lineWidth: 4,
+    order: 12,
+    enabled: false,
+    label: '옛 터널 개통 신호 · 교역로 운행 재개',
+    role: 'replacement-facility',
+  }),
+  item('snow-open-tunnel-heater', rectangle(286, 278, 158, 16), '#d8efff', {
+    stroke: '#70899a',
+    lineWidth: 2,
+    order: 13,
+    enabled: false,
+    role: 'replacement-complete-signal',
+  }),
+  item('snow-armored-train-body', rectangle(716, 292, 270, 134), '#506b7b', {
+    stroke: '#263b48',
+    lineWidth: 6,
+    order: 14,
+    label: '장갑 제설 열차 차체',
+    role: 'industrial-machine',
+  }),
+  item(
+    'snow-armored-train-plow',
+    [
+      { x: 986, y: 322 },
+      { x: 1128, y: 280 },
+      { x: 1162, y: 426 },
+      { x: 986, y: 402 },
+    ],
+    '#6f8796',
+    { stroke: '#b9d7ec', lineWidth: 6, order: 16, label: '쐐기형 제설판', role: 'snowplow-wedge' },
+  ),
+  item('snow-armored-train-track', rectangle(746, 392, 240, 34), '#31434d', {
+    stroke: '#b9d7ec',
+    lineWidth: 3,
+    order: 16,
+    label: '궤도형 구동륜',
+    role: 'snowplow-track',
+  }),
+  item('snow-armored-train-heater-rivets', rectangle(760, 310, 184, 12), '#b9d7ec', {
+    stroke: '#f4fbff',
+    lineWidth: 2,
+    order: 17,
+    label: '청백 열선 리벳',
+    role: 'heated-armor-rivets',
+  }),
+  item('snow-separated-train-frame', rectangle(716, 330, 270, 96), '#40535e', {
+    stroke: '#263b48',
+    lineWidth: 5,
+    order: 14,
+    enabled: false,
+    label: '방한 장갑이 분리된 제설 열차 골격',
+    role: 'machine-separated',
+  }),
+  item('snow-armor-cradle', rectangle(1036, 344, 184, 82), '#526a78', {
+    stroke: '#273b48',
+    lineWidth: 4,
+    order: 18,
+    enabled: false,
+    label: '제설 열차 장갑 회수대',
+    role: 'part-ready',
+  }),
+  item('snow-armor-signal', rectangle(1050, 358, 156, 20), '#b9d7ec', {
+    stroke: '#273b48',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: 'SNOWPLOW ARMOR · 회수 가능',
+    role: 'part-ready-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('snow-siding-tunnel-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+];
+
 const activatedStages = [
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
@@ -1419,6 +1709,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             SCRAP_MINE_ROAD_PORTAL_ID,
             SCRAP_SHIPYARD_ROAD_PORTAL_ID,
             SCRAP_GREENHOUSE_ROAD_PORTAL_ID,
+            SCRAP_SNOW_ROAD_PORTAL_ID,
           ],
         },
       ],
@@ -1972,6 +2263,189 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         },
       ],
     },
+    {
+      id: SCRAP_SNOW_REGION_ID,
+      label: '설산 교역로',
+      rooms: [
+        {
+          id: SCRAP_SNOW_ROAD_ROOM_ID,
+          label: '설산 교역로 · 연결로 진입부',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'snow-roadhead-ground-surface',
+              kind: 'solid',
+              material: 'snow-packed-trade-road',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: snowRoadheadRenderItems,
+          entities: [
+            {
+              id: 'snow-crew-briefing',
+              kind: 'story-interaction',
+              position: { x: 614, y: 354 },
+              interactionRange: 84,
+              speaker: '제설 열차 승무원',
+              conversationId: SCRAP_SNOW_CREW_CONVERSATION_ID,
+              conversationTitle: '막힌 옛 터널 개통 요청',
+              lines: [
+                '눈사태가 옛 터널을 막아 교역대가 다시 위험한 산길로 몰렸어. 열선 케이블도 수거 유닛이 뜯어 가고 있고.',
+                '터널을 다시 열면 이 장갑 제설 열차는 더 이상 생활 노선을 지킬 필요가 없어.',
+                '오른쪽 운행 현황판에서 적설 범위와 개통 시간을 먼저 확인해 줘.',
+              ],
+              presentationProfileId: 'snow-train-crew',
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: 'snow-facility-inspection',
+              kind: 'story-interaction',
+              position: { x: 836, y: 354 },
+              interactionRange: 78,
+              speaker: '설산 교역 운행 현황판',
+              conversationId: SCRAP_SNOW_FACILITY_CONVERSATION_ID,
+              conversationTitle: '옛 터널 적설과 개통 시간 확인',
+              lines: [
+                '열선 회수, 터널 제설, 폭주 기관차 제동과 신호 설비 복구까지 16구간 예상.',
+                '성공하면 고철 대왕은 개통된 터널 경계를 우회해 수도 도착이 3일 늦어진다.',
+              ],
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'facility-observed',
+              requestCampaignEventStart: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: [SCRAP_SNOW_ROAD_PORTAL_ID, 'snow-roadhead-tunnel-portal'],
+        },
+        {
+          id: SCRAP_SNOW_TUNNEL_ROOM_ID,
+          label: '설산 교역로 · 막힌 옛 터널',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'snow-tunnel-ground-surface',
+              kind: 'solid',
+              material: 'heated-old-tunnel-floor',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: snowTunnelRenderItems,
+          entities: [
+            {
+              id: 'snow-tunnel-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'snow-tunnel-collector',
+              position: { x: 808, y: 426 },
+              maxHealth: 92,
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'journey-combat',
+            },
+          ],
+          triggers: [],
+          portals: ['snow-roadhead-tunnel-portal', 'snow-tunnel-siding-portal'],
+        },
+        {
+          id: SCRAP_SNOW_TRAIN_ROOM_ID,
+          label: '설산 교역로 · 장갑 제설 열차 대피선',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'snow-siding-ground-surface',
+              kind: 'solid',
+              material: 'armored-snowplow-siding',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: snowTrainRenderItems,
+          entities: [
+            {
+              id: 'snowplow-train-boss',
+              kind: 'combat-enemy',
+              encounterProfileId: 'snowplow-train-boss',
+              position: { x: 850, y: 426 },
+              maxHealth: 138,
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'boss-defeated',
+            },
+            {
+              id: 'snow-tunnel-restoration',
+              kind: 'story-interaction',
+              position: { x: 360, y: 354 },
+              interactionRange: 84,
+              speaker: '제설 열차 승무원',
+              conversationId: SCRAP_SNOW_REPLACEMENT_CONVERSATION_ID,
+              conversationTitle: '옛 터널 열선·신호 설비 복구',
+              lines: [
+                '폭주 기관차가 멈췄어. 회수한 열선 케이블을 터널 바닥에 다시 잇고 개통 신호를 올리자.',
+                '터널 운행 재개. 교역대가 안전한 지름길을 쓰니 장갑 제설 열차는 이제 노선에서 물러나도 돼.',
+              ],
+              presentationProfileId: 'snow-train-crew',
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'replacement-complete',
+              enabled: false,
+            },
+            {
+              id: 'snow-train-separation',
+              kind: 'story-interaction',
+              position: { x: 850, y: 354 },
+              interactionRange: 96,
+              speaker: '장갑 제설 열차',
+              conversationId: SCRAP_SNOW_SEPARATION_CONVERSATION_ID,
+              conversationTitle: '제설 열차 장갑 차체 분리',
+              lines: [
+                '열선 제동축을 잠그고 쐐기형 제설판과 궤도 구동부를 차체에서 해제한다.',
+                '백청 장갑판이 회수대에 고정됐다. 차고 로봇의 방한 장갑으로 사용할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'machine-separated',
+              enabled: false,
+            },
+            {
+              id: 'snow-armor-part-claim',
+              kind: 'story-interaction',
+              position: { x: 1128, y: 354 },
+              interactionRange: 90,
+              speaker: '제설 열차 장갑 회수대',
+              conversationId: SCRAP_SNOW_PART_CONVERSATION_ID,
+              conversationTitle: '제설 열차 장갑 부품 회수',
+              lines: [
+                '제설 열차 장갑 차체를 확보했다. 차고 조립식 로봇의 방한 장갑이 누적 조립된다.',
+                '고철 대왕은 개통된 터널 경계를 우회한다. D-DAY +3일, 다음 지역은 자유롭게 선택할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_SNOW_REGION_ID,
+              campaignStageKind: 'part-claimed',
+              completeCampaignRegion: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: ['snow-tunnel-siding-portal'],
+        },
+      ],
+    },
   ],
   portals: [
     {
@@ -2163,6 +2637,71 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       to: {
         regionId: SCRAP_GREENHOUSE_REGION_ID,
         roomId: SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: SCRAP_SNOW_ROAD_PORTAL_ID,
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_AWAKENING_REGION_ID,
+        roomId: SCRAP_AWAKENING_ROOM_ID,
+        anchor: { x: 1030, y: 426 },
+        spawn: { x: 978, y: 350 },
+        radius: 76,
+      },
+      to: {
+        regionId: SCRAP_SNOW_REGION_ID,
+        roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 122, y: 350 },
+        radius: 76,
+      },
+      campaignTravel: {
+        routeId: 'road:neighborhood-scrapyard:snow-trade-road',
+        fromLocationId: 'neighborhood-scrapyard',
+        toLocationId: SCRAP_SNOW_REGION_ID,
+      },
+      transition: { durationSeconds: 0.48 },
+    },
+    {
+      id: 'snow-roadhead-tunnel-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_SNOW_REGION_ID,
+        roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_SNOW_REGION_ID,
+        roomId: SCRAP_SNOW_TUNNEL_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: 'snow-tunnel-siding-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_SNOW_REGION_ID,
+        roomId: SCRAP_SNOW_TUNNEL_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_SNOW_REGION_ID,
+        roomId: SCRAP_SNOW_TRAIN_ROOM_ID,
         anchor: { x: 68, y: 426 },
         spawn: { x: 126, y: 350 },
         radius: 74,
@@ -2378,6 +2917,46 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
+      id: 'scrapyard-snow-road-open',
+      priority: 108,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SNOW_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-snow-road-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-snow-road-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-snow-road-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'scrapyard-snow-road-sign', value: true },
+        {
+          op: 'set-enabled',
+          target: 'snow-roadhead-return-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'snow-roadhead-return-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'snow-roadhead-return-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'snow-roadhead-return-sign', value: true },
+      ],
+    },
+    {
       id: 'scrapyard-walker-drive-installed',
       priority: 110,
       when: { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
@@ -2475,6 +3054,60 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-sixty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-snowplow-armor-installed',
+      priority: 118,
+      when: { fact: 'scrapCollectedPartIds', includes: 'snowplow-armor' },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-snow-armor-torso', value: true },
+        { op: 'set-enabled', target: 'garage-robot-snow-armor-rivet-left', value: true },
+        { op: 'set-enabled', target: 'garage-robot-snow-armor-rivet-right', value: true },
+        { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-two-part-completion',
+      priority: 118.1,
+      when: { fact: 'scrapCollectedPartCount', eq: 2 },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-three-part-completion',
+      priority: 118.2,
+      when: { fact: 'scrapCollectedPartCount', eq: 3 },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-sixty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-four-part-completion',
+      priority: 118.3,
+      when: { fact: 'scrapCollectedPartCount', eq: 4 },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-sixty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-eighty-label', value: true },
       ],
     },
     {
@@ -2912,6 +3545,128 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           target: 'greenhouse-reactor-signal',
           property: 'label',
           value: 'ARCANE REACTOR · 차고 수송 완료',
+        },
+      ],
+    },
+    {
+      id: 'snow-briefing-complete',
+      priority: 330,
+      when: {
+        all: [
+          {
+            fact: 'scrapRegionStageIds.snow-trade-road',
+            in: ['snow-trade-road:npc-briefing', 'snow-trade-road:facility-observed'],
+          },
+          { fact: 'scrapRegionStatuses.snow-trade-road', eq: 'available' },
+        ],
+      },
+      operations: [{ op: 'set-enabled', target: 'snow-facility-inspection', value: true }],
+    },
+    {
+      id: 'snow-core-event-started',
+      priority: 340,
+      when: { fact: 'scrapRegionStatuses.snow-trade-road', in: ['in-progress', 'resolved'] },
+      operations: [
+        { op: 'set-enabled', target: 'snow-facility-inspection', value: false },
+        { op: 'set-enabled', target: SCRAP_SNOW_ROAD_PORTAL_ID, value: false },
+        { op: 'set-enabled', target: 'snow-roadhead-tunnel-portal', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-gate-landmark-structure', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-gate-landmark-opening', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-gate-landmark-threshold', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-sign', value: true },
+      ],
+    },
+    {
+      id: 'snow-journey-combat-complete',
+      priority: 350,
+      when: {
+        fact: 'scrapRegionStageIds.snow-trade-road',
+        in: [
+          'snow-trade-road:journey-combat',
+          'snow-trade-road:boss-defeated',
+          'snow-trade-road:replacement-complete',
+          'snow-trade-road:machine-separated',
+          'snow-trade-road:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'snow-tunnel-collector', value: false },
+        { op: 'set-enabled', target: 'snow-tunnel-siding-portal', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-siding-gate-landmark-structure', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-siding-gate-landmark-opening', value: true },
+        { op: 'set-enabled', target: 'snow-tunnel-siding-gate-landmark-threshold', value: true },
+        { op: 'set-enabled', target: 'snow-siding-sign', value: true },
+      ],
+    },
+    {
+      id: 'snow-boss-defeated',
+      priority: 360,
+      when: {
+        fact: 'scrapRegionStageIds.snow-trade-road',
+        in: [
+          'snow-trade-road:boss-defeated',
+          'snow-trade-road:replacement-complete',
+          'snow-trade-road:machine-separated',
+          'snow-trade-road:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'snowplow-train-boss', value: false },
+        { op: 'set-enabled', target: 'snow-tunnel-restoration', value: true },
+      ],
+    },
+    {
+      id: 'snow-replacement-complete',
+      priority: 370,
+      when: {
+        fact: 'scrapRegionStageIds.snow-trade-road',
+        in: [
+          'snow-trade-road:replacement-complete',
+          'snow-trade-road:machine-separated',
+          'snow-trade-road:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'snow-tunnel-restoration', value: false },
+        { op: 'set-enabled', target: 'snow-open-tunnel-signal', value: true },
+        { op: 'set-enabled', target: 'snow-open-tunnel-heater', value: true },
+        { op: 'set-enabled', target: 'snow-train-separation', value: true },
+      ],
+    },
+    {
+      id: 'snow-machine-separated',
+      priority: 380,
+      when: {
+        fact: 'scrapRegionStageIds.snow-trade-road',
+        in: ['snow-trade-road:machine-separated', 'snow-trade-road:campaign-updated'],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'snow-train-separation', value: false },
+        { op: 'set-enabled', target: 'snow-armored-train-body', value: false },
+        { op: 'set-enabled', target: 'snow-armored-train-plow', value: false },
+        { op: 'set-enabled', target: 'snow-armored-train-track', value: false },
+        { op: 'set-enabled', target: 'snow-armored-train-heater-rivets', value: false },
+        { op: 'set-enabled', target: 'snow-separated-train-frame', value: true },
+        { op: 'set-enabled', target: 'snow-armor-cradle', value: true },
+        { op: 'set-enabled', target: 'snow-armor-signal', value: true },
+        { op: 'set-enabled', target: 'snow-armor-part-claim', value: true },
+      ],
+    },
+    {
+      id: 'snow-campaign-updated',
+      priority: 390,
+      when: {
+        fact: 'scrapRegionStageIds.snow-trade-road',
+        eq: 'snow-trade-road:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: 'snow-armor-part-claim', value: false },
+        { op: 'set-enabled', target: SCRAP_SNOW_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set',
+          target: 'snow-armor-signal',
+          property: 'label',
+          value: 'SNOWPLOW ARMOR · 차고 수송 완료',
         },
       ],
     },

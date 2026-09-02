@@ -361,6 +361,29 @@ assert.equal(
   greenhouseSuccess.regionEventStageIds['greenhouse-plains'],
   'greenhouse-plains:campaign-updated',
 );
+const snowProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('snow-trade-road');
+let snowStarted = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'snow-trade-road' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+snowStarted = commit(snowStarted, regionStageAction('snow-trade-road', 'npc-briefing'));
+snowStarted = commit(snowStarted, regionStageAction('snow-trade-road', 'facility-observed'));
+const snowEventPreview = previewScrapCampaignAction(
+  snowStarted,
+  regionEventStartAction('snow-trade-road'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(snowEventPreview.costSegments, 16);
+assert.equal(snowEventPreview.successExtensionDays, 3);
+const snowSuccess = resolveRegion(fresh, 'snow-trade-road');
+assert.equal(snowSuccess.regionStates['snow-trade-road'], 'resolved');
+assert.equal(snowSuccess.collectedPartIds.includes(snowProfile.part.id), true);
+assert.equal(snowSuccess.deadlineSegments, 120 - 16 + 12);
+assert.equal(snowSuccess.rivalDelaySegments, 12);
+assert.equal(
+  snowSuccess.regionEventStageIds['snow-trade-road'],
+  'snow-trade-road:campaign-updated',
+);
 for (const orderedSnapshot of [
   resolveRegion(resolveRegion(fresh, 'abandoned-mine'), 'harbor-shipyard'),
   commit(resolveRegion(fresh, 'harbor-shipyard'), convoyAction('abandoned-mine')),
@@ -383,6 +406,15 @@ assert.equal(firstThreeReadModel.completionPercent, 60);
 assert.deepEqual(
   firstThreeReadModel.regions.filter((region) => region.collected).map((region) => region.id),
   ['abandoned-mine', 'harbor-shipyard', 'greenhouse-plains'],
+);
+const firstFourResolved = resolveRegion(firstThreeResolved, 'snow-trade-road');
+const firstFourReadModel = getScrapCampaignReadModel(firstFourResolved, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(firstFourReadModel.collectedPartCount, 4);
+assert.equal(firstFourReadModel.completionPercent, 80);
+assert.equal(firstFourReadModel.finalBattleAvailable, false);
+assert.deepEqual(
+  firstFourReadModel.regions.filter((region) => region.collected).map((region) => region.id),
+  ['abandoned-mine', 'harbor-shipyard', 'greenhouse-plains', 'snow-trade-road'],
 );
 const versionThreeMine = { ...mineSuccess, version: 3 };
 delete versionThreeMine.regionEventStageIds;
@@ -516,6 +548,7 @@ console.log(
       'harbor-fourteen-segment-three-day-detour-and-crane-part',
       'mine-harbor-order-or-convoy-two-part-forty-percent',
       'greenhouse-eighteen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
+      'snow-sixteen-segment-three-day-detour-armor-and-first-four-eighty-percent',
       'v3-region-stage-migration-to-v4',
       'rival-first-convoy-two-segment-no-extension-recovery',
       'five-part-order-independent-final-battle-unlock',

@@ -21,6 +21,11 @@ import {
   SCRAP_GREENHOUSE_ROAD_ROOM_ID,
   SCRAP_GREENHOUSE_PIPE_ROOM_ID,
   SCRAP_GREENHOUSE_REACTOR_ROOM_ID,
+  SCRAP_SNOW_ROAD_PORTAL_ID,
+  SCRAP_SNOW_REGION_ID,
+  SCRAP_SNOW_ROAD_ROOM_ID,
+  SCRAP_SNOW_TUNNEL_ROOM_ID,
+  SCRAP_SNOW_TRAIN_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -1016,6 +1021,192 @@ assert.deepEqual(
   '완료 reload의 반복 온실 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
 );
 
+const snowFlowScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedGreenhouseProgression,
+});
+let snowJumpSequence = 4_000;
+let snowCampaignRequest = null;
+snowFlowScene.campaignActionPreviewRequested.connect((request) => {
+  snowCampaignRequest = request;
+});
+setAtPortalToRoom(snowFlowScene, SCRAP_AWAKENING_ROOM_ID, SCRAP_SNOW_ROAD_ROOM_ID);
+snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
+snowJumpSequence += 1;
+assert.equal(snowCampaignRequest?.portalId, SCRAP_SNOW_ROAD_PORTAL_ID);
+assert.equal(snowCampaignRequest?.preview.targetLocationLabel, '설산 교역로');
+assert.equal(snowCampaignRequest?.preview.costSegments, 1);
+assert.equal(snowFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(snowFlowScene);
+assert.deepEqual(snowFlowScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+});
+assert.equal(snowFlowScene.getWorldStatus().campaign.currentLocationId, SCRAP_SNOW_REGION_ID);
+assert.match(snowFlowScene.getWorldStatus().objective, /제설 열차 승무원/);
+assert.doesNotMatch(
+  `${snowFlowScene.getWorldStatus().story.title} ${snowFlowScene.getWorldStatus().objective}`,
+  /학원|교관|마법 생물/,
+);
+
+setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, 'npc-briefing');
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+let snowRegion = snowFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+assert.equal(snowRegion.eventStageKind, 'npc-briefing');
+assert.match(snowFlowScene.getWorldStatus().objective, /16구간/);
+
+setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, 'facility-observed');
+const beforeSnowEvent = snowFlowScene.getProgressionSnapshot().scrapCampaign;
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+assert.equal(snowCampaignRequest?.source, 'region-core-event');
+assert.equal(snowCampaignRequest?.preview.costSegments, 16);
+assert.equal(snowCampaignRequest?.preview.successExtensionDays, 3);
+assert.equal(
+  snowFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
+  beforeSnowEvent.elapsedSegments,
+  '설산 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
+);
+assert.equal(snowFlowScene.cancelScrapCampaignAction().cancelled, true);
+
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+assert.equal(snowFlowScene.confirmScrapCampaignAction().started, true);
+snowRegion = snowFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+assert.equal(snowRegion.status, 'in-progress');
+assert.equal(snowFlowScene.getWorldStatus().campaign.phaseLabel, '낮');
+assert.equal(snowFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-23');
+
+setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, SCRAP_SNOW_TUNNEL_ROOM_ID);
+snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
+snowJumpSequence += 1;
+finishPortalTransition(snowFlowScene);
+assert.equal(
+  snowFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'snow-tunnel-collector',
+);
+snowFlowScene.enterTree();
+snowFlowScene.roomSceneNode.encounter.completeForVisualQa();
+snowRegion = snowFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+assert.equal(snowRegion.eventStageKind, 'journey-combat');
+const snowMidReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: snowFlowScene.getProgressionSnapshot(),
+});
+snowMidReload.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_TUNNEL_ROOM_ID,
+  x: 808,
+});
+assert.equal(
+  snowMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'snow-tunnel-collector'),
+  false,
+  '옛 터널 전투 완료 reload는 열선 수거 유닛을 되살리면 안 됩니다.',
+);
+assert.ok(
+  snowMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .portals.some((portal) => portal.to.roomId === SCRAP_SNOW_TRAIN_ROOM_ID),
+);
+
+setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_TUNNEL_ROOM_ID, SCRAP_SNOW_TRAIN_ROOM_ID);
+snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
+snowJumpSequence += 1;
+finishPortalTransition(snowFlowScene);
+const snowBoss = snowFlowScene.roomSceneNode.getEncounterGameplaySnapshot();
+assert.equal(snowBoss.profileId, 'snowplow-train-boss');
+assert.equal(snowBoss.presentationProfileId, 'snowplow-train-boss');
+assert.match(snowBoss.weakPoint.label, /열선|제동축/);
+snowFlowScene.roomSceneNode.encounter.completeForVisualQa();
+
+setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_TRAIN_ROOM_ID, 'replacement-complete');
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+assert.ok(itemIds(snowFlowScene).includes('snow-open-tunnel-signal'));
+setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_TRAIN_ROOM_ID, 'machine-separated');
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+assert.ok(itemIds(snowFlowScene).includes('snow-armor-signal'));
+setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_TRAIN_ROOM_ID, 'part-claimed');
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+
+const snowCompleteCampaign = snowFlowScene.getWorldStatus().campaign;
+snowRegion = snowCompleteCampaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+assert.equal(snowRegion.status, 'resolved');
+assert.equal(snowRegion.eventStageKind, 'campaign-updated');
+assert.equal(snowRegion.collected, true);
+assert.equal(snowCompleteCampaign.collectedPartCount, 4);
+assert.equal(snowCompleteCampaign.completionPercent, 80);
+assert.equal(snowCompleteCampaign.deadlineLabel, 'D-26');
+assert.equal(snowCompleteCampaign.rivalDelaySegments, 12);
+
+setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_TRAIN_ROOM_ID, SCRAP_SNOW_TUNNEL_ROOM_ID);
+snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
+snowJumpSequence += 1;
+finishPortalTransition(snowFlowScene);
+setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_TUNNEL_ROOM_ID, SCRAP_SNOW_ROAD_ROOM_ID);
+snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
+snowJumpSequence += 1;
+finishPortalTransition(snowFlowScene);
+setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, SCRAP_AWAKENING_ROOM_ID);
+snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
+assert.equal(snowFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(snowFlowScene);
+const completedSnowProgression = snowFlowScene.getProgressionSnapshot();
+snowFlowScene.exitTree();
+
+const completedSnowReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedSnowProgression,
+});
+assert.equal(
+  completedSnowReload.getWorldStatus().campaign.currentLocationId,
+  'neighborhood-scrapyard',
+);
+for (const expectedItemId of [
+  'garage-robot-walker-leg-left',
+  'garage-robot-crane-arm-left',
+  'garage-robot-reactor-core',
+  'garage-robot-snow-armor-torso',
+  'garage-robot-snow-armor-rivet-left',
+  'garage-robot-eighty-label',
+]) {
+  assert.ok(itemIds(completedSnowReload).includes(expectedItemId), expectedItemId);
+}
+for (const absentItemId of [
+  'garage-robot-zero-label',
+  'garage-robot-forty-label',
+  'garage-robot-sixty-label',
+  'garage-robot-snow-twenty-label',
+]) {
+  assert.ok(!itemIds(completedSnowReload).includes(absentItemId), absentItemId);
+}
+assert.equal(completedSnowReload.getWorldStatus().wardLabel, '4/5 부품 · 로봇 80%');
+assert.match(completedSnowReload.getWorldStatus().encounterHint, /4\/5 PARTS · ROBOT 80%/);
+const beforeRepeatedSnowClaim = completedSnowReload.getProgressionSnapshot();
+completedSnowReload.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_TRAIN_ROOM_ID,
+  x: 1128,
+});
+assert.equal(
+  completedSnowReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'snow-armor-part-claim'),
+  false,
+  '완료 reload 뒤 제설 열차 장갑 회수 trigger는 다시 활성화되면 안 됩니다.',
+);
+completedSnowReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 5_000 }));
+assert.deepEqual(
+  completedSnowReload.getProgressionSnapshot(),
+  beforeRepeatedSnowClaim,
+  '완료 reload의 반복 설산 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
 const mineReload = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: travelScene.getProgressionSnapshot(),
@@ -1096,6 +1287,9 @@ console.log(
       'greenhouse-eight-stage-technician-pipeline-reactor-machine-part-flow',
       'greenhouse-event-preview-eighteen-segments-four-day-extension-and-cancel',
       'greenhouse-midstage-and-part-reload-idempotence-and-garage-sixty-percent',
+      'snow-eight-stage-crew-tunnel-snowplow-machine-part-flow',
+      'snow-event-preview-sixteen-segments-three-day-extension-and-cancel',
+      'snow-midstage-and-part-reload-idempotence-and-garage-eighty-percent',
       'keyboard-touch-interaction-parity',
     ],
   }),
