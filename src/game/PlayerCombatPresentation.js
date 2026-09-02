@@ -188,9 +188,22 @@ function createCharacterItems(
   const materialShadow = scaleHexColor(materialColor, 0.58);
   const materialEdge = scaleHexColor(materialColor, 0.42);
   const accentShadow = scaleHexColor(accentColor, 0.58);
-  const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
-  const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const projectedJoints = bonePose.projectedJoints ?? null;
+  const usesAuthoredSkeleton = Boolean(projectedJoints && bonePose.frameId);
+  const bodyX = usesAuthoredSkeleton
+    ? position.x + (projectedJoints.chest.x + projectedJoints.pelvis.x) / 2
+    : position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
+  const bodyY = usesAuthoredSkeleton
+    ? position.y + (projectedJoints.chest.y + projectedJoints.pelvis.y) / 2
+    : position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
+  const headX = usesAuthoredSkeleton ? position.x + projectedJoints.head.x : bodyX - 1;
+  const headY = usesAuthoredSkeleton ? position.y + projectedJoints.head.y : bodyY - 63;
+  const headRotation = usesAuthoredSkeleton
+    ? Math.atan2(
+        projectedJoints.head.y - projectedJoints.neck.y,
+        projectedJoints.head.x - projectedJoints.neck.x,
+      )
+    : bonePose.headTilt;
   const swordRotation = targetPose.swordAngle;
   const projectedArm = (shoulder, elbow, hand) =>
     Object.freeze({
@@ -222,7 +235,9 @@ function createCharacterItems(
           lowerLength: 31,
           bendDirection: -1,
         });
-  const rearHip = { x: bodyX - 8, y: bodyY + 27 };
+  const rearHip = usesAuthoredSkeleton
+    ? { x: position.x + projectedJoints.farHip.x, y: position.y + projectedJoints.farHip.y }
+    : { x: bodyX - 8, y: bodyY + 27 };
   const rearLeg = ARM_IK_SOLVER.solve({
     root: rearHip,
     target: {
@@ -233,7 +248,9 @@ function createCharacterItems(
     lowerLength: 27,
     bendDirection: -1,
   });
-  const leadHip = { x: bodyX + 8, y: bodyY + 27 };
+  const leadHip = usesAuthoredSkeleton
+    ? { x: position.x + projectedJoints.nearHip.x, y: position.y + projectedJoints.nearHip.y }
+    : { x: bodyX + 8, y: bodyY + 27 };
   const leadLeg = ARM_IK_SOLVER.solve({
     root: leadHip,
     target: {
@@ -397,7 +414,7 @@ function createCharacterItems(
     polygon(
       'head',
       regularPolygon(17, 21, 8, Math.PI / 8),
-      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      { x: headX, y: headY, rotation: headRotation },
       '#cf8f78',
       { stroke: '#3d2832', lineWidth: 2 },
     ),
@@ -411,7 +428,7 @@ function createCharacterItems(
         { x: 15, y: -2 },
         { x: -15, y: -2 },
       ],
-      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      { x: headX, y: headY, rotation: headRotation },
       materialShadow,
       { stroke: materialEdge, lineWidth: 2 },
     ),
@@ -428,7 +445,7 @@ function createCharacterItems(
         { x: 12, y: -3 },
         { x: 1, y: -3 },
       ],
-      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      { x: headX, y: headY, rotation: headRotation },
       accentColor,
       { stroke: accentShadow, lineWidth: 1.25, opacity: 0.94 },
     ),
@@ -494,7 +511,7 @@ function createCharacterItems(
         { x: -5, y: 15 },
         { x: -15, y: 8 },
       ],
-      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      { x: headX, y: headY, rotation: headRotation },
       materialEdge,
       { stroke: scaleHexColor(materialColor, 0.25), lineWidth: 2, order: 13.75 },
     ),

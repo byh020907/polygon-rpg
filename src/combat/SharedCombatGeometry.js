@@ -1,6 +1,8 @@
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 
-export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.265;
+// The authored 160px human rig must occupy the intended 18–22% of a 720px play viewport.
+// This scale is shared by its visible cutout and authoritative swept/body geometry.
+export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.85;
 export const PLAYER_CHARACTER_FOOT_OFFSET = 82;
 
 const PLAYER_IK_SOLVER = new TwoBoneIKSolver();
@@ -44,6 +46,24 @@ function limbPolygon(start, end, width) {
     { x: end.x - normalX, y: end.y - normalY },
     { x: start.x - normalX, y: start.y - normalY },
   ];
+}
+
+function skeletonTorsoPolygon(position, joints) {
+  // The cutout body is defined by the same projected shoulder/hip anchors as the authored
+  // skeleton.  z deliberately stays out of this polygon: it is presentation depth only.
+  return [joints.farShoulder, joints.nearShoulder, joints.nearHip, joints.farHip].map((joint) => ({
+    x: position.x + joint.x,
+    y: position.y + joint.y,
+  }));
+}
+
+function skeletonHeadPolygon(position, joints) {
+  const headRotation = Math.atan2(joints.head.y - joints.neck.y, joints.head.x - joints.neck.x);
+  return transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
+    x: position.x + joints.head.x,
+    y: position.y + joints.head.y,
+    rotation: headRotation,
+  });
 }
 
 function posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale }) {
@@ -131,28 +151,33 @@ export function samplePlayerCombatGeometry({
     ],
     { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1 },
   );
+  const usesAuthoredSkeleton = Boolean(projectedJoints && bonePose.frameId);
   const rawHurtPolygons = [
     {
       part: 'torso',
-      points: transformPoints(
-        [
-          { x: -21, y: -36 },
-          { x: 17, y: -38 },
-          { x: 23, y: 13 },
-          { x: 13, y: 34 },
-          { x: -15, y: 32 },
-          { x: -25, y: 9 },
-        ],
-        { x: bodyX, y: bodyY },
-      ),
+      points: usesAuthoredSkeleton
+        ? skeletonTorsoPolygon(position, projectedJoints)
+        : transformPoints(
+            [
+              { x: -21, y: -36 },
+              { x: 17, y: -38 },
+              { x: 23, y: 13 },
+              { x: 13, y: 34 },
+              { x: -15, y: 32 },
+              { x: -25, y: 9 },
+            ],
+            { x: bodyX, y: bodyY },
+          ),
     },
     {
       part: 'head',
-      points: transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
-        x: bodyX - 1,
-        y: bodyY - 63,
-        rotation: bonePose.headTilt,
-      }),
+      points: usesAuthoredSkeleton
+        ? skeletonHeadPolygon(position, projectedJoints)
+        : transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
+            x: bodyX - 1,
+            y: bodyY - 63,
+            rotation: bonePose.headTilt,
+          }),
     },
     { part: 'weapon-arm', points: limbPolygon(rightArm.root, rightArm.elbow, 10) },
     { part: 'weapon-forearm', points: limbPolygon(rightArm.elbow, rightArm.hand, 8) },

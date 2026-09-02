@@ -109,6 +109,27 @@ assert.ok(
   'orthographic projection must preserve authored near/far depth order',
 );
 
+const authoredUtilityClips = [
+  sampleCharacterBonePose({ animationTime: 0.21 }),
+  sampleCharacterBonePose({ animationTime: 0.21, movementIntent: 1 }),
+  sampleCharacterBonePose({ isGrounded: false, verticalVelocity: -260 }),
+  sampleCharacterBonePose({ isGrounded: false, verticalVelocity: 260 }),
+  sampleCharacterBonePose({ landingRecovery: 0.65 }),
+  sampleCharacterBonePose({ motionState: Object.freeze({ id: 'guard', progress: 0 }) }),
+  sampleCharacterBonePose({ hitstunProgress: 0.65 }),
+];
+assert.ok(
+  authoredUtilityClips.every(
+    (pose) => pose.frameId && pose.projectedJoints?.chest && pose.projectedJoints?.nearFoot,
+  ),
+  'idle/run/jump/fall/landing/guard/hit must all use authored local-3D pose frames',
+);
+assert.equal(
+  new Set(authoredUtilityClips.map((pose) => pose.frameId)).size,
+  authoredUtilityClips.length,
+  'utility action strips need distinct readable frame identities',
+);
+
 for (const [motionId, contactFrameId] of Object.entries({
   slash: 'slash-contact',
   heavy: 'heavy-contact',
@@ -286,6 +307,7 @@ console.log(
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',
       'authored-basic-strong-launcher-and-counter-pose-strips',
+      'authored-idle-run-jump-fall-landing-guard-hit-pose-strips',
       'normal-enemy-body-collision',
       'normal-enemy-roll-through',
       'jump-landing-held-movement-continuity',

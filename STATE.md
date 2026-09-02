@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-feedback-priority · player-authored-action-clip-foundation`
+`human-feedback-priority · player-collision-and-transition-continuity`
 
 ## Project Direction Comparison
 
@@ -16,7 +16,7 @@
 | ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Persona                 | gap    | 정식 의뢰·동년배 rival·붕괴 구조 선택·각성 흐름과 폐광 combat의 고철 cutout 품질을 유지한다. 다섯 지역은 주목표 1개와 현장 확인형 연결 이슈 2개로 교차하며 작전 지도에서 한눈에 읽힌다. 그러나 20~30분 도입의 탐색·전투 밀도, 여러 지역 반복 정찰, 연결 이슈의 고유 encounter, final battle과 ending은 아직 없어 시작부터 결말까지 조작·서사·시각 개성이 완결되지 않았다.                                                                                                         |
 | Quality                 | gap    | 전체 `npm run check`, 실제 92/120구간 focused action trace, Codex in-app Browser desktop/mobile와 독립 verifier를 통과한 단일-owner issue window는 demo식 요청 나열보다 플레이 판단이 선명하다. 같은 수준의 cast·scene·combat polish가 약 10시간 전체 캠페인과 결말로 확장되지 않아 유료 완성 게임 수준에는 아직 Gap이 있다.                                                                                                                                                      |
-| Human Feedback Priority | gap    | `INBOX.md`의 전투 이동/전환과 animation feedback은 같은 Goal에서 ① immutable local 3D joint/pose와 fixed side-view projection ② license·source·mapping을 기록하는 local retarget/import 경계 ③ frame-authored clip ④ roll collision·landing·held input 결합 순으로 구현한다. normal body separation, active-roll 통과, jump arc, landing/portal held input fixture와 roll 3D projection에 더해 Player의 Basic·Strong·launcher·shield counter가 setup/contact/follow-through stable frame ID와 local 3D arm·hand projection으로 PASS했다. 각 contact pose는 shipped equipment 전체 timing profile의 CombatCommandController snapshot 첫/마지막 active 60Hz frame과 직접 고정되고, Renderer·shared combat geometry가 같은 projected attachment를 사용한다. `npm run test:combat`, focused lint/format, in-app Browser desktop 1280×720·mobile 844×390 QA는 PASS. idle/run/jump/landing/guard/hit clip 전환과 실제 연속 재생·독립 검증은 남았다. |
+| Human Feedback Priority | gap    | `INBOX.md`의 전투 이동/전환과 animation feedback은 immutable local 3D pose → local retarget/import provenance → frame-authored clip → body/roll/landing/held-input 결합 순으로 구현한다. Player idle/run/jump/fall/landing/guard/hit와 roll·Basic·Strong·launcher·shield counter는 stable frame ID와 projected torso/head/limb/equipment, shared combat geometry를 함께 사용한다. `npm run test:combat`, focused lint/format, independent Terra verifier와 in-app Browser 1280×720·844×390(약 20% Player height, console warn/error 0)은 PASS. 남은 우선 Gap은 체급/공간부족 roll destination과 실제 전환 중 연속 playback의 Browser evidence다. |
 
 ## Product Desired State Comparison
 
@@ -58,8 +58,8 @@
 
 ## Active Execution Goal
 
-Human Feedback Priority · 3D skeleton/projection → reference-retarget metadata → frame-authored Player clips → collision/input continuity. 이번 tick은 local rotation world-pose·orthographic depth, raw asset 없는 provenance/retargeter, roll marker와 일반 적 body/landing/portal continuity fixture를 추가했다. 독립 verifier는 projected skeleton이 아직 feet 외 torso/head/limb/attachment cutout을 구동하지 않고, approved local reference-derived Player clip 및 체급·공간부족 collision coverage가 없다고 FAIL했다. 다음 미완성 흐름은 그 cutout projection과 Basic·Strong·guard·jump/fall/landing/hit clip, safe roll destination을 닫는 것이다.
+Human Feedback Priority · 체급별 body collision과 safe roll destination, jump arc 및 Room/Chunk 전환 held input의 실제 연속 playback을 닫는다. 이번 tick은 Player의 local-3D skeleton pose를 torso/head/arm/hip/equipment cutout과 shared geometry로 연결하고 idle/run/jump/fall/landing/guard/hit frame strip, 0.85 viewport scale을 추가했다. focused combat fixture와 independent verifier, in-app Browser desktop/mobile stable pose는 PASS했다. 다음 미완성 흐름은 공간 부족·벽·대형 적 roll rejection 및 전환 중 반복 continuous Browser trace다.
 
 ## Blockers
 
-Human Feedback Priority: 3D projection/reuse foundation 위의 Player 핵심 authored clip 완성, desktop/mobile actual continuous playback, body collider의 체급별/공간부족 결과와 피격 contact/body feedback의 independent verification이 남았다. 이 결과가 검증되기 전에는 Verified Playable Frontier로 복귀하지 않는다. 그 밖에 fresh worker-controlled offline reload, Android Chromium/iPhone·iPad Safari의 실제 설치/standalone/device icon QA와 failed-update cache recovery는 unverified다.
+Human Feedback Priority: Player authored clip projection·viewport scale은 focused fixture, independent verifier와 desktop/mobile stable Browser QA를 통과했다. body collider의 체급별/공간부족 결과와 Room/Chunk 전환 중 실제 continuous playback은 남았다. 이 결과가 검증되기 전에는 Verified Playable Frontier로 복귀하지 않는다. 그 밖에 fresh worker-controlled offline reload, Android Chromium/iPhone·iPad Safari의 실제 설치/standalone/device icon QA와 failed-update cache recovery는 unverified다.

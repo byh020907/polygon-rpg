@@ -30,66 +30,66 @@ const SCRAPYARD_APPRENTICE_FIXTURE = deepFreezeFixture({
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
     count: 37,
-    digest: 'e809b93113bd428394a17ca5f4330f313565715a83d3bd1de382397dd85c680f',
+    digest: 'c56616e204c9b3488cbb513734e4ca33105dac5ef3fcc6df40b3b1d9775f5af8',
   }),
   'pose-move': Object.freeze({
     count: 37,
-    digest: 'a304808db2a15633b8ad1d08b779e3e7cb08d98b3a3c70f96362ff5790036d7c',
+    digest: '472515542cda7e941bd1ad8c022d42a3df06323de10b1fc6eb049b5d4d3f008a',
   }),
   'pose-guard': Object.freeze({
     count: 37,
-    digest: '013b5277c4ec49b62ccf6cfdf3932cd2117cd177176be4fb9f071e9c43ddb02b',
+    digest: 'cb04f786b6e69248a098dff36331ab896a0140ca5dc8ddc703ca95335c34a687',
   }),
   'pose-roll': Object.freeze({
     count: 37,
-    digest: '1a52f60e97465e7c0ac2a60f448f6274cfedc69cc3cd0bb729a9e750d438efda',
+    digest: '10d273039069b6106dd83ef590bbfb81868f67ba5025e738d3576ce881fdcc69',
   }),
   'pose-ground-attack': Object.freeze({
     count: 37,
-    digest: '37538f055c7803916df0beb84f72ea5c785ab20dc98125ce397608395e7e84b8',
+    digest: '044a84dd57b36d151625af125367c29ed0bde2ca170a0181df95107994b11e08',
   }),
   'pose-air-attack': Object.freeze({
     count: 37,
-    digest: '4ae9e742e6baabab2bcd4b90312d76faa993e3b529912da89811a3a67e81a093',
+    digest: '8e25245c019c5fff057e407262738fdd3048c645ae38a80fe0dba5f2aa8398d6',
   }),
   'pose-hit': Object.freeze({
     count: 37,
-    digest: 'd5ba01de87f6e709de305a06e9fb84eea5cbb75acff0b10c32a877014b4c4113',
+    digest: '21afda21131c268264074e66bd5159e208e0238733d4a337ccf5c887c893d274',
   }),
 });
 
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
     count: 44,
-    digest: 'f9e7ee6ddadc97be7b5288c74ddb6b658d8a2f621deac338a3dd5a91d8e4e612',
+    digest: 'c07ba08f320a01e0cdf6b923dfafe342d616138e61dbebae09204db3297f5be7',
   }),
   'combat-block': Object.freeze({
     count: 43,
-    digest: 'cf5474a74c06c8837a25b31fed4d54bbf8bae86e184f28fd666e4f933649fbcd',
+    digest: '954e0867cdf4c252820b94338d611d7ae037df88aac9f85d5932222c4af1ab5b',
   }),
   'combat-evade': Object.freeze({
     count: 40,
-    digest: '683bf1b845ebc76916e21f5b4d27217e4d615457daf7fa17bd01174df8fab837',
+    digest: 'ebee97bd8d96f3fb26c36d6120d225b022164562d9aeecffdcb4a1a8ea998056',
   }),
   'combat-punish': Object.freeze({
     count: 43,
-    digest: 'd183cf42bc969726b93d86f9c67321352d435d3776d55f40551ae0e58ba4bf2c',
+    digest: '91e37a5cfdd56ca84c6e9f8b47b12f2d64114d9400edc34e6dc6f0fbd9c2caba',
   }),
   'combat-launch': Object.freeze({
     count: 44,
-    digest: 'b5526ca55356b5bc324adc68cb6cd8ae0fa770a3d6418eda4bada391ca488818',
+    digest: '35053e98271e64eb98419c31efde1536bd91d53882c85503f03ceb6d3913dd3d',
   }),
   'combat-guard-break': Object.freeze({
     count: 43,
-    digest: 'bc4ed9e7298e91fb8b6729876f725373b612ca6516caccc30dd5cd24a2a25568',
+    digest: '654a1319a2ffd779984cfba2bb990c9f5bebde169516302fb24981e52f102114',
   }),
   'combat-just-guard': Object.freeze({
     count: 48,
-    digest: '0916760a4f605751fbbe1ec7f0496fd56fbc925744ef85f5a3ef0e4c637e8ab8',
+    digest: 'b27a30188384bd1ba80d8b62d388cacb1906acd967c5d0c2f886ba6bdbdc1784',
   }),
   'combat-guard-counter': Object.freeze({
     count: 44,
-    digest: 'f0c251d53bea3fffb4eb6d69a3d6ca205fadaf14e5d53c42ac4d7bb6b812571b',
+    digest: 'ab6054c530ac1349dee101bdf700d39c7d076701c07ae57fa88a5331be19bed0',
   }),
 });
 
@@ -277,6 +277,11 @@ assert.strictEqual(
   fixedOutput.combatGeometry.hurt.find(({ part }) => part === 'head').points,
   'rendered head must reuse shared gameplay hurt geometry exactly',
 );
+assert.equal(
+  torsoItem.points.length,
+  4,
+  'an authored 3D pose must build the torso from projected shoulder and hip anchors, not a static hex',
+);
 function pointSegmentDistance(point, start, end) {
   const deltaX = end.x - start.x;
   const deltaY = end.y - start.y;
@@ -344,6 +349,7 @@ console.log(
       'fixed-public-item-parity',
       'deep-frozen-output',
       'shared-sword-shield-torso-head-geometry-identity',
+      'authored-skeleton-torso-anchor-projection',
       'shared-body-foot-pivot-and-connected-sword',
       'immutable-injected-profile-validation',
       'scrap-workwear-landmark-ids-and-profile-colors',

@@ -43,74 +43,24 @@ function pose({
 }
 
 function sampleIdle(animationTime) {
-  const breath = Math.sin(animationTime * 2.4);
-  return pose({
-    rootY: breath * 0.9,
-    bodyLean: breath * 0.008,
-    headTilt: -breath * 0.014,
-    rearFootX: -7,
-    leadFootX: 7,
-    capeLift: 0.08 + Math.max(0, breath) * 0.04,
-  });
+  return sampleAuthoredCycle(AUTHORED_PLAYER_UTILITY_FRAMES.idle, animationTime, 2.4);
 }
 
 function sampleMovement(animationTime) {
-  const cycle = animationTime * 7.5;
-  const stride = Math.sin(cycle);
-  const lift = Math.cos(cycle);
-  return pose({
-    rootY: -Math.abs(lift) * 1.5,
-    bodyLean: 0.075,
-    headTilt: -0.045,
-    rearFootX: -8 + stride * 17,
-    rearFootY: CHARACTER_FOOT_Y - Math.max(0, lift) * 8,
-    leadFootX: 8 - stride * 17,
-    leadFootY: CHARACTER_FOOT_Y - Math.max(0, -lift) * 8,
-    capeLift: 0.68,
-  });
+  return sampleAuthoredCycle(AUTHORED_PLAYER_UTILITY_FRAMES.run, animationTime, 7.5);
 }
 
 function sampleAirborne(verticalVelocity) {
-  const direction = clamp(verticalVelocity / REFERENCE_JUMP_SPEED, -1, 1);
-  if (direction < 0) {
-    const rising = -direction;
-    return pose({
-      rootX: 1,
-      rootY: -2,
-      bodyLean: 0.08 + rising * 0.04,
-      headTilt: -0.07,
-      rearFootX: -13,
-      rearFootY: 68 - rising * 6,
-      leadFootX: 12,
-      leadFootY: 61 + rising * 4,
-      capeLift: 0.9,
-    });
-  }
-
-  return pose({
-    rootX: 1,
-    rootY: -1,
-    bodyLean: 0.01 - direction * 0.06,
-    headTilt: 0.035,
-    rearFootX: -12,
-    rearFootY: 70 + direction * 6,
-    leadFootX: 14,
-    leadFootY: 66 + direction * 7,
-    capeLift: 0.72,
-  });
+  return sampleAuthoredPoseFrames(
+    verticalVelocity < 0
+      ? AUTHORED_PLAYER_UTILITY_FRAMES.jumpRise
+      : AUTHORED_PLAYER_UTILITY_FRAMES.jumpFall,
+    clamp(Math.abs(verticalVelocity) / REFERENCE_JUMP_SPEED),
+  );
 }
 
 function sampleGuard(animationTime) {
-  const breath = Math.sin(animationTime * 2.1);
-  return pose({
-    rootX: -2,
-    rootY: 3 + breath * 0.45,
-    bodyLean: -0.075 + breath * 0.006,
-    headTilt: 0.045 - breath * 0.01,
-    rearFootX: -15,
-    leadFootX: 15,
-    capeLift: 0.16,
-  });
+  return sampleAuthoredCycle(AUTHORED_PLAYER_UTILITY_FRAMES.guard, animationTime, 2.1);
 }
 
 function sampleBlockReaction(progress, strength) {
@@ -129,15 +79,7 @@ function sampleBlockReaction(progress, strength) {
 }
 
 function sampleLanding(recovery) {
-  const impact = clamp(recovery);
-  return pose({
-    rootY: impact * 5,
-    bodyLean: impact * 0.035,
-    headTilt: -impact * 0.04,
-    rearFootX: -13,
-    leadFootX: 13,
-    capeLift: impact * 0.24,
-  });
+  return sampleAuthoredPoseFrames(AUTHORED_PLAYER_UTILITY_FRAMES.landing, clamp(recovery));
 }
 
 function sampleHitReaction(intensity, knockedOut) {
@@ -152,15 +94,7 @@ function sampleHitReaction(intensity, knockedOut) {
         leadFootX: 18,
         leadFootY: 78,
       })
-    : pose({
-        rootX: -8 * intensity,
-        rootY: 3 * intensity,
-        bodyLean: -0.18 * intensity,
-        headTilt: 0.2 * intensity,
-        rearFootX: -14,
-        leadFootX: 12,
-        capeLift: 0.35,
-      });
+    : sampleAuthoredPoseFrames(AUTHORED_PLAYER_UTILITY_FRAMES.hit, clamp(intensity));
 }
 
 const AUTHORED_ARM_TRANSFORMS = Object.freeze({
@@ -357,6 +291,213 @@ const ROLL_POSE_FRAMES = Object.freeze([
     capeLift: 0.18,
   }),
 ]);
+
+// These Player actions are pose strips, not a global bob/lean equation.  The fixed frames share
+// the same local 3D skeleton and projection contract as the combat clips below.
+const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
+  idle: Object.freeze([
+    authoredRollFrame({ id: 'idle-rest', at: 0, transition: 'linear', capeLift: 0.12 }),
+    authoredRollFrame({
+      id: 'idle-breath',
+      at: 0.5,
+      transition: 'linear',
+      rootY: -1,
+      bodyLean: 0.025,
+      headTilt: -0.02,
+      capeLift: 0.18,
+    }),
+    authoredRollFrame({ id: 'idle-return', at: 1, transition: 'linear', capeLift: 0.12 }),
+  ]),
+  run: Object.freeze([
+    authoredRollFrame({
+      id: 'run-contact-near',
+      at: 0,
+      transition: 'linear',
+      rootY: -1,
+      bodyLean: 0.1,
+      rearFootX: -24,
+      leadFootX: 19,
+      capeLift: 0.68,
+    }),
+    authoredRollFrame({
+      id: 'run-pass',
+      at: 0.25,
+      transition: 'linear',
+      rootY: -4,
+      bodyLean: 0.13,
+      rearFootX: -4,
+      rearFootY: 65,
+      leadFootX: 7,
+      leadFootY: 71,
+      capeLift: 0.88,
+    }),
+    authoredRollFrame({
+      id: 'run-contact-far',
+      at: 0.5,
+      transition: 'linear',
+      rootY: -1,
+      bodyLean: 0.1,
+      rearFootX: -19,
+      leadFootX: 24,
+      capeLift: 0.68,
+    }),
+    authoredRollFrame({
+      id: 'run-recover',
+      at: 0.75,
+      transition: 'linear',
+      rootY: -4,
+      bodyLean: 0.13,
+      rearFootX: -7,
+      rearFootY: 71,
+      leadFootX: 4,
+      leadFootY: 65,
+      capeLift: 0.88,
+    }),
+    authoredRollFrame({
+      id: 'run-loop',
+      at: 1,
+      transition: 'linear',
+      rootY: -1,
+      bodyLean: 0.1,
+      rearFootX: -24,
+      leadFootX: 19,
+      capeLift: 0.68,
+    }),
+  ]),
+  jumpRise: Object.freeze([
+    authoredRollFrame({
+      id: 'jump-crouch',
+      at: 0,
+      transition: 'hold',
+      rootY: 5,
+      bodyLean: 0.13,
+      rearFootX: -18,
+      leadFootX: 17,
+      capeLift: 0.32,
+    }),
+    authoredRollFrame({
+      id: 'jump-rise',
+      at: 1,
+      transition: 'snap',
+      rootX: 2,
+      rootY: -6,
+      bodyLean: 0.12,
+      headTilt: -0.08,
+      rearFootX: -14,
+      rearFootY: 64,
+      leadFootX: 13,
+      leadFootY: 60,
+      capeLift: 0.94,
+    }),
+  ]),
+  jumpFall: Object.freeze([
+    authoredRollFrame({
+      id: 'fall-tuck',
+      at: 0,
+      transition: 'hold',
+      rootX: 2,
+      rootY: -5,
+      bodyLean: 0.04,
+      headTilt: 0.04,
+      rearFootX: -13,
+      rearFootY: 64,
+      leadFootX: 14,
+      leadFootY: 63,
+      capeLift: 0.84,
+    }),
+    authoredRollFrame({
+      id: 'fall-brace',
+      at: 1,
+      transition: 'linear',
+      rootX: 1,
+      rootY: -1,
+      bodyLean: -0.08,
+      headTilt: 0.08,
+      rearFootX: -17,
+      rearFootY: 75,
+      leadFootX: 18,
+      leadFootY: 72,
+      capeLift: 0.62,
+    }),
+  ]),
+  landing: Object.freeze([
+    authoredRollFrame({
+      id: 'landing-compress',
+      at: 0,
+      transition: 'hold',
+      rootY: 7,
+      bodyLean: 0.08,
+      rearFootX: -15,
+      leadFootX: 15,
+      capeLift: 0.36,
+    }),
+    authoredRollFrame({
+      id: 'landing-release',
+      at: 1,
+      transition: 'linear',
+      rootY: 0,
+      bodyLean: 0.02,
+      rearFootX: -9,
+      leadFootX: 9,
+      capeLift: 0.18,
+    }),
+  ]),
+  guard: Object.freeze([
+    authoredRollFrame({
+      id: 'guard-brace',
+      at: 0,
+      transition: 'linear',
+      rootX: -3,
+      rootY: 3,
+      bodyLean: -0.12,
+      headTilt: 0.05,
+      rearFootX: -17,
+      leadFootX: 15,
+      capeLift: 0.2,
+      armPose: 'windup',
+    }),
+    authoredRollFrame({
+      id: 'guard-settle',
+      at: 1,
+      transition: 'linear',
+      rootX: -2,
+      rootY: 2,
+      bodyLean: -0.09,
+      headTilt: 0.03,
+      rearFootX: -16,
+      leadFootX: 14,
+      capeLift: 0.16,
+      armPose: 'windup',
+    }),
+  ]),
+  hit: Object.freeze([
+    authoredRollFrame({
+      id: 'hit-contact',
+      at: 0,
+      transition: 'hold',
+      rootX: -8,
+      rootY: 4,
+      bodyLean: -0.2,
+      headTilt: 0.19,
+      rearFootX: -16,
+      leadFootX: 11,
+      capeLift: 0.42,
+      armPose: 'contact',
+    }),
+    authoredRollFrame({
+      id: 'hit-recover',
+      at: 1,
+      transition: 'linear',
+      rootX: -1,
+      rootY: 1,
+      bodyLean: -0.03,
+      headTilt: 0.02,
+      rearFootX: -10,
+      leadFootX: 10,
+      capeLift: 0.2,
+    }),
+  ]),
+});
 
 // Primary grounded attacks deliberately use the same local-3D, frame-authored format as roll.
 // Combat owns timing/contact; these stable pose IDs only project that timeline into cutout joints.
@@ -669,6 +810,11 @@ function sampleAuthoredPoseFrames(frames, progress) {
     ...blendBonePose(previous.value, next.value, next.transition === 'hold' ? 0 : amount),
     frameId: previous.id,
   });
+}
+
+function sampleAuthoredCycle(frames, animationTime, rate) {
+  const progress = (((animationTime * rate) % 1) + 1) % 1;
+  return sampleAuthoredPoseFrames(frames, progress);
 }
 
 function sampleRoll(progress) {
