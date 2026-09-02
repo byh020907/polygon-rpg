@@ -41,6 +41,7 @@ import {
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
+import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 
 const STEP_SECONDS = 1 / 120;
 const EMPTY_INPUT = Object.freeze({
@@ -196,6 +197,30 @@ setAtStoryInteraction(scene, 'scrap-rival-departure');
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
 assert.ok(itemIds(scene).includes('scrap-rival-search-hook'));
+
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 500,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const ambientDialogue = scene.getWorldStatus().dialogue;
+assert.equal(ambientDialogue.active, true, '동행 중 짧은 ambient 말풍선이 자동으로 시작되어야 합니다.');
+assert.equal(ambientDialogue.presentationMode, 'ambient');
+assert.equal(ambientDialogue.prompt, '이동 중 대화');
+const ambientStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(scene.position.x > ambientStartX, 'ambient 말풍선은 이동과 jump 입력을 잠그면 안 됩니다.');
+assert.equal(scene.getWorldStatus().dialogue.active, true, '이동 input은 ambient 말풍선을 닫으면 안 됩니다.');
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(scene.getWorldStatus().dialogue.active, false, 'ambient 말풍선은 입력 없이 짧게 종료되어야 합니다.');
+const ambientQaRequest = readVisualQaRequest(
+  '?visualQa=1&gameStart=scrap-intro-walk&visualQaRenderer=polygon&visualQaPhase=active',
+);
+assert.equal(ambientQaRequest.scenario.mapId, SCRAP_AWAKENING_MAP.id);
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');
 prologueSequence = completeDialogue(scene, prologueSequence);

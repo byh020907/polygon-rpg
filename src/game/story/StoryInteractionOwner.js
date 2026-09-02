@@ -24,6 +24,7 @@ const EMPTY_DIALOGUE = Object.freeze({
 const REVEAL_CHARACTERS_PER_SECOND = 28;
 const COMMA_PAUSE_SECONDS = 0.12;
 const TERMINAL_PAUSE_SECONDS = 0.22;
+const AMBIENT_LINE_HOLD_SECONDS = 2.4;
 
 function dialogueWorldAnchor(interaction, playerPosition = null) {
   const anchor =
@@ -66,6 +67,9 @@ function isStoryInteraction(entity) {
     Number.isFinite(entity.position?.y) &&
     Number.isFinite(entity.interactionRange) &&
     entity.interactionRange > 0 &&
+    (entity.autoStart === undefined || typeof entity.autoStart === 'boolean') &&
+    (entity.autoStartRange === undefined ||
+      (Number.isFinite(entity.autoStartRange) && entity.autoStartRange > 0)) &&
     conversationIsValid &&
     Array.isArray(commands) &&
     commands.every(
@@ -77,6 +81,10 @@ function isStoryInteraction(entity) {
         command.type.length > 0,
     )
   );
+}
+
+function isAmbientInteraction(interaction) {
+  return interaction?.presentationMode === 'ambient' && interaction.autoStart === true;
 }
 
 function interactionCommands(interaction) {
@@ -170,7 +178,7 @@ function nearestInteraction(entities, playerPosition) {
   if (!Array.isArray(entities) || !playerPosition) return null;
   return (
     entities
-      .filter(isStoryInteraction)
+      .filter((interaction) => isStoryInteraction(interaction) && !isAmbientInteraction(interaction))
       .map((interaction) => ({
         interaction,
         distance: distanceBetween(interaction.position, playerPosition),
@@ -179,6 +187,27 @@ function nearestInteraction(entities, playerPosition) {
       .sort(
         (left, right) =>
           left.distance - right.distance || left.interaction.id.localeCompare(right.interaction.id),
+      )[0]?.interaction ?? null
+  );
+}
+
+function nearestAmbientInteraction(entities, playerPosition, completedInteractionIds) {
+  if (!Array.isArray(entities) || !playerPosition) return null;
+  return (
+    entities
+      .filter(
+        (interaction) =>
+          isStoryInteraction(interaction) &&
+          isAmbientInteraction(interaction) &&
+          !completedInteractionIds.has(interaction.id),
+      )
+      .map((interaction) => ({
+        interaction,
+        distance: distanceBetween(interaction.position, playerPosition),
+      }))
+      .filter(({ interaction, distance }) => distance <= (interaction.autoStartRange ?? interaction.interactionRange))
+      .sort(
+        (left, right) => left.distance - right.distance || left.interaction.id.localeCompare(right.interaction.id),
       )[0]?.interaction ?? null
   );
 }
@@ -196,6 +225,8 @@ export class StoryInteractionOwner {
     this.lineIndex = -1;
     this.revealedCharacters = 0;
     this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+    this.ambientLineHoldSeconds = 0;
+    this.completedAmbientInteractionIds = new Set();
   }
 
   reset() {
@@ -204,6 +235,8 @@ export class StoryInteractionOwner {
     this.lineIndex = -1;
     this.revealedCharacters = 0;
     this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+    this.ambientLineHoldSeconds = 0;
+    this.completedAmbientInteractionIds.clear();
   }
 
   blocksGameplayInput({ entities = [] } = {}) {
@@ -211,8 +244,22 @@ export class StoryInteractionOwner {
     return findInteraction(entities, this.activeInteractionId)?.locksPlayerInput === true;
   }
 
-  advance(deltaSeconds, { entities = [], transcripts = [] } = {}) {
-    if (!this.activeInteractionId || !Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
+  advance(deltaSeconds, { entities = [], transcripts = [], playerPosition = null } = {}) {
+    if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return;
+    if (!this.activeInteractionId) {
+      const ambient = nearestAmbientInteraction(
+        entities,
+        playerPosition,
+        this.completedAmbientInteractionIds,
+      );
+      if (!ambient) return;
+      this.activeInteractionId = ambient.id;
+      this.lineIndex = 0;
+      this.revealedCharacters = 0;
+      this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+      this.ambientLineHoldSeconds = 0;
+      return;
+    }
     const interaction = findInteraction(entities, this.activeInteractionId);
     const source = dialogueSource(interaction, this.activeTranscriptId, transcripts);
     if (!source) return;
@@ -228,6 +275,24 @@ export class StoryInteractionOwner {
       this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND + punctuationPause(character);
     }
     if (this.revealedCharacters < characters.length) this.revealDelaySeconds -= remainingSeconds;
+    if (!isAmbientInteraction(interaction) || this.revealedCharacters < characters.length) return;
+
+    this.ambientLineHoldSeconds += remainingSeconds;
+    if (this.ambientLineHoldSeconds < AMBIENT_LINE_HOLD_SECONDS) return;
+    if (this.lineIndex < source.lines.length - 1) {
+      this.lineIndex += 1;
+      this.revealedCharacters = 0;
+      this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+      this.ambientLineHoldSeconds = 0;
+      return;
+    }
+    this.completedAmbientInteractionIds.add(interaction.id);
+    this.activeInteractionId = null;
+    this.activeTranscriptId = null;
+    this.lineIndex = -1;
+    this.revealedCharacters = 0;
+    this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+    this.ambientLineHoldSeconds = 0;
   }
 
   completeCurrentLine({ entities = [], transcripts = [] } = {}) {
@@ -245,6 +310,9 @@ export class StoryInteractionOwner {
       if (!source) {
         this.reset();
         return Object.freeze({ consumed: true, transition: 'missing-target' });
+      }
+      if (isAmbientInteraction(interaction)) {
+        return Object.freeze({ consumed: false, transition: 'ambient-passthrough' });
       }
       const lineLength = Array.from(source.lines[this.lineIndex]).length;
       if (this.revealedCharacters < lineLength) {
@@ -330,7 +398,13 @@ export class StoryInteractionOwner {
         canAdvance: revealComplete && canAdvance,
         canClose: revealComplete && !canAdvance,
         revealComplete,
-        prompt: revealComplete ? (canAdvance ? '↑ 다음 대사' : '↑ 대화 마치기') : '↑ 대사 완성',
+        prompt: isAmbientInteraction(activeInteraction)
+          ? '이동 중 대화'
+          : revealComplete
+            ? canAdvance
+              ? '↑ 다음 대사'
+              : '↑ 대화 마치기'
+            : '↑ 대사 완성',
         worldAnchor: dialogueWorldAnchor(activeInteraction, playerPosition),
         commands:
           source.mode === 'current'

@@ -145,6 +145,21 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 });
 
 const VISUAL_QA_SCENARIOS = Object.freeze({
+  'scrap-intro-walk': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 500,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    inputTimelineByPhase: Object.freeze({
+      active: Object.freeze([
+        Object.freeze({ frames: 2, input: Object.freeze({ right: true }) }),
+      ]),
+    }),
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    }),
+  }),
   'scrap-intro-before': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,

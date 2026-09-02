@@ -17,6 +17,7 @@ export const SCRAPYARD_OWNER_ENTITY_ID = 'scrapyard-owner-analysis';
 export const SCRAPYARD_OWNER_COMMISSION_ENTITY_ID = 'scrapyard-owner-commission';
 export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
+export const SCRAP_RIVAL_WALK_ENTITY_ID = 'scrap-rival-walk-with';
 export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
 export const SCRAP_RIVAL_RESCUE_ENTITY_ID = 'scrap-rival-rescue-request';
 export const SCRAP_PLAYER_DECISION_ENTITY_ID = 'scrap-player-device-decision';
@@ -2684,6 +2685,21 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_RIVAL_WALK_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 540, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 96,
+              speaker: '하린',
+              lines: [
+                '왼쪽 발판은 얇아. 내 갈고리 표식 쪽으로 걸어. 작은 수거 유닛이 나오면 네 방패 뒤로 붙을게.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
               id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
               kind: 'story-interaction',
               position: { x: 677, y: 354 },
@@ -4074,6 +4090,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_SEARCH_ENTITY_ID, value: true },
       ],
     },
