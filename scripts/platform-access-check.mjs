@@ -185,6 +185,8 @@ function verifyStandaloneViewportSynchronization() {
   const windowListeners = new Map();
   const visualViewportListeners = new Map();
   const properties = new Map();
+  const scheduledFrames = new Map();
+  let nextFrameId = 0;
   const browserWindow = {
     innerWidth: 844,
     innerHeight: 390,
@@ -193,6 +195,14 @@ function verifyStandaloneViewportSynchronization() {
     },
     removeEventListener(name) {
       windowListeners.delete(name);
+    },
+    requestAnimationFrame(callback) {
+      const frameId = ++nextFrameId;
+      scheduledFrames.set(frameId, callback);
+      return frameId;
+    },
+    cancelAnimationFrame(frameId) {
+      scheduledFrames.delete(frameId);
     },
     visualViewport: {
       width: 806.6,
@@ -213,6 +223,30 @@ function verifyStandaloneViewportSynchronization() {
   browserWindow.visualViewport.height = 343.6;
   visualViewportListeners.get('resize')();
   assert.equal(properties.get('--app-visible-viewport-height'), '344px');
+  browserWindow.visualViewport.width = 0;
+  browserWindow.visualViewport.height = 0;
+  browserWindow.innerWidth = 640;
+  browserWindow.innerHeight = 390;
+  windowListeners.get('orientationchange')();
+  assert.equal(
+    properties.get('--app-visible-viewport-width'),
+    '640px',
+    'standalone 전환 중 visualViewport가 일시적으로 0이어도 layout viewport로 복구해야 한다.',
+  );
+  assert.equal(properties.get('--app-visible-viewport-height'), '390px');
+  browserWindow.visualViewport.width = 630.4;
+  browserWindow.visualViewport.height = 354.4;
+  const pendingCallbacks = [...scheduledFrames.values()];
+  scheduledFrames.clear();
+  for (const callback of pendingCallbacks) callback();
+  assert.equal(
+    properties.get('--app-visible-viewport-width'),
+    '630px',
+    '다음 paint에서 안정화한 standalone visual viewport를 다시 반영해야 한다.',
+  );
+  assert.equal(properties.get('--app-visible-viewport-height'), '354px');
+  windowListeners.get('pageshow')();
+  assert.equal(scheduledFrames.size, 1, 'pageshow 뒤에도 중복 resync frame을 예약하면 안 된다.');
   adapter.stop();
   assert.equal(windowListeners.size, 0, '화면 종료 뒤 window listener를 남기면 안 된다.');
   assert.equal(
@@ -220,6 +254,7 @@ function verifyStandaloneViewportSynchronization() {
     0,
     '화면 종료 뒤 visual viewport listener를 남기면 안 된다.',
   );
+  assert.equal(scheduledFrames.size, 0, '화면 종료 뒤 예약된 viewport resync를 남기면 안 된다.');
 }
 
 function verifyDebugConfigurationRoundTrip() {
