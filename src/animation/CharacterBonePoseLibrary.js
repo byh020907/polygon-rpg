@@ -297,6 +297,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
     armPose: 'rollRelease',
   }),
   authoredRollFrame({
+    id: 'roll-ready',
     at: 1,
     transition: 'hold',
     rootY: 0,

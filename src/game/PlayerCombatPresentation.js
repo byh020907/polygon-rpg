@@ -205,6 +205,11 @@ function createCharacterItems(
       )
     : bonePose.headTilt;
   const swordRotation = targetPose.swordAngle;
+  const poseWeaponLengthScale =
+    Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0
+      ? targetPose.weaponLengthScale
+      : 1;
+  const resolvedWeaponLengthScale = weaponLengthScale * poseWeaponLengthScale;
   const projectedArm = (shoulder, elbow, hand) =>
     Object.freeze({
       root: { x: position.x + shoulder.x, y: position.y + shoulder.y },
@@ -274,7 +279,7 @@ function createCharacterItems(
         swordRotation - targetPose.trailArc,
         swordRotation,
         42,
-        111 * weaponLengthScale,
+        111 * resolvedWeaponLengthScale,
       ),
       { x: 0, y: 0 },
       '#bff8ef',
@@ -474,9 +479,9 @@ function createCharacterItems(
       'sword-blade',
       [
         { x: 0, y: -3 },
-        { x: 100 * weaponLengthScale, y: -3 },
-        { x: 126 * weaponLengthScale, y: 0 },
-        { x: 100 * weaponLengthScale, y: 4 },
+        { x: 100 * resolvedWeaponLengthScale, y: -3 },
+        { x: 126 * resolvedWeaponLengthScale, y: 0 },
+        { x: 100 * resolvedWeaponLengthScale, y: 4 },
         { x: 0, y: 4 },
       ],
       { x: bladeOrigin.x, y: bladeOrigin.y, rotation: swordRotation },
@@ -487,8 +492,8 @@ function createCharacterItems(
       'sword-shine',
       [
         { x: 12, y: -2 },
-        { x: 99 * weaponLengthScale, y: -2 },
-        { x: 117 * weaponLengthScale, y: -0.5 },
+        { x: 99 * resolvedWeaponLengthScale, y: -2 },
+        { x: 117 * resolvedWeaponLengthScale, y: -0.5 },
         { x: 22, y: 0 },
       ],
       { x: bladeOrigin.x, y: bladeOrigin.y, rotation: swordRotation },

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibrary.js';
+import { samplePlayerMotionPose } from '../src/animation/PlayerMotionPose.js';
 import { retargetMotionKeyframes } from '../src/animation/MotionClipRetargeter.js';
 import { MOTION_REFERENCE_CATALOG } from '../src/animation/MotionReferenceCatalog.js';
 import { ROLL_TIMELINE_MARKERS, rollTimelineMarkerAt } from '../src/animation/RollTimeline.js';
@@ -9,6 +10,8 @@ import {
   CombatCommandController,
   combatMotionFrameData,
 } from '../src/combat/CombatCommandController.js';
+import { samplePlayerCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
+import { CHARACTER_RENDER_SCALE } from '../src/game/PlayerCombatPresentation.js';
 import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
 import {
   ENCOUNTER_PROFILES,
@@ -149,6 +152,33 @@ assert.ok(
     authoredMidRoll.projectedJoints.farShoulder.depth,
   'orthographic projection must preserve authored near/far depth order',
 );
+
+for (const progress of [0, 0.5, 0.999_999, 1]) {
+  const rollMotionPose = samplePlayerMotionPose({
+    motionState: Object.freeze({ id: 'idle', progress: 0 }),
+    boneInput: Object.freeze({ rollProgress: progress }),
+  });
+  assert.equal(
+    rollMotionPose.targetPose.weaponLengthScale,
+    0.3,
+    `roll pose ${progress} must keep the blade tucked rather than rendering an idle-length weapon`,
+  );
+  const rollGeometry = samplePlayerCombatGeometry({
+    position: Object.freeze({ x: 300, y: 352 }),
+    facing: 1,
+    targetPose: rollMotionPose.targetPose,
+    bonePose: rollMotionPose.bonePose,
+    geometryScale: CHARACTER_RENDER_SCALE,
+  });
+  const rollBladeSpan = Math.hypot(
+    rollGeometry.weapon.points[2].x - rollGeometry.weapon.points[0].x,
+    rollGeometry.weapon.points[2].y - rollGeometry.weapon.points[0].y,
+  );
+  assert.ok(
+    rollBladeSpan < 40,
+    `rolled Player blade must remain inside the compact roll silhouette at ${progress}`,
+  );
+}
 
 const authoredUtilityClips = [
   sampleCharacterBonePose({ animationTime: 0.21 }),

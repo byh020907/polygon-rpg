@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-feedback-priority · campaign-map debug panel verified · character and roll pose-quality next`
+`human-feedback-priority · authored 3D roll pose and tucked-blade seam verified · installed mobile app viewport scale next`
 
 ## Project Direction Comparison
 

@@ -107,6 +107,11 @@ export function samplePlayerCombatGeometry({
   geometryScale,
   weaponLengthScale = 1,
 }) {
+  const poseWeaponLengthScale =
+    Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0
+      ? targetPose.weaponLengthScale
+      : 1;
+  const resolvedWeaponLengthScale = weaponLengthScale * poseWeaponLengthScale;
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const projectedJoints = bonePose.projectedJoints ?? null;
@@ -147,9 +152,9 @@ export function samplePlayerCombatGeometry({
   const weaponPoints = transformPoints(
     [
       { x: 0, y: -3 },
-      { x: 100 * weaponLengthScale, y: -3 },
-      { x: 126 * weaponLengthScale, y: 0 },
-      { x: 100 * weaponLengthScale, y: 4 },
+      { x: 100 * resolvedWeaponLengthScale, y: -3 },
+      { x: 126 * resolvedWeaponLengthScale, y: 0 },
+      { x: 100 * resolvedWeaponLengthScale, y: 4 },
       { x: 0, y: 4 },
     ],
     { ...bladeOrigin, rotation: targetPose.swordAngle },
