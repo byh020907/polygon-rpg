@@ -51,6 +51,13 @@ function resolveEncounterProfile(profiles, profileId = 'training') {
       `${profileId} encounter에는 character presentation profile ID가 필요합니다.`,
     );
   }
+  const completionDisposition = profile.completionDisposition ?? 'defeated';
+  if (!['defeated', 'surrender', 'flee'].includes(completionDisposition)) {
+    throw new TypeError(`${profileId} encounter completion disposition이 올바르지 않습니다.`);
+  }
+  if (profile.species === 'human-salvager' && completionDisposition === 'defeated') {
+    throw new TypeError(`${profileId} human salvager는 surrender 또는 flee로 끝나야 합니다.`);
+  }
   return profile;
 }
 
@@ -270,6 +277,9 @@ export class TrainingEncounterNode extends SceneNode {
       lastCommandTransition: null,
       enchantStatus: null,
       enchantTickSeconds: 0,
+      completionDisposition: encounterProfile.completionDisposition ?? 'defeated',
+      resolutionState: 'active',
+      resolutionDirection: 0,
       ...(posture ? { posture } : {}),
       ...(weakPoint ? { weakPoint } : {}),
     };
@@ -346,6 +356,8 @@ export class TrainingEncounterNode extends SceneNode {
       role: enemy.role,
       species: enemy.species,
       label: enemy.label,
+      completionDisposition: enemy.completionDisposition,
+      resolutionState: enemy.resolutionState,
       materialReward: this.entity.materialReward,
       aiState: enemy.aiState,
       attackKind: enemy.attackKind,
@@ -369,6 +381,8 @@ export class TrainingEncounterNode extends SceneNode {
       entityId: this.enemy.id,
       profileId: this.enemy.profileId,
       role: this.enemy.role,
+      completionDisposition: this.enemy.completionDisposition,
+      resolutionState: this.enemy.resolutionState,
       materialReward: this.entity.materialReward,
       campaignProgress: this.entity.campaignProgress,
     });
@@ -379,8 +393,30 @@ export class TrainingEncounterNode extends SceneNode {
       throw new Error('Visual QA completion은 active enemy life에 한 번만 적용할 수 있습니다.');
     }
     this.enemy.health = 0;
+    return this.resolveCompletion();
+  }
+
+  resolveCompletion() {
+    if (this.completionEmitted) return this.createCompletionResult();
+    const enemy = this.enemy;
     this.completionEmitted = true;
-    if (this.entity.encounterProfile.respawns) this.enemy.resetSeconds = RESET_SECONDS;
+    if (enemy.completionDisposition === 'surrender') {
+      enemy.resolutionState = 'surrendered';
+      enemy.aiState = 'surrendered';
+      enemy.velocityX = 0;
+      enemy.velocityY = 0;
+      enemy.rotation = 0;
+    } else if (enemy.completionDisposition === 'flee') {
+      enemy.resolutionState = 'fleeing';
+      enemy.resolutionDirection = enemy.facing === 0 ? 1 : -enemy.facing;
+      enemy.aiState = 'fleeing';
+      enemy.velocityX = enemy.resolutionDirection * 160;
+      enemy.velocityY = 0;
+      enemy.rotation = enemy.resolutionDirection * 0.16;
+    } else {
+      enemy.resolutionState = 'defeated';
+    }
+    if (this.entity.encounterProfile.respawns) enemy.resetSeconds = RESET_SECONDS;
     const result = this.createCompletionResult();
     this.encounterCompleted.emit(result);
     return result;
@@ -418,6 +454,8 @@ export class TrainingEncounterNode extends SceneNode {
         presentationProfileId: enemy.presentationProfileId,
         species: enemy.species,
         label: enemy.label,
+        completionDisposition: enemy.completionDisposition,
+        resolutionState: enemy.resolutionState,
         punishWindowOpen: enemy.punishWindowOpen,
         attack: Object.freeze({
           kind: enemy.attackKind,
@@ -468,9 +506,7 @@ export class TrainingEncounterNode extends SceneNode {
       enemy.enchantTickSeconds = 0;
     }
     if (enemy.health === 0 && !this.completionEmitted) {
-      this.completionEmitted = true;
-      if (this.entity.encounterProfile.respawns) enemy.resetSeconds = RESET_SECONDS;
-      this.encounterCompleted.emit(this.createCompletionResult());
+      this.resolveCompletion();
     }
   }
 
@@ -571,6 +607,17 @@ export class TrainingEncounterNode extends SceneNode {
     }
     enemy.groundImpactSeconds = Math.max(0, enemy.groundImpactSeconds - deltaSeconds);
     if (enemy.health <= 0) {
+      if (enemy.resolutionState === 'fleeing') {
+        enemy.position.x += enemy.velocityX * deltaSeconds;
+        enemy.facing = enemy.resolutionDirection;
+        if (
+          enemy.position.x < this.movementBounds.minX - 80 ||
+          enemy.position.x > this.movementBounds.maxX + 80
+        ) {
+          enemy.resolutionState = 'departed';
+          enemy.velocityX = 0;
+        }
+      }
       if (this.entity.encounterProfile.respawns) {
         enemy.resetSeconds = Math.max(0, enemy.resetSeconds - deltaSeconds);
         if (enemy.resetSeconds <= 0) this.reset();
@@ -1255,10 +1302,6 @@ export class TrainingEncounterNode extends SceneNode {
     );
     enemy.health = Math.max(0, enemy.health - damage);
     if (weakPointPunishAccepted) this.setWeakPointExposure(false);
-    if (enemy.health === 0 && !this.completionEmitted) {
-      this.completionEmitted = true;
-      this.encounterCompleted.emit(this.createCompletionResult());
-    }
     this.confirmedComboCycle = combatState.comboCycle;
     enemy.comboCycleHitPending = enemy.health > 0;
     enemy.lastReceivedComboCycle = combatState.comboCycle;
@@ -1397,6 +1440,7 @@ export class TrainingEncounterNode extends SceneNode {
         playerMotion: Object.freeze(playerMotion),
       }),
     );
+    if (enemy.health === 0 && !this.completionEmitted) this.resolveCompletion();
     this.cameraFeedbackOccurred.emit(
       Object.freeze({
         direction: player.facing,

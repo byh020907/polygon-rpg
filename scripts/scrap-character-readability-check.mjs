@@ -222,6 +222,29 @@ for (const [encounterId, profileId, regionId, roomId] of [
       `${encounterId}에는 ${landmarkId}가 필요합니다.`,
     );
   }
+  const completion = humanScene.roomSceneNode.encounter.completeForVisualQa();
+  assert.ok(['surrender', 'flee'].includes(completion.completionDisposition));
+  assert.equal(
+    completion.resolutionState,
+    completion.completionDisposition === 'surrender' ? 'surrendered' : 'fleeing',
+  );
+  const resolvedFrame = humanScene.createRenderFrame(2);
+  assert.equal(
+    resolvedFrame.combatEnemy.resolutionState,
+    completion.completionDisposition === 'surrender' ? 'surrendered' : 'fleeing',
+  );
+  assert.ok(
+    resolvedFrame.items.some((item) => item.id === 'combat-enemy-resolution-fill'),
+    `${encounterId} human resolution에는 비살상 status marker가 필요합니다.`,
+  );
+  const resolutionItem =
+    completion.completionDisposition === 'surrender'
+      ? 'combat-enemy-human-surrender-marker'
+      : 'combat-enemy-human-flee-dust';
+  assert.ok(
+    resolvedFrame.items.some((item) => item.id === resolutionItem),
+    `${encounterId} human resolution은 ${completion.completionDisposition} pose로 읽혀야 합니다.`,
+  );
 }
 const quarryCollectorEncounter = ENCOUNTER_PROFILES['quarry-cut-collector'];
 assert.equal(quarryCollectorEncounter.presentationProfileId, 'collector-unit');

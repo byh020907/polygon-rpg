@@ -920,6 +920,8 @@ export function createTrainingEnemyItems(
   const groggy = enemy.posture?.groggy === true;
   const groggyPulse = groggy ? 0.72 + 0.28 * Math.sin(enemy.posture.groggySeconds * 30) : 1;
   const glasswind = enemy.species === 'glasswind';
+  const surrendering = enemy.resolutionState === 'surrendered';
+  const fleeing = enemy.resolutionState === 'fleeing';
   const bodyFill = groggy
     ? '#bff8ed'
     : flash
@@ -930,7 +932,14 @@ export function createTrainingEnemyItems(
           ? '#4f7f9d'
           : presentationProfile.material;
   const healthRatio = Math.max(0, enemy.health / enemy.maxHealth);
-  const opacity = enemy.health > 0 ? 1 : Math.max(0.18, enemy.resetSeconds);
+  const opacity =
+    enemy.resolutionState === 'departed'
+      ? 0
+      : surrendering || fleeing
+        ? 1
+        : enemy.health > 0
+          ? 1
+          : Math.max(0.18, enemy.resetSeconds);
   const enchant = enemy.enchantStatus;
   const enchantAura = enchant
     ? polygon(
@@ -955,41 +964,47 @@ export function createTrainingEnemyItems(
       ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds
       : 0;
   const weaponLength = sampleTrainingEnemyWeaponLength(enemy, profiles);
-  const weaponAngle =
-    enemy.aiState === 'hitstun'
-      ? enemy.hitReactionWeaponAngle
-      : enemy.aiState === 'windup'
-        ? enemy.attackKind === 'sweep'
-          ? -1.4
-          : enemy.attackKind === 'heavy'
-            ? -1.8
-            : enemy.attackKind === 'antiAir'
-              ? 0.1
-              : -1.2
-        : enemy.aiState === 'attack'
+  const weaponAngle = surrendering
+    ? 0.85
+    : fleeing
+      ? 0.42
+      : enemy.aiState === 'hitstun'
+        ? enemy.hitReactionWeaponAngle
+        : enemy.aiState === 'windup'
           ? enemy.attackKind === 'sweep'
-            ? -0.3 + attackProgress * 0.55
-            : enemy.attackKind === 'antiAir'
-              ? 0.1 - attackProgress * 3
-              : enemy.attackKind === 'heavy'
-                ? -1.8 + attackProgress * 2.4
-                : -1.2 + attackProgress * 1.8
-          : enemy.aiState === 'recovery'
-            ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
-            : -0.65;
+            ? -1.4
+            : enemy.attackKind === 'heavy'
+              ? -1.8
+              : enemy.attackKind === 'antiAir'
+                ? 0.1
+                : -1.2
+          : enemy.aiState === 'attack'
+            ? enemy.attackKind === 'sweep'
+              ? -0.3 + attackProgress * 0.55
+              : enemy.attackKind === 'antiAir'
+                ? 0.1 - attackProgress * 3
+                : enemy.attackKind === 'heavy'
+                  ? -1.8 + attackProgress * 2.4
+                  : -1.2 + attackProgress * 1.8
+            : enemy.aiState === 'recovery'
+              ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
+              : -0.65;
   const renderFacing = ['windup', 'attack', 'recovery'].includes(enemy.aiState)
     ? enemy.attackFacing
     : enemy.facing;
-  const poseRotation =
-    enemy.aiState === 'recovery'
-      ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
-      : enemy.rotation +
-        (groggy ? -0.18 : 0) +
-        (enemy.aiState === 'windup'
-          ? -0.14
-          : enemy.aiState === 'attack'
-            ? -0.14 + attackProgress * 0.42
-            : 0);
+  const poseRotation = surrendering
+    ? 0.18
+    : fleeing
+      ? enemy.resolutionDirection * 0.22
+      : enemy.aiState === 'recovery'
+        ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
+        : enemy.rotation +
+          (groggy ? -0.18 : 0) +
+          (enemy.aiState === 'windup'
+            ? -0.14
+            : enemy.aiState === 'attack'
+              ? -0.14 + attackProgress * 0.42
+              : 0);
   const weaponHand = { x: x + 8, y: y - (enemy.attackKind === 'sweep' ? 20 : 56) };
   const weaponShoulder = { x: x - 8, y: y - (enemy.attackKind === 'sweep' ? 45 : 59) };
   const weaponElbow = {
@@ -1002,6 +1017,44 @@ export function createTrainingEnemyItems(
       : 0;
   const items = [
     ...(enchantAura ? [enchantAura] : []),
+    ...(surrendering && presentationProfile.family === 'human'
+      ? [
+          limbSegment(
+            'combat-enemy-human-surrender-rear-arm',
+            { x: x - 10, y: y - 64 },
+            { x: x - 25, y: y - 108 },
+            8,
+            presentationProfile.material,
+            { stroke: '#20272b', lineWidth: 2 },
+          ),
+          limbSegment(
+            'combat-enemy-human-surrender-front-arm',
+            { x: x + 10, y: y - 64 },
+            { x: x + 27, y: y - 108 },
+            8,
+            presentationProfile.accent,
+            { stroke: '#20272b', lineWidth: 2 },
+          ),
+          polygon(
+            'combat-enemy-human-surrender-marker',
+            regularPolygon(10, 13, 3),
+            { x, y: y - 126 },
+            '#e4bd64',
+            { stroke: '#fff1bd', lineWidth: 1.5 },
+          ),
+        ]
+      : []),
+    ...(fleeing && presentationProfile.family === 'human'
+      ? [
+          polygon(
+            'combat-enemy-human-flee-dust',
+            regularPolygon(24, 8, 8),
+            { x: x - enemy.resolutionDirection * 24, y: enemy.groundY },
+            '#b9a98b',
+            { opacity: 0.42 },
+          ),
+        ]
+      : []),
     polygon(
       'combat-enemy-shadow',
       regularPolygon(25, 7, 10),
@@ -1276,12 +1329,23 @@ export function createTrainingEnemyItems(
       stroke: '#09070b',
       lineWidth: 1,
     }),
-    polygon(
-      'combat-enemy-health-fill',
-      rectangle(-32, -1, 64 * healthRatio, 2),
-      { x, y: y - 112 },
-      healthRatio > 0.3 ? '#df6571' : '#f0c96b',
-    ),
+    ...(surrendering || fleeing
+      ? [
+          polygon(
+            'combat-enemy-resolution-fill',
+            rectangle(-32, -1, 64, 2),
+            { x, y: y - 112 },
+            surrendering ? '#75d6c4' : '#e4bd64',
+          ),
+        ]
+      : [
+          polygon(
+            'combat-enemy-health-fill',
+            rectangle(-32, -1, 64 * healthRatio, 2),
+            { x, y: y - 112 },
+            healthRatio > 0.3 ? '#df6571' : '#f0c96b',
+          ),
+        ]),
     ...(enemy.posture && enemy.health > 0
       ? [
           polygon(
