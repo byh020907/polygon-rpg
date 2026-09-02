@@ -22,6 +22,44 @@ import {
 export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
 const VISUAL_QA_PHASES = new Set(VISUAL_QA_PHASE_IDS);
 
+const SCRAP_FINAL_BATTLE_COMPLETED_REGIONS = Object.freeze([
+  Object.freeze({
+    regionId: 'abandoned-mine',
+    stageKind: 'campaign-updated',
+    status: 'resolved',
+    collected: true,
+    currentLocationId: 'neighborhood-scrapyard',
+  }),
+  Object.freeze({
+    regionId: SCRAP_SHIPYARD_REGION_ID,
+    stageKind: 'campaign-updated',
+    status: 'resolved',
+    collected: true,
+    currentLocationId: 'neighborhood-scrapyard',
+  }),
+  Object.freeze({
+    regionId: SCRAP_GREENHOUSE_REGION_ID,
+    stageKind: 'campaign-updated',
+    status: 'resolved',
+    collected: true,
+    currentLocationId: 'neighborhood-scrapyard',
+  }),
+  Object.freeze({
+    regionId: SCRAP_SNOW_REGION_ID,
+    stageKind: 'campaign-updated',
+    status: 'resolved',
+    collected: true,
+    currentLocationId: 'neighborhood-scrapyard',
+  }),
+  Object.freeze({
+    regionId: SCRAP_QUARRY_REGION_ID,
+    stageKind: 'campaign-updated',
+    status: 'resolved',
+    collected: true,
+    currentLocationId: 'neighborhood-scrapyard',
+  }),
+]);
+
 const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
   'posture-full': Object.freeze({
     expectedEvent: null,
@@ -884,6 +922,25 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     scrapLastSegment: true,
     scrapGameOverStageId: SCRAP_GAME_OVER_STAGE.INPUT_LOCKED,
     expectation: Object.freeze({}),
+  }),
+  'scrap-final-armor': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 480,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    scrapRegionStates: SCRAP_FINAL_BATTLE_COMPLETED_REGIONS,
+    scrapFinalBattleStageId: SCRAP_FINAL_BATTLE_STAGE.ARMOR,
+    expectation: Object.freeze({
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+      expectedItems: Object.freeze([
+        'scrap-final-counter-reactor',
+        'scrap-final-counter-cutter',
+        'scrap-final-ancient-armor-left',
+        'scrap-final-ancient-armor-right',
+        'scrap-final-armor-target',
+      ]),
+    }),
   }),
   'scrap-final-epilogue': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,

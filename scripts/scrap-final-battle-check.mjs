@@ -10,6 +10,7 @@ import {
   toScrapCampaignSnapshot,
 } from '../src/game/campaign/ScrapCampaignState.js';
 import { SCRAP_FINAL_BATTLE_STAGE } from '../src/game/campaign/ScrapFinalBattleState.js';
+import { createScrapFinalBattlePresentation } from '../src/game/campaign/ScrapFinalBattlePresentation.js';
 
 function finalAction(stageId) {
   return Object.freeze({
@@ -96,5 +97,35 @@ assert.throws(
     ),
   /다섯 part/,
 );
+
+const armorPresentation = createScrapFinalBattlePresentation(SCRAP_FINAL_BATTLE_STAGE.ARMOR);
+assert.deepEqual(
+  armorPresentation
+    .filter((item) => item.role === 'scrap-final-battle')
+    .map((item) => item.id)
+    .sort(),
+  armorPresentation
+    .filter((item) => item.role !== 'final-arena-horizon' && item.role !== 'final-arena-ground')
+    .map((item) => item.id)
+    .sort(),
+);
+assert.ok(armorPresentation.some((item) => item.id === 'scrap-final-counter-reactor'));
+assert.ok(armorPresentation.some((item) => item.id === 'scrap-final-ancient-armor-left'));
+assert.ok(armorPresentation.some((item) => item.id === 'scrap-final-armor-target'));
+
+const weaponPresentation = createScrapFinalBattlePresentation(SCRAP_FINAL_BATTLE_STAGE.WEAPON);
+assert.ok(weaponPresentation.some((item) => item.id === 'scrap-final-ancient-cutter-blade'));
+assert.ok(weaponPresentation.some((item) => item.id === 'scrap-final-weapon-target'));
+
+const controlPresentation = createScrapFinalBattlePresentation(
+  SCRAP_FINAL_BATTLE_STAGE.CONTROL_CORE,
+);
+assert.ok(controlPresentation.some((item) => item.id === 'scrap-final-exposed-control-core'));
+assert.ok(
+  createScrapFinalBattlePresentation(SCRAP_FINAL_BATTLE_STAGE.EPILOGUE).some(
+    (item) => item.id === 'scrap-final-epilogue-crane',
+  ),
+);
+assert.deepEqual(createScrapFinalBattlePresentation(SCRAP_FINAL_BATTLE_STAGE.INACTIVE), []);
 
 console.log('scrap final battle checks passed');

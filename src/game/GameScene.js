@@ -89,6 +89,7 @@ import {
   SCRAP_FINAL_BATTLE_STAGE,
   assertScrapFinalBattleStageId,
 } from './campaign/ScrapFinalBattleState.js';
+import { createScrapFinalBattlePresentation } from './campaign/ScrapFinalBattlePresentation.js';
 import { SCRAPYARD_REST_ENTITY_ID } from './maps/scrapAwakening.js';
 
 const CHARACTER_SPEED = 230;
@@ -3942,8 +3943,17 @@ export class GameScene extends SceneNode {
         : null,
     });
     const playerItems = activeRoom.presentationOnly ? [] : characterItems;
+    const scrapFinalBattleItems = createScrapFinalBattlePresentation(
+      this.progressionSnapshot.scrapCampaign.finalBattleStageId,
+    );
     const items = Object.freeze(
-      [...mapSnapshot.renderItems, ...encounterItems, ...playerItems, ...combatEffectItems]
+      [
+        ...mapSnapshot.renderItems,
+        ...scrapFinalBattleItems,
+        ...encounterItems,
+        ...playerItems,
+        ...combatEffectItems,
+      ]
         .filter((item) => item.enabled !== false)
         .sort(
           (left, right) =>
