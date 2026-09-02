@@ -112,6 +112,38 @@
 - 실제 viewport의 frame strip과 연속 재생에서 몸통이 납작하게 기울어지거나 가까운 팔이 갑자기 먼 팔 뒤로 튀고, torso polygon이 뒤집히거나 장비가 몸을 관통하면 실패다.
 - 외부 3D dependency 없이 현재 static ESM·Canvas 2D production boundary와 PWA offline asset 계약을 유지한다.
 
+### 기본 스켈레톤 동작은 인터넷 모션 레퍼런스 우선 사용
+
+idle, walk, run, jump, fall, landing, roll, guard와 피격처럼 일반적인 인체 동작은 처음부터 감으로 직접 만들기보다 인터넷에서 적절한 모션 레퍼런스나 재사용 가능한 motion data가 있는지 먼저 조사하고 이를 현재 3D skeleton frame pose로 가져와 사용하는 방향으로 한다.
+
+#### Reference-first 원칙
+
+- 기본 action clip을 새로 만들기 전에 실제 인체 동작 영상, 연속 이미지, 공개 motion capture와 skeleton animation 자료를 검색한다. 검증된 공통 동작을 이유 없이 다시 발명하지 않는다.
+- 실제 BVH·FBX·glTF 등의 motion data를 가져올 때는 public domain, CC0 또는 프로젝트가 재배포·수정할 수 있는 명확한 permissive license를 우선한다. 출처·license·원본 URL·가져온 날짜와 수정 내용을 clip metadata 또는 project reference 문서에 남긴다.
+- 상용 게임·영화·애니메이션 영상과 라이선스가 불분명한 자료는 pose, 무게중심, timing과 silhouette를 관찰하는 시각 레퍼런스로만 사용한다. 원본 asset이나 추출 데이터를 그대로 저장·배포하지 않는다.
+- 적절한 재사용 자료가 없어서 직접 authoring하는 경우에도 어떤 레퍼런스를 조사했고 왜 그대로 사용할 수 없었는지 짧은 근거를 남긴다.
+
+#### 현재 스켈레톤으로 변환
+
+- 외부 motion은 runtime에서 직접 의존하지 않고 development-time importer 또는 명시적 변환 단계로 현재 프로젝트의 3D skeleton joint 이름과 frame pose JSON/data로 변환해 repository에 보존한다.
+- source skeleton의 joint를 root·pelvis·chest·head·near/far arm·leg에 명시적으로 mapping하고, 신체 비율·축 방향·단위·root motion과 frame rate를 정규화한다.
+- 원본의 모든 frame을 그대로 유지하는 것이 목적이 아니다. 측면 액션 게임에서 읽히는 준비·접촉·follow-through key pose를 추출하고 불필요한 noise와 미세 motion을 줄인 뒤 앞서 정한 hold/snap/제한적 interpolation clip으로 재구성한다.
+- 외부 모션의 timing이 gameplay startup·active·recovery를 바꾸지 않는다. command owner의 authored timing에 맞춰 pose frame을 retarget하며 접촉·회피·착지 frame ID를 실제 판정과 다시 대응한다.
+- roll과 공격은 Player의 검·방패·가방, 얇은 비율과 고정 side-view projection에 맞게 손·어깨·골반·발 위치를 추가 보정한다. reference를 가져왔다는 이유로 장비 관통이나 읽히지 않는 3/4 pose를 허용하지 않는다.
+
+#### 재사용과 오프라인 경계
+
+- 정규화된 기본 human motion library는 Player에서 먼저 검증한 뒤 비율과 attachment 보정으로 NPC, 작업인형과 실제 인간 적이 공유한다. 각 캐릭터가 같은 raw 수식을 따로 구현하지 않는다.
+- 비인간 skeleton은 체형이 유사한 동물·기계 motion reference를 별도로 조사하고, 인간 motion을 무리하게 retarget하지 않는다.
+- 게임 runtime과 설치 PWA는 외부 URL에서 motion을 내려받지 않는다. 검증·변환된 local clip만 사용하고 필요한 asset은 offline cache inventory에 포함한다.
+
+#### 확인 기준
+
+- 각 기본 clip은 사용한 reference, license 상태, skeleton mapping과 핵심 수정 내용을 추적할 수 있어야 한다.
+- source reference의 주요 pose와 최종 2D projected frame strip을 나란히 비교해 무게중심, 발 지지, 관절 순서와 이동 방향이 보존되는지 확인한다.
+- 실제 게임 속도에서 reference motion을 그대로 느리게 재생하거나 frame 수만 늘린 결과가 아니라, 현재 전투 timing과 side-view silhouette에 맞게 재구성됐는지 독립 검증한다.
+- license와 source를 확인할 수 없는 외부 animation data가 production source나 PWA cache에 포함되면 실패다.
+
 ## Feedback Guide
 
 실제 제품을 사용하며 느낀 문제, 기대한 결과와 관찰한 상황을 가능한 한 원문에 가깝게 적는다.
