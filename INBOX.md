@@ -79,6 +79,39 @@
 - reduced-motion은 카메라 흔들림과 과한 보조 motion을 줄일 수 있지만 action을 이해하는 핵심 pose frame을 삭제하지 않는다.
 - 본 frame authoring을 사용했다는 사실만으로 완료하지 않는다. 현재 그래픽 Quality 선언에 맞는 무게중심, 타격 방향, silhouette와 실제 조작 감각이 독립 검증되어야 한다.
 
+### 3D 스켈레톤 좌표를 2D 컷아웃으로 투영
+
+고정 측면 시점에서 몸통과 캐릭터 전체를 화면 평면의 회전값으로 돌리면 종이 인형이 기울어지는 것처럼 부자연스럽다. 본 정의와 authored pose frame은 3D 좌표계를 사용하고, 실제 게임 렌더링은 이를 고정 측면 카메라로 2D에 투영해 기존 Canvas polygon/cutout으로 그리는 구조로 한다.
+
+#### 범위
+
+- 3D 캐릭터 모델, mesh, vertex skinning, texture/UV, perspective camera, WebGL과 Three.js 같은 외부 3D library는 도입하지 않는다.
+- 3D로 계산하는 것은 skeleton joint의 위치·부모 관계·local rotation과 frame pose뿐이다. 외형은 투영된 관절 사이에 기존 2D polygon, capsule, head shape와 장비 shape를 생성해 표현한다.
+- gameplay world, 이동, 중력, 지형, body collider, hitbox/hurtbox와 카메라는 계속 2D다. 표현용 `z`가 충돌 폭, 이동 가능 축이나 공격 범위를 암묵적으로 바꾸지 않는다.
+
+#### 최소 스켈레톤과 투영
+
+- Skeleton은 최소한 root, pelvis, chest, neck, head와 가까운/먼 쪽 shoulder·elbow·hand, hip·knee·foot joint를 가진다.
+- 각 authored frame은 joint 또는 bone의 local 3D transform을 소유하며 부모 transform을 결합한 world pose를 만든다.
+- 고정 측면 직교 카메라는 3D joint를 screen x/y와 depth로 투영한다. screen x/y는 기존 renderer 좌표가 되고 depth는 가까운/먼 본과 장비의 draw order를 결정한다.
+- 팔·다리는 투영된 두 관절을 잇는 2D limb polygon으로, 머리는 head joint의 기존 shape로, 검·방패·가방은 해당 hand/chest joint의 2D attachment로 그린다.
+- 몸통은 별도 3D 모델을 만들지 않고 투영된 가까운/먼 어깨와 골반 anchor를 연결한 단순 2D polygon으로 만든다. chest가 비틀리면 네 anchor의 투영 위치와 depth order가 달라져 측면→약한 3/4 silhouette가 자연스럽게 나타나야 한다.
+
+#### 회전과 frame authoring
+
+- 화면 평면 회전은 앞으로 숙이기, 뒤로 젖히기와 구르기 root 진행처럼 실제 side-view에서 보이는 제한된 기울기에만 사용한다.
+- 몸통 비틀기, 가까운/먼 팔 교차와 어깨·골반 counter rotation은 3D skeleton pose로 authored한다. 전역 `torsoRotation` 숫자 하나로 전체 polygon을 돌려 대체하지 않는다.
+- side view의 가까운/먼 사지 layer가 pose 중 교차할 때 depth sort가 안정적으로 바뀌고 한 frame에서 앞뒤가 떨리면 안 된다. 같은 depth에서는 stable authored tie-break order를 사용한다.
+- 기존 frame-authored clip의 hold/snap/제한적 interpolation 규칙을 유지한다. 3D skeleton은 좋은 pose를 자동 생성하는 절차가 아니라 사람이 정의한 frame을 일관되게 투영하는 기반이다.
+
+#### 재사용과 확인 기준
+
+- Player 핵심 clip에서 skeleton과 projection을 먼저 검증하고, 신체 비율과 attachment profile만 바꿔 NPC·작업인형·실제 인간 적에 재사용한다. 비인간 몹은 필요한 joint graph를 별도 authored할 수 있지만 같은 transform/projection 계약을 사용한다.
+- side, 약한 3/4, 공격 contact와 roll 중간 frame에서 shoulder·hip·hand·foot의 3D 좌표, projected 2D 위치와 depth order를 fixture로 고정한다.
+- 기존 2D collider와 3D presentation skeleton을 나란히 확인해 몸통 비틀기나 구르기 중에도 화면 pose와 gameplay 판정이 허용 범위를 벗어나지 않는지 검증한다.
+- 실제 viewport의 frame strip과 연속 재생에서 몸통이 납작하게 기울어지거나 가까운 팔이 갑자기 먼 팔 뒤로 튀고, torso polygon이 뒤집히거나 장비가 몸을 관통하면 실패다.
+- 외부 3D dependency 없이 현재 static ESM·Canvas 2D production boundary와 PWA offline asset 계약을 유지한다.
+
 ## Feedback Guide
 
 실제 제품을 사용하며 느낀 문제, 기대한 결과와 관찰한 상황을 가능한 한 원문에 가깝게 적는다.
