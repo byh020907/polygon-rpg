@@ -159,7 +159,7 @@ function convoyAction(regionId) {
 
 const fresh = createScrapCampaignSnapshot(SCRAP_CAMPAIGN_PROFILE);
 const initial = getScrapCampaignReadModel(fresh, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(initial.hudLabel, '첫 수거 의뢰 · 고철 대왕 각성 전');
+assert.equal(initial.hudLabel, '첫 수거 의뢰 · 고대 병기 각성 전');
 assert.equal(initial.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(initial.awakeningActive, false);
 assert.equal(initial.deadlineRevealed, false);
@@ -177,6 +177,13 @@ assert.deepEqual(
 );
 for (const region of SCRAP_CAMPAIGN_PROFILE.regions) {
   assert.equal(region.eventStages.length, 8);
+  assert.equal(
+    region.routeDetour.segments,
+    region.event.extensionSegments,
+    `${region.id}의 D-DAY 변화는 마지막 작업이 만든 authored 우회 거리와 같아야 합니다.`,
+  );
+  assert.ok(region.routeDetour.closureLabel.length > 0);
+  assert.ok(region.routeDetour.detourLabel.length > 0);
   assert.equal(new Set(region.eventStages.map((stage) => stage.id)).size, 8);
   assert.ok(
     region.eventStages.every((stage) => stage.nextObjective.length > 0),
@@ -529,6 +536,16 @@ assert.equal(mineSuccess.completedIssueIds.includes('mine-rescue-operation'), tr
 assert.equal(mineSuccess.collectedPartIds.includes(mineProfile.part.id), true);
 assert.equal(mineSuccess.deadlineSegments, 120 - 9 + 8);
 assert.equal(mineSuccess.rivalDelaySegments, 8);
+const mineReadModel = getScrapCampaignReadModel(mineSuccess, SCRAP_CAMPAIGN_PROFILE);
+assert.deepEqual(mineReadModel.activeRouteDetours, [
+  {
+    regionId: 'abandoned-mine',
+    regionLabel: '폐광 산촌',
+    closureLabel: '굴착기가 옛 군사 지하도를 붕괴',
+    detourLabel: '서부 갱도 우회',
+    segments: 8,
+  },
+]);
 assert.equal(mineSuccess.regionEventStageIds['abandoned-mine'], 'abandoned-mine:campaign-updated');
 
 const harborProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('harbor-shipyard');

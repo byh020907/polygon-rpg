@@ -21,12 +21,12 @@ const PRESENTATION_BY_STAGE = Object.freeze({
   }),
   [SCRAP_GAME_OVER_STAGE.INPUT_LOCKED]: Object.freeze({
     title: 'D-DAY 0',
-    cue: '작전 신호가 끊겼습니다. 고철 대왕이 수도 진입로에 도달했습니다.',
+    cue: '작전 신호가 끊겼습니다. 고대 병기가 왕도 진입로에 도달했습니다.',
     recoveryAvailable: false,
   }),
   [SCRAP_GAME_OVER_STAGE.CAPITAL_ARRIVAL]: Object.freeze({
     title: '수도 성문 도착',
-    cue: '작전 지도 위 마지막 구간이 닫히고 고철 대왕의 표식이 수도에 겹칩니다.',
+    cue: '작전 지도 위 마지막 구간이 닫히고 고대 병기의 표식이 왕도에 겹칩니다.',
     recoveryAvailable: false,
   }),
   [SCRAP_GAME_OVER_STAGE.CAPITAL_DESTROYED]: Object.freeze({

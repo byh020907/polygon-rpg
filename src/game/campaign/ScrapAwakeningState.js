@@ -29,7 +29,7 @@ const STAGE_DURATION_SECONDS = Object.freeze({
 
 export function assertScrapAwakeningStageId(stageId) {
   if (!STAGE_INDEX.has(stageId)) {
-    throw new TypeError(`지원하지 않는 고철 대왕 각성 stage입니다: ${stageId}`);
+    throw new TypeError(`지원하지 않는 고대 병기 각성 stage입니다: ${stageId}`);
   }
   return stageId;
 }
@@ -105,49 +105,52 @@ export function getScrapAwakeningPresentation(stageId) {
     },
     [SCRAP_AWAKENING_STAGE.PLAYER_DECISION]: {
       title: '구조 장치의 유일한 전원',
-      briefing: '구조 winch와 맞는 출력은 폐병기 흉곽의 제어장치뿐입니다.',
-      objective: '청록 제어장치에 다가가 ↑로 조사하세요.',
-      cue: '제어장치 조사 · 상호작용 ↑',
+      briefing: '하린을 끌고 간 회수팔의 직접 제어는 폐병기 흉곽의 제어핵에만 연결돼 있습니다.',
+      objective: '청록 제어핵에 다가가 ↑로 조사하세요.',
+      cue: '제어핵 조사 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED]: {
       title: '사람을 먼저 구한다',
-      briefing: '장치를 떼면 폐병기 회로가 깨어날 수 있지만, 하린을 구할 다른 방법은 없습니다.',
-      objective: '제어장치 앞에서 ↑를 눌러 구조 winch에 연결하세요.',
-      cue: '구조용 장치 회수 · 상호작용 ↑',
+      briefing:
+        '제어핵을 떼면 비상 운용이 시작될 수 있지만, 회수팔을 멈춰 하린을 구할 다른 방법은 없습니다.',
+      objective: '제어핵 앞에서 ↑를 눌러 회수팔의 정상 제어를 끊으세요.',
+      cue: '구조용 제어핵 회수 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED]: {
-      title: '구조 장치 가동',
-      briefing: '제어장치가 구조 winch에 전력을 보내 잔해를 들어 올립니다.',
-      objective: '구조 winch 가동이 끝날 때까지 기다리세요.',
-      cue: 'INPUT LOCK · RESCUE POWER',
+      title: '회수팔 정상 제어 차단',
+      briefing: '제어핵이 빠지자 자동 회수팔이 풀리고 하린을 붙잡은 장력이 사라집니다.',
+      objective: '회수팔 정지가 끝날 때까지 기다리세요.',
+      cue: 'INPUT LOCK · ARM RELEASE',
     },
     [SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED]: {
       title: '하린 구조 성공',
-      briefing: '하린이 잔해에서 빠져나온 순간 제어장치 신호가 폐병기의 남은 회로로 역류합니다.',
+      briefing:
+        '하린이 빠져나온 순간 제어핵 접속부가 비상 장갑 안으로 봉쇄되고 폐병기가 비상 운용으로 전환됩니다.',
       objective: '폐병기 반응이 끝날 때까지 기다리세요.',
       cue: 'RESCUE COMPLETE · SIGNAL RETURN',
     },
     [SCRAP_AWAKENING_STAGE.EYES_LIT]: {
-      title: '고철 대왕 각성',
+      title: '고대 병기 각성',
       briefing: '어둡던 단안이 켜지고 주변 고철이 몸체 쪽으로 끌려갑니다.',
       objective: '고철 결합 연출이 끝날 때까지 기다리세요.',
       cue: 'EYE ONLINE · ASSEMBLY START',
     },
     [SCRAP_AWAKENING_STAGE.ASSEMBLED]: {
-      title: '불완전한 고철 대왕',
+      title: '불완전한 고대 병기',
       briefing: '서로 맞지 않는 판금과 케이블이 거대한 상체를 억지로 세웁니다.',
       objective: '진로 탐색 연출이 끝날 때까지 기다리세요.',
-      cue: 'SCRAP KING · ROUTE ACQUIRED',
+      cue: 'ANCIENT WEAPON · EMERGENCY ROUTE',
     },
     [SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED]: {
       title: '수도까지 남은 시간',
-      briefing: '고철 대왕이 움직이기 시작했습니다. 수도 도착까지 D-30.',
+      briefing:
+        '제어핵 응답 없음. 고대 병기가 저장된 중앙 지휘소 좌표를 향해 움직입니다. 왕도 도착까지 D-30.',
       objective: 'D-30 안내 뒤 조작이 돌아올 때까지 기다리세요.',
       cue: 'D-30 · 수도 도착까지',
     },
     [SCRAP_AWAKENING_STAGE.COMPLETE]: {
       title: '각성 직후',
-      briefing: '하린을 구한 두 견습생은 자신들이 깨운 고철 대왕보다 먼저 고물상으로 돌아갑니다.',
+      briefing: '하린을 구한 두 견습생은 자신들이 깨운 고대 병기보다 먼저 고물상으로 돌아갑니다.',
       objective: '왼쪽 고물상 주인에게 돌아가 ↑로 사고를 보고하세요.',
       cue: 'CONTROL RESTORED · D-30',
     },

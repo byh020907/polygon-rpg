@@ -155,7 +155,7 @@ export function createScrapCampaignSnapshot(profile) {
     awakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
     garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.LOCKED,
     gameOver: false,
-    lastChangeLabel: '첫 수거 의뢰 · 제어장치 회수 전',
+    lastChangeLabel: '첫 수거 의뢰 · 제어핵 회수 전',
   });
 }
 
@@ -176,8 +176,8 @@ export function toScrapCampaignSnapshot(value, profile) {
   for (const [field, label] of [
     ['elapsedSegments', '경과 구간'],
     ['deadlineSegments', '남은 D-DAY 구간'],
-    ['rivalProgressSegments', '고철 대왕 진행 구간'],
-    ['rivalDelaySegments', '고철 대왕 우회 지연 구간'],
+    ['rivalProgressSegments', '고대 병기 진행 구간'],
+    ['rivalDelaySegments', '고대 병기 우회 지연 구간'],
   ]) {
     assertNonNegativeInteger(value[field], label);
   }
@@ -318,7 +318,7 @@ export function toScrapCampaignSnapshot(value, profile) {
     awakeningStageId !== SCRAP_AWAKENING_STAGE.COMPLETE &&
     garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.LOCKED
   ) {
-    throw new TypeError('고물상 차고 reveal은 고철 대왕 각성 완료 뒤에만 진행할 수 있습니다.');
+    throw new TypeError('고물상 차고 reveal은 고대 병기 각성 완료 뒤에만 진행할 수 있습니다.');
   }
   if (
     awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE &&
@@ -898,7 +898,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     garageRevealStageId: current.garageRevealStageId,
     gameOver: preview.willGameOver,
     lastChangeLabel: preview.willGameOver
-      ? `${authoredAction.label} · 고철 대왕 수도 도착`
+      ? `${authoredAction.label} · 고대 병기 왕도 도착`
       : authoredAction.label,
   });
   return Object.freeze({
@@ -935,6 +935,9 @@ export function getScrapCampaignReadModel(snapshot, profile) {
       travelSegments: region.route.travelSegments,
       eventSegments: region.event.costSegments,
       extensionDays: region.event.extensionSegments / CAMPAIGN_SEGMENTS_PER_DAY,
+      routeDetourDays: region.routeDetour.segments / CAMPAIGN_SEGMENTS_PER_DAY,
+      routeClosureLabel: region.routeDetour.closureLabel,
+      routeDetourLabel: region.routeDetour.detourLabel,
       machineLabel: region.machineLabel,
       partId: region.part.id,
       partLabel: region.part.label,
@@ -1013,12 +1016,23 @@ export function getScrapCampaignReadModel(snapshot, profile) {
       travelSegments: route.travelSegments,
     }),
   );
+  const activeRouteDetours = regions
+    .filter((region) => region.status === SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED)
+    .map((region) =>
+      Object.freeze({
+        regionId: region.id,
+        regionLabel: region.label,
+        closureLabel: region.routeClosureLabel,
+        detourLabel: region.routeDetourLabel,
+        segments: profile.getRegion(region.id).routeDetour.segments,
+      }),
+    );
   const rivalArrival = timeReadModel(current.elapsedSegments + current.deadlineSegments, 0);
   return Object.freeze({
     ...time,
     hudLabel: isScrapAwakeningDeadlineRevealed(current.awakeningStageId)
       ? `Day ${time.day} · ${time.phaseLabel} · ${time.deadlineLabel}`
-      : '첫 수거 의뢰 · 고철 대왕 각성 전',
+      : '첫 수거 의뢰 · 고대 병기 각성 전',
     awakeningStageId: current.awakeningStageId,
     awakeningActive: isScrapAwakeningActive(current.awakeningStageId),
     deadlineRevealed: isScrapAwakeningDeadlineRevealed(current.awakeningStageId),
@@ -1033,6 +1047,7 @@ export function getScrapCampaignReadModel(snapshot, profile) {
     rivalDirectionLabel: current.gameOver ? profile.capital.label : rivalRoute.directionLabel,
     rivalArrivalLabel: `Day ${rivalArrival.day} · ${rivalArrival.phaseLabel}`,
     rivalDelaySegments: current.rivalDelaySegments,
+    activeRouteDetours: Object.freeze(activeRouteDetours),
     lastChangeLabel: current.lastChangeLabel,
     collectedPartCount: current.collectedPartIds.length,
     totalPartCount: profile.regions.length,

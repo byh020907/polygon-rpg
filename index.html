@@ -33,7 +33,7 @@
             <p class="menu-kicker">A SCRAPYARD APPRENTICE · THIRTY DAYS TO THE CAPITAL</p>
             <h1 id="game-title"><span>POLYGON</span><strong>RPG</strong></h1>
             <p class="menu-subtitle">
-              다섯 산업기계를 먼저 구해<br />우리 식의 거대 로봇을 완성한다.
+              다섯 산업기계를 먼저 구해<br />우리 식의 대항 병기를 완성한다.
             </p>
 
             <div class="menu-actions">
@@ -77,7 +77,7 @@
             <div class="journey-mark" aria-hidden="true">◆</div>
             <h2>사람을 구했더니 왕국이 야근</h2>
             <p>
-              붕괴에 갇힌 라이벌을 구하려 떼어낸 제어장치가 고철 대왕을 깨웠다. 두 견습생과 고물상
+              회수팔에 붙잡힌 라이벌을 구하려 떼어낸 제어핵이 고대 병기를 깨웠다. 두 견습생과 고물상
               주인은 왕국 다섯 지역의 산업기계를 먼저 구해 자신들이 일으킨 사고를 수습한다.
             </p>
             <dl>
@@ -110,7 +110,7 @@
           <canvas
             id="game-canvas"
             tabindex="0"
-            aria-label="고철 대왕 D-30 캠페인 게임 화면"
+            aria-label="고대 병기 D-30 캠페인 게임 화면"
             aria-describedby="game-status-surface"
           ></canvas>
 
@@ -157,7 +157,7 @@
             aria-live="assertive"
             aria-atomic="true"
           >
-            <small>고철 대왕 수도 진로 확정</small>
+            <small>고대 병기 왕도 진로 확정</small>
             <strong>D-30</strong>
             <span>수도 도착까지 30일</span>
           </section>
@@ -168,8 +168,8 @@
             aria-live="polite"
             aria-atomic="true"
           >
-            <small>GARAGE ASSEMBLY · 제어장치 두뇌 장착</small>
-            <strong>거대 로봇 완성도 0%</strong>
+            <small>GARAGE ASSEMBLY · 제어핵 두뇌 장착</small>
+            <strong>대항 병기 완성도 0%</strong>
             <span>0/5 필수 부품 · 벽 지도에서 첫 지역을 선택하세요</span>
           </section>
           <section
@@ -237,7 +237,7 @@
               <header class="operation-map-header">
                 <div>
                   <small>ROYAL SCRAP OPERATION</small>
-                  <h2 id="operation-map-title" tabindex="-1">고철 대왕 추격 작전 지도</h2>
+                  <h2 id="operation-map-title" tabindex="-1">고대 병기 우회 작전 지도</h2>
                 </div>
                 <button type="button" aria-label="작전 지도 닫기" @click="closeOperationMap">
                   닫기
@@ -248,9 +248,9 @@
                 <strong x-text="campaign.hudLabel"></strong>
                 <span x-text="`현재 위치 · ${campaign.currentLocationLabel}`"></span>
                 <span
-                  x-text="`고철 대왕 · ${campaign.rivalLocationLabel} → ${campaign.rivalDirectionLabel}`"
+                  x-text="`고대 병기 · ${campaign.rivalLocationLabel} → ${campaign.rivalDirectionLabel}`"
                 ></span>
-                <span x-text="`수도 도착 예정 · ${campaign.rivalArrivalLabel}`"></span>
+                <span x-text="`왕도 도착 예정 · ${campaign.rivalArrivalLabel}`"></span>
               </p>
 
               <nav class="operation-map-connections" aria-label="대지역 연결 도로">
@@ -331,8 +331,10 @@
                         <dd x-text="`${region.eventSegments}구간`"></dd>
                       </div>
                       <div>
-                        <dt>성공</dt>
-                        <dd x-text="`D-DAY +${region.extensionDays}일`"></dd>
+                        <dt>마지막 작업</dt>
+                        <dd
+                          x-text="`${region.routeClosureLabel} · ${region.routeDetourLabel} ${region.routeDetourDays}일`"
+                        ></dd>
                       </div>
                     </dl>
                     <strong
@@ -342,7 +344,7 @@
                 </template>
               </section>
 
-              <section class="operation-map-assembly" aria-label="거대 로봇 조립 현황">
+              <section class="operation-map-assembly" aria-label="대항 병기 조립 현황">
                 <div>
                   <small>GARAGE ASSEMBLY</small>
                   <strong x-text="`완성도 ${campaign.completionPercent}%`"></strong>
@@ -353,7 +355,7 @@
                 <div
                   class="operation-map-progress"
                   role="progressbar"
-                  aria-label="거대 로봇 완성도"
+                  aria-label="대항 병기 완성도"
                   aria-valuemin="0"
                   aria-valuemax="100"
                   x-bind:aria-valuenow="campaign.completionPercent"
@@ -416,7 +418,7 @@
                   ></dd>
                 </div>
                 <div>
-                  <dt>고철 대왕</dt>
+                  <dt>고대 병기</dt>
                   <dd
                     x-text="campaignActionPreview.rival.movementSegments > 0 ? `${campaignActionPreview.rival.before.locationLabel} → ${campaignActionPreview.rival.after.directionLabel} 방향 · +${campaignActionPreview.rival.movementSegments}구간` : `우회 지연 적용 · 이동 없음`"
                   ></dd>
@@ -476,7 +478,7 @@
 
               <figure
                 class="scrap-game-over-map"
-                aria-label="고철 대왕이 다섯 지역을 지나 수도에 도착한 작전 지도"
+                aria-label="고대 병기가 다섯 지역을 지나 왕도에 도착한 작전 지도"
               >
                 <div class="scrap-game-over-route" aria-hidden="true">
                   <i></i><i></i><i></i><i></i><i></i><b></b>
@@ -491,7 +493,7 @@
                   <span></span><b></b><i></i>
                 </div>
                 <div class="scrap-game-over-impact" aria-hidden="true"></div>
-                <figcaption>D-DAY 0 · 고철 대왕 수도 도착 · 전투와 지도 command 잠금</figcaption>
+                <figcaption>D-DAY 0 · 고대 병기 왕도 도착 · 전투와 지도 command 잠금</figcaption>
               </figure>
 
               <section
@@ -651,7 +653,7 @@
             <h2 id="game-status-title">Canvas 대체 현재 게임 상태</h2>
             <p x-text="`지역: ${areaName} · ${campaign.hudLabel}`"></p>
             <p
-              x-text="`작전: ${campaign.currentLocationLabel} · 고철 대왕 ${campaign.rivalLocationLabel} → ${campaign.rivalDirectionLabel}`"
+              x-text="`작전: ${campaign.currentLocationLabel} · 고대 병기 ${campaign.rivalLocationLabel} → ${campaign.rivalDirectionLabel}`"
             ></p>
             <p x-text="`목표: ${objective}`"></p>
             <p x-text="`진행: ${journeyLabel}`"></p>

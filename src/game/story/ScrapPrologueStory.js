@@ -46,9 +46,9 @@ const SCRAP_PROLOGUE_CONVERSATIONS = Object.freeze([
     interactionId: 'scrap-rival-yard-search',
     speaker: '하린',
     lines: [
-      '이 지지대, 수거 표식보다 훨씬 오래됐어. 안쪽 winch 전원도 끊겨 있네.',
+      '이 지지대, 수거 표식보다 훨씬 오래됐어. 안쪽 회수팔이 아직 움직여.',
       '나는 위쪽 cable을 볼게. 넌 흉곽 아래 통로가 버티는지 확인해 줘.',
-      '잠깐, 발밑 판금이— 뒤로 물러나!',
+      '잠깐, 회수팔이 내 갈고리를— 잡혔어!',
     ],
   }),
   conversation({
@@ -57,9 +57,9 @@ const SCRAP_PROLOGUE_CONVERSATIONS = Object.freeze([
     interactionId: 'scrap-rival-rescue-request',
     speaker: '하린',
     lines: [
-      '나 여기 있어. 다리는 움직이는데 잔해가 허리 위를 눌렀어.',
-      '구조 winch가 바로 위야. 전원만 들어오면 cable로 이 판을 들 수 있어.',
-      '맞는 출력이 저 흉곽의 청록 장치뿐이야. 하지만 떼면 폐병기 회로가 깨어날 수도 있어.',
+      '나 여기 있어. 회수팔이 갈고리를 잡고 안쪽으로 끌고 가고 있어.',
+      '팔의 관절은 저 흉곽 장치에 바로 물려 있어. 그걸 빼야 멈출 거야.',
+      '하지만 떼면 폐병기 비상 회로가 깨어날 수도 있어.',
     ],
   }),
   conversation({
@@ -68,19 +68,20 @@ const SCRAP_PROLOGUE_CONVERSATIONS = Object.freeze([
     interactionId: 'scrap-player-device-decision',
     speaker: '주인공 (독백)',
     lines: [
-      '이 장치를 winch에 연결하면 하린을 꺼낼 수 있다.',
-      '폐병기 신호가 살아날 위험은 있다. 그래도 사람을 두고 다른 전원을 찾으러 갈 시간은 없어.',
+      '이 제어핵을 빼면 회수팔을 멈추고 하린을 꺼낼 수 있다.',
+      '폐병기 비상 운용이 깨어날 위험은 있다. 그래도 사람을 두고 다른 방법을 찾을 시간은 없어.',
       '먼저 구한다. 무슨 일이 깨어나든 그다음에 내가 책임진다.',
     ],
   }),
   conversation({
     id: SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_ANALYSIS,
-    title: '제어장치 분석과 차고 개방',
+    title: '제어핵 분석과 차고 개방',
     interactionId: 'scrapyard-owner-analysis',
     speaker: '고물상 주인',
     lines: [
       '퇴직했는데 또 야근이라니. 둘이 무사한 건 잘했다. 그 장치부터 작업대에 올려 봐.',
-      '이건 왕국 전역 기계 신호를 읽는 제어 두뇌야. 너희가 깨운 놈보다 먼저 부품을 모아야 한다.',
+      '이건 위치를 보내지 않는 수동 제어핵이야. 저 병기는 오래된 중앙 지휘소 좌표를 따라 왕도로 가고 있어.',
+      '동원 신호를 받은 생활 기계들의 군수 인장을 풀고, 제어핵을 돌려놓을 대항 병기를 먼저 완성해야 한다.',
       '벽 지도를 켜고 차고문도 열자. 사고를 냈으면 끝까지 수습하는 게 우리 일이다.',
     ],
   }),

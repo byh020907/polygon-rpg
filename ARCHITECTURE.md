@@ -20,24 +20,24 @@
 
 ## Module Boundaries
 
-| Boundary                       | Responsibility                                                                                                        | Must Not Know or Do                                     |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Browser Bootstrap / UI Adapter | Screen·modal state, semantic controls, accessible interaction, status render                                          | Mutable gameplay internals, route·time rule 재구현      |
-| Debug Configuration Adapter    | Hold 뒤 QA panel, stable campaign scenario와 URL 양방향 변환                                                          | Player 저장 재사용, gameplay state 직접 쓰기            |
-| Application Composition        | Browser resource, input/render/UI/domain owner 조립                                                                   | Domain rule 재구현, renderer별 gameplay 분기            |
-| Scene Runtime                  | Tree-owned lifecycle와 scoped signal                                                                                  | Global lookup, implicit mutable singleton               |
-| Input Adapters                 | Keyboard/pointer를 frozen common intent·sequence로 변환                                                               | Map, combat, campaign time 또는 modal policy            |
-| Game Orchestrator              | Player·combat·map·story·progression coordination과 immutable RenderFrame/status                                       | DOM, Canvas drawing, storage serialization              |
-| Authored Campaign Content      | 도입·반복 cast·다섯 region·교차 issue graph·route·사건 단계·시간·연장·part·map patch·robot·ending profile             | Browser API, mutable runtime writer                     |
-| Campaign Domain                | 4구간 날짜, D-DAY, 고철 대왕 route, primary/linked issue window, region result, part·robot completion과 action ledger | Render delta 시간, UI layout, unloaded Chunk simulation |
-| Map Domain                     | Region/Room/Chunk, active snapshot, stable-ID patch와 atomic transition                                               | Campaign action 결정, renderer mutation                 |
-| Encounter / Combat Domain      | Command phase, enemy state, contact, guard/evade/posture와 result                                                     | DOM, persistence, campaign route mutation               |
-| Progression Domain             | 장비·인챈트·command·회수 part와 campaign transaction coordination                                                     | UI layout, concrete storage/browser API                 |
-| Story Interaction              | Blocking/ambient 말풍선, 독백, active speaker·line·anchor·reveal·대화 기록과 authored event request                   | DOM bubble geometry, campaign state 직접 mutation       |
-| Storage Port                   | Versioned snapshot와 recovery slot validation·load/save result                                                        | Gameplay rule, hidden fallback success                  |
-| Shared Combat Geometry         | Pose에서 weapon/shield/hurt/swept-contact geometry 계산                                                               | Canvas style, damage write                              |
-| Art Direction Profiles         | 저채도 palette, depth layer, material, light, effect와 HUD presentation token의 immutable 정의                        | Gameplay rule, Canvas/DOM 직접 write                    |
-| Renderers                      | 같은 immutable RenderFrame을 Polygon/Retro로 투영                                                                     | Simulation, hit 재판정, state write                     |
+| Boundary                       | Responsibility                                                                                                                      | Must Not Know or Do                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Browser Bootstrap / UI Adapter | Screen·modal state, semantic controls, accessible interaction, status render                                                        | Mutable gameplay internals, route·time rule 재구현      |
+| Debug Configuration Adapter    | Hold 뒤 QA panel, stable campaign scenario와 URL 양방향 변환                                                                        | Player 저장 재사용, gameplay state 직접 쓰기            |
+| Application Composition        | Browser resource, input/render/UI/domain owner 조립                                                                                 | Domain rule 재구현, renderer별 gameplay 분기            |
+| Scene Runtime                  | Tree-owned lifecycle와 scoped signal                                                                                                | Global lookup, implicit mutable singleton               |
+| Input Adapters                 | Keyboard/pointer를 frozen common intent·sequence로 변환                                                                             | Map, combat, campaign time 또는 modal policy            |
+| Game Orchestrator              | Player·combat·map·story·progression coordination과 immutable RenderFrame/status                                                     | DOM, Canvas drawing, storage serialization              |
+| Authored Campaign Content      | 도입·반복 cast·다섯 region·교차 issue graph·route·사건 단계·시간·연장·part·map patch·robot·ending profile                           | Browser API, mutable runtime writer                     |
+| Campaign Domain                | 4구간 날짜, D-DAY, 고대 병기 route·우회 거리, primary/linked issue window, region result, part·대항 병기 completion과 action ledger | Render delta 시간, UI layout, unloaded Chunk simulation |
+| Map Domain                     | Region/Room/Chunk, active snapshot, stable-ID patch와 atomic transition                                                             | Campaign action 결정, renderer mutation                 |
+| Encounter / Combat Domain      | Command phase, enemy state, contact, guard/evade/posture와 result                                                                   | DOM, persistence, campaign route mutation               |
+| Progression Domain             | 장비·인챈트·command·회수 part와 campaign transaction coordination                                                                   | UI layout, concrete storage/browser API                 |
+| Story Interaction              | Blocking/ambient 말풍선, 독백, active speaker·line·anchor·reveal·대화 기록과 authored event request                                 | DOM bubble geometry, campaign state 직접 mutation       |
+| Storage Port                   | Versioned snapshot와 recovery slot validation·load/save result                                                                      | Gameplay rule, hidden fallback success                  |
+| Shared Combat Geometry         | Pose에서 weapon/shield/hurt/swept-contact geometry 계산                                                                             | Canvas style, damage write                              |
+| Art Direction Profiles         | 저채도 palette, depth layer, material, light, effect와 HUD presentation token의 immutable 정의                                      | Gameplay rule, Canvas/DOM 직접 write                    |
+| Renderers                      | 같은 immutable RenderFrame을 Polygon/Retro로 투영                                                                                   | Simulation, hit 재판정, state write                     |
 
 Adapter는 policy를 호출하고 policy는 adapter를 import하지 않는다. Concrete map, campaign/equipment profile과 adapter는 composition root에서 주입한다.
 
@@ -83,13 +83,13 @@ Keyboard / Touch / DOM intent
 - Authored Campaign Profile은 다섯 region의 stable ID, label, color/material language, route, event segment cost, D-DAY extension, industrial machine, part와 robot module을 immutable data로 제공한다.
 - Authored Campaign Profile은 약 10시간/부품당 약 2시간의 target pacing, issue dependency graph와 각 issue의 region·cast·required encounter/state change를 제공한다. Cross-region dependency는 item delivery만으로 완료되지 않고 destination issue의 authored interaction, exploration, combat 또는 world patch 중 하나 이상을 요구한다.
 - Issue activation policy는 공간적으로 열린 다섯 region과 별개로 primary issue 하나 및 linked issue 최대 두 개만 active로 만든다. 완료 transaction이 다음 연결을 결정하며 UI가 모든 region request를 임의로 나열하지 않는다.
-- Region core event의 소비 시간이 성공 연장보다 크다. Player-first 완료는 region을 resolved로 만들고 D-DAY를 2~5일 연장하며 part를 지급한다.
+- Region core event의 소비 시간은 마지막 작업으로 생기는 2~5일 상당의 실제 우회 거리보다 크다. Player-first 완료는 region을 resolved로 만들고, 지도 route patch와 일치하는 distance-derived D-DAY 변화를 기록하며 part를 지급한다. 임의의 부품 보상 연장은 금지한다.
 - Rival-first arrival은 region을 destroyed/convoy state로 바꾸고 extension을 제거한다. Two-segment convoy chase는 같은 필수 part를 한 번 지급해 진행 불가를 막는다.
 - Rival position과 route는 time-consuming commit에서만 deterministic하게 전진하고 같은 snapshot/context는 같은 read model을 만든다. Background simulation과 wall-clock catch-up을 금지한다.
 - 다섯 part를 모두 가진 snapshot만 final battle available을 참으로 resolve한다.
 - D-DAY 0 이후 combat/map command를 성공 처리하지 않고 game-over presentation sequence가 state의 terminal reason을 투영한다.
 - Main issue chain을 authored 최단 집중 경로로 실행한 pacing fixture는 초기 D-DAY budget의 약 75~80%를 소비한다. Optional issue와 실수는 남은 budget을 사용하고 반복되는 큰 손실은 D-DAY 0으로 연결한다.
-- Final battle snapshot은 armor·weapon·control-core phase와 첫 control device 재설치 completion을 ledger에 남긴다. Epilogue read model은 robot module 반환, 다섯 region 기계 복귀, 고철 대왕 복구 장비 전환과 두 견습생의 공식 수거팀 인정을 한 번만 투영한다.
+- Final battle snapshot은 armor·weapon·control-core phase와 제어핵 재설치 completion을 ledger에 남긴다. Epilogue read model은 대항 병기 module 반환, 다섯 region 기계 복귀, 고대 병기 복구 장비 전환과 두 견습생의 공식 수거팀 인정을 한 번만 투영한다.
 
 ## Operation Map Contract
 
@@ -121,7 +121,7 @@ Keyboard / Touch / DOM intent
 - Story beat는 `blocking`, `ambient`, `monologue` presentation mode를 명시한다. Blocking은 필요한 짧은 구간에만 gameplay input을 잠그고 ambient는 이동 중에도 수명과 world anchor를 유지하며 monologue는 새 장소·수상한 물체·중요한 선택에서만 Player anchor를 사용한다.
 - Bottom objective DTO는 짧은 imperative action과 필요한 command hint만 제공하고 세계관·감정·사건 경위를 포함하지 않는다. 서사 문장은 bubble DTO와 transcript만 소유한다.
 - 완료된 중요 conversation은 immutable authored transcript catalog와 viewed conversation ID로 다시 열 수 있다. Transcript UI는 현재 scene beat를 진행시키거나 campaign event를 재실행하지 않는다.
-- Introduction awakening은 정식 의뢰, 라이벌 동행, 기본 탐색·전투, 붕괴, 구조 요청, 주인공 선택 독백, 구조용 device 회수, 구조 성공, input lock, camera cue, eye/assembly render patch, shake, D-30 notice, 마을 귀환과 garage reveal을 saveable staged event로 기록한다.
+- Introduction awakening은 자동 회수팔에 붙잡힌 라이벌, 회수팔의 직접 제어를 끊는 제어핵 회수, 비상 장갑으로 봉쇄되는 접속부, 중앙 지휘소 좌표를 따르는 고대 병기의 비상 운용, 동원 신호, D-30 notice, 마을 귀환과 garage reveal을 saveable staged event로 기록한다. 제어핵은 위치를 송출하지 않는 수동 장치다.
 - Recurring cast profile은 고물상 주인·라이벌과 각 region의 결정권자/생활 당사자/연결 인물을 stable ID로 정의하고 before/in-progress/after location, work pose, damage state와 conversation을 map patch로 바꾼다.
 
 ## Rendering, Input and Accessibility
@@ -176,7 +176,7 @@ Keyboard / Touch / DOM intent
 - Campaign fixture는 Day 1 morning/D-30, 네 segment rollover, zero-cost action, one-segment travel, preview warning, idempotent commit, player-first extension, rival-first convoy fallback, five-part final unlock과 D-DAY 0 terminal boundary를 고정한다.
 - Persistence fixture는 campaign round-trip, legacy migration, corrupt/write failure와 recovery slot selection을 검증한다.
 - Browser flow는 MENU short operation map, MENU hold debug separation, HUD/map same-state projection, desktop/mobile focus·overflow와 console error를 확인한다.
-- Prologue fixture는 의뢰→라이벌 동행→탐색·전투→붕괴→구조 요청→독백→device 회수·구조→각성→귀환의 stage order, input-lock 경계, transcript, save/reload와 중복 보상 방지를 고정한다.
+- Prologue fixture는 의뢰→라이벌 동행→탐색·전투→회수팔 붕괴/구조 요청→독백→제어핵 회수·구조→접속부 봉쇄·각성→귀환의 stage order, input-lock 경계, transcript, save/reload와 중복 보상 방지를 고정한다.
 - Story Browser flow는 목표 HUD를 숨긴 상태에서 원인·감정·다음 행동이 world bubble과 실제 action으로 이해되는지, bubble 없이 objective ribbon만으로 전체 story가 누출되지 않는지, ambient 이동과 transcript replay가 campaign state를 다시 쓰지 않는지 확인한다.
 - Region fixture는 authored cast/issue graph completeness, primary 1 + linked 2 window, cross-region dependency의 실제 encounter/state-change 조건, order independence, stable before/in-progress/after map patch와 robot module accumulation을 고정한다.
 - Pacing fixture는 집중 main chain이 initial D-DAY budget의 약 75~80%를 사용하고 optional/error path가 남은 여유를 소비하며 반복 실패가 terminal boundary에 닿음을 고정한다.

@@ -9,6 +9,7 @@ function freezeRegion(region) {
   return Object.freeze({
     ...region,
     route: Object.freeze({ ...region.route }),
+    routeDetour: Object.freeze({ ...region.routeDetour }),
     event: Object.freeze({ ...region.event }),
     eventStages: Object.freeze(region.eventStages.map((stage) => Object.freeze({ ...stage }))),
     objectives: Object.freeze({ ...region.objectives }),
@@ -61,12 +62,17 @@ const regions = [
     id: 'abandoned-mine',
     label: '폐광 산촌',
     route: { travelSegments: 1, rivalArrivalSegment: 10 },
+    routeDetour: {
+      segments: 8,
+      closureLabel: '굴착기가 옛 군사 지하도를 붕괴',
+      detourLabel: '서부 갱도 우회',
+    },
     event: { costSegments: 9, extensionSegments: 8, label: '붕괴 광산 구조와 굴착기 인수' },
     eventStages: eventStages('abandoned-mine', {
       'npc-briefing': '오른쪽 구조 현황판에서 붕괴 범위, 9구간 비용과 성공 연장을 확인하세요.',
       'facility-observed': '오른쪽 구조 갱도로 들어가 선점 수거반을 물리고 작업자 길을 확보하세요.',
       'journey-combat': '확보한 갱도 오른쪽에서 굴착기 작업장으로 이동해 Boss를 제압하세요.',
-      'boss-defeated': '작업장 왼쪽에서 광부와 새 갱도 버팀목을 체결하세요.',
+      'boss-defeated': '작업장 왼쪽에서 광부와 굴착기로 옛 군사 지하도를 무너뜨리세요.',
       'replacement-complete': '보행식 굴착기 본체를 조사해 하체·구동부를 분리하세요.',
       'machine-separated': '오른쪽 회수대에서 굴착기 하체·구동부를 수령하세요.',
       'part-claimed': '고물상 차고와 작전 지도에서 새 다리와 다음 지역을 확인하세요.',
@@ -87,12 +93,17 @@ const regions = [
     id: 'harbor-shipyard',
     label: '항구 조선소',
     route: { travelSegments: 1, rivalArrivalSegment: 24 },
+    routeDetour: {
+      segments: 12,
+      closureLabel: '크레인이 퇴역 화물선으로 고대 교량을 절단',
+      detourLabel: '해안 외곽 우회',
+    },
     event: { costSegments: 13, extensionSegments: 12, label: '조선소 탈환과 마지막 선박 수리' },
     eventStages: eventStages('harbor-shipyard', {
       'npc-briefing': '오른쪽 도크 현황판에서 점거 범위, 13구간 비용과 성공 연장을 확인하세요.',
       'facility-observed': '점거된 건선거로 들어가 선점 수거반을 물리고 선박 수리선을 확보하세요.',
       'journey-combat': '확보한 건선거 끝에서 쌍둥이 크레인 부두로 이동해 Boss를 제압하세요.',
-      'boss-defeated': '조선공과 마지막 선박의 외판 수리를 끝내세요.',
+      'boss-defeated': '조선공과 퇴역 화물선을 들어 고대 교량을 절단하세요.',
       'replacement-complete': '쌍둥이 크레인의 압력을 빼고 유압 장치를 분리하세요.',
       'machine-separated': '부두 회수대에서 크레인 유압 장치를 수령하세요.',
       'part-claimed': '고물상 차고와 작전 지도에서 새 팔과 다음 지역을 확인하세요.',
@@ -113,13 +124,19 @@ const regions = [
     id: 'greenhouse-plains',
     label: '온실 평원',
     route: { travelSegments: 1, rivalArrivalSegment: 40 },
+    routeDetour: {
+      segments: 16,
+      closureLabel: '동력로가 관개 펌프를 가동해 평원을 습지로 변경',
+      detourLabel: '습지 외곽 우회',
+    },
     event: { costSegments: 17, extensionSegments: 16, label: '지열 설비 복구와 구형 동력로 분리' },
     eventStages: eventStages('greenhouse-plains', {
       'npc-briefing': '오른쪽 지열 압력판에서 파손 범위, 17구간 비용과 성공 연장을 확인하세요.',
       'facility-observed':
         '파열된 온실 배관 구역으로 들어가 기생 기계를 제거하고 복구선을 확보하세요.',
       'journey-combat': '복구선을 따라 구형 동력로실로 이동해 과열 조절기 Boss를 제압하세요.',
-      'boss-defeated': '온실 기술자와 안전한 저압 지열 배관을 연결해 작물 난방을 복구하세요.',
+      'boss-defeated':
+        '온실 기술자와 동력로로 관개 펌프를 최대 출력 가동해 평원을 습지로 바꾸세요.',
       'replacement-complete': '구형 고출력 동력로를 냉각하고 주 동력원을 분리하세요.',
       'machine-separated': '동력로실 회수대에서 고출력 동력로를 수령하세요.',
       'part-claimed': '고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.',
@@ -140,6 +157,11 @@ const regions = [
     id: 'snow-trade-road',
     label: '설산 교역로',
     route: { travelSegments: 1, rivalArrivalSegment: 58 },
+    routeDetour: {
+      segments: 12,
+      closureLabel: '제설 열차가 눈사태 방벽을 무너뜨려 산길을 폐쇄',
+      detourLabel: '설산 능선 우회',
+    },
     event: { costSegments: 13, extensionSegments: 12, label: '옛 터널 개통과 제설 열차 인수' },
     eventStages: eventStages('snow-trade-road', {
       'npc-briefing': '오른쪽 운행 현황판에서 적설 구간, 13구간 비용과 성공 연장을 확인하세요.',
@@ -147,7 +169,7 @@ const regions = [
         '눈에 막힌 옛 터널로 들어가 열선 케이블을 훔치는 길목 수거반을 물리세요.',
       'journey-combat':
         '개통 신호를 따라 제설 열차 대피선으로 이동해 폭주 기관차 Boss를 제압하세요.',
-      'boss-defeated': '열차 승무원과 옛 터널의 열선·신호 설비를 복구해 산길을 대체하세요.',
+      'boss-defeated': '열차 승무원과 제설 열차로 눈사태 방벽을 무너뜨려 산길을 폐쇄하세요.',
       'replacement-complete': '장갑 제설 열차의 제동을 잠그고 방한 차체를 분리하세요.',
       'machine-separated': '대피선 회수대에서 제설 열차 장갑 차체를 수령하세요.',
       'part-claimed': '고물상 차고와 작전 지도에서 새 장갑과 다음 지역을 확인하세요.',
@@ -168,6 +190,11 @@ const regions = [
     id: 'red-quarry',
     label: '붉은 채석장',
     route: { travelSegments: 1, rivalArrivalSegment: 78 },
+    routeDetour: {
+      segments: 20,
+      closureLabel: '절단기가 왕도 방향 석조 고가도로 지지대를 절단',
+      detourLabel: '채석 절벽 우회',
+    },
     event: { costSegments: 21, extensionSegments: 20, label: '마지막 채굴과 채석장 안전 폐쇄' },
     eventStages: eventStages('red-quarry', {
       'npc-briefing': '오른쪽 안전 작업판에서 남은 절개면, 21구간 비용과 성공 연장을 확인하세요.',
@@ -175,7 +202,7 @@ const regions = [
         '마지막 절개 갱도로 들어가 발파선을 훔치는 수거 유닛을 제거하고 채굴선을 확보하세요.',
       'journey-combat':
         '확보한 절개면 끝에서 암반 절단기 작업장으로 이동해 폭주 절단기 Boss를 제압하세요.',
-      'boss-defeated': '채석공과 마지막 석재를 절단하고 붉은 채석장의 안전 폐쇄 지지대를 세우세요.',
+      'boss-defeated': '채석공과 절단기로 왕도 방향 석조 고가도로 지지대를 절단하세요.',
       'replacement-complete': '초대형 암반 절단기의 회전축을 잠그고 절단검 모듈을 분리하세요.',
       'machine-separated': '작업장 회수대에서 초대형 암반 절단검을 수령하세요.',
       'part-claimed': '고물상 차고와 작전 지도에서 거대 검과 완성도 100%를 확인하세요.',

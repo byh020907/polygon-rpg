@@ -63,32 +63,32 @@ export function getScrapGarageRevealPresentation(stageId) {
   const presentations = {
     [SCRAP_GARAGE_REVEAL_STAGE.LOCKED]: {
       title: '첫 수거 의뢰',
-      briefing: '폐병기 제어장치를 회수해 고철 대왕의 각성을 확인해야 합니다.',
-      objective: '폐병기 안의 반짝이는 제어장치를 직접 회수하세요.',
+      briefing: '폐병기 제어핵을 회수해 고대 병기의 비상 운용을 확인해야 합니다.',
+      objective: '폐병기 안의 반짝이는 제어핵을 직접 회수하세요.',
       cue: 'GARAGE · LOCKED',
     },
     [SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY]: {
       title: '고물상으로 복귀',
-      briefing: '회수한 제어장치를 고물상 주인에게 가져가 분석을 부탁합니다.',
+      briefing: '회수한 제어핵을 고물상 주인에게 가져가 분석을 부탁합니다.',
       objective: '왼쪽 고물상 작업대의 주인에게 돌아가 ↑로 보고하세요.',
       cue: '고물상 주인 · 상호작용 ↑',
     },
     [SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS]: {
       title: '퇴직했는데 또 야근',
-      briefing: '고물상 주인이 제어장치의 왕국 전역 신호를 분석합니다.',
-      objective: '제어장치 분석 중 · 조작이 잠시 멈춥니다.',
+      briefing: '고물상 주인이 제어핵과 동원 신호의 흔적을 분석합니다.',
+      objective: '제어핵 분석 중 · 조작이 잠시 멈춥니다.',
       cue: 'DEVICE ANALYSIS · FIVE SIGNALS',
     },
     [SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED]: {
       title: '왕국 작전 지도',
-      briefing: '벽 지도에 다섯 산업 지역과 고철 대왕의 수도 진로가 켜집니다.',
+      briefing: '벽 지도에 다섯 산업 지역과 고대 병기의 왕도 진로가 켜집니다.',
       objective: '다섯 대지역 경로 확인 · 차고 개방 준비 중',
       cue: 'OPERATION MAP · ONLINE',
     },
     [SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED]: {
       title: '차고문 개방',
-      briefing: '회수한 제어장치가 미완성 거대 로봇 골격의 두뇌 자리에 장착됩니다.',
-      objective: '거대 로봇 골격 · 완성도 0% 공개',
+      briefing: '회수한 제어핵이 미완성 대항 병기 골격의 두뇌 자리에 장착됩니다.',
+      objective: '대항 병기 골격 · 완성도 0% 공개',
       cue: 'GARAGE OPEN · ROBOT 0%',
     },
     [SCRAP_GARAGE_REVEAL_STAGE.COMPLETE]: {

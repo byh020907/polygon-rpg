@@ -125,13 +125,13 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /@keydown\.tab="trapOperationMapFocus\(\$event\)"/);
   assert.match(html, /x-for="region in campaign\.regions"/);
   assert.match(html, /x-for="edge in campaign\.routeEdges"/);
-  assert.match(html, /수도 도착 예정/);
+  assert.match(html, /왕도 도착 예정/);
   assert.match(html, /x-text="campaign\.hudLabel"/);
   assert.match(html, /class="scrap-awakening-deadline"[\s\S]*role="status"/);
   assert.match(html, /x-show="campaign\.awakeningStageId === 'deadline-revealed'"/);
   assert.match(html, /id="game-canvas"[\s\S]*tabindex="0"/);
   assert.match(html, /class="scrap-garage-reveal"[\s\S]*role="status"/);
-  assert.match(html, /거대 로봇 완성도 0%/);
+  assert.match(html, /대항 병기 완성도 0%/);
   assert.match(html, /x-show="operationMapAvailable"/);
   assert.match(html, /id="debug-panel-title"/);
   assert.match(html, /class="debug-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
