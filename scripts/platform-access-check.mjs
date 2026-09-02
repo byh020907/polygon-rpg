@@ -89,6 +89,12 @@ function verifySemanticStatusAndFocusTargets() {
   const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
   const shell = readFileSync(new URL('../src/ui/gameShell.js', import.meta.url), 'utf8');
 
+  assert.match(
+    html,
+    /<meta\s+name="viewport"\s+content="width=device-width, initial-scale=1\.0, viewport-fit=cover"\s*\/>/,
+    '설치형 iOS 화면에서 safe-area inset을 실제 화면 좌표로 읽으려면 viewport-fit=cover가 필요하다.',
+  );
+
   for (const targetId of Object.values(SCREEN_FOCUS_TARGET)) {
     assert.match(html, new RegExp(`id=["']${targetId}["']`), `${targetId} target이 필요하다.`);
   }
