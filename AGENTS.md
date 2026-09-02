@@ -33,12 +33,15 @@ Before product work, read the selected Method and all four Project Sources compl
 
 ## Development Order
 
+- **Human Feedback Priority:** `INBOX.md`의 pending feedback과 그것이 만든 아직 검증되지 않은 제품 결과가 다른 자율 Gap보다 항상 우선한다. fresh worker는 이를 Desired State에 반영하는 데서 끝내지 않고, 해당 feedback이 요구한 관찰 가능한 제품 결과를 구현·검증할 Execution Goal을 먼저 선택한다.
+- INBOX 원문을 Product Goal·Architecture·Project Direction이 소유해 queue에서 제거했더라도 실제 제품 결과가 아직 충족되지 않았다면 우선순위를 잃지 않는다. `STATE.md`에 현재형 `Human Feedback Priority` Gap과 evidence를 유지하고, 결과가 검증된 뒤 해당 임시 표시를 제거한다.
+- pending INBOX와 미완료 INBOX 유래 우선 Gap이 모두 없을 때만 아래 Verified Playable Frontier 순서를 적용한다.
 - 개발은 새 게임을 시작한 사용자가 실제로 경험하는 순서의 **검증 완료 전선(Verified Playable Frontier)** 을 전진시키는 방식으로 진행한다.
 - 다음 Execution Goal은 원칙적으로 게임 시작부터 확인했을 때 가장 먼저 만나는 미완성·부정확·미검증 필수 흐름을 선택한다. 그 흐름이 Product Goal, Architecture와 Project Direction의 품질 기준을 함께 충족하기 전에는 독립적인 후반 지역, 최종전이나 주변 시스템으로 건너뛰지 않는다.
 - 한 Execution Goal은 현재 전선의 연속된 vertical slice를 완성한다. 해당 구간에 필요한 시나리오, 대사, 조작, 전투, 그래픽, 음향/피드백, 저장·복구와 실제 viewport 검증 중 관련 항목을 함께 닫고, 코드 골격이나 UI 일부만 만든 상태를 전선 완료로 보지 않는다.
 - 전선에서 완성·검증한 캐릭터 표현, interaction, encounter, map, lighting, HUD와 테스트 구조를 다음 구간이 재사용하도록 확장한다. 후반 기능을 별도로 먼저 만들어 나중에 첫 흐름에 역적용하는 순서를 기본값으로 삼지 않는다.
 - 기반 구조 변경이 필요하면 현재 전선에 먼저 적용해 실제 플레이와 시각 QA로 증명한 뒤 다음 구간으로 전파한다. 아직 사용되지 않는 범용화나 미래 장면용 선행 구현은 직접 dependency가 아닐 때 선택하지 않는다.
-- Human이 별도의 높은 우선순위 feedback을 명시한 경우에는 그 항목을 먼저 완료할 수 있다. 해당 항목이 끝나면 검증 완료 전선의 가장 이른 Gap으로 복귀한다.
+- Human Feedback Priority 결과가 검증되면 검증 완료 전선의 가장 이른 Gap으로 즉시 복귀한다.
 - `STATE.md`의 Current Phase와 Active Execution Goal은 현재 검증 완료 전선, 바로 다음 미완성 사용자 흐름과 그 evidence를 짧게 기록한다. 장기 roadmap이나 완료 이력을 누적하지 않는다.
 
 ## Human Feedback Ingress
