@@ -11,6 +11,7 @@ import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
+  SCRAPYARD_REST_ENTITY_ID,
   SCRAP_MINE_ROAD_PORTAL_ID,
   SCRAP_MINE_ROAD_REGION_ID,
   SCRAP_MINE_ROAD_ROOM_ID,
@@ -140,6 +141,19 @@ function setAtStoryInteraction(scene, interactionId) {
     x: interaction.position.x,
   });
   return interaction;
+}
+
+function setAtRecoveryCamp(scene) {
+  const restSpot = scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.find((entity) => entity.id === SCRAPYARD_REST_ENTITY_ID);
+  assert.ok(restSpot, '차고 개방 뒤 완전 회복 야전 침상이 필요합니다.');
+  scene.setVisualQaLocation({
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: restSpot.position.x,
+  });
+  return restSpot;
 }
 
 function setAtPortalToRoom(scene, sourceRoomId, destinationRoomId) {
@@ -474,6 +488,8 @@ assert.match(garageCompleteStatus.objective, /벽 지도/);
 for (const itemId of [
   'scrapyard-wall-map-frame',
   'scrapyard-wall-map-route',
+  'scrapyard-recovery-cot-frame',
+  'scrapyard-recovery-cot-roll',
   'garage-robot-frame-torso',
   'garage-robot-brain-core',
   'garage-robot-zero-label',
@@ -482,6 +498,46 @@ for (const itemId of [
 }
 assert.ok(!itemIds(scene).includes('scrapyard-analysis-device-core'));
 assert.ok(!itemIds(scene).includes('scrapyard-garage-door-left'));
+
+let restRequest = null;
+scene.campaignActionPreviewRequested.connect((request) => {
+  if (request.source === 'full-recovery-camp') restRequest = request;
+});
+setAtRecoveryCamp(scene);
+scene.playerHealth = 17;
+const beforeRestProgression = scene.getProgressionSnapshot();
+const beforeRestPreview = scene.getProgressionSnapshot().scrapCampaign;
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 16 }));
+assert.equal(restRequest?.preview.kind, 'rest');
+assert.equal(restRequest?.preview.title, '완전히 회복하고 다음 시간대로 갈까요?');
+assert.equal(restRequest?.preview.detailLabel, '고물상 작업장 · 체력 전부 회복');
+assert.equal(restRequest?.preview.costSegments, 1);
+assert.deepEqual(
+  scene.getProgressionSnapshot().scrapCampaign,
+  beforeRestPreview,
+  '완전 회복 preview는 campaign 시간을 소비하면 안 됩니다.',
+);
+assert.equal(scene.cancelScrapCampaignAction().cancelled, true);
+assert.deepEqual(
+  scene.getProgressionSnapshot().scrapCampaign,
+  beforeRestPreview,
+  '완전 회복 취소는 campaign snapshot을 바꾸면 안 됩니다.',
+);
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 17 }));
+assert.equal(scene.confirmScrapCampaignAction().started, true);
+const afterRest = scene.getWorldStatus();
+const afterRestSnapshot = scene.getProgressionSnapshot().scrapCampaign;
+assert.equal(
+  afterRest.health,
+  afterRest.maxHealth,
+  '완전 회복은 Player 체력을 모두 복구해야 합니다.',
+);
+assert.equal(afterRestSnapshot.elapsedSegments, beforeRestPreview.elapsedSegments + 1);
+assert.equal(afterRestSnapshot.deadlineSegments, beforeRestPreview.deadlineSegments - 1);
+assert.equal(afterRest.campaign.phaseLabel, '낮');
+assert.match(afterRest.progressionNotice, /완전 회복/);
+assert.match(afterRest.encounterHint, /완전히 회복/);
+scene.restoreProgression(beforeRestProgression);
 
 let operationMapRequest = null;
 scene.operationMapRequested.connect((request) => {

@@ -559,6 +559,7 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
     ? profile.getPrimaryIssue(current.activePrimaryIssueId)
     : null;
   const regionEventStart = authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START;
+  const fullRest = authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REST;
   const differentPrimaryActive =
     regionEventStart &&
     activePrimaryIssue !== null &&
@@ -600,13 +601,15 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
     actionId: authoredAction.actionId,
     label: authoredAction.label,
     kind: authoredAction.kind,
-    title:
-      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START
-        ? '지역 핵심 사건을 시작할까요?'
+    title: regionEventStart
+      ? '지역 핵심 사건을 시작할까요?'
+      : fullRest
+        ? '완전히 회복하고 다음 시간대로 갈까요?'
         : '장거리 이동을 확정할까요?',
-    detailLabel:
-      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START
-        ? (targetRegion?.event.label ?? authoredAction.label)
+    detailLabel: regionEventStart
+      ? (targetRegion?.event.label ?? authoredAction.label)
+      : fullRest
+        ? '고물상 작업장 · 체력 전부 회복'
         : locationLabel(authoredAction.targetLocationId, profile),
     costSegments: authoredAction.costSegments,
     extensionSegments: authoredAction.extensionSegments,

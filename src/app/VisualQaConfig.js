@@ -275,6 +275,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedItems: Object.freeze([
         'scrapyard-wall-map-frame',
         'scrapyard-wall-map-route',
+        'scrapyard-recovery-cot-frame',
+        'scrapyard-recovery-cot-roll',
         'garage-robot-frame-torso',
         'garage-robot-brain-core',
         'garage-robot-zero-label',

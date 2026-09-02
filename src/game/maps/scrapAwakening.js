@@ -21,6 +21,7 @@ export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
 export const SCRAP_RIVAL_RESCUE_ENTITY_ID = 'scrap-rival-rescue-request';
 export const SCRAP_PLAYER_DECISION_ENTITY_ID = 'scrap-player-device-decision';
 export const SCRAPYARD_WALL_MAP_ENTITY_ID = 'scrapyard-wall-operation-map';
+export const SCRAPYARD_REST_ENTITY_ID = 'scrapyard-full-recovery-cot';
 export const SCRAP_MINE_ROAD_PORTAL_ID = 'scrapyard-abandoned-mine-road';
 export const SCRAP_MINE_ROAD_REGION_ID = 'abandoned-mine';
 export const SCRAP_MINE_ROAD_ROOM_ID = 'abandoned-mine-roadhead';
@@ -377,6 +378,22 @@ const renderItems = [
     enabled: false,
     label: '기록된 핵심 대화 목록',
     role: 'dialogue-archive-screen',
+  }),
+  item('scrapyard-recovery-cot-frame', rectangle(590, 382, 112, 22), '#735743', {
+    stroke: '#2d251f',
+    lineWidth: 3,
+    order: 14,
+    enabled: false,
+    label: '야전 침상',
+    role: 'full-recovery-camp',
+  }),
+  item('scrapyard-recovery-cot-roll', rectangle(604, 372, 78, 18), '#9b8a68', {
+    stroke: '#3e3730',
+    lineWidth: 2,
+    order: 15,
+    enabled: false,
+    label: '완전 회복 침낭',
+    role: 'full-recovery-camp',
   }),
   item('scrapyard-garage-door-left', rectangle(410, 214, 72, 212), '#596166', {
     stroke: '#24292b',
@@ -2766,6 +2783,14 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               transcriptArchive: true,
               enabled: false,
             },
+            {
+              id: SCRAPYARD_REST_ENTITY_ID,
+              kind: 'campaign-full-rest',
+              position: { x: 646, y: 374 },
+              interactionRange: 70,
+              label: '야전 침상 · 완전 회복',
+              enabled: false,
+            },
           ],
           triggers: [],
           portals: [
@@ -4189,13 +4214,18 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-frame-leg-right', value: true },
         { op: 'set-enabled', target: 'garage-robot-brain-core', value: true },
         { op: 'set-enabled', target: 'garage-robot-zero-label', value: true },
+        { op: 'set-enabled', target: 'scrapyard-recovery-cot-frame', value: true },
+        { op: 'set-enabled', target: 'scrapyard-recovery-cot-roll', value: true },
       ],
     },
     {
       id: 'scrapyard-wall-map-interactive',
       priority: 90,
       when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
-      operations: [{ op: 'set-enabled', target: SCRAPYARD_WALL_MAP_ENTITY_ID, value: true }],
+      operations: [
+        { op: 'set-enabled', target: SCRAPYARD_WALL_MAP_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAPYARD_REST_ENTITY_ID, value: true },
+      ],
     },
     {
       id: 'scrapyard-mine-road-open',

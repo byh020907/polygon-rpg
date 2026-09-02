@@ -85,6 +85,7 @@ import {
   createScrapGameOverPresentation,
   getScrapGameOverPresentation,
 } from './campaign/ScrapGameOverPresentation.js';
+import { SCRAPYARD_REST_ENTITY_ID } from './maps/scrapAwakening.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -1543,6 +1544,23 @@ export class GameScene extends SceneNode {
     return true;
   }
 
+  tryRequestScrapCampaignRestFromWorld() {
+    const campaign = this.getScrapAwakeningReadModel();
+    if (!this.isScrapAwakeningLocation() || !campaign.garageRevealComplete) return false;
+    const restSpot = this.mapRuntime
+      .getResolvedSnapshot()
+      .entities.find((entity) => entity.id === SCRAPYARD_REST_ENTITY_ID);
+    if (!restSpot?.position) return false;
+    const interactionRange = restSpot.interactionRange ?? 64;
+    if (
+      Math.hypot(this.position.x - restSpot.position.x, this.position.y - restSpot.position.y) >
+      interactionRange
+    ) {
+      return false;
+    }
+    return this.requestScrapCampaignRest();
+  }
+
   createScrapCampaignTravelAction(portal) {
     const travel = portal?.campaignTravel;
     if (!travel) throw new TypeError('campaign 장거리 이동 portal이 필요합니다.');
@@ -1642,6 +1660,19 @@ export class GameScene extends SceneNode {
     });
   }
 
+  createScrapCampaignRestAction() {
+    const campaignSnapshot = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    return Object.freeze({
+      actionId: `rest:full:${campaignSnapshot.elapsedSegments}:${campaignSnapshot.committedActionIds.length}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.REST,
+      label: '고물상 야전 침상 · 완전 회복',
+      costSegments: 1,
+    });
+  }
+
   commitScrapCampaignDomainAction(action) {
     const transaction = commitScrapCampaignAction(
       this.progressionSnapshot.scrapCampaign,
@@ -1712,6 +1743,24 @@ export class GameScene extends SceneNode {
     return true;
   }
 
+  requestScrapCampaignRest() {
+    if (this.progressionSnapshot.scrapCampaign.gameOver) return false;
+    if (this.pendingScrapCampaignAction || this.mapRuntime.getTransition()) return false;
+    const action = this.createScrapCampaignRestAction();
+    const preview = previewScrapCampaignAction(
+      this.progressionSnapshot.scrapCampaign,
+      action,
+      this.scrapCampaignProfile,
+    );
+    this.pendingScrapCampaignAction = Object.freeze({ type: 'full-rest', action, preview });
+    this.combatCommands.reset();
+    this.rollState = null;
+    this.campaignActionPreviewRequested.emit(
+      Object.freeze({ source: 'full-recovery-camp', preview }),
+    );
+    return true;
+  }
+
   confirmScrapCampaignAction() {
     const pending = this.pendingScrapCampaignAction;
     if (!pending) return Object.freeze({ started: false, reason: 'no-pending-preview' });
@@ -1732,6 +1781,11 @@ export class GameScene extends SceneNode {
     }
     const transaction = this.commitScrapCampaignDomainAction(pending.action);
     this.pendingScrapCampaignAction = null;
+    if (pending.type === 'full-rest' && transaction.changed) {
+      this.playerHealth = this.playerMaxHealth;
+      this.recoveryNotice = '야전 침상에서 완전히 회복했습니다.';
+      this.statusNode.publish({ force: true });
+    }
     return Object.freeze({
       started: transaction.changed,
       reason: transaction.changed ? 'confirmed' : transaction.reason,
@@ -3021,11 +3075,16 @@ export class GameScene extends SceneNode {
       jumpIssued && !awakeningConsumed && !dialogueConsumed
         ? this.tryRequestOperationMapFromWorld()
         : false;
+    const restConsumed =
+      jumpIssued && !awakeningConsumed && !dialogueConsumed && !wallMapConsumed
+        ? this.tryRequestScrapCampaignRestFromWorld()
+        : false;
     const portalStarted =
       jumpIssued &&
       !awakeningConsumed &&
       !dialogueConsumed &&
       !wallMapConsumed &&
+      !restConsumed &&
       this.tryPortalTransition();
     if (this.mapRuntime.getTransition() === null && guardEdge) this.tryStartRoll(horizontal);
     const isTransitioning = this.mapRuntime.getTransition() !== null;
@@ -3038,6 +3097,7 @@ export class GameScene extends SceneNode {
       !awakeningConsumed &&
       !dialogueConsumed &&
       !wallMapConsumed &&
+      !restConsumed &&
       jumpIssued &&
       this.isGrounded &&
       currentCombatState.canJump
@@ -3055,7 +3115,8 @@ export class GameScene extends SceneNode {
         !controlsLocked &&
         !storyBlocksGameplay &&
         !awakeningConsumed &&
-        !wallMapConsumed,
+        !wallMapConsumed &&
+        !restConsumed,
       isAirborne: !this.isGrounded,
       allowGuard: this.isGrounded,
       staminaDeltaSeconds: deltaSeconds,
