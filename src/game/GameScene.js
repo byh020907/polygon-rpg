@@ -961,7 +961,7 @@ export class GameScene extends SceneNode {
         deadlineSegments: 0,
         rivalProgressSegments: current.rivalProgressSegments + current.deadlineSegments,
         gameOver: true,
-        lastChangeLabel: 'D-DAY 0 · 고철 대왕 수도 도착',
+        lastChangeLabel: 'D-DAY 0 · 고대 병기 수도 도착',
       },
       this.scrapCampaignProfile,
     );
@@ -1516,7 +1516,7 @@ export class GameScene extends SceneNode {
       this.progressionSnapshot.scrapCampaign,
       this.scrapCampaignProfile,
     );
-    this.progressionNotice = '구조용 제어장치 회수 · winch 전력 연결';
+    this.progressionNotice = '구조용 제어핵 회수 · winch 전력 연결';
     this.combatCommands.reset();
     this.rollState = null;
     this.verticalVelocity = 0;
@@ -1586,7 +1586,7 @@ export class GameScene extends SceneNode {
       this.scrapCampaignProfile,
     );
     if (!transaction.changed) return false;
-    this.progressionNotice = '고물상 주인 · 제어장치 분석 시작';
+    this.progressionNotice = '고물상 주인 · 제어핵 분석 시작';
     this.combatCommands.reset();
     this.rollState = null;
     this.verticalVelocity = 0;
@@ -3459,7 +3459,7 @@ export class GameScene extends SceneNode {
         ? Object.freeze({
             title: `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`,
             briefing: `${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} 부품이 원래 산업기계 형태를 유지한 채 조립식 로봇에 장착됐습니다.`,
-            objective: '벽 지도에서 다음 지역과 고철 대왕의 현재 진로를 확인하세요.',
+            objective: '벽 지도에서 다음 지역과 고대 병기의 현재 진로를 확인하세요.',
             cue: `5 REGIONS · ${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} PARTS · ROBOT ${scrapCampaign.completionPercent}%`,
           })
         : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
@@ -3760,7 +3760,7 @@ export class GameScene extends SceneNode {
           ? scrapCampaign.finalBattle.title
           : scrapAwakeningLocation
             ? scrapCampaign.awakeningActive
-              ? '고철 대왕 각성 연출'
+              ? '고대 병기 각성 연출'
               : scrapCampaign.garageRevealActive
                 ? '고물상 분석 · 차고 개방'
                 : scrapCampaign.garageRevealComplete
@@ -3782,12 +3782,12 @@ export class GameScene extends SceneNode {
           ? scrapCampaign.garageRevealComplete
             ? scrapCampaign.collectedPartCount > 0
               ? `${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} 부품 · 로봇 ${scrapCampaign.completionPercent}%`
-              : '제어장치 · 우리 로봇 두뇌 장착'
+              : '제어핵 · 우리 로봇 두뇌 장착'
             : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-              ? '회수한 제어장치 · 고물상 분석 대기'
+              ? '회수한 제어핵 · 고물상 분석 대기'
               : scrapCampaign.deadlineRevealed
-                ? '회수한 제어장치 · 보유 중'
-                : '제어장치 · 폐병기 흉곽 안'
+                ? '회수한 제어핵 · 보유 중'
+                : '제어핵 · 폐병기 흉곽 안'
           : scrapCampaignRegionLocation
             ? scrapCampaignRegionReadModel.collected
               ? `${scrapCampaignRegionReadModel.partLabel} · 차고 로봇 ${scrapCampaign.completionPercent}%`

@@ -29,7 +29,5 @@ export const SCRAP_CAMPAIGN_PART_IDS = Object.freeze([
 export const SCRAP_CAMPAIGN_REGION_STATUS = Object.freeze({
   AVAILABLE: 'available',
   IN_PROGRESS: 'in-progress',
-  CONVOY: 'convoy',
   RESOLVED: 'resolved',
-  RECOVERED: 'recovered',
 });

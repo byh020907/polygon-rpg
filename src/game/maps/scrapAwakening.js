@@ -274,7 +274,7 @@ const renderItems = [
     stroke: '#2d251f',
     lineWidth: 3,
     order: 12,
-    label: '제어장치 분석 작업대',
+    label: '제어핵 분석 작업대',
   }),
   item('scrapyard-owner-torso', rectangle(184, 286, 28, 72), '#635748', {
     stroke: '#25201d',
@@ -322,7 +322,7 @@ const renderItems = [
     opacity: 0.76,
     order: 22,
     enabled: false,
-    label: '제어장치 분석 신호',
+    label: '제어핵 분석 신호',
     role: 'analysis-signal',
   }),
   item('scrapyard-analysis-device-core', polygon(132, 310, 12, 16, 6, Math.PI / 6), '#a7fff0', {
@@ -330,7 +330,7 @@ const renderItems = [
     lineWidth: 3,
     order: 23,
     enabled: false,
-    label: '회수한 제어장치 · 분석 중',
+    label: '회수한 제어핵 · 분석 중',
     role: 'control-device-analysis',
   }),
   item('scrapyard-wall-map-frame', rectangle(270, 214, 126, 92), '#d8c18a', {
@@ -437,7 +437,7 @@ const renderItems = [
     lineWidth: 3,
     order: 23,
     enabled: false,
-    label: '회수한 제어장치 · 거대 로봇 두뇌',
+    label: '회수한 제어핵 · 거대 로봇 두뇌',
     role: 'robot-brain',
   }),
   item('garage-robot-zero-label', rectangle(430, 194, 104, 12), '#e4bd64', {
@@ -835,7 +835,7 @@ const renderItems = [
     opacity: 0.82,
     order: 23,
     enabled: false,
-    label: '제어장치 구조 전력',
+    label: '제어핵 구조 전력',
     role: 'rescue-signal',
   }),
   item('scrap-device-glow-outer', polygon(774, 354, 32, 32, 12), '#63e4d0', {
@@ -849,7 +849,7 @@ const renderItems = [
   item('scrap-device-core', polygon(774, 354, 13, 17, 6, Math.PI / 6), '#a7fff0', {
     stroke: '#245e5b',
     order: 19,
-    label: '반짝이는 제어장치',
+    label: '반짝이는 제어핵',
     role: 'control-device',
     enabled: false,
   }),
@@ -2758,7 +2758,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               kind: 'scrap-awakening-device',
               position: { x: 774, y: 354 },
               interactionRange: 72,
-              label: '반짝이는 제어장치',
+              label: '반짝이는 제어핵',
               enabled: false,
             },
             {
@@ -2768,7 +2768,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               interactionRange: 82,
               speaker: '고물상 주인',
               conversationId: SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
-              conversationTitle: '제어장치 분석과 차고 개방',
+              conversationTitle: '제어핵 분석과 차고 개방',
               lines: [
                 '퇴직했는데 또 야근이라니. 둘이 무사한 건 잘했다. 그 장치부터 작업대에 올려 봐.',
                 '이건 왕국 전역 기계 신호를 읽는 제어 두뇌야. 너희가 깨운 놈보다 먼저 부품을 모아야 한다.',
@@ -2871,7 +2871,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '시설 상태와 작업 시간 확인',
               lines: [
                 '구조 레일 단선. 내부 이동, 선점 수거반 격퇴, 굴착기 제압과 새 버팀목 설치까지 9구간 예상.',
-                '성공하면 고철 대왕은 막힌 산길을 우회해 수도 도착이 2일 늦어진다.',
+                '성공하면 고대 병기는 막힌 산길을 우회해 수도 도착이 2일 늦어진다.',
               ],
               campaignRegionId: 'abandoned-mine',
               campaignStageKind: 'facility-observed',
@@ -2989,7 +2989,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '굴착기 다리 부품 회수',
               lines: [
                 '굴착기 하체·구동부를 확보했다. 차고 조립식 로봇 완성도 20%.',
-                '고철 대왕은 막힌 산길을 우회한다. D-DAY +2일, 다음 지역은 자유롭게 선택할 수 있다.',
+                '고대 병기는 막힌 산길을 우회한다. D-DAY +2일, 다음 지역은 자유롭게 선택할 수 있다.',
               ],
               campaignRegionId: 'abandoned-mine',
               campaignStageKind: 'part-claimed',
@@ -3054,7 +3054,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '점거 범위와 선박 수리 시간 확인',
               lines: [
                 '건선거 점거 해제, 선점 수거반 격퇴, 크레인 제압과 마지막 선박 외판 수리까지 13구간 예상.',
-                '성공하면 고철 대왕은 막힌 해안 운송로를 우회해 수도 도착이 3일 늦어진다.',
+                '성공하면 고대 병기는 막힌 해안 운송로를 우회해 수도 도착이 3일 늦어진다.',
               ],
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
               campaignStageKind: 'facility-observed',
@@ -3172,7 +3172,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '크레인 팔 부품 회수',
               lines: [
                 '쌍둥이 크레인 유압 장치를 확보했다. 차고 조립식 로봇의 팔이 누적 조립된다.',
-                '고철 대왕은 해안 운송로를 우회한다. D-DAY +3일, 다음 지역은 자유롭게 선택할 수 있다.',
+                '고대 병기는 해안 운송로를 우회한다. D-DAY +3일, 다음 지역은 자유롭게 선택할 수 있다.',
               ],
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
               campaignStageKind: 'part-claimed',
@@ -3237,7 +3237,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '배관 파손과 복구 시간 확인',
               lines: [
                 '기생 기계 제거, 압력선 확보, 조절기 제압과 안전한 저압 지열 배관 복구까지 17구간 예상.',
-                '성공하면 고철 대왕은 과열 평원을 우회해 수도 도착이 4일 늦어진다.',
+                '성공하면 고대 병기는 과열 평원을 우회해 수도 도착이 4일 늦어진다.',
               ],
               campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
               campaignStageKind: 'facility-observed',
@@ -3355,7 +3355,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '주 동력원 부품 회수',
               lines: [
                 '구형 고출력 동력로를 확보했다. 차고 조립식 로봇의 주 동력원이 누적 조립된다.',
-                '고철 대왕은 과열 평원을 우회한다. D-DAY +4일, 다음 지역은 자유롭게 선택할 수 있다.',
+                '고대 병기는 과열 평원을 우회한다. D-DAY +4일, 다음 지역은 자유롭게 선택할 수 있다.',
               ],
               campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
               campaignStageKind: 'part-claimed',
@@ -3420,7 +3420,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '옛 터널 적설과 개통 시간 확인',
               lines: [
                 '열선 회수, 터널 제설, 폭주 기관차 제동과 신호 설비 복구까지 13구간 예상.',
-                '성공하면 고철 대왕은 개통된 터널 경계를 우회해 수도 도착이 3일 늦어진다.',
+                '성공하면 고대 병기는 개통된 터널 경계를 우회해 수도 도착이 3일 늦어진다.',
               ],
               campaignRegionId: SCRAP_SNOW_REGION_ID,
               campaignStageKind: 'facility-observed',
@@ -3538,7 +3538,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '제설 열차 장갑 부품 회수',
               lines: [
                 '제설 열차 장갑 차체를 확보했다. 차고 조립식 로봇의 방한 장갑이 누적 조립된다.',
-                '고철 대왕은 개통된 터널 경계를 우회한다. D-DAY +3일, 다음 지역은 자유롭게 선택할 수 있다.',
+                '고대 병기는 개통된 터널 경계를 우회한다. D-DAY +3일, 다음 지역은 자유롭게 선택할 수 있다.',
               ],
               campaignRegionId: SCRAP_SNOW_REGION_ID,
               campaignStageKind: 'part-claimed',
@@ -3603,7 +3603,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '마지막 절개와 안전 폐쇄 시간 확인',
               lines: [
                 '수거 유닛 제거, 마지막 석재 절단, 폭주 절단기 정지와 안전 폐쇄까지 21구간 예상.',
-                '성공하면 고철 대왕은 폐쇄된 채석장 절벽을 우회해 수도 도착이 5일 늦어진다.',
+                '성공하면 고대 병기는 폐쇄된 채석장 절벽을 우회해 수도 도착이 5일 늦어진다.',
               ],
               campaignRegionId: SCRAP_QUARRY_REGION_ID,
               campaignStageKind: 'facility-observed',
@@ -3721,7 +3721,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationTitle: '초대형 암반 절단검 회수',
               lines: [
                 '초대형 암반 절단검을 확보했다. 다섯 산업기계 부품이 차고 조립식 로봇에 모두 누적된다.',
-                '고철 대왕은 폐쇄된 채석장 절벽을 우회한다. D-DAY +5일, 로봇 100%와 최종전 준비가 열렸다.',
+                '고대 병기는 폐쇄된 채석장 절벽을 우회한다. D-DAY +5일, 로봇 100%와 최종전 준비가 열렸다.',
               ],
               campaignRegionId: SCRAP_QUARRY_REGION_ID,
               campaignStageKind: 'part-claimed',

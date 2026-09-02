@@ -205,18 +205,33 @@ scene.setVisualQaLocation({
 });
 scene.update(STEP_SECONDS, input({ right: true }));
 const ambientDialogue = scene.getWorldStatus().dialogue;
-assert.equal(ambientDialogue.active, true, '동행 중 짧은 ambient 말풍선이 자동으로 시작되어야 합니다.');
+assert.equal(
+  ambientDialogue.active,
+  true,
+  '동행 중 짧은 ambient 말풍선이 자동으로 시작되어야 합니다.',
+);
 assert.equal(ambientDialogue.presentationMode, 'ambient');
 assert.equal(ambientDialogue.prompt, '이동 중 대화');
 const ambientStartX = scene.position.x;
 scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
-assert.ok(scene.position.x > ambientStartX, 'ambient 말풍선은 이동과 jump 입력을 잠그면 안 됩니다.');
-assert.equal(scene.getWorldStatus().dialogue.active, true, '이동 input은 ambient 말풍선을 닫으면 안 됩니다.');
+assert.ok(
+  scene.position.x > ambientStartX,
+  'ambient 말풍선은 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  true,
+  '이동 input은 ambient 말풍선을 닫으면 안 됩니다.',
+);
 for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
 }
-assert.equal(scene.getWorldStatus().dialogue.active, false, 'ambient 말풍선은 입력 없이 짧게 종료되어야 합니다.');
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  'ambient 말풍선은 입력 없이 짧게 종료되어야 합니다.',
+);
 const ambientQaRequest = readVisualQaRequest(
   '?visualQa=1&gameStart=scrap-intro-walk&visualQaRenderer=polygon&visualQaPhase=active',
 );
@@ -279,7 +294,7 @@ assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
 assert.deepEqual(
   scene.position,
   beforeInteraction,
-  '제어장치 상호작용은 Player jump를 억제해야 합니다.',
+  '제어핵 상호작용은 Player jump를 억제해야 합니다.',
 );
 assert.equal(scene.isGrounded, true);
 assert.ok(!itemIds(scene).includes('scrap-device-core'));
@@ -292,7 +307,7 @@ scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence - 
 assert.deepEqual(
   scene.getProgressionSnapshot(),
   afterRecovery,
-  '같은 jump sequence는 제어장치 회수나 stage를 반복 확정하면 안 됩니다.',
+  '같은 jump sequence는 제어핵 회수나 stage를 반복 확정하면 안 됩니다.',
 );
 
 const lockedX = scene.position.x;
@@ -386,7 +401,7 @@ assert.ok(
   !completedReload.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-control-device'),
-  '완료 reload 뒤 제어장치 trigger가 다시 생기면 안 됩니다.',
+  '완료 reload 뒤 제어핵 trigger가 다시 생기면 안 됩니다.',
 );
 completedReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
 assert.equal(stage(completedReload), SCRAP_AWAKENING_STAGE.COMPLETE);
@@ -476,7 +491,7 @@ const garageCompleteStatus = scene.getWorldStatus();
 assert.equal(garageCompleteStatus.operationMapAvailable, true);
 assert.equal(garageCompleteStatus.campaign.completionPercent, 0);
 assert.equal(garageCompleteStatus.journeyLabel, '작전 준비 완료 · 로봇 0%');
-assert.equal(garageCompleteStatus.wardLabel, '제어장치 · 우리 로봇 두뇌 장착');
+assert.equal(garageCompleteStatus.wardLabel, '제어핵 · 우리 로봇 두뇌 장착');
 scene.setVisualQaLocation({
   regionId: SCRAP_AWAKENING_REGION_ID,
   roomId: SCRAP_AWAKENING_ROOM_ID,

@@ -148,16 +148,6 @@ function resolveRegion(snapshot, regionId) {
   return commit(current, regionSuccessAction(regionId));
 }
 
-function convoyAction(regionId) {
-  return {
-    actionId: `region:${regionId}:convoy-recovered`,
-    kind: SCRAP_CAMPAIGN_ACTION_KIND.CONVOY_CHASE,
-    label: `${regionId} 수송대 추격`,
-    targetRegionId: regionId,
-    costSegments: SCRAP_CAMPAIGN_PROFILE.convoyChaseCostSegments,
-  };
-}
-
 const fresh = createScrapCampaignSnapshot(SCRAP_CAMPAIGN_PROFILE);
 const initial = getScrapCampaignReadModel(fresh, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(initial.hudLabel, '첫 수거 의뢰 · 고대 병기 각성 전');
@@ -190,7 +180,7 @@ for (const region of SCRAP_CAMPAIGN_PROFILE.regions) {
     region.eventStages.every((stage) => stage.nextObjective.length > 0),
     `${region.id}의 모든 stage는 authored 다음 목표를 제공해야 합니다.`,
   );
-  assert.deepEqual(Object.keys(region.mapPatches), ['before', 'partReady', 'resolved', 'convoy']);
+  assert.deepEqual(Object.keys(region.mapPatches), ['before', 'partReady', 'resolved']);
   const primaryIssue = SCRAP_CAMPAIGN_PROFILE.getPrimaryIssueForRegion(region.id);
   assert.equal(primaryIssue.regionId, region.id);
   assert.equal(primaryIssue.linkedIssues.length, 2);
@@ -228,7 +218,7 @@ assert.equal(awakening.snapshot.awakeningStageId, SCRAP_AWAKENING_STAGE.DEVICE_R
 assert.equal(
   startScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE).changed,
   false,
-  '제어장치 회수는 반복 trigger로 재시작되면 안 됩니다.',
+  '제어핵 회수는 반복 trigger로 재시작되면 안 됩니다.',
 );
 for (const expectedStageId of [
   SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED,
@@ -664,7 +654,7 @@ assert.equal(quarrySuccess.rivalDelaySegments, 20);
 assert.equal(quarrySuccess.regionEventStageIds['red-quarry'], 'red-quarry:campaign-updated');
 for (const orderedSnapshot of [
   resolveRegion(resolveRegion(fresh, 'abandoned-mine'), 'harbor-shipyard'),
-  commit(resolveRegion(fresh, 'harbor-shipyard'), convoyAction('abandoned-mine')),
+  resolveRegion(resolveRegion(fresh, 'harbor-shipyard'), 'abandoned-mine'),
 ]) {
   const orderedReadModel = getScrapCampaignReadModel(orderedSnapshot, SCRAP_CAMPAIGN_PROFILE);
   assert.equal(orderedReadModel.collectedPartCount, 2);
@@ -719,6 +709,31 @@ const migratedVersionFourMine = toScrapCampaignSnapshot(versionFourMine, SCRAP_C
 assert.equal(migratedVersionFourMine.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
 assert.equal(migratedVersionFourMine.activePrimaryIssueId, null);
 assert.deepEqual(migratedVersionFourMine.completedIssueIds, []);
+const versionSixLegacyRegionStatus = {
+  ...fresh,
+  version: 6,
+  regionStates: { ...fresh.regionStates, 'abandoned-mine': ['con', 'voy'].join('') },
+};
+const migratedVersionSixLegacyRegionStatus = toScrapCampaignSnapshot(
+  versionSixLegacyRegionStatus,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(migratedVersionSixLegacyRegionStatus.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
+assert.equal(migratedVersionSixLegacyRegionStatus.regionStates['abandoned-mine'], 'available');
+const versionSixLegacyCompletedRegion = {
+  ...mineSuccess,
+  version: 6,
+  regionStates: { ...mineSuccess.regionStates, 'abandoned-mine': 'recovered' },
+};
+const migratedVersionSixLegacyCompletedRegion = toScrapCampaignSnapshot(
+  versionSixLegacyCompletedRegion,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(migratedVersionSixLegacyCompletedRegion.regionStates['abandoned-mine'], 'resolved');
+assert.equal(
+  migratedVersionSixLegacyCompletedRegion.collectedPartIds.includes(mineProfile.part.id),
+  true,
+);
 
 let rivalFirst = fresh;
 for (let index = 0; index < mineProfile.route.rivalArrivalSegment; index += 1) {
@@ -729,14 +744,10 @@ for (let index = 0; index < mineProfile.route.rivalArrivalSegment; index += 1) {
     costSegments: 1,
   });
 }
-assert.equal(rivalFirst.regionStates['abandoned-mine'], 'convoy');
-const recoveredMine = commit(rivalFirst, convoyAction('abandoned-mine'));
-assert.equal(recoveredMine.regionStates['abandoned-mine'], 'recovered');
-assert.equal(recoveredMine.collectedPartIds.includes(mineProfile.part.id), true);
 assert.equal(
-  recoveredMine.deadlineSegments,
-  rivalFirst.deadlineSegments - SCRAP_CAMPAIGN_PROFILE.convoyChaseCostSegments,
-  '수송대 추격은 D-DAY 연장 없이 2구간을 소비합니다.',
+  rivalFirst.regionStates['abandoned-mine'],
+  'available',
+  '고대 병기의 이동은 지역 부품 흐름이나 지역 상태를 자동으로 바꾸면 안 됩니다.',
 );
 
 let completeCampaign = fresh;
@@ -744,10 +755,7 @@ for (const regionId of ['red-quarry', 'snow-trade-road', 'greenhouse-plains']) {
   completeCampaign = resolveRegion(completeCampaign, regionId);
 }
 for (const regionId of ['abandoned-mine', 'harbor-shipyard']) {
-  completeCampaign =
-    completeCampaign.regionStates[regionId] === 'convoy'
-      ? commit(completeCampaign, convoyAction(regionId))
-      : resolveRegion(completeCampaign, regionId);
+  completeCampaign = resolveRegion(completeCampaign, regionId);
 }
 const completeReadModel = getScrapCampaignReadModel(completeCampaign, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(completeReadModel.collectedPartCount, 5);
@@ -846,12 +854,13 @@ console.log(
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
-      'mine-harbor-order-or-convoy-two-part-forty-percent',
+      'mine-harbor-order-independent-two-part-forty-percent',
       'greenhouse-seventeen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
       'snow-thirteen-segment-three-day-detour-armor-and-first-four-eighty-percent',
       'quarry-twenty-one-segment-five-day-detour-cutter-and-five-part-hundred-percent',
       'v3-region-stage-and-v4-issue-window-migration-to-v5',
-      'rival-first-convoy-two-segment-no-extension-recovery',
+      'v6-legacy-region-status-migration-to-v7',
+      'rival-progress-does-not-rewrite-region-progress',
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',
       'schema-v9-round-trip-and-v8-migration',

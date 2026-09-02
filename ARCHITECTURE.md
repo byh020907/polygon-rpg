@@ -86,7 +86,7 @@ Keyboard / Touch / DOM intent
 - Authored Campaign Profile은 약 10시간/부품당 약 2시간의 target pacing, issue dependency graph와 각 issue의 region·cast·required encounter/state change를 제공한다. Cross-region dependency는 item delivery만으로 완료되지 않고 destination issue의 authored interaction, exploration, combat 또는 world patch 중 하나 이상을 요구한다.
 - Issue activation policy는 공간적으로 열린 다섯 region과 별개로 primary issue 하나 및 linked issue 최대 두 개만 active로 만든다. 완료 transaction이 다음 연결을 결정하며 UI가 모든 region request를 임의로 나열하지 않는다.
 - Region core event의 소비 시간은 마지막 작업으로 생기는 2~5일 상당의 실제 우회 거리보다 크다. Player-first 완료는 region을 resolved로 만들고, 지도 route patch와 일치하는 distance-derived D-DAY 변화를 기록하며 part를 지급한다. 임의의 부품 보상 연장은 금지한다.
-- Rival-first arrival은 region을 destroyed/convoy state로 바꾸고 extension을 제거한다. Two-segment convoy chase는 같은 필수 part를 한 번 지급해 진행 불가를 막는다.
+- 지역 부품은 군수 인장 해제, 현지 산업기계 오작동 해결과 마지막 작업을 하나의 region success transaction으로 확정할 때 한 번만 지급한다. 그 마지막 작업이 만든 stable route patch와 거리 기반 D-DAY 변화는 같은 transaction에 기록한다.
 - Rival position과 route는 time-consuming commit에서만 deterministic하게 전진하고 같은 snapshot/context는 같은 read model을 만든다. Background simulation과 wall-clock catch-up을 금지한다.
 - 다섯 part를 모두 가진 snapshot만 final battle available을 참으로 resolve한다.
 - D-DAY 0 이후 combat/map command를 성공 처리하지 않고 game-over presentation sequence가 state의 terminal reason을 투영한다.
@@ -178,7 +178,7 @@ Keyboard / Touch / DOM intent
 
 - Syntax, lint와 formatting은 `npm run check`, patch whitespace는 `git diff --check`로 검사한다.
 - Combat/input/map/progression rule은 DOM 없는 deterministic fixtures로 검증한다.
-- Campaign fixture는 Day 1 morning/D-30, 네 segment rollover, zero-cost action, one-segment travel, preview warning, idempotent commit, player-first extension, rival-first convoy fallback, five-part final unlock과 D-DAY 0 terminal boundary를 고정한다.
+- Campaign fixture는 Day 1 morning/D-30, 네 segment rollover, zero-cost action, one-segment travel, preview warning, idempotent commit, 마지막 작업의 route patch·거리 기반 D-DAY 변화, five-part final unlock과 D-DAY 0 terminal boundary를 고정한다.
 - Persistence fixture는 campaign round-trip, legacy migration, corrupt/write failure와 recovery slot selection을 검증한다.
 - Browser flow는 MENU short operation map, MENU hold debug separation, HUD/map same-state projection, desktop/mobile focus·overflow와 console error를 확인한다.
 - PWA fixture는 manifest field/icon purpose, root scope·navigation fallback, complete cache inventory, offline first-visit fallback, waiting update의 user-applied single reload 및 storage/cache 분리를 고정한다.

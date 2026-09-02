@@ -151,7 +151,7 @@ const RAW_PROFILES = [
   {
     id: 'collector-unit',
     label: '수거 유닛',
-    roleLabel: '고철 대왕 소속',
+    roleLabel: '고대 병기 동원 신호',
     family: 'machine',
     accent: '#e25f47',
     material: '#4b4f53',

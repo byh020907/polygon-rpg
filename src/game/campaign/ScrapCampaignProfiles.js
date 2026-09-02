@@ -53,7 +53,6 @@ function mapPatches(regionId) {
     before: `${regionId}:facility-operating`,
     partReady: `${regionId}:machine-separated`,
     resolved: `${regionId}:facility-replaced-machine-removed`,
-    convoy: `${regionId}:facility-destroyed-convoy-route`,
   };
 }
 
@@ -370,11 +369,10 @@ const linkedIssueById = new Map(
 );
 
 export const SCRAP_CAMPAIGN_PROFILE = Object.freeze({
-  id: 'scrap-king-d30',
+  id: 'ancient-weapon-d30',
   startLocation: Object.freeze({ id: SCRAP_CAMPAIGN_START_LOCATION_ID, label: '동네 고물상' }),
   capital: Object.freeze({ id: SCRAP_CAMPAIGN_CAPITAL_ID, label: '왕국 수도' }),
   initialDeadlineSegments: SCRAP_CAMPAIGN_INITIAL_DEADLINE_SEGMENTS,
-  convoyChaseCostSegments: 2,
   regions: Object.freeze(regions),
   routes: Object.freeze(routes),
   primaryIssues: Object.freeze(primaryIssues),
