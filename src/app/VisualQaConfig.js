@@ -183,7 +183,64 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
   'pose-hit': Object.freeze({ expectedMotion: 'idle', expectedItem: 'shield' }),
 });
 
+function createBaselinePlaybackScenario(inputTimeline, expectation = {}) {
+  return Object.freeze({
+    regionId: 'academy-region',
+    roomId: 'training-room',
+    x: 500,
+    inputTimelineByPhase: Object.freeze({
+      active: Object.freeze(
+        inputTimeline.map((segment) =>
+          Object.freeze({ ...segment, input: Object.freeze(segment.input) }),
+        ),
+      ),
+    }),
+    expectation: Object.freeze({ expectedPlayerGrounded: true, ...expectation }),
+  });
+}
+
+// These scenarios advance the real fixed-step command path before the Canvas is captured. They
+// complement the stable mid-pose board with reproducible motion evidence for actual playback.
+const PLAYER_BASELINE_PLAYBACK_SCENARIOS = Object.freeze({
+  'baseline-idle-playback': createBaselinePlaybackScenario([{ frames: 8, input: {} }]),
+  'baseline-run-playback': createBaselinePlaybackScenario([{ frames: 24, input: { right: true } }]),
+  'baseline-jump-playback': createBaselinePlaybackScenario(
+    [
+      { frames: 1, input: { right: true, jump: true, jumpSequence: 1 } },
+      { frames: 18, input: { right: true } },
+    ],
+    { expectedPlayerGrounded: false },
+  ),
+  'baseline-landing-playback': createBaselinePlaybackScenario([
+    { frames: 1, input: { right: true, jump: true, jumpSequence: 1 } },
+    { frames: 180, input: { right: true } },
+  ]),
+  'baseline-roll-playback': createBaselinePlaybackScenario([
+    { frames: 1, input: { right: true, guard: true } },
+    { frames: 25, input: { right: true } },
+  ]),
+  'baseline-basic-playback': createBaselinePlaybackScenario(
+    [
+      { frames: 1, input: { basicAttack: true, basicAttackSequence: 1 } },
+      { frames: 11, input: {} },
+    ],
+    { expectedMotion: 'slash' },
+  ),
+  'baseline-strong-playback': createBaselinePlaybackScenario(
+    [
+      { frames: 1, input: { strongAttack: true, strongAttackSequence: 1 } },
+      { frames: 15, input: {} },
+    ],
+    { expectedMotion: 'heavy' },
+  ),
+  'baseline-guard-playback': createBaselinePlaybackScenario(
+    [{ frames: 16, input: { guard: true } }],
+    { expectedMotion: 'guard' },
+  ),
+});
+
 const VISUAL_QA_SCENARIOS = Object.freeze({
+  ...PLAYER_BASELINE_PLAYBACK_SCENARIOS,
   'scrap-intro-walk': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,

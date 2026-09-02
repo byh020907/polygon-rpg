@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 
+import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibrary.js';
 import { retargetMotionKeyframes } from '../src/animation/MotionClipRetargeter.js';
 import { MOTION_REFERENCE_CATALOG } from '../src/animation/MotionReferenceCatalog.js';
@@ -28,6 +29,30 @@ const EMPTY_INPUT = Object.freeze({
   basicAttackSequence: 0,
   strongAttackSequence: 0,
 });
+
+const BASELINE_PLAYBACK_EXPECTATIONS = Object.freeze({
+  'baseline-idle-playback': Object.freeze({ motion: null, grounded: true }),
+  'baseline-run-playback': Object.freeze({ motion: null, grounded: true }),
+  'baseline-jump-playback': Object.freeze({ motion: null, grounded: false }),
+  'baseline-landing-playback': Object.freeze({ motion: null, grounded: true }),
+  'baseline-roll-playback': Object.freeze({ motion: null, grounded: true }),
+  'baseline-basic-playback': Object.freeze({ motion: 'slash', grounded: true }),
+  'baseline-strong-playback': Object.freeze({ motion: 'heavy', grounded: true }),
+  'baseline-guard-playback': Object.freeze({ motion: 'guard', grounded: true }),
+});
+
+for (const [scenarioId, expected] of Object.entries(BASELINE_PLAYBACK_EXPECTATIONS)) {
+  const request = readVisualQaRequest(
+    `?visualQa=1&gameStart=${scenarioId}&gameFrame=0&visualQaRenderer=polygon&visualQaPhase=active`,
+  );
+  assert.ok(request, `${scenarioId} must be a valid stable Visual QA request`);
+  assert.ok(
+    Object.isFrozen(request.scenario.inputTimelineByPhase.active),
+    `${scenarioId} playback timeline must stay immutable`,
+  );
+  assert.equal(request.scenario.expectation.expectedMotion ?? null, expected.motion);
+  assert.equal(request.scenario.expectation.expectedPlayerGrounded, expected.grounded);
+}
 
 const collectorCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES.training);
 const humanCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES['mine-claim-jacker']);
