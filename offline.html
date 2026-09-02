@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080c13" />
+    <title>Polygon RPG — 연결 필요</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #080c13;
+        color: #f6f0dd;
+        font:
+          17px/1.6 system-ui,
+          sans-serif;
+      }
+      main {
+        width: min(32rem, calc(100% - 3rem));
+        border: 1px solid #5b625e;
+        border-radius: 18px;
+        padding: 2rem;
+        background: #151b22;
+      }
+      strong {
+        color: #e2bb65;
+        letter-spacing: 0.08em;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2bb65;
+        background: #25313a;
+        color: #f6f0dd;
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <strong>POLYGON RPG</strong>
+      <h1>첫 실행에는 연결이 필요합니다</h1>
+      <p>한 번 정상 로딩하면 현재 게임 전체를 오프라인으로 계속 플레이할 수 있습니다.</p>
+      <button type="button" onclick="location.reload()">다시 시도</button>
+    </main>
+  </body>
+</html>

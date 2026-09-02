@@ -166,6 +166,10 @@ export class GameApplication {
     return this.currentApp.resetSavedProgress();
   }
 
+  saveCurrentProgress() {
+    return this.currentApp.saveCurrentProgress();
+  }
+
   onScreenChanged() {
     return this.currentApp.onScreenChanged();
   }

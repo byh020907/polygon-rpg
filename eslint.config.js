@@ -16,4 +16,10 @@ export default [
       globals: globals.node,
     },
   },
+  {
+    files: ['sw.js'],
+    languageOptions: {
+      globals: globals.serviceworker,
+    },
+  },
 ];

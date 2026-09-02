@@ -15,6 +15,7 @@
 - Vanilla JavaScript ES modules, Canvas 2D와 vendored Alpine.js ES module을 사용한다.
 - 하나의 animation-frame owner가 120Hz fixed simulation을 구동하고 60Hz integer combat frame을 결정적으로 sample한다.
 - Production은 `index.html`과 static source를 직접 제공한다. Node.js는 local server, lint, fixtures와 visual verification에만 사용한다.
+- PWA는 manifest와 root-scoped Service Worker를 사용한다. 현재 release의 필수 static asset은 atomic versioned cache로 준비하고 Service Worker lifecycle은 shell에 explicit status만 전달한다.
 - Runtime source는 CDN, external account, wall clock과 development-only server behavior에 의존하지 않는다.
 - GitHub Pages production source는 `main /`이며 별도 build artifact를 요구하지 않는다.
 
@@ -23,6 +24,7 @@
 | Boundary                       | Responsibility                                                                                                                      | Must Not Know or Do                                     |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | Browser Bootstrap / UI Adapter | Screen·modal state, semantic controls, accessible interaction, status render                                                        | Mutable gameplay internals, route·time rule 재구현      |
+| PWA Lifecycle Adapter          | Manifest/install prompt, Service Worker lifecycle, version-ready status와 명시적 apply 요청                                         | Campaign state·storage schema·gameplay input 직접 write |
 | Debug Configuration Adapter    | Hold 뒤 QA panel, stable campaign scenario와 URL 양방향 변환                                                                        | Player 저장 재사용, gameplay state 직접 쓰기            |
 | Application Composition        | Browser resource, input/render/UI/domain owner 조립                                                                                 | Domain rule 재구현, renderer별 gameplay 분기            |
 | Scene Runtime                  | Tree-owned lifecycle와 scoped signal                                                                                                | Global lookup, implicit mutable singleton               |
@@ -148,6 +150,8 @@ Keyboard / Touch / DOM intent
 - Retro pipeline은 screen-space snap, low-resolution raster, alpha threshold, posterization, outline과 nearest-neighbor upscale 순서를 유지한다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
 - UI screen state, operation-map modal과 debug panel state는 gameplay input에 섞지 않는다.
+- PWA Lifecycle Adapter는 `beforeinstallprompt`, iOS standalone 안내, update waiting과 controller change를 UI command로 변환한다. 설치·갱신은 사용자 입력으로만 시작하며 game screen에서 자동 prompt/reload하지 않는다.
+- standalone game start는 orientation lock을 best-effort로 요청하되 fullscreen을 기본 요청하지 않는다. safe-area inset은 UI adapter layout token으로만 소비한다.
 - Semantic controls는 accessible name과 keyboard focus order를 가지며 modal은 focus를 trap하고 opener로 복귀한다.
 - Mobile/desktop은 같은 simulation과 world framing을 공유하고 safe area/layout만 adapter가 조정한다.
 - Reduced motion은 camera shake를 낮춰도 warning, contact, D-DAY와 state-change feedback을 제거하지 않는다.
@@ -158,6 +162,7 @@ Keyboard / Touch / DOM intent
 - Snapshot에는 campaign clock, D-DAY, rival route, region states, part/robot completion, action ledger, equipment, enchant와 progression이 함께 들어간다.
 - Storage는 `latest morning`, `latest core event`, `pre-action` recovery slot을 구분한다. Morning boundary, core completion 직후와 time action confirm 직전에 orchestrator가 explicit save request를 보낸다.
 - Load/save failure는 explicit result로 UI에 전달하고 domain state를 부분 적용하지 않는다.
+- cache version 전환은 ProgressionStorage와 독립이다. update 적용 전 UI adapter가 explicit save를 요청하고, cache 실패는 active cache와 typed progress snapshot을 유지한다.
 - Game-over restart는 사용자가 선택한 recovery snapshot을 원자 복원하며 story 안의 rewind flag를 만들지 않는다.
 - Reward, part, boss와 route transition은 reload/repeated trigger에서 중복 지급하지 않는다.
 - Room transition, input sequence와 encounter reset은 interruption 뒤 stale command/entity를 다음 Room으로 넘기지 않는다.
@@ -176,6 +181,7 @@ Keyboard / Touch / DOM intent
 - Campaign fixture는 Day 1 morning/D-30, 네 segment rollover, zero-cost action, one-segment travel, preview warning, idempotent commit, player-first extension, rival-first convoy fallback, five-part final unlock과 D-DAY 0 terminal boundary를 고정한다.
 - Persistence fixture는 campaign round-trip, legacy migration, corrupt/write failure와 recovery slot selection을 검증한다.
 - Browser flow는 MENU short operation map, MENU hold debug separation, HUD/map same-state projection, desktop/mobile focus·overflow와 console error를 확인한다.
+- PWA fixture는 manifest field/icon purpose, root scope·navigation fallback, complete cache inventory, offline first-visit fallback, waiting update의 user-applied single reload 및 storage/cache 분리를 고정한다.
 - Prologue fixture는 의뢰→라이벌 동행→탐색·전투→회수팔 붕괴/구조 요청→독백→제어핵 회수·구조→접속부 봉쇄·각성→귀환의 stage order, input-lock 경계, transcript, save/reload와 중복 보상 방지를 고정한다.
 - Story Browser flow는 목표 HUD를 숨긴 상태에서 원인·감정·다음 행동이 world bubble과 실제 action으로 이해되는지, bubble 없이 objective ribbon만으로 전체 story가 누출되지 않는지, ambient 이동과 transcript replay가 campaign state를 다시 쓰지 않는지 확인한다.
 - Region fixture는 authored cast/issue graph completeness, primary 1 + linked 2 window, cross-region dependency의 실제 encounter/state-change 조건, order independence, stable before/in-progress/after map patch와 robot module accumulation을 고정한다.

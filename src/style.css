@@ -421,6 +421,10 @@ dd {
 /* Game view */
 
 .game-screen {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-right: max(8px, env(safe-area-inset-right));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding-left: max(8px, env(safe-area-inset-left));
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   width: min(100%, 1500px);
@@ -2809,7 +2813,10 @@ kbd {
 
   .game-screen {
     min-height: auto;
-    padding: 8px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
   }
 
   .game-hud-overlay {

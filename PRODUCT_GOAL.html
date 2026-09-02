@@ -759,6 +759,38 @@
                 </li>
               </ul>
             </article>
+            <article class="requirement" id="PG-PWA-OFFLINE">
+              <p class="requirement-id">PG-PWA-OFFLINE</p>
+              <h3>한 번 정상 로딩한 모바일 게임은 설치·오프라인·안전한 갱신까지 이어진다</h3>
+              <ul>
+                <li>
+                  Android Chromium과 iPhone/iPad Safari에서 홈 화면 앱으로 설치할 수 있다. 설치
+                  가능한 환경의 메인 메뉴에만 <strong>앱으로 설치</strong>를 보이고, Android는
+                  사용자 입력으로 시스템 설치를 요청하며 iPhone/iPad는 공유 → 홈 화면에 추가의 짧은
+                  안내를 연다.
+                </li>
+                <li>
+                  설치 앱은 standalone 창과 가로 방향을 우선 사용한다. 게임 시작 시 지원되는
+                  기기에서만 방향 잠금을 요청하며, 기본 강제 전체화면은 사용하지 않는다. HUD와
+                  조작계는 safe-area를 피해 노치·상태 표시줄·홈 인디케이터에 가려지지 않는다.
+                </li>
+                <li>
+                  온라인에서 한 번 정상 로딩한 현재 배포본은 메뉴, 모든 게임 module·화면·저장·복구와
+                  설치 asset을 하나의 versioned cache로 준비해 네트워크 없이 계속 플레이한다. 최초
+                  방문이 오프라인이면 빈 화면 대신 연결 필요와 재시도 행동을 보여 준다.
+                </li>
+                <li>
+                  새 버전은 플레이를 중단하지 않고 완전한 새 cache가 준비된 뒤 메뉴에만 알린다.
+                  사용자가 적용하면 최신 진행과 recovery slot을 먼저 저장하고 waiting worker를 한 번
+                  활성화해 한 번만 새로고침한다. 실패한 갱신은 기존 정상 cache와 저장을 유지한다.
+                </li>
+                <li>
+                  주인공 고글·공구 가방·검 silhouette가 작은 크기에서도 읽히는 일반·maskable icon과
+                  standalone launch asset을 제공한다. cache와 게임 진행 저장은 분리되며 삭제 가능한
+                  browser data 경계는 도움말에서만 짧게 알린다.
+                </li>
+              </ul>
+            </article>
           </div>
         </section>
 
@@ -915,6 +947,18 @@
                     복원한다.
                   </td>
                   <td>failure injection과 multi-slot round-trip</td>
+                </tr>
+                <tr>
+                  <th>PG-PWA-OFFLINE</th>
+                  <td>
+                    모바일 크기에서 온라인 첫 로딩·설치·완전 종료 뒤 오프라인 standalone 재실행과
+                    저장 이어하기를 수행한다. 새 버전은 메뉴의 명시적 적용 전에는 reload하지 않고,
+                    적용 뒤 저장을 보존한 채 한 번만 전환한다.
+                  </td>
+                  <td>
+                    manifest/icon·Service Worker cache lifecycle fixture, Android/iOS 설치 안내와
+                    offline Browser flow
+                  </td>
                 </tr>
               </tbody>
             </table>

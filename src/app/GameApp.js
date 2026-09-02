@@ -378,6 +378,10 @@ export class GameApp extends SceneNode {
     return result;
   }
 
+  saveCurrentProgress() {
+    return this.saveProgression(this.scene.getProgressionSnapshot());
+  }
+
   saveRecoveryRequest(request, { quiet = false } = {}) {
     if (this.isVisualQa) {
       return Object.freeze({ ok: true, kind: 'visual-qa-recovery-skipped' });

@@ -1,6 +1,7 @@
 import { GAME_SCREEN } from '../app/GameApp.js';
 import { createDebugConfigurationAdapter } from './DebugConfigurationAdapter.js';
 import { HoldActivationController } from './HoldActivationController.js';
+import { createPwaLifecycleAdapter, isStandalone } from '../pwa/PwaLifecycleAdapter.js';
 import {
   createDocumentFocusPort,
   ScreenFocusOwner,
@@ -26,51 +27,11 @@ function formatGameStats({ fps, logicalWidth, logicalHeight }) {
   return `${fps} FPS · ${logicalWidth}×${logicalHeight} logical`;
 }
 
-function createMobileViewportController(browserDocument, browserScreen) {
+function createMobileViewportController(browserScreen) {
   let requestVersion = 0;
-  let ownedFullscreenElement = null;
-
-  async function exitOwnedFullscreen() {
-    const fullscreenElement = ownedFullscreenElement;
-    ownedFullscreenElement = null;
-
-    if (
-      !fullscreenElement ||
-      browserDocument.fullscreenElement !== fullscreenElement ||
-      typeof browserDocument.exitFullscreen !== 'function'
-    ) {
-      return;
-    }
-
-    try {
-      await browserDocument.exitFullscreen();
-    } catch {
-      // Fullscreen may already have been released by the browser or the user.
-    }
-  }
-
   return Object.freeze({
     async enterLandscape() {
       const currentRequest = ++requestVersion;
-      const root = browserDocument?.documentElement;
-      if (!root) return;
-
-      if (!browserDocument.fullscreenElement && typeof root.requestFullscreen === 'function') {
-        try {
-          await root.requestFullscreen();
-          if (browserDocument.fullscreenElement === root) {
-            ownedFullscreenElement = root;
-          }
-        } catch {
-          // Installed apps and some browsers allow orientation lock without fullscreen.
-        }
-      }
-
-      if (currentRequest !== requestVersion) {
-        await exitOwnedFullscreen();
-        return;
-      }
-
       const orientation = browserScreen?.orientation;
       if (typeof orientation?.lock !== 'function') return;
 
@@ -94,7 +55,6 @@ function createMobileViewportController(browserDocument, browserScreen) {
           // The browser may have unlocked automatically while leaving fullscreen.
         }
       }
-      void exitOwnedFullscreen();
     },
   });
 }
@@ -163,7 +123,8 @@ function focusGameOverPresentation(browserDocument, recoveryAvailable) {
 }
 
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
-  const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
+  const mobileViewport = createMobileViewportController(globalThis.screen);
+  const pwaLifecycle = createPwaLifecycleAdapter({ browserWindow: globalThis });
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
     globalThis.location,
     visualQaRequest,
@@ -178,6 +139,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
   const initialDebugConfiguration = debugConfigurationAdapter.initialConfiguration;
   let debugMenuHold = null;
   let debugHoldAbortController = null;
+  let unsubscribePwa = null;
   let operationMapOpenerId = 'game-menu-control';
   const initialScreen = visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU;
   const screenFocusOwner = new ScreenFocusOwner({
@@ -338,6 +300,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     combatCommandGuide: 'A/S starter · 공중 starter 1회',
     progressionNotice: '훈련 골렘 처치 시 인장 +3',
     saveStatus: '성장 저장 준비 중',
+    pwa: pwaLifecycle.getState(),
     health: 100,
     maxHealth: 100,
     stamina: 100,
@@ -492,6 +455,10 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         },
       });
       this.$nextTick(() => {
+        unsubscribePwa = pwaLifecycle.subscribe((state) => {
+          this.pwa = state;
+        });
+        void pwaLifecycle.start();
         if (visualQaRequest) {
           this.isPlaying = false;
           try {
@@ -520,6 +487,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           globalThis.requestAnimationFrame(() => focusDebugPanel(globalThis.document));
         }
       });
+      this.$cleanup = () => unsubscribePwa();
     },
 
     get playButtonLabel() {
@@ -564,7 +532,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     },
 
     startGame() {
-      mobileViewport.leaveLandscape();
+      if (isStandalone(globalThis)) void mobileViewport.enterLandscape();
+      else mobileViewport.leaveLandscape();
       this.forceMobileControls = false;
       this.launchGame(SCREEN_FOCUS_TARGET.MENU_START);
     },
@@ -589,6 +558,14 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     resetSavedProgress() {
       return gameApp.resetSavedProgress();
+    },
+
+    requestPwaInstall() {
+      void pwaLifecycle.requestInstall();
+    },
+
+    applyPwaUpdate() {
+      void pwaLifecycle.applyUpdate(() => gameApp.saveCurrentProgress());
     },
 
     startDebugMenuHold(event) {
@@ -907,6 +884,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     },
 
     destroy() {
+      unsubscribePwa?.();
+      unsubscribePwa = null;
       debugHoldAbortController?.abort();
       debugHoldAbortController = null;
       debugMenuHold?.cancel();

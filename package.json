@@ -26,6 +26,7 @@
     "test:growth": "node scripts/progression-growth-check.mjs",
     "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs",
     "test:platform": "node scripts/platform-access-check.mjs",
+    "test:pwa": "node scripts/pwa-offline-check.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

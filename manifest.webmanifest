@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "Polygon RPG — 왕국 고철 수거 작전",
+  "short_name": "Polygon RPG",
+  "description": "다섯 산업기계를 먼저 구해 대항 병기를 완성하는 2D 액션 RPG",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#080c13",
+  "background_color": "#080c13",
+  "icons": [
+    {
+      "src": "./public/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./public/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./public/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

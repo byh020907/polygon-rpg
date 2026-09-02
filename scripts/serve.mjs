@@ -6,11 +6,21 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const defaultRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const defaultHost = '127.0.0.1';
 const defaultPort = 5173;
-const publicFiles = new Set(['/index.html', '/PRODUCT_GOAL.html', '/.nojekyll']);
+const publicFiles = new Set([
+  '/index.html',
+  '/offline.html',
+  '/manifest.webmanifest',
+  '/sw.js',
+  '/PRODUCT_GOAL.html',
+  '/.nojekyll',
+]);
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],
   ['.js', 'text/javascript; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.webmanifest', 'application/manifest+json; charset=utf-8'],
 ]);
 
 function readOption(name, fallback) {
@@ -33,7 +43,11 @@ function resolveRequestPath(rootPath, requestUrl) {
   }
 
   const normalizedPath = pathname === '/' ? '/index.html' : path.posix.normalize(pathname);
-  if (!publicFiles.has(normalizedPath) && !normalizedPath.startsWith('/src/')) {
+  if (
+    !publicFiles.has(normalizedPath) &&
+    !normalizedPath.startsWith('/src/') &&
+    !normalizedPath.startsWith('/public/')
+  ) {
     return null;
   }
 
@@ -41,13 +55,18 @@ function resolveRequestPath(rootPath, requestUrl) {
   const filePath = path.resolve(rootPath, relativePath);
   const rootWithSeparator = rootPath.endsWith(path.sep) ? rootPath : `${rootPath}${path.sep}`;
   const sourceRoot = path.join(rootPath, 'src');
+  const publicRoot = path.join(rootPath, 'public');
   const sourceRootWithSeparator = `${sourceRoot}${path.sep}`;
+  const publicRootWithSeparator = `${publicRoot}${path.sep}`;
 
   if (!filePath.startsWith(rootWithSeparator)) {
     return null;
   }
 
   if (normalizedPath.startsWith('/src/') && !filePath.startsWith(sourceRootWithSeparator)) {
+    return null;
+  }
+  if (normalizedPath.startsWith('/public/') && !filePath.startsWith(publicRootWithSeparator)) {
     return null;
   }
 

@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#080c13" />
-    <link rel="icon" href="data:," />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./public/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./public/icons/icon-192.png" />
+    <link rel="apple-touch-startup-image" href="./public/icons/icon-512.png" />
     <title>Polygon RPG</title>
     <link rel="stylesheet" href="./src/style.css" />
   </head>
@@ -66,9 +71,38 @@
                 <span>저장 진행 초기화</span>
                 <small>현재 저장을 새 진행으로 교체</small>
               </button>
+              <button
+                class="menu-button menu-button--install"
+                type="button"
+                x-show="pwa.installAvailable || pwa.showIosInstallGuide"
+                @click="requestPwaInstall"
+              >
+                <span>앱으로 설치</span>
+                <small
+                  x-text="pwa.showIosInstallGuide ? '공유 → 홈 화면에 추가' : '오프라인으로 계속 플레이'"
+                >
+                </small>
+              </button>
+              <button
+                class="menu-button menu-button--update"
+                type="button"
+                x-show="pwa.updateReady"
+                @click="applyPwaUpdate"
+              >
+                <span>새 버전 적용</span>
+                <small>진행을 먼저 저장하고 한 번만 전환</small>
+              </button>
             </div>
 
             <p class="menu-version" x-text="saveStatus" aria-live="polite"></p>
+            <p class="menu-version" x-text="pwa.status" aria-live="polite"></p>
+            <details class="menu-data-notice">
+              <summary>저장 데이터 안내</summary>
+              <p>
+                진행은 이 기기의 browser data에 저장됩니다. 앱이나 browser data를 삭제하면 복구
+                지점도 지워질 수 있습니다.
+              </p>
+            </details>
             <p class="menu-version">PRE-ALPHA · STATIC CANVAS BUILD</p>
           </section>
 
@@ -639,6 +673,7 @@
                 aria-live="polite"
                 x-text="debugConfigurationStatus"
               ></p>
+              <p class="debug-runtime-stats" x-text="`PWA 진단 · ${pwa.status}`"></p>
               <p class="debug-runtime-stats" x-text="gameStats"></p>
             </aside>
           </div>
