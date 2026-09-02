@@ -275,6 +275,19 @@ const scene = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: fresh,
 });
+const campaignBeforeKoReturn = scene.getProgressionSnapshot().scrapCampaign;
+const legacyWorldTimeBeforeKoReturn = scene.getProgressionSnapshot().worldTime;
+scene.respawnPlayerAfterKo();
+const campaignAfterKoReturn = scene.getProgressionSnapshot().scrapCampaign;
+assert.equal(campaignAfterKoReturn.elapsedSegments, campaignBeforeKoReturn.elapsedSegments + 1);
+assert.equal(campaignAfterKoReturn.deadlineSegments, campaignBeforeKoReturn.deadlineSegments - 1);
+assert.equal(campaignAfterKoReturn.committedActionIds.length, 1);
+assert.match(campaignAfterKoReturn.committedActionIds[0], /^ko-return:/);
+assert.deepEqual(
+  scene.getProgressionSnapshot().worldTime,
+  legacyWorldTimeBeforeKoReturn,
+  'KO 복귀는 legacy World Time이 아닌 고철 Campaign owner만 갱신해야 합니다.',
+);
 const beforePosition = { ...scene.position };
 scene.setVisualQaScrapGameOverStage(SCRAP_GAME_OVER_STAGE.INPUT_LOCKED);
 scene.update(0.4, Object.freeze({ right: true, jump: true, jumpSequence: 1 }));
@@ -305,6 +318,7 @@ console.log(
       'recovery-write-failure-explicit-result',
       'pre-action-save-failure-blocks-action-commit',
       'selected-recovery-main-save-before-scene-restore',
+      'ko-return-single-segment-campaign-commit-without-legacy-world-time-write',
       'game-over-input-lock-capital-destruction-recovery-sequence',
       'terminal-gameplay-command-rejection',
     ],

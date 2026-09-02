@@ -1629,6 +1629,19 @@ export class GameScene extends SceneNode {
     });
   }
 
+  createScrapCampaignKoReturnAction() {
+    const campaignSnapshot = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    return Object.freeze({
+      actionId: `ko-return:${campaignSnapshot.elapsedSegments}:${campaignSnapshot.committedActionIds.length}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.KO_RETURN,
+      label: 'KO 거점 복귀',
+      costSegments: 1,
+    });
+  }
+
   commitScrapCampaignDomainAction(action) {
     const transaction = commitScrapCampaignAction(
       this.progressionSnapshot.scrapCampaign,
@@ -2648,13 +2661,10 @@ export class GameScene extends SceneNode {
   }
 
   respawnPlayerAfterKo(inputSnapshot = {}) {
-    this.applyWorldAction(
-      'event:player-ko',
-      this.worldTimeProfile.getCoreEventAction('player-ko'),
-      {
-        repeatable: true,
-      },
+    const campaignTransaction = this.commitScrapCampaignDomainAction(
+      this.createScrapCampaignKoReturnAction(),
     );
+    if (!campaignTransaction.changed || campaignTransaction.snapshot.gameOver) return;
     const journey = this.journeyProgress.snapshot();
     const regionExpansion = this.regionExpansionProgress.snapshot();
     const activeRegionId = this.mapRuntime.getActiveLocation().regionId;

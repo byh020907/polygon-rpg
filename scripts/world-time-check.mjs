@@ -130,12 +130,34 @@ assert.equal(
   beforeTraining.clockMinutes + 45,
   '완료한 훈련은 의미 있는 행동 비용을 한 번 확정해야 합니다.',
 );
-const beforeKo = meaningfulActionScene.getProgressionSnapshot().worldTime;
+const beforeKoWorldTime = meaningfulActionScene.getProgressionSnapshot().worldTime;
+const beforeKoCampaign = meaningfulActionScene.getProgressionSnapshot().scrapCampaign;
 meaningfulActionScene.respawnPlayerAfterKo(EMPTY_INPUT);
+const afterKoProgression = meaningfulActionScene.getProgressionSnapshot();
+assert.deepEqual(
+  afterKoProgression.worldTime,
+  beforeKoWorldTime,
+  'KO 복구는 legacy World Time을 쓰지 않아야 합니다.',
+);
+assert.equal(
+  afterKoProgression.scrapCampaign.elapsedSegments,
+  beforeKoCampaign.elapsedSegments + 1,
+  'KO 복구는 Scrap Campaign의 1구간만 확정해야 합니다.',
+);
+assert.equal(
+  afterKoProgression.scrapCampaign.deadlineSegments,
+  beforeKoCampaign.deadlineSegments - 1,
+  'KO 복구는 같은 Campaign transaction에서 D-DAY를 한 구간 줄여야 합니다.',
+);
+assert.match(
+  afterKoProgression.scrapCampaign.lastChangeLabel,
+  /KO 거점 복귀/,
+  'KO 복구의 시간 원인은 Campaign read model에 남아야 합니다.',
+);
 assert.equal(
   meaningfulActionScene.getProgressionSnapshot().worldTime.clockMinutes,
-  beforeKo.clockMinutes + 60,
-  'KO 복구는 authored 시간 비용을 한 번 확정해야 합니다.',
+  beforeKoWorldTime.clockMinutes,
+  'KO 복구는 legacy World Time을 변경하지 않아야 합니다.',
 );
 
 const rebuildContext = meaningfulActionScene.mapRuntime.getWorldContext();
