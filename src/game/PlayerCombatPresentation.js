@@ -190,6 +190,7 @@ function createCharacterItems(
   const accentShadow = scaleHexColor(accentColor, 0.58);
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
+  const projectedJoints = bonePose.projectedJoints ?? null;
   const swordRotation = targetPose.swordAngle;
   const rightShoulder = { x: bodyX + 17, y: bodyY - 25 };
   const rightArm = ARM_IK_SOLVER.solve({
@@ -211,8 +212,8 @@ function createCharacterItems(
   const rearLeg = ARM_IK_SOLVER.solve({
     root: rearHip,
     target: {
-      x: position.x + bonePose.rearFootTarget.x,
-      y: position.y + bonePose.rearFootTarget.y,
+      x: position.x + (projectedJoints?.farFoot.x ?? bonePose.rearFootTarget.x),
+      y: position.y + (projectedJoints?.farFoot.y ?? bonePose.rearFootTarget.y),
     },
     upperLength: 28,
     lowerLength: 27,
@@ -222,8 +223,8 @@ function createCharacterItems(
   const leadLeg = ARM_IK_SOLVER.solve({
     root: leadHip,
     target: {
-      x: position.x + bonePose.leadFootTarget.x,
-      y: position.y + bonePose.leadFootTarget.y,
+      x: position.x + (projectedJoints?.nearFoot.x ?? bonePose.leadFootTarget.x),
+      y: position.y + (projectedJoints?.nearFoot.y ?? bonePose.leadFootTarget.y),
     },
     upperLength: 28,
     lowerLength: 27,

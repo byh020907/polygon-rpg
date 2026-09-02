@@ -1,3 +1,6 @@
+import { projectSideViewSkeletonFrame } from './SkeletonPoseProjection.js';
+import { rollTimelineMarkerAt } from './RollTimeline.js';
+
 const CHARACTER_FOOT_Y = 80;
 const REFERENCE_JUMP_SPEED = 470;
 
@@ -160,21 +163,187 @@ function sampleHitReaction(intensity, knockedOut) {
       });
 }
 
-function sampleRoll(progress) {
-  const boundedProgress = clamp(progress);
-  const easedProgress = boundedProgress * boundedProgress * (3 - 2 * boundedProgress);
-  const arc = Math.sin(boundedProgress * Math.PI);
-  return pose({
-    rootX: arc * 4,
-    rootY: 12 - arc * 9,
-    bodyLean: easedProgress * Math.PI * 2,
-    headTilt: -easedProgress * Math.PI * 2,
-    rearFootX: -6,
-    rearFootY: 62 + arc * 3,
-    leadFootX: 7,
-    leadFootY: 60 + arc * 5,
-    capeLift: 0.92,
+function authoredRollFrame({
+  id,
+  at,
+  transition,
+  rootX = 0,
+  rootY = 0,
+  bodyLean = 0,
+  headTilt = 0,
+  rearFootX = -8,
+  rearFootY = CHARACTER_FOOT_Y,
+  leadFootX = 8,
+  leadFootY = CHARACTER_FOOT_Y,
+  depth = 0,
+  capeLift = 0,
+}) {
+  const chestLength = 34;
+  const headLength = 17;
+  const chestX = Math.sin(bodyLean) * chestLength;
+  const chestY = -Math.cos(bodyLean) * chestLength;
+  const headX = Math.sin(headTilt) * headLength;
+  const headY = -Math.cos(headTilt) * headLength;
+  const pelvisY = 48;
+  const hipY = 4;
+  const kneeY = 12;
+  const legBaseY = rootY + pelvisY + hipY + kneeY;
+  const localRotation = Object.freeze({
+    root: 0,
+    pelvis: bodyLean * 0.18,
+    chest: bodyLean * 0.72,
+    neck: headTilt * 0.28,
+    head: headTilt * 0.72,
+    nearShoulder: -0.14,
+    nearElbow: 0.3,
+    nearHand: 0.12,
+    farShoulder: 0.14,
+    farElbow: -0.3,
+    farHand: -0.12,
+    nearHip: -bodyLean * 0.1,
+    nearKnee: bodyLean * 0.12,
+    nearFoot: 0,
+    farHip: bodyLean * 0.1,
+    farKnee: -bodyLean * 0.12,
+    farFoot: 0,
   });
+  const frame = Object.freeze({
+    id,
+    at,
+    transition,
+    capeLift,
+    joints: Object.freeze(
+      Object.fromEntries(
+        Object.entries({
+          root: { x: rootX, y: rootY, z: 0 },
+          pelvis: { x: 0, y: pelvisY, z: 0 },
+          chest: { x: chestX, y: chestY, z: depth },
+          neck: { x: 1, y: -18, z: depth },
+          head: { x: headX, y: headY, z: depth },
+          nearShoulder: { x: 8, y: -5, z: 4 + depth },
+          nearElbow: { x: 9, y: 17, z: 3 + depth },
+          nearHand: { x: 8, y: 13, z: 2 + depth },
+          farShoulder: { x: -8, y: -5, z: -4 + depth },
+          farElbow: { x: -9, y: 17, z: -3 + depth },
+          farHand: { x: -8, y: 13, z: -2 + depth },
+          nearHip: { x: 8, y: hipY, z: 2 },
+          nearKnee: { x: 0, y: kneeY, z: 1 },
+          nearFoot: { x: leadFootX - 8, y: leadFootY - legBaseY, z: 0 },
+          farHip: { x: -8, y: hipY, z: -2 },
+          farKnee: { x: 0, y: kneeY, z: -1 },
+          farFoot: { x: rearFootX + 8, y: rearFootY - legBaseY, z: 0 },
+        }).map(([jointId, value]) => [
+          jointId,
+          Object.freeze({ ...value, rotation: localRotation[jointId] }),
+        ]),
+      ),
+    ),
+  });
+  return Object.freeze({ ...frame, value: projectSideViewSkeletonFrame(frame) });
+}
+
+// This authored strip is a local 3D joint hierarchy. It is projected to 2D cutout anchors,
+// never rendered as a 3D mesh or used by 2D collision authority.
+const ROLL_POSE_FRAMES = Object.freeze([
+  authoredRollFrame({
+    id: 'roll-plant',
+    at: 0,
+    transition: 'hold',
+    rootY: 5,
+    bodyLean: 0.13,
+    headTilt: -0.1,
+    rearFootX: -16,
+    leadFootX: 15,
+    capeLift: 0.3,
+  }),
+  authoredRollFrame({
+    id: 'roll-tuck',
+    at: 0.14,
+    transition: 'snap',
+    rootX: 3,
+    rootY: 14,
+    bodyLean: 0.38,
+    headTilt: -0.28,
+    rearFootX: -11,
+    rearFootY: 67,
+    leadFootX: 12,
+    leadFootY: 65,
+    depth: 0.4,
+    capeLift: 0.75,
+  }),
+  authoredRollFrame({
+    id: 'roll-contact',
+    at: 0.36,
+    transition: 'linear',
+    rootX: 7,
+    rootY: 18,
+    bodyLean: 0.82,
+    headTilt: -0.58,
+    rearFootX: -3,
+    rearFootY: 60,
+    leadFootX: 4,
+    leadFootY: 58,
+    depth: 1,
+    capeLift: 1,
+  }),
+  authoredRollFrame({
+    id: 'roll-unfold',
+    at: 0.62,
+    transition: 'linear',
+    rootX: 9,
+    rootY: 12,
+    bodyLean: -0.62,
+    headTilt: 0.42,
+    rearFootX: -5,
+    rearFootY: 59,
+    leadFootX: 7,
+    leadFootY: 63,
+    depth: -1,
+    capeLift: 0.94,
+  }),
+  authoredRollFrame({
+    id: 'roll-recover',
+    at: 0.84,
+    transition: 'linear',
+    rootX: 4,
+    rootY: 4,
+    bodyLean: -0.16,
+    headTilt: 0.12,
+    rearFootX: -15,
+    rearFootY: 76,
+    leadFootX: 16,
+    leadFootY: 80,
+    depth: -0.35,
+    capeLift: 0.46,
+  }),
+  authoredRollFrame({
+    at: 1,
+    transition: 'hold',
+    rootY: 0,
+    bodyLean: 0.02,
+    headTilt: 0,
+    rearFootX: -9,
+    leadFootX: 9,
+    capeLift: 0.18,
+  }),
+]);
+
+function sampleAuthoredPoseFrames(frames, progress) {
+  const boundedProgress = clamp(progress);
+  const nextIndex = frames.findIndex((frame) => frame.at > boundedProgress);
+  if (nextIndex <= 0) return frames.at(-1).value;
+  const previous = frames[nextIndex - 1];
+  const next = frames[nextIndex];
+  if (next.transition === 'snap') return previous.value;
+  const amount = (boundedProgress - previous.at) / (next.at - previous.at);
+  if (amount <= Number.EPSILON) return previous.value;
+  if (amount >= 1 - Number.EPSILON) return next.value;
+  return blendBonePose(previous.value, next.value, next.transition === 'hold' ? 0 : amount);
+}
+
+function sampleRoll(progress) {
+  const sampled = sampleAuthoredPoseFrames(ROLL_POSE_FRAMES, progress);
+  return Object.freeze({ ...sampled, rollMarker: rollTimelineMarkerAt(progress) });
 }
 
 function sampleCombat(motionState) {
@@ -325,6 +494,25 @@ function blendBonePose(previousPose, currentPose, amount) {
       previousPose[key].x + (currentPose[key].x - previousPose[key].x) * amount,
       previousPose[key].y + (currentPose[key].y - previousPose[key].y) * amount,
     );
+  const projectedJoints =
+    previousPose.projectedJoints && currentPose.projectedJoints
+      ? Object.freeze(
+          Object.fromEntries(
+            Object.keys(previousPose.projectedJoints).map((jointId) => {
+              const previousJoint = previousPose.projectedJoints[jointId];
+              const currentJoint = currentPose.projectedJoints[jointId];
+              return [
+                jointId,
+                Object.freeze({
+                  x: previousJoint.x + (currentJoint.x - previousJoint.x) * amount,
+                  y: previousJoint.y + (currentJoint.y - previousJoint.y) * amount,
+                  depth: previousJoint.depth + (currentJoint.depth - previousJoint.depth) * amount,
+                }),
+              ];
+            }),
+          ),
+        )
+      : null;
   return Object.freeze({
     rootOffset: blendPoint('rootOffset'),
     bodyLean: previousPose.bodyLean + (currentPose.bodyLean - previousPose.bodyLean) * amount,
@@ -336,6 +524,7 @@ function blendBonePose(previousPose, currentPose, amount) {
     rearFootTarget: blendPoint('rearFootTarget'),
     leadFootTarget: blendPoint('leadFootTarget'),
     capeLift: previousPose.capeLift + (currentPose.capeLift - previousPose.capeLift) * amount,
+    ...(projectedJoints ? { projectedJoints } : {}),
   });
 }
 

@@ -12,6 +12,7 @@ import {
   samplePlayerCombatGeometry as sampleSharedPlayerCombatGeometry,
 } from '../combat/SharedCombatGeometry.js';
 import { samplePlayerMotionPose } from '../animation/PlayerMotionPose.js';
+import { rollTimelineMarkerAt } from '../animation/RollTimeline.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
@@ -250,6 +251,10 @@ const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 const CHARACTER_CELL_SIZE = 48;
 const CHARACTER_BOUNDARY_HALF_WIDTH = CHARACTER_CELL_SIZE / 2;
 const CHARACTER_FOOT_OFFSET = PLAYER_CHARACTER_FOOT_OFFSET;
+const PLAYER_BODY_HALF_WIDTH = 20;
+const NORMAL_ENEMY_BODY_HALF_WIDTH = 28;
+const BOSS_ENEMY_BODY_HALF_WIDTH = 46;
+const PLAYER_BODY_HEIGHT = 76;
 
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
@@ -2609,6 +2614,42 @@ export class GameScene extends SceneNode {
     return true;
   }
 
+  resolvePlayerEnemyBodyCollision(enemy, previousPositionX = this.position.x) {
+    if (!enemy || enemy.health <= 0 || enemy.resolutionState === 'departed') return false;
+    const motionId = this.combatCommands.snapshot().id;
+    if (!this.rollState && !['idle', 'guard'].includes(motionId)) return false;
+    const playerFootY = this.position.y + CHARACTER_FOOT_OFFSET;
+    const enemyTopY = enemy.position.y - PLAYER_BODY_HEIGHT;
+    if (playerFootY <= enemyTopY || this.position.y >= enemy.position.y) return false;
+
+    const enemyHalfWidth =
+      enemy.role === 'boss' ? BOSS_ENEMY_BODY_HALF_WIDTH : NORMAL_ENEMY_BODY_HALF_WIDTH;
+    const separation = PLAYER_BODY_HALF_WIDTH + enemyHalfWidth;
+    const distance = this.position.x - enemy.position.x;
+    if (Math.abs(distance) >= separation) return false;
+
+    const rollProgress = this.rollState
+      ? this.rollState.elapsedSeconds / this.rollState.durationSeconds
+      : null;
+    const rollMarker = rollProgress === null ? null : rollTimelineMarkerAt(rollProgress);
+    const canRollThrough =
+      enemy.role !== 'boss' && rollMarker?.gameplay === 'evade-and-body-through';
+    if (canRollThrough) return false;
+
+    const previousDistance = previousPositionX - enemy.position.x;
+    const direction = Math.sign(distance || previousDistance || -this.facing) || 1;
+    const activeRoom = this.mapRuntime.getActiveRoom();
+    const movementBounds = activeRoom.movementBounds ?? {
+      minX: CHARACTER_BOUNDARY_HALF_WIDTH,
+      maxX: this.mapRuntime.definition.worldSize.width - CHARACTER_BOUNDARY_HALF_WIDTH,
+    };
+    this.position.x = Math.max(
+      movementBounds.minX,
+      Math.min(movementBounds.maxX, enemy.position.x + direction * separation),
+    );
+    return true;
+  }
+
   getAttackHitProfile(motionId) {
     return resolveEquipmentAttackProfile(
       motionId,
@@ -3127,14 +3168,12 @@ export class GameScene extends SceneNode {
     if (this.playerHealth === 0 && this.playerKoSeconds === 0) {
       this.respawnPlayerAfterKo(inputSnapshot);
     }
-    const landingControlsLocked = this.landingRecoverySeconds > 0;
     const nextLandingRecoverySeconds = this.landingRecoverySeconds - deltaSeconds;
     this.landingRecoverySeconds =
       nextLandingRecoverySeconds <= Number.EPSILON ? 0 : nextLandingRecoverySeconds;
     const wasGrounded = this.isGrounded;
 
     const controlsLocked =
-      landingControlsLocked ||
       this.playerHitstunSeconds > 0 ||
       this.playerBlockstunSeconds > 0 ||
       this.playerHealth === 0 ||
@@ -3301,6 +3340,7 @@ export class GameScene extends SceneNode {
             comboFacing * Math.min(comboPullSpeed * deltaSeconds, targetGap - maximumComboGap);
         }
       }
+      this.resolvePlayerEnemyBodyCollision(encounterBeforeStep, movementStartX);
     }
     this.updatePlayerCombatGeometry(combatState);
     this.resolveScrapFinalBattleCombatHit(combatState, activeAttackProfile);
@@ -3311,6 +3351,7 @@ export class GameScene extends SceneNode {
     this.updateJourneyTriggers();
 
     if (isRolling) {
+      const rollStartX = this.position.x;
       this.updateRoll(deltaSeconds);
       const activeRoom = this.mapRuntime.getActiveRoom();
       const movementBounds = activeRoom.movementBounds ?? {
@@ -3321,9 +3362,14 @@ export class GameScene extends SceneNode {
         movementBounds.minX,
         Math.min(movementBounds.maxX, this.position.x),
       );
+      this.resolvePlayerEnemyBodyCollision(
+        this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null,
+        rollStartX,
+      );
     }
 
     const encounterAfterStep = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
+    this.resolvePlayerEnemyBodyCollision(encounterAfterStep, this.previousPosition.x);
     if (
       encounterAfterStep &&
       (encounterAfterStep.slamAttackerBouncePending ||
@@ -3374,7 +3420,7 @@ export class GameScene extends SceneNode {
       this.combatCommands.cancelAirMotionForLanding();
       this.combatCommands.clearComboContinuation();
       if (!wasGrounded) {
-        this.landingRecoverySeconds = LANDING_RECOVERY_SECONDS;
+        this.landingRecoverySeconds = 0;
         this.combatEvents.emit(COMBAT_EVENT_TYPE.LANDING, {
           actor: 'player',
           target: 'player',
