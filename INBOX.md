@@ -79,6 +79,42 @@
 - 피격 전후 실제 viewport에서 머리 위 불명확한 이펙트가 사라지고 접촉점과 몸체 반응만으로 피격·가드·무적을 구분할 수 있는지 확인한다.
 - 좌우 이동을 누른 채 exterior↔interior, Room↔Chunk와 장거리 도로 전환을 반복하고 목적지 첫 fixed-step의 held input, position continuity, 중복 command 0건과 눈에 띄는 hitch가 없는지 desktop/mobile에서 검증한다.
 
+### 프레임 authored 본 포즈 애니메이션으로 동작 품질 개선
+
+1. 구를 때 캐릭터 전체를 단순히 회전시키지 말고 별도의 구르기 모션을 만든다. bitmap sprite animation으로 교체하는 것은 아니며 현재 본 시스템으로 각 프레임의 자세를 직접 정의하고 순서대로 재생해 스프라이트 애니메이션처럼 명확한 pose 변화가 보이게 한다.
+2. 기타 어색한 애니메이션도 같은 방식으로 개선한다. 순수 수치·수식 기반 본 애니메이션은 보조 움직임처럼 적절한 곳에만 사용하고, 일반적인 주요 행동은 authored frame 방식으로 만든다. 단순히 몸이나 검을 위아래로 흔드는 조잡한 동작을 완료 결과로 두지 않는다.
+
+#### 애니메이션 구조
+
+- Polygon/Vector 캐릭터와 본 계층은 유지한다. 새 action clip은 시간순 pose frame 목록을 소유하고 각 frame이 root, 몸통, 머리, 팔·다리, 장비와 무기의 local transform을 명시한다.
+- 각 pose frame은 고정 duration과 다음 frame으로 넘어갈 때의 authored transition 방식(`hold`, 제한적 interpolation, 빠른 snap 등)을 가진다. 모든 본에 하나의 전역 sine/ease 수식을 적용해 동작을 생성하지 않는다.
+- gameplay command owner가 startup·active·recovery, stamina, cancel과 hit 판정을 계속 소유한다. Animation clip은 같은 authored timeline의 현재 phase를 투영할 뿐 combat timing을 임의로 바꾸지 않는다.
+- 무기 접촉 frame, 회피 무적 frame, body collision 통과 frame과 발이 지면에 닿는 frame은 clip의 안정된 ID로 gameplay timeline과 대응해 화면 pose와 실제 판정이 어긋나지 않게 한다.
+- 캐릭터·장비 variant는 같은 clip을 공유할 수 있지만 신체 비율, 무기 길이와 장비 landmark가 달라 silhouette가 무너지면 variant별 pose 보정을 authored data로 제공한다.
+
+#### 구르기 clip
+
+- 구르기는 준비 자세에서 무게중심을 낮추고, 어깨와 머리를 말아 넣고, 팔과 검을 몸에 붙인 뒤, 다리가 지면을 차고 몸이 회전하며, 반대발로 풀려나오는 연속 pose를 가진다.
+- 캐릭터 전체 polygon group을 중심점 기준으로 일정 각도 회전시키는 표현을 사용하지 않는다. 몸통·골반·머리·팔다리의 상대 위치가 frame마다 달라 실제 사람이 구르는 silhouette가 보여야 한다.
+- roll-through body collision, 회피 active 구간과 종료 위치는 앞선 전투 이동 feedback의 규칙을 따르며 시각 frame과 판정 frame이 일치해야 한다.
+- 구르기 종료 pose는 입력 방향과 현재 이동 흐름으로 자연스럽게 연결되고 강제 idle이나 별도 멈춤을 만들지 않는다.
+
+#### 주요 action clip
+
+- Basic·Strong·launcher·shield counter는 각각 준비, 힘 축적, 접촉, follow-through와 회수 pose를 직접 authored한다. 같은 팔을 위아래로 이동하거나 검 각도만 왕복해 서로 다른 공격으로 보이게 하지 않는다.
+- guard, just guard, 피격, guard break, jump, fall, landing, NPC 작업과 적 공격도 실제 사용자 화면에서 어색함이 확인되면 frame-authored clip으로 전환한다.
+- hitstop 동안 contact pose를 유지하고 재생 재개 뒤 follow-through로 이어진다. 화면 흔들림이나 파티클로 불완전한 본 동작을 가리지 않는다.
+- idle 호흡, 천·가방·머리카락의 작은 지연, 조준 보정, 경사면 발 위치와 미세한 반동처럼 연속 수치가 자연스러운 보조 요소에는 procedural animation을 사용할 수 있다. 이는 주요 pose를 대체하지 않고 위에 제한적으로 합성한다.
+
+#### 제작·재사용과 확인 기준
+
+- 먼저 실제 Player의 idle/run/jump/landing/roll/Basic/Strong/guard/hit 핵심 clip 세트를 목표 품질로 완성하고 같은 authoring 구조를 NPC, 인간형 적과 비인간 관절형 몹에 재사용한다.
+- 각 clip의 frame contact sheet 또는 pose strip을 생성해 frame별 실루엣, 발 지지, 무기 궤적과 장비 관통을 비교할 수 있게 한다.
+- 실제 게임 속도와 viewport에서 재생해 동작이 pose 사이에서 떨리거나 관절이 뒤집히고, 몸체·무기가 순간 이동하거나 공격 판정과 접촉 pose가 어긋나는지 확인한다.
+- 구르기 시작/중간/종료, 각 공격의 startup/contact/follow-through, 피격·가드·착지 frame을 stable Visual QA 상태로 직접 시작하고 desktop/mobile PNG와 실제 연속 재생을 모두 확인한다.
+- reduced-motion은 카메라 흔들림과 과한 보조 motion을 줄일 수 있지만 action을 이해하는 핵심 pose frame을 삭제하지 않는다.
+- 본 frame authoring을 사용했다는 사실만으로 완료하지 않는다. 현재 그래픽 Quality 선언에 맞는 무게중심, 타격 방향, silhouette와 실제 조작 감각이 독립 검증되어야 한다.
+
 ## Feedback Guide
 
 실제 제품을 사용하며 느낀 문제, 기대한 결과와 관찰한 상황을 가능한 한 원문에 가깝게 적는다.
