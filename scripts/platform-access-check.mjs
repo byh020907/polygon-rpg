@@ -107,6 +107,11 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(css, /\.game-semantic-status|\.visually-hidden/);
   assert.match(css, /@media \(min-width: 901px\)[\s\S]*height: 100dvh;[\s\S]*overflow: hidden;/);
   assert.match(css, /calc\(\(100dvh - 78px\) \* 16 \/ 9\)/);
+  assert.match(
+    css,
+    /--game-safe-top: max\(4px, env\(safe-area-inset-top\)\);[\s\S]*padding: var\(--game-safe-top\) var\(--game-safe-right\) var\(--game-safe-bottom\)[\s\S]*height: 100%;/,
+    '설치형 landscape도 safe-area를 보존하고 viewport 안에서만 canvas를 맞춰야 한다.',
+  );
   assert.doesNotMatch(html, /MENTAL|정신력|vital-track--mental/);
   assert.doesNotMatch(shell, /\bmental(?:Percent)?\b|maxMental/);
   assert.doesNotMatch(css, /vital-track--mental/);

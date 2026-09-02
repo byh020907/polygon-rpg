@@ -421,16 +421,18 @@ dd {
 /* Game view */
 
 .game-screen {
-  padding-top: max(8px, env(safe-area-inset-top));
-  padding-right: max(8px, env(safe-area-inset-right));
-  padding-bottom: max(8px, env(safe-area-inset-bottom));
-  padding-left: max(8px, env(safe-area-inset-left));
+  --game-safe-top: max(8px, env(safe-area-inset-top));
+  --game-safe-right: max(8px, env(safe-area-inset-right));
+  --game-safe-bottom: max(8px, env(safe-area-inset-bottom));
+  --game-safe-left: max(8px, env(safe-area-inset-left));
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   width: min(100%, 1500px);
   min-height: 100vh;
   margin: 0 auto;
-  padding: clamp(8px, 1.5vw, 20px) clamp(8px, 1.8vw, 24px) 10px;
+  padding: max(clamp(8px, 1.5vw, 20px), var(--game-safe-top))
+    max(clamp(8px, 1.8vw, 24px), var(--game-safe-right)) max(10px, var(--game-safe-bottom))
+    max(clamp(8px, 1.8vw, 24px), var(--game-safe-left));
   background: radial-gradient(circle at 50% 0%, rgb(50 104 99 / 15%), transparent 42rem), #05090d;
 }
 
@@ -2646,19 +2648,24 @@ kbd {
 @media (pointer: coarse) and (orientation: landscape),
   (max-width: 900px) and (orientation: landscape) {
   .game-screen {
+    --game-safe-top: max(4px, env(safe-area-inset-top));
+    --game-safe-right: max(4px, env(safe-area-inset-right));
+    --game-safe-bottom: max(4px, env(safe-area-inset-bottom));
+    --game-safe-left: max(4px, env(safe-area-inset-left));
     grid-template-rows: minmax(0, 1fr);
     width: 100%;
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
-    padding: 4px;
+    padding: var(--game-safe-top) var(--game-safe-right) var(--game-safe-bottom)
+      var(--game-safe-left);
   }
 
   .game-viewport {
     align-self: center;
     justify-self: center;
-    width: min(100%, calc((100dvh - 8px) * 16 / 9));
-    height: calc(100dvh - 8px);
+    width: min(100%, calc((100dvh - var(--game-safe-top) - var(--game-safe-bottom)) * 16 / 9));
+    height: 100%;
   }
 
   .game-viewport canvas {
