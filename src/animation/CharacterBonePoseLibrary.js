@@ -163,6 +163,33 @@ function sampleHitReaction(intensity, knockedOut) {
       });
 }
 
+const AUTHORED_ARM_TRANSFORMS = Object.freeze({
+  neutral: Object.freeze({
+    nearElbow: Object.freeze({ x: 15, y: -18, z: 3, rotation: 0.3 }),
+    nearHand: Object.freeze({ x: 15, y: -15, z: 2, rotation: 0.12 }),
+    farElbow: Object.freeze({ x: -15, y: -15, z: -3, rotation: -0.3 }),
+    farHand: Object.freeze({ x: -20, y: -13, z: -2, rotation: -0.12 }),
+  }),
+  windup: Object.freeze({
+    nearElbow: Object.freeze({ x: -10, y: -29, z: 5, rotation: -0.42 }),
+    nearHand: Object.freeze({ x: -16, y: -23, z: 4, rotation: -0.3 }),
+    farElbow: Object.freeze({ x: -9, y: -11, z: -3, rotation: 0.16 }),
+    farHand: Object.freeze({ x: -14, y: -10, z: -2, rotation: 0.08 }),
+  }),
+  contact: Object.freeze({
+    nearElbow: Object.freeze({ x: 22, y: 5, z: 5, rotation: 0.45 }),
+    nearHand: Object.freeze({ x: 26, y: 1, z: 4, rotation: 0.2 }),
+    farElbow: Object.freeze({ x: 8, y: -5, z: -3, rotation: -0.16 }),
+    farHand: Object.freeze({ x: 11, y: -6, z: -2, rotation: -0.08 }),
+  }),
+  followThrough: Object.freeze({
+    nearElbow: Object.freeze({ x: 24, y: 13, z: 4, rotation: 0.32 }),
+    nearHand: Object.freeze({ x: 29, y: 8, z: 3, rotation: 0.12 }),
+    farElbow: Object.freeze({ x: 3, y: -10, z: -3, rotation: -0.12 }),
+    farHand: Object.freeze({ x: 7, y: -11, z: -2, rotation: -0.08 }),
+  }),
+});
+
 function authoredRollFrame({
   id,
   at,
@@ -177,7 +204,10 @@ function authoredRollFrame({
   leadFootY = CHARACTER_FOOT_Y,
   depth = 0,
   capeLift = 0,
+  armPose = 'neutral',
 }) {
+  const arm = AUTHORED_ARM_TRANSFORMS[armPose];
+  if (!arm) throw new RangeError(`알 수 없는 authored arm pose입니다: ${armPose}`);
   const chestLength = 34;
   const headLength = 17;
   const chestX = Math.sin(bodyLean) * chestLength;
@@ -195,11 +225,11 @@ function authoredRollFrame({
     neck: headTilt * 0.28,
     head: headTilt * 0.72,
     nearShoulder: -0.14,
-    nearElbow: 0.3,
-    nearHand: 0.12,
+    nearElbow: arm.nearElbow.rotation,
+    nearHand: arm.nearHand.rotation,
     farShoulder: 0.14,
-    farElbow: -0.3,
-    farHand: -0.12,
+    farElbow: arm.farElbow.rotation,
+    farHand: arm.farHand.rotation,
     nearHip: -bodyLean * 0.1,
     nearKnee: bodyLean * 0.12,
     nearFoot: 0,
@@ -221,11 +251,11 @@ function authoredRollFrame({
           neck: { x: 1, y: -18, z: depth },
           head: { x: headX, y: headY, z: depth },
           nearShoulder: { x: 8, y: -5, z: 4 + depth },
-          nearElbow: { x: 9, y: 17, z: 3 + depth },
-          nearHand: { x: 8, y: 13, z: 2 + depth },
+          nearElbow: { x: arm.nearElbow.x, y: arm.nearElbow.y, z: arm.nearElbow.z + depth },
+          nearHand: { x: arm.nearHand.x, y: arm.nearHand.y, z: arm.nearHand.z + depth },
           farShoulder: { x: -8, y: -5, z: -4 + depth },
-          farElbow: { x: -9, y: 17, z: -3 + depth },
-          farHand: { x: -8, y: 13, z: -2 + depth },
+          farElbow: { x: arm.farElbow.x, y: arm.farElbow.y, z: arm.farElbow.z + depth },
+          farHand: { x: arm.farHand.x, y: arm.farHand.y, z: arm.farHand.z + depth },
           nearHip: { x: 8, y: hipY, z: 2 },
           nearKnee: { x: 0, y: kneeY, z: 1 },
           nearFoot: { x: leadFootX - 8, y: leadFootY - legBaseY, z: 0 },
@@ -328,17 +358,317 @@ const ROLL_POSE_FRAMES = Object.freeze([
   }),
 ]);
 
+// Primary grounded attacks deliberately use the same local-3D, frame-authored format as roll.
+// Combat owns timing/contact; these stable pose IDs only project that timeline into cutout joints.
+const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
+  slash: Object.freeze([
+    authoredRollFrame({
+      id: 'slash-ready',
+      at: 0,
+      transition: 'hold',
+      rootY: 1,
+      bodyLean: -0.04,
+      headTilt: 0.03,
+      rearFootX: -14,
+      leadFootX: 14,
+      capeLift: 0.2,
+      armPose: 'neutral',
+    }),
+    authoredRollFrame({
+      id: 'slash-windup',
+      at: 0.24,
+      transition: 'hold',
+      rootX: -5,
+      rootY: 2,
+      bodyLean: -0.22,
+      headTilt: 0.1,
+      rearFootX: -17,
+      leadFootX: 11,
+      depth: -0.55,
+      capeLift: 0.46,
+      armPose: 'windup',
+    }),
+    authoredRollFrame({
+      id: 'slash-contact',
+      at: 11 / 31,
+      transition: 'snap',
+      rootX: 8,
+      rootY: 3,
+      bodyLean: 0.18,
+      headTilt: -0.12,
+      rearFootX: -12,
+      leadFootX: 20,
+      depth: 0.75,
+      capeLift: 0.88,
+      armPose: 'contact',
+    }),
+    authoredRollFrame({
+      id: 'slash-follow-through',
+      at: 21 / 31,
+      transition: 'linear',
+      rootX: 11,
+      rootY: 4,
+      bodyLean: 0.29,
+      headTilt: -0.16,
+      rearFootX: -8,
+      leadFootX: 23,
+      depth: 0.45,
+      capeLift: 0.75,
+      armPose: 'followThrough',
+    }),
+    authoredRollFrame({
+      id: 'slash-recover',
+      at: 1,
+      transition: 'linear',
+      rootX: 1,
+      rootY: 0,
+      bodyLean: 0.02,
+      headTilt: 0,
+      rearFootX: -9,
+      leadFootX: 9,
+      capeLift: 0.18,
+      armPose: 'neutral',
+    }),
+  ]),
+  heavy: Object.freeze([
+    authoredRollFrame({
+      id: 'heavy-ready',
+      at: 0,
+      transition: 'hold',
+      rootY: 2,
+      bodyLean: -0.06,
+      headTilt: 0.03,
+      rearFootX: -16,
+      leadFootX: 16,
+      capeLift: 0.2,
+      armPose: 'neutral',
+    }),
+    authoredRollFrame({
+      id: 'heavy-load',
+      at: 0.27,
+      transition: 'hold',
+      rootX: -8,
+      rootY: 7,
+      bodyLean: -0.34,
+      headTilt: 0.17,
+      rearFootX: -22,
+      leadFootX: 10,
+      depth: -0.7,
+      capeLift: 0.58,
+      armPose: 'windup',
+    }),
+    authoredRollFrame({
+      id: 'heavy-contact',
+      at: 16 / 46,
+      transition: 'snap',
+      rootX: 10,
+      rootY: 10,
+      bodyLean: 0.31,
+      headTilt: -0.2,
+      rearFootX: -12,
+      leadFootX: 25,
+      depth: 0.8,
+      capeLift: 1,
+      armPose: 'contact',
+    }),
+    authoredRollFrame({
+      id: 'heavy-follow-through',
+      at: 31 / 46,
+      transition: 'linear',
+      rootX: 13,
+      rootY: 8,
+      bodyLean: 0.43,
+      headTilt: -0.22,
+      rearFootX: -8,
+      leadFootX: 26,
+      depth: 0.42,
+      capeLift: 0.86,
+      armPose: 'followThrough',
+    }),
+    authoredRollFrame({
+      id: 'heavy-recover',
+      at: 1,
+      transition: 'linear',
+      rootX: 1,
+      rootY: 0,
+      bodyLean: 0.02,
+      headTilt: 0,
+      rearFootX: -9,
+      leadFootX: 9,
+      capeLift: 0.2,
+      armPose: 'neutral',
+    }),
+  ]),
+  rising: Object.freeze([
+    authoredRollFrame({
+      id: 'rising-ready',
+      at: 0,
+      transition: 'hold',
+      rootY: 3,
+      bodyLean: 0.08,
+      headTilt: -0.04,
+      rearFootX: -18,
+      leadFootX: 13,
+      capeLift: 0.3,
+      armPose: 'neutral',
+    }),
+    authoredRollFrame({
+      id: 'rising-load',
+      at: 0.25,
+      transition: 'hold',
+      rootX: -4,
+      rootY: 10,
+      bodyLean: 0.3,
+      headTilt: -0.13,
+      rearFootX: -23,
+      leadFootX: 7,
+      depth: 0.55,
+      capeLift: 0.66,
+      armPose: 'windup',
+    }),
+    authoredRollFrame({
+      id: 'rising-contact',
+      at: 13 / 36,
+      transition: 'snap',
+      rootX: 6,
+      rootY: -7,
+      bodyLean: -0.27,
+      headTilt: 0.15,
+      rearFootX: -12,
+      rearFootY: 70,
+      leadFootX: 18,
+      leadFootY: 67,
+      depth: -0.72,
+      capeLift: 0.98,
+      armPose: 'contact',
+    }),
+    authoredRollFrame({
+      id: 'rising-follow-through',
+      at: 25 / 36,
+      transition: 'linear',
+      rootX: 8,
+      rootY: -4,
+      bodyLean: -0.19,
+      headTilt: 0.1,
+      rearFootX: -10,
+      rearFootY: 69,
+      leadFootX: 20,
+      leadFootY: 70,
+      depth: -0.36,
+      capeLift: 0.78,
+      armPose: 'followThrough',
+    }),
+    authoredRollFrame({
+      id: 'rising-recover',
+      at: 1,
+      transition: 'linear',
+      rootY: 0,
+      bodyLean: 0.02,
+      headTilt: 0,
+      rearFootX: -9,
+      leadFootX: 9,
+      capeLift: 0.18,
+      armPose: 'neutral',
+    }),
+  ]),
+  shieldBash: Object.freeze([
+    authoredRollFrame({
+      id: 'counter-ready',
+      at: 0,
+      transition: 'hold',
+      rootX: -3,
+      rootY: 4,
+      bodyLean: -0.15,
+      headTilt: 0.06,
+      rearFootX: -17,
+      leadFootX: 15,
+      depth: -0.3,
+      capeLift: 0.18,
+      armPose: 'neutral',
+    }),
+    authoredRollFrame({
+      id: 'counter-load',
+      at: 0.24,
+      transition: 'hold',
+      rootX: -8,
+      rootY: 5,
+      bodyLean: -0.26,
+      headTilt: 0.12,
+      rearFootX: -20,
+      leadFootX: 12,
+      depth: -0.6,
+      capeLift: 0.36,
+      armPose: 'windup',
+    }),
+    authoredRollFrame({
+      id: 'counter-contact',
+      at: 9 / 26,
+      transition: 'snap',
+      rootX: 14,
+      rootY: 4,
+      bodyLean: 0.26,
+      headTilt: -0.1,
+      rearFootX: -12,
+      leadFootX: 27,
+      depth: 0.72,
+      capeLift: 0.76,
+      armPose: 'contact',
+    }),
+    authoredRollFrame({
+      id: 'counter-follow-through',
+      at: 18 / 26,
+      transition: 'linear',
+      rootX: 12,
+      rootY: 5,
+      bodyLean: 0.16,
+      headTilt: -0.06,
+      rearFootX: -10,
+      leadFootX: 24,
+      depth: 0.34,
+      capeLift: 0.54,
+      armPose: 'followThrough',
+    }),
+    authoredRollFrame({
+      id: 'counter-recover',
+      at: 1,
+      transition: 'linear',
+      rootX: 1,
+      rootY: 1,
+      bodyLean: 0.02,
+      headTilt: 0,
+      rearFootX: -9,
+      leadFootX: 9,
+      capeLift: 0.18,
+      armPose: 'neutral',
+    }),
+  ]),
+});
+
+const AUTHORED_COMBAT_FRAME_ANCHORS = Object.freeze({
+  slash: Object.freeze({ contact: 11 / 31, followThrough: 21 / 31 }),
+  heavy: Object.freeze({ contact: 16 / 46, followThrough: 31 / 46 }),
+  rising: Object.freeze({ contact: 13 / 36, followThrough: 25 / 36 }),
+  shieldBash: Object.freeze({ contact: 9 / 26, followThrough: 18 / 26 }),
+});
+
 function sampleAuthoredPoseFrames(frames, progress) {
   const boundedProgress = clamp(progress);
   const nextIndex = frames.findIndex((frame) => frame.at > boundedProgress);
-  if (nextIndex <= 0) return frames.at(-1).value;
+  if (nextIndex <= 0) {
+    const frame = frames.at(-1);
+    return Object.freeze({ ...frame.value, frameId: frame.id ?? null });
+  }
   const previous = frames[nextIndex - 1];
   const next = frames[nextIndex];
-  if (next.transition === 'snap') return previous.value;
+  if (next.transition === 'snap') return Object.freeze({ ...previous.value, frameId: previous.id });
   const amount = (boundedProgress - previous.at) / (next.at - previous.at);
-  if (amount <= Number.EPSILON) return previous.value;
-  if (amount >= 1 - Number.EPSILON) return next.value;
-  return blendBonePose(previous.value, next.value, next.transition === 'hold' ? 0 : amount);
+  if (amount <= Number.EPSILON) return Object.freeze({ ...previous.value, frameId: previous.id });
+  if (amount >= 1 - Number.EPSILON)
+    return Object.freeze({ ...next.value, frameId: next.id ?? null });
+  return Object.freeze({
+    ...blendBonePose(previous.value, next.value, next.transition === 'hold' ? 0 : amount),
+    frameId: previous.id,
+  });
 }
 
 function sampleRoll(progress) {
@@ -346,7 +676,51 @@ function sampleRoll(progress) {
   return Object.freeze({ ...sampled, rollMarker: rollTimelineMarkerAt(progress) });
 }
 
+function remapAuthoredCombatProgress(motionId, progress, frame) {
+  const anchors = AUTHORED_COMBAT_FRAME_ANCHORS[motionId];
+  const durationFrames = frame?.durationFrames ?? frame?.duration;
+  const startupFrames = frame?.startupFrames ?? frame?.startupEnd;
+  const activeFrames = frame?.activeFrames ?? frame?.activeEnd - startupFrames;
+  if (
+    !anchors ||
+    !Number.isFinite(durationFrames) ||
+    !Number.isFinite(startupFrames) ||
+    !Number.isFinite(activeFrames) ||
+    durationFrames <= 0
+  ) {
+    return progress;
+  }
+  const activeStart = startupFrames / durationFrames;
+  const activeEnd = (startupFrames + activeFrames) / durationFrames;
+  const bounded = clamp(progress);
+  if (bounded <= activeStart) {
+    return activeStart <= Number.EPSILON
+      ? anchors.contact
+      : (bounded / activeStart) * anchors.contact;
+  }
+  if (bounded <= activeEnd) {
+    const span = Math.max(Number.EPSILON, activeEnd - activeStart);
+    return (
+      anchors.contact + ((bounded - activeStart) / span) * (anchors.followThrough - anchors.contact)
+    );
+  }
+  const span = Math.max(Number.EPSILON, 1 - activeEnd);
+  return anchors.followThrough + ((bounded - activeEnd) / span) * (1 - anchors.followThrough);
+}
+
+function sampleAuthoredCombat(motionState) {
+  const frames = AUTHORED_COMBAT_POSE_FRAMES[motionState.id];
+  return frames
+    ? sampleAuthoredPoseFrames(
+        frames,
+        remapAuthoredCombatProgress(motionState.id, motionState.progress, motionState.frame),
+      )
+    : null;
+}
+
 function sampleCombat(motionState) {
+  const authored = sampleAuthoredCombat(motionState);
+  if (authored) return authored;
   const progress = clamp(motionState.progress);
   const action = Math.sin(progress * Math.PI);
 

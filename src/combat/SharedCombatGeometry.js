@@ -75,20 +75,37 @@ export function samplePlayerCombatGeometry({
 }) {
   const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
-  const rightArm = PLAYER_IK_SOLVER.solve({
-    root: { x: bodyX + 17, y: bodyY - 25 },
-    target: { x: bodyX + targetPose.handTarget.x, y: bodyY + targetPose.handTarget.y },
-    upperLength: 38,
-    lowerLength: 35,
-    bendDirection: 1,
-  });
-  const leftArm = PLAYER_IK_SOLVER.solve({
-    root: { x: bodyX - 17, y: bodyY - 24 },
-    target: { x: bodyX + targetPose.shieldTarget.x, y: bodyY + targetPose.shieldTarget.y },
-    upperLength: 34,
-    lowerLength: 31,
-    bendDirection: -1,
-  });
+  const projectedJoints = bonePose.projectedJoints ?? null;
+  const projectedArm = (shoulder, elbow, hand) =>
+    Object.freeze({
+      root: { x: position.x + shoulder.x, y: position.y + shoulder.y },
+      elbow: { x: position.x + elbow.x, y: position.y + elbow.y },
+      hand: { x: position.x + hand.x, y: position.y + hand.y },
+    });
+  const rightArm =
+    projectedJoints && bonePose.frameId
+      ? projectedArm(
+          projectedJoints.nearShoulder,
+          projectedJoints.nearElbow,
+          projectedJoints.nearHand,
+        )
+      : PLAYER_IK_SOLVER.solve({
+          root: { x: bodyX + 17, y: bodyY - 25 },
+          target: { x: bodyX + targetPose.handTarget.x, y: bodyY + targetPose.handTarget.y },
+          upperLength: 38,
+          lowerLength: 35,
+          bendDirection: 1,
+        });
+  const leftArm =
+    projectedJoints && bonePose.frameId
+      ? projectedArm(projectedJoints.farShoulder, projectedJoints.farElbow, projectedJoints.farHand)
+      : PLAYER_IK_SOLVER.solve({
+          root: { x: bodyX - 17, y: bodyY - 24 },
+          target: { x: bodyX + targetPose.shieldTarget.x, y: bodyY + targetPose.shieldTarget.y },
+          upperLength: 34,
+          lowerLength: 31,
+          bendDirection: -1,
+        });
   const bladeOrigin = {
     x: rightArm.hand.x + Math.cos(targetPose.swordAngle) * 5,
     y: rightArm.hand.y + Math.sin(targetPose.swordAngle) * 5,

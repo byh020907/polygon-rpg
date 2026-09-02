@@ -192,22 +192,36 @@ function createCharacterItems(
   const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const projectedJoints = bonePose.projectedJoints ?? null;
   const swordRotation = targetPose.swordAngle;
-  const rightShoulder = { x: bodyX + 17, y: bodyY - 25 };
-  const rightArm = ARM_IK_SOLVER.solve({
-    root: rightShoulder,
-    target: { x: bodyX + targetPose.handTarget.x, y: bodyY + targetPose.handTarget.y },
-    upperLength: 38,
-    lowerLength: 35,
-    bendDirection: 1,
-  });
-  const leftShoulder = { x: bodyX - 17, y: bodyY - 24 };
-  const leftArm = ARM_IK_SOLVER.solve({
-    root: leftShoulder,
-    target: { x: bodyX + targetPose.shieldTarget.x, y: bodyY + targetPose.shieldTarget.y },
-    upperLength: 34,
-    lowerLength: 31,
-    bendDirection: -1,
-  });
+  const projectedArm = (shoulder, elbow, hand) =>
+    Object.freeze({
+      root: { x: position.x + shoulder.x, y: position.y + shoulder.y },
+      elbow: { x: position.x + elbow.x, y: position.y + elbow.y },
+      hand: { x: position.x + hand.x, y: position.y + hand.y },
+    });
+  const rightArm =
+    projectedJoints && bonePose.frameId
+      ? projectedArm(
+          projectedJoints.nearShoulder,
+          projectedJoints.nearElbow,
+          projectedJoints.nearHand,
+        )
+      : ARM_IK_SOLVER.solve({
+          root: { x: bodyX + 17, y: bodyY - 25 },
+          target: { x: bodyX + targetPose.handTarget.x, y: bodyY + targetPose.handTarget.y },
+          upperLength: 38,
+          lowerLength: 35,
+          bendDirection: 1,
+        });
+  const leftArm =
+    projectedJoints && bonePose.frameId
+      ? projectedArm(projectedJoints.farShoulder, projectedJoints.farElbow, projectedJoints.farHand)
+      : ARM_IK_SOLVER.solve({
+          root: { x: bodyX - 17, y: bodyY - 24 },
+          target: { x: bodyX + targetPose.shieldTarget.x, y: bodyY + targetPose.shieldTarget.y },
+          upperLength: 34,
+          lowerLength: 31,
+          bendDirection: -1,
+        });
   const rearHip = { x: bodyX - 8, y: bodyY + 27 };
   const rearLeg = ARM_IK_SOLVER.solve({
     root: rearHip,

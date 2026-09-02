@@ -4,6 +4,11 @@ import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibra
 import { retargetMotionKeyframes } from '../src/animation/MotionClipRetargeter.js';
 import { MOTION_REFERENCE_CATALOG } from '../src/animation/MotionReferenceCatalog.js';
 import { ROLL_TIMELINE_MARKERS, rollTimelineMarkerAt } from '../src/animation/RollTimeline.js';
+import {
+  CombatCommandController,
+  combatMotionFrameData,
+} from '../src/combat/CombatCommandController.js';
+import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
@@ -103,6 +108,80 @@ assert.ok(
     authoredMidRoll.projectedJoints.farShoulder.depth,
   'orthographic projection must preserve authored near/far depth order',
 );
+
+for (const [motionId, contactFrameId] of Object.entries({
+  slash: 'slash-contact',
+  heavy: 'heavy-contact',
+  rising: 'rising-contact',
+  shieldBash: 'counter-contact',
+})) {
+  for (const timingProfile of [{}, ...EQUIPMENT_PROFILES.map(({ combatTiming }) => combatTiming)]) {
+    const frame = combatMotionFrameData(motionId, timingProfile);
+    const activeProgress = frame.startupFrames / frame.durationFrames;
+    const lastActiveProgress =
+      (frame.startupFrames + frame.activeFrames - 1) / frame.durationFrames;
+    const strip = [
+      activeProgress - 1 / frame.durationFrames,
+      activeProgress,
+      lastActiveProgress,
+    ].map((progress) =>
+      sampleCharacterBonePose({
+        motionState: Object.freeze({ id: motionId, progress, frame }),
+      }),
+    );
+    assert.notEqual(
+      strip[0].frameId,
+      contactFrameId,
+      `${motionId} must retain a windup pose before the combat active window`,
+    );
+    assert.equal(
+      strip[1].frameId,
+      contactFrameId,
+      `${motionId} contact pose must start on the first active combat frame`,
+    );
+    assert.equal(
+      strip[2].frameId,
+      contactFrameId,
+      `${motionId} contact pose must remain through the final active combat frame`,
+    );
+    assert.ok(
+      strip.every((pose) => pose.projectedJoints?.nearHand && pose.projectedJoints?.farFoot),
+      `${motionId} must project every authored combat frame through the local 3D skeleton`,
+    );
+    assert.ok(
+      strip[0].projectedJoints.nearHand.y !== strip[1].projectedJoints.nearHand.y,
+      `${motionId} must author a distinct local 3D weapon-arm transform at contact`,
+    );
+  }
+}
+
+for (const { id: equipmentId, combatTiming } of EQUIPMENT_PROFILES) {
+  for (const [motionId, contactFrameId] of Object.entries({
+    slash: 'slash-contact',
+    heavy: 'heavy-contact',
+    rising: 'rising-contact',
+    shieldBash: 'counter-contact',
+  })) {
+    const controller = new CombatCommandController({ timingProfile: combatTiming });
+    controller.start(motionId);
+    const frame = controller.getMotionFrameData(motionId);
+    controller.update(frame.startupFrames / 60, EMPTY_INPUT, { acceptCommands: false });
+    const snapshot = controller.snapshot();
+    assert.equal(snapshot.phase, 'strike', `${equipmentId} ${motionId} must reach an active frame`);
+    const pose = sampleCharacterBonePose({
+      motionState: Object.freeze({
+        id: snapshot.id,
+        progress: snapshot.progress,
+        frame: snapshot.frame,
+      }),
+    });
+    assert.equal(
+      pose.frameId,
+      contactFrameId,
+      `${equipmentId} ${motionId} runtime snapshot must select the active contact pose`,
+    );
+  }
+}
 
 function withScene(run) {
   const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
@@ -206,6 +285,7 @@ console.log(
       '3d-skeleton-side-projection',
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',
+      'authored-basic-strong-launcher-and-counter-pose-strips',
       'normal-enemy-body-collision',
       'normal-enemy-roll-through',
       'jump-landing-held-movement-continuity',

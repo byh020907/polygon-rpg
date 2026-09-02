@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-feedback-priority · skeleton-projection-to-combat-continuity`
+`human-feedback-priority · player-authored-action-clip-foundation`
 
 ## Project Direction Comparison
 
@@ -16,7 +16,7 @@
 | ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Persona                 | gap    | 정식 의뢰·동년배 rival·붕괴 구조 선택·각성 흐름과 폐광 combat의 고철 cutout 품질을 유지한다. 다섯 지역은 주목표 1개와 현장 확인형 연결 이슈 2개로 교차하며 작전 지도에서 한눈에 읽힌다. 그러나 20~30분 도입의 탐색·전투 밀도, 여러 지역 반복 정찰, 연결 이슈의 고유 encounter, final battle과 ending은 아직 없어 시작부터 결말까지 조작·서사·시각 개성이 완결되지 않았다.                                                                                                         |
 | Quality                 | gap    | 전체 `npm run check`, 실제 92/120구간 focused action trace, Codex in-app Browser desktop/mobile와 독립 verifier를 통과한 단일-owner issue window는 demo식 요청 나열보다 플레이 판단이 선명하다. 같은 수준의 cast·scene·combat polish가 약 10시간 전체 캠페인과 결말로 확장되지 않아 유료 완성 게임 수준에는 아직 Gap이 있다.                                                                                                                                                      |
-| Human Feedback Priority | gap    | `INBOX.md`의 전투 이동/전환과 animation feedback은 같은 Goal에서 ① immutable local 3D joint/pose와 fixed side-view projection ② license·source·mapping을 기록하는 local retarget/import 경계 ③ frame-authored clip ④ roll collision·landing·held input 결합 순으로 구현한다. 현재 normal body separation, active-roll 통과, jump arc, landing/portal held input fixture와 roll 3D projection은 PASS이나 Player의 전체 핵심 clip set·mobile visual 연속 재생과 독립 검증은 남았다. |
+| Human Feedback Priority | gap    | `INBOX.md`의 전투 이동/전환과 animation feedback은 같은 Goal에서 ① immutable local 3D joint/pose와 fixed side-view projection ② license·source·mapping을 기록하는 local retarget/import 경계 ③ frame-authored clip ④ roll collision·landing·held input 결합 순으로 구현한다. normal body separation, active-roll 통과, jump arc, landing/portal held input fixture와 roll 3D projection에 더해 Player의 Basic·Strong·launcher·shield counter가 setup/contact/follow-through stable frame ID와 local 3D arm·hand projection으로 PASS했다. 각 contact pose는 shipped equipment 전체 timing profile의 CombatCommandController snapshot 첫/마지막 active 60Hz frame과 직접 고정되고, Renderer·shared combat geometry가 같은 projected attachment를 사용한다. `npm run test:combat`, focused lint/format, in-app Browser desktop 1280×720·mobile 844×390 QA는 PASS. idle/run/jump/landing/guard/hit clip 전환과 실제 연속 재생·독립 검증은 남았다. |
 
 ## Product Desired State Comparison
 
