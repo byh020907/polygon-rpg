@@ -16,6 +16,7 @@ import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
+import { createSceneArtDirectionReadModel } from './ScrapArtDirectionProfiles.js';
 import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
 import { RegionExpansionProgress } from './encounter/RegionExpansionProgress.js';
 import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from './journey/FirstJourneyDungeonSignature.js';
@@ -428,6 +429,7 @@ export class GameScene extends SceneNode {
     scrapAwakeningProfile,
     characterPresentationCatalog,
     playerPresentationProfileId,
+    artDirectionProfile = null,
     enchantmentCatalog,
     progressionSnapshot = null,
   } = {}) {
@@ -449,6 +451,7 @@ export class GameScene extends SceneNode {
       playerPresentationProfileId,
       'Player',
     );
+    this.artDirectionProfile = artDirectionProfile;
     this.enchantmentCatalog = assertEnchantmentCatalog(enchantmentCatalog);
     const initialProgression =
       progressionSnapshot ??
@@ -1017,6 +1020,12 @@ export class GameScene extends SceneNode {
           enemy.aiState = 'hitstun';
           enemy.hitstunSeconds = 0.18;
           enemy.hitFlashSeconds = 0.12;
+          this.hitStopSeconds = 0.045;
+          this.combatCameraFeedback.trigger({
+            direction: 1,
+            strength: 3.8,
+            durationSeconds: 0.1,
+          });
           emit(COMBAT_EVENT_TYPE.HIT);
         }
         break;
@@ -3713,6 +3722,25 @@ export class GameScene extends SceneNode {
           }),
         })
       : null;
+    const artDirection = createSceneArtDirectionReadModel(this.artDirectionProfile, {
+      roomId: activeRoom.id,
+      combatEvents,
+      player: activeRoom.presentationOnly
+        ? null
+        : {
+            position: renderPosition,
+            groundY: activeRoom.groundY,
+            scale: characterRenderScale,
+          },
+      enemy: encounterRender.enemy
+        ? {
+            position: encounterRender.enemy.position,
+            groundY: activeRoom.groundY,
+            width: encounterRender.enemy.posture ? 92 : 58,
+            height: encounterRender.enemy.posture ? 112 : 86,
+          }
+        : null,
+    });
     const playerItems = activeRoom.presentationOnly ? [] : characterItems;
     const items = Object.freeze(
       [...mapSnapshot.renderItems, ...encounterItems, ...playerItems, ...combatEffectItems]
@@ -3812,6 +3840,7 @@ export class GameScene extends SceneNode {
           : null,
       }),
       combatEnemy,
+      artDirection,
       items,
     });
     this.renderFrameCreated.emit(renderFrame);

@@ -436,44 +436,75 @@ dd {
   top: clamp(10px, 1.5vw, 18px);
   left: clamp(10px, 1.5vw, 18px);
   display: grid;
-  gap: 2px;
-  width: clamp(210px, 25vw, 350px);
-  padding: 8px 10px 7px;
-  background: linear-gradient(90deg, rgb(3 7 9 / 82%), rgb(3 7 9 / 46%) 82%, transparent);
-  filter: drop-shadow(0 2px 3px #000);
+  gap: 4px;
+  width: clamp(240px, 25vw, 360px);
+  padding: 10px 18px 9px 14px;
+  border: 1px solid rgb(192 198 191 / 34%);
+  background:
+    linear-gradient(135deg, rgb(194 200 194 / 14%) 0 9%, transparent 9% 92%, rgb(0 0 0 / 34%) 92%),
+    linear-gradient(100deg, rgb(13 16 16 / 94%), rgb(38 40 38 / 78%) 78%, rgb(9 11 11 / 18%));
+  box-shadow:
+    inset 0 1px rgb(237 239 234 / 14%),
+    inset 0 -2px rgb(0 0 0 / 48%);
+  clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  filter: drop-shadow(0 4px 5px rgb(0 0 0 / 64%));
   pointer-events: none;
+}
+
+.game-hud-overlay::before,
+.game-hud-overlay::after {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border: 1px solid rgb(222 225 216 / 44%);
+  border-radius: 50%;
+  background: #242725;
+  box-shadow: inset 0 1px rgb(255 255 255 / 18%);
+  content: '';
+}
+
+.game-hud-overlay::before {
+  top: 4px;
+  left: 5px;
+}
+
+.game-hud-overlay::after {
+  right: 5px;
+  bottom: 4px;
 }
 
 .vital-row {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 80px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
   min-height: 7px;
 }
 
 .vital-row > span {
-  color: #f3f1e9;
-  font-family: Arial, sans-serif;
-  font-size: clamp(0.43rem, 0.58vw, 0.57rem);
+  color: #d9ddd7;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: clamp(0.44rem, 0.59vw, 0.58rem);
   font-weight: 900;
   line-height: 1;
   text-shadow: 1px 1px 0 #000;
 }
 
 .vital-row > span b {
-  color: #b8e6d8;
+  color: #aeb8b3;
   font-size: 0.82em;
 }
 
 .vital-track {
   position: relative;
   display: block;
-  height: clamp(3px, 0.42vw, 5px);
+  height: clamp(5px, 0.5vw, 7px);
   overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 76%);
-  background: rgb(18 20 20 / 88%);
-  box-shadow: 0 0 0 1px rgb(222 225 218 / 30%);
+  border: 1px solid rgb(0 0 0 / 88%);
+  background: rgb(7 9 9 / 92%);
+  box-shadow:
+    0 0 0 1px rgb(194 200 194 / 34%),
+    inset 0 1px 2px rgb(0 0 0 / 75%);
 }
 
 .vital-track i {
@@ -482,11 +513,11 @@ dd {
 }
 
 .vital-track--hp i {
-  background: linear-gradient(90deg, #8e2d36, #d95d64);
+  background: linear-gradient(90deg, #71363a, #b25355 78%, #d3aca2);
 }
 
 .vital-track--stamina i {
-  background: linear-gradient(90deg, #9ca7a1, #eff1e9);
+  background: linear-gradient(90deg, #727a75, #d7dbd5 86%, #f0f1ed);
 }
 
 .hud-money {
@@ -561,9 +592,16 @@ dd {
   top: clamp(12px, 1.7vw, 20px);
   left: clamp(245px, 29vw, 410px);
   display: flex;
-  gap: 5px;
+  gap: 7px;
   align-items: center;
-  color: #e4e1d5;
+  padding: 5px 12px 5px 9px;
+  border: 1px solid rgb(186 191 184 / 26%);
+  color: #dedfd9;
+  background: linear-gradient(105deg, rgb(17 20 19 / 88%), rgb(48 49 45 / 62%));
+  box-shadow:
+    inset 3px 0 #8d4b3e,
+    0 3px 8px rgb(0 0 0 / 44%);
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%);
   font:
     700 clamp(0.48rem, 0.7vw, 0.68rem) Arial,
     sans-serif;
@@ -571,13 +609,14 @@ dd {
 }
 
 .hud-item-counter b {
-  color: #c4c6ba;
+  color: #a65b48;
   font-size: 0.82rem;
 }
 
 .hud-item-counter span {
-  color: #dce8df;
-  font-size: 0.6rem;
+  color: #d9ddd7;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
 }
 
 .game-area-label {
@@ -818,10 +857,13 @@ dd {
   right: clamp(10px, 1.5vw, 18px);
   min-height: 28px;
   padding: 0 9px;
-  border: 1px solid rgb(139 159 153 / 35%);
+  border: 1px solid rgb(188 194 187 / 32%);
   border-radius: 2px;
-  color: #bdc8c4;
-  background: rgb(5 12 14 / 62%);
+  color: #c9cdc8;
+  background: linear-gradient(135deg, rgb(54 57 54 / 86%), rgb(12 15 14 / 88%));
+  box-shadow:
+    inset 2px 0 #706f68,
+    0 3px 8px rgb(0 0 0 / 48%);
   font:
     700 0.55rem ui-monospace,
     SFMono-Regular,
@@ -1812,15 +1854,15 @@ dd {
 .encounter-readout {
   position: absolute;
   z-index: 3;
-  top: clamp(48px, 5vw, 66px);
+  top: clamp(54px, 5vw, 70px);
   left: 50%;
   display: grid;
-  gap: 3px;
-  min-width: min(360px, 48vw);
-  padding: 7px 12px;
-  border: 1px solid rgb(226 190 110 / 42%);
-  color: #f2ead4;
-  background: linear-gradient(90deg, transparent, rgb(6 11 16 / 86%) 16% 84%, transparent);
+  gap: 2px;
+  min-width: min(380px, 42vw);
+  padding: 5px 14px;
+  border-block: 1px solid rgb(184 188 181 / 24%);
+  color: #dddcd5;
+  background: linear-gradient(90deg, transparent, rgb(15 17 16 / 84%) 12% 88%, transparent);
   filter: drop-shadow(0 3px 8px #000);
   text-align: center;
   pointer-events: none;
@@ -1828,7 +1870,7 @@ dd {
 }
 
 .encounter-readout small {
-  color: #d7aa62;
+  color: #a77a55;
   font:
     800 0.46rem ui-monospace,
     SFMono-Regular,
@@ -2510,6 +2552,30 @@ kbd {
 
   .game-footer {
     display: none;
+  }
+
+  .game-hud-overlay {
+    top: 6px;
+    left: 6px;
+    width: min(220px, 40vw);
+    padding: 6px 10px 6px 9px;
+  }
+
+  .vital-row {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+
+  .hud-item-counter {
+    top: 6px;
+    right: 52px;
+    left: auto;
+    padding: 4px 8px;
+  }
+
+  .encounter-readout {
+    top: 42px;
+    min-width: min(280px, 46vw);
+    padding: 3px 8px;
   }
 
   .mobile-controls {

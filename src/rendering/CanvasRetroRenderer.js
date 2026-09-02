@@ -62,15 +62,23 @@ export class CanvasRetroRenderer {
     this.foregroundContext.clearRect(0, 0, logicalWidth, logicalHeight);
     this.foregroundContext.imageSmoothingEnabled = false;
 
-    const project = (worldPosition) => {
+    const mobileScale = viewport.cssWidth <= 900 ? (frame.artDirection?.mobileCameraScale ?? 1) : 1;
+    const presentationZoom = (frame.artDirection?.cameraZoom ?? 1) * mobileScale;
+    const focusX = viewport.width / 2;
+    const focusY = viewport.height * (frame.artDirection?.cameraFocusY ?? 0.5);
+    const project = (worldPosition, parallax = 1) => {
       const cameraOffset = frame.cameraOffset ?? { x: 0, y: 0 };
-      const screenPosition = this.camera.worldToScreen(
+      const baseScreenPosition = this.camera.worldToScreen(
         {
-          x: worldPosition.x - cameraOffset.x,
-          y: worldPosition.y - cameraOffset.y,
+          x: worldPosition.x - cameraOffset.x * parallax,
+          y: worldPosition.y - cameraOffset.y * parallax,
         },
         viewport,
       );
+      const screenPosition = {
+        x: focusX + (baseScreenPosition.x - focusX) * presentationZoom,
+        y: focusY + (baseScreenPosition.y - focusY) * presentationZoom,
+      };
       const logicalX = screenPosition.x / boundedPixelSize;
       const logicalY = screenPosition.y / boundedPixelSize;
       return {
@@ -82,7 +90,8 @@ export class CanvasRetroRenderer {
       width: logicalWidth,
       height: logicalHeight,
     };
-    const logicalWorldScale = this.camera.getScale(viewport) / boundedPixelSize;
+    const logicalWorldScale =
+      (this.camera.getScale(viewport) * presentationZoom) / boundedPixelSize;
 
     paintBackdrop(this.sceneContext, frame, logicalViewport, project, {
       retro: true,

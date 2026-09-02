@@ -22,6 +22,7 @@ import { WORLD_TIME_PROFILE } from '../game/world/WorldTimeProfiles.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
 import { SCRAP_AWAKENING_PROFILE } from '../game/campaign/ScrapAwakeningProfile.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPresentationProfiles.js';
+import { SCRAP_ART_DIRECTION_PROFILE } from '../game/ScrapArtDirectionProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
@@ -194,6 +195,7 @@ export class GameApp extends SceneNode {
         scrapAwakeningProfile: SCRAP_AWAKENING_PROFILE,
         characterPresentationCatalog: CHARACTER_PRESENTATION_PROFILE,
         playerPresentationProfileId: 'scrapyard-apprentice',
+        artDirectionProfile: SCRAP_ART_DIRECTION_PROFILE,
         enchantmentCatalog: ENCHANTMENT_CATALOG,
         progressionSnapshot,
       }),

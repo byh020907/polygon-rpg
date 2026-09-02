@@ -558,6 +558,51 @@
                 </li>
               </ul>
             </article>
+            <article class="requirement" id="PG-VISUAL-FIDELITY">
+              <p class="requirement-id">PG-VISUAL-FIDELITY</p>
+              <h3>고철 컷아웃과 벡터 셀 아트가 유료 게임의 기준 장면을 만든다</h3>
+              <ul>
+                <li>
+                  실제 플레이 화면의 85~90%는 흑백에 가까운 저채도 명암으로 정리한다. 지역 차이는
+                  강한 고유색보다 안개 농도, 명암, 재질, 건축 silhouette와 미세한 색온도로 만들고,
+                  강한 색은 피격·위험 공격·상호작용·D-DAY·속성 공격처럼 기능적인 순간에만 짧게
+                  사용한다.
+                </li>
+                <li>
+                  실제 camera에서 인간형 높이는 desktop viewport의 약 18~22%를 기준으로 하며
+                  mobile에서는 pose와 장비가 읽히도록 조금 더 크게 보정한다. 얇고 각진 몸체에도
+                  머리, 작업복, 고글, 가방, 관절, 도구와 무기의 형태 detail이 남는다.
+                </li>
+                <li>
+                  각 gameplay Chunk는 하늘·먼 지형·대형 구조물·play 지형·전경 장식의 5개 안팎 depth
+                  layer와 camera parallax를 가진다. 화면의 시각적 중심은 거대한 산업기계나 건축물
+                  하나이며 흙 단면·판금 길·cable·잔해와 재질 경계가 collision 지형을 따라 읽힌다.
+                </li>
+                <li>
+                  태양·달·전등·용광로·공격 effect는 위치·방향·세기·범위를 가진 광원이다. 폴리곤 면,
+                  광원 관계, 재질 반응과 장애물 차폐를 계산해 3~4단계 cell 명암으로 양자화하고,
+                  접지·투영 그림자와 금속·천·흙·돌의 서로 다른 반응을 함께 보인다.
+                </li>
+                <li>
+                  타격은 준비 pose → 접촉 섬광 → 짧은 hit stop → 타격 방향 camera 이동 →
+                  반동·knockback → 잔상·파편 감쇠로 읽힌다. 위력이 클수록 강조하며 reduced
+                  motion에서도 hit stop, 자세 반동과 접촉 effect는 유지한다. 일반 피격·guard·just
+                  guard·무적·강공 준비와 enchant 속성은 색이 아니라 pose, shape, particle와
+                  trajectory가 먼저 구분한다.
+                </li>
+                <li>
+                  HUD는 얇은 판금 frame과 계기판 형태의 체력·stamina·D-DAY를 화면 가장자리에 작게
+                  유지하고 위험·guard break·시간 변화 때만 확장한다. 장식은 플레이 영역과 공격
+                  예고를 가리지 않으며 MENU short와 developer panel long hold의 경계를 유지한다.
+                </li>
+                <li>
+                  주인공·NPC·일반 적·대표 지형·전경과 배경·동적 광원·공격과 피격·HUD가 하나의 같은
+                  장면에서 위 규칙으로 읽히고, 최종 제품의 모든 지역·인물·적·Boss에도 같은 규칙을
+                  사용한다. 기존 학원 fantasy presentation과 새 고철 cutout presentation을 섞어
+                  남기지 않는다.
+                </li>
+              </ul>
+            </article>
             <article class="requirement" id="PG-FINAL-BATTLE">
               <p class="requirement-id">PG-FINAL-BATTLE</p>
               <h3>다섯 산업기계가 보이는 조립식 로봇으로 결전한다</h3>
@@ -626,6 +671,11 @@
             <li>
               도입과 지역 변화는 별도 영상이 아니라 polygon render object, camera, shake, 말풍선,
               combat, map patch와 저장 flag로 플레이 안에서 표현한다.
+            </li>
+            <li>
+              고급 polygon cutout의 각진 면과 매끄러운 vector cartoon의 윤곽을 함께 사용한다. 저채도
+              장면 안에서도 silhouette, material, light와 기능적 accent가 정보를 분리하며 단순한
+              회색 바닥이나 원형 밝기 overlay를 완성된 광원 표현으로 사용하지 않는다.
             </li>
             <li>배경만 바꾸고 기존 학원 판타지형 Player·교관·마법 생물·Boss를 남기지 않는다.</li>
             <li>
@@ -707,6 +757,16 @@
                   <td>정면/측면/pose board와 desktop/mobile capture</td>
                 </tr>
                 <tr>
+                  <th>PG-VISUAL-FIDELITY</th>
+                  <td>
+                    대표 combat 장면과 확장된 모든 gameplay 장면에서 저채도 depth layer, 실제 camera
+                    크기의 detail silhouette, 차폐·재질을 반영한 3~4단계 cell light, 방향성 타격
+                    feedback과 절제된 산업 HUD를 동시에 읽는다. 흑백으로 보아도 Player·적·공격
+                    예고·충돌 지형·상호작용 대상을 구분하고 effect와 HUD가 전투를 가리지 않는다.
+                  </td>
+                  <td>1280×720·844×390 actual PNG, grayscale 판독과 combat timing trace</td>
+                </tr>
+                <tr>
                   <th>PG-FINAL-BATTLE</th>
                   <td>다섯 부품이 보이는 완성 로봇으로 기존 grammar의 거대 결전을 끝낸다.</td>
                   <td>부품별 조립 state와 최종전 trace</td>
@@ -732,7 +792,9 @@
           </div>
           <p class="note">
             시각 QA는 도입 전/중/후, 각 지역 전/회수 직전/해결/추격, 부품별 로봇, 마지막
-            1구간/D-DAY/game-over와 최종전을 결정적 상태로 실제 PNG에서 판독한다.
+            1구간/D-DAY/game-over와 최종전을 결정적 상태로 actual PNG에서 판독한다. 대표 combat
+            장면은 desktop 1280×720과 mobile 844×390의 원본·grayscale capture를 함께 비교하고, 확대
+            asset이나 자동 검사만으로 visual fidelity를 합격 처리하지 않는다.
           </p>
         </section>
       </main>
