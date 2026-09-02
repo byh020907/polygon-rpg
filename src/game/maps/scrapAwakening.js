@@ -19,6 +19,7 @@ export const SCRAPYARD_OWNER_COMMISSION_ENTITY_ID = 'scrapyard-owner-commission'
 export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
 export const SCRAP_RIVAL_WALK_ENTITY_ID = 'scrap-rival-walk-with';
+export const SCRAP_RIVAL_BRACE_ENTITY_ID = 'scrap-rival-yard-brace';
 export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
 export const SCRAP_RIVAL_RESCUE_ENTITY_ID = 'scrap-rival-rescue-request';
 export const SCRAP_PLAYER_DECISION_ENTITY_ID = 'scrap-player-device-decision';
@@ -2706,13 +2707,39 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               encounterProfileId: 'yard-scout-collector',
               position: { x: 610, y: 426 },
               maxHealth: 58,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_BRACE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 790, y: 354 },
+              interactionRange: 88,
+              speaker: SCRAP_CAST.RIVAL.name,
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_BRACE,
+              conversationTitle: '폐병기 지지대 점검',
+              lines: [
+                '첫 유닛은 멈췄어. 여기 지지대를 고정하면 흉곽 아래 통로까지 갈 수 있겠지.',
+                '잠깐, 안쪽 회수 신호가 판금을 다시 당긴다. 저 유닛이 지지대를 물고 있어.',
+                '내가 표식을 붙일 테니 네가 길을 열어. 흔들리면 바로 방패를 들어.',
+              ],
+              presentationProfileId: 'rival-scout',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_PERIMETER,
+              enabled: false,
+            },
+            {
+              id: 'scrap-yard-brace-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'yard-brace-collector',
+              position: { x: 950, y: 426 },
+              maxHealth: 74,
               scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
               enabled: false,
             },
             {
               id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
               kind: 'story-interaction',
-              position: { x: 677, y: 354 },
+              position: { x: 1120, y: 354 },
               interactionRange: 88,
               speaker: SCRAP_CAST.RIVAL.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
@@ -4105,8 +4132,32 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
-      id: 'scrap-prologue-yard-search',
+      id: 'scrap-prologue-yard-brace',
       priority: 4,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_BRACE },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_BRACE_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-perimeter',
+      priority: 5,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_PERIMETER },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-brace-collector', value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-search',
+      priority: 6,
       when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SEARCH },
       operations: [
         { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },

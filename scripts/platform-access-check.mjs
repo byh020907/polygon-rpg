@@ -362,6 +362,7 @@ function verifyDebugConfigurationRoundTrip() {
     adapter.scenarioEntries.map((entry) => entry.id),
     [
       'scrap-intro-walk',
+      'scrap-intro-brace',
       'scrap-intro-before',
       'scrap-intro-awakening',
       'scrap-intro-d30',

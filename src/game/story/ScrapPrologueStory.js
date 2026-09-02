@@ -13,6 +13,7 @@ function conversation({ id, title, interactionId, speaker, lines }) {
 export const SCRAP_PROLOGUE_CONVERSATION_ID = Object.freeze({
   OWNER_COMMISSION: 'scrap-prologue:owner-commission',
   RIVAL_DEPARTURE: 'scrap-prologue:rival-departure',
+  YARD_BRACE: 'scrap-prologue:yard-brace',
   YARD_SEARCH: 'scrap-prologue:yard-search',
   RIVAL_RESCUE: 'scrap-prologue:rival-rescue',
   PLAYER_DECISION: 'scrap-prologue:player-decision',
@@ -40,6 +41,17 @@ const SCRAP_PROLOGUE_CONVERSATIONS = Object.freeze([
       '공동 의뢰라도 좋은 부품은 먼저 표시한 사람이 가져가는 거다. 이번엔 내가 앞설게.',
       '그래도 혼자 폐병기 안으로 들어가진 말자. 네 방패가 앞, 내 갈고리가 뒤다.',
       '오른쪽 수거 표식까지 같이 가자. 이동하면서 작은 수거 유닛은 기본기로 정리하고.',
+    ],
+  }),
+  conversation({
+    id: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_BRACE,
+    title: '폐병기 지지대 점검',
+    interactionId: 'scrap-rival-yard-brace',
+    speaker: SCRAP_CAST.RIVAL.name,
+    lines: [
+      '첫 유닛은 멈췄어. 여기 지지대를 고정하면 흉곽 아래 통로까지 갈 수 있겠지.',
+      '잠깐, 안쪽 회수 신호가 판금을 다시 당긴다. 저 유닛이 지지대를 물고 있어.',
+      '내가 표식을 붙일 테니 네가 길을 열어. 흔들리면 바로 방패를 들어.',
     ],
   }),
   conversation({

@@ -260,6 +260,19 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     }),
   }),
+  'scrap-intro-brace': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 870,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_PERIMETER,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_PERIMETER,
+      expectedPatchIds: Object.freeze(['scrap-prologue-yard-perimeter']),
+      expectedItems: Object.freeze(['combat-enemy-collector-eye', 'scrap-rival-search-hook']),
+      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
   'scrap-intro-before': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
@@ -1875,6 +1888,7 @@ export function visualQaScenarioIds() {
 // campaign in its playable order.
 const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-walk': '도입 · 고물상 수거장 동행',
+  'scrap-intro-brace': '도입 · 지지대 통로 수거 유닛',
   'scrap-intro-before': '도입 · 붕괴 뒤 제어핵 선택',
   'scrap-intro-awakening': '도입 · 고대 병기 각성',
   'scrap-intro-d30': '도입 · D-30 경보',

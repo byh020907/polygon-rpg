@@ -4,6 +4,8 @@ export const SCRAP_AWAKENING_STAGE = Object.freeze({
   COMMISSION: 'commission',
   RIVAL_DEPARTURE: 'rival-departure',
   YARD_CLEARANCE: 'yard-clearance',
+  YARD_BRACE: 'yard-brace',
+  YARD_PERIMETER: 'yard-perimeter',
   YARD_SEARCH: 'yard-search',
   COLLAPSE: 'collapse',
   RESCUE_REQUEST: 'rescue-request',
@@ -92,6 +94,19 @@ export function getScrapAwakeningPresentation(stageId) {
       briefing: `${SCRAP_CAST.RIVAL.name}과 함께 수거 표식을 따라가자, 멈춰 있던 소형 수거 유닛이 통로를 막고 움직이기 시작합니다.`,
       objective: '수거 유닛을 기본 공격과 방패로 막고 현장 표식까지 길을 여세요.',
       cue: '수거 유닛 조우 · Basic / Guard',
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_BRACE]: {
+      title: '수거장 안전 지지대',
+      briefing: `${SCRAP_CAST.RIVAL.name}이 안쪽 흉곽으로 가는 판금 통로를 고정하려 하지만, 회수 신호가 지지대를 다시 잠급니다.`,
+      objective: `${SCRAP_CAST.RIVAL.name}에게 다가가 ↑로 지지대와 수거 표식을 점검하세요.`,
+      cue: '안전 지지대 점검 · 상호작용 ↑',
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_PERIMETER]: {
+      title: '흉곽 통로 확보',
+      briefing:
+        '안쪽 통로를 지키던 회수 유닛이 지지대를 끌어당기기 시작합니다. 방패로 간격을 만들고 길을 확보해야 합니다.',
+      objective: '회수 유닛을 막고 흉곽 아래 현장 표식까지 길을 여세요.',
+      cue: '통로 수거 유닛 · Guard / Strong',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: {
       title: '폐병기 수거장 탐색',

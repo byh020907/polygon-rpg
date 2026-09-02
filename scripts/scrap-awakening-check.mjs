@@ -260,10 +260,10 @@ assert.equal(
 scene.resolveJourneyEncounter(
   Object.freeze({
     entityId: 'scrap-yard-scout-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
   }),
 );
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_BRACE);
 assert.equal(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -274,19 +274,59 @@ assert.equal(
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  `전투 완료 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-brace'),
+  `첫 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 안전 지지대를 점검해야 합니다.`,
 );
 const clearanceReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
 });
-assert.equal(stage(clearanceReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(clearanceReload), SCRAP_AWAKENING_STAGE.YARD_BRACE);
 assert.equal(
   clearanceReload.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
   false,
   '도입 전투 완료 저장을 다시 열어도 조우를 반복해서 확정하면 안 됩니다.',
+);
+
+setAtStoryInteraction(scene, 'scrap-rival-yard-brace');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_PERIMETER);
+assert.equal(
+  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'yard-brace-collector',
+  '안전 지지대를 점검한 뒤에는 guard/Strong을 연습할 두 번째 수거 유닛이 필요합니다.',
+);
+scene.resolveJourneyEncounter(
+  Object.freeze({
+    entityId: 'scrap-yard-brace-collector',
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  }),
+);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-brace-collector'),
+  false,
+  '두 번째 수거 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
+);
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  `두 번째 전투 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+);
+const perimeterReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+});
+assert.equal(stage(perimeterReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  perimeterReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-brace-collector'),
+  false,
+  '두 번째 도입 전투 완료 저장도 조우를 반복해서 확정하면 안 됩니다.',
 );
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');
@@ -333,6 +373,7 @@ assert.ok(itemIds(scene).includes('scrap-device-core'));
 assert.deepEqual(scene.getProgressionSnapshot().viewedConversationIds, [
   SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_BRACE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
   SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
@@ -560,8 +601,8 @@ const archiveCommands = archiveDialogue.commands.filter(
 );
 assert.equal(
   archiveCommands.length,
-  6,
-  '작전 기록기에서 도입 다섯 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
+  7,
+  '작전 기록기에서 도입 여섯 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
 );
 const beforeReplay = scene.getProgressionSnapshot();
 const replayResult = scene.executeDialogueCommand(
