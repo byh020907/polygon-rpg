@@ -97,6 +97,12 @@ const COMBAT_VISUAL_QA_SCENARIOS = Object.freeze({
     expectedItem: 'combat-enemy-hit-ring',
     expectedAnchor: 'event-contact',
   }),
+  'combat-player-hit': Object.freeze({
+    expectedEvent: 'hit',
+    expectedMotion: 'idle',
+    expectedItem: 'player-hit-ring',
+    expectedAnchor: 'event-contact',
+  }),
   'combat-block': Object.freeze({
     expectedEvent: 'guard',
     expectedMotion: 'guard',

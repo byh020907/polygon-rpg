@@ -1064,6 +1064,7 @@ export class GameScene extends SceneNode {
     if (
       ![
         'combat-hit',
+        'combat-player-hit',
         'combat-block',
         'combat-evade',
         'combat-punish',
@@ -1177,6 +1178,28 @@ export class GameScene extends SceneNode {
             durationSeconds: 0.1,
           });
           emit(COMBAT_EVENT_TYPE.HIT);
+        }
+        break;
+      case 'combat-player-hit':
+        encounter.lastVisualContact = Object.freeze({
+          ...encounter.lastVisualContact,
+          attacker: 'enemy',
+          weaponItemId: 'combat-enemy-weapon',
+          hurtItemId: 'workwear-front-panel',
+          position: Object.freeze({ x: playerX + 18, y: groundY - 45 }),
+        });
+        encounter.contactSeconds = active ? 0.18 : 0;
+        if (active) {
+          this.playerHitstunSeconds = 0.18;
+          this.hitStopSeconds = 0.035;
+          emit(COMBAT_EVENT_TYPE.HIT, {
+            actor: 'enemy',
+            target: 'player',
+            position: encounter.lastVisualContact.position,
+            direction: 1,
+            strength: 1.6,
+            durationSeconds: 0.18,
+          });
         }
         break;
       case 'combat-block':

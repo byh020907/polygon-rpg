@@ -11,6 +11,7 @@ import {
   combatMotionFrameData,
 } from '../src/combat/CombatCommandController.js';
 import { samplePlayerCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
+import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 import { CHARACTER_RENDER_SCALE } from '../src/game/PlayerCombatPresentation.js';
 import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
 import {
@@ -412,6 +413,40 @@ try {
   plazaScene.exitTree();
 }
 
+const mobilePortalScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+mobilePortalScene.enterTree();
+try {
+  const portal = mobilePortalScene.mapRuntime.getPortal('academy-field-portal');
+  const sourceRoom = mobilePortalScene.mapRuntime.getActiveRoom();
+  mobilePortalScene.position = {
+    x: sourceRoom.bounds.x + portal.from.anchor.x,
+    y: sourceRoom.groundY - 80,
+  };
+  mobilePortalScene.previousPosition = { ...mobilePortalScene.position };
+  const touch = new MobileInputAdapter();
+  touch.press('right', 11);
+  touch.press('jump', 12);
+  mobilePortalScene.update(STEP, touch.snapshot());
+  touch.release(12);
+  for (let tick = 0; tick < 120 && mobilePortalScene.mapRuntime.getTransition(); tick += 1) {
+    mobilePortalScene.update(STEP, touch.snapshot());
+  }
+  assert.equal(mobilePortalScene.mapRuntime.getActiveLocation().roomId, 'field-crossing');
+  const destinationX = mobilePortalScene.position.x;
+  mobilePortalScene.update(STEP, touch.snapshot());
+  assert.ok(
+    mobilePortalScene.position.x > destinationX,
+    'touch-held movement must continue on the destination first gameplay fixed step',
+  );
+  assert.equal(
+    mobilePortalScene.combatCommands.snapshot().id,
+    'idle',
+    'the touch interaction that started a portal must not replay as a destination command',
+  );
+} finally {
+  mobilePortalScene.exitTree();
+}
+
 console.log(
   JSON.stringify({
     status: 'PASS',
@@ -431,6 +466,7 @@ console.log(
       'jump-landing-held-movement-continuity',
       'jump-body-arc-clearance',
       'portal-held-input-continuity',
+      'mobile-portal-held-input-continuity',
     ],
   }),
 );

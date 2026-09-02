@@ -63,6 +63,10 @@ const EFFECT_PARITY = Object.freeze({
     count: 44,
     digest: '12581b38564869d6fdfe6de187a8ce69046b7c6c7f16b2bc58f706fcd6cad3f5',
   }),
+  'combat-player-hit': Object.freeze({
+    count: 44,
+    digest: '71196898928eb7bc7dd1b0a074cc9c9ae3a6bdd5fd5b43a35c05a1a3183c0c4d',
+  }),
   'combat-block': Object.freeze({
     count: 43,
     digest: '9e364a28985dee5839d43666f1b163f440f670e3ef6cceabd1b49a9fbfa4fae5',
@@ -150,6 +154,53 @@ for (const [scenarioId, expected] of Object.entries(EFFECT_PARITY)) {
   assertPublicParity(scenarioId, expected, (scene, id) =>
     scene.setVisualQaCombatScenario(id, 'active'),
   );
+}
+
+const playerHitScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+playerHitScene.enterTree();
+try {
+  playerHitScene.setVisualQaLocation({
+    regionId: 'academy-region',
+    roomId: 'training-room',
+    x: 560,
+  });
+  playerHitScene.setVisualQaCombatScenario('combat-player-hit', 'active');
+  const playerHitFrame = playerHitScene.createRenderFrame(0);
+  const playerHitRing = playerHitFrame.items.find((item) => item.id === 'player-hit-ring');
+  const playerHead = playerHitFrame.items.find((item) => item.id === 'head');
+  const playerTorso = playerHitFrame.items.find((item) => item.id === 'torso');
+  assert.ok(playerHitRing?.points?.length, 'player hit must render a contact-point ring');
+  assert.ok(playerHead?.points?.length, 'player hit QA needs the rendered player head');
+  assert.ok(playerTorso?.points?.length, 'player hit QA needs the rendered player torso');
+  const ringCenter = playerHitRing.points.reduce(
+    (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }),
+    { x: 0, y: 0 },
+  );
+  ringCenter.x /= playerHitRing.points.length;
+  ringCenter.y /= playerHitRing.points.length;
+  const headCenterY =
+    playerHead.points.reduce((sum, point) => sum + point.y, 0) / playerHead.points.length;
+  const torsoCenter = playerTorso.points.reduce(
+    (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }),
+    { x: 0, y: 0 },
+  );
+  torsoCenter.x /= playerTorso.points.length;
+  torsoCenter.y /= playerTorso.points.length;
+  assert.ok(
+    ringCenter.y > headCenterY + 24,
+    'player hit feedback must stay at the body contact, never become a floating head marker',
+  );
+  assert.ok(
+    Math.hypot(ringCenter.x - torsoCenter.x, ringCenter.y - torsoCenter.y) < 40,
+    'player hit feedback must remain attached to the player torso contact zone',
+  );
+  assert.equal(
+    playerHitFrame.items.some((item) => /player-(hit|invulnerable)-marker/.test(item.id)),
+    false,
+    'player hit feedback must not add a symbolic head/invulnerability marker',
+  );
+} finally {
+  playerHitScene.exitTree();
 }
 
 const fixedMotionState = Object.freeze({
@@ -351,6 +402,7 @@ console.log(
       'shared-sword-shield-torso-head-geometry-identity',
       'authored-skeleton-torso-anchor-projection',
       'shared-body-foot-pivot-and-connected-sword',
+      'player-hit-contact-not-head-marker',
       'immutable-injected-profile-validation',
       'scrap-workwear-landmark-ids-and-profile-colors',
       'fantasy-landmark-removal',
