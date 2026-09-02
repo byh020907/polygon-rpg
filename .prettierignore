@@ -4,3 +4,4 @@ coverage
 package-lock.json
 src/vendor
 .ai/methods/**
+INBOX.md
