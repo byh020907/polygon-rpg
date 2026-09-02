@@ -34,6 +34,7 @@ Before product work, read the selected Method and all four Project Sources compl
 ## Development Order
 
 - **Human Feedback Priority:** `INBOX.md`의 pending feedback과 그것이 만든 아직 검증되지 않은 제품 결과가 다른 자율 Gap보다 항상 우선한다. fresh worker는 이를 Desired State에 반영하는 데서 끝내지 않고, 해당 feedback이 요구한 관찰 가능한 제품 결과를 구현·검증할 Execution Goal을 먼저 선택한다.
+- 여러 Human Feedback Priority가 같은 영역에서 맞물리면 INBOX의 기록 순서를 구현 순서로 간주하지 않는다. 뒤 항목이 앞 항목의 구현 기반을 바꾸는 경우에는 재작업을 피하도록 선행 계약과 기반 구조부터 세우고, 그 위에 표현과 동작을 구현한다. 새 기반과 무관하게 계속 유효한 수정은 버리지 않고 보존·이식하며, 선택한 dependency chain을 `STATE.md`의 Active Execution Goal에 명시한다.
 - INBOX 원문을 Product Goal·Architecture·Project Direction이 소유해 queue에서 제거했더라도 실제 제품 결과가 아직 충족되지 않았다면 우선순위를 잃지 않는다. `STATE.md`에 현재형 `Human Feedback Priority` Gap과 evidence를 유지하고, 결과가 검증된 뒤 해당 임시 표시를 제거한다.
 - pending INBOX와 미완료 INBOX 유래 우선 Gap이 모두 없을 때만 아래 Verified Playable Frontier 순서를 적용한다.
 - 개발은 새 게임을 시작한 사용자가 실제로 경험하는 순서의 **검증 완료 전선(Verified Playable Frontier)** 을 전진시키는 방식으로 진행한다.
