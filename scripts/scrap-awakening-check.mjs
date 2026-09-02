@@ -5,6 +5,7 @@ import {
   getScrapAwakeningPresentation,
 } from '../src/game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
+import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
 import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../src/game/story/ScrapPrologueStory.js';
 import {
   SCRAP_AWAKENING_MAP,
@@ -117,6 +118,14 @@ function setAtCampaignInteraction(scene, roomId, stageKind) {
     x: interaction.position.x,
   });
   return interaction;
+}
+
+function completeActiveLinkedIssuesForRegion(scene, regionId) {
+  const primaryIssue = SCRAP_CAMPAIGN_PROFILE.getPrimaryIssueForRegion(regionId);
+  scene.setVisualQaScrapIssueState({
+    activePrimaryIssueId: primaryIssue.id,
+    completedIssueIds: primaryIssue.linkedIssues.map((issue) => issue.id),
+  });
 }
 
 function setAtStoryInteraction(scene, interactionId) {
@@ -635,7 +644,8 @@ mineFlowScene.setVisualQaLocation({
 const beforeMineEventPreview = mineFlowScene.getProgressionSnapshot().scrapCampaign;
 mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
 assert.equal(mineEventRequest?.source, 'region-core-event');
-assert.equal(mineEventRequest?.preview.costSegments, 10);
+assert.equal(mineEventRequest?.preview.costSegments, 9);
+assert.equal(mineEventRequest?.preview.allowed, false);
 assert.equal(mineEventRequest?.preview.successExtensionDays, 2);
 assert.equal(mineEventRequest?.preview.before.phaseLabel, '낮');
 assert.deepEqual(
@@ -644,16 +654,18 @@ assert.deepEqual(
   '지역 사건 preview는 시간을 소비하면 안 됩니다.',
 );
 assert.equal(mineFlowScene.cancelScrapCampaignAction().cancelled, true);
+completeActiveLinkedIssuesForRegion(mineFlowScene, 'abandoned-mine');
 
 mineEventRequest = null;
 mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
-assert.equal(mineEventRequest?.preview.costSegments, 10);
+assert.equal(mineEventRequest?.preview.costSegments, 9);
+assert.equal(mineEventRequest?.preview.allowed, true);
 assert.equal(mineFlowScene.confirmScrapCampaignAction().started, true);
 mineRegion = mineFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === 'abandoned-mine');
 assert.equal(mineRegion.status, 'in-progress');
-assert.equal(mineFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(mineFlowScene.getWorldStatus().campaign.phaseLabel, '저녁');
 assert.equal(mineFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-28');
 assert.ok(
   mineFlowScene.mapRuntime
@@ -729,7 +741,7 @@ assert.equal(mineRegion.eventStageKind, 'campaign-updated');
 assert.equal(mineRegion.collected, true);
 assert.equal(mineCompleteCampaign.collectedPartCount, 1);
 assert.equal(mineCompleteCampaign.completionPercent, 20);
-assert.equal(mineCompleteCampaign.phaseLabel, '밤');
+assert.equal(mineCompleteCampaign.phaseLabel, '저녁');
 assert.equal(mineCompleteCampaign.deadlineLabel, 'D-30');
 assert.equal(mineCompleteCampaign.rivalDelaySegments, 8);
 assert.match(mineFlowScene.getWorldStatus().objective, /고물상.*20%/);
@@ -804,13 +816,14 @@ let shipyardRegion = shipyardFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
 assert.equal(shipyardRegion.eventStageKind, 'npc-briefing');
-assert.match(shipyardFlowScene.getWorldStatus().objective, /14구간/);
+assert.match(shipyardFlowScene.getWorldStatus().objective, /13구간/);
 
 setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, 'facility-observed');
 const beforeShipyardEvent = shipyardFlowScene.getProgressionSnapshot().scrapCampaign;
 shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
 assert.equal(shipyardCampaignRequest?.source, 'region-core-event');
-assert.equal(shipyardCampaignRequest?.preview.costSegments, 14);
+assert.equal(shipyardCampaignRequest?.preview.costSegments, 13);
+assert.equal(shipyardCampaignRequest?.preview.allowed, false);
 assert.equal(shipyardCampaignRequest?.preview.successExtensionDays, 3);
 assert.equal(
   shipyardFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
@@ -818,14 +831,16 @@ assert.equal(
   '항구 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
 );
 assert.equal(shipyardFlowScene.cancelScrapCampaignAction().cancelled, true);
+completeActiveLinkedIssuesForRegion(shipyardFlowScene, SCRAP_SHIPYARD_REGION_ID);
 
 shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+assert.equal(shipyardCampaignRequest?.preview.allowed, true);
 assert.equal(shipyardFlowScene.confirmScrapCampaignAction().started, true);
 shipyardRegion = shipyardFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
 assert.equal(shipyardRegion.status, 'in-progress');
-assert.equal(shipyardFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(shipyardFlowScene.getWorldStatus().campaign.phaseLabel, '낮');
 assert.equal(shipyardFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-26');
 
 setAtPortalToRoom(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, SCRAP_SHIPYARD_DRYDOCK_ROOM_ID);
@@ -988,13 +1003,14 @@ let greenhouseRegion = greenhouseFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
 assert.equal(greenhouseRegion.eventStageKind, 'npc-briefing');
-assert.match(greenhouseFlowScene.getWorldStatus().objective, /18구간/);
+assert.match(greenhouseFlowScene.getWorldStatus().objective, /17구간/);
 
 setAtCampaignInteraction(greenhouseFlowScene, SCRAP_GREENHOUSE_ROAD_ROOM_ID, 'facility-observed');
 const beforeGreenhouseEvent = greenhouseFlowScene.getProgressionSnapshot().scrapCampaign;
 greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
 assert.equal(greenhouseCampaignRequest?.source, 'region-core-event');
-assert.equal(greenhouseCampaignRequest?.preview.costSegments, 18);
+assert.equal(greenhouseCampaignRequest?.preview.costSegments, 17);
+assert.equal(greenhouseCampaignRequest?.preview.allowed, false);
 assert.equal(greenhouseCampaignRequest?.preview.successExtensionDays, 4);
 assert.equal(
   greenhouseFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
@@ -1002,14 +1018,16 @@ assert.equal(
   '온실 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
 );
 assert.equal(greenhouseFlowScene.cancelScrapCampaignAction().cancelled, true);
+completeActiveLinkedIssuesForRegion(greenhouseFlowScene, SCRAP_GREENHOUSE_REGION_ID);
 
 greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+assert.equal(greenhouseCampaignRequest?.preview.allowed, true);
 assert.equal(greenhouseFlowScene.confirmScrapCampaignAction().started, true);
 greenhouseRegion = greenhouseFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
 assert.equal(greenhouseRegion.status, 'in-progress');
-assert.equal(greenhouseFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(greenhouseFlowScene.getWorldStatus().campaign.phaseLabel, '아침');
 assert.equal(greenhouseFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-24');
 
 setAtPortalToRoom(
@@ -1207,13 +1225,14 @@ let snowRegion = snowFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
 assert.equal(snowRegion.eventStageKind, 'npc-briefing');
-assert.match(snowFlowScene.getWorldStatus().objective, /16구간/);
+assert.match(snowFlowScene.getWorldStatus().objective, /13구간/);
 
 setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, 'facility-observed');
 const beforeSnowEvent = snowFlowScene.getProgressionSnapshot().scrapCampaign;
 snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
 assert.equal(snowCampaignRequest?.source, 'region-core-event');
-assert.equal(snowCampaignRequest?.preview.costSegments, 16);
+assert.equal(snowCampaignRequest?.preview.costSegments, 13);
+assert.equal(snowCampaignRequest?.preview.allowed, false);
 assert.equal(snowCampaignRequest?.preview.successExtensionDays, 3);
 assert.equal(
   snowFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
@@ -1221,15 +1240,17 @@ assert.equal(
   '설산 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
 );
 assert.equal(snowFlowScene.cancelScrapCampaignAction().cancelled, true);
+completeActiveLinkedIssuesForRegion(snowFlowScene, SCRAP_SNOW_REGION_ID);
 
 snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+assert.equal(snowCampaignRequest?.preview.allowed, true);
 assert.equal(snowFlowScene.confirmScrapCampaignAction().started, true);
 snowRegion = snowFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
 assert.equal(snowRegion.status, 'in-progress');
-assert.equal(snowFlowScene.getWorldStatus().campaign.phaseLabel, '낮');
-assert.equal(snowFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-23');
+assert.equal(snowFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
+assert.equal(snowFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-25');
 
 setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, SCRAP_SNOW_TUNNEL_ROOM_ID);
 snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
@@ -1293,8 +1314,8 @@ assert.equal(snowRegion.eventStageKind, 'campaign-updated');
 assert.equal(snowRegion.collected, true);
 assert.equal(snowCompleteCampaign.collectedPartCount, 4);
 assert.equal(snowCompleteCampaign.completionPercent, 80);
-assert.equal(snowCompleteCampaign.deadlineLabel, 'D-26');
-assert.equal(snowCompleteCampaign.rivalDelaySegments, 12);
+assert.equal(snowCompleteCampaign.deadlineLabel, 'D-28');
+assert.equal(snowCompleteCampaign.rivalDelaySegments, 13);
 
 setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_TRAIN_ROOM_ID, SCRAP_SNOW_TUNNEL_ROOM_ID);
 snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
@@ -1393,13 +1414,18 @@ let quarryRegion = quarryFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
 assert.equal(quarryRegion.eventStageKind, 'npc-briefing');
-assert.match(quarryFlowScene.getWorldStatus().objective, /22구간/);
+assert.match(quarryFlowScene.getWorldStatus().objective, /21구간/);
 
 setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, 'facility-observed');
 const beforeQuarryEvent = quarryFlowScene.getProgressionSnapshot().scrapCampaign;
 quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
 assert.equal(quarryCampaignRequest?.source, 'region-core-event');
-assert.equal(quarryCampaignRequest?.preview.costSegments, 22);
+assert.equal(quarryCampaignRequest?.preview.costSegments, 21);
+assert.equal(
+  quarryCampaignRequest?.preview.allowed,
+  true,
+  '이미 해결한 폐광·온실 현장 stage는 채석장 linked issue로 재인식되어야 합니다.',
+);
 assert.equal(quarryCampaignRequest?.preview.successExtensionDays, 5);
 assert.equal(
   quarryFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
@@ -1407,8 +1433,10 @@ assert.equal(
   '채석장 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
 );
 assert.equal(quarryFlowScene.cancelScrapCampaignAction().cancelled, true);
+completeActiveLinkedIssuesForRegion(quarryFlowScene, SCRAP_QUARRY_REGION_ID);
 quarryJumpSequence += 1;
 quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+assert.equal(quarryCampaignRequest?.preview.allowed, true);
 assert.equal(quarryFlowScene.confirmScrapCampaignAction().started, true);
 quarryRegion = quarryFlowScene
   .getWorldStatus()
@@ -1679,16 +1707,16 @@ console.log(
       'mine-event-preview-cost-success-extension-and-cancel-zero-cost',
       'mine-part-reload-idempotence-and-garage-twenty-percent',
       'shipyard-eight-stage-worker-drydock-crane-machine-part-flow',
-      'shipyard-event-preview-fourteen-segments-three-day-extension-and-cancel',
+      'shipyard-event-preview-thirteen-segments-three-day-extension-and-cancel',
       'shipyard-midstage-and-part-reload-idempotence-and-garage-forty-percent',
       'greenhouse-eight-stage-technician-pipeline-reactor-machine-part-flow',
-      'greenhouse-event-preview-eighteen-segments-four-day-extension-and-cancel',
+      'greenhouse-event-preview-seventeen-segments-four-day-extension-and-cancel',
       'greenhouse-midstage-and-part-reload-idempotence-and-garage-sixty-percent',
       'snow-eight-stage-crew-tunnel-snowplow-machine-part-flow',
-      'snow-event-preview-sixteen-segments-three-day-extension-and-cancel',
+      'snow-event-preview-thirteen-segments-three-day-extension-and-cancel',
       'snow-midstage-and-part-reload-idempotence-and-garage-eighty-percent',
       'quarry-eight-stage-worker-cut-rock-cutter-machine-part-flow',
-      'quarry-event-preview-twenty-two-segments-five-day-extension-and-cancel',
+      'quarry-event-preview-twenty-one-segments-five-day-extension-and-cancel',
       'quarry-midstage-and-part-reload-idempotence-and-garage-hundred-percent',
       'quarry-free-order-two-three-four-part-single-completion-label',
       'keyboard-touch-interaction-parity',

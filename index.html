@@ -262,6 +262,49 @@
                 </template>
               </nav>
 
+              <section class="operation-map-issues" aria-labelledby="operation-issue-title">
+                <header>
+                  <div>
+                    <small>ISSUE WINDOW</small>
+                    <h3 id="operation-issue-title">현재 작전 연결</h3>
+                  </div>
+                  <strong x-text="campaign.issueWindow.summaryLabel"></strong>
+                </header>
+                <template x-if="campaign.issueWindow.primary">
+                  <div class="operation-map-issue-grid">
+                    <article class="operation-map-primary-issue" data-issue-kind="primary">
+                      <small
+                        x-text="`주목표 · ${campaign.issueWindow.primary.regionLabel}`"
+                      ></small>
+                      <h4 x-text="campaign.issueWindow.primary.label"></h4>
+                      <p x-text="campaign.issueWindow.primary.objective"></p>
+                    </article>
+                    <ol class="operation-map-linked-issues" aria-label="연결 이슈">
+                      <template x-for="issue in campaign.issueWindow.linked" x-bind:key="issue.id">
+                        <li
+                          x-bind:data-issue-id="issue.id"
+                          x-bind:data-issue-completed="String(issue.completed)"
+                        >
+                          <div>
+                            <small
+                              x-text="`${issue.statusLabel} · ${issue.targetRegionLabel}`"
+                            ></small>
+                            <strong x-text="issue.label"></strong>
+                          </div>
+                          <p
+                            x-text="issue.completed ? issue.completionEvidence : issue.objective"
+                          ></p>
+                        </li>
+                      </template>
+                    </ol>
+                  </div>
+                </template>
+                <p class="operation-map-issue-empty" x-show="!campaign.issueWindow.primary">
+                  어느 지역부터 시작해도 됩니다. 현장의 첫 설명을 들으면 그 사건 하나와 연결 이슈
+                  최대 두 개만 여기에 고정됩니다.
+                </p>
+              </section>
+
               <section class="operation-map-route" aria-label="다섯 대지역 작전 현황">
                 <template x-for="region in campaign.regions" x-bind:key="region.id">
                   <article
@@ -385,12 +428,19 @@
               >
                 이 행동을 확정하면 D-DAY 0에 도달해 수도 파괴가 시작됩니다.
               </p>
+              <p class="campaign-action-warning" x-show="!campaignActionPreview.allowed">
+                <strong x-text="campaignActionPreview.blockedReason"></strong>
+                <span
+                  x-text="`먼저 확인: ${campaignActionPreview.blockingIssueLabels.join(' · ')}`"
+                ></span>
+              </p>
               <footer>
                 <button type="button" @click="cancelCampaignActionPreview">취소 · 시간 유지</button>
                 <button
                   id="campaign-action-confirm-control"
                   class="campaign-action-confirm"
                   type="button"
+                  x-bind:disabled="!campaignActionPreview.allowed"
                   @click="confirmCampaignActionPreview"
                 >
                   <span

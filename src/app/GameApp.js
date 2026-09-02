@@ -613,6 +613,9 @@ export class GameApp extends SceneNode {
       (scenario.scrapRegionState ? [scenario.scrapRegionState] : [])) {
       this.scene.setVisualQaScrapRegionState(scrapRegionState);
     }
+    if (scenario.scrapIssueState) {
+      this.scene.setVisualQaScrapIssueState(scenario.scrapIssueState);
+    }
     if (scenario.scrapLastSegment) this.scene.setVisualQaScrapLastSegment();
     if (scenario.scrapGameOverStageId) {
       const recoverySnapshot = this.scene.getProgressionSnapshot();
@@ -682,6 +685,9 @@ export class GameApp extends SceneNode {
       (scenario.scrapRegionState ? [scenario.scrapRegionState] : [])) {
       this.scene.setVisualQaScrapRegionState(scrapRegionState);
     }
+    if (scenario.scrapIssueState) {
+      this.scene.setVisualQaScrapIssueState(scenario.scrapIssueState);
+    }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);
     const expectation = Object.freeze({
@@ -713,6 +719,9 @@ export class GameApp extends SceneNode {
     const expectedAwakeningActive = expectation.expectedAwakeningActive;
     const expectedGarageRevealStageId = expectation.expectedGarageRevealStageId;
     const expectedGarageRevealActive = expectation.expectedGarageRevealActive;
+    const expectedPrimaryIssueId = expectation.expectedPrimaryIssueId;
+    const expectedLinkedIssueCount = expectation.expectedLinkedIssueCount;
+    const expectedCompletedLinkedIssueCount = expectation.expectedCompletedLinkedIssueCount;
     const expectedLastChangeLabel = expectation.expectedLastChangeLabel;
     const expectedGameOverStageId = expectation.expectedGameOverStageId;
     const portalIds = renderFrame.map.portalIds;
@@ -836,6 +845,15 @@ export class GameApp extends SceneNode {
       garageRevealActiveMatches:
         expectedGarageRevealActive === undefined ||
         worldStatus.campaign.garageRevealActive === expectedGarageRevealActive,
+      primaryIssueMatches:
+        !expectedPrimaryIssueId ||
+        worldStatus.campaign.issueWindow.primary?.id === expectedPrimaryIssueId,
+      linkedIssueCountMatches:
+        expectedLinkedIssueCount === undefined ||
+        worldStatus.campaign.issueWindow.linkedCount === expectedLinkedIssueCount,
+      completedLinkedIssueCountMatches:
+        expectedCompletedLinkedIssueCount === undefined ||
+        worldStatus.campaign.issueWindow.completedLinkedCount === expectedCompletedLinkedIssueCount,
       lastChangeLabelMatches:
         !expectedLastChangeLabel ||
         worldStatus.campaign.lastChangeLabel === expectedLastChangeLabel,
@@ -868,6 +886,9 @@ export class GameApp extends SceneNode {
         assertionEvidence.awakeningActiveMatches &&
         assertionEvidence.garageRevealStageMatches &&
         assertionEvidence.garageRevealActiveMatches &&
+        assertionEvidence.primaryIssueMatches &&
+        assertionEvidence.linkedIssueCountMatches &&
+        assertionEvidence.completedLinkedIssueCountMatches &&
         assertionEvidence.lastChangeLabelMatches &&
         assertionEvidence.gameOverStageMatches,
     });
@@ -901,6 +922,7 @@ export class GameApp extends SceneNode {
       progressionNotice: worldStatus.progressionNotice,
       awakeningStageId: worldStatus.campaign.awakeningStageId,
       garageRevealStageId: worldStatus.campaign.garageRevealStageId,
+      issueWindow: worldStatus.campaign.issueWindow,
       lastChangeLabel: worldStatus.campaign.lastChangeLabel,
       gameOverStageId: worldStatus.gameOverPresentation.stageId,
       materialQuantities: progression.enchantment.materialQuantities,

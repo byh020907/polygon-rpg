@@ -18,6 +18,15 @@ function freezeRegion(region) {
   });
 }
 
+function freezePrimaryIssue(issue) {
+  return Object.freeze({
+    ...issue,
+    linkedIssues: Object.freeze(
+      issue.linkedIssues.map((linkedIssue) => Object.freeze({ ...linkedIssue })),
+    ),
+  });
+}
+
 const REGION_EVENT_STAGE_KINDS = Object.freeze([
   Object.freeze({ id: 'npc-briefing', label: 'NPC 말풍선' }),
   Object.freeze({ id: 'facility-observed', label: '지역 상태 확인' }),
@@ -52,9 +61,9 @@ const regions = [
     id: 'abandoned-mine',
     label: '폐광 산촌',
     route: { travelSegments: 1, rivalArrivalSegment: 10 },
-    event: { costSegments: 10, extensionSegments: 8, label: '붕괴 광산 구조와 굴착기 인수' },
+    event: { costSegments: 9, extensionSegments: 8, label: '붕괴 광산 구조와 굴착기 인수' },
     eventStages: eventStages('abandoned-mine', {
-      'npc-briefing': '오른쪽 구조 현황판에서 붕괴 범위, 10구간 비용과 성공 연장을 확인하세요.',
+      'npc-briefing': '오른쪽 구조 현황판에서 붕괴 범위, 9구간 비용과 성공 연장을 확인하세요.',
       'facility-observed': '오른쪽 구조 갱도로 들어가 수거 유닛을 제거하고 작업자 길을 확보하세요.',
       'journey-combat': '확보한 갱도 오른쪽에서 굴착기 작업장으로 이동해 Boss를 제압하세요.',
       'boss-defeated': '작업장 왼쪽에서 광부와 새 갱도 버팀목을 체결하세요.',
@@ -65,7 +74,7 @@ const regions = [
     }),
     objectives: {
       arrival: '광부 작업반장에게 붕괴 광산의 구조 상황을 들으세요.',
-      eventStart: '핵심 사건을 확정해 10구간 구조 작업을 시작하세요.',
+      eventStart: '핵심 사건을 확정해 9구간 구조 작업을 시작하세요.',
       resolved:
         '굴착기 다리 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 차고 20%를 확인하세요.',
     },
@@ -78,9 +87,9 @@ const regions = [
     id: 'harbor-shipyard',
     label: '항구 조선소',
     route: { travelSegments: 1, rivalArrivalSegment: 24 },
-    event: { costSegments: 14, extensionSegments: 12, label: '조선소 탈환과 마지막 선박 수리' },
+    event: { costSegments: 13, extensionSegments: 12, label: '조선소 탈환과 마지막 선박 수리' },
     eventStages: eventStages('harbor-shipyard', {
-      'npc-briefing': '오른쪽 도크 현황판에서 점거 범위, 14구간 비용과 성공 연장을 확인하세요.',
+      'npc-briefing': '오른쪽 도크 현황판에서 점거 범위, 13구간 비용과 성공 연장을 확인하세요.',
       'facility-observed': '점거된 건선거로 들어가 수거 유닛을 제거하고 선박 수리선을 확보하세요.',
       'journey-combat': '확보한 건선거 끝에서 쌍둥이 크레인 부두로 이동해 Boss를 제압하세요.',
       'boss-defeated': '조선공과 마지막 선박의 외판 수리를 끝내세요.',
@@ -91,7 +100,7 @@ const regions = [
     }),
     objectives: {
       arrival: '조선소 용접공에게 점거된 도크와 마지막 선박 수리 상황을 들으세요.',
-      eventStart: '핵심 사건을 확정해 14구간 조선소 탈환과 수리를 시작하세요.',
+      eventStart: '핵심 사건을 확정해 13구간 조선소 탈환과 수리를 시작하세요.',
       resolved:
         '크레인 팔 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 누적 조립 상태를 확인하세요.',
     },
@@ -104,9 +113,9 @@ const regions = [
     id: 'greenhouse-plains',
     label: '온실 평원',
     route: { travelSegments: 1, rivalArrivalSegment: 40 },
-    event: { costSegments: 18, extensionSegments: 16, label: '지열 설비 복구와 구형 동력로 분리' },
+    event: { costSegments: 17, extensionSegments: 16, label: '지열 설비 복구와 구형 동력로 분리' },
     eventStages: eventStages('greenhouse-plains', {
-      'npc-briefing': '오른쪽 지열 압력판에서 파손 범위, 18구간 비용과 성공 연장을 확인하세요.',
+      'npc-briefing': '오른쪽 지열 압력판에서 파손 범위, 17구간 비용과 성공 연장을 확인하세요.',
       'facility-observed':
         '파열된 온실 배관 구역으로 들어가 기생 기계를 제거하고 복구선을 확보하세요.',
       'journey-combat': '복구선을 따라 구형 동력로실로 이동해 과열 조절기 Boss를 제압하세요.',
@@ -118,7 +127,7 @@ const regions = [
     }),
     objectives: {
       arrival: '온실 기술자에게 지열 배관 파열과 작물 난방 상황을 들으세요.',
-      eventStart: '핵심 사건을 확정해 18구간 지열 설비 복구를 시작하세요.',
+      eventStart: '핵심 사건을 확정해 17구간 지열 설비 복구를 시작하세요.',
       resolved:
         '고출력 동력로 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 누적 조립 상태를 확인하세요.',
     },
@@ -131,9 +140,9 @@ const regions = [
     id: 'snow-trade-road',
     label: '설산 교역로',
     route: { travelSegments: 1, rivalArrivalSegment: 58 },
-    event: { costSegments: 16, extensionSegments: 12, label: '옛 터널 개통과 제설 열차 인수' },
+    event: { costSegments: 13, extensionSegments: 12, label: '옛 터널 개통과 제설 열차 인수' },
     eventStages: eventStages('snow-trade-road', {
-      'npc-briefing': '오른쪽 운행 현황판에서 적설 구간, 16구간 비용과 성공 연장을 확인하세요.',
+      'npc-briefing': '오른쪽 운행 현황판에서 적설 구간, 13구간 비용과 성공 연장을 확인하세요.',
       'facility-observed':
         '눈에 막힌 옛 터널로 들어가 열선 케이블을 훔치는 수거 유닛을 제거하세요.',
       'journey-combat':
@@ -146,7 +155,7 @@ const regions = [
     }),
     objectives: {
       arrival: '제설 열차 승무원에게 막힌 옛 터널과 고립된 교역로 상황을 들으세요.',
-      eventStart: '핵심 사건을 확정해 16구간 옛 터널 개통 작업을 시작하세요.',
+      eventStart: '핵심 사건을 확정해 13구간 옛 터널 개통 작업을 시작하세요.',
       resolved:
         '제설 열차 장갑 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 누적 조립 상태를 확인하세요.',
     },
@@ -159,9 +168,9 @@ const regions = [
     id: 'red-quarry',
     label: '붉은 채석장',
     route: { travelSegments: 1, rivalArrivalSegment: 78 },
-    event: { costSegments: 22, extensionSegments: 20, label: '마지막 채굴과 채석장 안전 폐쇄' },
+    event: { costSegments: 21, extensionSegments: 20, label: '마지막 채굴과 채석장 안전 폐쇄' },
     eventStages: eventStages('red-quarry', {
-      'npc-briefing': '오른쪽 안전 작업판에서 남은 절개면, 22구간 비용과 성공 연장을 확인하세요.',
+      'npc-briefing': '오른쪽 안전 작업판에서 남은 절개면, 21구간 비용과 성공 연장을 확인하세요.',
       'facility-observed':
         '마지막 절개 갱도로 들어가 발파선을 훔치는 수거 유닛을 제거하고 채굴선을 확보하세요.',
       'journey-combat':
@@ -174,7 +183,7 @@ const regions = [
     }),
     objectives: {
       arrival: '채석공 작업반장에게 마지막 채굴과 안전 폐쇄 상황을 들으세요.',
-      eventStart: '핵심 사건을 확정해 22구간 마지막 채굴과 안전 폐쇄 작업을 시작하세요.',
+      eventStart: '핵심 사건을 확정해 21구간 마지막 채굴과 안전 폐쇄 작업을 시작하세요.',
       resolved:
         '암반 절단검 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 로봇 100%를 확인하세요.',
     },
@@ -202,6 +211,137 @@ const routes = regions.map((region) =>
   }),
 );
 
+const primaryIssues = [
+  freezePrimaryIssue({
+    id: 'mine-rescue-operation',
+    regionId: 'abandoned-mine',
+    label: '붕괴 광산 작업자 구조',
+    objective: '항구와 온실에서 구조 설비를 확보한 뒤 폐광 산촌으로 돌아오세요.',
+    linkedIssues: [
+      {
+        id: 'mine-harbor-lift-cable',
+        targetRegionId: 'harbor-shipyard',
+        label: '승강기용 crane cable 확보',
+        objective: '점거된 도크에서 구조용 굵은 cable의 위치와 인양 상태를 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '항구 도크 crane cable 현장 확인',
+      },
+      {
+        id: 'mine-greenhouse-pressure-brace',
+        targetRegionId: 'greenhouse-plains',
+        label: '승강기 압력 버팀쇠 설계 확인',
+        objective: '온실 기술자와 파열 배관을 조사해 압력 버팀쇠 규격을 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '온실 지열 배관 현장 확인',
+      },
+    ],
+  }),
+  freezePrimaryIssue({
+    id: 'shipyard-recovery-operation',
+    regionId: 'harbor-shipyard',
+    label: '조선소 탈환과 마지막 선박 수리',
+    objective: '온실과 설산에서 수리 자재를 확보한 뒤 항구 조선소로 돌아오세요.',
+    linkedIssues: [
+      {
+        id: 'shipyard-greenhouse-coolant',
+        targetRegionId: 'greenhouse-plains',
+        label: '용접선 냉각수 확보',
+        objective: '파열 배관 구역에서 용접선을 식힐 지열 냉각수 상태를 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '온실 지열 냉각수 현장 확인',
+      },
+      {
+        id: 'shipyard-snow-haul-winch',
+        targetRegionId: 'snow-trade-road',
+        label: '선박 인양 winch 규격 확인',
+        objective: '제설 열차 승무원에게 산악 인양 winch 규격을 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '설산 열차 설비 현장 확인',
+      },
+    ],
+  }),
+  freezePrimaryIssue({
+    id: 'greenhouse-restoration-operation',
+    regionId: 'greenhouse-plains',
+    label: '온실 지열 설비 복구',
+    objective: '설산과 폐광에서 내열 부품을 확보한 뒤 온실 평원으로 돌아오세요.',
+    linkedIssues: [
+      {
+        id: 'greenhouse-snow-thermal-cable',
+        targetRegionId: 'snow-trade-road',
+        label: '내한 열선 cable 확보',
+        objective: '눈 막힌 옛 터널에서 지열 배관용 내한 cable 상태를 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '설산 터널 내한 cable 현장 확인',
+      },
+      {
+        id: 'greenhouse-mine-seal-plate',
+        targetRegionId: 'abandoned-mine',
+        label: '배관 밀폐 철판 규격 확인',
+        objective: '폐광 구조 현황판에서 굴착기용 밀폐 철판 규격을 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '폐광 구조 설비 현장 확인',
+      },
+    ],
+  }),
+  freezePrimaryIssue({
+    id: 'snow-route-operation',
+    regionId: 'snow-trade-road',
+    label: '옛 터널 개통과 교역로 복구',
+    objective: '채석장과 항구에서 열원·배관을 확보한 뒤 설산 교역로로 돌아오세요.',
+    linkedIssues: [
+      {
+        id: 'snow-quarry-heat-stone',
+        targetRegionId: 'red-quarry',
+        label: '터널 축열석 확보',
+        objective: '채석장 절개 갱도에서 터널 열선용 축열석 상태를 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '채석장 축열석 현장 확인',
+      },
+      {
+        id: 'snow-shipyard-insulated-hose',
+        targetRegionId: 'harbor-shipyard',
+        label: '제동용 단열 hose 규격 확인',
+        objective: '항구 도크에서 크레인 유압 hose의 단열 규격을 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '항구 도크 설비 현장 확인',
+      },
+    ],
+  }),
+  freezePrimaryIssue({
+    id: 'quarry-closure-operation',
+    regionId: 'red-quarry',
+    label: '마지막 채굴과 안전 폐쇄',
+    objective: '폐광과 온실에서 지지·냉각 기술을 확보한 뒤 붉은 채석장으로 돌아오세요.',
+    linkedIssues: [
+      {
+        id: 'quarry-mine-roof-brace',
+        targetRegionId: 'abandoned-mine',
+        label: '절개면 지지대 확보',
+        objective: '폐광 구조 갱도에서 채석장 폐쇄용 지지대 규격을 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '폐광 지지대 현장 확인',
+      },
+      {
+        id: 'quarry-greenhouse-cooling-mist',
+        targetRegionId: 'greenhouse-plains',
+        label: '절단기 냉각 분무 규격 확인',
+        objective: '온실 배관 현장에서 절단기 냉각 분무 규격을 확인하세요.',
+        completionStageKind: 'facility-observed',
+        completionEvidence: '온실 지열 배관 현장 확인',
+      },
+    ],
+  }),
+];
+
+const primaryIssueById = new Map(primaryIssues.map((issue) => [issue.id, issue]));
+const primaryIssueByRegionId = new Map(primaryIssues.map((issue) => [issue.regionId, issue]));
+const linkedIssueById = new Map(
+  primaryIssues.flatMap((primaryIssue) =>
+    primaryIssue.linkedIssues.map((linkedIssue) => [linkedIssue.id, linkedIssue]),
+  ),
+);
+
 export const SCRAP_CAMPAIGN_PROFILE = Object.freeze({
   id: 'scrap-king-d30',
   startLocation: Object.freeze({ id: SCRAP_CAMPAIGN_START_LOCATION_ID, label: '동네 고물상' }),
@@ -210,7 +350,24 @@ export const SCRAP_CAMPAIGN_PROFILE = Object.freeze({
   convoyChaseCostSegments: 2,
   regions: Object.freeze(regions),
   routes: Object.freeze(routes),
+  primaryIssues: Object.freeze(primaryIssues),
+  pacing: Object.freeze({
+    targetPlayMinutes: 600,
+    targetRegionMinutes: 120,
+    focusedTravelSegments: 19,
+    focusedInitialBudgetMinimumPercent: 75,
+    focusedInitialBudgetMaximumPercent: 80,
+  }),
   getRegion(regionId) {
     return regionById.get(regionId) ?? null;
+  },
+  getPrimaryIssue(issueId) {
+    return primaryIssueById.get(issueId) ?? null;
+  },
+  getPrimaryIssueForRegion(regionId) {
+    return primaryIssueByRegionId.get(regionId) ?? null;
+  },
+  getLinkedIssue(issueId) {
+    return linkedIssueById.get(issueId) ?? null;
   },
 });

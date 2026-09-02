@@ -2829,7 +2829,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_MINE_FACILITY_CONVERSATION_ID,
               conversationTitle: '시설 상태와 작업 시간 확인',
               lines: [
-                '구조 레일 단선. 내부 이동, 수거 유닛 제거, 굴착기 제압과 새 버팀목 설치까지 10구간 예상.',
+                '구조 레일 단선. 내부 이동, 수거 유닛 제거, 굴착기 제압과 새 버팀목 설치까지 9구간 예상.',
                 '성공하면 고철 대왕은 막힌 산길을 우회해 수도 도착이 2일 늦어진다.',
               ],
               campaignRegionId: 'abandoned-mine',
@@ -3012,7 +3012,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_SHIPYARD_FACILITY_CONVERSATION_ID,
               conversationTitle: '점거 범위와 선박 수리 시간 확인',
               lines: [
-                '건선거 점거 해제, 수거 유닛 제거, 크레인 제압과 마지막 선박 외판 수리까지 14구간 예상.',
+                '건선거 점거 해제, 수거 유닛 제거, 크레인 제압과 마지막 선박 외판 수리까지 13구간 예상.',
                 '성공하면 고철 대왕은 막힌 해안 운송로를 우회해 수도 도착이 3일 늦어진다.',
               ],
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
@@ -3195,7 +3195,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_GREENHOUSE_FACILITY_CONVERSATION_ID,
               conversationTitle: '배관 파손과 복구 시간 확인',
               lines: [
-                '기생 기계 제거, 압력선 확보, 조절기 제압과 안전한 저압 지열 배관 복구까지 18구간 예상.',
+                '기생 기계 제거, 압력선 확보, 조절기 제압과 안전한 저압 지열 배관 복구까지 17구간 예상.',
                 '성공하면 고철 대왕은 과열 평원을 우회해 수도 도착이 4일 늦어진다.',
               ],
               campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
@@ -3378,7 +3378,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_SNOW_FACILITY_CONVERSATION_ID,
               conversationTitle: '옛 터널 적설과 개통 시간 확인',
               lines: [
-                '열선 회수, 터널 제설, 폭주 기관차 제동과 신호 설비 복구까지 16구간 예상.',
+                '열선 회수, 터널 제설, 폭주 기관차 제동과 신호 설비 복구까지 13구간 예상.',
                 '성공하면 고철 대왕은 개통된 터널 경계를 우회해 수도 도착이 3일 늦어진다.',
               ],
               campaignRegionId: SCRAP_SNOW_REGION_ID,
@@ -3561,7 +3561,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAP_QUARRY_FACILITY_CONVERSATION_ID,
               conversationTitle: '마지막 절개와 안전 폐쇄 시간 확인',
               lines: [
-                '수거 유닛 제거, 마지막 석재 절단, 폭주 절단기 정지와 안전 폐쇄까지 22구간 예상.',
+                '수거 유닛 제거, 마지막 석재 절단, 폭주 절단기 정지와 안전 폐쇄까지 21구간 예상.',
                 '성공하면 고철 대왕은 폐쇄된 채석장 절벽을 우회해 수도 도착이 5일 늦어진다.',
               ],
               campaignRegionId: SCRAP_QUARRY_REGION_ID,

@@ -810,6 +810,38 @@ export class GameScene extends SceneNode {
     return scrapCampaign;
   }
 
+  setVisualQaScrapIssueState({ activePrimaryIssueId, completedIssueIds = [] }) {
+    const primaryIssue = this.scrapCampaignProfile.getPrimaryIssue(activePrimaryIssueId);
+    if (
+      !primaryIssue ||
+      !Array.isArray(completedIssueIds) ||
+      completedIssueIds.some(
+        (issueId) => !primaryIssue.linkedIssues.some((linkedIssue) => linkedIssue.id === issueId),
+      )
+    ) {
+      throw new Error(`지원하지 않는 Scrap campaign issue QA state입니다: ${activePrimaryIssueId}`);
+    }
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...current,
+        activePrimaryIssueId,
+        completedIssueIds: [...completedIssueIds],
+        lastChangeLabel: `${primaryIssue.label} · 연결 이슈 ${completedIssueIds.length}/${primaryIssue.linkedIssues.length}`,
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return scrapCampaign;
+  }
+
   setVisualQaScrapGameOverStage(stageId = SCRAP_GAME_OVER_STAGE.RECOVERY_CHOICE) {
     const current = toScrapCampaignSnapshot(
       this.progressionSnapshot.scrapCampaign,
@@ -1572,6 +1604,18 @@ export class GameScene extends SceneNode {
     });
   }
 
+  createScrapCampaignIssueFocusAction(regionId) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    if (!region) throw new Error(`지원하지 않는 주목표 region입니다: ${regionId}`);
+    return Object.freeze({
+      actionId: `issue-focus:${region.id}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.ISSUE_FOCUS,
+      label: `주목표 고정 · ${region.label}`,
+      targetRegionId: region.id,
+      costSegments: 0,
+    });
+  }
+
   createScrapCampaignRegionSuccessAction(regionId) {
     const region = this.scrapCampaignProfile.getRegion(regionId);
     if (!region) throw new Error(`지원하지 않는 지역 성공 action입니다: ${regionId}`);
@@ -1633,6 +1677,9 @@ export class GameScene extends SceneNode {
   requestScrapCampaignRegionEventStart(regionId) {
     if (this.progressionSnapshot.scrapCampaign.gameOver) return false;
     if (this.pendingScrapCampaignAction || this.mapRuntime.getTransition()) return false;
+    if (!this.progressionSnapshot.scrapCampaign.activePrimaryIssueId) {
+      this.commitScrapCampaignDomainAction(this.createScrapCampaignIssueFocusAction(regionId));
+    }
     const action = this.createScrapCampaignRegionEventStartAction(regionId);
     const preview = previewScrapCampaignAction(
       this.progressionSnapshot.scrapCampaign,

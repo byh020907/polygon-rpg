@@ -86,23 +86,64 @@ function regionEventStartAction(regionId) {
   };
 }
 
-function resolveRegion(snapshot, regionId) {
+function issueFocusAction(regionId) {
+  const region = SCRAP_CAMPAIGN_PROFILE.getRegion(regionId);
+  return {
+    actionId: `issue-focus:${region.id}`,
+    kind: SCRAP_CAMPAIGN_ACTION_KIND.ISSUE_FOCUS,
+    label: `주목표 고정 · ${region.label}`,
+    targetRegionId: region.id,
+    costSegments: 0,
+  };
+}
+
+function progressRegionToStage(snapshot, regionId, targetStageKind) {
+  const region = SCRAP_CAMPAIGN_PROFILE.getRegion(regionId);
+  const targetStageIndex = region.eventStages.findIndex((stage) => stage.kind === targetStageKind);
   let current = toScrapCampaignSnapshot(
     { ...snapshot, currentLocationId: regionId },
     SCRAP_CAMPAIGN_PROFILE,
   );
-  for (const stageKind of ['npc-briefing', 'facility-observed']) {
-    current = commit(current, regionStageAction(regionId, stageKind));
+  let currentStageIndex = region.eventStages.findIndex(
+    (stage) => stage.id === current.regionEventStageIds[regionId],
+  );
+  while (currentStageIndex < targetStageIndex) {
+    const nextStage = region.eventStages[currentStageIndex + 1];
+    if (nextStage.kind === 'journey-combat' && current.regionStates[regionId] === 'available') {
+      current = commit(current, regionEventStartAction(regionId));
+    }
+    current = commit(current, regionStageAction(regionId, nextStage.kind));
+    currentStageIndex += 1;
   }
-  current = commit(current, regionEventStartAction(regionId));
-  for (const stageKind of [
-    'journey-combat',
-    'boss-defeated',
-    'replacement-complete',
-    'machine-separated',
-  ]) {
-    current = commit(current, regionStageAction(regionId, stageKind));
+  return current;
+}
+
+function satisfyActiveLinkedIssues(snapshot, primaryRegionId) {
+  const primaryIssue = SCRAP_CAMPAIGN_PROFILE.getPrimaryIssueForRegion(primaryRegionId);
+  let current = snapshot;
+  for (const linkedIssue of primaryIssue.linkedIssues) {
+    current = progressRegionToStage(
+      current,
+      linkedIssue.targetRegionId,
+      linkedIssue.completionStageKind,
+    );
   }
+  return toScrapCampaignSnapshot(
+    { ...current, currentLocationId: primaryRegionId },
+    SCRAP_CAMPAIGN_PROFILE,
+  );
+}
+
+function resolveRegion(snapshot, regionId) {
+  let current = progressRegionToStage(snapshot, regionId, 'facility-observed');
+  const primaryIssue = SCRAP_CAMPAIGN_PROFILE.getPrimaryIssueForRegion(regionId);
+  if (!current.activePrimaryIssueId) {
+    current = commit(current, issueFocusAction(regionId));
+  }
+  if (current.activePrimaryIssueId === primaryIssue.id) {
+    current = satisfyActiveLinkedIssues(current, regionId);
+  }
+  current = progressRegionToStage(current, regionId, 'machine-separated');
   return commit(current, regionSuccessAction(regionId));
 }
 
@@ -127,6 +168,9 @@ assert.equal(initial.currentLocationLabel, '동네 고물상');
 assert.equal(initial.regions.length, 5);
 assert.equal(initial.routeEdges.length, 5);
 assert.equal(initial.rivalArrivalLabel, 'Day 31 · 아침');
+assert.equal(initial.issueWindow.primary, null);
+assert.equal(initial.issueWindow.linkedCount, 0);
+assert.equal(initial.issueWindow.maximumLinkedCount, 2);
 assert.deepEqual(
   initial.routeEdges.map((edge) => edge.travelSegments),
   [1, 1, 1, 1, 1],
@@ -139,7 +183,21 @@ for (const region of SCRAP_CAMPAIGN_PROFILE.regions) {
     `${region.id}의 모든 stage는 authored 다음 목표를 제공해야 합니다.`,
   );
   assert.deepEqual(Object.keys(region.mapPatches), ['before', 'partReady', 'resolved', 'convoy']);
+  const primaryIssue = SCRAP_CAMPAIGN_PROFILE.getPrimaryIssueForRegion(region.id);
+  assert.equal(primaryIssue.regionId, region.id);
+  assert.equal(primaryIssue.linkedIssues.length, 2);
+  assert.equal(new Set(primaryIssue.linkedIssues.map((issue) => issue.id)).size, 2);
+  for (const linkedIssue of primaryIssue.linkedIssues) {
+    const targetRegion = SCRAP_CAMPAIGN_PROFILE.getRegion(linkedIssue.targetRegionId);
+    assert.notEqual(linkedIssue.targetRegionId, region.id);
+    assert.ok(
+      targetRegion.eventStages.some((stage) => stage.kind === linkedIssue.completionStageKind),
+      `${linkedIssue.id}는 실제 target region 현장 stage를 완료 조건으로 가져야 합니다.`,
+    );
+  }
 }
+assert.equal(SCRAP_CAMPAIGN_PROFILE.pacing.targetPlayMinutes, 600);
+assert.equal(SCRAP_CAMPAIGN_PROFILE.pacing.targetRegionMinutes, 120);
 assert.equal(initial.completionPercent, 0);
 assert.equal(initial.finalBattleAvailable, false);
 
@@ -218,7 +276,7 @@ const legacyCampaign = { ...fresh, version: 1 };
 delete legacyCampaign.awakeningStageId;
 delete legacyCampaign.garageRevealStageId;
 const migratedCampaign = toScrapCampaignSnapshot(legacyCampaign, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedCampaign.version, 4);
+assert.equal(migratedCampaign.version, 5);
 assert.equal(migratedCampaign.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(migratedCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.LOCKED);
 
@@ -289,6 +347,81 @@ const nextMorning = getScrapCampaignReadModel(fourPhaseCycle, SCRAP_CAMPAIGN_PRO
 assert.equal(nextMorning.day, 2);
 assert.equal(nextMorning.phaseId, 'morning');
 
+let focusedCampaign = fresh;
+let focusedTravelCount = 0;
+function focusedTravel(targetLocationId) {
+  focusedTravelCount += 1;
+  focusedCampaign = commit(
+    focusedCampaign,
+    travelAction(`focused-travel:${focusedTravelCount}`, targetLocationId),
+  );
+}
+function focusedObserve(regionId) {
+  focusedTravel(regionId);
+  focusedCampaign = progressRegionToStage(focusedCampaign, regionId, 'facility-observed');
+}
+function focusedResolve(regionId) {
+  focusedTravel(regionId);
+  if (!focusedCampaign.activePrimaryIssueId) {
+    focusedCampaign = commit(focusedCampaign, issueFocusAction(regionId));
+  }
+  assert.equal(
+    focusedCampaign.activePrimaryIssueId,
+    SCRAP_CAMPAIGN_PROFILE.getPrimaryIssueForRegion(regionId).id,
+  );
+  assert.equal(
+    getScrapCampaignReadModel(focusedCampaign, SCRAP_CAMPAIGN_PROFILE).issueWindow
+      .completedLinkedCount,
+    2,
+  );
+  focusedCampaign = progressRegionToStage(focusedCampaign, regionId, 'machine-separated');
+  focusedCampaign = commit(focusedCampaign, regionSuccessAction(regionId));
+}
+function focusedReturn() {
+  focusedTravel('neighborhood-scrapyard');
+}
+
+focusedObserve('abandoned-mine');
+focusedReturn();
+focusedObserve('harbor-shipyard');
+focusedReturn();
+focusedObserve('greenhouse-plains');
+focusedReturn();
+focusedResolve('abandoned-mine');
+focusedReturn();
+focusedObserve('snow-trade-road');
+focusedReturn();
+focusedResolve('harbor-shipyard');
+focusedReturn();
+focusedResolve('greenhouse-plains');
+focusedReturn();
+focusedObserve('red-quarry');
+focusedReturn();
+focusedResolve('snow-trade-road');
+focusedReturn();
+focusedResolve('red-quarry');
+
+const focusedReadModel = getScrapCampaignReadModel(focusedCampaign, SCRAP_CAMPAIGN_PROFILE);
+const focusedInitialBudgetPercent =
+  (focusedCampaign.elapsedSegments / SCRAP_CAMPAIGN_PROFILE.initialDeadlineSegments) * 100;
+assert.equal(focusedTravelCount, SCRAP_CAMPAIGN_PROFILE.pacing.focusedTravelSegments);
+assert.equal(
+  focusedCampaign.committedActionIds.filter((actionId) => actionId.startsWith('focused-travel:'))
+    .length,
+  focusedTravelCount,
+);
+assert.equal(
+  focusedCampaign.committedActionIds.filter((actionId) => actionId.endsWith(':event-start')).length,
+  5,
+);
+assert.equal(focusedReadModel.collectedPartCount, 5);
+assert.equal(focusedReadModel.issueWindow.primary, null);
+assert.ok(
+  focusedInitialBudgetPercent >= SCRAP_CAMPAIGN_PROFILE.pacing.focusedInitialBudgetMinimumPercent &&
+    focusedInitialBudgetPercent <= SCRAP_CAMPAIGN_PROFILE.pacing.focusedInitialBudgetMaximumPercent,
+  `실제 집중 action trace는 초기 D-DAY의 75~80%를 사용해야 합니다: ${focusedInitialBudgetPercent}%`,
+);
+
 const mineProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('abandoned-mine');
 let mineStarted = toScrapCampaignSnapshot(
   { ...fresh, currentLocationId: 'abandoned-mine' },
@@ -296,17 +429,90 @@ let mineStarted = toScrapCampaignSnapshot(
 );
 mineStarted = commit(mineStarted, regionStageAction('abandoned-mine', 'npc-briefing'));
 mineStarted = commit(mineStarted, regionStageAction('abandoned-mine', 'facility-observed'));
+mineStarted = commit(mineStarted, issueFocusAction('abandoned-mine'));
+const mineIssueWindow = getScrapCampaignReadModel(mineStarted, SCRAP_CAMPAIGN_PROFILE).issueWindow;
+assert.equal(mineIssueWindow.primary.id, 'mine-rescue-operation');
+assert.equal(mineIssueWindow.primary.regionId, 'abandoned-mine');
+assert.equal(mineIssueWindow.linkedCount, 2);
+assert.equal(mineIssueWindow.completedLinkedCount, 0);
+assert.deepEqual(
+  mineIssueWindow.linked.map((issue) => issue.targetRegionId),
+  ['harbor-shipyard', 'greenhouse-plains'],
+);
+const blockedMineEventPreview = previewScrapCampaignAction(
+  mineStarted,
+  regionEventStartAction('abandoned-mine'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedMineEventPreview.allowed, false);
+assert.deepEqual(blockedMineEventPreview.blockingIssueIds, [
+  'mine-harbor-lift-cable',
+  'mine-greenhouse-pressure-brace',
+]);
+assert.throws(() => commit(mineStarted, regionEventStartAction('abandoned-mine')), /연결 이슈 2개/);
+
+let crossRegionIssues = progressRegionToStage(mineStarted, 'harbor-shipyard', 'facility-observed');
+let crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(crossRegionReadModel.issueWindow.primary.id, 'mine-rescue-operation');
+assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(crossRegionReadModel.issueWindow.linked[0].completed, true);
+assert.equal(
+  crossRegionReadModel.issueWindow.linked[0].completionEvidence,
+  '항구 도크 crane cable 현장 확인',
+);
+
+crossRegionIssues = progressRegionToStage(
+  crossRegionIssues,
+  'greenhouse-plains',
+  'facility-observed',
+);
+crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(crossRegionReadModel.issueWindow.linkedCount, 2);
+assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 2);
+assert.deepEqual(
+  crossRegionReadModel.issueWindow.linked.map((issue) => issue.completed),
+  [true, true],
+);
+const activeIssueStorage = new MemoryStorage();
+const activeIssuePersistence = new ProgressionStorage(
+  activeIssueStorage,
+  'scrap-campaign-active-issue-v9',
+  ENCHANTMENT_CATALOG,
+  null,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+const activeIssueProgression = {
+  ...createProgressionSnapshot(
+    DEFAULT_EQUIPMENT_PROFILE_ID,
+    ENCHANTMENT_CATALOG,
+    SCRAP_CAMPAIGN_PROFILE,
+  ),
+  scrapCampaign: crossRegionIssues,
+};
+assert.equal(activeIssuePersistence.save(activeIssueProgression).ok, true);
+const loadedActiveIssue = activeIssuePersistence.load(
+  DEFAULT_EQUIPMENT_PROFILE_ID,
+  [DEFAULT_EQUIPMENT_PROFILE_ID],
+  ENCHANTMENT_CATALOG,
+);
+assert.equal(loadedActiveIssue.ok, true);
+assert.deepEqual(loadedActiveIssue.snapshot.scrapCampaign, crossRegionIssues);
+mineStarted = toScrapCampaignSnapshot(
+  { ...crossRegionIssues, currentLocationId: 'abandoned-mine' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
 const mineEventPreview = previewScrapCampaignAction(
   mineStarted,
   regionEventStartAction('abandoned-mine'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(mineEventPreview.costSegments, 10);
+assert.equal(mineEventPreview.allowed, true);
+assert.equal(mineEventPreview.costSegments, 9);
 assert.equal(mineEventPreview.extensionSegments, 0);
 assert.equal(mineEventPreview.successExtensionDays, 2);
 mineStarted = commit(mineStarted, regionEventStartAction('abandoned-mine'));
 assert.equal(mineStarted.regionStates['abandoned-mine'], 'in-progress');
-assert.equal(mineStarted.deadlineSegments, 110);
+assert.equal(mineStarted.deadlineSegments, 111);
 let mineSuccess = mineStarted;
 for (const stageKind of [
   'journey-combat',
@@ -318,8 +524,10 @@ for (const stageKind of [
 }
 mineSuccess = commit(mineSuccess, regionSuccessAction('abandoned-mine'));
 assert.equal(mineSuccess.regionStates['abandoned-mine'], 'resolved');
+assert.equal(mineSuccess.activePrimaryIssueId, null);
+assert.equal(mineSuccess.completedIssueIds.includes('mine-rescue-operation'), true);
 assert.equal(mineSuccess.collectedPartIds.includes(mineProfile.part.id), true);
-assert.equal(mineSuccess.deadlineSegments, 120 - 10 + 8);
+assert.equal(mineSuccess.deadlineSegments, 120 - 9 + 8);
 assert.equal(mineSuccess.rivalDelaySegments, 8);
 assert.equal(mineSuccess.regionEventStageIds['abandoned-mine'], 'abandoned-mine:campaign-updated');
 
@@ -335,16 +543,34 @@ const harborEventPreview = previewScrapCampaignAction(
   regionEventStartAction('harbor-shipyard'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(harborEventPreview.costSegments, 14);
+assert.equal(harborEventPreview.allowed, false);
+assert.equal(harborEventPreview.costSegments, 13);
 assert.equal(harborEventPreview.successExtensionDays, 3);
 const harborSuccess = resolveRegion(fresh, 'harbor-shipyard');
 assert.equal(harborSuccess.regionStates['harbor-shipyard'], 'resolved');
 assert.equal(harborSuccess.collectedPartIds.includes(harborProfile.part.id), true);
-assert.equal(harborSuccess.deadlineSegments, 120 - 14 + 12);
+assert.equal(harborSuccess.deadlineSegments, 120 - 13 + 12);
 assert.equal(harborSuccess.rivalDelaySegments, 12);
 assert.equal(
   harborSuccess.regionEventStageIds['harbor-shipyard'],
   'harbor-shipyard:campaign-updated',
+);
+let nonActiveRegionProbe = commit(harborSuccess, issueFocusAction('greenhouse-plains'));
+nonActiveRegionProbe = progressRegionToStage(
+  nonActiveRegionProbe,
+  'snow-trade-road',
+  'facility-observed',
+);
+const nonActiveRegionPreview = previewScrapCampaignAction(
+  nonActiveRegionProbe,
+  regionEventStartAction('snow-trade-road'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(nonActiveRegionPreview.allowed, false);
+assert.match(nonActiveRegionPreview.blockedReason, /현재 주목표/);
+assert.throws(
+  () => commit(nonActiveRegionProbe, regionEventStartAction('snow-trade-road')),
+  /현재 주목표/,
 );
 const greenhouseProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('greenhouse-plains');
 let greenhouseStarted = toScrapCampaignSnapshot(
@@ -364,12 +590,12 @@ const greenhouseEventPreview = previewScrapCampaignAction(
   regionEventStartAction('greenhouse-plains'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(greenhouseEventPreview.costSegments, 18);
+assert.equal(greenhouseEventPreview.costSegments, 17);
 assert.equal(greenhouseEventPreview.successExtensionDays, 4);
 const greenhouseSuccess = resolveRegion(fresh, 'greenhouse-plains');
 assert.equal(greenhouseSuccess.regionStates['greenhouse-plains'], 'resolved');
 assert.equal(greenhouseSuccess.collectedPartIds.includes(greenhouseProfile.part.id), true);
-assert.equal(greenhouseSuccess.deadlineSegments, 120 - 18 + 16);
+assert.equal(greenhouseSuccess.deadlineSegments, 120 - 17 + 16);
 assert.equal(greenhouseSuccess.rivalDelaySegments, 16);
 assert.equal(
   greenhouseSuccess.regionEventStageIds['greenhouse-plains'],
@@ -387,12 +613,12 @@ const snowEventPreview = previewScrapCampaignAction(
   regionEventStartAction('snow-trade-road'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(snowEventPreview.costSegments, 16);
+assert.equal(snowEventPreview.costSegments, 13);
 assert.equal(snowEventPreview.successExtensionDays, 3);
 const snowSuccess = resolveRegion(fresh, 'snow-trade-road');
 assert.equal(snowSuccess.regionStates['snow-trade-road'], 'resolved');
 assert.equal(snowSuccess.collectedPartIds.includes(snowProfile.part.id), true);
-assert.equal(snowSuccess.deadlineSegments, 120 - 16 + 12);
+assert.equal(snowSuccess.deadlineSegments, 120 - 13 + 12);
 assert.equal(snowSuccess.rivalDelaySegments, 12);
 assert.equal(
   snowSuccess.regionEventStageIds['snow-trade-road'],
@@ -410,12 +636,12 @@ const quarryEventPreview = previewScrapCampaignAction(
   regionEventStartAction('red-quarry'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(quarryEventPreview.costSegments, 22);
+assert.equal(quarryEventPreview.costSegments, 21);
 assert.equal(quarryEventPreview.successExtensionDays, 5);
 const quarrySuccess = resolveRegion(fresh, 'red-quarry');
 assert.equal(quarrySuccess.regionStates['red-quarry'], 'resolved');
 assert.equal(quarrySuccess.collectedPartIds.includes(quarryProfile.part.id), true);
-assert.equal(quarrySuccess.deadlineSegments, 120 - 22 + 20);
+assert.equal(quarrySuccess.deadlineSegments, 120 - 21 + 20);
 assert.equal(quarrySuccess.rivalDelaySegments, 20);
 assert.equal(quarrySuccess.regionEventStageIds['red-quarry'], 'red-quarry:campaign-updated');
 for (const orderedSnapshot of [
@@ -462,12 +688,19 @@ assert.deepEqual(
 const versionThreeMine = { ...mineSuccess, version: 3 };
 delete versionThreeMine.regionEventStageIds;
 const migratedVersionThreeMine = toScrapCampaignSnapshot(versionThreeMine, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedVersionThreeMine.version, 4);
+assert.equal(migratedVersionThreeMine.version, 5);
 assert.equal(
   migratedVersionThreeMine.regionEventStageIds['abandoned-mine'],
   'abandoned-mine:campaign-updated',
-  'v3에서 이미 해결된 region은 최종 campaign-updated stage로 이관되어야 합니다.',
+  'v3에서 이미 해결된 region은 v5의 최종 campaign-updated stage로 이관되어야 합니다.',
 );
+const versionFourMine = { ...mineSuccess, version: 4 };
+delete versionFourMine.activePrimaryIssueId;
+delete versionFourMine.completedIssueIds;
+const migratedVersionFourMine = toScrapCampaignSnapshot(versionFourMine, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(migratedVersionFourMine.version, 5);
+assert.equal(migratedVersionFourMine.activePrimaryIssueId, null);
+assert.deepEqual(migratedVersionFourMine.completedIssueIds, []);
 
 let rivalFirst = fresh;
 for (let index = 0; index < mineProfile.route.rivalArrivalSegment; index += 1) {
@@ -492,10 +725,12 @@ let completeCampaign = fresh;
 for (const regionId of ['red-quarry', 'snow-trade-road', 'greenhouse-plains']) {
   completeCampaign = resolveRegion(completeCampaign, regionId);
 }
-assert.equal(completeCampaign.regionStates['abandoned-mine'], 'convoy');
-assert.equal(completeCampaign.regionStates['harbor-shipyard'], 'convoy');
-completeCampaign = commit(completeCampaign, convoyAction('abandoned-mine'));
-completeCampaign = commit(completeCampaign, convoyAction('harbor-shipyard'));
+for (const regionId of ['abandoned-mine', 'harbor-shipyard']) {
+  completeCampaign =
+    completeCampaign.regionStates[regionId] === 'convoy'
+      ? commit(completeCampaign, convoyAction(regionId))
+      : resolveRegion(completeCampaign, regionId);
+}
 const completeReadModel = getScrapCampaignReadModel(completeCampaign, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(completeReadModel.collectedPartCount, 5);
 assert.equal(completeReadModel.completionPercent, 100);
@@ -588,12 +823,16 @@ console.log(
       'four-segment-day-rollover',
       'stable-action-idempotence',
       'ordered-region-stages-event-start-cost-and-success-detour',
-      'harbor-fourteen-segment-three-day-detour-and-crane-part',
+      'authored-primary-one-linked-two-cross-region-issue-window',
+      'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
+      'active-issue-window-schema-v5-storage-round-trip',
+      'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
+      'harbor-thirteen-segment-three-day-detour-and-crane-part',
       'mine-harbor-order-or-convoy-two-part-forty-percent',
-      'greenhouse-eighteen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
-      'snow-sixteen-segment-three-day-detour-armor-and-first-four-eighty-percent',
-      'quarry-twenty-two-segment-five-day-detour-cutter-and-five-part-hundred-percent',
-      'v3-region-stage-migration-to-v4',
+      'greenhouse-seventeen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
+      'snow-thirteen-segment-three-day-detour-armor-and-first-four-eighty-percent',
+      'quarry-twenty-one-segment-five-day-detour-cutter-and-five-part-hundred-percent',
+      'v3-region-stage-and-v4-issue-window-migration-to-v5',
       'rival-first-convoy-two-segment-no-extension-recovery',
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',

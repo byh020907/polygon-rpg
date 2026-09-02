@@ -285,6 +285,49 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
     }),
   }),
+  'scrap-issue-window': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 300,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    scrapRegionStates: Object.freeze([
+      Object.freeze({
+        regionId: 'abandoned-mine',
+        stageKind: 'facility-observed',
+        status: 'available',
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        stageKind: 'journey-combat',
+        status: 'in-progress',
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        stageKind: 'facility-observed',
+        status: 'available',
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+    ]),
+    scrapIssueState: Object.freeze({
+      activePrimaryIssueId: 'mine-rescue-operation',
+      completedIssueIds: Object.freeze(['mine-harbor-lift-cable']),
+    }),
+    expectation: Object.freeze({
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+      expectedPrimaryIssueId: 'mine-rescue-operation',
+      expectedLinkedIssueCount: 2,
+      expectedCompletedLinkedIssueCount: 1,
+      expectedItems: Object.freeze([
+        'scrapyard-wall-map-frame',
+        'scrapyard-wall-map-route',
+        'garage-robot-frame-torso',
+        'garage-robot-brain-core',
+      ]),
+    }),
+  }),
   'scrap-mine-boss': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: 'abandoned-mine',
