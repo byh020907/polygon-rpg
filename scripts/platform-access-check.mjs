@@ -6,6 +6,7 @@ import { GAME_SCREEN, resolveReducedMotionPreference } from '../src/app/GameApp.
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
+import { createStandaloneViewportAdapter } from '../src/pwa/StandaloneViewportAdapter.js';
 import {
   buildDebugQaUrl,
   buildPlayerGameUrl,
@@ -109,7 +110,7 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(css, /calc\(\(100dvh - 78px\) \* 16 \/ 9\)/);
   assert.match(
     css,
-    /--game-safe-top: max\(4px, env\(safe-area-inset-top\)\);[\s\S]*padding: var\(--game-safe-top\) var\(--game-safe-right\) var\(--game-safe-bottom\)[\s\S]*height: 100%;/,
+    /--game-safe-top: max\(4px, env\(safe-area-inset-top\)\);[\s\S]*height: var\(--app-visible-viewport-height, 100dvh\);[\s\S]*padding: var\(--game-safe-top\) var\(--game-safe-right\) var\(--game-safe-bottom\)[\s\S]*height: 100%;/,
     '설치형 landscape도 safe-area를 보존하고 viewport 안에서만 canvas를 맞춰야 한다.',
   );
   assert.doesNotMatch(html, /MENTAL|정신력|vital-track--mental/);
@@ -172,6 +173,47 @@ function verifySemanticStatusAndFocusTargets() {
     gameApp,
     /uiState\.debugPanelOpen !== true &&\s*uiState\.operationMapOpen !== true/,
     '작전 지도 modal 동안 fixed simulation도 멈춰야 한다.',
+  );
+}
+
+function verifyStandaloneViewportSynchronization() {
+  const windowListeners = new Map();
+  const visualViewportListeners = new Map();
+  const properties = new Map();
+  const browserWindow = {
+    innerWidth: 844,
+    innerHeight: 390,
+    addEventListener(name, listener) {
+      windowListeners.set(name, listener);
+    },
+    removeEventListener(name) {
+      windowListeners.delete(name);
+    },
+    visualViewport: {
+      width: 806.6,
+      height: 361.3,
+      addEventListener(name, listener) {
+        visualViewportListeners.set(name, listener);
+      },
+      removeEventListener(name) {
+        visualViewportListeners.delete(name);
+      },
+    },
+  };
+  const root = { style: { setProperty: (name, value) => properties.set(name, value) } };
+  const adapter = createStandaloneViewportAdapter({ browserWindow, root });
+  assert.equal(adapter.start(), true);
+  assert.equal(properties.get('--app-visible-viewport-width'), '807px');
+  assert.equal(properties.get('--app-visible-viewport-height'), '361px');
+  browserWindow.visualViewport.height = 343.6;
+  visualViewportListeners.get('resize')();
+  assert.equal(properties.get('--app-visible-viewport-height'), '344px');
+  adapter.stop();
+  assert.equal(windowListeners.size, 0, '화면 종료 뒤 window listener를 남기면 안 된다.');
+  assert.equal(
+    visualViewportListeners.size,
+    0,
+    '화면 종료 뒤 visual viewport listener를 남기면 안 된다.',
   );
 }
 
@@ -633,6 +675,7 @@ verifyVisualQaReducedMotionOverride();
 verifyInteractiveControlKeyboardBoundary();
 verifyReducedMotionVisualQaRequest();
 verifyMobileVisibilityCleanup();
+verifyStandaloneViewportSynchronization();
 
 console.log(
   JSON.stringify(
@@ -665,6 +708,7 @@ console.log(
         'reduced-motion-in-app-visual-qa-request',
         'visual-qa-explicit-reduced-motion-override',
         'mobile-visibility-and-window-blur-cleanup',
+        'standalone-visible-viewport-safe-area-synchronization',
       ],
     },
     null,

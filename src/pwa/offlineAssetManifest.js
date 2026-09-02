@@ -12,7 +12,11 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/animation/CharacterBonePoseLibrary.js',
   './src/animation/CombatPoseLibrary.js',
   './src/animation/Easing.js',
+  './src/animation/MotionClipRetargeter.js',
+  './src/animation/MotionReferenceCatalog.js',
   './src/animation/PlayerMotionPose.js',
+  './src/animation/RollTimeline.js',
+  './src/animation/SkeletonPoseProjection.js',
   './src/animation/TwoBoneIKSolver.js',
   './src/app/DialoguePresentation.js',
   './src/app/GameApp.js',
@@ -90,4 +94,5 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/ui/HoldActivationController.js',
   './src/ui/ScreenFocusOwner.js',
   './src/pwa/PwaLifecycleAdapter.js',
+  './src/pwa/StandaloneViewportAdapter.js',
 ]);

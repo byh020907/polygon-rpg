@@ -2,6 +2,7 @@ import { GAME_SCREEN } from '../app/GameApp.js';
 import { createDebugConfigurationAdapter } from './DebugConfigurationAdapter.js';
 import { HoldActivationController } from './HoldActivationController.js';
 import { createPwaLifecycleAdapter, isStandalone } from '../pwa/PwaLifecycleAdapter.js';
+import { createStandaloneViewportAdapter } from '../pwa/StandaloneViewportAdapter.js';
 import {
   createDocumentFocusPort,
   ScreenFocusOwner,
@@ -124,6 +125,7 @@ function focusGameOverPresentation(browserDocument, recoveryAvailable) {
 
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.screen);
+  const standaloneViewport = createStandaloneViewportAdapter({ browserWindow: globalThis });
   const pwaLifecycle = createPwaLifecycleAdapter({ browserWindow: globalThis });
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
     globalThis.location,
@@ -455,6 +457,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         },
       });
       this.$nextTick(() => {
+        standaloneViewport.start();
         unsubscribePwa = pwaLifecycle.subscribe((state) => {
           this.pwa = state;
         });
@@ -892,6 +895,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       setDebugBackgroundInert(globalThis.document, false);
       setOperationMapBackgroundInert(globalThis.document, false);
       mobileViewport.leaveLandscape();
+      standaloneViewport.stop();
       gameApp.destroy();
     },
   }));

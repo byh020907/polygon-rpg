@@ -1,6 +1,6 @@
 importScripts('./src/pwa/offlineAssetManifest.js');
 
-const CACHE_VERSION = 'polygon-rpg-release-2026-09-02-pwa-6';
+const CACHE_VERSION = 'polygon-rpg-release-2026-09-02-pwa-7';
 const CACHE_NAME = `polygon-rpg-${CACHE_VERSION}`;
 const SHELL_URL = new URL('./index.html', self.location).href;
 const OFFLINE_URL = new URL('./offline.html', self.location).href;
