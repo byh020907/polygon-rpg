@@ -18,6 +18,7 @@
     "test:journey": "node scripts/first-journey-runtime-recovery-check.mjs",
     "test:world": "node scripts/world-time-check.mjs",
     "test:campaign": "node scripts/scrap-campaign-check.mjs",
+    "test:final": "node scripts/scrap-final-battle-check.mjs",
     "test:recovery": "node scripts/scrap-recovery-check.mjs",
     "test:intro": "node scripts/scrap-awakening-check.mjs",
     "test:character": "node scripts/scrap-character-readability-check.mjs",

@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`ambient-dialogue-verified`
+`final-battle-domain-verified`
 
 ## Project Direction Comparison
 
@@ -31,7 +31,7 @@
 | PG-SCRAP-GROWTH      | gap       | 검별 enchant, equipment trade-off, dialogue-scoped transaction과 schema v9 round-trip을 통과한다. 실제 Player는 작업복·고글·공구 가방을 쓰지만 growth NPC와 일부 region material presentation은 Academy fantasy다.                                                                                                                                                                                                                                                       |
 | PG-SCRAP-READABILITY | gap       | Desired State는 지역당 비인간 4 + 인간형 1 + 동원 기계 + 엘리트 + Boss, 전체 인간형 20~25%, 세 가지 이상 body/movement spectrum과 실제 인간의 항복·도주를 요구한다. 기존 profile은 이 complete roster·종료 반응을 아직 구현하지 않았다.                                                                                                                                                                                                                                  |
 | PG-VISUAL-FIDELITY   | gap       | 폐광 combat 기준 장면은 11 depth, four material, quantized light, directional impact와 industrial HUD를 actual Browser에서 유지한다. 도입 하린의 trapped arm/marker와 rescued standing silhouette는 desktop/mobile에서 읽힌다. 이 규칙의 전체 region·cast·enemy·Boss 확장은 남아 있다.                                                                                                                                                                                   |
-| PG-FINAL-BATTLE      | gap       | 다섯 part 5/5·100%, final availability와 대항 병기 module은 고정됐다. giant arena, armor/weapon/control-core phase, 제어핵 재설치와 epilogue는 없다.                                                                                                                                                                                                                                                                                                                     |
+| PG-FINAL-BATTLE      | gap       | schema v6 Campaign owner가 다섯 part 전용 unlock과 armor→weapon→control-core→core-reinstalled→epilogue의 순차·idempotent action ledger를 소유한다. `scrap-final-epilogue` Browser state는 다섯 부품 로봇과 제어핵 재설치·공식 수거팀 후일담을 투영한다. 실제 giant arena, player combat/contact와 지역 machine 복귀 map patch는 남았다. |
 | PG-PLATFORM-ACCESS   | gap       | Keyboard/touch parity, dialogue, MENU hold, URL state와 stable scenario가 있다. 최신 Codex in-app Browser 1280×720·844×390에서 동일 issue window, body/issue 가로 overflow 0, console warn/error 0과 Escape focus 복귀를 확인했다. final-battle scenario는 없다.                                                                                                                                                                                                         |
 | PG-RECOVERY          | satisfied | Versioned progression과 campaign/equipment/enchant aggregate를 `pre-action`, `latest-morning`, `latest-core-event` slot에 저장한다. 도입 conversation/stage도 reload·중복 방지를 통과하며 corrupt/read/write failure와 선택 복구는 explicit/atomic하다.                                                                                                                                                                                                                  |
 
@@ -55,8 +55,8 @@
 
 ## Active Execution Goal
 
-없음. 최신 verified snapshot은 하린의 YARD_SEARCH ambient 동행 말풍선, 다섯 region의 single-primary/two-linked issue owner, operation-map projection과 focused pacing trace 및 고물상 야전 침상의 preview/cancel 무변경·1구간 confirm·전 체력 복구를 포함한다.
+없음. 최신 verified snapshot은 final battle schema v6의 five-part gate, armor→weapon→control-core→core-reinstalled→epilogue ledger, v5 migration과 `scrap-final-epilogue` Browser projection을 포함한다.
 
 ## Blockers
 
-없음. 새 INBOX feedback의 현재형 Product/Engineering 반영, 20~30분 도입의 실제 탐색·전투·ambient 동행, linked issue 고유 encounter, 반복 cast 확장, actual convoy/route patch, final battle/ending과 전체 art 확장은 자율 구현 가능한 Gap이다.
+없음. 새 INBOX feedback의 현재형 Product/Engineering 반영, 20~30분 도입의 실제 탐색·전투·ambient 동행, linked issue 고유 encounter, 반복 cast 확장, actual convoy/route patch, giant final encounter·arena·지역 map patch와 전체 art 확장은 자율 구현 가능한 Gap이다.

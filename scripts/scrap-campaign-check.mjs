@@ -8,6 +8,7 @@ import {
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import {
   SCRAP_CAMPAIGN_ACTION_KIND,
+  SCRAP_CAMPAIGN_SCHEMA_VERSION,
   advanceScrapGarageReveal,
   advanceScrapAwakening,
   commitScrapCampaignAction,
@@ -283,7 +284,7 @@ const legacyCampaign = { ...fresh, version: 1 };
 delete legacyCampaign.awakeningStageId;
 delete legacyCampaign.garageRevealStageId;
 const migratedCampaign = toScrapCampaignSnapshot(legacyCampaign, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedCampaign.version, 5);
+assert.equal(migratedCampaign.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
 assert.equal(migratedCampaign.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(migratedCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.LOCKED);
 
@@ -705,7 +706,7 @@ assert.deepEqual(
 const versionThreeMine = { ...mineSuccess, version: 3 };
 delete versionThreeMine.regionEventStageIds;
 const migratedVersionThreeMine = toScrapCampaignSnapshot(versionThreeMine, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedVersionThreeMine.version, 5);
+assert.equal(migratedVersionThreeMine.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
 assert.equal(
   migratedVersionThreeMine.regionEventStageIds['abandoned-mine'],
   'abandoned-mine:campaign-updated',
@@ -715,7 +716,7 @@ const versionFourMine = { ...mineSuccess, version: 4 };
 delete versionFourMine.activePrimaryIssueId;
 delete versionFourMine.completedIssueIds;
 const migratedVersionFourMine = toScrapCampaignSnapshot(versionFourMine, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedVersionFourMine.version, 5);
+assert.equal(migratedVersionFourMine.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
 assert.equal(migratedVersionFourMine.activePrimaryIssueId, null);
 assert.deepEqual(migratedVersionFourMine.completedIssueIds, []);
 

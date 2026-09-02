@@ -3,6 +3,7 @@ import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../game/journey/FirstJour
 import { SCRAP_AWAKENING_STAGE } from '../game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../game/campaign/ScrapGarageRevealState.js';
 import { SCRAP_GAME_OVER_STAGE } from '../game/campaign/ScrapGameOverPresentation.js';
+import { SCRAP_FINAL_BATTLE_STAGE } from '../game/campaign/ScrapFinalBattleState.js';
 import {
   SCRAP_AWAKENING_MAP_ID,
   SCRAP_AWAKENING_REGION_ID,
@@ -152,9 +153,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     x: 500,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
     inputTimelineByPhase: Object.freeze({
-      active: Object.freeze([
-        Object.freeze({ frames: 2, input: Object.freeze({ right: true }) }),
-      ]),
+      active: Object.freeze([Object.freeze({ frames: 2, input: Object.freeze({ right: true }) })]),
     }),
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
@@ -885,6 +884,62 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     scrapLastSegment: true,
     scrapGameOverStageId: SCRAP_GAME_OVER_STAGE.INPUT_LOCKED,
     expectation: Object.freeze({}),
+  }),
+  'scrap-final-epilogue': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 480,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    scrapRegionStates: Object.freeze([
+      Object.freeze({
+        regionId: 'abandoned-mine',
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_SNOW_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_QUARRY_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+    ]),
+    scrapFinalBattleStageId: SCRAP_FINAL_BATTLE_STAGE.EPILOGUE,
+    expectation: Object.freeze({
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+      expectedItems: Object.freeze([
+        'garage-robot-walker-leg-left',
+        'garage-robot-crane-arm-left',
+        'garage-robot-reactor-core',
+        'garage-robot-snow-armor-torso',
+        'garage-robot-quarry-cutter-blade',
+        'garage-robot-hundred-label',
+      ]),
+    }),
   }),
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
   'scrap-character-board': Object.freeze({

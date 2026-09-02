@@ -617,6 +617,9 @@ export class GameApp extends SceneNode {
       this.scene.setVisualQaScrapIssueState(scenario.scrapIssueState);
     }
     if (scenario.scrapLastSegment) this.scene.setVisualQaScrapLastSegment();
+    if (scenario.scrapFinalBattleStageId) {
+      this.scene.setVisualQaScrapFinalBattleStage(scenario.scrapFinalBattleStageId);
+    }
     if (scenario.scrapGameOverStageId) {
       const recoverySnapshot = this.scene.getProgressionSnapshot();
       this.visualQaRecoverySnapshots = new Map([
@@ -687,6 +690,9 @@ export class GameApp extends SceneNode {
     }
     if (scenario.scrapIssueState) {
       this.scene.setVisualQaScrapIssueState(scenario.scrapIssueState);
+    }
+    if (scenario.scrapFinalBattleStageId) {
+      this.scene.setVisualQaScrapFinalBattleStage(scenario.scrapFinalBattleStageId);
     }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);

@@ -85,6 +85,10 @@ import {
   createScrapGameOverPresentation,
   getScrapGameOverPresentation,
 } from './campaign/ScrapGameOverPresentation.js';
+import {
+  SCRAP_FINAL_BATTLE_STAGE,
+  assertScrapFinalBattleStageId,
+} from './campaign/ScrapFinalBattleState.js';
 import { SCRAPYARD_REST_ENTITY_ID } from './maps/scrapAwakening.js';
 
 const CHARACTER_SPEED = 230;
@@ -832,6 +836,31 @@ export class GameScene extends SceneNode {
         activePrimaryIssueId,
         completedIssueIds: [...completedIssueIds],
         lastChangeLabel: `${primaryIssue.label} · 연결 이슈 ${completedIssueIds.length}/${primaryIssue.linkedIssues.length}`,
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return scrapCampaign;
+  }
+
+  setVisualQaScrapFinalBattleStage(stageId) {
+    assertScrapFinalBattleStageId(stageId);
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...current,
+        finalBattleStageId: stageId,
+        lastChangeLabel: getScrapCampaignReadModel(
+          { ...current, finalBattleStageId: stageId },
+          this.scrapCampaignProfile,
+        ).finalBattle.cue,
       },
       this.scrapCampaignProfile,
     );
@@ -3349,6 +3378,8 @@ export class GameScene extends SceneNode {
         : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
           ? scrapCampaign.garageReveal
           : scrapCampaign.awakening;
+    const scrapFinalBattleActive =
+      scrapCampaign.finalBattle.stageId !== SCRAP_FINAL_BATTLE_STAGE.INACTIVE;
     const scrapRegionObjective = (() => {
       if (!scrapCampaignRegionReadModel) return '';
       if (scrapCampaignRegionReadModel.status === 'resolved') {
@@ -3379,43 +3410,50 @@ export class GameScene extends SceneNode {
         activeStage?.nextObjective ?? `${scrapCampaignRegion.label}의 다음 현장 단계를 확인하세요.`
       );
     })();
-    const story = scrapAwakeningLocation
+    const story = scrapFinalBattleActive
       ? Object.freeze({
-          beatId:
-            scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-              ? `scrap-garage-reveal:${scrapCampaign.garageRevealStageId}`
-              : `scrap-awakening:${scrapCampaign.awakeningStageId}`,
-          title: scrapIntroPresentation.title,
-          briefing: scrapIntroPresentation.briefing,
-          nextObjective: scrapIntroPresentation.objective,
+          beatId: `scrap-final:${scrapCampaign.finalBattle.stageId}`,
+          title: scrapCampaign.finalBattle.title,
+          briefing: scrapCampaign.finalBattle.cue,
+          nextObjective: scrapCampaign.finalBattle.objective,
         })
-      : scrapCampaignRegionLocation
+      : scrapAwakeningLocation
         ? Object.freeze({
-            beatId: `scrap-region:${scrapCampaignRegion.id}:${scrapCampaignRegionReadModel.eventStageKind ?? 'roadhead'}`,
-            title:
-              scrapCampaignRegionReadModel.status === 'resolved'
-                ? `${scrapCampaignRegion.label} 해결 · ${scrapCampaignRegion.part.label}`
-                : `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.eventStageLabel}`,
-            briefing: `${scrapCampaignRegion.visual.material} 지대의 ${scrapCampaignRegion.machineLabel}. ${scrapCampaignRegionReadModel.statusLabel}`,
-            nextObjective: scrapRegionObjective,
+            beatId:
+              scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+                ? `scrap-garage-reveal:${scrapCampaign.garageRevealStageId}`
+                : `scrap-awakening:${scrapCampaign.awakeningStageId}`,
+            title: scrapIntroPresentation.title,
+            briefing: scrapIntroPresentation.briefing,
+            nextObjective: scrapIntroPresentation.objective,
           })
-        : characterBoardActive
+        : scrapCampaignRegionLocation
           ? Object.freeze({
-              beatId: 'scrap-character-readability',
-              title: '고철 생활권 캐릭터 설계 비교',
-              briefing:
-                '정면·측면·대표 pose에서 직업 도구, 작업복과 공격 가동부를 실제 gameplay 크기로 비교합니다.',
+              beatId: `scrap-region:${scrapCampaignRegion.id}:${scrapCampaignRegionReadModel.eventStageKind ?? 'roadhead'}`,
+              title:
+                scrapCampaignRegionReadModel.status === 'resolved'
+                  ? `${scrapCampaignRegion.label} 해결 · ${scrapCampaignRegion.part.label}`
+                  : `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.eventStageLabel}`,
+              briefing: `${scrapCampaignRegion.visual.material} 지대의 ${scrapCampaignRegion.machineLabel}. ${scrapCampaignRegionReadModel.statusLabel}`,
+              nextObjective: scrapRegionObjective,
             })
-          : resolveFirstJourneyStory({
-              equipment: {
-                id: this.equipmentProfile.id,
-                label: this.equipmentProfile.label,
-                progressionComplete,
-              },
-              journey,
-              regionExpansion,
-              activeRoomId: roomId,
-            });
+          : characterBoardActive
+            ? Object.freeze({
+                beatId: 'scrap-character-readability',
+                title: '고철 생활권 캐릭터 설계 비교',
+                briefing:
+                  '정면·측면·대표 pose에서 직업 도구, 작업복과 공격 가동부를 실제 gameplay 크기로 비교합니다.',
+              })
+            : resolveFirstJourneyStory({
+                equipment: {
+                  id: this.equipmentProfile.id,
+                  label: this.equipmentProfile.label,
+                  progressionComplete,
+                },
+                journey,
+                regionExpansion,
+                activeRoomId: roomId,
+              });
     const dialogue = this.resolveDialogueStatus();
     const encounterMaterial = encounter?.materialReward
       ? this.enchantmentCatalog.getProfile(encounter.materialReward.elementId)
@@ -3566,6 +3604,10 @@ export class GameScene extends SceneNode {
       objective = scrapIntroPresentation.objective;
       encounterHint = scrapIntroPresentation.cue;
     }
+    if (scrapFinalBattleActive) {
+      objective = scrapCampaign.finalBattle.objective;
+      encounterHint = scrapCampaign.finalBattle.cue;
+    }
     if (scrapCampaignRegionLocation) {
       objective = story.nextObjective;
       if (encounter?.role === 'boss' && encounter.health > 0) {
@@ -3627,48 +3669,52 @@ export class GameScene extends SceneNode {
           : '',
       journeyLabel: characterBoardActive
         ? '고철 캐릭터 설계 비교'
+        : scrapFinalBattleActive
+          ? scrapCampaign.finalBattle.title
+          : scrapAwakeningLocation
+            ? scrapCampaign.awakeningActive
+              ? '고철 대왕 각성 연출'
+              : scrapCampaign.garageRevealActive
+                ? '고물상 분석 · 차고 개방'
+                : scrapCampaign.garageRevealComplete
+                  ? scrapCampaign.collectedPartCount > 0
+                    ? `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`
+                    : '작전 준비 완료 · 로봇 0%'
+                  : scrapCampaign.deadlineRevealed
+                    ? '각성 완료 · D-30 · 고물상 복귀'
+                    : scrapIntroPresentation.title
+            : scrapCampaignRegionLocation
+              ? `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.statusLabel}`
+              : location.regionId === 'glasswind-region' ||
+                  (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
+                ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
+                : (phaseLabels[journey.phase] ?? journey.phase),
+      wardLabel: scrapFinalBattleActive
+        ? `제어핵 · ${scrapCampaign.finalBattle.stageId}`
         : scrapAwakeningLocation
-          ? scrapCampaign.awakeningActive
-            ? '고철 대왕 각성 연출'
-            : scrapCampaign.garageRevealActive
-              ? '고물상 분석 · 차고 개방'
-              : scrapCampaign.garageRevealComplete
-                ? scrapCampaign.collectedPartCount > 0
-                  ? `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`
-                  : '작전 준비 완료 · 로봇 0%'
-                : scrapCampaign.deadlineRevealed
-                  ? '각성 완료 · D-30 · 고물상 복귀'
-                  : scrapIntroPresentation.title
+          ? scrapCampaign.garageRevealComplete
+            ? scrapCampaign.collectedPartCount > 0
+              ? `${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} 부품 · 로봇 ${scrapCampaign.completionPercent}%`
+              : '제어장치 · 우리 로봇 두뇌 장착'
+            : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+              ? '회수한 제어장치 · 고물상 분석 대기'
+              : scrapCampaign.deadlineRevealed
+                ? '회수한 제어장치 · 보유 중'
+                : '제어장치 · 폐병기 흉곽 안'
           : scrapCampaignRegionLocation
-            ? `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.statusLabel}`
+            ? scrapCampaignRegionReadModel.collected
+              ? `${scrapCampaignRegionReadModel.partLabel} · 차고 로봇 ${scrapCampaign.completionPercent}%`
+              : `${scrapCampaignRegion.machineLabel} · ${scrapCampaignRegionReadModel.eventStageLabel}`
             : location.regionId === 'glasswind-region' ||
                 (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
-              ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
-              : (phaseLabels[journey.phase] ?? journey.phase),
-      wardLabel: scrapAwakeningLocation
-        ? scrapCampaign.garageRevealComplete
-          ? scrapCampaign.collectedPartCount > 0
-            ? `${scrapCampaign.collectedPartCount}/${scrapCampaign.totalPartCount} 부품 · 로봇 ${scrapCampaign.completionPercent}%`
-            : '제어장치 · 우리 로봇 두뇌 장착'
-          : scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-            ? '회수한 제어장치 · 고물상 분석 대기'
-            : scrapCampaign.deadlineRevealed
-              ? '회수한 제어장치 · 보유 중'
-              : '제어장치 · 폐병기 흉곽 안'
-        : scrapCampaignRegionLocation
-          ? scrapCampaignRegionReadModel.collected
-            ? `${scrapCampaignRegionReadModel.partLabel} · 차고 로봇 ${scrapCampaign.completionPercent}%`
-            : `${scrapCampaignRegion.machineLabel} · ${scrapCampaignRegionReadModel.eventStageLabel}`
-          : location.regionId === 'glasswind-region' ||
-              (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
-            ? regionExpansion.glasswindBridgeStable
-              ? '유리바람 다리 · 안정'
-              : '횡풍 장벽 · 활성'
-            : journey.fieldWardActive
-              ? '수호 수액 · HP +20'
-              : journey.routeChoice === 'bypass'
-                ? '우회 · 수액 없음'
-                : '수호 수액 미획득',
+              ? regionExpansion.glasswindBridgeStable
+                ? '유리바람 다리 · 안정'
+                : '횡풍 장벽 · 활성'
+              : journey.fieldWardActive
+                ? '수호 수액 · HP +20'
+                : journey.routeChoice === 'bypass'
+                  ? '우회 · 수액 없음'
+                  : '수호 수액 미획득',
       timePhase: worldTime.timePhase,
       timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
       deadlineLabel: scrapCampaign.deadlineLabel,
