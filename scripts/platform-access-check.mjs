@@ -144,7 +144,7 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /@keydown\.tab="trapDebugPanelFocus\(\$event\)"/);
   assert.match(html, /id="debug-start"[\s\S]*x-model="debugStart"/);
   assert.match(html, /id="debug-renderer"[\s\S]*x-model="debugRenderer"/);
-  assert.match(html, /x-bind:selected="scenarioId === debugStart"/);
+  assert.match(html, /x-bind:selected="scenario\.id === debugStart"/);
   assert.match(html, /x-bind:selected="rendererId === debugRenderer"/);
   assert.match(html, /x-bind:selected="phaseId === debugPhase"/);
   assert.match(css, /--debug-hold-progress/);
@@ -230,7 +230,7 @@ function verifyDebugConfigurationRoundTrip() {
   });
 
   const serialized = buildDebugQaUrl(source, {
-    start: 'academy-dialogue',
+    start: 'scrap-garage-0',
     frame: 144,
     renderer: 'retro',
     phase: 'end',
@@ -239,14 +239,14 @@ function verifyDebugConfigurationRoundTrip() {
   const serializedUrl = new URL(serialized.href);
   assert.equal(serializedUrl.searchParams.get('campaign'), 'fresh');
   assert.equal(serializedUrl.searchParams.get('visualQa'), '1');
-  assert.equal(serializedUrl.searchParams.get('gameStart'), 'academy-dialogue');
+  assert.equal(serializedUrl.searchParams.get('gameStart'), 'scrap-garage-0');
   assert.equal(serializedUrl.searchParams.get('gameFrame'), '144');
   assert.equal(serializedUrl.searchParams.get('visualQaRenderer'), 'retro');
   assert.equal(serializedUrl.searchParams.get('visualQaPhase'), 'end');
   assert.equal(serializedUrl.searchParams.has('reducedMotion'), false);
   assert.equal(serializedUrl.hash, '#capture');
   assert.deepEqual(serialized.configuration, {
-    start: 'academy-dialogue',
+    start: 'scrap-garage-0',
     frame: 144,
     renderer: 'retro',
     phase: 'end',
@@ -307,11 +307,45 @@ function verifyDebugConfigurationRoundTrip() {
   const applied = adapter.apply(serialized.configuration);
   adapter.returnToPlayerGame();
   assert.equal(replacements.length, 2);
-  assert.equal(new URL(replacements[0].href).searchParams.get('gameStart'), 'academy-dialogue');
+  assert.equal(new URL(replacements[0].href).searchParams.get('gameStart'), 'scrap-garage-0');
   assert.equal(new URL(replacements[0].href).searchParams.get('debugPanel'), '1');
   assert.equal(new URL(replacements[1].href).searchParams.has('visualQa'), false);
-  assert.equal(applied.request.start, 'academy-dialogue');
-  assert.equal(reconfigurationRequests[0].start, 'academy-dialogue');
+  assert.equal(applied.request.start, 'scrap-garage-0');
+  assert.equal(reconfigurationRequests[0].start, 'scrap-garage-0');
+  assert.deepEqual(
+    adapter.scenarioEntries.map((entry) => entry.id),
+    [
+      'scrap-intro-walk',
+      'scrap-intro-before',
+      'scrap-intro-awakening',
+      'scrap-intro-d30',
+      'scrap-intro-after',
+      'scrap-garage-analysis',
+      'scrap-garage-0',
+      'scrap-issue-window',
+      'scrap-mine-boss',
+      'scrap-mine-resolved',
+      'scrap-shipyard-boss',
+      'scrap-shipyard-resolved',
+      'scrap-greenhouse-boss',
+      'scrap-greenhouse-resolved',
+      'scrap-snow-boss',
+      'scrap-snow-resolved',
+      'scrap-quarry-boss',
+      'scrap-quarry-resolved',
+      'scrap-garage-20',
+      'scrap-garage-40',
+      'scrap-garage-60',
+      'scrap-garage-80',
+      'scrap-garage-100',
+      'scrap-game-over',
+      'scrap-final-armor',
+      'scrap-final-epilogue',
+      'scrap-art-benchmark',
+      'scrap-character-board',
+    ],
+    '디버그 패널은 현재 고철 캠페인과 작전 지도 fixture만 선택지로 노출해야 한다.',
+  );
   assert.equal(reconfigurationRequests[1], null);
 
   const rollbackLocation = { href: source, search: new URL(source).search };

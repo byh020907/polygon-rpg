@@ -600,11 +600,11 @@
                 <label class="debug-field debug-field--wide" for="debug-start">
                   <span>시작 장면</span>
                   <select id="debug-start" x-model="debugStart">
-                    <template x-for="scenarioId in debugScenarioIds" x-bind:key="scenarioId">
+                    <template x-for="scenario in debugScenarioEntries" x-bind:key="scenario.id">
                       <option
-                        x-bind:value="scenarioId"
-                        x-bind:selected="scenarioId === debugStart"
-                        x-text="scenarioId"
+                        x-bind:value="scenario.id"
+                        x-bind:selected="scenario.id === debugStart"
+                        x-text="scenario.label"
                       ></option>
                     </template>
                   </select>

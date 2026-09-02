@@ -1863,3 +1863,46 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
 export function visualQaScenarioIds() {
   return Object.freeze(Object.keys(VISUAL_QA_SCENARIOS));
 }
+
+// The developer panel is a campaign inspection surface, not the complete fixture catalog.
+// Keep legacy/combat-only fixtures addressable by URL while presenting the current scrap
+// campaign in its playable order.
+const DEBUG_SCENARIO_LABELS = Object.freeze({
+  'scrap-intro-walk': '도입 · 고물상 수거장 동행',
+  'scrap-intro-before': '도입 · 붕괴 뒤 제어핵 선택',
+  'scrap-intro-awakening': '도입 · 고대 병기 각성',
+  'scrap-intro-d30': '도입 · D-30 경보',
+  'scrap-intro-after': '도입 · 귀환 완료',
+  'scrap-garage-analysis': '차고 · 주인 분석',
+  'scrap-garage-0': '작전 지도 · 5지역 / 로봇 0%',
+  'scrap-issue-window': '작전 지도 · 주목표와 연결 이슈',
+  'scrap-mine-boss': '폐광 산촌 · 굴착기 결전',
+  'scrap-mine-resolved': '폐광 산촌 · 마지막 작업 완료',
+  'scrap-shipyard-boss': '항구 조선소 · 크레인 결전',
+  'scrap-shipyard-resolved': '항구 조선소 · 마지막 작업 완료',
+  'scrap-greenhouse-boss': '온실 평원 · 동력로 결전',
+  'scrap-greenhouse-resolved': '온실 평원 · 마지막 작업 완료',
+  'scrap-snow-boss': '설산 교역로 · 제설 열차 결전',
+  'scrap-snow-resolved': '설산 교역로 · 마지막 작업 완료',
+  'scrap-quarry-boss': '붉은 채석장 · 절단기 결전',
+  'scrap-quarry-resolved': '붉은 채석장 · 마지막 작업 완료',
+  'scrap-garage-20': '차고 · 조립 20%',
+  'scrap-garage-40': '차고 · 조립 40%',
+  'scrap-garage-60': '차고 · 조립 60%',
+  'scrap-garage-80': '차고 · 조립 80%',
+  'scrap-garage-100': '차고 · 조립 100%',
+  'scrap-game-over': 'D-DAY · 수도 도착 게임오버',
+  'scrap-final-armor': '최종전 · 장갑 파괴',
+  'scrap-final-epilogue': '후일담 · 산업기계 귀환',
+  'scrap-art-benchmark': '폐광 · 전투/조명 기준 장면',
+  'scrap-character-board': '캐릭터 · 실제 크기 실루엣 보드',
+});
+
+export function visualQaDebugScenarioEntries() {
+  return Object.freeze(
+    Object.entries(DEBUG_SCENARIO_LABELS).map(([id, label]) => {
+      if (!VISUAL_QA_SCENARIOS[id]) throw new Error(`디버그 장면이 존재하지 않습니다: ${id}`);
+      return Object.freeze({ id, label });
+    }),
+  );
+}

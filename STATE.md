@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-feedback-priority · Player baseline pose playback verified · physical-device-pwa-validation`
+`human-feedback-priority · campaign-map debug panel verified · character and roll pose-quality next`
 
 ## Project Direction Comparison
 
@@ -57,8 +57,8 @@
 
 ## Active Execution Goal
 
-없음. 이번 tick은 Player의 idle/run/jump/landing/roll/Basic/Strong/guard/hit authored pose strip을 `npm run test:combat`과 Codex in-app Browser normal gameplay에서 desktop 1280×720 keyboard·mobile 844×390 touch로 판독했다. `baseline-*-playback` Visual QA는 같은 120Hz command path를 fixed-step으로 재생해 idle/run/jump/landing/roll/Basic/Strong/guard를 frozen RenderFrame assertion과 Canvas capture로 반복 가능하게 했고, 기존 hit strip fixture를 유지한다. 모바일 canvas는 677.109×380px, body overflow와 console warn/error는 모두 0이었다. 다음 Human Feedback Priority는 physical Android Chromium/iPhone·iPad Safari에서 설치·standalone safe-area/scale, offline 재실행과 update failure recovery를 검증하는 것이다.
+없음. 디버그 패널은 이제 현재 고철 캠페인·작전 지도 상태만 사람 읽을 수 있는 순서로 제공하고 기본 장면은 `scrap-garage-0`이다. `npm run test:platform`, changed-file lint/format, `git diff --check`가 통과했고 Codex in-app Browser desktop에서 `scrap-issue-window`를 URL과 같은 상태로 적용한 뒤 주목표 1·연결 1/2·다섯 지역 route/시간/마지막 작업/조립 0%를 읽었으며, 844×390에서도 캠페인 장면 선택과 controls가 보였다. 다음 Human Feedback Priority는 Player 캐릭터와 구르기 pose 품질이다.
 
 ## Blockers
 
-Human Feedback Priority: live visual viewport adapter와 embedded Browser 844×390·844×344 layout은 focused fixture까지 통과했지만 Android Chromium/iPhone·iPad Safari의 실제 설치·standalone screen scale, fresh worker-controlled offline reload, device icon QA와 failed-update cache recovery는 아직 unverified다. Player baseline authored-pose playback은 `test:combat`과 1280×720 keyboard·844×390 touch actual capture에서 판독했으며 motion reference provenance와 collision alignment도 PASS했다. 실제 device/PWA 결과가 검증될 때까지 Verified Playable Frontier로 복귀하지 않는다.
+Human Feedback Priority: Player 캐릭터와 구르기 pose가 현재 그래픽 Quality에 맞게 실제 게임 속도·viewport에서 무게중심, silhouette와 조작 흐름을 읽히게 하는 결과가 아직 검증되지 않았다. 또한 live visual viewport adapter와 embedded Browser 844×390·844×344 layout은 focused fixture까지 통과했지만 Android Chromium/iPhone·iPad Safari의 실제 설치·standalone screen scale, fresh worker-controlled offline reload, device icon QA와 failed-update cache recovery는 아직 unverified다. 두 pending feedback 결과가 검증될 때까지 Verified Playable Frontier로 복귀하지 않는다.

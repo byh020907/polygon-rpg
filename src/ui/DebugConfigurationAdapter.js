@@ -2,7 +2,7 @@ import {
   readVisualQaRequest,
   VISUAL_QA_PHASE_IDS,
   VISUAL_QA_RENDERER_IDS,
-  visualQaScenarioIds,
+  visualQaDebugScenarioEntries,
 } from '../app/VisualQaConfig.js';
 
 const DEBUG_QUERY_KEYS = Object.freeze([
@@ -16,7 +16,7 @@ const DEBUG_QUERY_KEYS = Object.freeze([
 ]);
 
 const DEFAULT_DEBUG_CONFIGURATION = Object.freeze({
-  start: 'academy',
+  start: 'scrap-garage-0',
   frame: 0,
   renderer: 'retro',
   phase: 'active',
@@ -99,7 +99,7 @@ export function createDebugConfigurationAdapter(
   }
 
   return Object.freeze({
-    scenarioIds: visualQaScenarioIds(),
+    scenarioEntries: visualQaDebugScenarioEntries(),
     rendererIds: VISUAL_QA_RENDERER_IDS,
     phaseIds: VISUAL_QA_PHASE_IDS,
     initialConfiguration: createDebugConfiguration(initialRequest),

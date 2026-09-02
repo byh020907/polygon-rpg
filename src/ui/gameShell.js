@@ -192,7 +192,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     }),
     debugPanelOpen: debugConfigurationAdapter.panelRequested,
     debugMenuHoldProgress: 0,
-    debugScenarioIds: debugConfigurationAdapter.scenarioIds,
+    debugScenarioEntries: debugConfigurationAdapter.scenarioEntries,
     debugRendererIds: debugConfigurationAdapter.rendererIds,
     debugPhaseIds: debugConfigurationAdapter.phaseIds,
     debugStart: initialDebugConfiguration.start,
