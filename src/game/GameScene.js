@@ -77,6 +77,12 @@ import {
   assertScrapGarageRevealStageId,
   getScrapGarageRevealPresentation,
 } from './campaign/ScrapGarageRevealState.js';
+import {
+  SCRAP_GAME_OVER_STAGE,
+  advanceScrapGameOverPresentation,
+  createScrapGameOverPresentation,
+  getScrapGameOverPresentation,
+} from './campaign/ScrapGameOverPresentation.js';
 
 const CHARACTER_SPEED = 230;
 const JUMP_SPEED = 470;
@@ -581,6 +587,7 @@ export class GameScene extends SceneNode {
       this.progressionSnapshot.scrapCampaign,
       this.scrapCampaignProfile,
     );
+    this.scrapGameOverPresentationState = createScrapGameOverPresentation(scrapCampaign.gameOver);
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
       deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
@@ -787,6 +794,58 @@ export class GameScene extends SceneNode {
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       scrapCampaign,
     });
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return scrapCampaign;
+  }
+
+  setVisualQaScrapGameOverStage(stageId = SCRAP_GAME_OVER_STAGE.RECOVERY_CHOICE) {
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...current,
+        elapsedSegments: current.elapsedSegments + current.deadlineSegments,
+        deadlineSegments: 0,
+        rivalProgressSegments: current.rivalProgressSegments + current.deadlineSegments,
+        gameOver: true,
+        lastChangeLabel: 'D-DAY 0 · 고철 대왕 수도 도착',
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
+    this.scrapGameOverPresentationState = createScrapGameOverPresentation(true, stageId);
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return getScrapGameOverPresentation(this.scrapGameOverPresentationState);
+  }
+
+  setVisualQaScrapLastSegment() {
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    const elapsedSegments = this.scrapCampaignProfile.initialDeadlineSegments - 1;
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...current,
+        elapsedSegments,
+        deadlineSegments: 1,
+        rivalProgressSegments: elapsedSegments,
+        rivalDelaySegments: 0,
+        gameOver: false,
+        lastChangeLabel: '마지막 1구간 · 수도 도착 직전',
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
+    this.scrapGameOverPresentationState = createScrapGameOverPresentation(false);
     this.syncScrapAwakeningWorldContext();
     this.statusNode.publish({ force: true });
     return scrapCampaign;
@@ -1519,6 +1578,7 @@ export class GameScene extends SceneNode {
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       scrapCampaign: transaction.snapshot,
     });
+    if (transaction.snapshot.gameOver) this.beginScrapGameOverPresentation();
     this.progressionNotice = `${transaction.preview.label} · ${transaction.preview.after.phaseLabel} · ${transaction.preview.after.deadlineLabel}`;
     this.syncScrapAwakeningWorldContext();
     this.emitDurableProgressionChanged();
@@ -1527,6 +1587,7 @@ export class GameScene extends SceneNode {
   }
 
   requestScrapCampaignTravel(portal) {
+    if (this.progressionSnapshot.scrapCampaign.gameOver) return false;
     if (this.pendingScrapCampaignAction || !this.canStartPortalTransition()) return false;
     const action = this.createScrapCampaignTravelAction(portal);
     const preview = previewScrapCampaignAction(
@@ -1553,6 +1614,7 @@ export class GameScene extends SceneNode {
   }
 
   requestScrapCampaignRegionEventStart(regionId) {
+    if (this.progressionSnapshot.scrapCampaign.gameOver) return false;
     if (this.pendingScrapCampaignAction || this.mapRuntime.getTransition()) return false;
     const action = this.createScrapCampaignRegionEventStartAction(regionId);
     const preview = previewScrapCampaignAction(
@@ -1618,6 +1680,22 @@ export class GameScene extends SceneNode {
     return this.cancelScrapCampaignAction();
   }
 
+  getPendingScrapCampaignAction() {
+    return this.pendingScrapCampaignAction;
+  }
+
+  beginScrapGameOverPresentation() {
+    this.scrapGameOverPresentationState = createScrapGameOverPresentation(true);
+    this.pendingScrapCampaignAction = null;
+    this.portalTransitionPresentation = null;
+    this.movementIntent = 0;
+    this.rollState = null;
+    this.verticalVelocity = 0;
+    this.storyInteractionOwner.reset();
+    this.combatCommands.reset();
+    return getScrapGameOverPresentation(this.scrapGameOverPresentationState);
+  }
+
   emitDurableProgressionChanged() {
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       firstJourney: this.journeyProgress.persistenceSnapshot(),
@@ -1648,6 +1726,7 @@ export class GameScene extends SceneNode {
   }
 
   canStartPortalTransition() {
+    if (this.progressionSnapshot.scrapCampaign.gameOver) return false;
     if (this.mapRuntime.getTransition() || this.pendingScrapCampaignAction) return false;
     const combatState = this.combatCommands.snapshot();
     return this.isGrounded && !this.rollState && combatState.id === 'idle';
@@ -1776,6 +1855,7 @@ export class GameScene extends SceneNode {
           this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
             scrapCampaign: campaignTransaction.snapshot,
           });
+          if (campaignTransaction.snapshot.gameOver) this.beginScrapGameOverPresentation();
           this.progressionNotice = `${campaignTransaction.preview.label} · ${campaignTransaction.preview.after.phaseLabel} · ${campaignTransaction.preview.after.deadlineLabel}`;
         }
       }
@@ -2738,6 +2818,17 @@ export class GameScene extends SceneNode {
     this.previousPosition = { ...this.position };
     this.previousAnimationTime = this.animationTime;
     this.previousCameraPosition = { ...this.cameraPosition };
+    if (this.progressionSnapshot.scrapCampaign.gameOver) {
+      const previousStageId = this.scrapGameOverPresentationState.stageId;
+      this.scrapGameOverPresentationState = advanceScrapGameOverPresentation(
+        this.scrapGameOverPresentationState,
+        deltaSeconds,
+      );
+      if (this.scrapGameOverPresentationState.stageId !== previousStageId) {
+        this.statusNode.publish({ force: true });
+      }
+      return;
+    }
     this.combatCameraFeedback.update(deltaSeconds);
     this.combatEvents.update(deltaSeconds);
     this.storyInteractionOwner.advance(deltaSeconds, this.getStoryInteractionContext());
@@ -3043,6 +3134,7 @@ export class GameScene extends SceneNode {
       progression.scrapCampaign,
       this.scrapCampaignProfile,
     );
+    const gameOverPresentation = getScrapGameOverPresentation(this.scrapGameOverPresentationState);
     const phaseLabels = {
       prepare: '학원촌 준비',
       field: 'Field 탐험',
@@ -3418,7 +3510,9 @@ export class GameScene extends SceneNode {
       timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
       deadlineLabel: scrapCampaign.deadlineLabel,
       campaign: scrapCampaign,
-      operationMapAvailable: !scrapAwakeningLocation || scrapCampaign.garageRevealComplete,
+      gameOverPresentation,
+      operationMapAvailable:
+        !scrapCampaign.gameOver && (!scrapAwakeningLocation || scrapCampaign.garageRevealComplete),
       characterBoard: room.characterBoardManifest
         ? Object.freeze({ active: true, ...room.characterBoardManifest })
         : Object.freeze({

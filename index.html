@@ -402,6 +402,87 @@
           </div>
 
           <div
+            class="scrap-game-over-backdrop"
+            x-show="gameOverOpen"
+            x-bind:data-stage="gameOverPresentation.stageId"
+            @keydown.tab="trapGameOverFocus($event)"
+          >
+            <section
+              class="scrap-game-over-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="scrap-game-over-title"
+              aria-describedby="scrap-game-over-cue"
+            >
+              <header aria-live="assertive" aria-atomic="true">
+                <small>ROYAL CAPITAL · TERMINAL ACTION</small>
+                <h2
+                  id="scrap-game-over-title"
+                  tabindex="-1"
+                  x-text="gameOverPresentation.title"
+                ></h2>
+                <p id="scrap-game-over-cue" x-text="gameOverPresentation.cue"></p>
+              </header>
+
+              <figure
+                class="scrap-game-over-map"
+                aria-label="고철 대왕이 다섯 지역을 지나 수도에 도착한 작전 지도"
+              >
+                <div class="scrap-game-over-route" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i><b></b>
+                </div>
+                <div class="scrap-game-over-capital" aria-hidden="true">
+                  <span class="capital-tower capital-tower--left"></span>
+                  <span class="capital-tower capital-tower--center"></span>
+                  <span class="capital-tower capital-tower--right"></span>
+                  <strong>수도</strong>
+                </div>
+                <div class="scrap-game-over-rival" aria-hidden="true">
+                  <span></span><b></b><i></i>
+                </div>
+                <div class="scrap-game-over-impact" aria-hidden="true"></div>
+                <figcaption>D-DAY 0 · 고철 대왕 수도 도착 · 전투와 지도 command 잠금</figcaption>
+              </figure>
+
+              <section
+                class="scrap-recovery-choices"
+                x-show="gameOverPresentation.recoveryAvailable"
+                aria-labelledby="scrap-recovery-title"
+              >
+                <header>
+                  <div>
+                    <small>RECOVERY RECORDS</small>
+                    <h3 id="scrap-recovery-title">어느 작전 기록에서 다시 시작할까요?</h3>
+                  </div>
+                  <p x-text="recoveryStatus" aria-live="polite"></p>
+                </header>
+                <div class="scrap-recovery-slot-list">
+                  <template x-for="slot in recoverySlots" x-bind:key="slot.id">
+                    <button
+                      class="scrap-recovery-slot"
+                      type="button"
+                      x-bind:data-recovery-slot="slot.id"
+                      x-bind:disabled="!recoveryRestorable"
+                      @click="restoreRecoverySlot(slot.id)"
+                    >
+                      <span>
+                        <small x-text="slot.title"></small>
+                        <strong x-text="slot.timeLabel"></strong>
+                      </span>
+                      <span x-text="slot.detailLabel"></span>
+                      <em x-text="slot.assemblyLabel"></em>
+                    </button>
+                  </template>
+                </div>
+                <p class="scrap-recovery-note">
+                  복구는 선택한 snapshot의 시간·부품·보상·장비를 함께 교체합니다. 세계 안의 시간
+                  되감기로 취급하지 않습니다.
+                </p>
+              </section>
+            </section>
+          </div>
+
+          <div
             class="debug-panel-backdrop"
             x-show="debugPanelOpen"
             @click.self="closeDebugPanel"

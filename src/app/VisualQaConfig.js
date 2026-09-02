@@ -2,6 +2,7 @@ import { FIRST_JOURNEY_CHECKPOINT_ID } from '../game/encounter/FirstJourneyProgr
 import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../game/journey/FirstJourneyDungeonSignature.js';
 import { SCRAP_AWAKENING_STAGE } from '../game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../game/campaign/ScrapGarageRevealState.js';
+import { SCRAP_GAME_OVER_STAGE } from '../game/campaign/ScrapGameOverPresentation.js';
 import {
   SCRAP_AWAKENING_MAP_ID,
   SCRAP_AWAKENING_REGION_ID,
@@ -738,6 +739,46 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'garage-robot-eighty-label',
       ]),
     }),
+  }),
+  'scrap-game-over': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 480,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    scrapRegionStates: Object.freeze([
+      Object.freeze({
+        regionId: 'abandoned-mine',
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_SHIPYARD_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_GREENHOUSE_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+      Object.freeze({
+        regionId: SCRAP_SNOW_REGION_ID,
+        stageKind: 'campaign-updated',
+        status: 'resolved',
+        collected: true,
+        currentLocationId: 'neighborhood-scrapyard',
+      }),
+    ]),
+    scrapLastSegment: true,
+    scrapGameOverStageId: SCRAP_GAME_OVER_STAGE.INPUT_LOCKED,
+    expectation: Object.freeze({}),
   }),
   academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
   'scrap-character-board': Object.freeze({

@@ -1228,6 +1228,317 @@ dd {
   background: #d89250;
 }
 
+.scrap-game-over-backdrop {
+  position: absolute;
+  z-index: 14;
+  inset: 0;
+  display: grid;
+  padding: 10px;
+  overflow: auto;
+  color: #f2e6cd;
+  background:
+    radial-gradient(circle at 75% 40%, rgb(167 61 32 / 24%), transparent 34%), rgb(5 7 7 / 92%);
+  place-items: center;
+  backdrop-filter: blur(7px) saturate(0.72);
+}
+
+.scrap-game-over-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(310px, 1.1fr);
+  gap: clamp(12px, 2.2vw, 24px);
+  width: min(940px, 100%);
+  max-height: 100%;
+  padding: clamp(16px, 3vw, 30px);
+  overflow: auto;
+  border: 1px solid rgb(219 114 73 / 66%);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgb(61 28 21 / 34%), transparent 45%), rgb(10 13 14 / 98%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 72%);
+}
+
+.scrap-game-over-panel > header {
+  grid-column: 1 / -1;
+}
+
+.scrap-game-over-panel > header small,
+.scrap-recovery-choices small {
+  color: #e07f54;
+  font:
+    800 0.61rem ui-monospace,
+    monospace;
+  letter-spacing: 0.15em;
+}
+
+.scrap-game-over-panel > header h2 {
+  margin: 5px 0 7px;
+  color: #ffe0bd;
+  font:
+    800 clamp(1.55rem, 5vw, 3.25rem) Georgia,
+    serif;
+  letter-spacing: -0.025em;
+}
+
+.scrap-game-over-panel > header p {
+  max-width: 760px;
+  margin: 0;
+  color: #c4b8a5;
+  font-size: clamp(0.72rem, 1.5vw, 0.88rem);
+}
+
+.scrap-game-over-map {
+  position: relative;
+  min-height: 245px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgb(216 132 80 / 40%);
+  border-radius: 6px;
+  background:
+    linear-gradient(transparent 94%, rgb(220 136 82 / 12%) 94%),
+    linear-gradient(90deg, transparent 94%, rgb(220 136 82 / 10%) 94%),
+    linear-gradient(155deg, #202321, #101516 68%);
+  background-size:
+    100% 32px,
+    40px 100%,
+    auto;
+}
+
+.scrap-game-over-route {
+  position: absolute;
+  top: 55%;
+  right: 72px;
+  left: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3px;
+  background: linear-gradient(90deg, #846245, #d17b4c);
+}
+
+.scrap-game-over-route i {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #b98558;
+  border-radius: 50%;
+  background: #171a19;
+}
+
+.scrap-game-over-route b {
+  width: 20px;
+  height: 20px;
+  border: 3px double #f0b56e;
+  background: #3b2118;
+  transform: rotate(45deg);
+}
+
+.scrap-game-over-capital {
+  position: absolute;
+  right: 22px;
+  bottom: 58px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 72px;
+  height: 100px;
+  transform-origin: 50% 100%;
+  transition:
+    filter 260ms ease,
+    transform 420ms cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+.scrap-game-over-capital strong {
+  position: absolute;
+  right: 0;
+  bottom: -25px;
+  left: 0;
+  color: #e7c389;
+  font:
+    700 0.65rem ui-monospace,
+    monospace;
+  text-align: center;
+}
+
+.capital-tower {
+  display: block;
+  width: 21px;
+  height: 54px;
+  border: 2px solid #d8b67c;
+  background: linear-gradient(90deg, #755841, #3d342d);
+}
+
+.capital-tower--center {
+  height: 84px;
+  clip-path: polygon(50% 0, 100% 24%, 100% 100%, 0 100%, 0 24%);
+}
+
+.scrap-game-over-rival {
+  position: absolute;
+  bottom: 63px;
+  left: 28px;
+  width: 64px;
+  height: 80px;
+  transform: translateX(-72px);
+  transition: transform 900ms cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.scrap-game-over-rival span,
+.scrap-game-over-rival b,
+.scrap-game-over-rival i {
+  position: absolute;
+  display: block;
+  border: 2px solid #dd7a4d;
+  background: #3b2923;
+}
+
+.scrap-game-over-rival span {
+  top: 4px;
+  left: 18px;
+  width: 30px;
+  height: 28px;
+  border-radius: 45% 45% 30% 30%;
+  box-shadow: inset 8px 0 #583026;
+}
+
+.scrap-game-over-rival b {
+  top: 31px;
+  left: 8px;
+  width: 48px;
+  height: 30px;
+  transform: skew(-8deg);
+}
+
+.scrap-game-over-rival i {
+  top: 58px;
+  left: 13px;
+  width: 38px;
+  height: 19px;
+  border-top: 0;
+}
+
+.scrap-game-over-impact {
+  position: absolute;
+  right: 26px;
+  bottom: 58px;
+  width: 68px;
+  height: 68px;
+  opacity: 0;
+  background: repeating-conic-gradient(#f1a15e 0 7deg, transparent 7deg 18deg);
+  transform: scale(0.2);
+  transition:
+    opacity 180ms ease,
+    transform 360ms ease;
+}
+
+.scrap-game-over-map figcaption {
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
+  left: 12px;
+  color: #b9a990;
+  font:
+    700 0.58rem ui-monospace,
+    monospace;
+  letter-spacing: 0.04em;
+}
+
+.scrap-game-over-backdrop:not([data-stage='input-locked']) .scrap-game-over-rival {
+  transform: translateX(calc(100% + 170px));
+}
+
+.scrap-game-over-backdrop[data-stage='capital-destroyed'] .scrap-game-over-capital,
+.scrap-game-over-backdrop[data-stage='recovery-choice'] .scrap-game-over-capital {
+  filter: saturate(0.4) brightness(0.65);
+  transform: rotate(8deg) scaleY(0.72);
+}
+
+.scrap-game-over-backdrop[data-stage='capital-destroyed'] .scrap-game-over-impact,
+.scrap-game-over-backdrop[data-stage='recovery-choice'] .scrap-game-over-impact {
+  opacity: 0.9;
+  transform: scale(1.25);
+}
+
+.scrap-recovery-choices {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  min-width: 0;
+}
+
+.scrap-recovery-choices > header {
+  display: grid;
+  gap: 5px;
+}
+
+.scrap-recovery-choices h3 {
+  margin: 2px 0 0;
+  color: #f5d7ac;
+  font:
+    700 clamp(1rem, 2.4vw, 1.35rem) Georgia,
+    serif;
+}
+
+.scrap-recovery-choices header p,
+.scrap-recovery-note {
+  margin: 0;
+  color: #aa9f8e;
+  font-size: 0.67rem;
+}
+
+.scrap-recovery-slot-list {
+  display: grid;
+  gap: 7px;
+}
+
+.scrap-recovery-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  width: 100%;
+  padding: 10px 12px;
+  color: #e9dfce;
+  border: 1px solid rgb(217 141 79 / 45%);
+  border-radius: 4px;
+  background: linear-gradient(110deg, rgb(65 39 26 / 72%), rgb(13 17 18 / 92%));
+  text-align: left;
+  cursor: pointer;
+}
+
+.scrap-recovery-slot > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.scrap-recovery-slot > span:nth-child(2) {
+  grid-column: 1 / -1;
+  color: #b7ab98;
+  font-size: 0.67rem;
+}
+
+.scrap-recovery-slot strong {
+  color: #ffe1aa;
+  font-size: 0.82rem;
+}
+
+.scrap-recovery-slot em {
+  color: #87c5b5;
+  font:
+    700 0.61rem ui-monospace,
+    monospace;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.scrap-recovery-slot:hover:not(:disabled),
+.scrap-recovery-slot:focus-visible {
+  border-color: #f0b166;
+  outline: 2px solid rgb(240 177 102 / 34%);
+  outline-offset: 2px;
+}
+
+.scrap-recovery-slot:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .debug-panel-backdrop {
   position: absolute;
   z-index: 12;
@@ -2343,6 +2654,14 @@ kbd {
     gap: 5px;
   }
 
+  .scrap-game-over-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .scrap-game-over-map {
+    min-height: 210px;
+  }
+
   .game-footer {
     align-items: flex-start;
     flex-direction: column;
@@ -2462,5 +2781,11 @@ kbd {
 
   .menu-button:hover {
     transform: none;
+  }
+
+  .scrap-game-over-rival,
+  .scrap-game-over-capital,
+  .scrap-game-over-impact {
+    transition-duration: 1ms;
   }
 }

@@ -6,9 +6,11 @@ import {
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
 import { toScrapCampaignSnapshot } from '../campaign/ScrapCampaignState.js';
+import { RECOVERY_SLOT_IDS } from './CampaignRecoveryPolicy.js';
 
 const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6, 7]);
 const PREVIOUS_PROGRESSION_SCHEMA_VERSION = 8;
+const RECOVERY_STORAGE_SCHEMA_VERSION = 1;
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -261,6 +263,101 @@ function createStoredRecord(snapshot) {
   };
 }
 
+function decodeStoredSnapshot(
+  parsed,
+  defaultEquipmentId,
+  allowedEquipmentIds,
+  enchantmentCatalog,
+  weaponForgeProfile,
+  scrapCampaignProfile,
+) {
+  if (!isRecord(parsed) || !Number.isSafeInteger(parsed.version)) {
+    throw new TypeError('저장 진행 형식이 올바르지 않습니다.');
+  }
+  if (
+    !LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) &&
+    parsed.version !== PREVIOUS_PROGRESSION_SCHEMA_VERSION &&
+    parsed.version !== PROGRESSION_SCHEMA_VERSION
+  ) {
+    throw new Error('지원하지 않는 저장 진행 version입니다.');
+  }
+  if (!enchantmentCatalog || !Array.isArray(enchantmentCatalog.profiles)) {
+    throw new TypeError('저장 enchantment catalog이 필요합니다.');
+  }
+
+  const isLegacy =
+    LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ||
+    parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION;
+  const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
+    ? migrateLegacySnapshot(
+        parsed,
+        defaultEquipmentId,
+        allowedEquipmentIds,
+        enchantmentCatalog,
+        scrapCampaignProfile,
+      )
+    : parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION
+      ? migrateVersionEightSnapshot(
+          parsed,
+          defaultEquipmentId,
+          allowedEquipmentIds,
+          enchantmentCatalog,
+          weaponForgeProfile,
+          scrapCampaignProfile,
+        )
+      : validateCurrentSnapshot(
+          parsed,
+          defaultEquipmentId,
+          allowedEquipmentIds,
+          enchantmentCatalog,
+          weaponForgeProfile,
+          scrapCampaignProfile,
+        );
+  return Object.freeze({ isLegacy, snapshot });
+}
+
+function validateSnapshotForStorage(
+  snapshot,
+  enchantmentCatalog,
+  weaponForgeProfile,
+  scrapCampaignProfile,
+) {
+  assertProgressionSnapshot(snapshot, scrapCampaignProfile);
+  if (!enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
+  validateWeaponForgeSnapshot(snapshot.weaponForge, weaponForgeProfile, snapshot.ownedEquipmentIds);
+  return mergeProgressionSnapshot(snapshot, {
+    scrapCampaign: toScrapCampaignSnapshot(snapshot.scrapCampaign, scrapCampaignProfile),
+    enchantment: canonicalizeEnchantmentSnapshot(
+      snapshot.enchantment,
+      enchantmentCatalog,
+      snapshot.ownedEquipmentIds,
+    ),
+  });
+}
+
+function validateRecoveryMetadata(value, slotId) {
+  if (!isRecord(value) || value.slotId !== slotId) {
+    throw new TypeError('복구 지점 metadata가 slot과 일치하지 않습니다.');
+  }
+  for (const field of ['title', 'detailLabel', 'phaseLabel', 'deadlineLabel']) {
+    if (typeof value[field] !== 'string' || value[field].trim().length === 0) {
+      throw new TypeError(`복구 지점 ${field}가 올바르지 않습니다.`);
+    }
+  }
+  for (const field of [
+    'elapsedSegments',
+    'day',
+    'collectedPartCount',
+    'totalPartCount',
+    'completionPercent',
+  ]) {
+    if (!Number.isSafeInteger(value[field]) || value[field] < 0) {
+      throw new TypeError(`복구 지점 ${field}가 올바르지 않습니다.`);
+    }
+  }
+  return Object.freeze({ ...value });
+}
+
 function failure(reason, message) {
   return Object.freeze({ ok: false, reason, message });
 }
@@ -287,6 +384,7 @@ export class ProgressionStorage {
     }
     this.storage = storage;
     this.key = key;
+    this.recoveryKey = `${key}.recovery.v1`;
     this.enchantmentCatalog = enchantmentCatalog;
     this.weaponForgeProfile = weaponForgeProfile;
     this.scrapCampaignProfile = scrapCampaignProfile;
@@ -335,55 +433,15 @@ export class ProgressionStorage {
         '저장 진행이 손상되었습니다. 초기화 전까지 저장하지 않습니다.',
       );
     }
-    if (!isRecord(parsed) || !Number.isSafeInteger(parsed.version)) {
-      return failure(
-        'invalid-data',
-        '저장 진행 형식이 올바르지 않습니다. 초기화 전까지 저장하지 않습니다.',
-      );
-    }
-    if (
-      !LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) &&
-      parsed.version !== PREVIOUS_PROGRESSION_SCHEMA_VERSION &&
-      parsed.version !== PROGRESSION_SCHEMA_VERSION
-    ) {
-      return failure(
-        'unsupported-version',
-        '지원하지 않는 저장 진행입니다. 초기화 전까지 기존 기록을 보존합니다.',
-      );
-    }
-
     try {
-      if (!enchantmentCatalog || !Array.isArray(enchantmentCatalog.profiles)) {
-        throw new TypeError('저장 enchantment catalog이 필요합니다.');
-      }
-      const isLegacy =
-        LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ||
-        parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION;
-      const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
-        ? migrateLegacySnapshot(
-            parsed,
-            defaultEquipmentId,
-            allowedIds,
-            enchantmentCatalog,
-            this.scrapCampaignProfile,
-          )
-        : parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION
-          ? migrateVersionEightSnapshot(
-              parsed,
-              defaultEquipmentId,
-              allowedIds,
-              enchantmentCatalog,
-              this.weaponForgeProfile,
-              this.scrapCampaignProfile,
-            )
-          : validateCurrentSnapshot(
-              parsed,
-              defaultEquipmentId,
-              allowedIds,
-              enchantmentCatalog,
-              this.weaponForgeProfile,
-              this.scrapCampaignProfile,
-            );
+      const { isLegacy, snapshot } = decodeStoredSnapshot(
+        parsed,
+        defaultEquipmentId,
+        allowedIds,
+        enchantmentCatalog,
+        this.weaponForgeProfile,
+        this.scrapCampaignProfile,
+      );
       return Object.freeze({
         ok: true,
         kind: isLegacy ? 'migrated' : 'loaded',
@@ -400,21 +458,12 @@ export class ProgressionStorage {
   save(snapshot) {
     let validated;
     try {
-      assertProgressionSnapshot(snapshot, this.scrapCampaignProfile);
-      if (!this.enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
-      validateWeaponForgeSnapshot(
-        snapshot.weaponForge,
+      validated = validateSnapshotForStorage(
+        snapshot,
+        this.enchantmentCatalog,
         this.weaponForgeProfile,
-        snapshot.ownedEquipmentIds,
+        this.scrapCampaignProfile,
       );
-      validated = mergeProgressionSnapshot(snapshot, {
-        scrapCampaign: toScrapCampaignSnapshot(snapshot.scrapCampaign, this.scrapCampaignProfile),
-        enchantment: canonicalizeEnchantmentSnapshot(
-          snapshot.enchantment,
-          this.enchantmentCatalog,
-          snapshot.ownedEquipmentIds,
-        ),
-      });
     } catch {
       return failure('invalid-data', '현재 진행 값이 올바르지 않아 저장하지 못했습니다.');
     }
@@ -434,6 +483,134 @@ export class ProgressionStorage {
         'write-failed',
         '저장소에 진행을 쓰지 못했습니다. 현재 세션 진행은 유지됩니다.',
       );
+    }
+  }
+
+  loadRecoverySlots(
+    defaultEquipmentId,
+    allowedEquipmentIds = [defaultEquipmentId],
+    enchantmentCatalog = this.enchantmentCatalog,
+  ) {
+    const allowedIds = createAllowedEquipmentIds(allowedEquipmentIds, defaultEquipmentId);
+    let serialized;
+    try {
+      serialized = this.storage.getItem(this.recoveryKey);
+    } catch {
+      return failure('recovery-read-failed', '복구 지점을 읽지 못했습니다.');
+    }
+    if (serialized === null) return Object.freeze({ ok: true, kind: 'empty', records: [] });
+
+    try {
+      const envelope = JSON.parse(serialized);
+      if (
+        !isRecord(envelope) ||
+        envelope.version !== RECOVERY_STORAGE_SCHEMA_VERSION ||
+        !isRecord(envelope.slots)
+      ) {
+        throw new TypeError('복구 저장 형식이 올바르지 않습니다.');
+      }
+      const records = [];
+      for (const [slotId, record] of Object.entries(envelope.slots)) {
+        if (!RECOVERY_SLOT_IDS.includes(slotId) || !isRecord(record)) {
+          throw new TypeError('지원하지 않는 복구 지점이 있습니다.');
+        }
+        const metadata = validateRecoveryMetadata(record.metadata, slotId);
+        const { snapshot } = decodeStoredSnapshot(
+          record.snapshot,
+          defaultEquipmentId,
+          allowedIds,
+          enchantmentCatalog,
+          this.weaponForgeProfile,
+          this.scrapCampaignProfile,
+        );
+        records.push(Object.freeze({ slotId, metadata, snapshot }));
+      }
+      records.sort(
+        (left, right) =>
+          right.metadata.elapsedSegments - left.metadata.elapsedSegments ||
+          RECOVERY_SLOT_IDS.indexOf(left.slotId) - RECOVERY_SLOT_IDS.indexOf(right.slotId),
+      );
+      return Object.freeze({ ok: true, kind: 'loaded', records: Object.freeze(records) });
+    } catch {
+      return failure(
+        'recovery-invalid-data',
+        '복구 지점이 손상되었습니다. 현재 진행은 바꾸지 않았습니다.',
+      );
+    }
+  }
+
+  saveRecoverySlot(slotId, snapshot, metadata) {
+    if (!RECOVERY_SLOT_IDS.includes(slotId)) {
+      return failure('invalid-slot', '지원하지 않는 복구 지점입니다.');
+    }
+    let validatedSnapshot;
+    let validatedMetadata;
+    try {
+      validatedSnapshot = validateSnapshotForStorage(
+        snapshot,
+        this.enchantmentCatalog,
+        this.weaponForgeProfile,
+        this.scrapCampaignProfile,
+      );
+      validatedMetadata = validateRecoveryMetadata(metadata, slotId);
+    } catch {
+      return failure('invalid-data', '복구 지점의 진행 값이 올바르지 않습니다.');
+    }
+
+    let envelope = { version: RECOVERY_STORAGE_SCHEMA_VERSION, slots: {} };
+    try {
+      const serialized = this.storage.getItem(this.recoveryKey);
+      if (serialized !== null) {
+        const parsed = JSON.parse(serialized);
+        if (
+          !isRecord(parsed) ||
+          parsed.version !== RECOVERY_STORAGE_SCHEMA_VERSION ||
+          !isRecord(parsed.slots)
+        ) {
+          throw new TypeError('기존 복구 저장 형식이 올바르지 않습니다.');
+        }
+        envelope = parsed;
+      }
+    } catch {
+      return failure('recovery-invalid-data', '기존 복구 지점이 손상되어 덮어쓰지 않았습니다.');
+    }
+
+    const nextEnvelope = {
+      version: RECOVERY_STORAGE_SCHEMA_VERSION,
+      slots: {
+        ...envelope.slots,
+        [slotId]: {
+          metadata: validatedMetadata,
+          snapshot: createStoredRecord(validatedSnapshot),
+        },
+      },
+    };
+    try {
+      this.storage.setItem(this.recoveryKey, JSON.stringify(nextEnvelope));
+      return Object.freeze({
+        ok: true,
+        kind: 'recovery-saved',
+        record: Object.freeze({ slotId, metadata: validatedMetadata, snapshot: validatedSnapshot }),
+      });
+    } catch {
+      return failure(
+        'recovery-write-failed',
+        '복구 지점을 저장하지 못했습니다. 현재 진행은 유지됩니다.',
+      );
+    }
+  }
+
+  clearRecoverySlots() {
+    try {
+      if (typeof this.storage.removeItem === 'function') this.storage.removeItem(this.recoveryKey);
+      else
+        this.storage.setItem(
+          this.recoveryKey,
+          JSON.stringify({ version: RECOVERY_STORAGE_SCHEMA_VERSION, slots: {} }),
+        );
+      return Object.freeze({ ok: true, kind: 'recovery-cleared' });
+    } catch {
+      return failure('recovery-clear-failed', '이전 복구 지점을 지우지 못했습니다.');
     }
   }
 }

@@ -145,6 +145,23 @@ function focusCampaignActionPreview(browserDocument) {
   browserDocument.getElementById('campaign-action-title')?.focus();
 }
 
+function setGameOverBackgroundInert(browserDocument, isInert) {
+  const backdrop = browserDocument.querySelector('.scrap-game-over-backdrop');
+  const viewport = backdrop?.parentElement;
+  if (!viewport) return;
+  for (const child of viewport.children) {
+    if (child !== backdrop) child.inert = isInert;
+  }
+}
+
+function focusGameOverPresentation(browserDocument, recoveryAvailable) {
+  const recoveryTarget = recoveryAvailable
+    ? browserDocument.querySelector('.scrap-recovery-slot:not([disabled])')
+    : null;
+  const target = recoveryTarget ?? browserDocument.getElementById('scrap-game-over-title');
+  target?.focus();
+}
+
 export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
   const mobileViewport = createMobileViewportController(globalThis.document, globalThis.screen);
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
@@ -177,6 +194,17 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
     operationMapOpen: false,
     operationMapAvailable: false,
     campaignActionPreviewOpen: false,
+    gameOverOpen: false,
+    gameOverPresentation: Object.freeze({
+      active: false,
+      stageId: 'inactive',
+      title: '',
+      cue: '',
+      recoveryAvailable: false,
+    }),
+    recoverySlots: Object.freeze([]),
+    recoveryRestorable: false,
+    recoveryStatus: '복구 지점을 확인하는 중입니다.',
     campaignActionPreview: Object.freeze({
       label: '',
       kind: 'travel',
@@ -342,6 +370,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
             screen: this.screen,
             operationMapOpen: this.operationMapOpen,
             campaignActionPreviewOpen: this.campaignActionPreviewOpen,
+            gameOverOpen: this.gameOverOpen,
             debugPanelOpen: this.debugPanelOpen,
             reducedMotion: this.reducedMotion,
             isPlaying: this.isPlaying,
@@ -372,6 +401,8 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.trainingMarks = status.trainingMarks;
         },
         setWorldStatus: (status) => {
+          const previousGameOverStageId = this.gameOverPresentation.stageId;
+          const wasGameOverOpen = this.gameOverOpen;
           this.areaName = status.areaName;
           this.storyBeatId = status.story.beatId;
           this.storyTitle = status.story.title;
@@ -381,6 +412,24 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           this.timeLabel = status.timeLabel;
           this.deadlineLabel = status.deadlineLabel;
           this.campaign = status.campaign;
+          this.gameOverPresentation = status.gameOverPresentation;
+          this.gameOverOpen = status.gameOverPresentation.active;
+          if (this.gameOverOpen !== wasGameOverOpen) {
+            setGameOverBackgroundInert(globalThis.document, this.gameOverOpen);
+          }
+          if (
+            this.gameOverOpen &&
+            status.gameOverPresentation.stageId !== previousGameOverStageId
+          ) {
+            this.$nextTick(() =>
+              globalThis.requestAnimationFrame(() =>
+                focusGameOverPresentation(
+                  globalThis.document,
+                  status.gameOverPresentation.recoveryAvailable,
+                ),
+              ),
+            );
+          }
           this.operationMapAvailable = status.operationMapAvailable;
           this.characterBoard = status.characterBoard;
           this.canManageProgression = status.canManageProgression;
@@ -411,6 +460,18 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         setSaveStatus: (status) => {
           this.saveStatus = status;
         },
+        setRecoverySlots: (result) => {
+          this.recoverySlots = result.slots;
+          this.recoveryRestorable = result.restorable;
+          this.recoveryStatus = result.message;
+          if (this.gameOverOpen && this.gameOverPresentation.recoveryAvailable) {
+            this.$nextTick(() =>
+              globalThis.requestAnimationFrame(() =>
+                focusGameOverPresentation(globalThis.document, true),
+              ),
+            );
+          }
+        },
         requestOperationMap: () => {
           this.openOperationMap('game-canvas');
         },
@@ -432,6 +493,15 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
           }
         } else {
           gameApp.start();
+        }
+        if (this.gameOverOpen) {
+          setGameOverBackgroundInert(globalThis.document, true);
+          globalThis.requestAnimationFrame(() =>
+            focusGameOverPresentation(
+              globalThis.document,
+              this.gameOverPresentation.recoveryAvailable,
+            ),
+          );
         }
         if (this.debugPanelOpen) {
           setDebugBackgroundInert(globalThis.document, true);
@@ -634,6 +704,39 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       }
     },
 
+    trapGameOverFocus(event) {
+      const panel = globalThis.document.querySelector('.scrap-game-over-panel');
+      const focusable = [...(panel?.querySelectorAll(DEBUG_PANEL_FOCUSABLE_SELECTOR) ?? [])];
+      if (focusable.length === 0) {
+        event.preventDefault();
+        globalThis.document.getElementById('scrap-game-over-title')?.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && globalThis.document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && globalThis.document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    },
+
+    restoreRecoverySlot(slotId) {
+      if (!this.gameOverPresentation.recoveryAvailable || !this.recoveryRestorable) return;
+      const result = gameApp.restoreRecoverySlot(slotId);
+      if (!result.ok) {
+        this.recoveryStatus = result.message;
+        return;
+      }
+      this.$nextTick(() =>
+        globalThis.requestAnimationFrame(() =>
+          globalThis.document.getElementById('game-canvas')?.focus(),
+        ),
+      );
+    },
+
     openDebugPanel() {
       if (this.campaignActionPreviewOpen) return;
       if (this.operationMapOpen) {
@@ -714,6 +817,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
         this.reducedMotion = gameApp.prefersReducedMotion();
         setDebugBackgroundInert(globalThis.document, false);
         setCampaignActionBackgroundInert(globalThis.document, false);
+        setGameOverBackgroundInert(globalThis.document, false);
         this.debugConfigurationStatus = '일반 게임으로 돌아왔습니다.';
         this.$nextTick(() =>
           applyFocusAfterPaint(
@@ -739,6 +843,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       setDebugBackgroundInert(globalThis.document, false);
       setOperationMapBackgroundInert(globalThis.document, false);
       setCampaignActionBackgroundInert(globalThis.document, false);
+      setGameOverBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.RENDER_LAB, {
         menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_START,
       });
@@ -760,6 +865,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       setDebugBackgroundInert(globalThis.document, false);
       setOperationMapBackgroundInert(globalThis.document, false);
       setCampaignActionBackgroundInert(globalThis.document, false);
+      setGameOverBackgroundInert(globalThis.document, false);
       const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.MENU);
       this.screen = focusRequest.screen;
       this.isPlaying = false;

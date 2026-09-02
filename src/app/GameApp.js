@@ -7,6 +7,13 @@ import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
+import {
+  RECOVERY_SLOT_ID,
+  createInitialMorningRecoveryRequest,
+  createPostProgressionRecoveryRequests,
+  createPreActionRecoveryRequest,
+  createRecoverySlotReadModel,
+} from '../game/progression/CampaignRecoveryPolicy.js';
 import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
 import { SCRAP_AWAKENING_MAP, SCRAP_AWAKENING_MAP_ID } from '../game/maps/scrapAwakening.js';
 import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode.js';
@@ -62,6 +69,7 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.setWorldStatus !== 'function' ||
     typeof uiBridge.setDialoguePresentation !== 'function' ||
     typeof uiBridge.setSaveStatus !== 'function' ||
+    typeof uiBridge.setRecoverySlots !== 'function' ||
     typeof uiBridge.requestOperationMap !== 'function' ||
     typeof uiBridge.requestCampaignActionPreview !== 'function'
   ) {
@@ -73,6 +81,33 @@ function assertUiBridge(uiBridge) {
 }
 
 const PROGRESSION_STORAGE_KEY = 'polygon-rpg.progression.v1';
+
+const VISUAL_QA_RECOVERY_SLOTS = Object.freeze([
+  Object.freeze({
+    id: 'pre-action',
+    title: '행동 확정 직전',
+    detailLabel: '수도 도착을 확정하기 직전의 작전 기록',
+    timeLabel: 'Day 30 · 밤 · D-1',
+    assemblyLabel: '4/5 부품 · 로봇 80%',
+    elapsedSegments: 119,
+  }),
+  Object.freeze({
+    id: 'latest-core-event',
+    title: '이전 핵심 사건 완료',
+    detailLabel: '장갑 제설 열차 차체 회수 직후',
+    timeLabel: 'Day 25 · 낮 · D-6',
+    assemblyLabel: '4/5 부품 · 로봇 80%',
+    elapsedSegments: 97,
+  }),
+  Object.freeze({
+    id: 'latest-morning',
+    title: '최근 날짜의 아침',
+    detailLabel: '하루를 시작한 시점의 안전한 작전 기록',
+    timeLabel: 'Day 30 · 아침 · D-1',
+    assemblyLabel: '4/5 부품 · 로봇 80%',
+    elapsedSegments: 116,
+  }),
+]);
 
 function createProgressionStorage() {
   try {
@@ -107,6 +142,7 @@ export class GameApp extends SceneNode {
   constructor({ gameCanvas, polygonCanvas, retroCanvas, visualQaRequest = null }) {
     super('GameApp');
     const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
+    this.equipmentIds = Object.freeze([...equipmentIds]);
     const freshProgression = createProgressionSnapshot(
       EQUIPMENT_CATALOG.defaultProfileId,
       ENCHANTMENT_CATALOG,
@@ -114,6 +150,7 @@ export class GameApp extends SceneNode {
     );
     this.visualQaRequest = visualQaRequest;
     this.isVisualQa = Boolean(this.visualQaRequest);
+    this.visualQaRecoverySnapshots = new Map();
     this.progressionStorage = null;
     if (this.isVisualQa) {
       this.progressionLoadResult = Object.freeze({
@@ -140,6 +177,7 @@ export class GameApp extends SceneNode {
     const progressionSnapshot = this.progressionLoadResult.ok
       ? this.progressionLoadResult.snapshot
       : freshProgression;
+    this.lastObservedProgressionSnapshot = progressionSnapshot;
     const mapDefinition =
       !this.isVisualQa || this.visualQaRequest?.scenario?.mapId === SCRAP_AWAKENING_MAP_ID
         ? SCRAP_AWAKENING_MAP
@@ -180,7 +218,8 @@ export class GameApp extends SceneNode {
           uiState?.screen === GAME_SCREEN.GAME &&
           uiState?.debugPanelOpen !== true &&
           uiState?.operationMapOpen !== true &&
-          uiState?.campaignActionPreviewOpen !== true
+          uiState?.campaignActionPreviewOpen !== true &&
+          uiState?.gameOverOpen !== true
         );
       },
     });
@@ -215,6 +254,7 @@ export class GameApp extends SceneNode {
   onEnterTree() {
     this.connectTo(this.scene.worldStatusChanged, (status) => {
       this.uiBridge.setWorldStatus(status);
+      if (status.campaign.gameOver) this.refreshRecoverySlots();
     });
     this.connectTo(this.scene.playerStatusChanged, (status) => {
       this.uiBridge.setPlayerStatus(status);
@@ -232,6 +272,11 @@ export class GameApp extends SceneNode {
       this.uiBridge.requestCampaignActionPreview(request);
     });
     this.uiBridge.setSaveStatus(this.initialSaveStatus());
+    const initialMorningRequest = createInitialMorningRecoveryRequest(
+      this.scene.getProgressionSnapshot(),
+      SCRAP_CAMPAIGN_PROFILE,
+    );
+    if (initialMorningRequest) this.saveRecoveryRequest(initialMorningRequest, { quiet: true });
     if (this.progressionLoadResult.ok && this.progressionLoadResult.kind === 'migrated') {
       const migrationSave = this.saveProgression(this.scene.getProgressionSnapshot());
       if (migrationSave.ok) {
@@ -308,9 +353,170 @@ export class GameApp extends SceneNode {
       this.uiBridge?.setSaveStatus(result.message);
       return result;
     }
+    const previousSnapshot = this.lastObservedProgressionSnapshot;
+    this.lastObservedProgressionSnapshot = snapshot;
+    const recoveryRequests = createPostProgressionRecoveryRequests(
+      previousSnapshot,
+      snapshot,
+      SCRAP_CAMPAIGN_PROFILE,
+    );
+    const recoveryFailure = recoveryRequests
+      .map((request) => this.saveRecoveryRequest(request, { quiet: true }))
+      .find((result) => !result.ok);
     const result = this.progressionStorage.save(snapshot);
-    this.uiBridge?.setSaveStatus(result.ok ? '진행 자동 저장됨' : `저장 실패 · ${result.message}`);
+    this.uiBridge?.setSaveStatus(
+      !result.ok
+        ? `저장 실패 · ${result.message}`
+        : recoveryFailure
+          ? `진행 저장됨 · 복구 지점 실패 · ${recoveryFailure.message}`
+          : recoveryRequests.length > 0
+            ? '진행·복구 지점 자동 저장됨'
+            : '진행 자동 저장됨',
+    );
     return result;
+  }
+
+  saveRecoveryRequest(request, { quiet = false } = {}) {
+    if (this.isVisualQa) {
+      return Object.freeze({ ok: true, kind: 'visual-qa-recovery-skipped' });
+    }
+    if (!this.autosaveEnabled || !this.progressionStorage) {
+      const result = Object.freeze({
+        ok: false,
+        reason: 'recovery-unavailable',
+        message: this.progressionLoadResult.ok
+          ? '복구 저장소를 사용할 수 없습니다.'
+          : this.progressionLoadResult.message,
+      });
+      if (!quiet) this.uiBridge?.setSaveStatus(`복구 지점 실패 · ${result.message}`);
+      return result;
+    }
+    const result = this.progressionStorage.saveRecoverySlot(
+      request.slotId,
+      request.snapshot,
+      request.metadata,
+    );
+    if (!quiet) {
+      this.uiBridge?.setSaveStatus(
+        result.ok ? `${request.metadata.title} 저장됨` : `복구 지점 실패 · ${result.message}`,
+      );
+    }
+    return result;
+  }
+
+  refreshRecoverySlots() {
+    if (this.isVisualQa) {
+      const restorable = this.visualQaRecoverySnapshots.size > 0;
+      const result = Object.freeze({
+        ok: true,
+        restorable,
+        message: restorable
+          ? '시각 검증용 복구 지점 · 선택 동작 확인 가능'
+          : '시각 검증용 복구 지점',
+        slots: VISUAL_QA_RECOVERY_SLOTS,
+      });
+      this.uiBridge?.setRecoverySlots(result);
+      return result;
+    }
+    if (!this.progressionStorage) {
+      const result = Object.freeze({
+        ok: false,
+        restorable: false,
+        message: '복구 저장소를 사용할 수 없습니다.',
+        slots: Object.freeze([]),
+      });
+      this.uiBridge?.setRecoverySlots(result);
+      return result;
+    }
+    const loaded = this.progressionStorage.loadRecoverySlots(
+      EQUIPMENT_CATALOG.defaultProfileId,
+      this.equipmentIds,
+      ENCHANTMENT_CATALOG,
+    );
+    const result = loaded.ok
+      ? Object.freeze({
+          ok: true,
+          restorable: true,
+          message:
+            loaded.records.length > 0
+              ? '다시 시작할 작전 기록을 고르세요.'
+              : '사용 가능한 복구 지점이 없습니다.',
+          slots: Object.freeze(loaded.records.map(createRecoverySlotReadModel)),
+        })
+      : Object.freeze({
+          ok: false,
+          restorable: false,
+          message: loaded.message,
+          slots: Object.freeze([]),
+        });
+    this.uiBridge?.setRecoverySlots(result);
+    return result;
+  }
+
+  restoreRecoverySlot(slotId) {
+    if (this.isVisualQa) {
+      const snapshot = this.visualQaRecoverySnapshots.get(slotId);
+      if (!snapshot) {
+        const result = Object.freeze({
+          ok: false,
+          reason: 'visual-qa-recovery-missing',
+          message: '시각 검증용 복구 지점이 없습니다.',
+        });
+        this.uiBridge?.setSaveStatus(result.message);
+        return result;
+      }
+      this.input.clear({ resetSequences: true });
+      this.scene.restoreProgression(snapshot);
+      this.runner.reset(performance.now());
+      this.uiBridge?.setSaveStatus('시각 검증용 행동 직전 기록에서 작전 재개');
+      return Object.freeze({ ok: true, kind: 'visual-qa-recovered', slotId, snapshot });
+    }
+    if (!this.progressionStorage) {
+      const result = Object.freeze({
+        ok: false,
+        reason: 'storage-unavailable',
+        message: '복구 저장소를 사용할 수 없습니다.',
+      });
+      this.uiBridge?.setSaveStatus(result.message);
+      return result;
+    }
+    const loaded = this.progressionStorage.loadRecoverySlots(
+      EQUIPMENT_CATALOG.defaultProfileId,
+      this.equipmentIds,
+      ENCHANTMENT_CATALOG,
+    );
+    if (!loaded.ok) {
+      this.uiBridge?.setSaveStatus(`복구 실패 · ${loaded.message}`);
+      return loaded;
+    }
+    const record = loaded.records.find((candidate) => candidate.slotId === slotId);
+    if (!record) {
+      const result = Object.freeze({
+        ok: false,
+        reason: 'recovery-slot-missing',
+        message: '선택한 복구 지점이 더 이상 없습니다.',
+      });
+      this.uiBridge?.setSaveStatus(`복구 실패 · ${result.message}`);
+      return result;
+    }
+
+    const saveResult = this.progressionStorage.save(record.snapshot);
+    if (!saveResult.ok) {
+      this.uiBridge?.setSaveStatus(`복구 실패 · ${saveResult.message} · 현재 상태 유지`);
+      return saveResult;
+    }
+    this.lastObservedProgressionSnapshot = record.snapshot;
+    this.progressionLoadResult = Object.freeze({
+      ok: true,
+      kind: 'recovered',
+      snapshot: record.snapshot,
+    });
+    this.autosaveEnabled = true;
+    this.input.clear({ resetSequences: true });
+    this.scene.restoreProgression(record.snapshot);
+    this.runner.reset(performance.now());
+    this.uiBridge?.setSaveStatus(`${record.metadata.title}에서 작전 재개`);
+    return Object.freeze({ ok: true, kind: 'recovered', slotId, snapshot: record.snapshot });
   }
 
   resetSavedProgress() {
@@ -349,9 +555,20 @@ export class GameApp extends SceneNode {
       snapshot: freshProgression,
     });
     this.input.clear({ resetSequences: true });
+    this.lastObservedProgressionSnapshot = freshProgression;
     this.scene.restoreProgression(freshProgression);
+    const clearRecoveryResult = this.progressionStorage.clearRecoverySlots();
+    const initialMorningRequest = createInitialMorningRecoveryRequest(
+      freshProgression,
+      SCRAP_CAMPAIGN_PROFILE,
+    );
+    if (initialMorningRequest) this.saveRecoveryRequest(initialMorningRequest, { quiet: true });
     this.runner.reset(performance.now());
-    this.uiBridge?.setSaveStatus('저장 진행 초기화 완료 · 새 진행 자동 저장 준비');
+    this.uiBridge?.setSaveStatus(
+      clearRecoveryResult.ok
+        ? '저장 진행·복구 지점 초기화 완료 · 새 진행 자동 저장 준비'
+        : `저장 진행 초기화 완료 · 이전 복구 지점 정리 실패 · ${clearRecoveryResult.message}`,
+    );
     return Object.freeze({ ok: true, kind: 'reset', snapshot: freshProgression });
   }
 
@@ -393,6 +610,17 @@ export class GameApp extends SceneNode {
     for (const scrapRegionState of scenario.scrapRegionStates ??
       (scenario.scrapRegionState ? [scenario.scrapRegionState] : [])) {
       this.scene.setVisualQaScrapRegionState(scrapRegionState);
+    }
+    if (scenario.scrapLastSegment) this.scene.setVisualQaScrapLastSegment();
+    if (scenario.scrapGameOverStageId) {
+      const recoverySnapshot = this.scene.getProgressionSnapshot();
+      this.visualQaRecoverySnapshots = new Map([
+        [RECOVERY_SLOT_ID.PRE_ACTION, recoverySnapshot],
+        [RECOVERY_SLOT_ID.LATEST_CORE_EVENT, recoverySnapshot],
+        [RECOVERY_SLOT_ID.LATEST_MORNING, recoverySnapshot],
+      ]);
+      this.scene.setVisualQaScrapGameOverStage(scenario.scrapGameOverStageId);
+      this.refreshRecoverySlots();
     }
     this.scene.setVisualQaLocation(scenario);
     if (scenario.materialEchoDefeats) {
@@ -484,6 +712,7 @@ export class GameApp extends SceneNode {
     const expectedGarageRevealStageId = expectation.expectedGarageRevealStageId;
     const expectedGarageRevealActive = expectation.expectedGarageRevealActive;
     const expectedLastChangeLabel = expectation.expectedLastChangeLabel;
+    const expectedGameOverStageId = expectation.expectedGameOverStageId;
     const portalIds = renderFrame.map.portalIds;
     const progression = this.scene.getProgressionSnapshot();
     const worldStatus = this.scene.getWorldStatus();
@@ -608,6 +837,9 @@ export class GameApp extends SceneNode {
       lastChangeLabelMatches:
         !expectedLastChangeLabel ||
         worldStatus.campaign.lastChangeLabel === expectedLastChangeLabel,
+      gameOverStageMatches:
+        !expectedGameOverStageId ||
+        worldStatus.gameOverPresentation.stageId === expectedGameOverStageId,
     };
     const assertion = Object.freeze({
       ...assertionEvidence,
@@ -634,7 +866,8 @@ export class GameApp extends SceneNode {
         assertionEvidence.awakeningActiveMatches &&
         assertionEvidence.garageRevealStageMatches &&
         assertionEvidence.garageRevealActiveMatches &&
-        assertionEvidence.lastChangeLabelMatches,
+        assertionEvidence.lastChangeLabelMatches &&
+        assertionEvidence.gameOverStageMatches,
     });
     if (!assertion.passed) {
       const failedChecks = Object.entries(assertionEvidence)
@@ -667,6 +900,7 @@ export class GameApp extends SceneNode {
       awakeningStageId: worldStatus.campaign.awakeningStageId,
       garageRevealStageId: worldStatus.campaign.garageRevealStageId,
       lastChangeLabel: worldStatus.campaign.lastChangeLabel,
+      gameOverStageId: worldStatus.gameOverPresentation.stageId,
       materialQuantities: progression.enchantment.materialQuantities,
       player: renderFrame.player,
       combatEnemy: renderFrame.combatEnemy,
@@ -728,6 +962,22 @@ export class GameApp extends SceneNode {
   }
 
   confirmCampaignActionPreview() {
+    const pending = this.scene.getPendingScrapCampaignAction();
+    if (pending) {
+      const recoveryRequest = createPreActionRecoveryRequest(
+        this.scene.getProgressionSnapshot(),
+        pending.preview,
+        SCRAP_CAMPAIGN_PROFILE,
+      );
+      const recoveryResult = this.saveRecoveryRequest(recoveryRequest);
+      if (!recoveryResult.ok) {
+        return Object.freeze({
+          started: false,
+          reason: 'pre-action-recovery-save-failed',
+          recoveryResult,
+        });
+      }
+    }
     return this.scene.confirmScrapCampaignAction();
   }
 

@@ -9,6 +9,7 @@ function createBufferedUiBridge(uiBridge) {
     'setWorldStatus',
     'setDialoguePresentation',
     'setSaveStatus',
+    'setRecoverySlots',
     'requestOperationMap',
     'requestCampaignActionPreview',
   ]);
@@ -191,6 +192,10 @@ export class GameApplication {
 
   cancelCampaignActionPreview() {
     return this.currentApp.cancelCampaignActionPreview();
+  }
+
+  restoreRecoverySlot(slotId) {
+    return this.currentApp.restoreRecoverySlot(slotId);
   }
 
   pressMobileAction(actionId, pointerId) {
