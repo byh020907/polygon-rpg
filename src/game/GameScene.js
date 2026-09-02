@@ -90,6 +90,11 @@ import {
   assertScrapFinalBattleStageId,
 } from './campaign/ScrapFinalBattleState.js';
 import { createScrapFinalBattlePresentation } from './campaign/ScrapFinalBattlePresentation.js';
+import {
+  createScrapFinalBattleCombatState,
+  getScrapFinalBattleCombatProfile,
+  resolveScrapFinalBattleCombatContact,
+} from './campaign/ScrapFinalBattleCombat.js';
 import { SCRAPYARD_REST_ENTITY_ID } from './maps/scrapAwakening.js';
 
 const CHARACTER_SPEED = 230;
@@ -497,6 +502,10 @@ export class GameScene extends SceneNode {
     );
     this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
     this.storyInteractionOwner = new StoryInteractionOwner();
+    this.scrapFinalBattleCombat = createScrapFinalBattleCombatState(
+      this.progressionSnapshot.scrapCampaign.finalBattleStageId,
+    );
+    this.scrapFinalBattleOpeningSeconds = 0;
     const initialScrapCampaign = getScrapCampaignReadModel(
       this.progressionSnapshot.scrapCampaign,
       this.scrapCampaignProfile,
@@ -868,9 +877,76 @@ export class GameScene extends SceneNode {
     this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
       scrapCampaign,
     });
+    this.resetScrapFinalBattleCombat(stageId);
     this.syncScrapAwakeningWorldContext();
     this.statusNode.publish({ force: true });
     return scrapCampaign;
+  }
+
+  resetScrapFinalBattleCombat(stageId = this.progressionSnapshot.scrapCampaign.finalBattleStageId) {
+    this.scrapFinalBattleCombat = createScrapFinalBattleCombatState(stageId);
+    this.scrapFinalBattleOpeningSeconds = 0;
+    return this.scrapFinalBattleCombat;
+  }
+
+  createScrapFinalBattleStageAction(stageId) {
+    const current = toScrapCampaignSnapshot(
+      this.progressionSnapshot.scrapCampaign,
+      this.scrapCampaignProfile,
+    );
+    return Object.freeze({
+      actionId: `final-battle:${stageId}:${current.committedActionIds.length}`,
+      label: `최종전 · ${stageId}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.FINAL_BATTLE_STAGE,
+      finalBattleStageId: stageId,
+      costSegments: 0,
+    });
+  }
+
+  resolveScrapFinalBattleCombatHit(combatState, attackProfile) {
+    const stageId = this.progressionSnapshot.scrapCampaign.finalBattleStageId;
+    const profile = getScrapFinalBattleCombatProfile(stageId);
+    if (!profile) return false;
+    if (this.scrapFinalBattleCombat.stageId !== stageId) this.resetScrapFinalBattleCombat(stageId);
+    const result = resolveScrapFinalBattleCombatContact({
+      state: this.scrapFinalBattleCombat,
+      combatState,
+      attackProfile,
+      weaponSweep: this.playerCombatGeometry?.sweep,
+      openingActive: this.scrapFinalBattleOpeningSeconds > 0,
+    });
+    if (!result.changed) return false;
+    this.scrapFinalBattleCombat = result.state;
+    this.combatEvents.emit(COMBAT_EVENT_TYPE.HIT, {
+      actor: 'player',
+      target: 'enemy',
+      attackId: combatState.id,
+      position: result.contact.position,
+      direction: this.facing,
+      strength: result.completed ? 2.4 : 1.5,
+      durationSeconds: 0.16,
+    });
+    this.combatCameraFeedback.trigger({
+      direction: this.facing,
+      strength: result.completed ? 1.8 : 0.9,
+      durationSeconds: 0.12,
+    });
+    if (!result.completed) {
+      this.progressionNotice = `${profile.targetLabel} 타격 ${result.state.hitCount}/${profile.requiredHitCount}`;
+      return true;
+    }
+    const transaction = this.commitScrapCampaignDomainAction(
+      this.createScrapFinalBattleStageAction(
+        stageId === SCRAP_FINAL_BATTLE_STAGE.CONTROL_CORE
+          ? SCRAP_FINAL_BATTLE_STAGE.CORE_REINSTALLED
+          : stageId === SCRAP_FINAL_BATTLE_STAGE.ARMOR
+            ? SCRAP_FINAL_BATTLE_STAGE.WEAPON
+            : SCRAP_FINAL_BATTLE_STAGE.CONTROL_CORE,
+      ),
+    );
+    if (transaction.changed)
+      this.resetScrapFinalBattleCombat(transaction.snapshot.finalBattleStageId);
+    return transaction.changed;
   }
 
   setVisualQaScrapGameOverStage(stageId = SCRAP_GAME_OVER_STAGE.RECOVERY_CHOICE) {
@@ -2514,6 +2590,11 @@ export class GameScene extends SceneNode {
       durationSeconds: ROLL_DURATION_SECONDS,
     };
     this.facing = this.rollState.direction;
+    if (
+      getScrapFinalBattleCombatProfile(this.progressionSnapshot.scrapCampaign.finalBattleStageId)
+    ) {
+      this.scrapFinalBattleOpeningSeconds = 0.9;
+    }
     return true;
   }
 
@@ -3010,6 +3091,10 @@ export class GameScene extends SceneNode {
     }
     this.combatCameraFeedback.update(deltaSeconds);
     this.combatEvents.update(deltaSeconds);
+    this.scrapFinalBattleOpeningSeconds = Math.max(
+      0,
+      this.scrapFinalBattleOpeningSeconds - deltaSeconds,
+    );
     this.storyInteractionOwner.advance(deltaSeconds, this.getStoryInteractionContext());
     this.advanceScrapAwakeningRuntime(deltaSeconds);
     this.advanceScrapGarageRevealRuntime(deltaSeconds);
@@ -3218,6 +3303,7 @@ export class GameScene extends SceneNode {
       }
     }
     this.updatePlayerCombatGeometry(combatState);
+    this.resolveScrapFinalBattleCombatHit(combatState, activeAttackProfile);
     this.roomSceneNode?.stepEncounter(
       deltaSeconds,
       this.createTrainingEncounterFrame(combatState, activeAttackProfile),

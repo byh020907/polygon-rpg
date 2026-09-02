@@ -11,6 +11,10 @@ import {
 } from '../src/game/campaign/ScrapCampaignState.js';
 import { SCRAP_FINAL_BATTLE_STAGE } from '../src/game/campaign/ScrapFinalBattleState.js';
 import { createScrapFinalBattlePresentation } from '../src/game/campaign/ScrapFinalBattlePresentation.js';
+import {
+  createScrapFinalBattleCombatState,
+  resolveScrapFinalBattleCombatContact,
+} from '../src/game/campaign/ScrapFinalBattleCombat.js';
 
 function finalAction(stageId) {
   return Object.freeze({
@@ -127,5 +131,71 @@ assert.ok(
   ),
 );
 assert.deepEqual(createScrapFinalBattlePresentation(SCRAP_FINAL_BATTLE_STAGE.INACTIVE), []);
+
+const weaponSweep = Object.freeze({
+  part: 'weapon',
+  points: Object.freeze([
+    Object.freeze({ x: 796, y: 378 }),
+    Object.freeze({ x: 850, y: 378 }),
+    Object.freeze({ x: 850, y: 394 }),
+    Object.freeze({ x: 796, y: 394 }),
+  ]),
+});
+const finalAttackWindow = Object.freeze({ start: 0.2, end: 0.8 });
+const armorContact = resolveScrapFinalBattleCombatContact({
+  state: createScrapFinalBattleCombatState(SCRAP_FINAL_BATTLE_STAGE.ARMOR),
+  combatState: Object.freeze({ id: 'slash', sequence: 7, progress: 0.5 }),
+  attackProfile: finalAttackWindow,
+  weaponSweep,
+  openingActive: false,
+});
+assert.equal(armorContact.changed, false);
+assert.equal(armorContact.reason, 'opening-required');
+const firstArmorHit = resolveScrapFinalBattleCombatContact({
+  state: armorContact.state,
+  combatState: Object.freeze({ id: 'slash', sequence: 7, progress: 0.5 }),
+  attackProfile: finalAttackWindow,
+  weaponSweep,
+  openingActive: true,
+});
+assert.equal(firstArmorHit.changed, true);
+assert.equal(firstArmorHit.completed, false);
+assert.equal(firstArmorHit.state.hitCount, 1);
+assert.equal(
+  resolveScrapFinalBattleCombatContact({
+    state: firstArmorHit.state,
+    combatState: Object.freeze({ id: 'slash', sequence: 7, progress: 0.5 }),
+    attackProfile: finalAttackWindow,
+    weaponSweep,
+    openingActive: true,
+  }).reason,
+  'already-hit',
+);
+const secondArmorHit = resolveScrapFinalBattleCombatContact({
+  state: firstArmorHit.state,
+  combatState: Object.freeze({ id: 'thrust', sequence: 8, progress: 0.5 }),
+  attackProfile: finalAttackWindow,
+  weaponSweep,
+  openingActive: true,
+});
+assert.equal(secondArmorHit.completed, true);
+assert.equal(
+  resolveScrapFinalBattleCombatContact({
+    state: createScrapFinalBattleCombatState(SCRAP_FINAL_BATTLE_STAGE.WEAPON),
+    combatState: Object.freeze({ id: 'slash', sequence: 9, progress: 0.5 }),
+    attackProfile: finalAttackWindow,
+    weaponSweep,
+  }).reason,
+  'wrong-command',
+);
+assert.equal(
+  resolveScrapFinalBattleCombatContact({
+    state: createScrapFinalBattleCombatState(SCRAP_FINAL_BATTLE_STAGE.WEAPON),
+    combatState: Object.freeze({ id: 'heavy', sequence: 10, progress: 0.5 }),
+    attackProfile: finalAttackWindow,
+    weaponSweep,
+  }).completed,
+  true,
+);
 
 console.log('scrap final battle checks passed');

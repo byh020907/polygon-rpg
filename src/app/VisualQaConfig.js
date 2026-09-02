@@ -927,7 +927,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
     roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 480,
+    x: 650,
     scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
     scrapRegionStates: SCRAP_FINAL_BATTLE_COMPLETED_REGIONS,
     scrapFinalBattleStageId: SCRAP_FINAL_BATTLE_STAGE.ARMOR,

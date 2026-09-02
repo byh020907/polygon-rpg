@@ -111,7 +111,7 @@ function stageItems(stageId) {
         label: '고대 병기 · 분리할 장갑 오른쪽',
         lightOccluder: true,
       }),
-      item('scrap-final-armor-target', diamond(824, 172, 18, 18), '#e4bd64', {
+      item('scrap-final-armor-target', diamond(824, 386, 24, 26), '#e4bd64', {
         label: '장갑 결합부 · Guard와 Roll 뒤의 공격 틈',
         emissive: true,
       }),
@@ -125,7 +125,7 @@ function stageItems(stageId) {
       item('scrap-final-ancient-cutter-blade', rectangle(1054, 196, 32, 132), '#d97752', {
         label: '고대 병기 · 멈춰야 하는 절단검',
       }),
-      item('scrap-final-weapon-target', diamond(824, 182, 20, 20), '#e4bd64', {
+      item('scrap-final-weapon-target', diamond(824, 386, 26, 28), '#e4bd64', {
         label: '절단검 회복 틈 · Basic/Strong 연계 목표',
         emissive: true,
       }),
@@ -137,7 +137,7 @@ function stageItems(stageId) {
         label: '장갑과 무기 제거 뒤 열린 고대 병기 제어부',
         stroke: '#97a4a5',
       }),
-      item('scrap-final-exposed-control-core', diamond(824, 266, 32, 38), '#a7fff0', {
+      item('scrap-final-exposed-control-core', diamond(824, 386, 30, 34), '#a7fff0', {
         label: '노출된 제어부 · 제어핵 재설치 목표',
         emissive: true,
         stroke: '#245e5b',
