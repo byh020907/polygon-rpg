@@ -41,6 +41,7 @@ for (const source of fs.readdirSync(path.join(root, 'src'), { recursive: true })
 }
 assert.match(serviceWorker, /cacheCompleteRelease\(cache\)/);
 assert.match(serviceWorker, /new Request\(asset, \{ cache: 'reload' \}\)/);
+assert.doesNotMatch(serviceWorker, /event\.request\.cache === 'reload'/);
 assert.match(serviceWorker, /if \(!hasActiveRelease\) await self\.skipWaiting\(\)/);
 assert.match(serviceWorker, /SKIP_WAITING/);
 assert.match(serviceWorker, /event\.request\.mode === 'navigate'/);

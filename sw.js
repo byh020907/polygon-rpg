@@ -1,6 +1,6 @@
 importScripts('./src/pwa/offlineAssetManifest.js');
 
-const CACHE_VERSION = 'polygon-rpg-release-2026-09-02-pwa-5';
+const CACHE_VERSION = 'polygon-rpg-release-2026-09-02-pwa-6';
 const CACHE_NAME = `polygon-rpg-${CACHE_VERSION}`;
 const SHELL_URL = new URL('./index.html', self.location).href;
 const OFFLINE_URL = new URL('./offline.html', self.location).href;
@@ -60,7 +60,6 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension:')) return;
-  if (event.request.cache === 'reload') return;
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
   event.respondWith(
