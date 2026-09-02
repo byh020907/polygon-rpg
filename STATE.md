@@ -8,14 +8,15 @@
 
 ## Current Phase
 
-`current-design-alignment-verified · extended-prologue-playable-frontier`
+`human-feedback-priority-pending · combat-movement-and-authored-pose-quality`
 
 ## Project Direction Comparison
 
-| Direction | Status | Current Evidence                                                                                                                                                                                                                                                                                                                                                          |
-| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Persona   | gap    | 정식 의뢰·동년배 rival·붕괴 구조 선택·각성 흐름과 폐광 combat의 고철 cutout 품질을 유지한다. 다섯 지역은 주목표 1개와 현장 확인형 연결 이슈 2개로 교차하며 작전 지도에서 한눈에 읽힌다. 그러나 20~30분 도입의 탐색·전투 밀도, 여러 지역 반복 정찰, 연결 이슈의 고유 encounter, final battle과 ending은 아직 없어 시작부터 결말까지 조작·서사·시각 개성이 완결되지 않았다. |
-| Quality   | gap    | 전체 `npm run check`, 실제 92/120구간 focused action trace, Codex in-app Browser desktop/mobile와 독립 verifier를 통과한 단일-owner issue window는 demo식 요청 나열보다 플레이 판단이 선명하다. 같은 수준의 cast·scene·combat polish가 약 10시간 전체 캠페인과 결말로 확장되지 않아 유료 완성 게임 수준에는 아직 Gap이 있다.                                              |
+| Direction               | Status | Current Evidence                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Persona                 | gap    | 정식 의뢰·동년배 rival·붕괴 구조 선택·각성 흐름과 폐광 combat의 고철 cutout 품질을 유지한다. 다섯 지역은 주목표 1개와 현장 확인형 연결 이슈 2개로 교차하며 작전 지도에서 한눈에 읽힌다. 그러나 20~30분 도입의 탐색·전투 밀도, 여러 지역 반복 정찰, 연결 이슈의 고유 encounter, final battle과 ending은 아직 없어 시작부터 결말까지 조작·서사·시각 개성이 완결되지 않았다. |
+| Quality                 | gap    | 전체 `npm run check`, 실제 92/120구간 focused action trace, Codex in-app Browser desktop/mobile와 독립 verifier를 통과한 단일-owner issue window는 demo식 요청 나열보다 플레이 판단이 선명하다. 같은 수준의 cast·scene·combat polish가 약 10시간 전체 캠페인과 결말로 확장되지 않아 유료 완성 게임 수준에는 아직 Gap이 있다.                                              |
+| Human Feedback Priority | gap    | `INBOX.md`의 pending 원문은 일반 적 body collision·roll/jump 통과·일반 착지의 수평 흐름·Room/Chunk 전환 held input과 피격 표현을 먼저 실제 제품에서 검증하도록 요구한다. 이어서 Player의 roll·핵심 action을 frame-authored pose clip으로 개선해야 한다. 새 fresh worker가 Desired State 정합 뒤 이 관찰 가능한 결과를 구현·검증한다.                                      |
 
 ## Product Desired State Comparison
 
@@ -57,8 +58,8 @@
 
 ## Active Execution Goal
 
-없음. 최신 verified snapshot은 final-battle stage별 immutable render projection, `scrap-final-armor` URL scenario와 desktop/mobile Browser evidence를 포함한다.
+없음. 최신 verified snapshot은 current-design-alignment, campaign v7 migration, 작전 지도 desktop/mobile Browser evidence를 포함한다. Pending Human Feedback은 다음 fresh worker가 단일 owner로 처리한다.
 
 ## Blockers
 
-없음. fresh worker-controlled offline reload, Android Chromium/iPhone·iPad Safari의 실제 설치/standalone/device icon QA와 failed-update cache recovery는 현재 환경에서 unverified다. 검증 완료 전선의 바로 다음 흐름은 정식 수거 의뢰부터 라이벌 동행, 기본 탐색·전투, 붕괴 사고와 구조 요청까지 실제 20~30분 도입 밀도를 만드는 일이다. 그 뒤 linked issue 고유 encounter, 반복 cast 확장, giant final player combat·고대 병기의 actual attack pressure·지역 map patch와 전체 art 확장이 남는다.
+Human Feedback Priority: pending `INBOX.md`의 전투 이동·화면 전환·피격 표현과 frame-authored pose 요구가 다음 Execution Goal이다. 그 결과가 검증되기 전에는 Verified Playable Frontier로 복귀하지 않는다. 그 밖에 fresh worker-controlled offline reload, Android Chromium/iPhone·iPad Safari의 실제 설치/standalone/device icon QA와 failed-update cache recovery는 unverified다.
