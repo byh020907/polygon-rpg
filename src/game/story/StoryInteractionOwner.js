@@ -4,6 +4,7 @@ const EMPTY_DIALOGUE = Object.freeze({
   active: false,
   available: false,
   mode: 'current',
+  presentationMode: 'dialogue',
   interactionId: null,
   conversationId: null,
   title: '',
@@ -24,10 +25,14 @@ const REVEAL_CHARACTERS_PER_SECOND = 28;
 const COMMA_PAUSE_SECONDS = 0.12;
 const TERMINAL_PAUSE_SECONDS = 0.22;
 
-function dialogueWorldAnchor(interaction) {
+function dialogueWorldAnchor(interaction, playerPosition = null) {
+  const anchor =
+    interaction.dialogueAnchor === 'player' && playerPosition
+      ? playerPosition
+      : interaction.position;
   return Object.freeze({
-    x: interaction.position.x,
-    y: interaction.position.y,
+    x: anchor.x,
+    y: anchor.y,
   });
 }
 
@@ -95,14 +100,10 @@ function isTranscript(transcript) {
   );
 }
 
-function findTranscript(transcripts, transcriptId, interactionId) {
+function findTranscript(transcripts, transcriptId) {
   return (
-    transcripts?.find(
-      (transcript) =>
-        isTranscript(transcript) &&
-        transcript.id === transcriptId &&
-        transcript.interactionId === interactionId,
-    ) ?? null
+    transcripts?.find((transcript) => isTranscript(transcript) && transcript.id === transcriptId) ??
+    null
   );
 }
 
@@ -113,8 +114,8 @@ function replayCommands(interaction, transcripts) {
       .filter(
         (transcript) =>
           isTranscript(transcript) &&
-          transcript.interactionId === interaction.id &&
-          transcript.id !== interaction.conversationId,
+          transcript.id !== interaction.conversationId &&
+          (interaction.transcriptArchive === true || transcript.interactionId === interaction.id),
       )
       .map((transcript) =>
         Object.freeze({
@@ -140,10 +141,11 @@ function availableCommands(interaction, transcripts) {
 function dialogueSource(interaction, transcriptId, transcripts) {
   if (!interaction) return null;
   if (transcriptId) {
-    const transcript = findTranscript(transcripts, transcriptId, interaction.id);
+    const transcript = findTranscript(transcripts, transcriptId);
     if (!transcript) return null;
     return Object.freeze({
       mode: 'transcript',
+      presentationMode: 'transcript',
       conversationId: transcript.id,
       title: transcript.title,
       speaker: transcript.speaker,
@@ -152,6 +154,7 @@ function dialogueSource(interaction, transcriptId, transcripts) {
   }
   return Object.freeze({
     mode: 'current',
+    presentationMode: interaction.presentationMode ?? 'dialogue',
     conversationId: interaction.conversationId ?? null,
     title: interaction.conversationTitle ?? '',
     speaker: interaction.speaker,
@@ -201,6 +204,11 @@ export class StoryInteractionOwner {
     this.lineIndex = -1;
     this.revealedCharacters = 0;
     this.revealDelaySeconds = 1 / REVEAL_CHARACTERS_PER_SECOND;
+  }
+
+  blocksGameplayInput({ entities = [] } = {}) {
+    if (!this.activeInteractionId) return false;
+    return findInteraction(entities, this.activeInteractionId)?.locksPlayerInput === true;
   }
 
   advance(deltaSeconds, { entities = [], transcripts = [] } = {}) {
@@ -282,7 +290,7 @@ export class StoryInteractionOwner {
   startTranscript({ entities = [], transcripts = [] } = {}, interactionId, transcriptId) {
     if (this.activeInteractionId !== interactionId) return null;
     const interaction = findInteraction(entities, interactionId);
-    const transcript = findTranscript(transcripts, transcriptId, interactionId);
+    const transcript = findTranscript(transcripts, transcriptId);
     if (!interaction || !transcript || transcript.id === interaction.conversationId) return null;
     this.activeTranscriptId = transcript.id;
     this.lineIndex = 0;
@@ -310,6 +318,7 @@ export class StoryInteractionOwner {
         active: true,
         available: true,
         mode: source.mode,
+        presentationMode: source.presentationMode,
         interactionId: activeInteraction.id,
         conversationId: source.conversationId,
         title: source.title,
@@ -322,7 +331,7 @@ export class StoryInteractionOwner {
         canClose: revealComplete && !canAdvance,
         revealComplete,
         prompt: revealComplete ? (canAdvance ? '↑ 다음 대사' : '↑ 대화 마치기') : '↑ 대사 완성',
-        worldAnchor: dialogueWorldAnchor(activeInteraction),
+        worldAnchor: dialogueWorldAnchor(activeInteraction, playerPosition),
         commands:
           source.mode === 'current'
             ? availableCommands(activeInteraction, transcripts)
@@ -338,7 +347,7 @@ export class StoryInteractionOwner {
       interactionId: availableInteraction.id,
       speaker: availableInteraction.speaker,
       prompt: `↑ ${availableInteraction.speaker} 상호작용`,
-      worldAnchor: dialogueWorldAnchor(availableInteraction),
+      worldAnchor: dialogueWorldAnchor(availableInteraction, playerPosition),
     });
   }
 }

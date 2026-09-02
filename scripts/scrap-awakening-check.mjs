@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 
-import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
+import {
+  SCRAP_AWAKENING_STAGE,
+  getScrapAwakeningPresentation,
+} from '../src/game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
+import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../src/game/story/ScrapPrologueStory.js';
 import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
@@ -115,6 +119,20 @@ function setAtCampaignInteraction(scene, roomId, stageKind) {
   return interaction;
 }
 
+function setAtStoryInteraction(scene, interactionId) {
+  const interaction = scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.find((entity) => entity.id === interactionId);
+  assert.ok(interaction, `${interactionId} story interaction이 현재 stage에 필요합니다.`);
+  const active = scene.mapRuntime.getActiveLocation();
+  scene.setVisualQaLocation({
+    regionId: active.regionId,
+    roomId: active.roomId,
+    x: interaction.position.x,
+  });
+  return interaction;
+}
+
 function setAtPortalToRoom(scene, sourceRoomId, destinationRoomId) {
   const active = scene.mapRuntime.getActiveLocation();
   assert.equal(active.roomId, sourceRoomId);
@@ -137,11 +155,78 @@ function setAtPortalToRoom(scene, sourceRoomId, destinationRoomId) {
 const scene = createAwakeningScene();
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(scene.getWorldStatus().operationMapAvailable, false);
-assert.ok(itemIds(scene).includes('scrap-device-core'));
+assert.ok(!itemIds(scene).includes('scrap-device-core'));
 assert.ok(!itemIds(scene).includes('scrap-king-eye-left'));
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrapyard-owner-commission'),
+);
+
+let prologueSequence = 1;
+setAtStoryInteraction(scene, 'scrapyard-owner-commission');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE);
+assert.ok(itemIds(scene).includes('scrap-rival-departure-torso'));
+
+setAtStoryInteraction(scene, 'scrap-rival-departure');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.ok(itemIds(scene).includes('scrap-rival-search-hook'));
+
+setAtStoryInteraction(scene, 'scrap-rival-yard-search');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COLLAPSE);
+const collapseLockedX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.equal(scene.position.x, collapseLockedX, '붕괴 cinematic 동안 이동 입력은 잠겨야 합니다.');
+for (let tick = 0; tick < 240 && stage(scene) === SCRAP_AWAKENING_STAGE.COLLAPSE; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RESCUE_REQUEST);
+assert.ok(itemIds(scene).includes('scrap-collapse-debris'));
+
+setAtStoryInteraction(scene, 'scrap-rival-rescue-request');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.PLAYER_DECISION);
+
+const playerDecision = setAtStoryInteraction(scene, 'scrap-player-device-decision');
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: playerDecision.position.x - 40,
+});
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+const monologue = scene.getWorldStatus().dialogue;
+assert.equal(monologue.active, true);
+assert.equal(monologue.presentationMode, 'monologue');
+assert.equal(monologue.worldAnchor.x, scene.position.x);
+assert.notEqual(monologue.worldAnchor.x, playerDecision.position.x);
+const monologueLockedPosition = Object.freeze({ ...scene.position });
+scene.update(STEP_SECONDS, input({ right: true, basicAttack: true, basicAttackSequence: 1 }));
+assert.deepEqual(
+  scene.position,
+  monologueLockedPosition,
+  '중요 선택 독백 중에는 Player 머리 위 anchor가 움직이지 않도록 이동을 잠가야 합니다.',
+);
+assert.equal(scene.combatCommands.snapshot().id, 'idle');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED);
+assert.ok(itemIds(scene).includes('scrap-device-core'));
+assert.deepEqual(scene.getProgressionSnapshot().viewedConversationIds, [
+  SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
+  SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
+  SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
+  SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
+]);
+
 const beforeInteraction = Object.freeze({ ...scene.position });
 
-scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
 assert.deepEqual(
   scene.position,
@@ -155,7 +240,7 @@ assert.ok(
 );
 
 const afterRecovery = scene.getProgressionSnapshot();
-scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence - 1 }));
 assert.deepEqual(
   scene.getProgressionSnapshot(),
   afterRecovery,
@@ -179,21 +264,47 @@ assert.ok(scene.cameraPosition.x > lockedX, '각성 연출 camera는 폐병기 �
 
 const observedStages = [stage(scene)];
 let shakeObserved = false;
+let rescuedAfterStateObserved = false;
 for (let tick = 0; tick < 1_200 && stage(scene) !== SCRAP_AWAKENING_STAGE.COMPLETE; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
   const currentStage = stage(scene);
   if (observedStages.at(-1) !== currentStage) observedStages.push(currentStage);
+  if (currentStage === SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED) {
+    rescuedAfterStateObserved =
+      itemIds(scene).includes('scrap-rival-rescued-torso') &&
+      !itemIds(scene).includes('scrap-rival-trapped-torso');
+  }
   const cameraOffset = scene.combatCameraFeedback.snapshot();
   if (Math.abs(cameraOffset.x) > 0.01 || Math.abs(cameraOffset.y) > 0.01) shakeObserved = true;
 }
 assert.deepEqual(observedStages, [
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
+  SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
   SCRAP_AWAKENING_STAGE.ASSEMBLED,
   SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
   SCRAP_AWAKENING_STAGE.COMPLETE,
 ]);
 assert.equal(shakeObserved, true, '눈 점등·부품 결합 경계는 camera shake를 남겨야 합니다.');
+assert.equal(
+  rescuedAfterStateObserved,
+  true,
+  '구조 성공 직후 하린은 잔해 밖 standing after-state로 실제 장면에 남아야 합니다.',
+);
+for (const cinematicStageId of [
+  SCRAP_AWAKENING_STAGE.COLLAPSE,
+  SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
+  SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED,
+  SCRAP_AWAKENING_STAGE.EYES_LIT,
+  SCRAP_AWAKENING_STAGE.ASSEMBLED,
+  SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
+]) {
+  assert.match(
+    getScrapAwakeningPresentation(cinematicStageId).objective,
+    /기다리세요/,
+    `${cinematicStageId} bottom objective는 사건 설명 대신 Player action만 전달해야 합니다.`,
+  );
+}
 const completeStatus = scene.getWorldStatus();
 assert.equal(completeStatus.campaign.deadlineRevealed, true);
 assert.equal(completeStatus.campaign.hudLabel, 'Day 1 · 아침 · D-30');
@@ -301,7 +412,9 @@ assert.deepEqual(observedGarageStages, [
   SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
 ]);
 assert.deepEqual(
-  durableGarageStages,
+  durableGarageStages.filter(
+    (stageId, index) => index === 0 || stageId !== durableGarageStages[index - 1],
+  ),
   [
     SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
     SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
@@ -316,6 +429,38 @@ assert.equal(garageCompleteStatus.operationMapAvailable, true);
 assert.equal(garageCompleteStatus.campaign.completionPercent, 0);
 assert.equal(garageCompleteStatus.journeyLabel, '작전 준비 완료 · 로봇 0%');
 assert.equal(garageCompleteStatus.wardLabel, '제어장치 · 우리 로봇 두뇌 장착');
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 480,
+});
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 9 }));
+const archiveDialogue = scene.getWorldStatus().dialogue;
+assert.equal(archiveDialogue.conversationId, 'scrap-dialogue-archive');
+const archiveCommands = archiveDialogue.commands.filter(
+  (command) => command.type === 'replay-transcript' && command.canChoose,
+);
+assert.equal(
+  archiveCommands.length,
+  6,
+  '작전 기록기에서 도입 다섯 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
+);
+const beforeReplay = scene.getProgressionSnapshot();
+const replayResult = scene.executeDialogueCommand(
+  'scrapyard-dialogue-archive',
+  archiveCommands[0].id,
+);
+assert.equal(replayResult.reason, 'replay-started');
+assert.equal(scene.getWorldStatus().dialogue.mode, 'transcript');
+assert.deepEqual(
+  scene.getProgressionSnapshot(),
+  beforeReplay,
+  '기록 재생은 campaign stage나 progression을 다시 쓰면 안 됩니다.',
+);
+for (let replaySequence = 10; replaySequence <= 15; replaySequence += 1) {
+  scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: replaySequence }));
+}
+assert.equal(scene.getWorldStatus().dialogue.active, false);
 assert.match(garageCompleteStatus.objective, /벽 지도/);
 for (const itemId of [
   'scrapyard-wall-map-frame',
@@ -333,10 +478,12 @@ let operationMapRequest = null;
 scene.operationMapRequested.connect((request) => {
   operationMapRequest = request;
 });
-for (let tick = 0; tick < 40 && scene.position.x < 300; tick += 1) {
-  scene.update(STEP_SECONDS, input({ right: true }));
-}
-scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 9 }));
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 334,
+});
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 20 }));
 assert.equal(operationMapRequest?.source, 'scrapyard-wall-map');
 assert.equal(operationMapRequest?.campaign.completionPercent, 0);
 assert.equal(scene.isGrounded, true, '벽 지도 상호작용은 Player jump를 억제해야 합니다.');
@@ -1481,10 +1628,12 @@ assert.equal(travelScene.getWorldStatus().campaign.currentLocationId, 'neighborh
 assert.equal(travelScene.getWorldStatus().campaign.phaseLabel, '저녁');
 
 const keyboardScene = createAwakeningScene();
+keyboardScene.setVisualQaScrapAwakeningStage(SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED);
 const keyboard = new KeyboardInputAdapter({ isActive: () => true });
 keyboard.onKeyDown({ code: 'ArrowUp', target: { closest: () => null }, preventDefault() {} });
 keyboardScene.update(STEP_SECONDS, keyboard.snapshot());
 const mobileScene = createAwakeningScene();
+mobileScene.setVisualQaScrapAwakeningStage(SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED);
 const mobile = new MobileInputAdapter();
 mobile.press('jump', 17);
 mobileScene.update(STEP_SECONDS, mobile.snapshot());
@@ -1511,6 +1660,9 @@ console.log(
     status: 'PASS',
     probe: 'scrap-awakening-runtime',
     checks: [
+      'owner-rival-search-collapse-rescue-decision-stage-order',
+      'five-prologue-transcripts-recorded-and-replayable',
+      'rescue-success-before-awakening-signal',
       'device-proximity-jump-consumption',
       'stage-patch-and-repeat-trigger-idempotence',
       'input-lock-and-camera-cue',

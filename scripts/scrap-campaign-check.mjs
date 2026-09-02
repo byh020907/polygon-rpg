@@ -143,7 +143,20 @@ for (const region of SCRAP_CAMPAIGN_PROFILE.regions) {
 assert.equal(initial.completionPercent, 0);
 assert.equal(initial.finalBattleAvailable, false);
 
-let awakening = startScrapAwakening(fresh, SCRAP_CAMPAIGN_PROFILE);
+let awakening = Object.freeze({ changed: false, snapshot: fresh });
+for (const expectedStageId of [
+  SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE,
+  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  SCRAP_AWAKENING_STAGE.COLLAPSE,
+  SCRAP_AWAKENING_STAGE.RESCUE_REQUEST,
+  SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
+  SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED,
+]) {
+  awakening = advanceScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE);
+  assert.equal(awakening.changed, true);
+  assert.equal(awakening.snapshot.awakeningStageId, expectedStageId);
+}
+awakening = startScrapAwakening(awakening.snapshot, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(awakening.changed, true);
 assert.equal(awakening.snapshot.awakeningStageId, SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
 assert.equal(
@@ -152,6 +165,7 @@ assert.equal(
   '제어장치 회수는 반복 trigger로 재시작되면 안 됩니다.',
 );
 for (const expectedStageId of [
+  SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
   SCRAP_AWAKENING_STAGE.ASSEMBLED,
   SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,

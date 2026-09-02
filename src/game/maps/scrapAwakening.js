@@ -3,6 +3,7 @@ import {
   SCRAP_GARAGE_REVEAL_STAGE,
   SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
 } from '../campaign/ScrapGarageRevealState.js';
+import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../story/ScrapPrologueStory.js';
 import { defineMap } from '../map/MapDefinition.js';
 import { createEnvironmentPortalLandmarkItems } from './PortalRenderItems.js';
 
@@ -13,6 +14,12 @@ export const SCRAP_AWAKENING_DEVICE_ENTITY_ID = 'scrap-control-device';
 export const SCRAP_AWAKENING_FOCUS_X = 980;
 export const SCRAP_GARAGE_REVEAL_FOCUS_X = 300;
 export const SCRAPYARD_OWNER_ENTITY_ID = 'scrapyard-owner-analysis';
+export const SCRAPYARD_OWNER_COMMISSION_ENTITY_ID = 'scrapyard-owner-commission';
+export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
+export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
+export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
+export const SCRAP_RIVAL_RESCUE_ENTITY_ID = 'scrap-rival-rescue-request';
+export const SCRAP_PLAYER_DECISION_ENTITY_ID = 'scrap-player-device-decision';
 export const SCRAPYARD_WALL_MAP_ENTITY_ID = 'scrapyard-wall-operation-map';
 export const SCRAP_MINE_ROAD_PORTAL_ID = 'scrapyard-abandoned-mine-road';
 export const SCRAP_MINE_ROAD_REGION_ID = 'abandoned-mine';
@@ -271,7 +278,6 @@ const renderItems = [
     stroke: '#25201d',
     lineWidth: 3,
     order: 18,
-    enabled: false,
     label: '고물상 주인',
     role: 'scrapyard-owner',
   }),
@@ -279,21 +285,18 @@ const renderItems = [
     stroke: '#332820',
     lineWidth: 2,
     order: 19,
-    enabled: false,
     role: 'welding-goggles',
   }),
   item('scrapyard-owner-goggles', rectangle(185, 269, 27, 8), '#dfc37a', {
     stroke: '#392e21',
     lineWidth: 2,
     order: 20,
-    enabled: false,
     role: 'welding-goggles',
   }),
   item('scrapyard-owner-ledger', rectangle(157, 310, 22, 30), '#d2bc83', {
     stroke: '#443a2c',
     lineWidth: 2,
     order: 20,
-    enabled: false,
     role: 'ledger',
   }),
   item(
@@ -309,7 +312,6 @@ const renderItems = [
       stroke: '#303331',
       lineWidth: 2,
       order: 20,
-      enabled: false,
       role: 'large-wrench',
     },
   ),
@@ -360,6 +362,22 @@ const renderItems = [
       role: 'operation-route',
     },
   ),
+  item('scrapyard-dialogue-archive-panel', rectangle(430, 220, 100, 76), '#cbb77f', {
+    stroke: '#4d4030',
+    lineWidth: 4,
+    order: 16,
+    enabled: false,
+    label: '견습생 작전 대화 기록',
+    role: 'dialogue-archive',
+  }),
+  item('scrapyard-dialogue-archive-lines', rectangle(446, 238, 68, 38), '#3f554f', {
+    stroke: '#24302d',
+    lineWidth: 2,
+    order: 17,
+    enabled: false,
+    label: '기록된 핵심 대화 목록',
+    role: 'dialogue-archive-screen',
+  }),
   item('scrapyard-garage-door-left', rectangle(410, 214, 72, 212), '#596166', {
     stroke: '#24292b',
     lineWidth: 4,
@@ -653,18 +671,169 @@ const renderItems = [
     stroke: '#0a0d0e',
     order: 11,
   }),
+  item('scrap-rival-departure-torso', rectangle(418, 294, 26, 64), '#56666a', {
+    stroke: '#20282a',
+    lineWidth: 3,
+    order: 18,
+    enabled: false,
+    label: '라이벌 견습생 하린',
+    role: 'rival-apprentice',
+  }),
+  item('scrap-rival-departure-head', polygon(431, 283, 13, 15, 7), '#c69c76', {
+    stroke: '#332820',
+    lineWidth: 2,
+    order: 19,
+    enabled: false,
+    role: 'rival-head',
+  }),
+  item('scrap-rival-departure-hook', rectangle(449, 308, 8, 50), '#b9a66c', {
+    stroke: '#3b3526',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    role: 'salvage-hook',
+  }),
+  item('scrap-rival-search-torso', rectangle(664, 294, 26, 64), '#56666a', {
+    stroke: '#20282a',
+    lineWidth: 3,
+    order: 18,
+    enabled: false,
+    label: '현장을 조사하는 하린',
+    role: 'rival-apprentice',
+  }),
+  item('scrap-rival-search-head', polygon(677, 283, 13, 15, 7), '#c69c76', {
+    stroke: '#332820',
+    lineWidth: 2,
+    order: 19,
+    enabled: false,
+    role: 'rival-head',
+  }),
+  item('scrap-rival-search-hook', rectangle(694, 304, 8, 54), '#b9a66c', {
+    stroke: '#3b3526',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    role: 'salvage-hook',
+  }),
+  item('scrap-rival-trapped-torso', rectangle(1042, 326, 70, 26), '#56666a', {
+    stroke: '#20282a',
+    lineWidth: 3,
+    order: 18,
+    enabled: false,
+    label: '잔해에 갇힌 하린',
+    role: 'rival-trapped',
+  }),
+  item('scrap-rival-trapped-head', polygon(1028, 335, 16, 14, 7), '#c69c76', {
+    stroke: '#332820',
+    lineWidth: 2,
+    order: 19,
+    enabled: false,
+    role: 'rival-head',
+  }),
+  item(
+    'scrap-rival-trapped-arm',
+    [
+      { x: 1048, y: 330 },
+      { x: 1012, y: 306 },
+      { x: 1004, y: 316 },
+      { x: 1038, y: 344 },
+    ],
+    '#6d8589',
+    {
+      stroke: '#20282a',
+      lineWidth: 3,
+      order: 20,
+      enabled: false,
+      label: '잔해 밖으로 뻗은 하린의 팔',
+      role: 'rescue-request-arm',
+    },
+  ),
+  item('scrap-rival-trapped-marker', rectangle(1040, 321, 44, 7), '#75d6c4', {
+    stroke: '#234b4b',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '하린의 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item('scrap-rival-rescued-torso', rectangle(1016, 290, 28, 68), '#56666a', {
+    stroke: '#20282a',
+    lineWidth: 3,
+    order: 18,
+    enabled: false,
+    label: '구조된 라이벌 견습생 하린',
+    role: 'rival-rescued',
+  }),
+  item('scrap-rival-rescued-head', polygon(1030, 278, 14, 16, 7), '#c69c76', {
+    stroke: '#332820',
+    lineWidth: 2,
+    order: 19,
+    enabled: false,
+    role: 'rival-head',
+  }),
+  item('scrap-rival-rescued-hook', rectangle(1050, 304, 8, 54), '#b9a66c', {
+    stroke: '#3b3526',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    role: 'salvage-hook',
+  }),
+  item('scrap-rival-rescued-marker', rectangle(1018, 288, 40, 7), '#75d6c4', {
+    stroke: '#234b4b',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '구조 뒤에도 남은 하린의 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item(
+    'scrap-collapse-debris',
+    [
+      { x: 1100, y: 292 },
+      { x: 1190, y: 306 },
+      { x: 1160, y: 372 },
+      { x: 1088, y: 356 },
+    ],
+    '#49433a',
+    {
+      stroke: '#1d1b18',
+      lineWidth: 4,
+      order: 21,
+      enabled: false,
+      label: '붕괴한 폐병기 잔해',
+      role: 'collapse-debris',
+    },
+  ),
+  item('scrap-rescue-winch-cable', rectangle(1114, 188, 6, 130), '#b7a46f', {
+    stroke: '#343025',
+    lineWidth: 1,
+    order: 22,
+    enabled: false,
+    label: '구조 winch cable',
+    role: 'rescue-winch',
+  }),
+  item('scrap-rescue-signal', rectangle(776, 344, 330, 5), '#75d6c4', {
+    stroke: '#245e5b',
+    opacity: 0.82,
+    order: 23,
+    enabled: false,
+    label: '제어장치 구조 전력',
+    role: 'rescue-signal',
+  }),
   item('scrap-device-glow-outer', polygon(774, 354, 32, 32, 12), '#63e4d0', {
     opacity: 0.22,
     stroke: '#63e4d0',
     lineWidth: 1,
     order: 18,
     role: 'interaction-cue',
+    enabled: false,
   }),
   item('scrap-device-core', polygon(774, 354, 13, 17, 6, Math.PI / 6), '#a7fff0', {
     stroke: '#245e5b',
     order: 19,
     label: '반짝이는 제어장치',
     role: 'control-device',
+    enabled: false,
   }),
   item('scrap-king-eye-left', polygon(958, 226, 13, 8, 6), '#80f4df', {
     stroke: '#143d3a',
@@ -2381,15 +2550,30 @@ const quarryCutterRenderItems = [
 
 const activatedStages = [
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
+  SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
   SCRAP_AWAKENING_STAGE.ASSEMBLED,
   SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
   SCRAP_AWAKENING_STAGE.COMPLETE,
 ];
-const eyeStages = activatedStages.slice(1);
-const assemblyStages = activatedStages.slice(2);
-const deadlineStages = activatedStages.slice(3);
+const eyeStages = activatedStages.slice(2);
+const assemblyStages = activatedStages.slice(3);
+const deadlineStages = activatedStages.slice(4);
 const ownerVisibleStages = [SCRAP_AWAKENING_STAGE.COMPLETE];
+const rivalTrappedStages = [
+  SCRAP_AWAKENING_STAGE.COLLAPSE,
+  SCRAP_AWAKENING_STAGE.RESCUE_REQUEST,
+  SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
+  SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED,
+  SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
+];
+const rivalRescuedStages = [
+  SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED,
+  SCRAP_AWAKENING_STAGE.EYES_LIT,
+  SCRAP_AWAKENING_STAGE.ASSEMBLED,
+  SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
+  SCRAP_AWAKENING_STAGE.COMPLETE,
+];
 const deviceAnalysisStages = [
   SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
   SCRAP_GARAGE_REVEAL_STAGE.MAP_REVEALED,
@@ -2449,11 +2633,100 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           renderItems,
           entities: [
             {
+              id: SCRAPYARD_OWNER_COMMISSION_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 198, y: 354 },
+              interactionRange: 82,
+              speaker: '고물상 주인',
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
+              conversationTitle: '고물상 주인의 정식 수거 의뢰',
+              lines: [
+                '둘 다 정식 견습생이 됐으니 첫 공동 의뢰다. 외곽 폐병기의 동력 표식만 확인하고 와.',
+                '먼저 찾은 부품은 먼저 기록한다. 경쟁은 하되 안전 지지대부터 확인해.',
+                '나는 퇴직했는데 또 야근이군. 사고 없이 돌아오면 그걸로 됐다.',
+              ],
+              presentationProfileId: 'scrapyard-owner',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_DEPARTURE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 431, y: 354 },
+              interactionRange: 82,
+              speaker: '하린',
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
+              conversationTitle: '라이벌 하린과 현장 출발',
+              lines: [
+                '공동 의뢰라도 좋은 부품은 먼저 표시한 사람이 가져가는 거다. 이번엔 내가 앞설게.',
+                '그래도 혼자 폐병기 안으로 들어가진 말자. 네 방패가 앞, 내 갈고리가 뒤다.',
+                '오른쪽 수거 표식까지 같이 가자. 이동하면서 작은 수거 유닛은 기본기로 정리하고.',
+              ],
+              presentationProfileId: 'rival-scout',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 677, y: 354 },
+              interactionRange: 88,
+              speaker: '하린',
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
+              conversationTitle: '폐병기 내부 안전 조사',
+              lines: [
+                '이 지지대, 수거 표식보다 훨씬 오래됐어. 안쪽 winch 전원도 끊겨 있네.',
+                '나는 위쪽 cable을 볼게. 넌 흉곽 아래 통로가 버티는지 확인해 줘.',
+                '잠깐, 발밑 판금이— 뒤로 물러나!',
+              ],
+              presentationProfileId: 'rival-scout',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.COLLAPSE,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_RESCUE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1028, y: 354 },
+              interactionRange: 92,
+              speaker: '하린',
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
+              conversationTitle: '잔해 아래 하린의 구조 요청',
+              lines: [
+                '나 여기 있어. 다리는 움직이는데 잔해가 허리 위를 눌렀어.',
+                '구조 winch가 바로 위야. 전원만 들어오면 cable로 이 판을 들 수 있어.',
+                '맞는 출력이 저 흉곽의 청록 장치뿐이야. 하지만 떼면 폐병기 회로가 깨어날 수도 있어.',
+              ],
+              presentationProfileId: 'rival-scout',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
+              enabled: false,
+            },
+            {
+              id: SCRAP_PLAYER_DECISION_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 774, y: 354 },
+              interactionRange: 76,
+              speaker: '주인공 (독백)',
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
+              conversationTitle: '주인공의 구조 선택',
+              lines: [
+                '이 장치를 winch에 연결하면 하린을 꺼낼 수 있다.',
+                '폐병기 신호가 살아날 위험은 있다. 그래도 사람을 두고 다른 전원을 찾으러 갈 시간은 없어.',
+                '먼저 구한다. 무슨 일이 깨어나든 그다음에 내가 책임진다.',
+              ],
+              presentationProfileId: 'scrapyard-apprentice',
+              presentationMode: 'monologue',
+              dialogueAnchor: 'player',
+              locksPlayerInput: true,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED,
+              enabled: false,
+            },
+            {
               id: SCRAP_AWAKENING_DEVICE_ENTITY_ID,
               kind: 'scrap-awakening-device',
               position: { x: 774, y: 354 },
               interactionRange: 72,
               label: '반짝이는 제어장치',
+              enabled: false,
             },
             {
               id: SCRAPYARD_OWNER_ENTITY_ID,
@@ -2464,9 +2737,9 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               conversationId: SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
               conversationTitle: '제어장치 분석과 차고 개방',
               lines: [
-                '퇴직했는데 또 야근이라니. 그 반짝이는 장치부터 작업대에 올려 봐.',
-                '이건 고철 대왕의 부품이 아니라 왕국 전역 기계 신호를 읽는 제어 두뇌야.',
-                '벽 지도를 켜고 차고문도 열자. 빈 골격부터 채우면 아직 늦지 않았어.',
+                '퇴직했는데 또 야근이라니. 둘이 무사한 건 잘했다. 그 장치부터 작업대에 올려 봐.',
+                '이건 왕국 전역 기계 신호를 읽는 제어 두뇌야. 너희가 깨운 놈보다 먼저 부품을 모아야 한다.',
+                '벽 지도를 켜고 차고문도 열자. 사고를 냈으면 끝까지 수습하는 게 우리 일이다.',
               ],
               presentationProfileId: 'scrapyard-owner',
               enabled: false,
@@ -2477,6 +2750,20 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               position: { x: 334, y: 354 },
               interactionRange: 76,
               label: '왕국 작전 지도',
+              enabled: false,
+            },
+            {
+              id: SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 480, y: 354 },
+              interactionRange: 78,
+              speaker: '견습생 작전 기록기',
+              conversationId: 'scrap-dialogue-archive',
+              conversationTitle: '완료한 핵심 대화 기록',
+              lines: [
+                '놓친 핵심 대화를 골라 다시 확인할 수 있다. 기록 재생은 사건을 반복하지 않는다.',
+              ],
+              transcriptArchive: true,
               enabled: false,
             },
           ],
@@ -3736,6 +4023,92 @@ export const SCRAP_AWAKENING_MAP = defineMap({
   ],
   patches: [
     {
+      id: 'scrap-prologue-owner-commission',
+      priority: 1,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.COMMISSION },
+      operations: [
+        { op: 'set-enabled', target: SCRAPYARD_OWNER_COMMISSION_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-rival-departure',
+      priority: 2,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-departure-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-departure-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-departure-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_DEPARTURE_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-search',
+      priority: 3,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SEARCH },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_SEARCH_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-collapse-and-rescue',
+      priority: 4,
+      when: { fact: 'scrapAwakeningStageId', in: rivalTrappedStages },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-trapped-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-trapped-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-trapped-arm', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-trapped-marker', value: true },
+        { op: 'set-enabled', target: 'scrap-collapse-debris', value: true },
+        { op: 'set-enabled', target: 'scrap-rescue-winch-cable', value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-rescue-request',
+      priority: 5,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.RESCUE_REQUEST },
+      operations: [{ op: 'set-enabled', target: SCRAP_RIVAL_RESCUE_ENTITY_ID, value: true }],
+    },
+    {
+      id: 'scrap-prologue-player-decision',
+      priority: 6,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.PLAYER_DECISION },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-device-glow-outer', value: true },
+        { op: 'set-enabled', target: 'scrap-device-core', value: true },
+        { op: 'set-enabled', target: SCRAP_PLAYER_DECISION_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-device-investigated',
+      priority: 7,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-device-glow-outer', value: true },
+        { op: 'set-enabled', target: 'scrap-device-core', value: true },
+        { op: 'set-enabled', target: SCRAP_AWAKENING_DEVICE_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-rescue-powered',
+      priority: 8,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED },
+      operations: [{ op: 'set-enabled', target: 'scrap-rescue-signal', value: true }],
+    },
+    {
+      id: 'scrap-prologue-rival-rescued',
+      priority: 9,
+      when: { fact: 'scrapAwakeningStageId', in: rivalRescuedStages },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-rescued-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-rescued-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-rescued-hook', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-rescued-marker', value: true },
+      ],
+    },
+    {
       id: 'scrap-device-recovered',
       priority: 10,
       when: { fact: 'scrapAwakeningStageId', in: activatedStages },
@@ -3781,6 +4154,9 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrapyard-owner-ledger', value: true },
         { op: 'set-enabled', target: 'scrapyard-owner-wrench', value: true },
         { op: 'set-enabled', target: SCRAPYARD_OWNER_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrapyard-dialogue-archive-panel', value: true },
+        { op: 'set-enabled', target: 'scrapyard-dialogue-archive-lines', value: true },
+        { op: 'set-enabled', target: SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID, value: true },
       ],
     },
     {

@@ -47,6 +47,7 @@ import {
   resolveFirstJourneyConversationTranscripts,
   resolveFirstJourneyStory,
 } from './story/FirstJourneyStory.js';
+import { resolveScrapPrologueConversationTranscripts } from './story/ScrapPrologueStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
 import {
   createTrainingEnemyItems,
@@ -99,6 +100,13 @@ const ACADEMY_ROOM_IDS = Object.freeze([
 
 function isAcademyRoom(roomId) {
   return ACADEMY_ROOM_IDS.includes(roomId);
+}
+
+function resolveConversationTranscripts(viewedConversationIds) {
+  return Object.freeze([
+    ...resolveFirstJourneyConversationTranscripts(viewedConversationIds),
+    ...resolveScrapPrologueConversationTranscripts(viewedConversationIds),
+  ]);
 }
 
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
@@ -1350,7 +1358,7 @@ export class GameScene extends SceneNode {
     const awakening = this.getScrapAwakeningReadModel();
     if (
       !this.isScrapAwakeningLocation() ||
-      awakening.awakeningStageId !== SCRAP_AWAKENING_STAGE.COMMISSION
+      awakening.awakeningStageId !== SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED
     ) {
       return false;
     }
@@ -1369,7 +1377,7 @@ export class GameScene extends SceneNode {
       this.progressionSnapshot.scrapCampaign,
       this.scrapCampaignProfile,
     );
-    this.progressionNotice = '제어장치 직접 회수 · 고철 대왕 신호 감지';
+    this.progressionNotice = '구조용 제어장치 회수 · winch 전력 연결';
     this.combatCommands.reset();
     this.rollState = null;
     this.verticalVelocity = 0;
@@ -1776,9 +1784,7 @@ export class GameScene extends SceneNode {
     return Object.freeze({
       entities: mapSnapshot.entities,
       playerPosition: Object.freeze({ ...this.position }),
-      transcripts: resolveFirstJourneyConversationTranscripts(
-        this.progressionSnapshot.viewedConversationIds,
-      ),
+      transcripts: resolveConversationTranscripts(this.progressionSnapshot.viewedConversationIds),
     });
   }
 
@@ -1786,6 +1792,26 @@ export class GameScene extends SceneNode {
     const interaction = this.mapRuntime
       .getResolvedSnapshot()
       .entities.find((entity) => entity.conversationId === conversationId);
+    if (interaction?.scrapAwakeningNextStageId) {
+      const transaction = advanceScrapAwakening(
+        this.progressionSnapshot.scrapCampaign,
+        this.scrapCampaignProfile,
+      );
+      if (
+        !transaction.changed ||
+        transaction.snapshot.awakeningStageId !== interaction.scrapAwakeningNextStageId
+      ) {
+        return transaction;
+      }
+      this.progressionNotice = getScrapAwakeningPresentation(
+        transaction.snapshot.awakeningStageId,
+      ).cue;
+      const committed = this.commitScrapAwakening(transaction);
+      if (transaction.snapshot.awakeningStageId === SCRAP_AWAKENING_STAGE.COLLAPSE) {
+        this.combatCameraFeedback.trigger({ direction: 1, strength: 4.6, durationSeconds: 0.14 });
+      }
+      return committed;
+    }
     if (!interaction?.campaignRegionId || !interaction.campaignStageKind) return null;
     const action = interaction.completeCampaignRegion
       ? this.createScrapCampaignRegionSuccessAction(interaction.campaignRegionId)
@@ -2107,7 +2133,7 @@ export class GameScene extends SceneNode {
       if (command.type === 'replay-transcript') {
         return Object.freeze({
           ...command,
-          canChoose: this.canManageProgression(),
+          canChoose: true,
           active: false,
         });
       }
@@ -2122,7 +2148,7 @@ export class GameScene extends SceneNode {
       interactionId,
       commandId,
     );
-    if (!command || !this.canManageProgression()) {
+    if (!command) {
       return this.unavailableProgressionTransaction();
     }
     if (command.type === 'replay-transcript') {
@@ -2135,6 +2161,9 @@ export class GameScene extends SceneNode {
       this.progressionNotice = `지난 핵심 대화 재생 · ${transcript.title}`;
       this.statusNode.publish({ force: true });
       return Object.freeze({ changed: false, reason: 'replay-started', transcript });
+    }
+    if (!this.canManageProgression()) {
+      return this.unavailableProgressionTransaction();
     }
     if (command.type === 'manage-sword') {
       return this.manageMerchantSword(command.profileId);
@@ -2888,17 +2917,21 @@ export class GameScene extends SceneNode {
     const preUpdateCombatState = this.combatCommands.snapshot();
     const counterInputLocked =
       preUpdateCombatState.justGuardCounterReady || preUpdateCombatState.id === 'shieldBash';
-    const navigationLocked = controlsLocked || counterInputLocked;
+    const storyBlocksGameplay = this.storyInteractionOwner.blocksGameplayInput(
+      this.getStoryInteractionContext(),
+    );
+    const interactionInputLocked = controlsLocked || counterInputLocked;
+    const navigationLocked = interactionInputLocked || storyBlocksGameplay;
     const rawJumpPressed = Boolean(inputSnapshot.jump);
     const rawGuardPressed = Boolean(inputSnapshot.guard);
     let horizontal = navigationLocked
       ? 0
       : Number(inputSnapshot.right) - Number(inputSnapshot.left);
-    const jumpPressed = navigationLocked ? false : rawJumpPressed;
+    const jumpPressed = interactionInputLocked ? false : rawJumpPressed;
     const guardPressed = navigationLocked ? false : rawGuardPressed;
     const guardEdge = guardPressed && !this.guardWasPressed;
     const jumpSequence = inputSnapshot.jumpSequence;
-    const jumpIssued = navigationLocked
+    const jumpIssued = interactionInputLocked
       ? false
       : Number.isSafeInteger(jumpSequence)
         ? jumpSequence > this.lastJumpSequence
@@ -2914,9 +2947,7 @@ export class GameScene extends SceneNode {
         this.tryStartScrapGarageReveal();
       }
       this.resolveScrapCampaignStoryInteraction(dialogueResult.conversationId);
-      const transcript = resolveFirstJourneyConversationTranscripts([
-        dialogueResult.conversationId,
-      ])[0];
+      const transcript = resolveConversationTranscripts([dialogueResult.conversationId])[0];
       if (transcript) {
         const viewed = recordViewedConversation(
           this.progressionSnapshot,
@@ -2962,7 +2993,12 @@ export class GameScene extends SceneNode {
     }
     const combatState = this.combatCommands.update(deltaSeconds * animationSpeed, inputSnapshot, {
       acceptCommands:
-        !isTransitioning && !isRolling && !controlsLocked && !awakeningConsumed && !wallMapConsumed,
+        !isTransitioning &&
+        !isRolling &&
+        !controlsLocked &&
+        !storyBlocksGameplay &&
+        !awakeningConsumed &&
+        !wallMapConsumed,
       isAirborne: !this.isGrounded,
       allowGuard: this.isGrounded,
       staminaDeltaSeconds: deltaSeconds,
@@ -3484,7 +3520,7 @@ export class GameScene extends SceneNode {
                   : '작전 준비 완료 · 로봇 0%'
                 : scrapCampaign.deadlineRevealed
                   ? '각성 완료 · D-30 · 고물상 복귀'
-                  : '첫 고철 수거 의뢰'
+                  : scrapIntroPresentation.title
           : scrapCampaignRegionLocation
             ? `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.statusLabel}`
             : location.regionId === 'glasswind-region' ||

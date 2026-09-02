@@ -149,11 +149,23 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
     roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 730,
-    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
+    x: 760,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
     expectation: Object.freeze({
-      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
-      expectedItems: Object.freeze(['scrap-device-core', 'scrap-device-glow-outer']),
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
+      expectedPatchIds: Object.freeze([
+        'scrap-prologue-collapse-and-rescue',
+        'scrap-prologue-player-decision',
+      ]),
+      expectedItems: Object.freeze([
+        'scrap-device-core',
+        'scrap-device-glow-outer',
+        'scrap-rival-trapped-torso',
+        'scrap-rival-trapped-arm',
+        'scrap-rival-trapped-marker',
+        'scrap-collapse-debris',
+        'scrap-rescue-winch-cable',
+      ]),
       expectedAbsentItems: Object.freeze([
         'scrap-king-eye-left',
         'scrap-king-shoulder-left',

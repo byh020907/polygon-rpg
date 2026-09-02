@@ -303,18 +303,15 @@ function awakeningTransaction(current, nextStageId) {
 
 export function startScrapAwakening(snapshot, profile) {
   const current = toScrapCampaignSnapshot(snapshot, profile);
-  if (current.awakeningStageId !== SCRAP_AWAKENING_STAGE.COMMISSION) {
-    return Object.freeze({ changed: false, reason: 'already-started', snapshot: current });
+  if (current.awakeningStageId !== SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED) {
+    return Object.freeze({ changed: false, reason: 'device-not-investigated', snapshot: current });
   }
   return awakeningTransaction(current, SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
 }
 
 export function advanceScrapAwakening(snapshot, profile) {
   const current = toScrapCampaignSnapshot(snapshot, profile);
-  if (
-    current.awakeningStageId === SCRAP_AWAKENING_STAGE.COMMISSION ||
-    current.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-  ) {
+  if (current.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE) {
     return Object.freeze({ changed: false, reason: 'not-advancing', snapshot: current });
   }
   return awakeningTransaction(current, nextScrapAwakeningStage(current.awakeningStageId));

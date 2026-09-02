@@ -75,10 +75,10 @@
           <aside class="journey-card">
             <p class="journey-index">CAMPAIGN · AWAKENING</p>
             <div class="journey-mark" aria-hidden="true">◆</div>
-            <h2>퇴직했는데 또 야근</h2>
+            <h2>사람을 구했더니 왕국이 야근</h2>
             <p>
-              값나가는 고철인 줄 알고 떼어낸 제어장치가 고철 대왕을 깨웠다. 고물상 주인과 함께 왕국
-              다섯 지역의 산업기계를 먼저 회수해 수도를 지킨다.
+              붕괴에 갇힌 라이벌을 구하려 떼어낸 제어장치가 고철 대왕을 깨웠다. 두 견습생과 고물상
+              주인은 왕국 다섯 지역의 산업기계를 먼저 구해 자신들이 일으킨 사고를 수습한다.
             </p>
             <dl>
               <div>
@@ -661,18 +661,12 @@
             x-show="!visualQa"
             x-bind:data-story-beat="storyBeatId"
             aria-labelledby="story-briefing-title"
-            aria-describedby="story-briefing-detail story-current-objective"
             aria-live="polite"
           >
             <header>
-              <small x-text="`STORY · ${storyBeatId}`"></small>
-              <strong id="story-briefing-title" x-text="storyTitle"></strong>
+              <small>현재 할 일</small>
+              <strong id="story-briefing-title" x-text="objective"></strong>
             </header>
-            <p id="story-briefing-detail" x-text="storyBriefing"></p>
-            <div id="story-current-objective">
-              <small>현재 목표</small>
-              <strong x-text="objective"></strong>
-            </div>
           </section>
 
           <template x-if="dialogue.active">
@@ -680,6 +674,7 @@
               class="dialogue-bubble"
               x-bind:data-dialogue-active="String(dialogue.active)"
               x-bind:data-dialogue-target="dialogue.interactionId"
+              x-bind:data-dialogue-presentation="dialogue.presentationMode"
               aria-labelledby="dialogue-speaker"
               x-bind:data-dialogue-complete="String(dialogue.revealComplete)"
               x-bind:style="dialogue.screenAnchor ? `--dialogue-anchor-x: ${dialogue.screenAnchor.x}px; --dialogue-anchor-y: ${dialogue.screenAnchor.y}px` : ''"

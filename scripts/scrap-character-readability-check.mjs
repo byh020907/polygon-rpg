@@ -9,7 +9,7 @@ import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
-assert.equal(profiles.length, 15);
+assert.equal(profiles.length, 16);
 assert.equal(new Set(profiles.map((profile) => profile.id)).size, profiles.length);
 assert.deepEqual(CHARACTER_PRESENTATION_PROFILE.comparisonViews, [
   'front',
@@ -24,6 +24,7 @@ assert.ok(profiles.every((profile) => profile.minimumViewportHeight >= 64));
 const requiredRoleIds = [
   'scrapyard-apprentice',
   'scrapyard-owner',
+  'rival-scout',
   'mine-worker',
   'shipyard-worker',
   'greenhouse-technician',
@@ -79,7 +80,10 @@ const humanToolShapes = profiles
     ),
   );
 assert.ok(humanToolShapes.every(Boolean));
-assert.equal(new Set(humanToolShapes.map((tool) => normalizeShape(tool.points))).size, 7);
+assert.equal(
+  new Set(humanToolShapes.map((tool) => normalizeShape(tool.points))).size,
+  profiles.filter((profile) => profile.family === 'human').length,
+);
 assert.ok(
   profiles
     .filter((profile) => profile.family === 'human')
@@ -323,10 +327,10 @@ process.stdout.write(
     views: CHARACTER_PRESENTATION_PROFILE.comparisonViews,
     checks: [
       'immutable-character-presentation-profile',
-      'protagonist-owner-five-job-families-and-three-enemy-families',
+      'protagonist-owner-rival-five-job-families-and-three-enemy-families',
       'front-side-representative-pose-at-gameplay-scale',
       'tool-outfit-and-material-landmarks',
-      'seven-human-tool-geometries-and-headgear-are-shape-distinct',
+      'eight-human-tool-geometries-and-headgear-are-shape-distinct',
       'presentation-only-room-with-no-academy-player-fallback',
       'presentation-room-hides-touch-controls-and-academy-context',
       'polygon-retro-stable-visual-qa-scenario',
