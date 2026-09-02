@@ -110,8 +110,13 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(css, /calc\(\(100dvh - 78px\) \* 16 \/ 9\)/);
   assert.match(
     css,
-    /--game-safe-top: max\(4px, env\(safe-area-inset-top\)\);[\s\S]*height: var\(--app-visible-viewport-height, 100dvh\);[\s\S]*padding: var\(--game-safe-top\) var\(--game-safe-right\) var\(--game-safe-bottom\)[\s\S]*height: 100%;/,
-    '설치형 landscape도 safe-area를 보존하고 viewport 안에서만 canvas를 맞춰야 한다.',
+    /--game-safe-top: max\(4px, env\(safe-area-inset-top\)\);[\s\S]*height: var\(--app-visible-viewport-height, 100dvh\);[\s\S]*var\(--app-visible-viewport-width, 100vw\)[\s\S]*height: auto;[\s\S]*aspect-ratio: 16 \/ 9;/,
+    '설치형 landscape도 visible viewport의 양 축과 safe-area를 보존하며 16:9 canvas를 유지해야 한다.',
+  );
+  assert.match(
+    css,
+    /@media \(max-width: 760px\) and \(orientation: landscape\) \{\s*\.game-screen \{\s*padding: var\(--game-safe-top\) var\(--game-safe-right\) var\(--game-safe-bottom\)\s*var\(--game-safe-left\);/,
+    '좁은 landscape breakpoint도 game frame보다 큰 padding으로 visible viewport를 잘라서는 안 된다.',
   );
   assert.doesNotMatch(html, /MENTAL|정신력|vital-track--mental/);
   assert.doesNotMatch(shell, /\bmental(?:Percent)?\b|maxMental/);
