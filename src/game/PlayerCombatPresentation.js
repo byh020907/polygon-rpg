@@ -713,6 +713,7 @@ function createCharacterItems(
           : item.id === 'torso' || item.id === 'head'
             ? combatGeometry?.hurt?.find(({ part }) => part === item.id)?.points
             : null;
+    const usesAuthoredSkeleton = Boolean(bonePose.projectedJoints && bonePose.frameId);
     return Object.freeze({
       ...item,
       renderOrder,
@@ -725,6 +726,14 @@ function createCharacterItems(
         : Object.freeze(
             item.points.map((point) => {
               const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
+              if (usesAuthoredSkeleton && item.id !== 'shadow') {
+                const scaledX = position.x + (point.x - position.x) * renderScale;
+                const scaledY = footY + (point.y - footY) * renderScale;
+                return Object.freeze({
+                  x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
+                  y: scaledY,
+                });
+              }
               const relativeX =
                 (point.x - position.x) * (item.id === 'shadow' ? 1 : bonePose.bodyScaleX);
               const relativeY =

@@ -68,6 +68,20 @@ function skeletonHeadPolygon(position, joints) {
 
 function posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale }) {
   const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
+  const usesAuthoredSkeleton = Boolean(bonePose.projectedJoints && bonePose.frameId);
+  // Authored clips have already projected every limb from local 3D joints into the side-view
+  // plane. Applying the legacy whole-body lean here would rotate that finished pose a second
+  // time, making a roll read like a tilted paper doll instead of a changing body silhouette.
+  if (usesAuthoredSkeleton) {
+    return points.map((point) => {
+      const scaledX = position.x + (point.x - position.x) * geometryScale;
+      const scaledY = footY + (point.y - footY) * geometryScale;
+      return {
+        x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
+        y: scaledY,
+      };
+    });
+  }
   const lean = targetPose.bodyLean + bonePose.bodyLean;
   const cosine = Math.cos(lean);
   const sine = Math.sin(lean);

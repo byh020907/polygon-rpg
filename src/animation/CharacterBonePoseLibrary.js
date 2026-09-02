@@ -122,6 +122,18 @@ const AUTHORED_ARM_TRANSFORMS = Object.freeze({
     farElbow: Object.freeze({ x: 3, y: -10, z: -3, rotation: -0.12 }),
     farHand: Object.freeze({ x: 7, y: -11, z: -2, rotation: -0.08 }),
   }),
+  rollTuck: Object.freeze({
+    nearElbow: Object.freeze({ x: -7, y: 2, z: 5, rotation: 0.7 }),
+    nearHand: Object.freeze({ x: -2, y: 15, z: 4, rotation: 1.2 }),
+    farElbow: Object.freeze({ x: -8, y: 1, z: -3, rotation: -0.58 }),
+    farHand: Object.freeze({ x: -3, y: 12, z: -2, rotation: -1.05 }),
+  }),
+  rollRelease: Object.freeze({
+    nearElbow: Object.freeze({ x: 10, y: 7, z: 5, rotation: 0.35 }),
+    nearHand: Object.freeze({ x: 18, y: 10, z: 4, rotation: 0.12 }),
+    farElbow: Object.freeze({ x: 0, y: -4, z: -3, rotation: -0.2 }),
+    farHand: Object.freeze({ x: 4, y: -5, z: -2, rotation: -0.08 }),
+  }),
 });
 
 function authoredRollFrame({
@@ -234,6 +246,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
     leadFootY: 65,
     depth: 0.4,
     capeLift: 0.75,
+    armPose: 'rollTuck',
   }),
   authoredRollFrame({
     id: 'roll-contact',
@@ -249,6 +262,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
     leadFootY: 58,
     depth: 1,
     capeLift: 1,
+    armPose: 'rollTuck',
   }),
   authoredRollFrame({
     id: 'roll-unfold',
@@ -264,6 +278,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
     leadFootY: 63,
     depth: -1,
     capeLift: 0.94,
+    armPose: 'rollRelease',
   }),
   authoredRollFrame({
     id: 'roll-recover',
@@ -279,6 +294,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
     leadFootY: 80,
     depth: -0.35,
     capeLift: 0.46,
+    armPose: 'rollRelease',
   }),
   authoredRollFrame({
     at: 1,

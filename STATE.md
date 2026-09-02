@@ -8,7 +8,7 @@
 
 ## Current Phase
 
-`human-feedback-priority · installed-pwa-safe-area-and-authored-motion-validation`
+`human-feedback-priority · authored-roll-pose-projection-and-mobile-canvas-validation`
 
 ## Project Direction Comparison
 
@@ -57,8 +57,8 @@
 
 ## Active Execution Goal
 
-없음. 다음 Human Feedback Priority는 physical Android Chromium/iPhone·iPad Safari에서 설치·standalone safe-area/scale, offline 재실행과 update failure recovery를 확인하고, Player authored pose clip의 실제 continuous playback을 desktop/mobile에서 판독하는 것이다.
+없음. 이번 tick은 authored skeleton pose에 중복 적용되던 legacy 전신 회전을 제거하고 roll의 tuck/release arm pose를 연결했다. `test:combat`과 Codex in-app Browser 1280×720·844×390 Polygon roll capture에서 body·sword·shield silhouette, console error 0·mobile overflow 0을 확인했다. 다음 Human Feedback Priority는 physical Android Chromium/iPhone·iPad Safari에서 설치·standalone safe-area/scale, offline 재실행과 update failure recovery를 확인하고, 나머지 Player baseline clip의 실제 continuous desktop/mobile playback을 판독하는 것이다.
 
 ## Blockers
 
-Human Feedback Priority: landscape safe-area CSS와 embedded Browser 844×390 layout은 independent verifier까지 통과했지만 Android Chromium/iPhone·iPad Safari의 설치·standalone screen scale, fresh worker-controlled offline reload, device icon QA와 failed-update cache recovery는 아직 unverified다. Motion reference provenance와 deterministic pose-frame·collision alignment은 `test:combat`과 independent verifier에서 PASS했으나 모든 baseline clip의 actual continuous desktop/mobile 판독은 남았다. 이 priority 결과가 끝날 때까지 Verified Playable Frontier로 복귀하지 않는다.
+Human Feedback Priority: landscape safe-area CSS와 embedded Browser 844×390 layout은 independent verifier까지 통과했지만 Android Chromium/iPhone·iPad Safari의 설치·standalone screen scale, fresh worker-controlled offline reload, device icon QA와 failed-update cache recovery는 아직 unverified다. Motion reference provenance·deterministic pose-frame·collision alignment은 `test:combat`과 independent verifier에서 PASS했고 roll은 1280×720·844×390 actual capture로 판독했다. 나머지 baseline clip의 actual continuous desktop/mobile 판독은 남았다. 이 priority 결과가 끝날 때까지 Verified Playable Frontier로 복귀하지 않는다.
