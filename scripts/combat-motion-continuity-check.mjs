@@ -9,6 +9,10 @@ import {
   combatMotionFrameData,
 } from '../src/combat/CombatCommandController.js';
 import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
+import {
+  ENCOUNTER_PROFILES,
+  resolveEncounterBodyCollider,
+} from '../src/game/encounter/EncounterProfiles.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
@@ -24,6 +28,18 @@ const EMPTY_INPUT = Object.freeze({
   basicAttackSequence: 0,
   strongAttackSequence: 0,
 });
+
+const collectorCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES.training);
+const humanCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES['mine-claim-jacker']);
+const bossCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES['mine-collapse-boss']);
+assert.equal(collectorCollider.rollThrough, 'normal');
+assert.equal(humanCollider.rollThrough, 'normal');
+assert.equal(bossCollider.rollThrough, 'forbidden');
+assert.ok(
+  bossCollider.halfWidth > collectorCollider.halfWidth &&
+    bossCollider.height > collectorCollider.height,
+  'body colliders must scale with the authored enemy silhouette instead of using one normal/boss width',
+);
 
 function rollPose(progress) {
   return sampleCharacterBonePose({ rollProgress: progress });
@@ -244,12 +260,28 @@ withScene((scene) => {
 
 withScene((scene) => {
   const enemy = scene.roomSceneNode.encounter.enemy;
+  const bounds = scene.getPlayerMovementBounds();
+  enemy.position = { x: bounds.maxX - 34, y: scene.mapRuntime.getActiveRoom().groundY };
+  scene.position = { x: enemy.position.x - 70, y: scene.position.y };
+  scene.previousPosition = { ...scene.position };
+  scene.update(STEP, { ...EMPTY_INPUT, right: true, guard: true });
+  for (let tick = 0; tick < 55; tick += 1) scene.update(STEP, { ...EMPTY_INPUT, right: true });
+  const collider = scene.roomSceneNode.getEncounterGameplaySnapshot().bodyCollider;
+  assert.ok(
+    scene.position.x <= enemy.position.x - (20 + collider.halfWidth),
+    'a cramped roll must stay on the approach side instead of ending inside an enemy or room boundary',
+  );
+});
+
+withScene((scene) => {
+  const enemy = scene.roomSceneNode.encounter.enemy;
   enemy.role = 'boss';
   enemy.position = { x: scene.position.x + 72, y: scene.mapRuntime.getActiveRoom().groundY };
   scene.update(STEP, { ...EMPTY_INPUT, right: true, guard: true });
   for (let tick = 0; tick < 55; tick += 1) scene.update(STEP, { ...EMPTY_INPUT, right: true });
+  const collider = scene.roomSceneNode.getEncounterGameplaySnapshot().bodyCollider;
   assert.ok(
-    scene.position.x <= enemy.position.x - 66,
+    scene.position.x <= enemy.position.x - (20 + collider.halfWidth),
     'roll must stop at a boss body rather than ending inside its larger collision volume',
   );
 });
@@ -338,6 +370,7 @@ console.log(
       'authored-idle-run-jump-fall-landing-guard-hit-pose-strips',
       'normal-enemy-body-collision',
       'normal-enemy-roll-through',
+      'authored-scale-body-colliders-and-cramped-roll-rejection',
       'boss-body-roll-destination',
       'room-edge-roll-clearance',
       'jump-landing-held-movement-continuity',

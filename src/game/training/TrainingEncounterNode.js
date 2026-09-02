@@ -11,6 +11,7 @@ import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
 import { resolveSwordEnchantment } from '../enchantment/EnchantmentPolicy.js';
+import { resolveEncounterBodyCollider } from '../encounter/EncounterProfiles.js';
 
 const GRAVITY = 1180;
 const RESET_SECONDS = combatFramesToSeconds(60);
@@ -355,6 +356,11 @@ export class TrainingEncounterNode extends SceneNode {
       presentationProfileId: enemy.presentationProfileId,
       role: enemy.role,
       species: enemy.species,
+      bodyCollider: resolveEncounterBodyCollider({
+        ...this.entity.encounterProfile,
+        role: enemy.role,
+        species: enemy.species,
+      }),
       label: enemy.label,
       completionDisposition: enemy.completionDisposition,
       resolutionState: enemy.resolutionState,

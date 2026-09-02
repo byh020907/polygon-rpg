@@ -252,9 +252,7 @@ const CHARACTER_CELL_SIZE = 48;
 const CHARACTER_BOUNDARY_HALF_WIDTH = CHARACTER_CELL_SIZE / 2;
 const CHARACTER_FOOT_OFFSET = PLAYER_CHARACTER_FOOT_OFFSET;
 const PLAYER_BODY_HALF_WIDTH = 20;
-const NORMAL_ENEMY_BODY_HALF_WIDTH = 28;
-const BOSS_ENEMY_BODY_HALF_WIDTH = 46;
-const PLAYER_BODY_HEIGHT = 76;
+const ROLL_SAFE_CLEARANCE = 4;
 
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
@@ -2593,6 +2591,7 @@ export class GameScene extends SceneNode {
       direction: Math.sign(direction),
       elapsedSeconds: 0,
       durationSeconds: ROLL_DURATION_SECONDS,
+      bodyThroughAllowed: this.canRollThroughEncounterBody(Math.sign(direction)),
     };
     this.facing = this.rollState.direction;
     if (
@@ -2601,6 +2600,31 @@ export class GameScene extends SceneNode {
       this.scrapFinalBattleOpeningSeconds = 0.9;
     }
     return true;
+  }
+
+  canRollThroughEncounterBody(direction) {
+    const enemy = this.roomSceneNode?.getEncounterGameplaySnapshot();
+    const collider = enemy?.bodyCollider;
+    if (
+      !enemy ||
+      enemy.health <= 0 ||
+      enemy.resolutionState === 'departed' ||
+      collider?.rollThrough !== 'normal'
+    ) {
+      return collider?.rollThrough !== 'forbidden';
+    }
+    const playerFootY = this.position.y + CHARACTER_FOOT_OFFSET;
+    const enemyTopY = enemy.position.y - collider.height;
+    if (playerFootY <= enemyTopY || this.position.y >= enemy.position.y) return true;
+
+    const distanceAhead = (enemy.position.x - this.position.x) * direction;
+    const separation = PLAYER_BODY_HALF_WIDTH + collider.halfWidth;
+    if (distanceAhead <= 0 || distanceAhead >= ROLL_SPEED * ROLL_DURATION_SECONDS + separation) {
+      return true;
+    }
+    const movementBounds = this.getPlayerMovementBounds();
+    const safeDestination = enemy.position.x + direction * (separation + ROLL_SAFE_CLEARANCE);
+    return safeDestination >= movementBounds.minX && safeDestination <= movementBounds.maxX;
   }
 
   updateRoll(deltaSeconds) {
@@ -2619,12 +2643,14 @@ export class GameScene extends SceneNode {
     const motionId = this.combatCommands.snapshot().id;
     if (!this.rollState && !['idle', 'guard'].includes(motionId)) return false;
     const playerFootY = this.position.y + CHARACTER_FOOT_OFFSET;
-    const enemyTopY = enemy.position.y - PLAYER_BODY_HEIGHT;
+    const collider = enemy.bodyCollider;
+    if (!collider || !Number.isFinite(collider.halfWidth) || !Number.isFinite(collider.height)) {
+      throw new TypeError('active encounter는 authored body collider를 제공해야 합니다.');
+    }
+    const enemyTopY = enemy.position.y - collider.height;
     if (playerFootY <= enemyTopY || this.position.y >= enemy.position.y) return false;
 
-    const enemyHalfWidth =
-      enemy.role === 'boss' ? BOSS_ENEMY_BODY_HALF_WIDTH : NORMAL_ENEMY_BODY_HALF_WIDTH;
-    const separation = PLAYER_BODY_HALF_WIDTH + enemyHalfWidth;
+    const separation = PLAYER_BODY_HALF_WIDTH + collider.halfWidth;
     const distance = this.position.x - enemy.position.x;
     if (Math.abs(distance) >= separation) return false;
 
@@ -2633,7 +2659,9 @@ export class GameScene extends SceneNode {
       : null;
     const rollMarker = rollProgress === null ? null : rollTimelineMarkerAt(rollProgress);
     const canRollThrough =
-      enemy.role !== 'boss' && rollMarker?.gameplay === 'evade-and-body-through';
+      this.rollState?.bodyThroughAllowed === true &&
+      collider.rollThrough === 'normal' &&
+      rollMarker?.gameplay === 'evade-and-body-through';
     if (canRollThrough) return false;
 
     const previousDistance = previousPositionX - enemy.position.x;
