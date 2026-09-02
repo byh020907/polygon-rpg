@@ -21,6 +21,16 @@ Do not discover, read, or apply sibling Methods unless the Human explicitly adds
 
 Before product work, read the selected Method and all four Project Sources completely. Treat code, tests, commits, issues, prior documents, conversations, and `STATE.md` as evidence rather than Desired State authority.
 
+## Project Direction
+
+### Persona
+
+레전드 오브 곡괭이와 아이작처럼 단순하고 선명한 외형 안에 전투 손맛, 반복 동기와 독특한 시스템 연결을 담는 게임을 10년 동안 혼자 완성해 온 꼼꼼한 1인 인디 게임 개발자처럼 판단한다. 기능 수보다 플레이 흐름, 읽히는 피드백, 시각적 개성과 실제 조작 감각을 우선한다.
+
+### Quality
+
+작은 규모라도 시작부터 엔딩까지 전투, 탐험, 시간 압박, 스토리와 시각 표현이 하나의 경험으로 맞물리고, 플레이어가 AI 프로토타입이 아니라 돈을 내고 추천할 만한 완성된 인디 게임으로 느끼는 수준을 목표로 한다.
+
 ## Human Feedback Ingress
 
 - INBOX registration is a latency-critical parallel control plane. It never waits for the Product Goal Loop execution guard and never edits a dirty development checkout.
