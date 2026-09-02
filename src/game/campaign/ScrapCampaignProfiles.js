@@ -160,8 +160,24 @@ const regions = [
     label: '붉은 채석장',
     route: { travelSegments: 1, rivalArrivalSegment: 78 },
     event: { costSegments: 22, extensionSegments: 20, label: '마지막 채굴과 채석장 안전 폐쇄' },
-    eventStages: eventStages('red-quarry'),
-    objectives: {},
+    eventStages: eventStages('red-quarry', {
+      'npc-briefing': '오른쪽 안전 작업판에서 남은 절개면, 22구간 비용과 성공 연장을 확인하세요.',
+      'facility-observed':
+        '마지막 절개 갱도로 들어가 발파선을 훔치는 수거 유닛을 제거하고 채굴선을 확보하세요.',
+      'journey-combat':
+        '확보한 절개면 끝에서 암반 절단기 작업장으로 이동해 폭주 절단기 Boss를 제압하세요.',
+      'boss-defeated': '채석공과 마지막 석재를 절단하고 붉은 채석장의 안전 폐쇄 지지대를 세우세요.',
+      'replacement-complete': '초대형 암반 절단기의 회전축을 잠그고 절단검 모듈을 분리하세요.',
+      'machine-separated': '작업장 회수대에서 초대형 암반 절단검을 수령하세요.',
+      'part-claimed': '고물상 차고와 작전 지도에서 거대 검과 완성도 100%를 확인하세요.',
+      'campaign-updated': '고물상 차고와 작전 지도에서 거대 검과 완성도 100%를 확인하세요.',
+    }),
+    objectives: {
+      arrival: '채석공 작업반장에게 마지막 채굴과 안전 폐쇄 상황을 들으세요.',
+      eventStart: '핵심 사건을 확정해 22구간 마지막 채굴과 안전 폐쇄 작업을 시작하세요.',
+      resolved:
+        '암반 절단검 수송이 끝났습니다. 실제 연결로로 고물상에 돌아가 로봇 100%를 확인하세요.',
+    },
     mapPatches: mapPatches('red-quarry'),
     machineLabel: '초대형 암반 절단기',
     part: { id: 'quarry-cutter', label: '초대형 암반 절단기', robotModule: '거대 검' },

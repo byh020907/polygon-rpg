@@ -22,6 +22,7 @@ const SCRAP_ENEMY_TOOL_KINDS = Object.freeze([
   'hydraulic-crane',
   'geothermal-manifold',
   'snowplow-train',
+  'rock-cutting-machine',
 ]);
 
 function assertCharacterPresentationProfile(profile) {
@@ -144,6 +145,15 @@ function regularPolygon(radiusX, radiusY, sides, angleOffset = 0) {
   return Array.from({ length: sides }, (_, index) => {
     const angle = angleOffset + (index / sides) * Math.PI * 2;
     return { x: Math.cos(angle) * radiusX, y: Math.sin(angle) * radiusY };
+  });
+}
+
+function toothedWheel(radius, teeth, innerRatio = 0.82) {
+  return Array.from({ length: teeth * 2 }, (_, index) => {
+    const outer = index % 2 === 0;
+    const angle = -Math.PI / 2 + (index / (teeth * 2)) * Math.PI * 2;
+    const sampledRadius = radius * (outer ? 1 : innerRatio);
+    return { x: Math.cos(angle) * sampledRadius, y: Math.sin(angle) * sampledRadius };
   });
 }
 
@@ -638,6 +648,93 @@ function createScrapEnemyAppearanceItems({
           stroke: accent,
           lineWidth: 2.5,
           order: headOrder + 0.3,
+        },
+      ),
+    ];
+  }
+
+  if (toolKind === 'rock-cutting-machine') {
+    const bladeArmLength = Math.max(weaponLength - 16, 68);
+    const bladeRadius = Math.max(25, Math.min(34, bladeArmLength * 0.38));
+    const bladeCenter = {
+      x: weaponHand.x + Math.cos(weaponAngle) * bladeArmLength,
+      y: weaponHand.y + Math.sin(weaponAngle) * bladeArmLength,
+    };
+    const pivot = { x: x + shoulderWidth - 4, y: y - 54 };
+    return [
+      ...commonItems,
+      polygon(
+        'combat-enemy-quarry-body-housing',
+        [
+          { x: -shoulderWidth - 10, y: -25 },
+          { x: shoulderWidth - 4, y: -31 },
+          { x: shoulderWidth + 15, y: -16 },
+          { x: shoulderWidth + 12, y: 18 },
+          { x: hipWidth + 5, y: 28 },
+          { x: -hipWidth - 12, y: 24 },
+        ],
+        { x, y: y - 35 },
+        material,
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 4,
+          order: bodyOrder + 0.26,
+        },
+      ),
+      limbSegment('combat-enemy-quarry-pivot-arm', pivot, bladeCenter, 17, material, {
+        ...presentation,
+        stroke: accent,
+        lineWidth: 3.5,
+        order: weaponOrder + 0.19,
+      }),
+      polygon(
+        'combat-enemy-quarry-cutting-blade',
+        toothedWheel(bladeRadius, 14),
+        bladeCenter,
+        '#b8aea0',
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 4,
+          order: weaponOrder + 0.28,
+        },
+      ),
+      polygon(
+        'combat-enemy-quarry-cutting-blade-gullet',
+        regularPolygon(bladeRadius * 0.62, bladeRadius * 0.62, 14, Math.PI / 14),
+        bladeCenter,
+        '#4b3630',
+        {
+          ...presentation,
+          stroke: '#d8c4a6',
+          lineWidth: 2,
+          order: weaponOrder + 0.3,
+        },
+      ),
+      polygon(
+        'combat-enemy-quarry-drive-bearing',
+        regularPolygon(17, 17, 12, Math.PI / 12),
+        pivot,
+        '#d9b36c',
+        {
+          ...presentation,
+          stroke: '#fff0bd',
+          lineWidth: 3,
+          order: bodyOrder + 0.36,
+        },
+      ),
+      limbSegment(
+        'combat-enemy-quarry-outrigger',
+        { x: x - shoulderWidth + 2, y: y - 38 },
+        { x: x - hipWidth - 27, y: y - 1 },
+        13,
+        '#4b3630',
+        {
+          ...presentation,
+          stroke: accent,
+          lineWidth: 2.5,
+          order: bodyOrder - 0.14,
         },
       ),
     ];

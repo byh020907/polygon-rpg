@@ -384,6 +384,26 @@ assert.equal(
   snowSuccess.regionEventStageIds['snow-trade-road'],
   'snow-trade-road:campaign-updated',
 );
+const quarryProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('red-quarry');
+let quarryStarted = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'red-quarry' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+quarryStarted = commit(quarryStarted, regionStageAction('red-quarry', 'npc-briefing'));
+quarryStarted = commit(quarryStarted, regionStageAction('red-quarry', 'facility-observed'));
+const quarryEventPreview = previewScrapCampaignAction(
+  quarryStarted,
+  regionEventStartAction('red-quarry'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(quarryEventPreview.costSegments, 22);
+assert.equal(quarryEventPreview.successExtensionDays, 5);
+const quarrySuccess = resolveRegion(fresh, 'red-quarry');
+assert.equal(quarrySuccess.regionStates['red-quarry'], 'resolved');
+assert.equal(quarrySuccess.collectedPartIds.includes(quarryProfile.part.id), true);
+assert.equal(quarrySuccess.deadlineSegments, 120 - 22 + 20);
+assert.equal(quarrySuccess.rivalDelaySegments, 20);
+assert.equal(quarrySuccess.regionEventStageIds['red-quarry'], 'red-quarry:campaign-updated');
 for (const orderedSnapshot of [
   resolveRegion(resolveRegion(fresh, 'abandoned-mine'), 'harbor-shipyard'),
   commit(resolveRegion(fresh, 'harbor-shipyard'), convoyAction('abandoned-mine')),
@@ -415,6 +435,15 @@ assert.equal(firstFourReadModel.finalBattleAvailable, false);
 assert.deepEqual(
   firstFourReadModel.regions.filter((region) => region.collected).map((region) => region.id),
   ['abandoned-mine', 'harbor-shipyard', 'greenhouse-plains', 'snow-trade-road'],
+);
+const firstFiveResolved = resolveRegion(firstFourResolved, 'red-quarry');
+const firstFiveReadModel = getScrapCampaignReadModel(firstFiveResolved, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(firstFiveReadModel.collectedPartCount, 5);
+assert.equal(firstFiveReadModel.completionPercent, 100);
+assert.equal(firstFiveReadModel.finalBattleAvailable, true);
+assert.deepEqual(
+  firstFiveReadModel.regions.filter((region) => region.collected).map((region) => region.id),
+  ['abandoned-mine', 'harbor-shipyard', 'greenhouse-plains', 'snow-trade-road', 'red-quarry'],
 );
 const versionThreeMine = { ...mineSuccess, version: 3 };
 delete versionThreeMine.regionEventStageIds;
@@ -549,6 +578,7 @@ console.log(
       'mine-harbor-order-or-convoy-two-part-forty-percent',
       'greenhouse-eighteen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
       'snow-sixteen-segment-three-day-detour-armor-and-first-four-eighty-percent',
+      'quarry-twenty-two-segment-five-day-detour-cutter-and-five-part-hundred-percent',
       'v3-region-stage-migration-to-v4',
       'rival-first-convoy-two-segment-no-extension-recovery',
       'five-part-order-independent-final-battle-unlock',

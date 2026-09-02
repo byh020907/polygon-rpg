@@ -9,7 +9,7 @@ import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
-assert.equal(profiles.length, 14);
+assert.equal(profiles.length, 15);
 assert.equal(new Set(profiles.map((profile) => profile.id)).size, profiles.length);
 assert.deepEqual(CHARACTER_PRESENTATION_PROFILE.comparisonViews, [
   'front',
@@ -36,6 +36,7 @@ const requiredRoleIds = [
   'shipyard-twin-crane-boss',
   'greenhouse-geothermal-boss',
   'snowplow-train-boss',
+  'quarry-rock-cutter-boss',
 ];
 assert.deepEqual(
   profiles.map((profile) => profile.id),
@@ -86,6 +87,47 @@ assert.ok(
       board.items.some((boardItem) => boardItem.id.startsWith(`${profile.id}-front-headgear-`)),
     ),
 );
+
+const quarryWorker = CHARACTER_PRESENTATION_PROFILE.getProfile('quarry-worker');
+assert.equal(quarryWorker.toolKind, 'quarry-drill');
+assert.match(quarryWorker.material, /^#[0-9a-f]{6}$/i);
+assert.deepEqual(quarryWorker.landmarks, [
+  '분진 마스크와 귀마개',
+  '적갈색 방진 작업복',
+  '양손 착암 드릴',
+]);
+for (const view of CHARACTER_PRESENTATION_PROFILE.comparisonViews) {
+  for (const landmarkSuffix of ['headgear-dust-mask', 'dust-jacket-yoke']) {
+    assert.ok(
+      board.items.some((boardItem) => boardItem.id === `quarry-worker-${view}-${landmarkSuffix}`),
+      `채석공 ${view} silhouette에는 ${landmarkSuffix}가 필요합니다.`,
+    );
+  }
+  assert.ok(
+    board.items.some((boardItem) => boardItem.id === `quarry-worker-${view}-tool-quarry-drill-bit`),
+    `채석공 ${view} silhouette에는 착암 드릴 bit가 필요합니다.`,
+  );
+}
+
+const quarryBossProfile = CHARACTER_PRESENTATION_PROFILE.getProfile('quarry-rock-cutter-boss');
+assert.equal(quarryBossProfile.toolKind, 'rock-cutting-machine');
+assert.deepEqual(quarryBossProfile.landmarks, [
+  '적갈색 중량 본체',
+  '초대형 수직 절단날',
+  '노출된 황동 가동 베어링',
+]);
+for (const view of CHARACTER_PRESENTATION_PROFILE.comparisonViews) {
+  for (const landmarkSuffix of ['cutting-blade', 'blade-hub', 'outrigger']) {
+    assert.ok(
+      board.items.some(
+        (boardItem) =>
+          boardItem.id ===
+          `quarry-rock-cutter-boss-${view}-tool-rock-cutting-machine-${landmarkSuffix}`,
+      ),
+      `암반 절단기 ${view} silhouette에는 ${landmarkSuffix}가 필요합니다.`,
+    );
+  }
+}
 
 const boardRoom = ACADEMY_VILLAGE_MAP.getRoom('academy-region', 'scrap-character-design-board');
 assert.equal(boardRoom.presentationOnly, true);
@@ -146,6 +188,18 @@ for (const encounterProfile of Object.values(ENCOUNTER_PROFILES)) {
     `${encounterProfile.id} encounter는 authored machine appearance profile을 가져야 합니다.`,
   );
 }
+const quarryCollectorEncounter = ENCOUNTER_PROFILES['quarry-cut-collector'];
+assert.equal(quarryCollectorEncounter.presentationProfileId, 'collector-unit');
+assert.equal(quarryCollectorEncounter.role, 'field');
+assert.equal(quarryCollectorEncounter.respawns, false);
+const quarryBossEncounter = ENCOUNTER_PROFILES['quarry-rock-cutter-boss'];
+assert.equal(quarryBossEncounter.presentationProfileId, 'quarry-rock-cutter-boss');
+assert.equal(quarryBossEncounter.role, 'boss');
+assert.ok(
+  quarryBossEncounter.posture.maximum > ENCOUNTER_PROFILES['snowplow-train-boss'].posture.maximum,
+);
+assert.deepEqual(quarryBossEncounter.weakPoint.triggerAttackKinds, ['heavy']);
+assert.equal(quarryBossEncounter.weakPoint.id, 'quarry-cutter-main-bearing');
 gameplayScene.setVisualQaLocation({
   regionId: 'academy-region',
   roomId: 'training-room',
@@ -215,6 +269,18 @@ for (const scenario of [
     profileId: 'snowplow-train-boss',
     landmarkId: 'combat-enemy-snowplow-wedge',
   },
+  {
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    regionId: 'red-quarry',
+    roomId: 'red-quarry-cutter-yard',
+    profileId: 'quarry-rock-cutter-boss',
+    landmarkId: 'combat-enemy-quarry-body-housing',
+    landmarkIds: [
+      'combat-enemy-quarry-pivot-arm',
+      'combat-enemy-quarry-cutting-blade',
+      'combat-enemy-quarry-drive-bearing',
+    ],
+  },
 ]) {
   const scenarioScene = createTestGameScene({
     mapDefinition: scenario.mapDefinition ?? ACADEMY_VILLAGE_MAP,
@@ -230,6 +296,11 @@ for (const scenario of [
     scenarioFrame.items.some((item) => item.id === scenario.landmarkId),
     `${scenario.profileId} 실제 encounter에는 ${scenario.landmarkId}가 필요합니다.`,
   );
+  for (const landmarkId of scenario.landmarkIds ?? []) {
+    const landmark = scenarioFrame.items.find((item) => item.id === landmarkId);
+    assert.ok(landmark, `${scenario.profileId} 실제 encounter에는 ${landmarkId}가 필요합니다.`);
+    assert.equal(landmark.presentationOnly, true);
+  }
 }
 
 for (const renderer of ['polygon', 'retro']) {
@@ -265,6 +336,8 @@ process.stdout.write(
       'shipyard-worker-and-twin-crane-boss-distinct-job-machine-silhouettes',
       'greenhouse-technician-and-geothermal-boss-distinct-job-machine-silhouettes',
       'snow-train-crew-and-snowplow-boss-distinct-job-machine-silhouettes',
+      'quarry-worker-drill-dust-gear-and-rust-workwear-silhouette',
+      'quarry-rock-cutter-body-blade-moving-part-and-heavy-weak-point-contract',
       'renderer-read-only-presentation-items-and-combat-geometry-preserved',
     ],
   })}\n`,

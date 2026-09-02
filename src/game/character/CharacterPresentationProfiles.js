@@ -85,16 +85,16 @@ const RAW_PROFILES = [
   },
   {
     id: 'quarry-worker',
-    label: '채석장 작업자',
+    label: '붉은 채석장 채석공',
     roleLabel: '직업 NPC',
     family: 'human',
-    accent: '#d66b54',
-    material: '#644942',
-    toolKind: 'rock-cutter',
+    accent: '#c85d43',
+    material: '#744636',
+    toolKind: 'quarry-drill',
     minimumViewportHeight: 72,
     proportions: { shoulder: 20, hip: 13, head: 8, sideDepth: 10 },
-    landmarks: ['안면 보호구', '절단 방호복', '휴대 절단기'],
-    representativePose: '절단 반동을 버티며 양손 공구를 낮추는 자세',
+    landmarks: ['분진 마스크와 귀마개', '적갈색 방진 작업복', '양손 착암 드릴'],
+    representativePose: '발을 넓게 고정하고 착암 드릴의 반동을 아래로 누르는 자세',
   },
   {
     id: 'collector-unit',
@@ -186,6 +186,20 @@ const RAW_PROFILES = [
     proportions: { shoulder: 38, hip: 29, head: 7, sideDepth: 23 },
     landmarks: ['쐐기형 제설판', '궤도형 구동륜', '청백 열선 리벳'],
     representativePose: '차체를 낮추고 제설판의 넓은 돌진 범위와 노출 제동축을 예고하는 자세',
+  },
+  {
+    id: 'quarry-rock-cutter-boss',
+    label: '폭주 초대형 암반 절단기',
+    roleLabel: '붉은 채석장 Boss',
+    family: 'machine',
+    accent: '#d25b43',
+    material: '#704637',
+    toolKind: 'rock-cutting-machine',
+    minimumViewportHeight: 94,
+    proportions: { shoulder: 40, hip: 31, head: 7, sideDepth: 25 },
+    landmarks: ['적갈색 중량 본체', '초대형 수직 절단날', '노출된 황동 가동 베어링'],
+    representativePose:
+      '본체 지지대를 낮추고 절단날을 뒤로 들어 광폭 내려찍기와 베어링 노출을 예고하는 자세',
   },
 ];
 

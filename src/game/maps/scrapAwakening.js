@@ -55,6 +55,16 @@ export const SCRAP_SNOW_FACILITY_CONVERSATION_ID = 'snow-trade-road:facility-obs
 export const SCRAP_SNOW_REPLACEMENT_CONVERSATION_ID = 'snow-trade-road:replacement-complete';
 export const SCRAP_SNOW_SEPARATION_CONVERSATION_ID = 'snow-trade-road:machine-separated';
 export const SCRAP_SNOW_PART_CONVERSATION_ID = 'snow-trade-road:part-claimed';
+export const SCRAP_QUARRY_ROAD_PORTAL_ID = 'scrapyard-red-quarry-road';
+export const SCRAP_QUARRY_REGION_ID = 'red-quarry';
+export const SCRAP_QUARRY_ROAD_ROOM_ID = 'red-quarry-roadhead';
+export const SCRAP_QUARRY_CUT_ROOM_ID = 'red-quarry-final-cut';
+export const SCRAP_QUARRY_CUTTER_ROOM_ID = 'red-quarry-cutter-yard';
+export const SCRAP_QUARRY_WORKER_CONVERSATION_ID = 'red-quarry:worker-briefing';
+export const SCRAP_QUARRY_FACILITY_CONVERSATION_ID = 'red-quarry:facility-observed';
+export const SCRAP_QUARRY_REPLACEMENT_CONVERSATION_ID = 'red-quarry:replacement-complete';
+export const SCRAP_QUARRY_SEPARATION_CONVERSATION_ID = 'red-quarry:machine-separated';
+export const SCRAP_QUARRY_PART_CONVERSATION_ID = 'red-quarry:part-claimed';
 
 const PALETTE = Object.freeze({
   background: '#171a1c',
@@ -474,6 +484,49 @@ const renderItems = [
     label: 'ROBOT 80% · 4/5 PARTS · 다리+팔+동력원+장갑',
     role: 'completion-eighty',
   }),
+  item(
+    'garage-robot-quarry-cutter-blade',
+    [
+      { x: 530, y: 258 },
+      { x: 548, y: 270 },
+      { x: 578, y: 388 },
+      { x: 560, y: 416 },
+      { x: 538, y: 384 },
+    ],
+    '#c85642',
+    {
+      stroke: '#53231c',
+      lineWidth: 5,
+      order: 33,
+      enabled: false,
+      label: '초대형 암반 절단기 · 거대 검 모듈',
+      role: 'quarry-cutter-sword-module',
+    },
+  ),
+  item('garage-robot-quarry-cutter-teeth', rectangle(548, 294, 16, 92), '#e8b46f', {
+    stroke: '#53231c',
+    lineWidth: 3,
+    order: 34,
+    enabled: false,
+    label: '적철 절단 톱날 이빨',
+    role: 'quarry-cutter-teeth',
+  }),
+  item('garage-robot-quarry-twenty-label', rectangle(424, 190, 116, 16), '#cf5d48', {
+    stroke: '#53231c',
+    lineWidth: 2,
+    order: 34,
+    enabled: false,
+    label: 'ROBOT 20% · 1/5 PARTS · 거대 검',
+    role: 'completion-twenty',
+  }),
+  item('garage-robot-hundred-label', rectangle(408, 174, 148, 32), '#f4c36c', {
+    stroke: '#53231c',
+    lineWidth: 4,
+    order: 35,
+    enabled: false,
+    label: 'ROBOT 100% · 5/5 PARTS · 최종전 준비 완료',
+    role: 'completion-hundred',
+  }),
   item('wreck-hull-lower', polygon(986, 374, 206, 72, 10, Math.PI / 10), '#504d49', {
     stroke: '#252729',
     lineWidth: 4,
@@ -634,6 +687,19 @@ const renderItems = [
     order: 36,
     enabled: false,
     label: '설산 교역로 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  ...createEnvironmentPortalLandmarkItems('scrapyard-quarry-road-gate', 860, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 38,
+  }),
+  item('scrapyard-quarry-road-sign', rectangle(798, 304, 128, 58), '#9d493a', {
+    stroke: '#53231c',
+    lineWidth: 3,
+    order: 40,
+    enabled: false,
+    label: '붉은 채석장 연결로 · 1구간',
     role: 'long-distance-road-sign',
   }),
 ];
@@ -1603,6 +1669,240 @@ const snowTrainRenderItems = [
   }),
 ];
 
+const quarryRoadheadRenderItems = [
+  item('quarry-roadhead-sky', rectangle(0, 0, 1440, 426), '#4b2925', {
+    stroke: '#211313',
+    order: -100,
+    label: '붉은 먼지가 걷힌 채석장 진입로',
+  }),
+  item(
+    'quarry-roadhead-cliff',
+    [
+      { x: 0, y: 354 },
+      { x: 164, y: 216 },
+      { x: 344, y: 304 },
+      { x: 548, y: 168 },
+      { x: 748, y: 306 },
+      { x: 992, y: 188 },
+      { x: 1218, y: 318 },
+      { x: 1440, y: 238 },
+      { x: 1440, y: 426 },
+      { x: 0, y: 426 },
+    ],
+    '#8b4a3c',
+    { stroke: '#d57955', lineWidth: 4, order: -20, label: '적철암 절개면' },
+  ),
+  item('quarry-roadhead-ground', rectangle(0, 426, 1440, 114), '#7a4438', {
+    stroke: '#331d19',
+    order: 0,
+  }),
+  item('quarry-roadhead-haul-track', rectangle(0, 446, 1440, 22), '#b46b4e', {
+    stroke: '#4e2a22',
+    order: 2,
+    label: '마지막 석재 운반로',
+    role: 'quarry-haul-track',
+  }),
+  ...createEnvironmentPortalLandmarkItems('quarry-roadhead-return-gate', 68, 426, {
+    style: 'village-road',
+    enabled: false,
+    order: 22,
+  }),
+  item('quarry-roadhead-return-sign', rectangle(18, 310, 120, 52), '#9d493a', {
+    stroke: '#53231c',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '동네 고물상 연결로 · 1구간',
+    role: 'long-distance-road-sign',
+  }),
+  item('quarry-worker-coat', rectangle(588, 326, 40, 100), '#8f483a', {
+    stroke: '#3a201c',
+    lineWidth: 3,
+    order: 18,
+    label: '채석공 작업반장 · 적갈색 방진 작업복',
+    role: 'quarry-worker',
+  }),
+  item('quarry-worker-helmet', polygon(608, 314, 24, 13, 6), '#e0a358', {
+    stroke: '#5d3a20',
+    lineWidth: 2,
+    order: 20,
+    role: 'quarry-hard-hat',
+  }),
+  item('quarry-worker-drill', rectangle(640, 350, 52, 14), '#5b6564', {
+    stroke: '#202727',
+    lineWidth: 3,
+    order: 20,
+    label: '채석공 압축 공기 드릴',
+    role: 'quarry-air-drill',
+  }),
+  item('quarry-safety-board', rectangle(790, 316, 104, 110), '#8d503f', {
+    stroke: '#53231c',
+    lineWidth: 4,
+    order: 16,
+    label: '마지막 절개·발파·안전 폐쇄 작업판',
+    role: 'facility-status',
+  }),
+  item('quarry-safety-warning', rectangle(808, 336, 68, 16), '#f4c36c', {
+    stroke: '#6a3a20',
+    lineWidth: 2,
+    order: 17,
+    role: 'facility-warning-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('quarry-final-cut-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('quarry-final-cut-sign', rectangle(1262, 306, 142, 56), '#9d493a', {
+    stroke: '#53231c',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '마지막 절개 갱도 · 지역 내 이동 무료',
+    role: 'local-quarry-route',
+  }),
+];
+
+const quarryCutRenderItems = [
+  item('quarry-cut-backdrop', rectangle(0, 0, 1440, 540), '#321d1a', {
+    stroke: '#160d0c',
+    order: -100,
+    label: '붉은 채석장 마지막 절개 갱도',
+  }),
+  item('quarry-cut-ground', rectangle(0, 426, 1440, 114), '#6f3d32', {
+    stroke: '#2d1915',
+    order: 0,
+  }),
+  item('quarry-cut-rock-face', polygon(720, 250, 540, 230, 10, Math.PI / 10), '#7f4438', {
+    stroke: '#c9694d',
+    lineWidth: 6,
+    order: -8,
+    label: '마지막 적철암 절개면',
+    role: 'final-rock-face',
+  }),
+  item('quarry-cut-blast-line', rectangle(390, 366, 660, 14), '#e0a358', {
+    stroke: '#59391e',
+    lineWidth: 3,
+    order: 10,
+    label: '안전 폐쇄용 발파 신호선',
+    role: 'quarry-blast-line',
+  }),
+  item('quarry-cut-support', rectangle(668, 244, 104, 182), '#5c6664', {
+    stroke: '#272d2c',
+    lineWidth: 5,
+    order: 8,
+    label: '임시 절개면 지지대',
+    role: 'quarry-support',
+  }),
+  ...createEnvironmentPortalLandmarkItems('quarry-cut-roadhead-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+  ...createEnvironmentPortalLandmarkItems('quarry-cut-yard-gate', 1372, 426, {
+    style: 'sealed-stone',
+    enabled: false,
+    order: 22,
+  }),
+  item('quarry-cutter-yard-sign', rectangle(1262, 306, 142, 56), '#9d493a', {
+    stroke: '#53231c',
+    lineWidth: 3,
+    order: 24,
+    enabled: false,
+    label: '암반 절단기 작업장 · Boss',
+    role: 'boss-route-sign',
+  }),
+];
+
+const quarryCutterRenderItems = [
+  item('quarry-yard-backdrop', rectangle(0, 0, 1440, 540), '#3a211d', {
+    stroke: '#180f0d',
+    order: -100,
+    label: '초대형 암반 절단기 작업장',
+  }),
+  item('quarry-yard-ground', rectangle(0, 426, 1440, 114), '#855044', {
+    stroke: '#321d19',
+    order: 0,
+  }),
+  item('quarry-safe-closure', rectangle(250, 230, 228, 38), '#75d6c4', {
+    stroke: '#245e5b',
+    lineWidth: 4,
+    order: 12,
+    enabled: false,
+    label: '안전 폐쇄 지지대 · 마지막 채굴 완료',
+    role: 'replacement-facility',
+  }),
+  item('quarry-safe-closure-brace', rectangle(282, 276, 164, 18), '#5b7770', {
+    stroke: '#245e5b',
+    lineWidth: 2,
+    order: 13,
+    enabled: false,
+    role: 'replacement-complete-signal',
+  }),
+  item('quarry-cutter-machine-body', rectangle(704, 294, 286, 132), '#8f493b', {
+    stroke: '#3a211d',
+    lineWidth: 6,
+    order: 14,
+    label: '초대형 암반 절단기 본체',
+    role: 'industrial-machine',
+  }),
+  item('quarry-cutter-machine-arm', rectangle(934, 318, 134, 54), '#a95a43', {
+    stroke: '#4f2b22',
+    lineWidth: 5,
+    order: 15,
+    label: '절단기 가동 붐',
+    role: 'quarry-cutter-boom',
+  }),
+  item('quarry-cutter-machine-disc', polygon(1094, 344, 84, 84, 16, Math.PI / 16), '#cf5d48', {
+    stroke: '#f1b46b',
+    lineWidth: 7,
+    order: 17,
+    label: '적철 암반 절단날',
+    role: 'quarry-cutter-blade',
+  }),
+  item('quarry-cutter-machine-teeth', polygon(1094, 344, 64, 64, 12), '#e9b56e', {
+    stroke: '#5f3025',
+    lineWidth: 4,
+    order: 18,
+    label: '교대형 절단 톱니',
+    role: 'quarry-cutter-teeth',
+  }),
+  item('quarry-cutter-machine-track', rectangle(734, 394, 256, 32), '#44302b', {
+    stroke: '#e09a68',
+    lineWidth: 3,
+    order: 16,
+    label: '채석장 궤도 구동부',
+    role: 'quarry-cutter-track',
+  }),
+  item('quarry-separated-cutter-frame', rectangle(704, 330, 286, 96), '#704037', {
+    stroke: '#3a211d',
+    lineWidth: 5,
+    order: 14,
+    enabled: false,
+    label: '절단검이 분리된 암반 절단기 골격',
+    role: 'machine-separated',
+  }),
+  item('quarry-cutter-cradle', rectangle(1030, 342, 196, 84), '#784438', {
+    stroke: '#3a211d',
+    lineWidth: 4,
+    order: 18,
+    enabled: false,
+    label: '초대형 암반 절단검 회수대',
+    role: 'part-ready',
+  }),
+  item('quarry-cutter-signal', rectangle(1044, 358, 168, 20), '#f4c36c', {
+    stroke: '#6a3a20',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: 'ROCK CUTTER SWORD · 회수 가능',
+    role: 'part-ready-signal',
+  }),
+  ...createEnvironmentPortalLandmarkItems('quarry-yard-cut-gate', 68, 426, {
+    style: 'sealed-stone',
+    order: 22,
+  }),
+];
+
 const activatedStages = [
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
   SCRAP_AWAKENING_STAGE.EYES_LIT,
@@ -1710,6 +2010,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             SCRAP_SHIPYARD_ROAD_PORTAL_ID,
             SCRAP_GREENHOUSE_ROAD_PORTAL_ID,
             SCRAP_SNOW_ROAD_PORTAL_ID,
+            SCRAP_QUARRY_ROAD_PORTAL_ID,
           ],
         },
       ],
@@ -2446,6 +2747,189 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         },
       ],
     },
+    {
+      id: SCRAP_QUARRY_REGION_ID,
+      label: '붉은 채석장',
+      rooms: [
+        {
+          id: SCRAP_QUARRY_ROAD_ROOM_ID,
+          label: '붉은 채석장 · 연결로 진입부',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'quarry-roadhead-ground-surface',
+              kind: 'solid',
+              material: 'red-iron-haul-road',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: quarryRoadheadRenderItems,
+          entities: [
+            {
+              id: 'quarry-worker-briefing',
+              kind: 'story-interaction',
+              position: { x: 608, y: 354 },
+              interactionRange: 84,
+              speaker: '채석공 작업반장',
+              conversationId: SCRAP_QUARRY_WORKER_CONVERSATION_ID,
+              conversationTitle: '마지막 채굴과 안전 폐쇄 요청',
+              lines: [
+                '왕국이 쓸 마지막 석재만 잘라 내면 이 붉은 채석장은 안전하게 닫을 수 있어. 그런데 수거 유닛이 발파선을 뜯고 절단기를 깨웠지.',
+                '폐쇄 지지대를 세우면 초대형 암반 절단기는 더 이상 현장에 남을 이유가 없어.',
+                '오른쪽 안전 작업판에서 남은 절개면과 필요한 시간을 먼저 확인해 줘.',
+              ],
+              presentationProfileId: 'quarry-worker',
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: 'quarry-facility-inspection',
+              kind: 'story-interaction',
+              position: { x: 842, y: 354 },
+              interactionRange: 78,
+              speaker: '붉은 채석장 안전 작업판',
+              conversationId: SCRAP_QUARRY_FACILITY_CONVERSATION_ID,
+              conversationTitle: '마지막 절개와 안전 폐쇄 시간 확인',
+              lines: [
+                '수거 유닛 제거, 마지막 석재 절단, 폭주 절단기 정지와 안전 폐쇄까지 22구간 예상.',
+                '성공하면 고철 대왕은 폐쇄된 채석장 절벽을 우회해 수도 도착이 5일 늦어진다.',
+              ],
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'facility-observed',
+              requestCampaignEventStart: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: [SCRAP_QUARRY_ROAD_PORTAL_ID, 'quarry-roadhead-cut-portal'],
+        },
+        {
+          id: SCRAP_QUARRY_CUT_ROOM_ID,
+          label: '붉은 채석장 · 마지막 절개 갱도',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'quarry-cut-ground-surface',
+              kind: 'solid',
+              material: 'red-quarry-cut-floor',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: quarryCutRenderItems,
+          entities: [
+            {
+              id: 'quarry-cut-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'quarry-cut-collector',
+              position: { x: 808, y: 426 },
+              maxHealth: 98,
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'journey-combat',
+            },
+          ],
+          triggers: [],
+          portals: ['quarry-roadhead-cut-portal', 'quarry-cut-yard-portal'],
+        },
+        {
+          id: SCRAP_QUARRY_CUTTER_ROOM_ID,
+          label: '붉은 채석장 · 초대형 암반 절단기 작업장',
+          bounds: { x: 0, y: 0, width: 1440, height: 540 },
+          cameraAnchor: { x: 480, y: 270 },
+          groundY: 426,
+          movementBounds: { minX: 24, maxX: 1416 },
+          renderOrder: 30,
+          surfaces: [
+            {
+              id: 'quarry-yard-ground-surface',
+              kind: 'solid',
+              material: 'red-quarry-cutter-yard',
+              points: [
+                { x: 0, y: 426 },
+                { x: 1440, y: 426 },
+              ],
+            },
+          ],
+          renderItems: quarryCutterRenderItems,
+          entities: [
+            {
+              id: 'quarry-rock-cutter-boss',
+              kind: 'combat-enemy',
+              encounterProfileId: 'quarry-rock-cutter-boss',
+              position: { x: 850, y: 426 },
+              maxHealth: 148,
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'boss-defeated',
+            },
+            {
+              id: 'quarry-safe-closure-work',
+              kind: 'story-interaction',
+              position: { x: 364, y: 354 },
+              interactionRange: 84,
+              speaker: '채석공 작업반장',
+              conversationId: SCRAP_QUARRY_REPLACEMENT_CONVERSATION_ID,
+              conversationTitle: '마지막 채굴과 안전 폐쇄 완료',
+              lines: [
+                '폭주 절단기가 멈췄어. 잘라 둔 마지막 석재를 운반로로 보내고 절개면 지지대를 세우자.',
+                '안전 폐쇄 완료. 이제 초대형 절단기는 생활 현장을 떠나도 돼. 퇴직 장비가 자네 로봇 검으로 재취업하겠군.',
+              ],
+              presentationProfileId: 'quarry-worker',
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'replacement-complete',
+              enabled: false,
+            },
+            {
+              id: 'quarry-cutter-separation',
+              kind: 'story-interaction',
+              position: { x: 850, y: 354 },
+              interactionRange: 98,
+              speaker: '초대형 암반 절단기',
+              conversationId: SCRAP_QUARRY_SEPARATION_CONVERSATION_ID,
+              conversationTitle: '암반 절단검 모듈 분리',
+              lines: [
+                '주 베어링을 잠그고 가동 붐에서 적철 절단날과 교대형 톱니 모듈을 해제한다.',
+                '초대형 절단검이 회수대에 고정됐다. 차고 로봇의 오른팔 거대 검으로 사용할 수 있다.',
+              ],
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'machine-separated',
+              enabled: false,
+            },
+            {
+              id: 'quarry-cutter-part-claim',
+              kind: 'story-interaction',
+              position: { x: 1128, y: 354 },
+              interactionRange: 92,
+              speaker: '암반 절단검 회수대',
+              conversationId: SCRAP_QUARRY_PART_CONVERSATION_ID,
+              conversationTitle: '초대형 암반 절단검 회수',
+              lines: [
+                '초대형 암반 절단검을 확보했다. 다섯 산업기계 부품이 차고 조립식 로봇에 모두 누적된다.',
+                '고철 대왕은 폐쇄된 채석장 절벽을 우회한다. D-DAY +5일, 로봇 100%와 최종전 준비가 열렸다.',
+              ],
+              campaignRegionId: SCRAP_QUARRY_REGION_ID,
+              campaignStageKind: 'part-claimed',
+              completeCampaignRegion: true,
+              enabled: false,
+            },
+          ],
+          triggers: [],
+          portals: ['quarry-cut-yard-portal'],
+        },
+      ],
+    },
   ],
   portals: [
     {
@@ -2708,6 +3192,71 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       },
       transition: { durationSeconds: 0.36 },
     },
+    {
+      id: SCRAP_QUARRY_ROAD_PORTAL_ID,
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_AWAKENING_REGION_ID,
+        roomId: SCRAP_AWAKENING_ROOM_ID,
+        anchor: { x: 860, y: 426 },
+        spawn: { x: 808, y: 350 },
+        radius: 76,
+      },
+      to: {
+        regionId: SCRAP_QUARRY_REGION_ID,
+        roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 122, y: 350 },
+        radius: 76,
+      },
+      campaignTravel: {
+        routeId: 'road:neighborhood-scrapyard:red-quarry',
+        fromLocationId: 'neighborhood-scrapyard',
+        toLocationId: SCRAP_QUARRY_REGION_ID,
+      },
+      transition: { durationSeconds: 0.48 },
+    },
+    {
+      id: 'quarry-roadhead-cut-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_QUARRY_REGION_ID,
+        roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_QUARRY_REGION_ID,
+        roomId: SCRAP_QUARRY_CUT_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
+    {
+      id: 'quarry-cut-yard-portal',
+      enabled: false,
+      bidirectional: true,
+      from: {
+        regionId: SCRAP_QUARRY_REGION_ID,
+        roomId: SCRAP_QUARRY_CUT_ROOM_ID,
+        anchor: { x: 1372, y: 426 },
+        spawn: { x: 1314, y: 350 },
+        radius: 74,
+      },
+      to: {
+        regionId: SCRAP_QUARRY_REGION_ID,
+        roomId: SCRAP_QUARRY_CUTTER_ROOM_ID,
+        anchor: { x: 68, y: 426 },
+        spawn: { x: 126, y: 350 },
+        radius: 74,
+      },
+      transition: { durationSeconds: 0.36 },
+    },
   ],
   patches: [
     {
@@ -2957,6 +3506,46 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
+      id: 'scrapyard-quarry-road-open',
+      priority: 109,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_QUARRY_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-quarry-road-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-quarry-road-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'scrapyard-quarry-road-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'scrapyard-quarry-road-sign', value: true },
+        {
+          op: 'set-enabled',
+          target: 'quarry-roadhead-return-gate-landmark-structure',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'quarry-roadhead-return-gate-landmark-opening',
+          value: true,
+        },
+        {
+          op: 'set-enabled',
+          target: 'quarry-roadhead-return-gate-landmark-threshold',
+          value: true,
+        },
+        { op: 'set-enabled', target: 'quarry-roadhead-return-sign', value: true },
+      ],
+    },
+    {
       id: 'scrapyard-walker-drive-installed',
       priority: 110,
       when: { fact: 'scrapCollectedPartIds', includes: 'walker-drive' },
@@ -3069,6 +3658,17 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
+      id: 'scrapyard-quarry-cutter-installed',
+      priority: 118.05,
+      when: { fact: 'scrapCollectedPartIds', includes: 'quarry-cutter' },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-quarry-cutter-blade', value: true },
+        { op: 'set-enabled', target: 'garage-robot-quarry-cutter-teeth', value: true },
+        { op: 'set-enabled', target: 'garage-robot-quarry-twenty-label', value: true },
+      ],
+    },
+    {
       id: 'scrapyard-two-part-completion',
       priority: 118.1,
       when: { fact: 'scrapCollectedPartCount', eq: 2 },
@@ -3078,6 +3678,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-quarry-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-forty-label', value: true },
       ],
     },
@@ -3091,6 +3692,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-quarry-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-sixty-label', value: true },
       ],
@@ -3105,9 +3707,27 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-quarry-twenty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-sixty-label', value: false },
         { op: 'set-enabled', target: 'garage-robot-eighty-label', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-five-part-completion',
+      priority: 119.1,
+      when: { fact: 'scrapCollectedPartCount', eq: 5 },
+      operations: [
+        { op: 'set-enabled', target: 'garage-robot-zero-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-crane-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-reactor-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-snow-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-quarry-twenty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-forty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-sixty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-eighty-label', value: false },
+        { op: 'set-enabled', target: 'garage-robot-hundred-label', value: true },
       ],
     },
     {
@@ -3667,6 +4287,129 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           target: 'snow-armor-signal',
           property: 'label',
           value: 'SNOWPLOW ARMOR · 차고 수송 완료',
+        },
+      ],
+    },
+    {
+      id: 'quarry-briefing-complete',
+      priority: 400,
+      when: {
+        all: [
+          {
+            fact: 'scrapRegionStageIds.red-quarry',
+            in: ['red-quarry:npc-briefing', 'red-quarry:facility-observed'],
+          },
+          { fact: 'scrapRegionStatuses.red-quarry', eq: 'available' },
+        ],
+      },
+      operations: [{ op: 'set-enabled', target: 'quarry-facility-inspection', value: true }],
+    },
+    {
+      id: 'quarry-core-event-started',
+      priority: 410,
+      when: { fact: 'scrapRegionStatuses.red-quarry', in: ['in-progress', 'resolved'] },
+      operations: [
+        { op: 'set-enabled', target: 'quarry-facility-inspection', value: false },
+        { op: 'set-enabled', target: SCRAP_QUARRY_ROAD_PORTAL_ID, value: false },
+        { op: 'set-enabled', target: 'quarry-roadhead-cut-portal', value: true },
+        { op: 'set-enabled', target: 'quarry-final-cut-gate-landmark-structure', value: true },
+        { op: 'set-enabled', target: 'quarry-final-cut-gate-landmark-opening', value: true },
+        { op: 'set-enabled', target: 'quarry-final-cut-gate-landmark-threshold', value: true },
+        { op: 'set-enabled', target: 'quarry-final-cut-sign', value: true },
+      ],
+    },
+    {
+      id: 'quarry-journey-combat-complete',
+      priority: 420,
+      when: {
+        fact: 'scrapRegionStageIds.red-quarry',
+        in: [
+          'red-quarry:journey-combat',
+          'red-quarry:boss-defeated',
+          'red-quarry:replacement-complete',
+          'red-quarry:machine-separated',
+          'red-quarry:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'quarry-cut-collector', value: false },
+        { op: 'set-enabled', target: 'quarry-cut-yard-portal', value: true },
+        { op: 'set-enabled', target: 'quarry-cut-yard-gate-landmark-structure', value: true },
+        { op: 'set-enabled', target: 'quarry-cut-yard-gate-landmark-opening', value: true },
+        { op: 'set-enabled', target: 'quarry-cut-yard-gate-landmark-threshold', value: true },
+        { op: 'set-enabled', target: 'quarry-cutter-yard-sign', value: true },
+      ],
+    },
+    {
+      id: 'quarry-boss-defeated',
+      priority: 430,
+      when: {
+        fact: 'scrapRegionStageIds.red-quarry',
+        in: [
+          'red-quarry:boss-defeated',
+          'red-quarry:replacement-complete',
+          'red-quarry:machine-separated',
+          'red-quarry:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'quarry-rock-cutter-boss', value: false },
+        { op: 'set-enabled', target: 'quarry-safe-closure-work', value: true },
+      ],
+    },
+    {
+      id: 'quarry-replacement-complete',
+      priority: 440,
+      when: {
+        fact: 'scrapRegionStageIds.red-quarry',
+        in: [
+          'red-quarry:replacement-complete',
+          'red-quarry:machine-separated',
+          'red-quarry:campaign-updated',
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'quarry-safe-closure-work', value: false },
+        { op: 'set-enabled', target: 'quarry-safe-closure', value: true },
+        { op: 'set-enabled', target: 'quarry-safe-closure-brace', value: true },
+        { op: 'set-enabled', target: 'quarry-cutter-separation', value: true },
+      ],
+    },
+    {
+      id: 'quarry-machine-separated',
+      priority: 450,
+      when: {
+        fact: 'scrapRegionStageIds.red-quarry',
+        in: ['red-quarry:machine-separated', 'red-quarry:campaign-updated'],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'quarry-cutter-separation', value: false },
+        { op: 'set-enabled', target: 'quarry-cutter-machine-body', value: false },
+        { op: 'set-enabled', target: 'quarry-cutter-machine-arm', value: false },
+        { op: 'set-enabled', target: 'quarry-cutter-machine-disc', value: false },
+        { op: 'set-enabled', target: 'quarry-cutter-machine-teeth', value: false },
+        { op: 'set-enabled', target: 'quarry-cutter-machine-track', value: false },
+        { op: 'set-enabled', target: 'quarry-separated-cutter-frame', value: true },
+        { op: 'set-enabled', target: 'quarry-cutter-cradle', value: true },
+        { op: 'set-enabled', target: 'quarry-cutter-signal', value: true },
+        { op: 'set-enabled', target: 'quarry-cutter-part-claim', value: true },
+      ],
+    },
+    {
+      id: 'quarry-campaign-updated',
+      priority: 460,
+      when: {
+        fact: 'scrapRegionStageIds.red-quarry',
+        eq: 'red-quarry:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: 'quarry-cutter-part-claim', value: false },
+        { op: 'set-enabled', target: SCRAP_QUARRY_ROAD_PORTAL_ID, value: true },
+        {
+          op: 'set',
+          target: 'quarry-cutter-signal',
+          property: 'label',
+          value: 'ROCK CUTTER SWORD · 차고 수송 완료',
         },
       ],
     },

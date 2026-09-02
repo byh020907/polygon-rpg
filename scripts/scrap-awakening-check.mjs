@@ -26,6 +26,11 @@ import {
   SCRAP_SNOW_ROAD_ROOM_ID,
   SCRAP_SNOW_TUNNEL_ROOM_ID,
   SCRAP_SNOW_TRAIN_ROOM_ID,
+  SCRAP_QUARRY_ROAD_PORTAL_ID,
+  SCRAP_QUARRY_REGION_ID,
+  SCRAP_QUARRY_ROAD_ROOM_ID,
+  SCRAP_QUARRY_CUT_ROOM_ID,
+  SCRAP_QUARRY_CUTTER_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -1207,6 +1212,246 @@ assert.deepEqual(
   '완료 reload의 반복 설산 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
 );
 
+const quarryFlowScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedSnowProgression,
+});
+let quarryJumpSequence = 6_000;
+let quarryCampaignRequest = null;
+quarryFlowScene.campaignActionPreviewRequested.connect((request) => {
+  quarryCampaignRequest = request;
+});
+setAtPortalToRoom(quarryFlowScene, SCRAP_AWAKENING_ROOM_ID, SCRAP_QUARRY_ROAD_ROOM_ID);
+quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
+quarryJumpSequence += 1;
+assert.equal(quarryCampaignRequest?.portalId, SCRAP_QUARRY_ROAD_PORTAL_ID);
+assert.equal(quarryCampaignRequest?.preview.targetLocationLabel, '붉은 채석장');
+assert.equal(quarryCampaignRequest?.preview.costSegments, 1);
+assert.equal(quarryFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(quarryFlowScene);
+assert.deepEqual(quarryFlowScene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+});
+assert.equal(quarryFlowScene.getWorldStatus().campaign.currentLocationId, SCRAP_QUARRY_REGION_ID);
+assert.match(quarryFlowScene.getWorldStatus().objective, /채석공 작업반장/);
+assert.doesNotMatch(
+  `${quarryFlowScene.getWorldStatus().story.title} ${quarryFlowScene.getWorldStatus().objective}`,
+  /Academy|교관|마법 생물/,
+);
+
+setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, 'npc-briefing');
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+let quarryRegion = quarryFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
+assert.equal(quarryRegion.eventStageKind, 'npc-briefing');
+assert.match(quarryFlowScene.getWorldStatus().objective, /22구간/);
+
+setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, 'facility-observed');
+const beforeQuarryEvent = quarryFlowScene.getProgressionSnapshot().scrapCampaign;
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+assert.equal(quarryCampaignRequest?.source, 'region-core-event');
+assert.equal(quarryCampaignRequest?.preview.costSegments, 22);
+assert.equal(quarryCampaignRequest?.preview.successExtensionDays, 5);
+assert.equal(
+  quarryFlowScene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
+  beforeQuarryEvent.elapsedSegments,
+  '채석장 핵심 사건 preview는 확정 전 시간을 소비하면 안 됩니다.',
+);
+assert.equal(quarryFlowScene.cancelScrapCampaignAction().cancelled, true);
+quarryJumpSequence += 1;
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+assert.equal(quarryFlowScene.confirmScrapCampaignAction().started, true);
+quarryRegion = quarryFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
+assert.equal(quarryRegion.status, 'in-progress');
+
+setAtPortalToRoom(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, SCRAP_QUARRY_CUT_ROOM_ID);
+quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
+quarryJumpSequence += 1;
+finishPortalTransition(quarryFlowScene);
+assert.equal(
+  quarryFlowScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'quarry-cut-collector',
+);
+quarryFlowScene.enterTree();
+quarryFlowScene.roomSceneNode.encounter.completeForVisualQa();
+quarryRegion = quarryFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
+assert.equal(quarryRegion.eventStageKind, 'journey-combat');
+const quarryMidReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: quarryFlowScene.getProgressionSnapshot(),
+});
+quarryMidReload.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_CUT_ROOM_ID,
+  x: 808,
+});
+assert.equal(
+  quarryMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'quarry-cut-collector'),
+  false,
+);
+assert.ok(
+  quarryMidReload.mapRuntime
+    .getResolvedSnapshot()
+    .portals.some((portal) => portal.to.roomId === SCRAP_QUARRY_CUTTER_ROOM_ID),
+);
+
+setAtPortalToRoom(quarryFlowScene, SCRAP_QUARRY_CUT_ROOM_ID, SCRAP_QUARRY_CUTTER_ROOM_ID);
+quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
+quarryJumpSequence += 1;
+finishPortalTransition(quarryFlowScene);
+const quarryBoss = quarryFlowScene.roomSceneNode.getEncounterGameplaySnapshot();
+assert.equal(quarryBoss.profileId, 'quarry-rock-cutter-boss');
+assert.equal(quarryBoss.presentationProfileId, 'quarry-rock-cutter-boss');
+assert.match(quarryBoss.weakPoint.label, /베어링|회전축/);
+quarryFlowScene.roomSceneNode.encounter.completeForVisualQa();
+
+setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_CUTTER_ROOM_ID, 'replacement-complete');
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+assert.ok(itemIds(quarryFlowScene).includes('quarry-safe-closure'));
+setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_CUTTER_ROOM_ID, 'machine-separated');
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+assert.ok(itemIds(quarryFlowScene).includes('quarry-cutter-signal'));
+setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_CUTTER_ROOM_ID, 'part-claimed');
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+
+const quarryCompleteCampaign = quarryFlowScene.getWorldStatus().campaign;
+quarryRegion = quarryCompleteCampaign.regions.find(
+  (region) => region.id === SCRAP_QUARRY_REGION_ID,
+);
+assert.equal(quarryRegion.status, 'resolved');
+assert.equal(quarryRegion.eventStageKind, 'campaign-updated');
+assert.equal(quarryRegion.collected, true);
+assert.equal(quarryCompleteCampaign.collectedPartCount, 5);
+assert.equal(quarryCompleteCampaign.completionPercent, 100);
+assert.equal(quarryCompleteCampaign.finalBattleAvailable, true);
+assert.equal(quarryCompleteCampaign.rivalDelaySegments, 20);
+
+setAtPortalToRoom(quarryFlowScene, SCRAP_QUARRY_CUTTER_ROOM_ID, SCRAP_QUARRY_CUT_ROOM_ID);
+quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
+quarryJumpSequence += 1;
+finishPortalTransition(quarryFlowScene);
+setAtPortalToRoom(quarryFlowScene, SCRAP_QUARRY_CUT_ROOM_ID, SCRAP_QUARRY_ROAD_ROOM_ID);
+quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
+quarryJumpSequence += 1;
+finishPortalTransition(quarryFlowScene);
+setAtPortalToRoom(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, SCRAP_AWAKENING_ROOM_ID);
+quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
+assert.equal(quarryFlowScene.confirmScrapCampaignTravel().started, true);
+finishPortalTransition(quarryFlowScene);
+const completedQuarryProgression = quarryFlowScene.getProgressionSnapshot();
+quarryFlowScene.exitTree();
+
+const completedQuarryReload = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: completedQuarryProgression,
+});
+assert.equal(
+  completedQuarryReload.getWorldStatus().campaign.currentLocationId,
+  'neighborhood-scrapyard',
+);
+for (const expectedItemId of [
+  'garage-robot-walker-leg-left',
+  'garage-robot-crane-arm-left',
+  'garage-robot-reactor-core',
+  'garage-robot-snow-armor-torso',
+  'garage-robot-quarry-cutter-blade',
+  'garage-robot-quarry-cutter-teeth',
+  'garage-robot-hundred-label',
+]) {
+  assert.ok(itemIds(completedQuarryReload).includes(expectedItemId), expectedItemId);
+}
+for (const absentItemId of [
+  'garage-robot-zero-label',
+  'garage-robot-forty-label',
+  'garage-robot-sixty-label',
+  'garage-robot-eighty-label',
+  'garage-robot-quarry-twenty-label',
+]) {
+  assert.ok(!itemIds(completedQuarryReload).includes(absentItemId), absentItemId);
+}
+assert.equal(completedQuarryReload.getWorldStatus().wardLabel, '5/5 부품 · 로봇 100%');
+assert.match(completedQuarryReload.getWorldStatus().encounterHint, /5\/5 PARTS · ROBOT 100%/);
+const beforeRepeatedQuarryClaim = completedQuarryReload.getProgressionSnapshot();
+completedQuarryReload.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_CUTTER_ROOM_ID,
+  x: 1128,
+});
+assert.equal(
+  completedQuarryReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'quarry-cutter-part-claim'),
+  false,
+  '완료 reload 뒤 암반 절단검 회수 trigger는 다시 활성화되면 안 됩니다.',
+);
+completedQuarryReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 7_000 }));
+assert.deepEqual(
+  completedQuarryReload.getProgressionSnapshot(),
+  beforeRepeatedQuarryClaim,
+  '완료 reload의 반복 채석장 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
+const completionLabelIds = [
+  'garage-robot-zero-label',
+  'garage-robot-twenty-label',
+  'garage-robot-crane-twenty-label',
+  'garage-robot-reactor-twenty-label',
+  'garage-robot-snow-twenty-label',
+  'garage-robot-quarry-twenty-label',
+  'garage-robot-forty-label',
+  'garage-robot-sixty-label',
+  'garage-robot-eighty-label',
+  'garage-robot-hundred-label',
+];
+for (const freeOrderCase of [
+  {
+    regionIds: [SCRAP_QUARRY_REGION_ID, SCRAP_MINE_ROAD_REGION_ID],
+    expectedLabelId: 'garage-robot-forty-label',
+  },
+  {
+    regionIds: [SCRAP_QUARRY_REGION_ID, SCRAP_MINE_ROAD_REGION_ID, SCRAP_SHIPYARD_REGION_ID],
+    expectedLabelId: 'garage-robot-sixty-label',
+  },
+  {
+    regionIds: [
+      SCRAP_QUARRY_REGION_ID,
+      SCRAP_MINE_ROAD_REGION_ID,
+      SCRAP_SHIPYARD_REGION_ID,
+      SCRAP_GREENHOUSE_REGION_ID,
+    ],
+    expectedLabelId: 'garage-robot-eighty-label',
+  },
+]) {
+  const freeOrderScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+  freeOrderScene.setVisualQaScrapGarageRevealStage(SCRAP_GARAGE_REVEAL_STAGE.COMPLETE);
+  for (const regionId of freeOrderCase.regionIds) {
+    freeOrderScene.setVisualQaScrapRegionState({
+      regionId,
+      stageKind: 'campaign-updated',
+      status: 'resolved',
+      collected: true,
+      currentLocationId: 'neighborhood-scrapyard',
+    });
+  }
+  const visibleLabels = completionLabelIds.filter((itemId) =>
+    itemIds(freeOrderScene).includes(itemId),
+  );
+  assert.deepEqual(
+    visibleLabels,
+    [freeOrderCase.expectedLabelId],
+    `채석장을 ${freeOrderCase.regionIds.length}번째 이내에 회수해도 누적 완성도 label은 하나여야 합니다.`,
+  );
+  assert.ok(itemIds(freeOrderScene).includes('garage-robot-quarry-cutter-blade'));
+}
+
 const mineReload = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: travelScene.getProgressionSnapshot(),
@@ -1290,6 +1535,10 @@ console.log(
       'snow-eight-stage-crew-tunnel-snowplow-machine-part-flow',
       'snow-event-preview-sixteen-segments-three-day-extension-and-cancel',
       'snow-midstage-and-part-reload-idempotence-and-garage-eighty-percent',
+      'quarry-eight-stage-worker-cut-rock-cutter-machine-part-flow',
+      'quarry-event-preview-twenty-two-segments-five-day-extension-and-cancel',
+      'quarry-midstage-and-part-reload-idempotence-and-garage-hundred-percent',
+      'quarry-free-order-two-three-four-part-single-completion-label',
       'keyboard-touch-interaction-parity',
     ],
   }),

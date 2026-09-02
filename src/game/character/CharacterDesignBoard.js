@@ -106,6 +106,25 @@ function headgearItems(profile, view, centerX, headY, headRadius, lean, order) {
       }),
     ];
   }
+  if (profile.id === 'quarry-worker') {
+    return [
+      item(`${id}-hard-hat`, rectangle(left - 2, top, width + 4, 5), '#8a4935', { order }),
+      item(`${id}-earmuff`, rectangle(cx + width / 2 - 2, top + 4, 5, 9), accent, {
+        order: order + 1,
+      }),
+      item(
+        `${id}-dust-mask`,
+        [
+          { x: cx - width / 2, y: headY - 1 },
+          { x: cx + width / 2, y: headY - 1 },
+          { x: cx + 3, y: headY + 6 },
+          { x: cx - 3, y: headY + 6 },
+        ],
+        '#c6b8a0',
+        { stroke: accent, order: order + 2 },
+      ),
+    ];
+  }
   return [
     item(
       `${id}-face-guard`,
@@ -168,10 +187,21 @@ function outfitLandmarkItems(profile, view, centerX, neckY, hipY, shoulder, orde
   if (profile.id === 'quarry-worker') {
     return [
       item(
-        `${profile.id}-${view}-shoulder-guard`,
+        `${profile.id}-${view}-dust-jacket-yoke`,
         slantedBar(centerX - width / 2 - 2, neckY + 4, width + 4, 5, 0),
         profile.accent,
         { order },
+      ),
+      item(
+        `${profile.id}-${view}-respirator-harness`,
+        [
+          { x: centerX - width / 2 + 1, y: neckY + 8 },
+          { x: centerX - width / 2 + 4, y: neckY + 8 },
+          { x: centerX + width / 2 - 1, y: hipY + 2 },
+          { x: centerX + width / 2 - 4, y: hipY + 2 },
+        ],
+        '#d8b27c',
+        { order: order + 1 },
       ),
     ];
   }
@@ -288,16 +318,36 @@ function toolItems(profile, view, toolBaseX, toolBaseY, action, order) {
       }),
     ];
   }
-  if (profile.toolKind === 'rock-cutter') {
+  if (profile.toolKind === 'quarry-drill') {
     return [
-      item(`${id}-grip`, slantedBar(toolBaseX - 2, toolBaseY + 8, 18, 5, action ? 7 : 0), accent, {
-        order,
-      }),
+      item(
+        `${id}-rear-grip`,
+        slantedBar(toolBaseX - 5, toolBaseY + 4, 18, 5, action ? 5 : -1),
+        accent,
+        { order },
+      ),
       item(
         id,
-        octagon(toolBaseX + (action ? 20 : 14), toolBaseY + (action ? -1 : 11), 8, 8),
-        '#c8d0d2',
+        [
+          { x: toolBaseX + 7, y: toolBaseY + (action ? -3 : 6) },
+          { x: toolBaseX + 18, y: toolBaseY + (action ? -2 : 7) },
+          { x: toolBaseX + 23, y: toolBaseY + (action ? 9 : 20) },
+          { x: toolBaseX + 13, y: toolBaseY + (action ? 12 : 23) },
+        ],
+        '#3a3f40',
         { stroke: accent, order: order + 1 },
+      ),
+      item(
+        `${id}-bit`,
+        [
+          { x: toolBaseX + 16, y: toolBaseY + (action ? 9 : 20) },
+          { x: toolBaseX + 21, y: toolBaseY + (action ? 9 : 20) },
+          { x: toolBaseX + 22, y: toolBaseY + (action ? 31 : 38) },
+          { x: toolBaseX + 18, y: toolBaseY + (action ? 38 : 45) },
+          { x: toolBaseX + 15, y: toolBaseY + (action ? 31 : 38) },
+        ],
+        '#c6c1b2',
+        { stroke: '#332b27', order: order + 2 },
       ),
     ];
   }
@@ -413,6 +463,41 @@ function toolItems(profile, view, toolBaseX, toolBaseY, action, order) {
         octagon(toolBaseX + 8, toolBaseY - (action ? 10 : 2), 7, 7),
         accent,
         { stroke: '#f4fbff', order: order + 1 },
+      ),
+    ];
+  }
+  if (profile.toolKind === 'rock-cutting-machine') {
+    return [
+      item(
+        id,
+        [
+          { x: toolBaseX - 10, y: toolBaseY + 4 },
+          { x: toolBaseX + 14, y: toolBaseY - (action ? 12 : 5) },
+          { x: toolBaseX + 34, y: toolBaseY - (action ? 8 : 1) },
+          { x: toolBaseX + 35, y: toolBaseY + 17 },
+          { x: toolBaseX + 10, y: toolBaseY + 13 },
+          { x: toolBaseX - 9, y: toolBaseY + 16 },
+        ],
+        profile.material,
+        { stroke: accent, order },
+      ),
+      item(
+        `${id}-cutting-blade`,
+        octagon(toolBaseX + 34, toolBaseY - (action ? 7 : 0), 15, 22),
+        '#b8aea0',
+        { stroke: accent, lineWidth: 2, order: order + 1 },
+      ),
+      item(
+        `${id}-blade-hub`,
+        octagon(toolBaseX + 34, toolBaseY - (action ? 7 : 0), 6, 7),
+        '#d9b36c',
+        { stroke: '#4b2a22', order: order + 2 },
+      ),
+      item(
+        `${id}-outrigger`,
+        slantedBar(toolBaseX - 12, toolBaseY + 16, 42, 7, action ? -4 : 0),
+        '#4b3630',
+        { stroke: accent, order: order - 1 },
       ),
     ];
   }
