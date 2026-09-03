@@ -273,6 +273,24 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedAbsentItems: Object.freeze(['scrap-device-core']),
     }),
   }),
+  'scrap-intro-survey': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 1010,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
+      expectedPatchIds: Object.freeze(['scrap-prologue-yard-survey']),
+      expectedItems: Object.freeze([
+        'scrap-yard-winch-base',
+        'scrap-yard-winch-base-mark',
+        'scrap-yard-chest-plate-mark',
+        'scrap-rival-search-hook',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
   'scrap-intro-before': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
@@ -1889,6 +1907,7 @@ export function visualQaScenarioIds() {
 const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-walk': '도입 · 고물상 수거장 동행',
   'scrap-intro-brace': '도입 · 지지대 통로 수거 유닛',
+  'scrap-intro-survey': '도입 · 끊긴 winch 점검',
   'scrap-intro-before': '도입 · 붕괴 뒤 제어핵 선택',
   'scrap-intro-awakening': '도입 · 고대 병기 각성',
   'scrap-intro-d30': '도입 · D-30 경보',

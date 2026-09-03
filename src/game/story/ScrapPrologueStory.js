@@ -14,6 +14,7 @@ export const SCRAP_PROLOGUE_CONVERSATION_ID = Object.freeze({
   OWNER_COMMISSION: 'scrap-prologue:owner-commission',
   RIVAL_DEPARTURE: 'scrap-prologue:rival-departure',
   YARD_BRACE: 'scrap-prologue:yard-brace',
+  YARD_SURVEY: 'scrap-prologue:yard-survey',
   YARD_SEARCH: 'scrap-prologue:yard-search',
   RIVAL_RESCUE: 'scrap-prologue:rival-rescue',
   PLAYER_DECISION: 'scrap-prologue:player-decision',
@@ -52,6 +53,17 @@ const SCRAP_PROLOGUE_CONVERSATIONS = Object.freeze([
       '첫 유닛은 멈췄어. 여기 지지대를 고정하면 흉곽 아래 통로까지 갈 수 있겠지.',
       '잠깐, 안쪽 회수 신호가 판금을 다시 당긴다. 저 유닛이 지지대를 물고 있어.',
       '내가 표식을 붙일 테니 네가 길을 열어. 흔들리면 바로 방패를 들어.',
+    ],
+  }),
+  conversation({
+    id: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
+    title: '끊긴 구조 winch 점검',
+    interactionId: 'scrap-rival-yard-survey',
+    speaker: SCRAP_CAST.RIVAL.name,
+    lines: [
+      '두 번째 유닛도 멈췄어. 위를 봐, 구조 winch cable이 받침째 끊겨 있어.',
+      '흉곽 지지대 표식도 흔들려. 저 받침을 직접 점검하면 안쪽 통로가 버티는지 알 수 있어.',
+      '네가 받침을 확인하면 나는 흉곽 아래 표식을 붙일게. 그다음엔 같이 안쪽으로 들어가자.',
     ],
   }),
   conversation({

@@ -8,31 +8,31 @@
 
 ## Current Phase
 
-`verified-playable-frontier · prologue yard의 두 번째 탐색·전투 beat와 저장 경계를 검증했다; next: 20–30분 도입의 남은 실제 탐색·전투 밀도를 같은 흐름으로 확장한다`
+`verified-playable-frontier · prologue yard에 YARD_SURVEY winch 점검 탐색 beat와 저장 경계를 추가 검증했다; next: 20–30분 도입의 남은 실제 탐색·전투 밀도를 같은 흐름으로 확장한다`
 
 ## Project Direction Comparison
 
 | Direction | Status | Current Evidence                                                                                                                                                                                                                            |
 | --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Persona   | gap    | 정식 의뢰→라이벌 동행→ambient 이동 대화→첫 소형 수거 유닛→안전 지지대 점검→두 번째 수거 유닛→현장 조사→붕괴→구조·각성·D-30→차고 0% 흐름은 실제 조작과 저장 stage로 이어진다. 여러 탐색 구간·반복 정찰·각 지역 고유 조우와 결말은 아직 없다. |
-| Quality   | gap    | `test:intro`, `test:campaign`, `test:platform`, lint와 actual Browser desktop/mobile가 이 slice의 두 단계 전투·silhouette·HUD를 통과했다. 약 10시간 캠페인 전체의 밀도와 ending polish는 남았다.                                            |
+| Persona   | gap    | 정식 의뢰→라이벌 동행→ambient 이동 대화→첫 소형 수거 유닛→안전 지지대 점검→두 번째 수거 유닛→winch 점검→현장 조사→붕괴→구조·각성·D-30→차고 0% 흐름은 실제 조작과 저장 stage로 이어진다. 여러 탐색 구간·반복 정찰·각 지역 고유 조우와 결말은 아직 없다. |
+| Quality   | gap    | `test:intro`·`test:campaign`·`test:platform`과 actual Browser desktop/mobile이 이 slice의 세 단계 yard 흐름·silhouette·HUD를 통과했다. 약 10시간 캠페인 전체의 밀도와 ending polish는 남았다. |
 
 ## Product Desired State Comparison
 
 | Reference            | Status    | Current Evidence                                                                                                                                                                                                     |
 | -------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PG-COMBAT-CONTROL    | gap       | 120Hz keyboard/touch combat fixture와 도입 `yard-scout-collector`·`yard-brace-collector`의 Basic/Guard·Guard/Strong 목표·실제 combat owner 연결은 PASS. giant final-battle actual combat은 남았다.                   |
-| PG-SCRAP-AWAKENING   | gap       | 의뢰·동행 뒤 첫 유닛→`YARD_BRACE` 지지대 점검→`YARD_PERIMETER` 두 번째 유닛을 통과해야 `YARD_SEARCH`·붕괴로 진행하며 각 completion stage는 reload 뒤 재조우하지 않는다. 20–30분 분량의 추가 탐색/전투 beat는 남았다. |
+| PG-SCRAP-AWAKENING   | gap       | 의뢰·동행 뒤 첫 유닛→`YARD_BRACE` 지지대 점검→`YARD_PERIMETER` 두 번째 유닛→`YARD_SURVEY` winch 점검을 통과해야 `YARD_SEARCH`·붕괴로 진행하며 각 completion stage는 reload 뒤 재조우하지 않는다. 기록 재생은 도입 일곱 대화+고물상 분석 8개다. 20–30분 분량의 추가 탐색/전투 beat는 남았다. |
 | PG-OPEN-CAMPAIGN     | gap       | 다섯 region issue graph·part·route transaction은 있으나 실제 10시간 밀도와 linked issue 고유 encounter는 남았다.                                                                                                     |
-| PG-STORY-DELIVERY    | gap       | role-name bubble, ambient 이동 대화, 지지대 점검 대화, blocking 독백과 짧은 objective 경계가 있다. 전체 지역 story flow는 남았다.                                                                                    |
+| PG-STORY-DELIVERY    | gap       | role-name bubble, ambient 이동 대화, 지지대 점검 대화, `YARD_SURVEY` winch 점검 대화, blocking 독백과 짧은 objective 경계가 있다. 전체 지역 story flow는 남았다.                                                      |
 | PG-CAST-CONTINUITY   | gap       | 사용자 노출 `주인공`·`라이벌`·`고물상인`은 single immutable `SCRAP_CAST` profile에서 대사·상태·지도·silhouette로 투영되고 stable ID/저장과 분리된다. 반복 지역 cast after-state는 남았다.                            |
 | PG-CAMPAIGN-TIME     | gap       | D-30·네 segment·preview/idempotence·route detour fixture는 PASS; 전체 pacing 체감은 남았다.                                                                                                                          |
 | PG-OPERATION-MAP     | gap       | HUD/wall-map shared read model은 PASS; 실제 완료 route geometry patch는 남았다.                                                                                                                                      |
 | PG-SCRAP-GROWTH      | gap       | equipment/enchant persistence는 있으나 growth NPC와 모든 regional material 표현은 남았다.                                                                                                                            |
-| PG-SCRAP-READABILITY | gap       | 도입 collector와 nonlethal human profile은 있으나 region별 spectrum은 남았다.                                                                                                                                        |
-| PG-VISUAL-FIDELITY   | gap       | Desktop 1280×720·mobile 844×390에서 low-saturation yard, rival/collector silhouette, HUD와 no overflow/error를 확인했다. 전체 region 확장은 남았다.                                                                  |
+| PG-SCRAP-READABILITY | gap       | 도입 collector, winch 받침/흉곽 표식 marker와 nonlethal human profile은 있으나 region별 spectrum은 남았다.                                                                                                            |
+| PG-VISUAL-FIDELITY   | gap       | Desktop 1280×720·mobile 844×390에서 low-saturation yard, rival/collector silhouette, `YARD_SURVEY` marker·HUD와 no overflow/error를 `scrap-intro-survey` actual PNG로 확인했다. 전체 region 확장은 남았다.          |
 | PG-FINAL-BATTLE      | gap       | state/ledger fixture는 있으나 giant actual flow·epilogue map patch는 남았다.                                                                                                                                         |
-| PG-PLATFORM-ACCESS   | gap       | keyboard/touch, URL QA, installed Android Human scale evidence가 있다. final-battle touch flow와 iOS verification은 남았다.                                                                                          |
+| PG-PLATFORM-ACCESS   | gap       | keyboard/touch, URL QA(`scrap-intro-survey` debug scenario 포함), installed Android Human scale evidence가 있다. final-battle touch flow와 iOS verification은 남았다.                                                 |
 | PG-RECOVERY          | satisfied | pre-action/morning/core-event slots와 corrupt failure/atomic recovery fixture가 있다.                                                                                                                                |
 | PG-PWA-OFFLINE       | gap       | cache inventory에 cast profile을 포함한 PWA fixture는 PASS. iOS install·fresh offline/update failure Browser evidence는 남았다.                                                                                      |
 
@@ -41,17 +41,17 @@
 | Architecture Area         | Status    | Current Evidence                                                                                                                                                                                                                                                                     |
 | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Runtime / Lifecycle       | satisfied | Static ESM, 120Hz fixed runner와 scoped scene lifecycle을 유지한다.                                                                                                                                                                                                                  |
-| Module / State Ownership  | gap       | `SCRAP_CAST` is immutable authored display data; Campaign owner alone commits the two added yard stages, while Room combat emits a typed completion result. Legacy academy/world-time ownership remains.                                                                             |
-| Campaign / World Time     | gap       | stage target guard, persistence and five-region campaign fixtures pass; linked issue encounter depth remains.                                                                                                                                                                        |
+| Module / State Ownership  | gap       | `SCRAP_CAST` is immutable authored display data; Campaign owner alone commits the three gated yard stages (`YARD_BRACE`→`YARD_PERIMETER`→`YARD_SURVEY`→`YARD_SEARCH`), while Room combat emits a typed completion result. Legacy academy/world-time ownership remains.              |
+| Campaign / World Time     | gap       | `YARD_SURVEY` stage order/persistence fixtures pass with zero time cost; linked issue encounter depth remains.                                                                                                                                                                       |
 | Combat / Character        | gap       | `yard-scout-collector`와 `yard-brace-collector`가 shared command/contact authority와 collector presentation profile을 재사용한다; full body/movement spectrum and giant profile remain.                                                                                              |
-| World / Story             | gap       | stage patches gate first combat→brace inspection→second combat→investigation; transcripts/map IDs remain stable across display-name changes. More intro exploration and regional flow remain.                                                                                        |
-| Rendering / Accessibility | gap       | Browser desktop/mobile confirmed 16:9 canvas, overflow 0 and console warn/error 0 for intro combat; full campaign visual QA remains.                                                                                                                                                 |
+| World / Story             | gap       | stage patches gate first combat→brace inspection→second combat→winch survey→investigation; survey markers stay visible into `YARD_SEARCH`; transcripts/map IDs remain stable across display-name changes. More intro exploration and regional flow remain.                            |
+| Rendering / Accessibility | gap       | Browser desktop 1280×720/mobile 844×390 confirmed `scrap-intro-survey` patch/markers/dialogue affordance with console error 0 and QA assertion passed; full campaign visual QA remains.                                                                                              |
 | PWA / Persistence         | gap       | display profile is versioned-cache inventory; typed progress schema does not serialize display names. iOS/offline/update evidence remains.                                                                                                                                           |
-| Testing / Verification    | gap       | `npm run test:intro`, `test:campaign`, `test:platform`, ESLint, Prettier and diff whitespace PASS; Browser desktop/mobile two-stage intro combat had 0 console warn/error and 0 overflow, fresh independent verifier PASS. physical iOS and broader campaign visual evidence remain. |
+| Testing / Verification    | gap       | `test:intro`·`test:campaign`·`test:platform`·`test:story`·`test:recovery`·`test:combat`·`test:enchantment`·`test:world`·`test:character`·`test:visual`·`test:map`·`test:pwa`·Prettier·diff whitespace와 `scrap-intro-survey` actual Browser desktop/mobile이 이 slice의 세 단계 yard 흐름을 통과했다. `test:journey`(dungeon guardian tick 한계)·`test:growth`(encounter boundary)·ESLint(미설치 `@eslint/js`)는 이번 변경과 무관한 기존 실패로 남았다. |
 
 ## Active Execution Goal
 
-없음. 도입 수거장의 첫 전투→안전 지지대→두 번째 전투→현장 조사 경계와 역할명 feedback은 검증 완료했다. 다음 Goal은 이 전선을 유지하며 20–30분 도입에 필요한 남은 탐색·전투 밀도를 실제 조작/저장/viewport로 확장한다.
+없음. 도입 수거장의 첫 전투→안전 지지대→두 번째 전투→winch 점검→현장 조사 경계는 검증 완료했다. 다음 Goal은 이 전선을 유지하며 20–30분 도입에 필요한 남은 탐색·전투 밀도를 실제 조작/저장/viewport로 확장한다.
 
 ## Blockers
 

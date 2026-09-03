@@ -20,6 +20,7 @@ export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
 export const SCRAP_RIVAL_WALK_ENTITY_ID = 'scrap-rival-walk-with';
 export const SCRAP_RIVAL_BRACE_ENTITY_ID = 'scrap-rival-yard-brace';
+export const SCRAP_RIVAL_SURVEY_ENTITY_ID = 'scrap-rival-yard-survey';
 export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
 export const SCRAP_RIVAL_RESCUE_ENTITY_ID = 'scrap-rival-rescue-request';
 export const SCRAP_PLAYER_DECISION_ENTITY_ID = 'scrap-player-device-decision';
@@ -831,6 +832,30 @@ const renderItems = [
     enabled: false,
     label: '구조 winch cable',
     role: 'rescue-winch',
+  }),
+  item('scrap-yard-winch-base', rectangle(986, 386, 52, 40), '#6e6252', {
+    stroke: '#2c2823',
+    lineWidth: 3,
+    order: 13,
+    enabled: false,
+    label: '끊긴 구조 winch 받침',
+    role: 'survey-winch-base',
+  }),
+  item('scrap-yard-winch-base-mark', rectangle(990, 378, 44, 7), '#75d6c4', {
+    stroke: '#234b4b',
+    lineWidth: 2,
+    order: 14,
+    enabled: false,
+    label: 'winch 점검용 청록 표식띠',
+    role: 'survey-marker',
+  }),
+  item('scrap-yard-chest-plate-mark', rectangle(1072, 300, 44, 60), '#7d6a4c', {
+    stroke: '#2c2823',
+    lineWidth: 3,
+    order: 13,
+    enabled: false,
+    label: '흉곽 지지대 표식',
+    role: 'survey-chest-mark',
   }),
   item('scrap-rescue-signal', rectangle(776, 344, 330, 5), '#75d6c4', {
     stroke: '#245e5b',
@@ -2733,6 +2758,23 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               encounterProfileId: 'yard-brace-collector',
               position: { x: 950, y: 426 },
               maxHealth: 74,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_SURVEY_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1012, y: 354 },
+              interactionRange: 88,
+              speaker: SCRAP_CAST.RIVAL.name,
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
+              conversationTitle: '끊긴 구조 winch 점검',
+              lines: [
+                '두 번째 유닛도 멈췄어. 위를 봐, 구조 winch cable이 받침째 끊겨 있어.',
+                '흉곽 지지대 표식도 흔들려. 저 받침을 직접 점검하면 안쪽 통로가 버티는지 알 수 있어.',
+                '네가 받침을 확인하면 나는 흉곽 아래 표식을 붙일게. 그다음엔 같이 안쪽으로 들어가자.',
+              ],
+              presentationProfileId: 'rival-scout',
               scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
               enabled: false,
             },
@@ -4156,14 +4198,32 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
-      id: 'scrap-prologue-yard-search',
+      id: 'scrap-prologue-yard-survey',
       priority: 6,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SURVEY },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_SURVEY_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-search',
+      priority: 7,
       when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SEARCH },
       operations: [
         { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_SEARCH_ENTITY_ID, value: true },
       ],
     },

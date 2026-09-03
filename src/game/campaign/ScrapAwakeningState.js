@@ -6,6 +6,7 @@ export const SCRAP_AWAKENING_STAGE = Object.freeze({
   YARD_CLEARANCE: 'yard-clearance',
   YARD_BRACE: 'yard-brace',
   YARD_PERIMETER: 'yard-perimeter',
+  YARD_SURVEY: 'yard-survey',
   YARD_SEARCH: 'yard-search',
   COLLAPSE: 'collapse',
   RESCUE_REQUEST: 'rescue-request',
@@ -107,6 +108,12 @@ export function getScrapAwakeningPresentation(stageId) {
         '안쪽 통로를 지키던 회수 유닛이 지지대를 끌어당기기 시작합니다. 방패로 간격을 만들고 길을 확보해야 합니다.',
       objective: '회수 유닛을 막고 흉곽 아래 현장 표식까지 길을 여세요.',
       cue: '통로 수거 유닛 · Guard / Strong',
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_SURVEY]: {
+      title: '끊긴 구조 winch 점검',
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 끊긴 구조 winch 받침과 흉곽 지지대 표식을 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
+      objective: '끊긴 winch 받침으로 다가가 ↑로 점검하세요.',
+      cue: 'winch 점검 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: {
       title: '폐병기 수거장 탐색',

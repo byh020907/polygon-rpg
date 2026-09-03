@@ -300,10 +300,10 @@ assert.equal(
 scene.resolveJourneyEncounter(
   Object.freeze({
     entityId: 'scrap-yard-brace-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
   }),
 );
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SURVEY);
 assert.equal(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -314,19 +314,52 @@ assert.equal(
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  `두 번째 전투 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
+  `두 번째 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 끊긴 winch를 점검해야 합니다.`,
 );
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  false,
+  'winch 점검 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
+);
+assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+assert.ok(itemIds(scene).includes('scrap-yard-winch-base-mark'));
+assert.ok(itemIds(scene).includes('scrap-yard-chest-plate-mark'));
 const perimeterReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
 });
-assert.equal(stage(perimeterReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(perimeterReload), SCRAP_AWAKENING_STAGE.YARD_SURVEY);
 assert.equal(
   perimeterReload.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-yard-brace-collector'),
   false,
   '두 번째 도입 전투 완료 저장도 조우를 반복해서 확정하면 안 됩니다.',
+);
+assert.ok(itemIds(perimeterReload).includes('scrap-yard-winch-base'));
+
+setAtStoryInteraction(scene, 'scrap-rival-yard-survey');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  `winch 점검 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+);
+assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+const surveyReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+});
+assert.equal(stage(surveyReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  surveyReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
+  false,
+  'winch 점검 완료 저장 뒤에는 점검 interaction이 다시 활성화되면 안 됩니다.',
 );
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');
@@ -374,6 +407,7 @@ assert.deepEqual(scene.getProgressionSnapshot().viewedConversationIds, [
   SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_BRACE,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
   SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
@@ -601,8 +635,8 @@ const archiveCommands = archiveDialogue.commands.filter(
 );
 assert.equal(
   archiveCommands.length,
-  7,
-  '작전 기록기에서 도입 여섯 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
+  8,
+  '작전 기록기에서 도입 일곱 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
 );
 const beforeReplay = scene.getProgressionSnapshot();
 const replayResult = scene.executeDialogueCommand(
@@ -1877,7 +1911,7 @@ assert.deepEqual(
 
 const completionChecks = [
   'owner-rival-search-collapse-rescue-decision-stage-order',
-  'five-prologue-transcripts-recorded-and-replayable',
+  'prologue-transcripts-recorded-and-replayable',
   'rescue-success-before-awakening-signal',
   'device-proximity-jump-consumption',
   'stage-patch-and-repeat-trigger-idempotence',
