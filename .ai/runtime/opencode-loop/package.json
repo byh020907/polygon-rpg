@@ -1,0 +1,17 @@
+{
+  "name": "@ai-development-methods/pgl-opencode",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-describing OpenCode runtime adapter for Product Goal Loop Engineering",
+  "type": "module",
+  "bin": {
+    "pgl-opencode": "./bin/pgl-opencode.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

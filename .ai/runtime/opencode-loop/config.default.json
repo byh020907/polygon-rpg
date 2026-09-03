@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "remote": "origin",
+  "branch": "main",
+  "scheduleMinutes": 10,
+  "staleLeaseMinutes": 120,
+  "minimumOpenCodeVersion": "1.18.18",
+  "autoPush": true,
+  "agents": {
+    "manager": "product-goal-loop-manager",
+    "worker": "product-goal-loop-worker",
+    "verifier": "product-goal-loop-verifier",
+    "reconciliation": "product-goal-loop-reconciliation"
+  },
+  "models": {
+    "worker": null,
+    "verifier": null,
+    "reconciliation": null
+  },
+  "server": {
+    "hostname": "127.0.0.1",
+    "port": 0,
+    "username": "opencode"
+  },
+  "sessionRetention": {
+    "sanitizeExports": true,
+    "retainFinalCompletion": true,
+    "retainHumanInteracted": true
+  }
+}
