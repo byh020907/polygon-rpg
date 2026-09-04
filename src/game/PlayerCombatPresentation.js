@@ -198,12 +198,13 @@ function createCharacterItems(
     : position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const headX = usesAuthoredSkeleton ? position.x + projectedJoints.head.x : bodyX - 1;
   const headY = usesAuthoredSkeleton ? position.y + projectedJoints.head.y : bodyY - 63;
-  const headRotation = usesAuthoredSkeleton
-    ? Math.atan2(
-        projectedJoints.head.y - projectedJoints.neck.y,
-        projectedJoints.head.x - projectedJoints.neck.x,
-      )
-    : bonePose.headTilt;
+  // Authored headTilt is vertical-referenced (atan2(dx, -dy)). atan2(dy, dx) would pitch the
+  // head/goggles/hair ~90 degrees sideways, which reads as a broken idle/roll portrait.
+  const headRotation = bonePose.headTilt;
+  // Authored torso shapes are local cutouts placed at the skeleton midpoint. The final
+  // authored projection intentionally skips the legacy whole-body lean, so rigid torso
+  // clothing must carry the authored lean here. Limbs already follow projected joints.
+  const authoredBodyLean = usesAuthoredSkeleton ? bonePose.bodyLean : 0;
   const swordRotation = targetPose.swordAngle;
   const poseWeaponLengthScale =
     Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0
@@ -304,7 +305,7 @@ function createCharacterItems(
       {
         x: bodyX - 9,
         y: bodyY + 13,
-        rotation: -bonePose.capeLift * 0.025,
+        rotation: authoredBodyLean - bonePose.capeLift * 0.025,
       },
       materialShadow,
       { stroke: materialEdge, lineWidth: 2 },
@@ -319,7 +320,7 @@ function createCharacterItems(
         { x: -14, y: 7 },
         { x: 2, y: 3 },
       ],
-      { x: bodyX - 10, y: bodyY + 10 },
+      { x: bodyX - 10, y: bodyY + 10, rotation: authoredBodyLean },
       accentShadow,
       { stroke: materialEdge, lineWidth: 1.5 },
     ),
@@ -349,7 +350,7 @@ function createCharacterItems(
         { x: -15, y: 32 },
         { x: -25, y: 9 },
       ],
-      { x: bodyX, y: bodyY },
+      { x: bodyX, y: bodyY, rotation: authoredBodyLean },
       materialColor,
       { stroke: materialEdge, lineWidth: 2 },
     ),
@@ -362,7 +363,7 @@ function createCharacterItems(
         { x: 7, y: 22 },
         { x: -12, y: 17 },
       ],
-      { x: bodyX, y: bodyY },
+      { x: bodyX, y: bodyY, rotation: authoredBodyLean },
       scaleHexColor(materialColor, 0.82),
       { stroke: materialEdge, lineWidth: 1.5 },
     ),
@@ -374,7 +375,7 @@ function createCharacterItems(
         { x: 20, y: 5 },
         { x: -20, y: 7 },
       ],
-      { x: bodyX, y: bodyY + 27 },
+      { x: bodyX, y: bodyY + 27, rotation: authoredBodyLean },
       materialShadow,
       { stroke: materialEdge, lineWidth: 1.5 },
     ),
@@ -533,7 +534,9 @@ function createCharacterItems(
         { x: -4, y: 10 },
         { x: -9, y: -1 },
       ],
-      { x: bodyX - 1, y: bodyY - 63, rotation: bonePose.headTilt },
+      // The fringe is head hair: anchor it to the projected head like the back hair so it
+      // cannot detach from the face when the authored body leans or rolls.
+      { x: headX, y: headY, rotation: headRotation },
       materialShadow,
       { stroke: scaleHexColor(materialColor, 0.25), lineWidth: 1.5, order: 16.25 },
     ),
@@ -552,7 +555,7 @@ function createCharacterItems(
       {
         x: bodyX - 1,
         y: bodyY + 8,
-        rotation: -bonePose.capeLift * 0.035,
+        rotation: authoredBodyLean - bonePose.capeLift * 0.035,
       },
       materialColor,
       { stroke: materialEdge, lineWidth: 2, order: 2.75 },
@@ -567,7 +570,7 @@ function createCharacterItems(
         { x: -10, y: 28 },
         { x: -16, y: 4 },
       ],
-      { x: bodyX + 1, y: bodyY },
+      { x: bodyX + 1, y: bodyY, rotation: authoredBodyLean },
       accentColor,
       { stroke: accentShadow, lineWidth: 1.5, order: 9.25 },
     ),
@@ -579,7 +582,7 @@ function createCharacterItems(
         { x: 9, y: 6 },
         { x: -7, y: 9 },
       ],
-      { x: bodyX + 7, y: bodyY + 12, rotation: -0.08 },
+      { x: bodyX + 7, y: bodyY + 12, rotation: authoredBodyLean - 0.08 },
       accentShadow,
       { stroke: materialEdge, lineWidth: 1.5, order: 9.4 },
     ),

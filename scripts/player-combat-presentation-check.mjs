@@ -30,23 +30,23 @@ const SCRAPYARD_APPRENTICE_FIXTURE = deepFreezeFixture({
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
     count: 37,
-    digest: 'c56616e204c9b3488cbb513734e4ca33105dac5ef3fcc6df40b3b1d9775f5af8',
+    digest: '142576e371f9a136850e6402d3ab5cca70073bb25b10365119295233b1dc6468',
   }),
   'pose-move': Object.freeze({
     count: 37,
-    digest: '54c64b63796e0313f565e4bbed443700f1dcb05e0c4e99791d8b88466ffa438f',
+    digest: '81dfc636dfbdfa185f3b22b8ed87014560415a14a380a43f901561004ae6e4d4',
   }),
   'pose-guard': Object.freeze({
     count: 37,
-    digest: 'e8da08624c89d0f73a3f1e7a7109b675b1073632b1e142aab26f5788a7b55d76',
+    digest: '0a26d4d7d1aa092ae3b1b6c9bbf0e8411b80cb55ad39360ddbb72994d4844ab0',
   }),
   'pose-roll': Object.freeze({
     count: 37,
-    digest: 'fd0d18c643a94ee225130c5b1ab5fa07779ddbddb4a1a7a5ffe9acb5ec8f1f3f',
+    digest: '10cc808ab09071246205e374d803dca15c42e223640b567453075c613ca6bd9b',
   }),
   'pose-ground-attack': Object.freeze({
     count: 37,
-    digest: '97404bcd556e921567506a96d020917073a5a861e1d7de90a793ceafb9637fd8',
+    digest: '4e24f87ef699128aa0f53b5fb845d4a22c7217beca76311264408570012f6dda',
   }),
   'pose-air-attack': Object.freeze({
     count: 37,
@@ -54,34 +54,34 @@ const POSE_PARITY = Object.freeze({
   }),
   'pose-hit': Object.freeze({
     count: 37,
-    digest: '24ce4a692f6b311a47053b5161ef6c647e654348b28938bb163bb1a74b8ae46b',
+    digest: '49a765af3cde153442d1a3fcc399c4502ae08c2c1646e4902610c50ff7fb1f48',
   }),
 });
 
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
     count: 44,
-    digest: '12581b38564869d6fdfe6de187a8ce69046b7c6c7f16b2bc58f706fcd6cad3f5',
+    digest: '274a53455d0479a96130e9d3a193434763cd439a7c4a531fa182ce03a9969b52',
   }),
   'combat-player-hit': Object.freeze({
     count: 44,
-    digest: '71196898928eb7bc7dd1b0a074cc9c9ae3a6bdd5fd5b43a35c05a1a3183c0c4d',
+    digest: 'dd9c9c57f503f2abc688abb5cc6be702fdd615770ed81ee2c14d63279f34ef1e',
   }),
   'combat-block': Object.freeze({
     count: 43,
-    digest: '9e364a28985dee5839d43666f1b163f440f670e3ef6cceabd1b49a9fbfa4fae5',
+    digest: '1048cb8ce564bb38396797e113ece5fc948f900f3ca1acc75c40b6ae67f0a8dc',
   }),
   'combat-evade': Object.freeze({
     count: 40,
-    digest: 'ce190c54fc05fa98441302294563bec35c281255b8f685646e705edb3f806946',
+    digest: 'c2ed5322ce49c554086a7a6b7508d8e5bbc387093e917853abb3f9078c7a8a18',
   }),
   'combat-punish': Object.freeze({
     count: 43,
-    digest: '49ebdfd94ab5b703fbadfa04341b59ad07a56a4ae0821920ad4cdd6217ae097d',
+    digest: 'ab2ca0c92138c88b2a1436a49c1a0d5b86ae9562a27a5790ea7e4014a7b47092',
   }),
   'combat-launch': Object.freeze({
     count: 44,
-    digest: '38784046f58fa3407135393c4cb363d535b354c7147a9e08f6dd797651361bb8',
+    digest: 'f67531f16822790bf723bc079630678d9cb2b0ae29a91af9c934f810c03ffd5e',
   }),
   'combat-guard-break': Object.freeze({
     count: 43,
@@ -89,11 +89,11 @@ const EFFECT_PARITY = Object.freeze({
   }),
   'combat-just-guard': Object.freeze({
     count: 48,
-    digest: 'af5531da18cc60ca9d0cbad96bc703316e39a1538efc9185b9ebd36e1a770269',
+    digest: '583715148b810750dffdaa5c3279ba1c81bc2f13902976f67acbbbc164238b79',
   }),
   'combat-guard-counter': Object.freeze({
     count: 44,
-    digest: '10a28ddf7e5449fed66e76b63965257f868b9510a7d8354f9f6bc9838221f1dd',
+    digest: '5422a09c6fc8875a83350eb888ce849197bb08ee0b46c11c86cd7dbce25bf64e',
   }),
 });
 

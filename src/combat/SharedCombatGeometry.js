@@ -58,7 +58,9 @@ function skeletonTorsoPolygon(position, joints) {
 }
 
 function skeletonHeadPolygon(position, joints) {
-  const headRotation = Math.atan2(joints.head.y - joints.neck.y, joints.head.x - joints.neck.x);
+  // Keep the hurt head aligned with the cutout head: headTilt is vertical-referenced
+  // (atan2(dx, -dy)), matching SkeletonPoseProjection. atan2(dy, dx) would yaw it ~90 deg.
+  const headRotation = Math.atan2(joints.head.x - joints.neck.x, joints.neck.y - joints.head.y);
   return transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
     x: position.x + joints.head.x,
     y: position.y + joints.head.y,
