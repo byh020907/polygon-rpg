@@ -19,6 +19,7 @@ export const SCRAPYARD_OWNER_COMMISSION_ENTITY_ID = 'scrapyard-owner-commission'
 export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
 export const SCRAP_RIVAL_WALK_ENTITY_ID = 'scrap-rival-walk-with';
+export const SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID = 'scrap-rival-brace-guide';
 export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide';
 export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID = 'scrap-rival-collapse-warning';
@@ -2848,6 +2849,22 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 700, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '첫 유닛은 치웠어. 저 판금 통로 지지대까지 같이 가자. 흔들리면 네 방패 뒤로 붙을게.',
+                '지지대 표식을 내가 붙일 테니 넌 통로가 버티는지 봐 줘. 안쪽으로 가기 전에 확인만 하자.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
               id: SCRAP_RIVAL_BRACE_ENTITY_ID,
               kind: 'story-interaction',
               position: { x: 790, y: 354 },
@@ -4368,6 +4385,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID, value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_BRACE_ENTITY_ID, value: true },
       ],
     },

@@ -260,6 +260,19 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     }),
   }),
+  'scrap-intro-yard-brace': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 700,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
+      expectedPatchIds: Object.freeze(['scrap-prologue-yard-brace']),
+      expectedItems: Object.freeze(['scrap-rival-search-hook']),
+      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
   'scrap-intro-brace': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
@@ -1956,6 +1969,7 @@ export function visualQaScenarioIds() {
 // campaign in its playable order.
 const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-walk': '도입 · 고물상 수거장 동행',
+  'scrap-intro-yard-brace': '도입 · 첫 전투 뒤 지지대 동행 안내',
   'scrap-intro-brace': '도입 · 지지대 통로 수거 유닛',
   'scrap-intro-survey': '도입 · 끊긴 winch 점검',
   'scrap-intro-approach': '도입 · 흉곽 안쪽 경계 전투',
