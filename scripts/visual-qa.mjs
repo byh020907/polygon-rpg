@@ -162,6 +162,8 @@ async function run() {
   const outputDirectory = resolve(values.get('output') ?? join(repo, 'artifacts', 'visual-qa'));
   const width = positiveInteger(values.get('width') ?? 1440, 'width');
   const height = positiveInteger(values.get('height') ?? 810, 'height');
+  const headlessValue = values.get('headless') ?? '0';
+  const headless = headlessValue !== '' && headlessValue !== '0' && headlessValue !== 'false';
   const debugPort = 9300 + Math.floor(Math.random() * 500);
   const server = createStaticServer({ rootPath: repo });
   const profileDirectory = mkdtempSync(join(tmpdir(), 'polygon-rpg-visual-qa-'));
@@ -187,6 +189,7 @@ async function run() {
     browser = spawn(
       browserPath,
       [
+        ...(headless ? ['--headless=new', '--disable-gpu'] : []),
         `--remote-debugging-port=${debugPort}`,
         `--user-data-dir=${profileDirectory}`,
         `--window-size=${width},${height + 90}`,
