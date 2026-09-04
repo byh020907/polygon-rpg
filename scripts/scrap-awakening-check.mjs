@@ -414,18 +414,52 @@ assert.ok(itemIds(perimeterReload).includes('scrap-yard-winch-base'));
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-survey');
 prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_APPROACH);
+assert.equal(
+  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'yard-approach-collector',
+  'winch 점검 뒤에는 흉곽 안쪽 경계를 막는 세 번째 수거 유닛이 필요합니다.',
+);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  false,
+  '경계 수거 유닛을 정리하기 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
+);
+assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+scene.resolveJourneyEncounter(
+  Object.freeze({
+    entityId: 'scrap-yard-approach-collector',
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  }),
+);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-approach-collector'),
+  false,
+  '세 번째 수거 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
+);
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  `winch 점검 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+  `경계 전투 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
 );
 assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
 const surveyReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
 });
 assert.equal(stage(surveyReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  surveyReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-approach-collector'),
+  false,
+  '경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
+);
 assert.equal(
   surveyReload.mapRuntime
     .getResolvedSnapshot()
