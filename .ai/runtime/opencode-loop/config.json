@@ -13,9 +13,9 @@
     "reconciliation": "product-goal-loop-reconciliation"
   },
   "models": {
-    "worker": null,
-    "verifier": null,
-    "reconciliation": null
+    "worker": "opencode-go/muse-spark-1.3-contributor",
+    "verifier": "opencode-go/muse-spark-1.3-contributor",
+    "reconciliation": "opencode-go/muse-spark-1.3-contributor"
   },
   "server": {
     "hostname": "127.0.0.1",

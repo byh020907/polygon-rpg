@@ -16,6 +16,7 @@ import {
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
   SCRAPYARD_REST_ENTITY_ID,
+  SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
   SCRAP_RIVAL_RESCUE_ENTITY_ID,
   SCRAP_PLAYER_DECISION_ENTITY_ID,
@@ -428,6 +429,46 @@ assert.equal(
   '경계 수거 유닛을 정리하기 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
 );
 assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
+  `winch 점검 뒤 흉곽 경계로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 안내가 필요합니다.`,
+);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 1000,
+});
+scene.update(STEP_SECONDS, input({ left: true }));
+const approachGuideDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  approachGuideDialogue.active,
+  true,
+  '경계 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
+);
+assert.equal(approachGuideDialogue.presentationMode, 'ambient');
+assert.equal(approachGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
+const approachGuideStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ left: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x < approachGuideStartX,
+  'ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_APPROACH,
+  'ambient 안내는 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  'ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+);
 scene.resolveJourneyEncounter(
   Object.freeze({
     entityId: 'scrap-yard-approach-collector',
