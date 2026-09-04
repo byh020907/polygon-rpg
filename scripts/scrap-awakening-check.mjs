@@ -401,6 +401,17 @@ assert.equal(
 assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
 assert.ok(itemIds(scene).includes('scrap-yard-winch-base-mark'));
 assert.ok(itemIds(scene).includes('scrap-yard-chest-plate-mark'));
+assert.ok(
+  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
+  'winch 점검 단계부터 접힌 자동 회수팔이 보여야 합니다.',
+);
+assert.ok(itemIds(scene).includes('scrap-retrieval-arm-dormant-forearm'));
+assert.ok(itemIds(scene).includes('scrap-retrieval-arm-dormant-claw'));
+assert.equal(
+  itemIds(scene).includes('scrap-retrieval-arm-grab-claw'),
+  false,
+  '붕괴 전에는 회수팔 포획 자세를 보여주면 안 됩니다.',
+);
 const perimeterReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
 });
@@ -495,6 +506,16 @@ const surveyReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
 });
 assert.equal(stage(surveyReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.ok(
+  itemIds(surveyReload).includes('scrap-retrieval-arm-dormant-upper'),
+  '현장 조사 저장 뒤에도 접힌 회수팔이 유지되어야 합니다.',
+);
+assert.ok(itemIds(surveyReload).includes('scrap-retrieval-arm-dormant-claw'));
+assert.equal(
+  itemIds(surveyReload).includes('scrap-retrieval-arm-grab-claw'),
+  false,
+  '현장 조사 저장 뒤에 포획 자세가 미리 보이면 안 됩니다.',
+);
 assert.equal(
   surveyReload.mapRuntime
     .getResolvedSnapshot()
@@ -564,6 +585,17 @@ for (let tick = 0; tick < 240 && stage(scene) === SCRAP_AWAKENING_STAGE.COLLAPSE
 }
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RESCUE_REQUEST);
 assert.ok(itemIds(scene).includes('scrap-collapse-debris'));
+assert.ok(
+  itemIds(scene).includes('scrap-retrieval-arm-grab-upper'),
+  '붕괴 뒤에는 라이벌을 낚아챈 회수팔 포획 자세가 보여야 합니다.',
+);
+assert.ok(itemIds(scene).includes('scrap-retrieval-arm-grab-claw'));
+assert.ok(itemIds(scene).includes('scrap-retrieval-arm-grab-signal'));
+assert.equal(
+  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
+  false,
+  '포획 뒤에는 접힌 대기 자세가 남으면 안 됩니다.',
+);
 
 setAtStoryInteraction(scene, 'scrap-rival-rescue-request');
 prologueSequence = completeDialogue(scene, prologueSequence);
