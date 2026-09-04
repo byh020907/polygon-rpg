@@ -17,6 +17,7 @@ import {
   SCRAP_AWAKENING_ROOM_ID,
   SCRAPYARD_REST_ENTITY_ID,
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
+  SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
   SCRAP_RIVAL_RESCUE_ENTITY_ID,
   SCRAP_PLAYER_DECISION_ENTITY_ID,
@@ -507,6 +508,48 @@ assert.equal(
     .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
   false,
   'winch 점검 완료 저장 뒤에는 점검 interaction이 다시 활성화되면 안 됩니다.',
+);
+
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID),
+  `현장 조사에 들어가면 ${SCRAP_CAST.PROTAGONIST.monologueName}의 관찰 독백이 필요합니다.`,
+);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 1078,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const searchNoticeDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  searchNoticeDialogue.active,
+  true,
+  '현장 조사 중 주인공 관찰 독백이 자동으로 시작되어야 합니다.',
+);
+assert.equal(searchNoticeDialogue.presentationMode, 'ambient');
+assert.equal(searchNoticeDialogue.speaker, SCRAP_CAST.PROTAGONIST.monologueName);
+assert.equal(searchNoticeDialogue.worldAnchor.x, scene.position.x);
+const searchNoticeStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x > searchNoticeStartX,
+  '관찰 독백은 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  '관찰 독백은 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  '관찰 독백은 입력 없이 짧게 종료되어야 합니다.',
 );
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');

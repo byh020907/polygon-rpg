@@ -20,6 +20,7 @@ export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
 export const SCRAP_RIVAL_WALK_ENTITY_ID = 'scrap-rival-walk-with';
 export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide';
+export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_BRACE_ENTITY_ID = 'scrap-rival-yard-brace';
 export const SCRAP_RIVAL_SURVEY_ENTITY_ID = 'scrap-rival-yard-survey';
 export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
@@ -2804,6 +2805,23 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1078, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 36,
+              speaker: SCRAP_CAST.PROTAGONIST.monologueName,
+              lines: [
+                '흉곽 아래 통로는 버티는데, 저 회수팔이 아까부터 같은 각도로만 움직여.',
+                '수거 표식보다 오래된 지지대야. 건드리기 전에 라이벌이랑 같이 확인하자.',
+              ],
+              presentationProfileId: 'scrapyard-apprentice',
+              presentationMode: 'ambient',
+              dialogueAnchor: 'player',
+              enabled: false,
+            },
+            {
               id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
               kind: 'story-interaction',
               position: { x: 1120, y: 354 },
@@ -4264,6 +4282,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID, value: true },
         { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
         { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
         { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },

@@ -310,6 +310,24 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedAbsentItems: Object.freeze(['scrap-device-core']),
     }),
   }),
+  'scrap-intro-search': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 1095,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+      expectedPatchIds: Object.freeze(['scrap-prologue-yard-search']),
+      expectedItems: Object.freeze([
+        'scrap-yard-winch-base',
+        'scrap-yard-winch-base-mark',
+        'scrap-yard-chest-plate-mark',
+        'scrap-rival-search-hook',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+    }),
+  }),
   'scrap-intro-before': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
@@ -1928,6 +1946,7 @@ const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-brace': '도입 · 지지대 통로 수거 유닛',
   'scrap-intro-survey': '도입 · 끊긴 winch 점검',
   'scrap-intro-approach': '도입 · 흉곽 안쪽 경계 전투',
+  'scrap-intro-search': '도입 · 폐병기 내부 현장 조사',
   'scrap-intro-before': '도입 · 붕괴 뒤 제어핵 선택',
   'scrap-intro-awakening': '도입 · 고대 병기 각성',
   'scrap-intro-d30': '도입 · D-30 경보',
