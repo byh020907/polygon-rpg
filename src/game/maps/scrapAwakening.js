@@ -23,6 +23,7 @@ export const SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID = 'scrap-rival-brace-guide';
 export const SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID = 'scrap-rival-perimeter-guide';
 export const SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID = 'scrap-rival-survey-guide';
 export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide';
+export const SCRAP_RIVAL_PLATE_ENTITY_ID = 'scrap-rival-yard-plate';
 export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID = 'scrap-rival-collapse-warning';
 export const SCRAP_RIVAL_BRACE_ENTITY_ID = 'scrap-rival-yard-brace';
@@ -863,6 +864,33 @@ const renderItems = [
     enabled: false,
     label: '흉곽 지지대 표식',
     role: 'survey-chest-mark',
+  }),
+  item(
+    'scrap-yard-plate-fragment',
+    [
+      { x: 1128, y: 386 },
+      { x: 1192, y: 378 },
+      { x: 1200, y: 410 },
+      { x: 1136, y: 418 },
+    ],
+    '#5a5650',
+    {
+      stroke: '#242627',
+      lineWidth: 4,
+      order: 13,
+      enabled: false,
+      label: '떨어진 흉갑 조각',
+      role: 'fallen-chest-fragment',
+      materialId: 'metal',
+    },
+  ),
+  item('scrap-yard-plate-fragment-mark', rectangle(1148, 378, 40, 7), '#75d6c4', {
+    stroke: '#234b4b',
+    lineWidth: 2,
+    order: 14,
+    enabled: false,
+    label: '흉갑 조각 점검용 청록 표식띠',
+    role: 'survey-marker',
   }),
   item(
     'scrap-retrieval-arm-dormant-upper',
@@ -2947,7 +2975,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               encounterProfileId: 'yard-approach-collector',
               position: { x: 1062, y: 426 },
               maxHealth: 88,
-              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_PLATE,
               enabled: false,
             },
             {
@@ -2999,9 +3027,26 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_RIVAL_PLATE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1160, y: 354 },
+              interactionRange: 88,
+              speaker: SCRAP_CAST.RIVAL.name,
+              conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
+              conversationTitle: '떨어진 흉갑 조각 점검',
+              lines: [
+                '저기 떨어진 흉갑 조각 봐. 수거 표식보다 오래된 판금이 cable째 내려앉았어.',
+                '조각 아래 통로가 버티는지 직접 점검해야 안쪽으로 갈 수 있어. 내가 표식을 붙일게.',
+                '흔들리면 바로 방패를 들어. 확인이 끝나면 같이 흉곽 아래 표식으로 가자.',
+              ],
+              presentationProfileId: 'rival-scout',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+              enabled: false,
+            },
+            {
               id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
               kind: 'story-interaction',
-              position: { x: 1120, y: 354 },
+              position: { x: 1180, y: 354 },
               interactionRange: 88,
               speaker: SCRAP_CAST.RIVAL.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
@@ -4475,8 +4520,29 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
-      id: 'scrap-prologue-yard-search',
+      id: 'scrap-prologue-yard-plate',
       priority: 8,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_PLATE },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-upper', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-forearm', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-claw', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_PLATE_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-search',
+      priority: 9,
       when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SEARCH },
       operations: [
         { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
@@ -4489,6 +4555,8 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
         { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
         { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment-mark', value: true },
         { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-upper', value: true },
         { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-forearm', value: true },
         { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-claw', value: true },
@@ -4598,9 +4666,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY },
         ],
       },
-      operations: [
-        { op: 'set-enabled', target: SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID, value: true },
-      ],
+      operations: [{ op: 'set-enabled', target: SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID, value: true }],
     },
     {
       id: 'scrapyard-owner-returned',

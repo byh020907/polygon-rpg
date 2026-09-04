@@ -17,6 +17,7 @@ import {
   SCRAP_AWAKENING_ROOM_ID,
   SCRAPYARD_REST_ENTITY_ID,
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
+  SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID,
@@ -204,6 +205,7 @@ function mapEntityLines(entityId) {
 
 const prologueTranscriptById = new Map(
   resolveScrapPrologueConversationTranscripts([
+    SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
     SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
     SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
     SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
@@ -221,6 +223,10 @@ function assertMapEntityLinesMatchTranscript(entityId, conversationId) {
   );
 }
 
+assertMapEntityLinesMatchTranscript(
+  SCRAP_RIVAL_PLATE_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
+);
 assertMapEntityLinesMatchTranscript(
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
@@ -648,10 +654,10 @@ assert.equal(
 scene.resolveJourneyEncounter(
   Object.freeze({
     entityId: 'scrap-yard-approach-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_PLATE,
   }),
 );
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_PLATE);
 assert.equal(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -659,13 +665,71 @@ assert.equal(
   false,
   '세 번째 수거 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
 );
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  false,
+  '흉갑 조각 점검 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
+);
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_ENTITY_ID),
+  `경계 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 떨어진 흉갑 조각을 점검해야 합니다.`,
+);
+assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+assert.ok(itemIds(scene).includes('scrap-yard-plate-fragment'));
+assert.ok(itemIds(scene).includes('scrap-yard-plate-fragment-mark'));
+assert.ok(
+  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
+  '흉갑 조각 점검 단계에서도 접힌 자동 회수팔이 보여야 합니다.',
+);
+const plateLines = mapEntityLines(SCRAP_RIVAL_PLATE_ENTITY_ID).join('\n');
+assert.match(plateLines, /흉갑/);
+assert.match(plateLines, /방패/);
+assert.doesNotMatch(plateLines, /winch.*전원/);
+const plateReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+});
+assert.equal(stage(plateReload), SCRAP_AWAKENING_STAGE.YARD_PLATE);
+assert.equal(
+  plateReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-approach-collector'),
+  false,
+  '경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
+);
+assert.equal(
+  plateReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  false,
+  '흉갑 조각 점검 완료 저장 뒤에도 현장 조사가 미리 열리면 안 됩니다.',
+);
+assert.ok(itemIds(plateReload).includes('scrap-yard-plate-fragment'));
+
+setAtStoryInteraction(scene, 'scrap-rival-yard-plate');
+prologueSequence = completeDialogue(scene, prologueSequence);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_ENTITY_ID),
+  false,
+  '흉갑 조각 점검 뒤에는 점검 interaction이 다시 활성화되면 안 됩니다.',
+);
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  `경계 전투 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+  `흉갑 조각 점검 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
 );
 assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+assert.ok(
+  itemIds(scene).includes('scrap-yard-plate-fragment'),
+  '현장 조사 단계에서도 떨어진 흉갑 조각이 유지되어야 합니다.',
+);
 const surveyReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
 });
@@ -841,6 +905,7 @@ assert.deepEqual(scene.getProgressionSnapshot().viewedConversationIds, [
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_BRACE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
   SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
@@ -1135,8 +1200,8 @@ const archiveCommands = archiveDialogue.commands.filter(
 );
 assert.equal(
   archiveCommands.length,
-  8,
-  '작전 기록기에서 도입 일곱 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
+  9,
+  '작전 기록기에서 도입 여덟 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
 );
 const beforeReplay = scene.getProgressionSnapshot();
 const replayResult = scene.executeDialogueCommand(

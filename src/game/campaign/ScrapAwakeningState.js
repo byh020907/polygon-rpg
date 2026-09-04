@@ -8,6 +8,7 @@ export const SCRAP_AWAKENING_STAGE = Object.freeze({
   YARD_PERIMETER: 'yard-perimeter',
   YARD_SURVEY: 'yard-survey',
   YARD_APPROACH: 'yard-approach',
+  YARD_PLATE: 'yard-plate',
   YARD_SEARCH: 'yard-search',
   COLLAPSE: 'collapse',
   RESCUE_REQUEST: 'rescue-request',
@@ -121,6 +122,12 @@ export function getScrapAwakeningPresentation(stageId) {
       briefing: `winch 받침을 확인한 두 견습생 앞을 흉곽 경계 수거 유닛이 막습니다. ${SCRAP_CAST.RIVAL.name}이 표식을 붙이는 동안 방패로 간격을 만드세요.`,
       objective: '경계 수거 유닛을 Strong과 guard로 막고 안쪽 현장으로 길을 여세요.',
       cue: '경계 수거 유닛 · Strong / Guard',
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_PLATE]: {
+      title: '떨어진 흉갑 조각 점검',
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉곽 아래로 가는 길에 떨어진 흉갑 조각과 cable을 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
+      objective: '떨어진 흉갑 조각으로 다가가 ↑로 점검하세요.',
+      cue: '흉갑 조각 점검 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: {
       title: '폐병기 수거장 탐색',
