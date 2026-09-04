@@ -1,8 +1,9 @@
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 
-// The authored 160px human rig must occupy the intended 18–22% of a 720px play viewport.
-// This scale is shared by its visible cutout and authoritative swept/body geometry.
-export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.85;
+// The authored human rig renders as a ~108 logical px body silhouette in the 960x540
+// gameplay world (about 20% of the 540 logical height, about 144 CSS px on a 720p
+// viewport). This scale is shared by its visible cutout and authoritative swept/body geometry.
+export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.77;
 export const PLAYER_CHARACTER_FOOT_OFFSET = 82;
 
 const PLAYER_IK_SOLVER = new TwoBoneIKSolver();
@@ -57,10 +58,13 @@ function skeletonTorsoPolygon(position, joints) {
   }));
 }
 
-function skeletonHeadPolygon(position, joints) {
+function skeletonHeadPolygon(position, joints, bodyLean = 0) {
   // Keep the hurt head aligned with the cutout head: headTilt is vertical-referenced
   // (atan2(dx, -dy)), matching SkeletonPoseProjection. atan2(dy, dx) would yaw it ~90 deg.
-  const headRotation = Math.atan2(joints.head.x - joints.neck.x, joints.neck.y - joints.head.y);
+  // The projected direction alone stays near-upright while the torso anchors lean, so the
+  // authored body lean is carried here so a roll tuck reads as one connected silhouette.
+  const headDirection = Math.atan2(joints.head.x - joints.neck.x, joints.neck.y - joints.head.y);
+  const headRotation = bodyLean + headDirection;
   return transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
     x: position.x + joints.head.x,
     y: position.y + joints.head.y,
@@ -193,7 +197,7 @@ export function samplePlayerCombatGeometry({
     {
       part: 'head',
       points: usesAuthoredSkeleton
-        ? skeletonHeadPolygon(position, projectedJoints)
+        ? skeletonHeadPolygon(position, projectedJoints, bonePose.bodyLean ?? 0)
         : transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
             x: bodyX - 1,
             y: bodyY - 63,

@@ -198,13 +198,15 @@ function createCharacterItems(
     : position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
   const headX = usesAuthoredSkeleton ? position.x + projectedJoints.head.x : bodyX - 1;
   const headY = usesAuthoredSkeleton ? position.y + projectedJoints.head.y : bodyY - 63;
-  // Authored headTilt is vertical-referenced (atan2(dx, -dy)). atan2(dy, dx) would pitch the
-  // head/goggles/hair ~90 degrees sideways, which reads as a broken idle/roll portrait.
-  const headRotation = bonePose.headTilt;
   // Authored torso shapes are local cutouts placed at the skeleton midpoint. The final
   // authored projection intentionally skips the legacy whole-body lean, so rigid torso
   // clothing must carry the authored lean here. Limbs already follow projected joints.
   const authoredBodyLean = usesAuthoredSkeleton ? bonePose.bodyLean : 0;
+  // Authored headTilt is vertical-referenced (atan2(dx, -dy)). atan2(dy, dx) would pitch the
+  // head/goggles/hair ~90 degrees sideways, which reads as a broken idle/roll portrait.
+  // The projected head direction alone stays near-upright while the torso leans, so the
+  // authored lean is carried here so head, goggles and hair tuck with the rolling body.
+  const headRotation = authoredBodyLean + bonePose.headTilt;
   const swordRotation = targetPose.swordAngle;
   const poseWeaponLengthScale =
     Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0

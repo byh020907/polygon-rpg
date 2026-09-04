@@ -235,7 +235,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
   authoredRollFrame({
     id: 'roll-tuck',
     at: 0.14,
-    transition: 'snap',
+    transition: 'linear',
     rootX: 3,
     rootY: 14,
     bodyLean: 0.38,
@@ -299,7 +299,7 @@ const ROLL_POSE_FRAMES = Object.freeze([
   authoredRollFrame({
     id: 'roll-ready',
     at: 1,
-    transition: 'hold',
+    transition: 'linear',
     rootY: 0,
     bodyLean: 0.02,
     headTilt: 0,
