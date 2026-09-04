@@ -241,6 +241,13 @@ assert.doesNotMatch(playerDecisionText, /winch에 연결/);
 const ownerAnalysisText = mapEntityLines(SCRAPYARD_OWNER_ENTITY_ID).join('\n');
 assert.match(ownerAnalysisText, /위치를 보내지 않는 수동 제어핵/);
 assert.match(ownerAnalysisText, /중앙 지휘소 좌표/);
+const collapseBriefing = getScrapAwakeningPresentation(SCRAP_AWAKENING_STAGE.COLLAPSE).briefing;
+assert.match(collapseBriefing, /회수팔/);
+assert.match(collapseBriefing, /끌고 가/);
+const rescueBriefing = getScrapAwakeningPresentation(SCRAP_AWAKENING_STAGE.RESCUE_REQUEST).briefing;
+assert.match(rescueBriefing, /회수팔/);
+assert.match(rescueBriefing, /빼야 멈춘/);
+assert.doesNotMatch(rescueBriefing, /winch.*전원/);
 
 const scene = createAwakeningScene();
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COMMISSION);

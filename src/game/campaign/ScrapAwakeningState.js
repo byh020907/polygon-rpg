@@ -123,13 +123,13 @@ export function getScrapAwakeningPresentation(stageId) {
     },
     [SCRAP_AWAKENING_STAGE.COLLAPSE]: {
       title: '붕괴 사고',
-      briefing: `낡은 지지대가 무너지며 ${SCRAP_CAST.RIVAL.name}이 폐병기 잔해 아래에 갇힙니다.`,
+      briefing: `움직이던 자동 회수팔이 ${SCRAP_CAST.RIVAL.name}의 갈고리를 잡아 안쪽으로 끌고 가며 통로가 무너집니다.`,
       objective: '붕괴가 멎을 때까지 기다리세요.',
       cue: 'INPUT LOCK · COLLAPSE',
     },
     [SCRAP_AWAKENING_STAGE.RESCUE_REQUEST]: {
       title: '잔해 아래 구조 요청',
-      briefing: `${SCRAP_CAST.RIVAL.name}은 다친 몸으로 구조 winch의 전원이 끊겼다고 알립니다.`,
+      briefing: `${SCRAP_CAST.RIVAL.name}은 회수팔에 붙잡혀 끌려가고 있으며, 팔과 직접 연결된 흉곽 장치를 빼야 멈춘다고 알립니다.`,
       objective: `오른쪽 잔해의 ${SCRAP_CAST.RIVAL.name}에게 다가가 ↑로 상태를 확인하세요.`,
       cue: '구조 요청 · 상호작용 ↑',
     },
