@@ -17,6 +17,7 @@ import {
   SCRAP_AWAKENING_ROOM_ID,
   SCRAPYARD_REST_ENTITY_ID,
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
+  SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID,
   SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID,
   SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
@@ -572,6 +573,53 @@ assert.equal(
   scene.getWorldStatus().dialogue.active,
   false,
   '관찰 독백은 입력 없이 짧게 종료되어야 합니다.',
+);
+
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID),
+  `현장 조사 끝자락에는 ${SCRAP_CAST.RIVAL.name}의 붕괴 직전 ambient 경고가 필요합니다.`,
+);
+const collapseWarningLines = mapEntityLines(SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID).join('\n');
+assert.match(collapseWarningLines, /흔들/);
+assert.match(collapseWarningLines, /회수팔/);
+assert.doesNotMatch(collapseWarningLines, /winch.*전원/);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 1104,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const collapseWarningDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  collapseWarningDialogue.active,
+  true,
+  '붕괴 직전 라이벌 ambient 경고가 자동으로 시작되어야 합니다.',
+);
+assert.equal(collapseWarningDialogue.presentationMode, 'ambient');
+assert.equal(collapseWarningDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(collapseWarningDialogue.interactionId, SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID);
+assert.equal(collapseWarningDialogue.prompt, '이동 중 대화');
+const collapseWarningStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x > collapseWarningStartX,
+  '붕괴 경고 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  '붕괴 경고 ambient는 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  '붕괴 경고 ambient는 입력 없이 짧게 종료되어야 합니다.',
 );
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');
