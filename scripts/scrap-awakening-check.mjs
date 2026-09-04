@@ -7,12 +7,19 @@ import {
 import { SCRAP_CAST } from '../src/game/campaign/ScrapCastProfile.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
-import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../src/game/story/ScrapPrologueStory.js';
+import {
+  SCRAP_PROLOGUE_CONVERSATION_ID,
+  resolveScrapPrologueConversationTranscripts,
+} from '../src/game/story/ScrapPrologueStory.js';
 import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
   SCRAPYARD_REST_ENTITY_ID,
+  SCRAP_RIVAL_SEARCH_ENTITY_ID,
+  SCRAP_RIVAL_RESCUE_ENTITY_ID,
+  SCRAP_PLAYER_DECISION_ENTITY_ID,
+  SCRAPYARD_OWNER_ENTITY_ID,
   SCRAP_MINE_ROAD_PORTAL_ID,
   SCRAP_MINE_ROAD_REGION_ID,
   SCRAP_MINE_ROAD_ROOM_ID,
@@ -176,6 +183,64 @@ function setAtPortalToRoom(scene, sourceRoomId, destinationRoomId) {
   });
   return portal;
 }
+
+function mapEntityLines(entityId) {
+  for (const region of SCRAP_AWAKENING_MAP.regions ?? []) {
+    for (const room of region.rooms ?? []) {
+      for (const entity of room.entities ?? []) {
+        if (entity.id === entityId) return entity.lines;
+      }
+    }
+  }
+  assert.fail(`${entityId} map entity가 필요합니다.`);
+}
+
+const prologueTranscriptById = new Map(
+  resolveScrapPrologueConversationTranscripts([
+    SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
+    SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
+    SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
+    SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_ANALYSIS,
+  ]).map((entry) => [entry.id, entry]),
+);
+
+function assertMapEntityLinesMatchTranscript(entityId, conversationId) {
+  const transcript = prologueTranscriptById.get(conversationId);
+  assert.ok(transcript, `${conversationId} authored transcript가 필요합니다.`);
+  assert.deepEqual(
+    [...mapEntityLines(entityId)],
+    [...transcript.lines],
+    `${entityId} 현장 대사는 authored transcript와 같아야 합니다.`,
+  );
+}
+
+assertMapEntityLinesMatchTranscript(
+  SCRAP_RIVAL_SEARCH_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
+);
+assertMapEntityLinesMatchTranscript(
+  SCRAP_RIVAL_RESCUE_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
+);
+assertMapEntityLinesMatchTranscript(
+  SCRAP_PLAYER_DECISION_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.PLAYER_DECISION,
+);
+assertMapEntityLinesMatchTranscript(
+  SCRAPYARD_OWNER_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_ANALYSIS,
+);
+
+const rescueDialogueText = mapEntityLines(SCRAP_RIVAL_RESCUE_ENTITY_ID).join('\n');
+assert.match(rescueDialogueText, /회수팔/);
+assert.match(rescueDialogueText, /빼야 멈출/);
+assert.doesNotMatch(rescueDialogueText, /winch|전원만 들어오면/);
+const playerDecisionText = mapEntityLines(SCRAP_PLAYER_DECISION_ENTITY_ID).join('\n');
+assert.match(playerDecisionText, /제어핵을 빼면/);
+assert.doesNotMatch(playerDecisionText, /winch에 연결/);
+const ownerAnalysisText = mapEntityLines(SCRAPYARD_OWNER_ENTITY_ID).join('\n');
+assert.match(ownerAnalysisText, /위치를 보내지 않는 수동 제어핵/);
+assert.match(ownerAnalysisText, /중앙 지휘소 좌표/);
 
 const scene = createAwakeningScene();
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COMMISSION);
@@ -560,7 +625,7 @@ assert.ok(
     ),
   `${SCRAP_CAST.SCRAPYARD_OWNER.name}은 authored 직업 silhouette profile을 사용해야 합니다.`,
 );
-for (let jumpSequence = 3; jumpSequence <= 8; jumpSequence += 1) {
+for (let jumpSequence = 3; jumpSequence <= 10; jumpSequence += 1) {
   scene.update(STEP_SECONDS, input({ jump: true, jumpSequence }));
 }
 assert.equal(garageStage(scene), SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS);
@@ -627,7 +692,7 @@ scene.setVisualQaLocation({
   roomId: SCRAP_AWAKENING_ROOM_ID,
   x: 480,
 });
-scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 9 }));
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 11 }));
 const archiveDialogue = scene.getWorldStatus().dialogue;
 assert.equal(archiveDialogue.conversationId, 'scrap-dialogue-archive');
 const archiveCommands = archiveDialogue.commands.filter(
@@ -650,7 +715,7 @@ assert.deepEqual(
   beforeReplay,
   '기록 재생은 campaign stage나 progression을 다시 쓰면 안 됩니다.',
 );
-for (let replaySequence = 10; replaySequence <= 15; replaySequence += 1) {
+for (let replaySequence = 12; replaySequence <= 17; replaySequence += 1) {
   scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: replaySequence }));
 }
 assert.equal(scene.getWorldStatus().dialogue.active, false);
@@ -677,7 +742,7 @@ setAtRecoveryCamp(scene);
 scene.playerHealth = 17;
 const beforeRestProgression = scene.getProgressionSnapshot();
 const beforeRestPreview = scene.getProgressionSnapshot().scrapCampaign;
-scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 16 }));
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 18 }));
 assert.equal(restRequest?.preview.kind, 'rest');
 assert.equal(restRequest?.preview.title, '완전히 회복하고 다음 시간대로 갈까요?');
 assert.equal(restRequest?.preview.detailLabel, '고물상 작업장 · 체력 전부 회복');
@@ -693,7 +758,7 @@ assert.deepEqual(
   beforeRestPreview,
   '완전 회복 취소는 campaign snapshot을 바꾸면 안 됩니다.',
 );
-scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 17 }));
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 19 }));
 assert.equal(scene.confirmScrapCampaignAction().started, true);
 const afterRest = scene.getWorldStatus();
 const afterRestSnapshot = scene.getProgressionSnapshot().scrapCampaign;
