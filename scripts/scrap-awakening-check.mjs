@@ -17,6 +17,7 @@ import {
   SCRAP_AWAKENING_ROOM_ID,
   SCRAPYARD_REST_ENTITY_ID,
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
+  SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID,
   SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
   SCRAP_RIVAL_RESCUE_ENTITY_ID,
@@ -732,6 +733,61 @@ const completeX = scene.position.x;
 scene.update(STEP_SECONDS, input({ right: true }));
 assert.ok(scene.position.x > completeX, '각성 완료 뒤 이동 조작이 돌아와야 합니다.');
 
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID),
+  `각성 완료 뒤 서쪽 귀환 동선에는 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
+);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 620,
+});
+scene.update(STEP_SECONDS, input({ left: true }));
+const returnGuideDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  returnGuideDialogue.active,
+  true,
+  '서쪽 귀환 중 구조된 라이벌의 ambient 안내가 자동으로 시작되어야 합니다.',
+);
+assert.equal(returnGuideDialogue.presentationMode, 'ambient');
+assert.equal(returnGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(returnGuideDialogue.interactionId, SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID);
+assert.match(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.find((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID)
+    .lines.join('\n'),
+  /고물상/,
+  '귀환 안내는 왼쪽 고물상 작업대로 향하는 이유를 말풍선으로 전달해야 합니다.',
+);
+const returnGuideStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ left: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x < returnGuideStartX,
+  '귀환 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.COMPLETE,
+  '귀환 ambient 안내는 stage를 바꾸면 안 됩니다.',
+);
+assert.equal(
+  garageStage(scene),
+  SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY,
+  '귀환 ambient 안내는 차고 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  '귀환 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+);
+
 const resumed = createAwakeningScene({ progressionSnapshot: afterRecovery });
 assert.equal(stage(resumed), SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
 assert.ok(!itemIds(resumed).includes('scrap-device-core'));
@@ -755,6 +811,12 @@ assert.ok(
 completedReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
 assert.equal(stage(completedReload), SCRAP_AWAKENING_STAGE.COMPLETE);
 assert.equal(completedReload.isGrounded, false, '완료 뒤 ↑는 다시 Player jump여야 합니다.');
+assert.ok(
+  completedReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID),
+  '완료 저장 뒤에도 서쪽 귀환 ambient 안내가 유지되어야 합니다.',
+);
 
 for (let tick = 0; tick < 300 && scene.position.x > 255; tick += 1) {
   scene.update(STEP_SECONDS, input({ left: true }));
@@ -787,6 +849,13 @@ for (let jumpSequence = 3; jumpSequence <= 10; jumpSequence += 1) {
 }
 assert.equal(garageStage(scene), SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS);
 assert.equal(scene.getWorldStatus().dialogue.active, false);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID),
+  false,
+  '고물상 보고 뒤에는 귀환 ambient 안내가 다시 나타나면 안 됩니다.',
+);
 assert.ok(itemIds(scene).includes('scrapyard-analysis-device-core'));
 assert.ok(itemIds(scene).includes('scrapyard-device-analysis-beam'));
 const garageRevealStartSnapshot = scene.getProgressionSnapshot();

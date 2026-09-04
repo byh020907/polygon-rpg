@@ -25,6 +25,7 @@ export const SCRAP_RIVAL_BRACE_ENTITY_ID = 'scrap-rival-yard-brace';
 export const SCRAP_RIVAL_SURVEY_ENTITY_ID = 'scrap-rival-yard-survey';
 export const SCRAP_RIVAL_SEARCH_ENTITY_ID = 'scrap-rival-yard-search';
 export const SCRAP_RIVAL_RESCUE_ENTITY_ID = 'scrap-rival-rescue-request';
+export const SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID = 'scrap-rival-return-guide';
 export const SCRAP_PLAYER_DECISION_ENTITY_ID = 'scrap-player-device-decision';
 export const SCRAPYARD_WALL_MAP_ENTITY_ID = 'scrapyard-wall-operation-map';
 export const SCRAPYARD_REST_ENTITY_ID = 'scrapyard-full-recovery-cot';
@@ -2992,6 +2993,22 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 620, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '네가 제어핵을 빼줘서 풀려났어. 이 빚은 지역 돌면서 소문으로 갚는다.',
+                '왼쪽 고물상 작업대까지 같이 가자. 주인에게 먼저 보고해야 다음 수거가 열려.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
               id: SCRAPYARD_OWNER_ENTITY_ID,
               kind: 'story-interaction',
               position: { x: 198, y: 354 },
@@ -4499,6 +4516,19 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       priority: 40,
       when: { fact: 'scrapAwakeningStageId', in: deadlineStages },
       operations: [{ op: 'set-enabled', target: 'scrap-king-route-beacon', value: true }],
+    },
+    {
+      id: 'scrap-prologue-rival-return',
+      priority: 45,
+      when: {
+        all: [
+          { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.COMPLETE },
+          { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY },
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID, value: true },
+      ],
     },
     {
       id: 'scrapyard-owner-returned',
