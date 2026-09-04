@@ -66,7 +66,7 @@ function semverAtLeast(actual, minimum) {
   return true
 }
 
-export async function inspectOpenCode(project, config, directory = project.root) {
+export async function inspectOpenCode(project, config, directory = project.root, timeoutMs = 120_000) {
   const versionResult = await runChecked(opencodeBin(), ["--version"], {
     cwd: directory,
     errorCode: "OPENCODE_NOT_FOUND",
@@ -78,7 +78,7 @@ export async function inspectOpenCode(project, config, directory = project.root)
     throw prerequisite("OPENCODE_VERSION_UNSUPPORTED", `OpenCode ${config.minimumOpenCodeVersion} or newer is required; found ${version}.`, "opencode upgrade")
   }
   const agents = {}
-  for (const [role, name] of Object.entries(config.agents)) agents[name] = await inspectAgent(directory, name, { manager: role === "manager" })
+  for (const [role, name] of Object.entries(config.agents)) agents[name] = await inspectAgent(directory, name, { manager: role === "manager", timeoutMs })
   return { version, agents }
 }
 
@@ -87,7 +87,7 @@ export async function inspectAgent(repo, name, options = {}) {
     cwd: repo,
     errorCode: "OPENCODE_AGENT_MISSING",
     nextActions: [{ command: "pgl-opencode setup --dry-run", reason: `Install the ${name} agent template.` }],
-    timeoutMs: 120_000,
+    timeoutMs: options.timeoutMs ?? 120_000,
   })
   let agent
   try {

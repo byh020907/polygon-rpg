@@ -38,7 +38,7 @@ import {
   sessionHasFullAccess,
   serverHealth,
 } from "./opencode.mjs"
-import { exists, isPidAlive, nowIso, processIdentityMatches, readJson, runChecked, sha256, shortId, sleep, writeJsonAtomic } from "./system.mjs"
+import { exists, isPidAlive, isProcessTimeout, nowIso, processIdentityMatches, readJson, runChecked, sha256, shortId, sleep, writeJsonAtomic } from "./system.mjs"
 
 const adapterRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const REQUIRED_SOURCES = [
@@ -627,6 +627,24 @@ function unsafeSessionOutcome(outcomes) {
   return outcomes?.find((outcome) => outcome.warning || outcome.inspectionFailed || outcome.unacknowledgedHumanInput || outcome.activity?.status && outcome.activity.status !== "idle") ?? null
 }
 
+const CANDIDATE_PREFLIGHT_TIMEOUT_MS = 120_000
+const CANDIDATE_PREFLIGHT_RETRY_TIMEOUT_MS = 300_000
+
+async function inspectCandidateWithColdStartRetry(project, config, directory) {
+  try {
+    await inspectOpenCode(project, config, directory, CANDIDATE_PREFLIGHT_TIMEOUT_MS)
+    return { coldStartRetry: false }
+  } catch (error) {
+    if (!isProcessTimeout(error)) throw error
+  }
+  // The first CLI invocation inside a fresh candidate worktree can exceed the
+  // strict preflight budget while the configuration itself is healthy (cold
+  // start). That first attempt warms caches, so retry the same strict check
+  // once with an extended budget instead of misreporting a missing agent.
+  await inspectOpenCode(project, config, directory, CANDIDATE_PREFLIGHT_RETRY_TIMEOUT_MS)
+  return { coldStartRetry: true }
+}
+
 async function tickCommand(request) {
   const { project, config } = await contextFor(request)
   const dryRun = Boolean(option(request, "dryRun", false))
@@ -711,13 +729,14 @@ async function tickCommand(request) {
       execution.adapterSync = await syncAdapterToCandidate(project, execution)
     }
     try {
-      await inspectOpenCode(project, config, execution.worktree)
+      const preflight = await inspectCandidateWithColdStartRetry(project, config, execution.worktree)
+      if (preflight.coldStartRetry) execution.preflightColdStartRetry = true
     } catch (error) {
       execution.status = "externally_blocked"
       execution.blocker = { code: "CANDIDATE_PERMISSION_PREFLIGHT_FAILED", causeCode: error?.code, cause: error?.message, recordedAtUtc: nowIso() }
       await recordExecution(project, execution)
       await setPaused(project, config, true, "candidate-permission-preflight-failed", false)
-      throw partial("CANDIDATE_PERMISSION_PREFLIGHT_FAILED", "The root Full access preflight passed, but the candidate's effective OpenCode configuration did not; candidate files were preserved.", [{ command: `opencode debug agent ${config.agents.worker}`, reason: "Run from the preserved candidate worktree and repair its effective Full access configuration." }, { command: "pgl-opencode doctor --json", reason: "Inspect the repository-local installation." }], { executionId: execution.id, branch: execution.branch, worktree: execution.worktree, causeCode: error?.code, cause: error?.message })
+      throw partial("CANDIDATE_PERMISSION_PREFLIGHT_FAILED", "The root Full access preflight passed, but the candidate's effective OpenCode configuration did not (a cold-start timeout was already retried once with an extended budget); candidate files were preserved.", [{ command: `opencode debug agent ${config.agents.worker}`, reason: "Run from the preserved candidate worktree and repair its effective Full access configuration." }, { command: "pgl-opencode doctor --json", reason: "Inspect the repository-local installation." }], { executionId: execution.id, branch: execution.branch, worktree: execution.worktree, causeCode: error?.code, cause: error?.message })
     }
     await recordExecution(project, execution)
     await updateLease(project, leaseToken, { executionId: execution.id })

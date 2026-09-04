@@ -172,7 +172,8 @@ export function runProcess(command, args = [], options = {}) {
 export async function runChecked(command, args = [], options = {}) {
   const result = await runProcess(command, args, options)
   if (result.code !== 0) {
-    throw new RuntimeError(options.errorCode ?? "COMMAND_FAILED", `${command} exited with code ${result.code}`, {
+    const timedOut = result.timedOut === true
+    throw new RuntimeError(options.errorCode ?? "COMMAND_FAILED", timedOut && options.timeoutMs ? `${command} timed out after ${options.timeoutMs}ms (exit code ${result.code})` : `${command} exited with code ${result.code}`, {
       exitCode: options.exitCode ?? EXIT.PREREQUISITE,
       retryable: options.retryable ?? false,
       sideEffects: options.sideEffects ?? "none",
@@ -182,11 +183,18 @@ export async function runChecked(command, args = [], options = {}) {
         exitCode: result.code,
         stderr: result.stderr.trim(),
         stdout: result.stdout.trim(),
+        timedOut,
+        timeoutMs: options.timeoutMs ?? null,
       },
       nextActions: options.nextActions ?? [],
     })
   }
   return result
+}
+
+export function isProcessTimeout(error) {
+  if (error?.details?.timedOut === true) return true
+  return typeof error?.message === "string" && /timed out after \d+ms/.test(error.message)
 }
 
 export function spawnInherited(command, args = [], options = {}) {
