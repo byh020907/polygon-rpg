@@ -19,6 +19,7 @@ import {
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
+  SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID,
   SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID,
   SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
@@ -501,6 +502,52 @@ assert.ok(
     .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
   `두 번째 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 끊긴 winch를 점검해야 합니다.`,
 );
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID),
+  `두 번째 전투 뒤 winch 받침으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
+);
+const surveyGuideLines = mapEntityLines(SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID).join('\n');
+assert.match(surveyGuideLines, /winch/);
+assert.match(surveyGuideLines, /방패/);
+assert.doesNotMatch(surveyGuideLines, /winch.*전원/);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 975,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const surveyGuideDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  surveyGuideDialogue.active,
+  true,
+  '두 번째 전투 뒤 winch 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
+);
+assert.equal(surveyGuideDialogue.presentationMode, 'ambient');
+assert.equal(surveyGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(surveyGuideDialogue.interactionId, SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID);
+assert.equal(surveyGuideDialogue.prompt, '이동 중 대화');
+const surveyGuideStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x > surveyGuideStartX,
+  'winch 이동 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
+  'winch 이동 ambient 안내는 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  'winch 이동 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+);
 assert.equal(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -542,6 +589,13 @@ assert.equal(
   scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
   'yard-approach-collector',
   'winch 점검 뒤에는 흉곽 안쪽 경계를 막는 세 번째 수거 유닛이 필요합니다.',
+);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID),
+  false,
+  'winch 점검 뒤에는 이동 안내가 다시 나타나면 안 됩니다.',
 );
 assert.equal(
   scene.mapRuntime
