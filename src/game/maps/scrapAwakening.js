@@ -20,6 +20,7 @@ export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
 export const SCRAP_RIVAL_WALK_ENTITY_ID = 'scrap-rival-walk-with';
 export const SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID = 'scrap-rival-brace-guide';
+export const SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID = 'scrap-rival-perimeter-guide';
 export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide';
 export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID = 'scrap-rival-collapse-warning';
@@ -2882,6 +2883,22 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 870, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '지지대는 고정됐어. 앞 통로에 두 번째 수거 유닛이 지지대 표식을 물고 있어.',
+                '내가 왼쪽으로 붙을 테니 넌 방패를 들고 그대로 가자. 흔들리면 바로 뒤로 빠져.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
               id: 'scrap-yard-brace-collector',
               kind: 'combat-enemy',
               encounterProfileId: 'yard-brace-collector',
@@ -4398,6 +4415,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID, value: true },
         { op: 'set-enabled', target: 'scrap-yard-brace-collector', value: true },
       ],
     },
