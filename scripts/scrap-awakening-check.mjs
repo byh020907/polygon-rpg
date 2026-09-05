@@ -28,6 +28,10 @@ import {
   SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID,
   SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID,
   SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID,
+  SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID,
+  SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID,
+  SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID,
+  SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
@@ -2802,6 +2806,151 @@ assert.doesNotMatch(
   /학원|교관|마법 생물/,
 );
 
+const greenhouseRoadheadEntityIds = () =>
+  greenhouseFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  greenhouseRoadheadEntityIds().includes(SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID),
+  '온실 roadhead에는 모종을 지키는 생활 당사자 재배원이 필요합니다.',
+);
+assert.ok(
+  greenhouseRoadheadEntityIds().includes(SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID),
+  '온실 roadhead에는 설산 cable 소문을 가져오는 라이벌 연결 정찰이 필요합니다.',
+);
+assert.equal(
+  greenhouseRoadheadEntityIds().includes(SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID),
+  false,
+  '사건 시작 전에는 배관 앞 작업 상태의 대기 재배원이 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  greenhouseRoadheadEntityIds().includes(SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID),
+  false,
+  '해결 전에는 복구를 마친 상태의 대기 재배원이 미리 열리면 안 됩니다.',
+);
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-waiting-grower-vest'));
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-waiting-grower-sensor'));
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-rival-scout-torso'));
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-rival-scout-band'));
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-gate-lamp-dim'));
+assert.equal(
+  itemIds(greenhouseFlowScene).includes('greenhouse-gate-lamp-lit'),
+  false,
+  '해결 전에는 켜진 재배등을 보여주면 안 됩니다.',
+);
+const waitingGrowerLines = mapEntityLines(SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID).join('\n');
+assert.match(waitingGrowerLines, /배관/);
+assert.match(waitingGrowerLines, /압력판/);
+const greenhouseRivalScoutLines = mapEntityLines(SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID).join('\n');
+assert.match(greenhouseRivalScoutLines, /cable/);
+assert.match(greenhouseRivalScoutLines, /설산/);
+assert.match(greenhouseRivalScoutLines, /폐광/);
+
+const greenhouseCastScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: greenhouseFlowScene.getProgressionSnapshot(),
+});
+let greenhouseCastSequence = 200;
+const greenhouseCastRegionBefore = greenhouseCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
+greenhouseCastScene.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 486,
+});
+greenhouseCastSequence = completeDialogue(greenhouseCastScene, greenhouseCastSequence);
+const greenhouseCastRegionAfterGrower = greenhouseCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
+assert.equal(
+  greenhouseCastRegionAfterGrower.eventStageKind,
+  greenhouseCastRegionBefore.eventStageKind,
+  '대기 재배원 대화는 지역 사건 stage를 바꾸면 안 됩니다.',
+);
+assert.equal(
+  greenhouseCastRegionAfterGrower.status,
+  greenhouseCastRegionBefore.status,
+  '대기 재배원 대화는 지역 상태를 바꾸면 안 됩니다.',
+);
+greenhouseCastScene.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 1090,
+});
+greenhouseCastScene.update(STEP_SECONDS, input({ right: true }));
+const greenhouseRivalDialogue = greenhouseCastScene.getWorldStatus().dialogue;
+assert.equal(
+  greenhouseRivalDialogue.active,
+  true,
+  '라이벌 연결 정찰 ambient가 자동으로 시작되어야 합니다.',
+);
+assert.equal(greenhouseRivalDialogue.presentationMode, 'ambient');
+assert.equal(greenhouseRivalDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(greenhouseRivalDialogue.interactionId, SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID);
+const greenhouseRivalStartX = greenhouseCastScene.position.x;
+greenhouseCastScene.update(
+  STEP_SECONDS,
+  input({ right: true, jump: true, jumpSequence: greenhouseCastSequence }),
+);
+greenhouseCastSequence += 1;
+assert.ok(
+  greenhouseCastScene.position.x > greenhouseRivalStartX,
+  '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  greenhouseCastScene
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID).status,
+  greenhouseCastRegionBefore.status,
+  '라이벌 연결 정찰 ambient는 지역 상태를 바꾸면 안 됩니다.',
+);
+for (
+  let tick = 0;
+  tick < 1_200 && greenhouseCastScene.getWorldStatus().dialogue.active;
+  tick += 1
+) {
+  greenhouseCastScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  greenhouseCastScene.getWorldStatus().dialogue.active,
+  false,
+  '라이벌 연결 정찰 ambient는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+const greenhouseRoadheadQaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+greenhouseRoadheadQaScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  stageKind: 'npc-briefing',
+  status: 'available',
+});
+greenhouseRoadheadQaScene.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 730,
+});
+assert.ok(
+  greenhouseRoadheadQaScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('greenhouse-cast-rival-scout'),
+  'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
+);
+assert.ok(itemIds(greenhouseRoadheadQaScene).includes('greenhouse-waiting-grower-visor'));
+assert.ok(itemIds(greenhouseRoadheadQaScene).includes('greenhouse-rival-scout-hook'));
+assert.equal(
+  itemIds(greenhouseRoadheadQaScene).includes('greenhouse-gate-lamp-lit'),
+  false,
+  'roadhead QA 상태에서는 켜진 재배등이 없어야 합니다.',
+);
+const greenhouseRoadheadQaRequest = readVisualQaRequest(
+  '?visualQa=1&gameStart=scrap-greenhouse-roadhead&visualQaRenderer=polygon&visualQaPhase=active',
+);
+assert.equal(greenhouseRoadheadQaRequest.scenario.roomId, SCRAP_GREENHOUSE_ROAD_ROOM_ID);
+assert.equal(greenhouseRoadheadQaRequest.scenario.x, 730);
+assert.ok(
+  greenhouseRoadheadQaRequest.scenario.expectation.expectedItems.includes(
+    'greenhouse-rival-scout-torso',
+  ),
+);
+
 setAtCampaignInteraction(greenhouseFlowScene, SCRAP_GREENHOUSE_ROAD_ROOM_ID, 'npc-briefing');
 greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
 let greenhouseRegion = greenhouseFlowScene
@@ -2834,6 +2983,33 @@ greenhouseRegion = greenhouseFlowScene
 assert.equal(greenhouseRegion.status, 'in-progress');
 assert.equal(greenhouseFlowScene.getWorldStatus().campaign.phaseLabel, '아침');
 assert.equal(greenhouseFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-24');
+
+const greenhouseInProgressEntityIds = () =>
+  greenhouseFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.equal(
+  greenhouseInProgressEntityIds().includes(SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID),
+  false,
+  '사건 진행 중에는 입구에서 기다리던 대기 재배원이 배관 앞으로 이동해야 합니다.',
+);
+assert.ok(
+  greenhouseInProgressEntityIds().includes(SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID),
+  '사건 진행 중에는 배관 앞에서 모종을 옮길 준비를 하는 대기 재배원이 필요합니다.',
+);
+assert.ok(
+  greenhouseInProgressEntityIds().includes(SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID),
+  '사건 진행 중에도 라이벌 연결 정찰이 roadhead에 남아 있어야 합니다.',
+);
+greenhouseFlowScene.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 1240,
+});
+greenhouseJumpSequence = completeDialogue(greenhouseFlowScene, greenhouseJumpSequence);
+greenhouseRegion = greenhouseFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID);
+assert.equal(greenhouseRegion.status, 'in-progress');
+assert.equal(greenhouseRegion.collected, false);
 
 setAtPortalToRoom(
   greenhouseFlowScene,
@@ -2994,6 +3170,50 @@ assert.deepEqual(
   completedGreenhouseReload.getProgressionSnapshot(),
   beforeRepeatedGreenhouseClaim,
   '완료 reload의 반복 온실 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
+completedGreenhouseReload.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 1240,
+});
+const greenhouseResolvedEntityIds = () =>
+  completedGreenhouseReload.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  greenhouseResolvedEntityIds().includes(SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID),
+  '해결 뒤에는 복구를 마치고 배관 앞에 남은 대기 재배원이 필요합니다.',
+);
+assert.equal(
+  greenhouseResolvedEntityIds().includes(SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID),
+  false,
+  '해결 뒤에는 입구 대기 상태의 재배원이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  greenhouseResolvedEntityIds().includes(SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID),
+  false,
+  '해결 뒤에는 작업 준비 상태의 재배원이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  greenhouseResolvedEntityIds().includes(SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID),
+  false,
+  '해결 뒤 라이벌 연결 정찰은 다음 지역으로 먼저 이동해야 합니다.',
+);
+assert.ok(itemIds(completedGreenhouseReload).includes('greenhouse-gate-lamp-lit'));
+assert.equal(
+  itemIds(completedGreenhouseReload).includes('greenhouse-gate-lamp-dim'),
+  false,
+  '해결 뒤에는 꺼진 재배등이 남아 있으면 안 됩니다.',
+);
+const greenhouseAfterLines = mapEntityLines(SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID).join('\n');
+assert.match(greenhouseAfterLines, /모종/);
+let greenhouseAfterSequence = 3_100;
+greenhouseAfterSequence = completeDialogue(completedGreenhouseReload, greenhouseAfterSequence);
+assert.equal(
+  completedGreenhouseReload
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_GREENHOUSE_REGION_ID).status,
+  'resolved',
+  '복구 완료 대화는 해결 상태를 바꾸면 안 됩니다.',
 );
 
 const snowFlowScene = createTestGameScene({

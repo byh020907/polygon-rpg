@@ -81,6 +81,15 @@ export const SCRAP_GREENHOUSE_PIPE_ROOM_ID = 'greenhouse-plains-broken-pipeline'
 export const SCRAP_GREENHOUSE_REACTOR_ROOM_ID = 'greenhouse-plains-reactor-house';
 export const SCRAP_GREENHOUSE_TECHNICIAN_CONVERSATION_ID = 'greenhouse-plains:technician-briefing';
 export const SCRAP_GREENHOUSE_FACILITY_CONVERSATION_ID = 'greenhouse-plains:facility-observed';
+export const SCRAP_GREENHOUSE_WAITING_CONVERSATION_ID = 'greenhouse-plains:waiting-grower';
+export const SCRAP_GREENHOUSE_WAITING_WORKING_CONVERSATION_ID =
+  'greenhouse-plains:waiting-grower-working';
+export const SCRAP_GREENHOUSE_WAITING_AFTER_CONVERSATION_ID =
+  'greenhouse-plains:waiting-grower-after';
+export const SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID = 'greenhouse-rival-scout';
+export const SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID = 'greenhouse-waiting-grower';
+export const SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID = 'greenhouse-waiting-grower-working';
+export const SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID = 'greenhouse-waiting-grower-after';
 export const SCRAP_GREENHOUSE_REPLACEMENT_CONVERSATION_ID =
   'greenhouse-plains:replacement-complete';
 export const SCRAP_GREENHOUSE_SEPARATION_CONVERSATION_ID = 'greenhouse-plains:machine-separated';
@@ -2249,6 +2258,94 @@ const greenhouseRoadheadRenderItems = [
     stroke: '#2d3222',
     order: 1,
   }),
+  item('greenhouse-waiting-grower-vest', rectangle(468, 338, 32, 88), '#426052', {
+    stroke: '#1a2b24',
+    lineWidth: 3,
+    order: 18,
+    label: '대기 재배원 · 필터 조끼',
+    role: 'greenhouse-technician',
+  }),
+  item('greenhouse-waiting-grower-visor', rectangle(470, 320, 28, 10), '#7fcf7a', {
+    stroke: '#294829',
+    lineWidth: 2,
+    order: 20,
+    label: '대기 재배원 · 보안경',
+    role: 'pressure-visor',
+  }),
+  item(
+    'greenhouse-waiting-grower-sensor',
+    [
+      { x: 446, y: 426 },
+      { x: 452, y: 422 },
+      { x: 476, y: 352 },
+      { x: 470, y: 350 },
+    ],
+    '#b9f1ce',
+    {
+      stroke: '#294829',
+      lineWidth: 2,
+      order: 20,
+      label: '대기 재배원 · 휴대 센서',
+      role: 'geothermal-sensor',
+    },
+  ),
+  item('greenhouse-rival-scout-torso', rectangle(1077, 334, 26, 92), '#56666a', {
+    stroke: '#232c2e',
+    lineWidth: 3,
+    order: 18,
+    label: '라이벌 · 정찰 작업복',
+    role: 'rival-apprentice',
+  }),
+  item('greenhouse-rival-scout-head', polygon(1090, 320, 13, 15, 7), '#c69c76', {
+    stroke: '#3a2c21',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 측량 고글',
+    role: 'rival-head',
+  }),
+  item('greenhouse-rival-scout-hook', rectangle(1105, 348, 8, 54), '#b9a66c', {
+    stroke: '#4d4223',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 정찰 갈고리',
+    role: 'salvage-hook',
+  }),
+  item('greenhouse-rival-scout-band', rectangle(1079, 358, 22, 7), '#75d6c4', {
+    stroke: '#2c4a47',
+    lineWidth: 1,
+    order: 21,
+    label: '라이벌 · 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item('greenhouse-gate-grower-vest', rectangle(1224, 338, 32, 88), '#426052', {
+    stroke: '#1a2b24',
+    lineWidth: 3,
+    order: 18,
+    label: '배관 앞 대기 재배원 · 필터 조끼',
+    role: 'greenhouse-technician',
+  }),
+  item('greenhouse-gate-grower-visor', rectangle(1226, 320, 28, 10), '#7fcf7a', {
+    stroke: '#294829',
+    lineWidth: 2,
+    order: 20,
+    label: '배관 앞 대기 재배원 · 보안경',
+    role: 'pressure-visor',
+  }),
+  item('greenhouse-gate-lamp-dim', rectangle(1262, 366, 14, 20), '#5c6650', {
+    stroke: '#2b3325',
+    lineWidth: 2,
+    order: 20,
+    label: '배관 앞 꺼진 재배등',
+    role: 'greenhouse-grow-lamp',
+  }),
+  item('greenhouse-gate-lamp-lit', rectangle(1262, 366, 14, 20), '#d8f2c8', {
+    stroke: '#3d5a34',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '배관 앞 켜진 재배등',
+    role: 'greenhouse-grow-lamp-lit',
+  }),
   item(
     'greenhouse-glasshouse-shell',
     [
@@ -3998,6 +4095,67 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               presentationProfileId: 'greenhouse-technician',
               campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
               campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 486, y: 354 },
+              interactionRange: 84,
+              speaker: '대기 재배원',
+              conversationId: SCRAP_GREENHOUSE_WAITING_CONVERSATION_ID,
+              conversationTitle: '모종을 지키는 재배원',
+              lines: [
+                '주 배관이 터진 채로 있어. 기술자는 저압 얘기만 하지만, 난 저 지열 배관이 다시 데워지는 걸 보고 싶어.',
+                '네가 기생 기계를 치우면 내가 먼저 들어가서 모종을 옮길게. 휴대 센서는 이미 챙겼어.',
+                '오른쪽 압력판은 봤어? 복구 시간 안에 끝내야 고대 병기가 평원 습지를 우회한다더군.',
+              ],
+              presentationProfileId: 'greenhouse-technician',
+            },
+            {
+              id: SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1090, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '먼저 와서 배관 구역을 봤어. 눈 막힌 옛 터널의 내한 cable을 확인하면 지열 배관 수리에 쓸 수 있대.',
+                '폐광 구조 현황판에서 밀폐 철판 규격도 확인해 봐. 설산 승무원은 열선 cable을, 폐광 반장은 철판을 알고 있대.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 재배원',
+              conversationId: SCRAP_GREENHOUSE_WAITING_WORKING_CONVERSATION_ID,
+              conversationTitle: '배관 앞에 선 대기 재배원',
+              lines: [
+                '통로가 열렸어. 재배등이 켜지면 내가 먼저 들어가서 모종을 옮길게.',
+                '넌 동력로 쪽을 맡아줘. 기생 기계가 또 배관을 노릴지도 몰라.',
+              ],
+              presentationProfileId: 'greenhouse-technician',
+              enabled: false,
+            },
+            {
+              id: SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 재배원',
+              conversationId: SCRAP_GREENHOUSE_WAITING_AFTER_CONVERSATION_ID,
+              conversationTitle: '복구를 마친 대기 재배원',
+              lines: [
+                '모종을 다 옮겼어! 재배등은 켜 둘게. 이제 이 온실은 저압 배관으로도 돌아가.',
+                '구형 동력로는 가져가. 네 로봇 동력원이 우리 평원을 습지로 바꾼 셈이니까.',
+              ],
+              presentationProfileId: 'greenhouse-technician',
+              enabled: false,
             },
             {
               id: 'greenhouse-facility-inspection',
@@ -5931,6 +6089,23 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       operations: [{ op: 'set-enabled', target: 'greenhouse-facility-inspection', value: true }],
     },
     {
+      id: 'greenhouse-cast-rival-scout',
+      priority: 262,
+      when: { fact: 'scrapRegionStatuses.greenhouse-plains', in: ['available', 'in-progress'] },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-cast-working',
+      priority: 264,
+      when: { fact: 'scrapRegionStatuses.greenhouse-plains', eq: 'in-progress' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID, value: true },
+      ],
+    },
+    {
       id: 'greenhouse-core-event-started',
       priority: 270,
       when: { fact: 'scrapRegionStatuses.greenhouse-plains', in: ['in-progress', 'resolved'] },
@@ -6060,6 +6235,22 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           property: 'label',
           value: 'ARCANE REACTOR · 차고 수송 완료',
         },
+      ],
+    },
+    {
+      id: 'greenhouse-cast-after',
+      priority: 322,
+      when: {
+        fact: 'scrapRegionStageIds.greenhouse-plains',
+        eq: 'greenhouse-plains:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'greenhouse-gate-lamp-dim', value: false },
+        { op: 'set-enabled', target: 'greenhouse-gate-lamp-lit', value: true },
       ],
     },
     {

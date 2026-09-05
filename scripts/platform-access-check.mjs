@@ -383,6 +383,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-shipyard-roadhead',
       'scrap-shipyard-boss',
       'scrap-shipyard-resolved',
+      'scrap-greenhouse-roadhead',
       'scrap-greenhouse-boss',
       'scrap-greenhouse-resolved',
       'scrap-snow-boss',
