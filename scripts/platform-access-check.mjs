@@ -377,6 +377,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-garage-analysis',
       'scrap-garage-0',
       'scrap-issue-window',
+      'scrap-mine-roadhead',
       'scrap-mine-boss',
       'scrap-mine-resolved',
       'scrap-shipyard-boss',

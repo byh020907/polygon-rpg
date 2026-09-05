@@ -20,6 +20,10 @@ import {
   SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID,
+  SCRAP_MINE_WAITING_MINER_ENTITY_ID,
+  SCRAP_MINE_WAITING_WORKING_ENTITY_ID,
+  SCRAP_MINE_WAITING_AFTER_ENTITY_ID,
+  SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
@@ -1987,6 +1991,144 @@ assert.doesNotMatch(
 );
 assert.ok(itemIds(travelScene).includes('mine-roadhead-warning-post'));
 
+const mineRoadheadEntityIds = () =>
+  travelScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  mineRoadheadEntityIds().includes(SCRAP_MINE_WAITING_MINER_ENTITY_ID),
+  '폐광 roadhead에는 갇힌 동료를 기다리는 생활 당사자 광부가 필요합니다.',
+);
+assert.ok(
+  mineRoadheadEntityIds().includes(SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID),
+  '폐광 roadhead에는 항구 cable 소문을 가져오는 라이벌 연결 정찰이 필요합니다.',
+);
+assert.equal(
+  mineRoadheadEntityIds().includes(SCRAP_MINE_WAITING_WORKING_ENTITY_ID),
+  false,
+  '사건 시작 전에는 갱도 앞 작업 상태의 대기 광부가 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  mineRoadheadEntityIds().includes(SCRAP_MINE_WAITING_AFTER_ENTITY_ID),
+  false,
+  '해결 전에는 구조 완료 상태의 대기 광부가 미리 열리면 안 됩니다.',
+);
+assert.ok(itemIds(travelScene).includes('mine-waiting-miner-coat'));
+assert.ok(itemIds(travelScene).includes('mine-waiting-miner-pickaxe'));
+assert.ok(itemIds(travelScene).includes('mine-rival-scout-torso'));
+assert.ok(itemIds(travelScene).includes('mine-rival-scout-band'));
+assert.ok(itemIds(travelScene).includes('mine-gate-lantern-dim'));
+assert.equal(
+  itemIds(travelScene).includes('mine-gate-lantern-lit'),
+  false,
+  '해결 전에는 켜진 구조 등을 보여주면 안 됩니다.',
+);
+const waitingMinerLines = mapEntityLines(SCRAP_MINE_WAITING_MINER_ENTITY_ID).join('\n');
+assert.match(waitingMinerLines, /갱도/);
+assert.match(waitingMinerLines, /레일/);
+const mineRivalScoutLines = mapEntityLines(SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID).join('\n');
+assert.match(mineRivalScoutLines, /cable/);
+assert.match(mineRivalScoutLines, /크레인/);
+assert.match(mineRivalScoutLines, /온실/);
+
+const mineCastScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: travelScene.getProgressionSnapshot(),
+});
+let mineCastSequence = 200;
+const mineCastRegionBefore = mineCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+mineCastScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 486,
+});
+mineCastSequence = completeDialogue(mineCastScene, mineCastSequence);
+const mineCastRegionAfterMiner = mineCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(
+  mineCastRegionAfterMiner.eventStageKind,
+  mineCastRegionBefore.eventStageKind,
+  '대기 광부 대화는 지역 사건 stage를 바꾸면 안 됩니다.',
+);
+assert.equal(
+  mineCastRegionAfterMiner.status,
+  mineCastRegionBefore.status,
+  '대기 광부 대화는 지역 상태를 바꾸면 안 됩니다.',
+);
+mineCastScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 1090,
+});
+mineCastScene.update(STEP_SECONDS, input({ right: true }));
+const mineRivalDialogue = mineCastScene.getWorldStatus().dialogue;
+assert.equal(
+  mineRivalDialogue.active,
+  true,
+  '라이벌 연결 정찰 ambient가 자동으로 시작되어야 합니다.',
+);
+assert.equal(mineRivalDialogue.presentationMode, 'ambient');
+assert.equal(mineRivalDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(mineRivalDialogue.interactionId, SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID);
+const mineRivalStartX = mineCastScene.position.x;
+mineCastScene.update(
+  STEP_SECONDS,
+  input({ right: true, jump: true, jumpSequence: mineCastSequence }),
+);
+mineCastSequence += 1;
+assert.ok(
+  mineCastScene.position.x > mineRivalStartX,
+  '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  mineCastScene.getWorldStatus().campaign.regions.find((region) => region.id === 'abandoned-mine')
+    .status,
+  mineCastRegionBefore.status,
+  '라이벌 연결 정찰 ambient는 지역 상태를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && mineCastScene.getWorldStatus().dialogue.active; tick += 1) {
+  mineCastScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  mineCastScene.getWorldStatus().dialogue.active,
+  false,
+  '라이벌 연결 정찰 ambient는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+const mineRoadheadQaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+mineRoadheadQaScene.setVisualQaScrapRegionState({
+  regionId: 'abandoned-mine',
+  stageKind: 'npc-briefing',
+  status: 'available',
+});
+mineRoadheadQaScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 730,
+});
+assert.ok(
+  mineRoadheadQaScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('mine-cast-rival-scout'),
+  'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
+);
+assert.ok(itemIds(mineRoadheadQaScene).includes('mine-waiting-miner-helmet'));
+assert.ok(itemIds(mineRoadheadQaScene).includes('mine-rival-scout-hook'));
+assert.equal(
+  itemIds(mineRoadheadQaScene).includes('mine-gate-lantern-lit'),
+  false,
+  'roadhead QA 상태에서는 켜진 구조 등이 없어야 합니다.',
+);
+const mineRoadheadQaRequest = readVisualQaRequest(
+  '?visualQa=1&gameStart=scrap-mine-roadhead&visualQaRenderer=polygon&visualQaPhase=active',
+);
+assert.equal(mineRoadheadQaRequest.scenario.roomId, SCRAP_MINE_ROAD_ROOM_ID);
+assert.equal(mineRoadheadQaRequest.scenario.x, 730);
+assert.ok(
+  mineRoadheadQaRequest.scenario.expectation.expectedItems.includes('mine-rival-scout-torso'),
+);
+
 const mineFlowScene = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: travelScene.getProgressionSnapshot(),
@@ -2048,6 +2190,33 @@ assert.ok(
     .getResolvedSnapshot()
     .portals.some((portal) => portal.id === 'mine-roadhead-tunnel-portal'),
 );
+
+const mineInProgressEntityIds = () =>
+  mineFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.equal(
+  mineInProgressEntityIds().includes(SCRAP_MINE_WAITING_MINER_ENTITY_ID),
+  false,
+  '사건 진행 중에는 입구에서 기다리던 대기 광부가 갱도 앞으로 이동해야 합니다.',
+);
+assert.ok(
+  mineInProgressEntityIds().includes(SCRAP_MINE_WAITING_WORKING_ENTITY_ID),
+  '사건 진행 중에는 갱도 앞에서 먼저 들어갈 준비를 하는 대기 광부가 필요합니다.',
+);
+assert.ok(
+  mineInProgressEntityIds().includes(SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID),
+  '사건 진행 중에도 라이벌 연결 정찰이 roadhead에 남아 있어야 합니다.',
+);
+mineFlowScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 1240,
+});
+mineJumpSequence = completeDialogue(mineFlowScene, mineJumpSequence);
+mineRegion = mineFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === 'abandoned-mine');
+assert.equal(mineRegion.status, 'in-progress');
+assert.equal(mineRegion.collected, false);
 
 mineFlowScene.setVisualQaLocation({
   regionId: SCRAP_MINE_ROAD_REGION_ID,
@@ -2145,6 +2314,50 @@ assert.ok(!itemIds(completedMineReload).includes('garage-robot-zero-label'));
 assert.equal(completedMineReload.getWorldStatus().journeyLabel, '차고 조립 갱신 · 로봇 20%');
 assert.match(completedMineReload.getWorldStatus().encounterHint, /1\/5 PARTS · ROBOT 20%/);
 assert.equal(completedMineReload.getWorldStatus().wardLabel, '1/5 부품 · 로봇 20%');
+
+completedMineReload.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 1240,
+});
+const mineResolvedEntityIds = () =>
+  completedMineReload.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  mineResolvedEntityIds().includes(SCRAP_MINE_WAITING_AFTER_ENTITY_ID),
+  '해결 뒤에는 구조를 마치고 갱도 앞에 남은 대기 광부가 필요합니다.',
+);
+assert.equal(
+  mineResolvedEntityIds().includes(SCRAP_MINE_WAITING_MINER_ENTITY_ID),
+  false,
+  '해결 뒤에는 입구 대기 상태의 광부가 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  mineResolvedEntityIds().includes(SCRAP_MINE_WAITING_WORKING_ENTITY_ID),
+  false,
+  '해결 뒤에는 작업 준비 상태의 광부가 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  mineResolvedEntityIds().includes(SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID),
+  false,
+  '해결 뒤 라이벌 연결 정찰은 다음 지역으로 먼저 이동해야 합니다.',
+);
+assert.ok(itemIds(completedMineReload).includes('mine-gate-lantern-lit'));
+assert.equal(
+  itemIds(completedMineReload).includes('mine-gate-lantern-dim'),
+  false,
+  '해결 뒤에는 꺼진 구조 등이 남아 있으면 안 됩니다.',
+);
+const mineAfterLines = mapEntityLines(SCRAP_MINE_WAITING_AFTER_ENTITY_ID).join('\n');
+assert.match(mineAfterLines, /나왔어/);
+let mineAfterSequence = 500;
+mineAfterSequence = completeDialogue(completedMineReload, mineAfterSequence);
+assert.equal(
+  completedMineReload
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === 'abandoned-mine').status,
+  'resolved',
+  '구조 완료 대화는 해결 상태를 바꾸면 안 됩니다.',
+);
 
 const shipyardFlowScene = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
@@ -3014,6 +3227,18 @@ assert.deepEqual(mineReload.mapRuntime.getActiveLocation(), {
 assert.equal(mineReload.getWorldStatus().campaign.currentLocationId, 'abandoned-mine');
 assert.equal(mineReload.getWorldStatus().story.beatId, 'scrap-region:abandoned-mine:roadhead');
 assert.ok(itemIds(mineReload).includes('mine-roadhead-return-sign'));
+assert.ok(
+  mineReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_MINE_WAITING_MINER_ENTITY_ID),
+  '이동 reload 뒤에도 대기 광부가 유지되어야 합니다.',
+);
+assert.ok(
+  mineReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID),
+  '이동 reload 뒤에도 라이벌 연결 정찰이 유지되어야 합니다.',
+);
 
 campaignTravelRequest = null;
 travelScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 12 }));

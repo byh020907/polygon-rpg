@@ -46,6 +46,13 @@ export const SCRAP_MINE_TUNNEL_ROOM_ID = 'abandoned-mine-rescue-tunnel';
 export const SCRAP_MINE_MACHINE_ROOM_ID = 'abandoned-mine-machine-yard';
 export const SCRAP_MINE_FOREMAN_CONVERSATION_ID = 'abandoned-mine:foreman-briefing';
 export const SCRAP_MINE_FACILITY_CONVERSATION_ID = 'abandoned-mine:facility-observed';
+export const SCRAP_MINE_WAITING_CONVERSATION_ID = 'abandoned-mine:waiting-miner';
+export const SCRAP_MINE_WAITING_WORKING_CONVERSATION_ID = 'abandoned-mine:waiting-miner-working';
+export const SCRAP_MINE_WAITING_AFTER_CONVERSATION_ID = 'abandoned-mine:waiting-miner-after';
+export const SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID = 'mine-rival-scout';
+export const SCRAP_MINE_WAITING_MINER_ENTITY_ID = 'mine-waiting-miner';
+export const SCRAP_MINE_WAITING_WORKING_ENTITY_ID = 'mine-waiting-miner-working';
+export const SCRAP_MINE_WAITING_AFTER_ENTITY_ID = 'mine-waiting-miner-after';
 export const SCRAP_MINE_REPLACEMENT_CONVERSATION_ID = 'abandoned-mine:replacement-complete';
 export const SCRAP_MINE_SEPARATION_CONVERSATION_ID = 'abandoned-mine:machine-separated';
 export const SCRAP_MINE_PART_CONVERSATION_ID = 'abandoned-mine:part-claimed';
@@ -1193,6 +1200,31 @@ const mineRoadheadRenderItems = [
     label: '동네 고물상 연결로 · 1구간',
     role: 'long-distance-road-sign',
   }),
+  item('mine-waiting-miner-coat', rectangle(468, 338, 32, 88), '#4e4238', {
+    stroke: '#241e1a',
+    lineWidth: 3,
+    order: 18,
+    label: '대기 광부 · 분진 작업복',
+    role: 'mine-worker',
+  }),
+  item('mine-waiting-miner-helmet', polygon(484, 324, 19, 14, 8, Math.PI / 8), '#b78a3e', {
+    stroke: '#3c2c1d',
+    lineWidth: 3,
+    order: 20,
+    label: '대기 광부 · 광부등',
+    role: 'mining-helmet',
+  }),
+  item(
+    'mine-waiting-miner-pickaxe',
+    [
+      { x: 446, y: 426 },
+      { x: 452, y: 422 },
+      { x: 476, y: 352 },
+      { x: 470, y: 350 },
+    ],
+    '#9b8c73',
+    { stroke: '#2b2822', lineWidth: 2, order: 20, label: '대기 광부 · 곡괭이', role: 'pickaxe' },
+  ),
   item('mine-roadhead-warning-post', rectangle(510, 286, 24, 140), '#c98945', {
     stroke: '#30231b',
     lineWidth: 3,
@@ -1249,6 +1281,63 @@ const mineRoadheadRenderItems = [
     lineWidth: 2,
     order: 17,
     role: 'facility-warning-signal',
+  }),
+  item('mine-rival-scout-torso', rectangle(1077, 334, 26, 92), '#56666a', {
+    stroke: '#232c2e',
+    lineWidth: 3,
+    order: 18,
+    label: '라이벌 · 정찰 작업복',
+    role: 'rival-apprentice',
+  }),
+  item('mine-rival-scout-head', polygon(1090, 320, 13, 15, 7), '#c69c76', {
+    stroke: '#3a2c21',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 측량 고글',
+    role: 'rival-head',
+  }),
+  item('mine-rival-scout-hook', rectangle(1105, 348, 8, 54), '#b9a66c', {
+    stroke: '#4d4223',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 정찰 갈고리',
+    role: 'salvage-hook',
+  }),
+  item('mine-rival-scout-band', rectangle(1079, 358, 22, 7), '#75d6c4', {
+    stroke: '#2c4a47',
+    lineWidth: 1,
+    order: 21,
+    label: '라이벌 · 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item('mine-gate-miner-coat', rectangle(1224, 338, 32, 88), '#4e4238', {
+    stroke: '#241e1a',
+    lineWidth: 3,
+    order: 18,
+    label: '구조 갱도 앞 대기 광부 · 분진 작업복',
+    role: 'mine-worker',
+  }),
+  item('mine-gate-miner-helmet', polygon(1240, 324, 19, 14, 8, Math.PI / 8), '#b78a3e', {
+    stroke: '#3c2c1d',
+    lineWidth: 3,
+    order: 20,
+    label: '구조 갱도 앞 대기 광부 · 광부등',
+    role: 'mining-helmet',
+  }),
+  item('mine-gate-lantern-dim', rectangle(1262, 366, 14, 20), '#6b5a3e', {
+    stroke: '#2b251c',
+    lineWidth: 2,
+    order: 20,
+    label: '구조 갱도 앞 꺼진 구조 등',
+    role: 'rescue-lantern',
+  }),
+  item('mine-gate-lantern-lit', rectangle(1262, 366, 14, 20), '#f7e7aa', {
+    stroke: '#5f4a24',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '구조 갱도 앞 켜진 구조 등',
+    role: 'rescue-lantern-lit',
   }),
   ...createEnvironmentPortalLandmarkItems('mine-rescue-tunnel-gate', 1346, 426, {
     style: 'sealed-stone',
@@ -3327,6 +3416,21 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               campaignStageKind: 'npc-briefing',
             },
             {
+              id: SCRAP_MINE_WAITING_MINER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 486, y: 354 },
+              interactionRange: 84,
+              speaker: '대기 광부',
+              conversationId: SCRAP_MINE_WAITING_CONVERSATION_ID,
+              conversationTitle: '갇힌 동료를 기다리는 광부',
+              lines: [
+                '셋이 아직 갱도 안에 있어. 반장은 버팀목 얘기만 하지만, 난 저 레일이 다시 깔리는 걸 보고 싶어.',
+                '네가 구조 길을 열면 내가 먼저 들어가서 동료들을 데리고 나올게. 곡괭이는 이미 챙겼어.',
+                '오른쪽 현황판은 봤어? 작업 시간 안에 끝내야 고대 병기가 산길을 우회한다더군.',
+              ],
+              presentationProfileId: 'mine-worker',
+            },
+            {
               id: 'mine-facility-inspection',
               kind: 'story-interaction',
               position: { x: 889, y: 354 },
@@ -3341,6 +3445,52 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               campaignRegionId: 'abandoned-mine',
               campaignStageKind: 'facility-observed',
               requestCampaignEventStart: true,
+              enabled: false,
+            },
+            {
+              id: SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1090, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '먼저 와서 갱도 입구를 봤어. 무너진 승강기를 끌어올리려면 항구 조선소의 굵은 크레인 cable이 필요하대.',
+                '점거된 건선거를 되찾으면 cable을 내어준대. 온실 기술자도 압력 버팀쇠 규격을 알고 있으니 들렀다 가.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: SCRAP_MINE_WAITING_WORKING_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 광부',
+              conversationId: SCRAP_MINE_WAITING_WORKING_CONVERSATION_ID,
+              conversationTitle: '갱도 앞에 선 대기 광부',
+              lines: [
+                '통로가 열렸어. 구조 등이 켜지면 내가 먼저 들어가서 동료들 손을 잡을게.',
+                '넌 굴착기 쪽을 맡아줘. 선점 수거반이 또 레일을 노릴지도 몰라.',
+              ],
+              presentationProfileId: 'mine-worker',
+              enabled: false,
+            },
+            {
+              id: SCRAP_MINE_WAITING_AFTER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 광부',
+              conversationId: SCRAP_MINE_WAITING_AFTER_CONVERSATION_ID,
+              conversationTitle: '구조를 마친 대기 광부',
+              lines: [
+                '셋 다 나왔어! 구조 등을 켜 둘게. 이제 이 갱도는 다시 버팀목으로 지탱하면 돼.',
+                '굴착기 하체는 가져가. 네 로봇 다리가 우리 산길을 우회시킨 셈이니까.',
+              ],
+              presentationProfileId: 'mine-worker',
               enabled: false,
             },
           ],
@@ -5274,6 +5424,21 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       operations: [{ op: 'set-enabled', target: 'mine-facility-inspection', value: true }],
     },
     {
+      id: 'mine-cast-rival-scout',
+      priority: 122,
+      when: { fact: 'scrapRegionStatuses.abandoned-mine', in: ['available', 'in-progress'] },
+      operations: [{ op: 'set-enabled', target: SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID, value: true }],
+    },
+    {
+      id: 'mine-cast-working',
+      priority: 124,
+      when: { fact: 'scrapRegionStatuses.abandoned-mine', eq: 'in-progress' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_MINE_WAITING_MINER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_MINE_WAITING_WORKING_ENTITY_ID, value: true },
+      ],
+    },
+    {
       id: 'mine-core-event-started',
       priority: 130,
       when: { fact: 'scrapRegionStatuses.abandoned-mine', in: ['in-progress', 'resolved'] },
@@ -5400,6 +5565,19 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           property: 'label',
           value: 'WALKER DRIVE · 차고 수송 완료',
         },
+      ],
+    },
+    {
+      id: 'mine-cast-after',
+      priority: 182,
+      when: { fact: 'scrapRegionStageIds.abandoned-mine', eq: 'abandoned-mine:campaign-updated' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_MINE_WAITING_MINER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_MINE_WAITING_WORKING_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_MINE_WAITING_AFTER_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'mine-gate-lantern-dim', value: false },
+        { op: 'set-enabled', target: 'mine-gate-lantern-lit', value: true },
       ],
     },
     {
