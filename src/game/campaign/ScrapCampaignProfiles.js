@@ -324,6 +324,8 @@ const primaryIssues = [
         objective: '폐광 구조 현황판에서 굴착기용 밀폐 철판 규격을 확인하세요.',
         completionStageKind: 'facility-observed',
         completionEvidence: '폐광 구조 설비 현장 확인',
+        encounterLabel: '밀폐 철판 절취 세력 제압',
+        requiredEncounterIds: ['mine-seal-plate-raider'],
       },
     ],
   }),

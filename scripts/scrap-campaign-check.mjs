@@ -432,6 +432,7 @@ function focusedReturn() {
 }
 
 focusedObserve('abandoned-mine');
+focusedCampaign = clearLinkedEncounters(focusedCampaign, 'abandoned-mine', 'focused');
 focusedReturn();
 focusedObserve('harbor-shipyard');
 focusedCampaign = clearLinkedEncounters(focusedCampaign, 'harbor-shipyard', 'focused');
@@ -1143,11 +1144,101 @@ assert.equal(reversedThermalReadModel.issueWindow.completedLinkedCount, 1);
 assert.equal(reversedThermalReadModel.issueWindow.linked[0].completed, true);
 greenhouseIssue = progressRegionToStage(greenhouseIssue, 'abandoned-mine', 'facility-observed');
 greenhouseSnowReadModel = getScrapCampaignReadModel(greenhouseIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(greenhouseSnowReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[1].completed, false);
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[1].statusLabel, '현장 전투 필요');
+assert.equal(
+  greenhouseSnowReadModel.issueWindow.linked[1].encounterLabel,
+  '밀폐 철판 절취 세력 제압',
+);
+assert.deepEqual(greenhouseSnowReadModel.issueWindow.linked[1].requiredEncounterIds, [
+  'mine-seal-plate-raider',
+]);
+assert.deepEqual(greenhouseSnowReadModel.issueWindow.linked[1].remainingEncounterIds, [
+  'mine-seal-plate-raider',
+]);
+assert.equal(
+  greenhouseSnowReadModel.issueWindow.linked[1].completionEvidence,
+  '폐광 구조 설비 현장 확인',
+);
+assert.ok(
+  ENCOUNTER_PROFILES['mine-seal-plate-raider'],
+  '연결 전투 profile이 필요합니다: mine-seal-plate-raider',
+);
+assert.equal(ENCOUNTER_PROFILES['mine-seal-plate-raider'].role, 'field');
+assert.equal(ENCOUNTER_PROFILES['mine-seal-plate-raider'].species, 'human-salvager');
+const blockedSealEventPreview = previewScrapCampaignAction(
+  toScrapCampaignSnapshot({ ...greenhouseIssue, currentLocationId: 'greenhouse-plains' }),
+  regionEventStartAction('greenhouse-plains'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedSealEventPreview.allowed, false);
+assert.deepEqual(blockedSealEventPreview.blockingIssueIds, ['greenhouse-mine-seal-plate']);
+const sealEncounterPreview = previewScrapCampaignAction(
+  greenhouseIssue,
+  linkedEncounterAction('abandoned-mine', 'mine-seal-plate-raider', 'preview'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(sealEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(sealEncounterPreview.costSegments, 0);
+assert.equal(sealEncounterPreview.willGameOver, false);
+greenhouseIssue = commit(
+  greenhouseIssue,
+  linkedEncounterAction('abandoned-mine', 'mine-seal-plate-raider', 'seal'),
+);
+greenhouseSnowReadModel = getScrapCampaignReadModel(greenhouseIssue, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(greenhouseSnowReadModel.issueWindow.completedLinkedCount, 2);
 assert.deepEqual(
   greenhouseSnowReadModel.issueWindow.linked.map((issue) => issue.completed),
   [true, true],
 );
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[1].statusLabel, '현장 해결');
+assert.deepEqual(greenhouseSnowReadModel.issueWindow.linked[1].remainingEncounterIds, []);
+assert.deepEqual(greenhouseIssue.clearedEncounterIds, [
+  'snow-thermal-raider',
+  'mine-seal-plate-raider',
+]);
+assert.throws(
+  () =>
+    commit(
+      greenhouseIssue,
+      linkedEncounterAction('abandoned-mine', 'mine-seal-plate-raider', 'seal-retry'),
+    ),
+  /이미 기록한 연결 전투/,
+  '같은 연결 전투를 중복 기록할 수 없습니다.',
+);
+const repeatedSealEncounter = commitScrapCampaignAction(
+  greenhouseIssue,
+  linkedEncounterAction('abandoned-mine', 'mine-seal-plate-raider', 'seal'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(repeatedSealEncounter.changed, false);
+assert.deepEqual(repeatedSealEncounter.snapshot, greenhouseIssue);
+let reversedSealOrder = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'greenhouse-plains' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+reversedSealOrder = commit(
+  reversedSealOrder,
+  regionStageAction('greenhouse-plains', 'npc-briefing'),
+);
+reversedSealOrder = commit(
+  reversedSealOrder,
+  regionStageAction('greenhouse-plains', 'facility-observed'),
+);
+reversedSealOrder = commit(reversedSealOrder, issueFocusAction('greenhouse-plains'));
+reversedSealOrder = progressRegionToStage(reversedSealOrder, 'abandoned-mine', 'npc-briefing');
+reversedSealOrder = toScrapCampaignSnapshot(
+  { ...reversedSealOrder, currentLocationId: 'abandoned-mine' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+reversedSealOrder = commit(
+  reversedSealOrder,
+  linkedEncounterAction('abandoned-mine', 'mine-seal-plate-raider', 'reversed'),
+);
+reversedSealOrder = progressRegionToStage(reversedSealOrder, 'abandoned-mine', 'facility-observed');
+const reversedSealReadModel = getScrapCampaignReadModel(reversedSealOrder, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(reversedSealReadModel.issueWindow.linked[1].completed, true);
 const greenhouseBothLinksResolvedPreview = previewScrapCampaignAction(
   toScrapCampaignSnapshot({ ...greenhouseIssue, currentLocationId: 'greenhouse-plains' }),
   regionEventStartAction('greenhouse-plains'),
@@ -1433,7 +1524,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
-      'mine-harbor-greenhouse-and-shipyard-coolant-snow-and-greenhouse-thermal-linked-encounter-requirement-and-order-independent-clearance',
+      'mine-harbor-greenhouse-and-shipyard-coolant-snow-and-greenhouse-thermal-and-greenhouse-seal-linked-encounter-requirement-and-order-independent-clearance',
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
