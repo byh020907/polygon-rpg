@@ -24,6 +24,10 @@ import {
   SCRAP_MINE_WAITING_WORKING_ENTITY_ID,
   SCRAP_MINE_WAITING_AFTER_ENTITY_ID,
   SCRAP_MINE_RIVAL_SCOUT_ENTITY_ID,
+  SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID,
+  SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID,
+  SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID,
+  SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
@@ -2399,6 +2403,147 @@ assert.doesNotMatch(
   /학원|교관|마법 생물/,
 );
 
+const shipyardRoadheadEntityIds = () =>
+  shipyardFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  shipyardRoadheadEntityIds().includes(SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID),
+  '항구 roadhead에는 출항을 기다리는 생활 당사자 갑판원이 필요합니다.',
+);
+assert.ok(
+  shipyardRoadheadEntityIds().includes(SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID),
+  '항구 roadhead에는 폐광 cable 소문을 가져오는 라이벌 연결 정찰이 필요합니다.',
+);
+assert.equal(
+  shipyardRoadheadEntityIds().includes(SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID),
+  false,
+  '사건 시작 전에는 건선거 앞 작업 상태의 대기 갑판원이 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  shipyardRoadheadEntityIds().includes(SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID),
+  false,
+  '해결 전에는 수리를 마친 상태의 대기 갑판원이 미리 열리면 안 됩니다.',
+);
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-waiting-crew-apron'));
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-waiting-crew-hook'));
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-rival-scout-torso'));
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-rival-scout-band'));
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-gate-lamp-dim'));
+assert.equal(
+  itemIds(shipyardFlowScene).includes('shipyard-gate-lamp-lit'),
+  false,
+  '해결 전에는 켜진 도크 작업등을 보여주면 안 됩니다.',
+);
+const waitingCrewLines = mapEntityLines(SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID).join('\n');
+assert.match(waitingCrewLines, /cable/);
+assert.match(waitingCrewLines, /현황판/);
+const shipyardRivalScoutLines = mapEntityLines(SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID).join('\n');
+assert.match(shipyardRivalScoutLines, /cable/);
+assert.match(shipyardRivalScoutLines, /폐광/);
+assert.match(shipyardRivalScoutLines, /온실/);
+
+const shipyardCastScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: shipyardFlowScene.getProgressionSnapshot(),
+});
+let shipyardCastSequence = 200;
+const shipyardCastRegionBefore = shipyardCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+shipyardCastScene.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  x: 486,
+});
+shipyardCastSequence = completeDialogue(shipyardCastScene, shipyardCastSequence);
+const shipyardCastRegionAfterCrew = shipyardCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+assert.equal(
+  shipyardCastRegionAfterCrew.eventStageKind,
+  shipyardCastRegionBefore.eventStageKind,
+  '대기 갑판원 대화는 지역 사건 stage를 바꾸면 안 됩니다.',
+);
+assert.equal(
+  shipyardCastRegionAfterCrew.status,
+  shipyardCastRegionBefore.status,
+  '대기 갑판원 대화는 지역 상태를 바꾸면 안 됩니다.',
+);
+shipyardCastScene.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  x: 1090,
+});
+shipyardCastScene.update(STEP_SECONDS, input({ right: true }));
+const shipyardRivalDialogue = shipyardCastScene.getWorldStatus().dialogue;
+assert.equal(
+  shipyardRivalDialogue.active,
+  true,
+  '라이벌 연결 정찰 ambient가 자동으로 시작되어야 합니다.',
+);
+assert.equal(shipyardRivalDialogue.presentationMode, 'ambient');
+assert.equal(shipyardRivalDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(shipyardRivalDialogue.interactionId, SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID);
+const shipyardRivalStartX = shipyardCastScene.position.x;
+shipyardCastScene.update(
+  STEP_SECONDS,
+  input({ right: true, jump: true, jumpSequence: shipyardCastSequence }),
+);
+shipyardCastSequence += 1;
+assert.ok(
+  shipyardCastScene.position.x > shipyardRivalStartX,
+  '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  shipyardCastScene
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID).status,
+  shipyardCastRegionBefore.status,
+  '라이벌 연결 정찰 ambient는 지역 상태를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && shipyardCastScene.getWorldStatus().dialogue.active; tick += 1) {
+  shipyardCastScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  shipyardCastScene.getWorldStatus().dialogue.active,
+  false,
+  '라이벌 연결 정찰 ambient는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+const shipyardRoadheadQaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+shipyardRoadheadQaScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  stageKind: 'npc-briefing',
+  status: 'available',
+});
+shipyardRoadheadQaScene.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  x: 730,
+});
+assert.ok(
+  shipyardRoadheadQaScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('shipyard-cast-rival-scout'),
+  'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
+);
+assert.ok(itemIds(shipyardRoadheadQaScene).includes('shipyard-waiting-crew-mask'));
+assert.ok(itemIds(shipyardRoadheadQaScene).includes('shipyard-rival-scout-hook'));
+assert.equal(
+  itemIds(shipyardRoadheadQaScene).includes('shipyard-gate-lamp-lit'),
+  false,
+  'roadhead QA 상태에서는 켜진 도크 작업등이 없어야 합니다.',
+);
+const shipyardRoadheadQaRequest = readVisualQaRequest(
+  '?visualQa=1&gameStart=scrap-shipyard-roadhead&visualQaRenderer=polygon&visualQaPhase=active',
+);
+assert.equal(shipyardRoadheadQaRequest.scenario.roomId, SCRAP_SHIPYARD_ROAD_ROOM_ID);
+assert.equal(shipyardRoadheadQaRequest.scenario.x, 730);
+assert.ok(
+  shipyardRoadheadQaRequest.scenario.expectation.expectedItems.includes(
+    'shipyard-rival-scout-torso',
+  ),
+);
+
 setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, 'npc-briefing');
 shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
 let shipyardRegion = shipyardFlowScene
@@ -2431,6 +2576,33 @@ shipyardRegion = shipyardFlowScene
 assert.equal(shipyardRegion.status, 'in-progress');
 assert.equal(shipyardFlowScene.getWorldStatus().campaign.phaseLabel, '낮');
 assert.equal(shipyardFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-26');
+
+const shipyardInProgressEntityIds = () =>
+  shipyardFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.equal(
+  shipyardInProgressEntityIds().includes(SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID),
+  false,
+  '사건 진행 중에는 입구에서 기다리던 대기 갑판원이 건선거 앞으로 이동해야 합니다.',
+);
+assert.ok(
+  shipyardInProgressEntityIds().includes(SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID),
+  '사건 진행 중에는 건선거 앞에서 먼저 올라갈 준비를 하는 대기 갑판원이 필요합니다.',
+);
+assert.ok(
+  shipyardInProgressEntityIds().includes(SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID),
+  '사건 진행 중에도 라이벌 연결 정찰이 roadhead에 남아 있어야 합니다.',
+);
+shipyardFlowScene.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  x: 1240,
+});
+shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
+shipyardRegion = shipyardFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+assert.equal(shipyardRegion.status, 'in-progress');
+assert.equal(shipyardRegion.collected, false);
 
 setAtPortalToRoom(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, SCRAP_SHIPYARD_DRYDOCK_ROOM_ID);
 shipyardFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: shipyardJumpSequence }));
@@ -2538,6 +2710,50 @@ assert.deepEqual(
   completedShipyardReload.getProgressionSnapshot(),
   beforeRepeatedShipyardClaim,
   '완료 reload의 반복 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
+completedShipyardReload.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  x: 1240,
+});
+const shipyardResolvedEntityIds = () =>
+  completedShipyardReload.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  shipyardResolvedEntityIds().includes(SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID),
+  '해결 뒤에는 수리를 마치고 건선거 앞에 남은 대기 갑판원이 필요합니다.',
+);
+assert.equal(
+  shipyardResolvedEntityIds().includes(SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID),
+  false,
+  '해결 뒤에는 입구 대기 상태의 갑판원이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  shipyardResolvedEntityIds().includes(SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID),
+  false,
+  '해결 뒤에는 작업 준비 상태의 갑판원이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  shipyardResolvedEntityIds().includes(SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID),
+  false,
+  '해결 뒤 라이벌 연결 정찰은 다음 지역으로 먼저 이동해야 합니다.',
+);
+assert.ok(itemIds(completedShipyardReload).includes('shipyard-gate-lamp-lit'));
+assert.equal(
+  itemIds(completedShipyardReload).includes('shipyard-gate-lamp-dim'),
+  false,
+  '해결 뒤에는 꺼진 도크 작업등이 남아 있으면 안 됩니다.',
+);
+const shipyardAfterLines = mapEntityLines(SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID).join('\n');
+assert.match(shipyardAfterLines, /출항/);
+let shipyardAfterSequence = 1_100;
+shipyardAfterSequence = completeDialogue(completedShipyardReload, shipyardAfterSequence);
+assert.equal(
+  completedShipyardReload
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID).status,
+  'resolved',
+  '수리 완료 대화는 해결 상태를 바꾸면 안 됩니다.',
 );
 
 const greenhouseFlowScene = createTestGameScene({

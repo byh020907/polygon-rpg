@@ -17,6 +17,7 @@ import {
   SCRAP_QUARRY_CUTTER_ROOM_ID,
   SCRAP_SHIPYARD_CRANE_ROOM_ID,
   SCRAP_SHIPYARD_REGION_ID,
+  SCRAP_SHIPYARD_ROAD_ROOM_ID,
 } from '../game/maps/scrapAwakening.js';
 
 export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
@@ -716,6 +717,36 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'combat-enemy-conveyor-ram-plate',
         'mine-walker-leg-left',
       ]),
+    }),
+  }),
+  'scrap-shipyard-roadhead': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_SHIPYARD_REGION_ID,
+    roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+    x: 730,
+    scrapRegionState: Object.freeze({
+      regionId: SCRAP_SHIPYARD_REGION_ID,
+      stageKind: 'npc-briefing',
+      status: 'available',
+    }),
+    expectation: Object.freeze({
+      expectedPatchIds: Object.freeze(['shipyard-briefing-complete', 'shipyard-cast-rival-scout']),
+      expectedItems: Object.freeze([
+        'shipyard-waiting-crew-apron',
+        'shipyard-waiting-crew-mask',
+        'shipyard-waiting-crew-hook',
+        'shipyard-worker-apron',
+        'shipyard-worker-mask',
+        'shipyard-rival-scout-torso',
+        'shipyard-rival-scout-head',
+        'shipyard-rival-scout-hook',
+        'shipyard-rival-scout-band',
+        'shipyard-gate-crew-apron',
+        'shipyard-gate-crew-mask',
+        'shipyard-gate-lamp-dim',
+        'shipyard-occupation-board',
+      ]),
+      expectedAbsentItems: Object.freeze(['shipyard-gate-lamp-lit']),
     }),
   }),
   'scrap-shipyard-boss': Object.freeze({
@@ -2090,6 +2121,7 @@ const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-mine-roadhead': '폐광 산촌 · 반복 인물 합류',
   'scrap-mine-boss': '폐광 산촌 · 굴착기 결전',
   'scrap-mine-resolved': '폐광 산촌 · 마지막 작업 완료',
+  'scrap-shipyard-roadhead': '항구 조선소 · 반복 인물 합류',
   'scrap-shipyard-boss': '항구 조선소 · 크레인 결전',
   'scrap-shipyard-resolved': '항구 조선소 · 마지막 작업 완료',
   'scrap-greenhouse-boss': '온실 평원 · 동력로 결전',

@@ -63,6 +63,14 @@ export const SCRAP_SHIPYARD_DRYDOCK_ROOM_ID = 'harbor-shipyard-occupied-drydock'
 export const SCRAP_SHIPYARD_CRANE_ROOM_ID = 'harbor-shipyard-twin-crane-pier';
 export const SCRAP_SHIPYARD_WORKER_CONVERSATION_ID = 'harbor-shipyard:worker-briefing';
 export const SCRAP_SHIPYARD_FACILITY_CONVERSATION_ID = 'harbor-shipyard:facility-observed';
+export const SCRAP_SHIPYARD_WAITING_CONVERSATION_ID = 'harbor-shipyard:waiting-crew';
+export const SCRAP_SHIPYARD_WAITING_WORKING_CONVERSATION_ID =
+  'harbor-shipyard:waiting-crew-working';
+export const SCRAP_SHIPYARD_WAITING_AFTER_CONVERSATION_ID = 'harbor-shipyard:waiting-crew-after';
+export const SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID = 'shipyard-rival-scout';
+export const SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID = 'shipyard-waiting-crew';
+export const SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID = 'shipyard-waiting-crew-working';
+export const SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID = 'shipyard-waiting-crew-after';
 export const SCRAP_SHIPYARD_REPLACEMENT_CONVERSATION_ID = 'harbor-shipyard:replacement-complete';
 export const SCRAP_SHIPYARD_SEPARATION_CONVERSATION_ID = 'harbor-shipyard:machine-separated';
 export const SCRAP_SHIPYARD_PART_CONVERSATION_ID = 'harbor-shipyard:part-claimed';
@@ -1900,6 +1908,94 @@ const shipyardRoadheadRenderItems = [
     stroke: '#273437',
     order: 1,
   }),
+  item('shipyard-waiting-crew-apron', rectangle(468, 338, 32, 88), '#3f5661', {
+    stroke: '#17282e',
+    lineWidth: 3,
+    order: 18,
+    label: '대기 갑판원 · 방열 앞치마',
+    role: 'shipyard-worker',
+  }),
+  item('shipyard-waiting-crew-mask', polygon(484, 324, 19, 14, 6, Math.PI / 6), '#56b7c9', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 20,
+    label: '대기 갑판원 · 용접 마스크',
+    role: 'welding-mask',
+  }),
+  item(
+    'shipyard-waiting-crew-hook',
+    [
+      { x: 446, y: 426 },
+      { x: 452, y: 422 },
+      { x: 476, y: 352 },
+      { x: 470, y: 350 },
+    ],
+    '#81989b',
+    {
+      stroke: '#1e2d30',
+      lineWidth: 2,
+      order: 20,
+      label: '대기 갑판원 · 계류 갈고리',
+      role: 'mooring-hook',
+    },
+  ),
+  item('shipyard-rival-scout-torso', rectangle(1077, 334, 26, 92), '#56666a', {
+    stroke: '#232c2e',
+    lineWidth: 3,
+    order: 18,
+    label: '라이벌 · 정찰 작업복',
+    role: 'rival-apprentice',
+  }),
+  item('shipyard-rival-scout-head', polygon(1090, 320, 13, 15, 7), '#c69c76', {
+    stroke: '#3a2c21',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 측량 고글',
+    role: 'rival-head',
+  }),
+  item('shipyard-rival-scout-hook', rectangle(1105, 348, 8, 54), '#b9a66c', {
+    stroke: '#4d4223',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 정찰 갈고리',
+    role: 'salvage-hook',
+  }),
+  item('shipyard-rival-scout-band', rectangle(1079, 358, 22, 7), '#75d6c4', {
+    stroke: '#2c4a47',
+    lineWidth: 1,
+    order: 21,
+    label: '라이벌 · 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item('shipyard-gate-crew-apron', rectangle(1224, 338, 32, 88), '#3f5661', {
+    stroke: '#17282e',
+    lineWidth: 3,
+    order: 18,
+    label: '건선거 앞 대기 갑판원 · 방열 앞치마',
+    role: 'shipyard-worker',
+  }),
+  item('shipyard-gate-crew-mask', polygon(1240, 324, 19, 14, 6, Math.PI / 6), '#56b7c9', {
+    stroke: '#183e42',
+    lineWidth: 3,
+    order: 20,
+    label: '건선거 앞 대기 갑판원 · 용접 마스크',
+    role: 'welding-mask',
+  }),
+  item('shipyard-gate-lamp-dim', rectangle(1262, 366, 14, 20), '#4a5a5e', {
+    stroke: '#223237',
+    lineWidth: 2,
+    order: 20,
+    label: '건선거 앞 꺼진 도크 작업등',
+    role: 'dock-work-lamp',
+  }),
+  item('shipyard-gate-lamp-lit', rectangle(1262, 366, 14, 20), '#bfe9e4', {
+    stroke: '#2c4a47',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '건선거 앞 켜진 도크 작업등',
+    role: 'dock-work-lamp-lit',
+  }),
   ...createEnvironmentPortalLandmarkItems('shipyard-roadhead-return-gate', 68, 426, {
     style: 'village-road',
     enabled: false,
@@ -3658,6 +3754,67 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               presentationProfileId: 'shipyard-worker',
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
               campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 486, y: 354 },
+              interactionRange: 84,
+              speaker: '대기 갑판원',
+              conversationId: SCRAP_SHIPYARD_WAITING_CONVERSATION_ID,
+              conversationTitle: '출항을 기다리는 갑판원',
+              lines: [
+                '마지막 선박이 도크에 묶인 채로 있어. 용접공은 외판 얘기만 하지만, 난 저 크레인 cable이 다시 감기는 걸 보고 싶어.',
+                '네가 점거를 풀면 내가 먼저 올라가서 갑판을 정리할게. 계류 갈고리는 이미 챙겼어.',
+                '오른쪽 현황판은 봤어? 작업 시간 안에 끝내야 고대 병기가 해안 운송로를 우회한다더군.',
+              ],
+              presentationProfileId: 'shipyard-worker',
+            },
+            {
+              id: SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1090, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '먼저 와서 건선거를 봤어. 점거된 도크를 되찾으면 폐광 승강기용 굵은 cable을 내어준대.',
+                '온실 기술자도 용접선 냉각수 규격을 알고 있으니 들렀다 가. 설산 승무원은 인양 winch를 본댔어.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 갑판원',
+              conversationId: SCRAP_SHIPYARD_WAITING_WORKING_CONVERSATION_ID,
+              conversationTitle: '건선거 앞에 선 대기 갑판원',
+              lines: [
+                '통로가 열렸어. 도크 작업등이 켜지면 내가 먼저 들어가서 갑판을 정리할게.',
+                '넌 크레인 쪽을 맡아줘. 선점 수거반이 또 cable을 노릴지도 몰라.',
+              ],
+              presentationProfileId: 'shipyard-worker',
+              enabled: false,
+            },
+            {
+              id: SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 갑판원',
+              conversationId: SCRAP_SHIPYARD_WAITING_AFTER_CONVERSATION_ID,
+              conversationTitle: '수리를 마친 대기 갑판원',
+              lines: [
+                '마지막 선박이 출항했어! 도크 작업등은 켜 둘게. 이제 이 부두는 크레인 없이도 돌아가.',
+                '크레인 유압 장치는 가져가. 네 로봇 팔이 우리 해안 운송로를 우회시킨 셈이니까.',
+              ],
+              presentationProfileId: 'shipyard-worker',
+              enabled: false,
             },
             {
               id: 'shipyard-facility-inspection',
@@ -5595,6 +5752,23 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       operations: [{ op: 'set-enabled', target: 'shipyard-facility-inspection', value: true }],
     },
     {
+      id: 'shipyard-cast-rival-scout',
+      priority: 192,
+      when: { fact: 'scrapRegionStatuses.harbor-shipyard', in: ['available', 'in-progress'] },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID, value: true },
+      ],
+    },
+    {
+      id: 'shipyard-cast-working',
+      priority: 194,
+      when: { fact: 'scrapRegionStatuses.harbor-shipyard', eq: 'in-progress' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID, value: true },
+      ],
+    },
+    {
       id: 'shipyard-core-event-started',
       priority: 200,
       when: { fact: 'scrapRegionStatuses.harbor-shipyard', in: ['in-progress', 'resolved'] },
@@ -5709,6 +5883,19 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'shipyard-hydraulics-cradle', value: true },
         { op: 'set-enabled', target: 'shipyard-hydraulics-signal', value: true },
         { op: 'set-enabled', target: 'shipyard-hydraulics-part-claim', value: true },
+      ],
+    },
+    {
+      id: 'shipyard-cast-after',
+      priority: 252,
+      when: { fact: 'scrapRegionStageIds.harbor-shipyard', eq: 'harbor-shipyard:campaign-updated' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'shipyard-gate-lamp-dim', value: false },
+        { op: 'set-enabled', target: 'shipyard-gate-lamp-lit', value: true },
       ],
     },
     {

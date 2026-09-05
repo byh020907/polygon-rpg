@@ -380,6 +380,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-mine-roadhead',
       'scrap-mine-boss',
       'scrap-mine-resolved',
+      'scrap-shipyard-roadhead',
       'scrap-shipyard-boss',
       'scrap-shipyard-resolved',
       'scrap-greenhouse-boss',
