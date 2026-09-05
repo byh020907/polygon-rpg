@@ -19,11 +19,18 @@ function freezeRegion(region) {
   });
 }
 
+function freezeLinkedIssue(linkedIssue) {
+  return Object.freeze({
+    ...linkedIssue,
+    requiredEncounterIds: Object.freeze([...(linkedIssue.requiredEncounterIds ?? [])]),
+  });
+}
+
 function freezePrimaryIssue(issue) {
   return Object.freeze({
     ...issue,
     linkedIssues: Object.freeze(
-      issue.linkedIssues.map((linkedIssue) => Object.freeze({ ...linkedIssue })),
+      issue.linkedIssues.map((linkedIssue) => freezeLinkedIssue(linkedIssue)),
     ),
   });
 }
@@ -251,6 +258,8 @@ const primaryIssues = [
         objective: '점거된 도크에서 구조용 굵은 cable의 위치와 인양 상태를 확인하세요.',
         completionStageKind: 'facility-observed',
         completionEvidence: '항구 도크 crane cable 현장 확인',
+        encounterLabel: '건선거 점거 세력 제압',
+        requiredEncounterIds: ['shipyard-drydock-collector', 'dock-salvage-raider'],
       },
       {
         id: 'mine-greenhouse-pressure-brace',

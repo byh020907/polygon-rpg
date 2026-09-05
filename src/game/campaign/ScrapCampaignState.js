@@ -31,7 +31,8 @@ import {
   nextScrapFinalBattleStage,
 } from './ScrapFinalBattleState.js';
 
-export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 7;
+export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 8;
+const LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 7;
 const REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 6;
 const FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 5;
 const ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 4;
@@ -47,6 +48,7 @@ export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
   KO_RETURN: 'ko-return',
   ISSUE_FOCUS: 'issue-focus',
   REGION_STAGE: 'region-stage',
+  LINKED_ENCOUNTER: 'linked-encounter',
   REGION_EVENT_START: 'region-event-start',
   REGION_SUCCESS: 'region-success',
   FINAL_BATTLE_STAGE: 'final-battle-stage',
@@ -96,6 +98,20 @@ function assertProfile(profile) {
     ) {
       throw new Error(`campaign primary issue profile이 없습니다: ${regionId}`);
     }
+    for (const linkedIssue of primaryIssue.linkedIssues) {
+      const requiredEncounterIds = linkedIssue.requiredEncounterIds ?? [];
+      if (
+        !Array.isArray(requiredEncounterIds) ||
+        new Set(requiredEncounterIds).size !== requiredEncounterIds.length ||
+        requiredEncounterIds.some(
+          (encounterId) => typeof encounterId !== 'string' || encounterId.trim().length === 0,
+        )
+      ) {
+        throw new Error(
+          `campaign linked issue encounter 요구가 유효하지 않습니다: ${linkedIssue.id}`,
+        );
+      }
+    }
   }
   return profile;
 }
@@ -114,6 +130,7 @@ function freezeSnapshot({
   regionEventStageIds,
   activePrimaryIssueId,
   completedIssueIds,
+  clearedEncounterIds,
   collectedPartIds,
   committedActionIds,
   awakeningStageId,
@@ -133,6 +150,7 @@ function freezeSnapshot({
     regionEventStageIds: Object.freeze({ ...regionEventStageIds }),
     activePrimaryIssueId,
     completedIssueIds: Object.freeze([...completedIssueIds]),
+    clearedEncounterIds: Object.freeze([...clearedEncounterIds]),
     collectedPartIds: Object.freeze([...collectedPartIds]),
     committedActionIds: Object.freeze([...committedActionIds]),
     awakeningStageId: assertScrapAwakeningStageId(awakeningStageId),
@@ -162,6 +180,7 @@ export function createScrapCampaignSnapshot(profile) {
     ),
     activePrimaryIssueId: null,
     completedIssueIds: [],
+    clearedEncounterIds: [],
     collectedPartIds: [],
     committedActionIds: [],
     awakeningStageId: SCRAP_AWAKENING_STAGE.COMMISSION,
@@ -179,6 +198,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   if (
     value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION &&
+    value.version !== LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
     value.version !== REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
     value.version !== FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
     value.version !== ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
@@ -237,6 +257,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   const regionEventStageIds = [
     SCRAP_CAMPAIGN_SCHEMA_VERSION,
+    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
@@ -275,6 +296,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   const activePrimaryIssueId = [
     SCRAP_CAMPAIGN_SCHEMA_VERSION,
+    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
   ].includes(value.version)
@@ -292,6 +314,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   const completedIssueIds = [
     SCRAP_CAMPAIGN_SCHEMA_VERSION,
+    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
   ].includes(value.version)
@@ -313,6 +336,19 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   if (activePrimaryIssueId && completedIssueIdSet.has(activePrimaryIssueId)) {
     throw new TypeError('완료된 primary issue를 active 상태로 유지할 수 없습니다.');
+  }
+  const clearedEncounterIds =
+    value.version === SCRAP_CAMPAIGN_SCHEMA_VERSION ? value.clearedEncounterIds : [];
+  if (!Array.isArray(clearedEncounterIds)) {
+    throw new TypeError('제압한 연결 전투 ID 목록은 배열이어야 합니다.');
+  }
+  const clearedEncounterIdSet = new Set();
+  for (const encounterId of clearedEncounterIds) {
+    assertId(encounterId, '제압한 연결 전투 ID');
+    if (clearedEncounterIdSet.has(encounterId)) {
+      throw new Error(`제압한 연결 전투 ID가 중복됩니다: ${encounterId}`);
+    }
+    clearedEncounterIdSet.add(encounterId);
   }
   for (const [field, label] of [
     ['collectedPartIds', '회수 part ID'],
@@ -344,6 +380,7 @@ export function toScrapCampaignSnapshot(value, profile) {
       : value.awakeningStageId;
   const garageRevealStageId = [
     SCRAP_CAMPAIGN_SCHEMA_VERSION,
+    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
@@ -369,6 +406,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   }
   const finalBattleStageId = [
     SCRAP_CAMPAIGN_SCHEMA_VERSION,
+    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
     REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
   ].includes(value.version)
     ? assertScrapFinalBattleStageId(value.finalBattleStageId)
@@ -385,6 +423,7 @@ export function toScrapCampaignSnapshot(value, profile) {
     regionEventStageIds,
     activePrimaryIssueId,
     completedIssueIds,
+    clearedEncounterIds: [...clearedEncounterIds],
     awakeningStageId,
     garageRevealStageId,
     finalBattleStageId,
@@ -532,6 +571,13 @@ function validateAction(action, profile) {
       throw new Error('지역 사건 시작 action은 authored 사건 비용과 0 연장을 사용해야 합니다.');
     }
   }
+  if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.LINKED_ENCOUNTER) {
+    const region = profile.getRegion(action.targetRegionId);
+    if (!region || action.costSegments !== 0 || extensionSegments !== 0) {
+      throw new Error('연결 전투 기록 action은 target region과 0구간 비용을 사용해야 합니다.');
+    }
+    assertId(action.encounterId, '연결 전투 ID');
+  }
   if (action.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_SUCCESS) {
     const region = profile.getRegion(action.targetRegionId);
     if (
@@ -624,6 +670,7 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
     : null;
   const regionEventStart = authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START;
   const fullRest = authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REST;
+  const linkedEncounter = authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.LINKED_ENCOUNTER;
   const finalBattleStage = authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.FINAL_BATTLE_STAGE;
   const hasEveryPart = current.collectedPartIds.length === profile.regions.length;
   const expectedFinalBattleStage = nextScrapFinalBattleStage(current.finalBattleStageId);
@@ -676,14 +723,18 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
         ? '지역 핵심 사건을 시작할까요?'
         : fullRest
           ? '완전히 회복하고 다음 시간대로 갈까요?'
-          : '장거리 이동을 확정할까요?',
+          : linkedEncounter
+            ? '연결 이슈 현장 전투를 기록할까요?'
+            : '장거리 이동을 확정할까요?',
     detailLabel: finalBattleStage
       ? getScrapFinalBattlePresentation(authoredAction.finalBattleStageId).cue
       : regionEventStart
         ? (targetRegion?.event.label ?? authoredAction.label)
         : fullRest
           ? '고물상 작업장 · 체력 전부 회복'
-          : locationLabel(authoredAction.targetLocationId, profile),
+          : linkedEncounter
+            ? authoredAction.label
+            : locationLabel(authoredAction.targetLocationId, profile),
     costSegments: authoredAction.costSegments,
     extensionSegments: authoredAction.extensionSegments,
     successExtensionSegments:
@@ -749,12 +800,24 @@ function assertNextRegionStage(currentStageId, targetStageId, region) {
   return region.eventStages[targetIndex];
 }
 
+function requiredEncounterIdsOf(linkedIssue) {
+  return Object.freeze([...(linkedIssue.requiredEncounterIds ?? [])]);
+}
+
+function remainingEncounterIdsOf(linkedIssue, clearedEncounterIds) {
+  const cleared = new Set(clearedEncounterIds);
+  return Object.freeze(
+    requiredEncounterIdsOf(linkedIssue).filter((encounterId) => !cleared.has(encounterId)),
+  );
+}
+
 function completeLinkedIssuesForStage(
   completedIssueIds,
   activePrimaryIssueId,
   region,
   targetStage,
   profile,
+  clearedEncounterIds = [],
 ) {
   const primaryIssue = activePrimaryIssueId ? profile.getPrimaryIssue(activePrimaryIssueId) : null;
   if (!primaryIssue) return completedIssueIds;
@@ -766,7 +829,11 @@ function completeLinkedIssuesForStage(
     const completionStageIndex = region.eventStages.findIndex(
       (stage) => stage.kind === linkedIssue.completionStageKind,
     );
-    if (completionStageIndex >= 0 && targetStageIndex >= completionStageIndex) {
+    if (
+      completionStageIndex >= 0 &&
+      targetStageIndex >= completionStageIndex &&
+      remainingEncounterIdsOf(linkedIssue, clearedEncounterIds).length === 0
+    ) {
       nextCompleted.push(linkedIssue.id);
     }
   }
@@ -778,6 +845,7 @@ function reconcileLinkedIssuesForPrimary(
   activePrimaryIssueId,
   regionEventStageIds,
   profile,
+  clearedEncounterIds = [],
 ) {
   const primaryIssue = activePrimaryIssueId ? profile.getPrimaryIssue(activePrimaryIssueId) : null;
   if (!primaryIssue) return completedIssueIds;
@@ -794,6 +862,7 @@ function reconcileLinkedIssuesForPrimary(
       targetRegion,
       currentStage,
       profile,
+      clearedEncounterIds,
     );
   }
   return nextCompleted;
@@ -844,6 +913,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
   let regionEventStageIds = { ...current.regionEventStageIds };
   let activePrimaryIssueId = current.activePrimaryIssueId;
   let completedIssueIds = [...current.completedIssueIds];
+  let clearedEncounterIds = [...current.clearedEncounterIds];
   let collectedPartIds = [...current.collectedPartIds];
   let currentLocationId = current.currentLocationId;
   let finalBattleStageId = current.finalBattleStageId;
@@ -868,6 +938,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
         activePrimaryIssueId,
         regionEventStageIds,
         profile,
+        clearedEncounterIds,
       );
     }
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL) {
@@ -899,7 +970,40 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
         region,
         targetStage,
         profile,
+        clearedEncounterIds,
       );
+    }
+    if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.LINKED_ENCOUNTER) {
+      if (current.currentLocationId !== region.id) {
+        throw new Error('현재 위치의 연결 전투만 기록할 수 있습니다.');
+      }
+      const demanded = profile.primaryIssues.some((primaryIssue) =>
+        primaryIssue.linkedIssues.some(
+          (linkedIssue) =>
+            linkedIssue.targetRegionId === region.id &&
+            requiredEncounterIdsOf(linkedIssue).includes(authoredAction.encounterId),
+        ),
+      );
+      if (!demanded) {
+        throw new Error('연결 이슈가 요구한 연결 전투만 기록할 수 있습니다.');
+      }
+      if (clearedEncounterIds.includes(authoredAction.encounterId)) {
+        throw new Error('이미 기록한 연결 전투입니다.');
+      }
+      clearedEncounterIds.push(authoredAction.encounterId);
+      const reachedStage = region.eventStages.find(
+        (stage) => stage.id === regionEventStageIds[region.id],
+      );
+      if (reachedStage) {
+        completedIssueIds = completeLinkedIssuesForStage(
+          completedIssueIds,
+          activePrimaryIssueId,
+          region,
+          reachedStage,
+          profile,
+          clearedEncounterIds,
+        );
+      }
     }
     if (authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.REGION_EVENT_START) {
       const facilityStage = region.eventStages.find((stage) => stage.kind === 'facility-observed');
@@ -949,6 +1053,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
     regionEventStageIds,
     activePrimaryIssueId,
     completedIssueIds,
+    clearedEncounterIds,
     collectedPartIds,
     committedActionIds: [...current.committedActionIds, authoredAction.actionId],
     awakeningStageId: current.awakeningStageId,
@@ -1032,6 +1137,11 @@ export function getScrapCampaignReadModel(snapshot, profile) {
           (stage) => stage.kind === linkedIssue.completionStageKind,
         );
         const completed = current.completedIssueIds.includes(linkedIssue.id);
+        const requiredEncounterIds = requiredEncounterIdsOf(linkedIssue);
+        const remainingEncounterIds = remainingEncounterIdsOf(
+          linkedIssue,
+          current.clearedEncounterIds,
+        );
         return Object.freeze({
           id: linkedIssue.id,
           label: linkedIssue.label,
@@ -1041,8 +1151,15 @@ export function getScrapCampaignReadModel(snapshot, profile) {
           completionStageKind: linkedIssue.completionStageKind,
           completionStageLabel: completionStage.label,
           completionEvidence: linkedIssue.completionEvidence,
+          encounterLabel: linkedIssue.encounterLabel ?? null,
+          requiredEncounterIds,
+          remainingEncounterIds,
           completed,
-          statusLabel: completed ? '현장 해결' : '연결 이슈',
+          statusLabel: completed
+            ? '현장 해결'
+            : remainingEncounterIds.length > 0
+              ? '현장 전투 필요'
+              : '연결 이슈',
         });
       })
     : [];

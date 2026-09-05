@@ -21,6 +21,7 @@ import {
   toScrapCampaignSnapshot,
 } from '../src/game/campaign/ScrapCampaignState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
+import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 
@@ -99,6 +100,43 @@ function issueFocusAction(regionId) {
   };
 }
 
+function linkedEncounterAction(regionId, encounterId, occurrenceId) {
+  const region = SCRAP_CAMPAIGN_PROFILE.getRegion(regionId);
+  return {
+    actionId: `linked-encounter:${regionId}:${encounterId}:${occurrenceId}`,
+    kind: SCRAP_CAMPAIGN_ACTION_KIND.LINKED_ENCOUNTER,
+    label: `${region.label} · 연결 전투 제압 ${encounterId}`,
+    targetRegionId: regionId,
+    encounterId,
+    costSegments: 0,
+  };
+}
+
+function requiredEncounterIdsForRegion(regionId) {
+  const required = [];
+  for (const primaryIssue of SCRAP_CAMPAIGN_PROFILE.primaryIssues) {
+    for (const linkedIssue of primaryIssue.linkedIssues) {
+      if (linkedIssue.targetRegionId !== regionId) continue;
+      for (const encounterId of linkedIssue.requiredEncounterIds ?? []) {
+        if (!required.includes(encounterId)) required.push(encounterId);
+      }
+    }
+  }
+  return required;
+}
+
+function clearLinkedEncounters(snapshot, regionId, occurrencePrefix) {
+  let current = toScrapCampaignSnapshot(
+    { ...snapshot, currentLocationId: regionId },
+    SCRAP_CAMPAIGN_PROFILE,
+  );
+  for (const encounterId of requiredEncounterIdsForRegion(regionId)) {
+    if (current.clearedEncounterIds.includes(encounterId)) continue;
+    current = commit(current, linkedEncounterAction(regionId, encounterId, occurrencePrefix));
+  }
+  return current;
+}
+
 function progressRegionToStage(snapshot, regionId, targetStageKind) {
   const region = SCRAP_CAMPAIGN_PROFILE.getRegion(regionId);
   const targetStageIndex = region.eventStages.findIndex((stage) => stage.kind === targetStageKind);
@@ -128,6 +166,11 @@ function satisfyActiveLinkedIssues(snapshot, primaryRegionId) {
       current,
       linkedIssue.targetRegionId,
       linkedIssue.completionStageKind,
+    );
+    current = clearLinkedEncounters(
+      current,
+      linkedIssue.targetRegionId,
+      `satisfy:${primaryRegionId}`,
     );
   }
   return toScrapCampaignSnapshot(
@@ -391,6 +434,7 @@ function focusedReturn() {
 focusedObserve('abandoned-mine');
 focusedReturn();
 focusedObserve('harbor-shipyard');
+focusedCampaign = clearLinkedEncounters(focusedCampaign, 'harbor-shipyard', 'focused');
 focusedReturn();
 focusedObserve('greenhouse-plains');
 focusedReturn();
@@ -461,12 +505,134 @@ assert.throws(() => commit(mineStarted, regionEventStartAction('abandoned-mine')
 let crossRegionIssues = progressRegionToStage(mineStarted, 'harbor-shipyard', 'facility-observed');
 let crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(crossRegionReadModel.issueWindow.primary.id, 'mine-rescue-operation');
-assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 1);
-assert.equal(crossRegionReadModel.issueWindow.linked[0].completed, true);
+assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 0);
+assert.equal(crossRegionReadModel.issueWindow.linked[0].completed, false);
+assert.equal(crossRegionReadModel.issueWindow.linked[0].statusLabel, '현장 전투 필요');
+assert.equal(crossRegionReadModel.issueWindow.linked[0].encounterLabel, '건선거 점거 세력 제압');
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[0].requiredEncounterIds, [
+  'shipyard-drydock-collector',
+  'dock-salvage-raider',
+]);
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[0].remainingEncounterIds, [
+  'shipyard-drydock-collector',
+  'dock-salvage-raider',
+]);
 assert.equal(
   crossRegionReadModel.issueWindow.linked[0].completionEvidence,
   '항구 도크 crane cable 현장 확인',
 );
+for (const requiredEncounterId of ['shipyard-drydock-collector', 'dock-salvage-raider']) {
+  const requiredProfile = ENCOUNTER_PROFILES[requiredEncounterId];
+  assert.ok(requiredProfile, `연결 전투 profile이 필요합니다: ${requiredEncounterId}`);
+}
+assert.equal(ENCOUNTER_PROFILES['shipyard-drydock-collector'].role, 'field');
+assert.equal(ENCOUNTER_PROFILES['dock-salvage-raider'].species, 'human-salvager');
+const blockedCableEventPreview = previewScrapCampaignAction(
+  crossRegionIssues,
+  regionEventStartAction('abandoned-mine'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedCableEventPreview.allowed, false);
+assert.deepEqual(blockedCableEventPreview.blockingIssueIds, [
+  'mine-harbor-lift-cable',
+  'mine-greenhouse-pressure-brace',
+]);
+assert.throws(
+  () => commit(crossRegionIssues, regionEventStartAction('abandoned-mine')),
+  /연결 이슈 2개/,
+);
+assert.throws(
+  () =>
+    commit(
+      toScrapCampaignSnapshot(
+        { ...crossRegionIssues, currentLocationId: 'abandoned-mine' },
+        SCRAP_CAMPAIGN_PROFILE,
+      ),
+      linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'wrong-place'),
+    ),
+  /현재 위치의 연결 전투/,
+  '다른 region에 머물러서는 연결 전투를 기록할 수 없습니다.',
+);
+assert.throws(
+  () =>
+    commit(
+      crossRegionIssues,
+      linkedEncounterAction('harbor-shipyard', 'mine-collapse-boss', 'unknown'),
+    ),
+  /연결 이슈가 요구한 연결 전투/,
+  '연결 이슈가 요구하지 않은 전투는 기록할 수 없습니다.',
+);
+const cableEncounterPreview = previewScrapCampaignAction(
+  crossRegionIssues,
+  linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'preview'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(cableEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(cableEncounterPreview.costSegments, 0);
+assert.equal(cableEncounterPreview.willGameOver, false);
+crossRegionIssues = commit(
+  crossRegionIssues,
+  linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'cable'),
+);
+crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 0);
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[0].remainingEncounterIds, [
+  'dock-salvage-raider',
+]);
+assert.throws(
+  () =>
+    commit(
+      crossRegionIssues,
+      linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'cable-retry'),
+    ),
+  /이미 기록한 연결 전투/,
+  '같은 연결 전투를 중복 기록할 수 없습니다.',
+);
+crossRegionIssues = commit(
+  crossRegionIssues,
+  linkedEncounterAction('harbor-shipyard', 'dock-salvage-raider', 'cable'),
+);
+crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(crossRegionReadModel.issueWindow.linked[0].completed, true);
+assert.equal(crossRegionReadModel.issueWindow.linked[0].statusLabel, '현장 해결');
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[0].remainingEncounterIds, []);
+assert.deepEqual(crossRegionIssues.clearedEncounterIds, [
+  'shipyard-drydock-collector',
+  'dock-salvage-raider',
+]);
+const repeatedCableEncounter = commitScrapCampaignAction(
+  crossRegionIssues,
+  linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'cable'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(repeatedCableEncounter.changed, false);
+assert.deepEqual(repeatedCableEncounter.snapshot, crossRegionIssues);
+
+let reversedCableOrder = progressRegionToStage(mineStarted, 'harbor-shipyard', 'npc-briefing');
+reversedCableOrder = toScrapCampaignSnapshot(
+  { ...reversedCableOrder, currentLocationId: 'harbor-shipyard' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+reversedCableOrder = commit(
+  reversedCableOrder,
+  linkedEncounterAction('harbor-shipyard', 'dock-salvage-raider', 'reversed'),
+);
+reversedCableOrder = commit(
+  reversedCableOrder,
+  linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'reversed'),
+);
+reversedCableOrder = progressRegionToStage(
+  reversedCableOrder,
+  'harbor-shipyard',
+  'facility-observed',
+);
+const reversedCableReadModel = getScrapCampaignReadModel(
+  reversedCableOrder,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(reversedCableReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(reversedCableReadModel.issueWindow.linked[0].completed, true);
 
 crossRegionIssues = progressRegionToStage(
   crossRegionIssues,
@@ -743,6 +909,32 @@ assert.equal(
   migratedVersionSixLegacyCompletedRegion.collectedPartIds.includes(mineProfile.part.id),
   true,
 );
+const versionSevenFresh = { ...fresh, version: 7 };
+delete versionSevenFresh.clearedEncounterIds;
+const migratedVersionSevenFresh = toScrapCampaignSnapshot(
+  versionSevenFresh,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(migratedVersionSevenFresh.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
+assert.deepEqual(migratedVersionSevenFresh.clearedEncounterIds, []);
+assert.deepEqual(migratedVersionSevenFresh.completedIssueIds, []);
+const versionSevenLegacyCable = {
+  ...fresh,
+  version: 7,
+  activePrimaryIssueId: 'mine-rescue-operation',
+  completedIssueIds: ['mine-harbor-lift-cable'],
+};
+const migratedVersionSevenLegacyCable = toScrapCampaignSnapshot(
+  versionSevenLegacyCable,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(migratedVersionSevenLegacyCable.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
+assert.deepEqual(migratedVersionSevenLegacyCable.clearedEncounterIds, []);
+assert.equal(
+  migratedVersionSevenLegacyCable.completedIssueIds.includes('mine-harbor-lift-cable'),
+  true,
+  'v7에서 확정된 연결 이슈 완료 이력은 마이그레이션 뒤에도 보존해야 합니다.',
+);
 
 let rivalFirst = fresh;
 for (let index = 0; index < mineProfile.route.rivalArrivalSegment; index += 1) {
@@ -860,6 +1052,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
+      'harbor-crane-cable-linked-encounter-requirement-and-order-independent-clearance',
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
@@ -869,6 +1062,7 @@ console.log(
       'quarry-twenty-one-segment-five-day-detour-cutter-and-five-part-hundred-percent',
       'v3-region-stage-and-v4-issue-window-migration-to-v5',
       'v6-legacy-region-status-migration-to-v7',
+      'v7-linked-encounter-migration-to-v8',
       'rival-progress-does-not-rewrite-region-progress',
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',
