@@ -286,6 +286,8 @@ const primaryIssues = [
         objective: '파열 배관 구역에서 용접선을 식힐 지열 냉각수 상태를 확인하세요.',
         completionStageKind: 'facility-observed',
         completionEvidence: '온실 지열 냉각수 현장 확인',
+        encounterLabel: '냉각수 기생 기계 제압',
+        requiredEncounterIds: ['greenhouse-coolant-parasite'],
       },
       {
         id: 'shipyard-snow-haul-winch',

@@ -811,6 +811,79 @@ const repeatedWinchEncounter = commitScrapCampaignAction(
 );
 assert.equal(repeatedWinchEncounter.changed, false);
 assert.deepEqual(repeatedWinchEncounter.snapshot, harborIssue);
+harborIssue = progressRegionToStage(harborIssue, 'greenhouse-plains', 'facility-observed');
+harborSnowReadModel = getScrapCampaignReadModel(harborIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(harborSnowReadModel.issueWindow.primary.id, 'shipyard-recovery-operation');
+assert.equal(harborSnowReadModel.issueWindow.linked[0].completed, false);
+assert.equal(harborSnowReadModel.issueWindow.linked[0].statusLabel, '현장 전투 필요');
+assert.equal(harborSnowReadModel.issueWindow.linked[0].encounterLabel, '냉각수 기생 기계 제압');
+assert.deepEqual(harborSnowReadModel.issueWindow.linked[0].requiredEncounterIds, [
+  'greenhouse-coolant-parasite',
+]);
+assert.deepEqual(harborSnowReadModel.issueWindow.linked[0].remainingEncounterIds, [
+  'greenhouse-coolant-parasite',
+]);
+assert.equal(
+  harborSnowReadModel.issueWindow.linked[0].completionEvidence,
+  '온실 지열 냉각수 현장 확인',
+);
+assert.ok(
+  ENCOUNTER_PROFILES['greenhouse-coolant-parasite'],
+  '연결 전투 profile이 필요합니다: greenhouse-coolant-parasite',
+);
+assert.equal(ENCOUNTER_PROFILES['greenhouse-coolant-parasite'].role, 'field');
+const blockedCoolantEventPreview = previewScrapCampaignAction(
+  harborIssue,
+  regionEventStartAction('harbor-shipyard'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedCoolantEventPreview.allowed, false);
+assert.deepEqual(blockedCoolantEventPreview.blockingIssueIds, ['shipyard-greenhouse-coolant']);
+const coolantEncounterPreview = previewScrapCampaignAction(
+  harborIssue,
+  linkedEncounterAction('greenhouse-plains', 'greenhouse-coolant-parasite', 'preview'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(coolantEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(coolantEncounterPreview.costSegments, 0);
+assert.equal(coolantEncounterPreview.willGameOver, false);
+harborIssue = commit(
+  harborIssue,
+  linkedEncounterAction('greenhouse-plains', 'greenhouse-coolant-parasite', 'coolant'),
+);
+harborSnowReadModel = getScrapCampaignReadModel(harborIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(harborSnowReadModel.issueWindow.completedLinkedCount, 2);
+assert.equal(harborSnowReadModel.issueWindow.linked[0].completed, true);
+assert.equal(harborSnowReadModel.issueWindow.linked[0].statusLabel, '현장 해결');
+assert.deepEqual(harborSnowReadModel.issueWindow.linked[0].remainingEncounterIds, []);
+assert.deepEqual(harborIssue.clearedEncounterIds, [
+  'snow-route-raider',
+  'greenhouse-coolant-parasite',
+]);
+assert.throws(
+  () =>
+    commit(
+      harborIssue,
+      linkedEncounterAction('greenhouse-plains', 'greenhouse-coolant-parasite', 'coolant-retry'),
+    ),
+  /이미 기록한 연결 전투/,
+  '같은 연결 전투를 중복 기록할 수 없습니다.',
+);
+const repeatedCoolantEncounter = commitScrapCampaignAction(
+  harborIssue,
+  linkedEncounterAction('greenhouse-plains', 'greenhouse-coolant-parasite', 'coolant'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(repeatedCoolantEncounter.changed, false);
+assert.deepEqual(repeatedCoolantEncounter.snapshot, harborIssue);
+const harborBothLinksResolvedPreview = previewScrapCampaignAction(
+  toScrapCampaignSnapshot({ ...harborIssue, currentLocationId: 'harbor-shipyard' }),
+  regionEventStartAction('harbor-shipyard'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(harborBothLinksResolvedPreview.allowed, true);
+assert.equal(harborBothLinksResolvedPreview.costSegments, 13);
+assert.equal(harborBothLinksResolvedPreview.successExtensionDays, 3);
 const activeIssueStorage = new MemoryStorage();
 const activeIssuePersistence = new ProgressionStorage(
   activeIssueStorage,
@@ -1217,7 +1290,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
-      'mine-harbor-greenhouse-and-shipyard-snow-linked-encounter-requirement-and-order-independent-clearance',
+      'mine-harbor-greenhouse-and-shipyard-coolant-snow-linked-encounter-requirement-and-order-independent-clearance',
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
