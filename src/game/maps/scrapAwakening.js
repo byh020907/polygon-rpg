@@ -26,6 +26,7 @@ export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide'
 export const SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID = 'scrap-rival-plate-guide';
 export const SCRAP_RIVAL_PLATE_ENTITY_ID = 'scrap-rival-yard-plate';
 export const SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID = 'scrap-rival-ridge-guide';
+export const SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID = 'scrap-rival-guard-guide';
 export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID = 'scrap-rival-collapse-warning';
 export const SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID = 'scrap-rival-yard-deep-guide';
@@ -3118,6 +3119,31 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               encounterProfileId: 'yard-ridge-collector',
               position: { x: 1280, y: 426 },
               maxHealth: 96,
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1244, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '심부 경계 유닛은 팔을 크게 들어 올린 뒤에야 내려찍어. 들어 올리는 순간에 방패를 맞대면 공격을 튕겨낼 수 있어.',
+                '맞대는 순간 바로 Basic으로 받아쳐. 내가 표식을 붙일 테니 흔들리면 뒤로 빠져.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: 'scrap-yard-guard-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'yard-guard-collector',
+              position: { x: 1312, y: 426 },
+              maxHealth: 104,
               scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
               enabled: false,
             },
@@ -4637,6 +4663,27 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-forearm', value: true },
         { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-claw', value: true },
         { op: 'set-enabled', target: 'scrap-yard-ridge-collector', value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-guard',
+      priority: 9.5,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_GUARD },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-upper', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-forearm', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-claw', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-guard-collector', value: true },
       ],
     },
     {

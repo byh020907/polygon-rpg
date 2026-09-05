@@ -10,6 +10,7 @@ export const SCRAP_AWAKENING_STAGE = Object.freeze({
   YARD_APPROACH: 'yard-approach',
   YARD_PLATE: 'yard-plate',
   YARD_RIDGE: 'yard-ridge',
+  YARD_GUARD: 'yard-guard',
   YARD_SEARCH: 'yard-search',
   COLLAPSE: 'collapse',
   RESCUE_REQUEST: 'rescue-request',
@@ -135,6 +136,13 @@ export function getScrapAwakeningPresentation(stageId) {
       briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉갑 조각 너머 능선으로 가는 길에 넓게 휘두르는 회수팔 경계 유닛이 통로를 막습니다.`,
       objective: '능선 경계 유닛을 방향 roll과 Strong으로 막고 안쪽 현장으로 길을 여세요.',
       cue: '능선 경계 유닛 · Roll / Strong',
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_GUARD]: {
+      title: '심부 방패 경계',
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉곽 심부로 가는 길에 묵직하게 내려찍는 경계 수거 유닛이 통로를 막습니다.`,
+      objective:
+        '심부 경계 유닛의 공격 순간에 방패를 맞대 just guard를 내고 Basic 방패 반격으로 길을 여세요.',
+      cue: '심부 경계 유닛 · Just Guard / Basic',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: {
       title: '폐병기 수거장 탐색',
