@@ -185,6 +185,284 @@
 
   위 항목 중 시각적 자연스러움이나 실제 플레이 결과를 검증할 수 없는 경우에는 PASS로 추정하지 말고 해당 항목을 미완료 또는 unverified로 남겨.
 
+- 현재 설치된 PWA에서 저장소의 새 버전이 배포되어도 게임이 이전 캐시를 계속 사용하고 업데이트가 제대로 감지·반영되지 않는다. 임시로 Service Worker의 캐시 문자열만 한 번 변경하지 말고, 앞으로 모든 PWA 배포에서 계속 사용할 수 있는 명시적인 앱 버전·빌드 버전 시스템을 개발하고 실제 업데이트 흐름 전체에 적용해. 메인 화면에는 현재 실행 중인 앱 버전도 항상 표시해.
+
+  이번 작업의 목적은 다음 세 가지다.
+
+  1. 게임의 제품 버전과 배포 빌드를 하나의 일관된 버전 체계로 관리한다.
+  2. 이미 설치된 PWA가 새 배포를 사이트 데이터 삭제나 재설치 없이 확실하게 발견하고 적용할 수 있게 한다.
+  3. 사용자가 메인 화면에서 현재 실행 중인 버전과 업데이트 가능 여부를 확인할 수 있게 한다.
+
+  단순히 현재 `sw.js`의 수동 캐시 문자열을 다른 날짜나 `pwa-9` 같은 값으로 한 번 변경하고 완료 처리하지 마. 이번 수정 이후의 게임 코드 변경도 자동으로 새 PWA 빌드로 식별되어야 한다.
+
+  ## 현재 문제를 먼저 재현한다
+
+  구현 전에 실제 Service Worker가 동작하는 브라우저 환경에서 다음 과정을 재현해.
+
+  1. 현재 버전을 실행하고 Service Worker와 offline cache가 설치될 때까지 기다린다.
+  2. 해당 브라우저의 site data와 Service Worker를 유지한다.
+  3. 서버의 게임 코드와 화면 내용을 새로운 배포 내용으로 교체한다.
+  4. 설치된 PWA를 다시 열거나 기존 화면으로 돌아온다.
+  5. 새 버전을 감지하는지, 업데이트 버튼이 나타나는지, 적용 후 새 코드가 실행되는지 확인한다.
+  6. 다시 오프라인으로 전환한 뒤 새 버전이 실행되는지 확인한다.
+
+  브라우저 cache 삭제, Application Storage 초기화, Service Worker 수동 제거, PWA 삭제 후 재설치를 해야만 새 버전이 나타난다면 업데이트 기능이 동작한 것으로 인정하지 않는다.
+
+  현재 테스트처럼 처음부터 `registration.waiting`이 존재하는 가짜 객체를 주입해 `SKIP_WAITING` 메시지가 전송되는지만 확인하지 마. 실제 문제는 새 배포가 waiting worker로 발견되는지부터 확인해야 한다.
+
+  ## 버전 체계
+
+  앱 버전을 다음처럼 역할별로 구분해.
+
+  - `appVersion`
+    - 사람이 읽을 수 있는 제품 버전이다.
+    - Semantic Version 형식을 사용한다.
+    - 현재 `package.json`이 `0.1.0`이라면 이번 변경 결과는 최소 patch 버전인 `0.1.1`로 올린다.
+    - 제품 단계와 호환성 변경을 표현한다.
+
+  - `buildId`
+    - 실제 배포된 정적 asset 집합을 구분하는 불변 식별자다.
+    - 앱 코드, HTML, CSS, Service Worker, manifest와 offline asset 중 하나라도 변경되면 달라져야 한다.
+    - 사람이 수동으로 날짜나 순번을 기억해서 수정하는 값으로 만들지 않는다.
+    - 배포 대상 asset 내용에서 계산한 결정적 fingerprint나 동등하게 누락을 방지할 수 있는 방식으로 생성한다.
+
+  - `saveSchemaVersion`
+    - 저장 데이터 구조의 버전이다.
+    - 앱 버전 및 PWA cache 버전과 분리한다.
+    - 앱 빌드가 바뀌었다는 이유만으로 기존 저장을 초기화하거나 schema version을 올리지 않는다.
+
+  예시 표시 형식은 다음 정도로 한다.
+
+  ```text
+  PRE-ALPHA · v0.1.1
+  BUILD · a13f92c
+  ```
+
+  앱 버전과 빌드 식별자를 `package.json`, `sw.js`, HTML과 여러 JavaScript 파일에 각각 수동 복사하지 마. 하나의 canonical release metadata에서 Service Worker, runtime과 메인 화면이 동일한 값을 읽도록 구성해.
+
+  정적 사이트 구조 때문에 생성 파일이 필요하다면 다음 원칙을 따른다.
+
+  - `package.json.version`은 사람이 관리하는 제품 버전의 source로 사용할 수 있다.
+  - 별도의 release metadata 생성 명령이 제품 버전, buildId와 offline asset inventory를 생성한다.
+  - 생성 결과는 Service Worker와 browser runtime이 함께 읽을 수 있어야 한다.
+  - 생성된 buildId는 배포 대상 파일 내용이 같으면 항상 같고, 내용이 달라지면 달라야 한다.
+  - 생성 metadata 자체를 다시 hash에 포함해 재귀적으로 buildId가 변하지 않게 한다.
+  - 생성 파일을 저장소에 포함해야 하는 현재 정적 배포 방식이라면 누락 없이 commit한다.
+  - 개발자가 buildId 문자열을 직접 편집하는 방식은 사용하지 않는다.
+
+  `npm run` 명령 등으로 release metadata를 생성·검증할 수 있게 하고, deployable asset이 변경됐는데 metadata가 갱신되지 않았으면 테스트가 실패해야 한다. 따라서 이후 에이전트가 게임 코드를 수정하고 PWA release 갱신을 잊더라도 오래된 buildId로 commit할 수 없어야 한다.
+
+  ## Service Worker와 캐시 적용
+
+  Service Worker cache 이름은 수동 날짜 문자열이 아니라 release metadata의 `buildId`에서 결정해.
+
+  다음 업데이트 계약을 만족해야 한다.
+
+  - 동일한 buildId는 동일한 배포 asset을 의미한다.
+  - 새 buildId는 반드시 새로운 release cache를 만든다.
+  - 새 Service Worker는 활성화되기 전에 해당 빌드에 필요한 필수 offline asset을 모두 준비한다.
+  - 필수 asset 하나라도 준비되지 않으면 기존 정상 버전을 유지하고 불완전한 새 버전을 활성화하지 않는다.
+  - 새 버전을 사용자가 적용하기 전까지 기존 active worker와 기존 저장 상태가 유지된다.
+  - 새 버전이 정상 활성화된 후에만 이 앱이 소유한 이전 release cache를 정리한다.
+  - 다른 사이트나 이 앱과 무관한 cache는 삭제하지 않는다.
+  - 업데이트 과정에서 localStorage나 게임 저장 데이터를 삭제하지 않는다.
+  - HTML은 새 버전인데 JavaScript 일부는 이전 버전인 mixed release 상태를 만들지 않는다.
+  - 업데이트 후 오프라인 재실행에서도 새 버전의 모든 필수 asset을 사용한다.
+
+  Service Worker가 참조하는 release metadata 또는 imported script도 브라우저의 오래된 HTTP cache 때문에 갱신 확인에서 제외되지 않게 해. Service Worker 등록 시 update cache 정책을 명시적으로 결정하고, 새 배포 확인에는 오래된 imported script cache가 사용되지 않도록 한다.
+
+  최소한 다음 상황에서 명시적인 업데이트 확인을 수행해.
+
+  - 앱 시작 및 Service Worker 등록 직후
+  - 이미 등록된 Service Worker가 있는 앱을 다시 열었을 때
+  - 앱이 background에서 foreground로 돌아왔을 때
+  - browser window가 다시 focus되었을 때
+  - 오프라인이었다가 온라인으로 돌아왔을 때
+  - 앱을 장시간 계속 열어 둔 경우의 제한된 주기 확인
+
+  모든 이벤트마다 중복 요청이 폭주하지 않도록 하나의 update check owner와 적절한 throttle을 둔다. 브라우저가 언젠가 자동 확인할 것이라고 가정하거나 사용자가 강제 새로고침해야만 확인되는 구조로 남기지 않는다.
+
+  ## 현재 버전과 새 버전 식별
+
+  runtime은 최소한 다음 상태를 구분해.
+
+  ```text
+  currentVersion
+  currentBuildId
+  updateChecking
+  updateReady
+  availableVersion
+  availableBuildId
+  updateError
+  ```
+
+  `currentVersion`과 `currentBuildId`는 현재 화면에서 실제로 실행 중인 JavaScript의 release metadata를 나타내야 한다. 서버에 새 파일이 존재한다는 이유로 아직 이전 코드가 실행 중인데 현재 버전을 새 버전으로 표시하면 안 된다.
+
+  waiting Service Worker가 발견되면 해당 worker가 담당하는 `availableVersion`과 `availableBuildId`를 확인할 수 있는 명시적인 메시지 계약을 만들어. 예를 들어 MessageChannel 또는 동일한 역할의 안전한 Service Worker 메시지 흐름을 사용할 수 있다.
+
+  현재 버전과 waiting 버전이 동일하다면 잘못된 업데이트 버튼을 노출하지 않는다. 버전 metadata를 읽지 못했지만 waiting worker가 실제로 존재한다면 업데이트 자체를 무시하지 말고, 버전 확인 실패를 진단 상태로 표시하면서 안전한 적용 가능 여부를 판단해.
+
+  ## 메인 화면 표시
+
+  메인 메뉴의 title card 하단에 현재 실행 중인 버전을 항상 표시해.
+
+  기존의 정적인 다음 문구만 버전 표시로 사용하지 마.
+
+  ```text
+  PRE-ALPHA · STATIC CANVAS BUILD
+  ```
+
+  제품 단계 문구는 유지할 수 있지만 실제 release metadata를 함께 표시해야 한다.
+
+  기본 상태 예시:
+
+  ```text
+  PRE-ALPHA · v0.1.1
+  BUILD · a13f92c
+  오프라인 플레이 준비 완료
+  ```
+
+  업데이트 확인 중 예시:
+
+  ```text
+  현재 v0.1.1 · 새 버전을 확인하는 중
+  ```
+
+  새 버전 준비 상태 예시:
+
+  ```text
+  업데이트 가능 · v0.1.1 → v0.1.2
+  BUILD · a13f92c → b29d610
+  ```
+
+  업데이트 적용 버튼에도 가능하면 새 버전을 표시해.
+
+  ```text
+  v0.1.2 적용
+  진행을 저장한 뒤 새 버전으로 전환
+  ```
+
+  버전 표시는 다음 조건을 만족해야 한다.
+
+  - 설치형 PWA와 일반 browser 실행에서 모두 보인다.
+  - 온라인과 오프라인 상태 모두 현재 버전은 확인할 수 있다.
+  - 업데이트가 없어도 현재 버전은 항상 표시된다.
+  - 저장 상태 문구와 PWA 상태, 앱 버전 문구를 서로 다른 상태로 관리한다.
+  - desktop과 mobile에서 버튼 또는 다른 메뉴 문구와 겹치지 않는다.
+  - 화면을 과도하게 차지하지 않되 사용자가 문제 신고 시 버전을 쉽게 읽을 수 있다.
+  - 버전 정보가 접근성 tree에서도 읽힌다.
+
+  ## 업데이트 적용
+
+  기존의 진행 저장 후 적용 원칙은 유지해.
+
+  - 사용자가 업데이트 버튼을 누르면 먼저 현재 진행 저장을 시도한다.
+  - 저장에 실패하면 새 Service Worker를 활성화하거나 화면을 reload하지 않는다.
+  - 저장 성공 후에만 waiting worker에 활성화를 요청한다.
+  - `controllerchange`를 실제로 확인한 후 새 버전으로 한 번만 reload한다.
+  - 중복 클릭으로 여러 번 저장·활성화·reload하지 않는다.
+  - 업데이트 완료 후 메인 화면에 표시되는 currentVersion과 currentBuildId가 새 값으로 바뀌어야 한다.
+
+  여러 탭이나 설치형 PWA 창이 같은 Service Worker scope를 사용할 때도 고려해. 한 화면에서 새 worker를 활성화했는데 다른 열린 화면이 이전 JavaScript를 계속 실행하며 새 cache와 섞이는 상태를 방치하지 않는다. 다른 client에는 새 버전 적용 사실을 알리고 안전한 reload 또는 명확한 재실행 안내를 제공해.
+
+  사용자의 명시적 선택 없이 업데이트가 발견됐다는 이유만으로 플레이 도중 즉시 reload하지 마.
+
+  ## 실패와 오프라인 처리
+
+  업데이트 확인 실패와 “최신 버전임”을 같은 상태로 취급하지 않는다.
+
+  - 온라인 확인에 실패하면 현재 실행 버전은 계속 표시한다.
+  - 확인 실패 시 `현재 버전 유지 · 업데이트 확인 실패`와 같이 진단 가능한 상태를 제공한다.
+  - offline 상태에서는 마지막으로 정상 설치된 release를 계속 실행한다.
+  - 새 release 설치 중 필수 asset fetch가 실패하면 기존 release를 삭제하지 않는다.
+  - 업데이트 실패 후 온라인으로 복귀하거나 앱을 다시 열면 재시도할 수 있어야 한다.
+  - updateReady 상태와 실제 waiting worker가 불일치하면 상태를 다시 동기화한다.
+
+  ## 구현 시 피해야 할 잘못된 해결
+
+  다음 중 하나만 수행하고 완료 처리하지 마.
+
+  - `CACHE_VERSION`의 날짜나 `pwa-8`을 `pwa-9`로 수동 변경
+  - 모든 asset URL에 임의의 동일 query string을 한 번 추가
+  - 메인 화면에 하드코딩된 `v0.1.1` 문자열만 추가
+  - `package.json.version`, UI 버전과 Service Worker cache 버전을 별도로 관리
+  - 업데이트가 안 되면 모든 cache와 localStorage를 삭제
+  - PWA를 다시 설치하라고 사용자에게 안내
+  - 페이지를 열 때마다 무조건 Service Worker를 제거하고 재등록
+  - 저장 여부를 확인하지 않고 `skipWaiting`과 reload 실행
+  - fake `registration.waiting` 객체만 사용해 업데이트 성공을 주장
+  - 현재 코드와 새 코드가 섞일 수 있는 상태에서 cache를 부분 갱신
+  - regex로 버전 문자열 존재 여부만 확인하고 실제 browser 업데이트를 검증하지 않음
+
+  ## 자동 검증
+
+  최소한 다음 자동 검증을 추가해.
+
+  1. canonical 제품 버전과 생성된 release metadata의 appVersion이 일치한다.
+  2. 현재 deployable asset 내용으로 계산한 buildId와 생성 metadata의 buildId가 일치한다.
+  3. deployable JavaScript, HTML, CSS 또는 Service Worker를 변경하면 release metadata를 갱신하지 않은 상태에서 테스트가 실패한다.
+  4. 동일한 asset은 동일 buildId를 만들고, asset 하나를 변경하면 buildId가 달라진다.
+  5. Service Worker cache 이름이 buildId를 사용한다.
+  6. 메인 화면이 runtime release metadata의 현재 버전을 표시한다.
+  7. 업데이트 확인이 시작·focus·foreground 복귀·online 복귀에서 호출되며 중복 호출은 제한된다.
+  8. waiting worker의 버전을 읽어 current와 available 버전을 구분한다.
+  9. 저장 실패 시 활성화 메시지와 reload가 발생하지 않는다.
+  10. 저장 성공 시에만 waiting worker가 활성화되고 controller 변경 후 한 번 reload한다.
+  11. 새 release 준비 실패 시 기존 cache가 유지된다.
+  12. 새 release 활성화 후 이전 앱 release cache만 정리된다.
+  13. 저장 데이터는 업데이트 전후 동일하게 유지된다.
+  14. offlineAsset inventory에 누락된 runtime asset이 있으면 테스트가 실패한다.
+
+  ## 실제 브라우저 업데이트 검증
+
+  fake adapter unit test와 별도로 실제 Service Worker가 동작하는 browser 통합 검증을 수행해.
+
+  하나의 지속되는 browser profile 또는 context에서 다음 두 개의 서로 다른 release를 순서대로 사용해.
+
+  ### Release A
+
+  - appVersion과 buildId가 A인 정적 파일을 서버에 제공한다.
+  - 페이지를 열고 Service Worker가 active가 될 때까지 기다린다.
+  - 메인 화면에 Release A 버전이 표시되는지 확인한다.
+  - 온라인 및 오프라인에서 Release A가 실행되는지 확인한다.
+  - 테스트용 저장 진행을 만든다.
+
+  ### Release B
+
+  - site data를 유지한 채 같은 URL의 서버 내용을 Release B로 교체한다.
+  - Release B는 화면에서 확인할 수 있는 작은 테스트 표식과 다른 buildId를 가져야 한다.
+  - 설치된 PWA 또는 기존 page를 다시 focus하거나 재실행한다.
+  - 명시적인 update check를 통해 Release B waiting worker가 생성되는지 확인한다.
+  - 메인 화면에 `A → B` 업데이트 가능 상태가 표시되는지 확인한다.
+  - 적용 전에는 Release A가 계속 실행되는지 확인한다.
+  - 업데이트 버튼으로 저장 후 적용한다.
+  - controller 변경과 reload 후 Release B의 코드와 버전이 표시되는지 확인한다.
+  - 기존 저장 진행이 유지되는지 확인한다.
+  - 네트워크를 끄고 다시 열어도 Release B가 실행되는지 확인한다.
+  - Release A asset이 새 화면에 섞이지 않는지 확인한다.
+
+  이 검증은 browser cache, Service Worker와 site data를 중간에 초기화하지 않고 통과해야 한다.
+
+  desktop과 mobile viewport의 메인 화면에서도 현재 버전, 업데이트 상태와 적용 버튼이 겹치거나 잘리지 않는지 실제 화면으로 확인해.
+
+  ## 완료 조건
+
+  다음 조건을 모두 만족하기 전에는 이 Human Feedback을 완료 처리하거나 INBOX에서 제거하지 마.
+
+  - 앱 버전, buildId와 cache identity가 하나의 release metadata 체계로 연결되어 있다.
+  - 앱 코드가 변경되면 stale release metadata를 테스트가 감지한다.
+  - 이후 배포에서도 수동 cache 문자열 변경을 기억할 필요가 없다.
+  - 기존 설치형 PWA가 cache 삭제나 재설치 없이 새 배포를 발견한다.
+  - 사용자가 적용하기 전에는 기존 정상 버전이 유지된다.
+  - 진행 저장 성공 후 새 버전으로 원자적으로 전환된다.
+  - 적용 후 새 버전의 코드와 asset만 실행된다.
+  - 업데이트 전의 게임 저장 데이터가 유지된다.
+  - 새 버전이 오프라인에서도 정상 실행된다.
+  - 메인 화면에서 현재 appVersion과 buildId를 항상 확인할 수 있다.
+  - 업데이트 준비 중에는 현재 버전과 적용할 새 버전을 구분해 표시한다.
+  - 실제 Release A → Release B browser 검증을 site data 초기화 없이 통과한다.
+  - 설치형 PWA 실제 환경에서 확인할 수 없는 항목은 PASS로 추정하지 않고 정확히 unverified로 남긴다.
+
 ## Feedback Guide
 
 실제 제품을 사용하며 느낀 문제, 기대한 결과와 관찰한 상황을 가능한 한 원문에 가깝게 적는다.
