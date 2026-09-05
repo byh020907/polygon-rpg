@@ -12,6 +12,7 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/animation/CharacterBonePoseLibrary.js',
   './src/animation/CombatPoseLibrary.js',
   './src/animation/Easing.js',
+  './src/animation/EnemyBonePoseLibrary.js',
   './src/animation/MotionClipRetargeter.js',
   './src/animation/MotionReferenceCatalog.js',
   './src/animation/PlayerMotionPose.js',

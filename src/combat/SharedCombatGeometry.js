@@ -1,4 +1,5 @@
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
+import { sampleEnemyBonePoseFor } from '../animation/EnemyBonePoseLibrary.js';
 
 // The authored human rig renders as a ~108 logical px body silhouette in the 960x540
 // gameplay world (about 20% of the 540 logical height, about 144 CSS px on a 720p
@@ -259,6 +260,13 @@ export function sampleTrainingEnemyWeaponLength(enemy, attackProfiles) {
 export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
   const { x, y } = enemy.position;
   const attackProfile = attackProfiles[enemy.attackKind];
+  // Same authored skeleton offsets as the presentation owner so hurt/weapon authority
+  // and the visible cutout never drift apart. Sizes and contact rules are unchanged.
+  const enemyBonePose = sampleEnemyBonePoseFor(enemy, attackProfiles);
+  const authoredBodyOffset = enemyBonePose.bodyLean * 0.25;
+  const authoredWeaponOffset = enemyBonePose.bodyLean * 0.12;
+  const authoredHandOffsetX = enemyBonePose.rootOffset.x * 0.6;
+  const authoredHandOffsetY = enemyBonePose.rootOffset.y * 0.6;
   const attackProgress =
     enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackProfile.attackSeconds : 0;
   const recoveryProgress =
@@ -266,7 +274,7 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
       ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds
       : 0;
   const weaponLength = sampleTrainingEnemyWeaponLength(enemy, attackProfiles);
-  const weaponAngle =
+  const baseWeaponAngle =
     enemy.aiState === 'hitstun'
       ? enemy.hitReactionWeaponAngle
       : enemy.aiState === 'windup'
@@ -288,10 +296,11 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
           : enemy.aiState === 'recovery'
             ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
             : -0.65;
+  const weaponAngle = baseWeaponAngle + authoredWeaponOffset;
   const renderFacing = ['windup', 'attack', 'recovery'].includes(enemy.aiState)
     ? enemy.attackFacing
     : enemy.facing;
-  const poseRotation =
+  const basePoseRotation =
     enemy.aiState === 'recovery'
       ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
       : enemy.rotation +
@@ -300,6 +309,7 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
           : enemy.aiState === 'attack'
             ? -0.14 + attackProgress * 0.42
             : 0);
+  const poseRotation = basePoseRotation + authoredBodyOffset;
   const presentationScale = enemy.presentationScale ?? 0.48;
   const poseEnemyPoints = (points) =>
     points.map((point) => {
@@ -316,7 +326,10 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
         y: y + (rotatedY - y) * presentationScale + embeddedOffset,
       };
     });
-  const weaponHand = { x: x + 8, y: y - (enemy.attackKind === 'sweep' ? 20 : 56) };
+  const weaponHand = {
+    x: x + 8 + authoredHandOffsetX,
+    y: y - (enemy.attackKind === 'sweep' ? 20 : 56) + authoredHandOffsetY,
+  };
   const weaponPoints = transformPoints(
     [
       { x: 0, y: -3 },

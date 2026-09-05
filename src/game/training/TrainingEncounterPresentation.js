@@ -1,4 +1,5 @@
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
+import { sampleEnemyBonePoseFor } from '../../animation/EnemyBonePoseLibrary.js';
 import {
   sampleTrainingEnemyCombatGeometry,
   sampleTrainingEnemyWeaponLength,
@@ -957,6 +958,14 @@ export function createTrainingEnemyItems(
     : null;
   const presentationScale = enemy.presentationScale ?? TRAINING_ENEMY_PRESENTATION_SCALE;
   const attackProfile = profiles[enemy.attackKind];
+  // Authored enemy skeleton: the same local-3D side-view projection contract as the
+  // player. It only nudges presentation anchors; contact/collider authority stays in
+  // SharedCombatGeometry with the identical offsets applied there.
+  const enemyBonePose = sampleEnemyBonePoseFor(enemy, profiles);
+  const authoredBodyOffset = enemyBonePose.bodyLean * 0.25;
+  const authoredWeaponOffset = enemyBonePose.bodyLean * 0.12;
+  const authoredHandOffsetX = enemyBonePose.rootOffset.x * 0.6;
+  const authoredHandOffsetY = enemyBonePose.rootOffset.y * 0.6;
   const attackProgress =
     enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackProfile.attackSeconds : 0;
   const recoveryProgress =
@@ -964,7 +973,7 @@ export function createTrainingEnemyItems(
       ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds
       : 0;
   const weaponLength = sampleTrainingEnemyWeaponLength(enemy, profiles);
-  const weaponAngle = surrendering
+  const baseWeaponAngle = surrendering
     ? 0.85
     : fleeing
       ? 0.42
@@ -989,10 +998,11 @@ export function createTrainingEnemyItems(
             : enemy.aiState === 'recovery'
               ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
               : -0.65;
+  const weaponAngle = baseWeaponAngle + authoredWeaponOffset;
   const renderFacing = ['windup', 'attack', 'recovery'].includes(enemy.aiState)
     ? enemy.attackFacing
     : enemy.facing;
-  const poseRotation = surrendering
+  const basePoseRotation = surrendering
     ? 0.18
     : fleeing
       ? enemy.resolutionDirection * 0.22
@@ -1005,7 +1015,11 @@ export function createTrainingEnemyItems(
             : enemy.aiState === 'attack'
               ? -0.14 + attackProgress * 0.42
               : 0);
-  const weaponHand = { x: x + 8, y: y - (enemy.attackKind === 'sweep' ? 20 : 56) };
+  const poseRotation = basePoseRotation + authoredBodyOffset;
+  const weaponHand = {
+    x: x + 8 + authoredHandOffsetX,
+    y: y - (enemy.attackKind === 'sweep' ? 20 : 56) + authoredHandOffsetY,
+  };
   const weaponShoulder = { x: x - 8, y: y - (enemy.attackKind === 'sweep' ? 45 : 59) };
   const weaponElbow = {
     x: lerp(weaponShoulder.x, weaponHand.x, 0.5) + Math.sin(weaponAngle) * 8,
