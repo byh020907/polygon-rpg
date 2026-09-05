@@ -294,6 +294,8 @@ const primaryIssues = [
         objective: '제설 열차 승무원에게 산악 인양 winch 규격을 확인하세요.',
         completionStageKind: 'facility-observed',
         completionEvidence: '설산 열차 설비 현장 확인',
+        encounterLabel: '설산 길목 수거반 제압',
+        requiredEncounterIds: ['snow-route-raider'],
       },
     ],
   }),

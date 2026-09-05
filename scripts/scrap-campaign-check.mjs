@@ -442,6 +442,7 @@ focusedReturn();
 focusedResolve('abandoned-mine');
 focusedReturn();
 focusedObserve('snow-trade-road');
+focusedCampaign = clearLinkedEncounters(focusedCampaign, 'snow-trade-road', 'focused');
 focusedReturn();
 focusedResolve('harbor-shipyard');
 focusedReturn();
@@ -709,6 +710,107 @@ const repeatedBraceEncounter = commitScrapCampaignAction(
 );
 assert.equal(repeatedBraceEncounter.changed, false);
 assert.deepEqual(repeatedBraceEncounter.snapshot, crossRegionIssues);
+
+let harborIssue = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'harbor-shipyard' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+harborIssue = commit(harborIssue, regionStageAction('harbor-shipyard', 'npc-briefing'));
+harborIssue = commit(harborIssue, regionStageAction('harbor-shipyard', 'facility-observed'));
+harborIssue = commit(harborIssue, issueFocusAction('harbor-shipyard'));
+const harborIssueWindow = getScrapCampaignReadModel(
+  harborIssue,
+  SCRAP_CAMPAIGN_PROFILE,
+).issueWindow;
+assert.equal(harborIssueWindow.primary.id, 'shipyard-recovery-operation');
+assert.equal(harborIssueWindow.primary.regionId, 'harbor-shipyard');
+assert.equal(harborIssueWindow.linkedCount, 2);
+assert.equal(harborIssueWindow.completedLinkedCount, 0);
+assert.deepEqual(
+  harborIssueWindow.linked.map((issue) => issue.targetRegionId),
+  ['greenhouse-plains', 'snow-trade-road'],
+);
+const blockedHarborEventPreview = previewScrapCampaignAction(
+  harborIssue,
+  regionEventStartAction('harbor-shipyard'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedHarborEventPreview.allowed, false);
+assert.deepEqual(blockedHarborEventPreview.blockingIssueIds, [
+  'shipyard-greenhouse-coolant',
+  'shipyard-snow-haul-winch',
+]);
+assert.throws(
+  () => commit(harborIssue, regionEventStartAction('harbor-shipyard')),
+  /연결 이슈 2개/,
+);
+
+harborIssue = progressRegionToStage(harborIssue, 'snow-trade-road', 'facility-observed');
+let harborSnowReadModel = getScrapCampaignReadModel(harborIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(harborSnowReadModel.issueWindow.primary.id, 'shipyard-recovery-operation');
+assert.equal(harborSnowReadModel.issueWindow.linked[1].completed, false);
+assert.equal(harborSnowReadModel.issueWindow.linked[1].statusLabel, '현장 전투 필요');
+assert.equal(harborSnowReadModel.issueWindow.linked[1].encounterLabel, '설산 길목 수거반 제압');
+assert.deepEqual(harborSnowReadModel.issueWindow.linked[1].requiredEncounterIds, [
+  'snow-route-raider',
+]);
+assert.deepEqual(harborSnowReadModel.issueWindow.linked[1].remainingEncounterIds, [
+  'snow-route-raider',
+]);
+assert.equal(
+  harborSnowReadModel.issueWindow.linked[1].completionEvidence,
+  '설산 열차 설비 현장 확인',
+);
+assert.ok(
+  ENCOUNTER_PROFILES['snow-route-raider'],
+  '연결 전투 profile이 필요합니다: snow-route-raider',
+);
+assert.equal(ENCOUNTER_PROFILES['snow-route-raider'].role, 'field');
+assert.equal(ENCOUNTER_PROFILES['snow-route-raider'].species, 'human-salvager');
+const blockedWinchEventPreview = previewScrapCampaignAction(
+  harborIssue,
+  regionEventStartAction('harbor-shipyard'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedWinchEventPreview.allowed, false);
+assert.deepEqual(blockedWinchEventPreview.blockingIssueIds, [
+  'shipyard-greenhouse-coolant',
+  'shipyard-snow-haul-winch',
+]);
+const winchEncounterPreview = previewScrapCampaignAction(
+  harborIssue,
+  linkedEncounterAction('snow-trade-road', 'snow-route-raider', 'preview'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(winchEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(winchEncounterPreview.costSegments, 0);
+assert.equal(winchEncounterPreview.willGameOver, false);
+harborIssue = commit(
+  harborIssue,
+  linkedEncounterAction('snow-trade-road', 'snow-route-raider', 'winch'),
+);
+harborSnowReadModel = getScrapCampaignReadModel(harborIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(harborSnowReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(harborSnowReadModel.issueWindow.linked[1].completed, true);
+assert.equal(harborSnowReadModel.issueWindow.linked[1].statusLabel, '현장 해결');
+assert.deepEqual(harborSnowReadModel.issueWindow.linked[1].remainingEncounterIds, []);
+assert.deepEqual(harborIssue.clearedEncounterIds, ['snow-route-raider']);
+assert.throws(
+  () =>
+    commit(
+      harborIssue,
+      linkedEncounterAction('snow-trade-road', 'snow-route-raider', 'winch-retry'),
+    ),
+  /이미 기록한 연결 전투/,
+  '같은 연결 전투를 중복 기록할 수 없습니다.',
+);
+const repeatedWinchEncounter = commitScrapCampaignAction(
+  harborIssue,
+  linkedEncounterAction('snow-trade-road', 'snow-route-raider', 'winch'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(repeatedWinchEncounter.changed, false);
+assert.deepEqual(repeatedWinchEncounter.snapshot, harborIssue);
 const activeIssueStorage = new MemoryStorage();
 const activeIssuePersistence = new ProgressionStorage(
   activeIssueStorage,
@@ -1115,7 +1217,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
-      'mine-harbor-greenhouse-linked-encounter-requirement-and-order-independent-clearance',
+      'mine-harbor-greenhouse-and-shipyard-snow-linked-encounter-requirement-and-order-independent-clearance',
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
