@@ -18,6 +18,7 @@ import {
   SCRAPYARD_REST_ENTITY_ID,
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID,
+  SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
@@ -780,6 +781,20 @@ assert.equal(
 assert.equal(
   plateReload.mapRuntime
     .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
+  false,
+  '흉갑 조각 점검 저장 뒤에 능선 동행 안내가 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  plateReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
+  false,
+  '흉갑 조각 점검 저장 뒤에 능선 경계 유닛이 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  plateReload.mapRuntime
+    .getResolvedSnapshot()
     .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
   false,
   '흉갑 조각 점검 저장 뒤에 심부 동행 안내가 미리 열리면 안 됩니다.',
@@ -794,7 +809,7 @@ assert.equal(
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-plate');
 prologueSequence = completeDialogue(scene, prologueSequence);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_RIDGE);
 assert.equal(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -802,11 +817,18 @@ assert.equal(
   false,
   '흉갑 조각 점검 뒤에는 점검 interaction이 다시 활성화되면 안 됩니다.',
 );
-assert.ok(
+assert.equal(
   scene.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  `흉갑 조각 점검 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+  false,
+  '능선 경계 전투를 마치기 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
+);
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
+  `흉갑 조각 점검 뒤 능선으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
 );
 assert.equal(
   scene.mapRuntime
@@ -814,6 +836,141 @@ assert.equal(
     .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
   false,
   '흉갑 조각 점검 뒤에는 이동 안내가 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
+  false,
+  '능선 경계 단계에서는 뒤에 남은 경계 이동 안내가 다시 나타나면 안 됩니다.',
+);
+assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
+assert.ok(
+  itemIds(scene).includes('scrap-yard-plate-fragment'),
+  '능선 경계 단계에서도 떨어진 흉갑 조각이 유지되어야 합니다.',
+);
+assert.ok(
+  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
+  '능선 경계 단계에서도 접힌 자동 회수팔이 보여야 합니다.',
+);
+assert.equal(
+  itemIds(scene).includes('scrap-retrieval-arm-grab-claw'),
+  false,
+  '붕괴 전에는 회수팔 포획 자세를 보여주면 안 됩니다.',
+);
+const ridgeGuideLines = mapEntityLines(SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID).join('\n');
+assert.match(ridgeGuideLines, /구르/);
+assert.match(ridgeGuideLines, /Strong/);
+assert.doesNotMatch(ridgeGuideLines, /winch.*전원/);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 1196,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const ridgeGuideDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  ridgeGuideDialogue.active,
+  true,
+  '흉갑 조각 점검 뒤 능선 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
+);
+assert.equal(ridgeGuideDialogue.presentationMode, 'ambient');
+assert.equal(ridgeGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(ridgeGuideDialogue.interactionId, SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID);
+assert.equal(ridgeGuideDialogue.prompt, '이동 중 대화');
+const ridgeGuideStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x > ridgeGuideStartX,
+  '능선 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_RIDGE,
+  '능선 ambient 안내는 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  '능선 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+);
+const ridgeReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+});
+assert.equal(stage(ridgeReload), SCRAP_AWAKENING_STAGE.YARD_RIDGE);
+assert.ok(
+  ridgeReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
+  '흉갑 조각 점검 저장 뒤에도 능선 동행 안내가 유지되어야 합니다.',
+);
+assert.ok(
+  ridgeReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
+  '흉갑 조각 점검 뒤에는 능선 경계 유닛이 통로를 막아야 합니다.',
+);
+assert.equal(
+  ridgeReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  false,
+  '능선 경계 전투 전에는 안쪽 현장 조사가 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  ridgeReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
+  false,
+  '능선 경계 저장 뒤에 흉갑 이동 안내가 다시 생기면 안 됩니다.',
+);
+assert.equal(
+  itemIds(ridgeReload).includes('scrap-retrieval-arm-grab-claw'),
+  false,
+  '능선 경계 저장 뒤에 포획 자세가 미리 보이면 안 됩니다.',
+);
+assert.equal(
+  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'yard-ridge-collector',
+  '흉갑 조각 점검 뒤에는 방향 roll과 Strong을 연습할 네 번째 경계 유닛이 필요합니다.',
+);
+scene.resolveJourneyEncounter(
+  Object.freeze({
+    entityId: 'scrap-yard-ridge-collector',
+    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  }),
+);
+assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
+  false,
+  '네 번째 경계 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
+  false,
+  '현장 조사 단계에서는 뒤에 남은 능선 이동 안내가 다시 나타나면 안 됩니다.',
+);
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
+  `능선 경계 전투 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
+);
+assert.equal(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
+  false,
+  '능선 경계 전투 뒤에는 흉갑 이동 안내가 다시 나타나면 안 됩니다.',
 );
 assert.equal(
   scene.mapRuntime
@@ -868,6 +1025,20 @@ assert.equal(
     .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
   false,
   '현장 조사 저장 뒤에 흉갑 이동 안내가 다시 생기면 안 됩니다.',
+);
+assert.equal(
+  surveyReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
+  false,
+  '현장 조사 저장 뒤에 능선 이동 안내가 다시 생기면 안 됩니다.',
+);
+assert.equal(
+  surveyReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
+  false,
+  '능선 경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
 );
 assert.ok(
   surveyReload.mapRuntime

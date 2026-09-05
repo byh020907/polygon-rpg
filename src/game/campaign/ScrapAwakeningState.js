@@ -9,6 +9,7 @@ export const SCRAP_AWAKENING_STAGE = Object.freeze({
   YARD_SURVEY: 'yard-survey',
   YARD_APPROACH: 'yard-approach',
   YARD_PLATE: 'yard-plate',
+  YARD_RIDGE: 'yard-ridge',
   YARD_SEARCH: 'yard-search',
   COLLAPSE: 'collapse',
   RESCUE_REQUEST: 'rescue-request',
@@ -128,6 +129,12 @@ export function getScrapAwakeningPresentation(stageId) {
       briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉곽 아래로 가는 길에 떨어진 흉갑 조각과 cable을 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
       objective: '떨어진 흉갑 조각으로 다가가 ↑로 점검하세요.',
       cue: '흉갑 조각 점검 · 상호작용 ↑',
+    },
+    [SCRAP_AWAKENING_STAGE.YARD_RIDGE]: {
+      title: '흉곽 능선 경계',
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉갑 조각 너머 능선으로 가는 길에 넓게 휘두르는 회수팔 경계 유닛이 통로를 막습니다.`,
+      objective: '능선 경계 유닛을 방향 roll과 Strong으로 막고 안쪽 현장으로 길을 여세요.',
+      cue: '능선 경계 유닛 · Roll / Strong',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: {
       title: '폐병기 수거장 탐색',

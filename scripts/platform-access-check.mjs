@@ -367,6 +367,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-intro-survey',
       'scrap-intro-approach',
       'scrap-intro-plate',
+      'scrap-intro-ridge',
       'scrap-intro-search',
       'scrap-intro-before',
       'scrap-intro-awakening',

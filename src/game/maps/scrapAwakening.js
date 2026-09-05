@@ -25,6 +25,7 @@ export const SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID = 'scrap-rival-survey-guide';
 export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide';
 export const SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID = 'scrap-rival-plate-guide';
 export const SCRAP_RIVAL_PLATE_ENTITY_ID = 'scrap-rival-yard-plate';
+export const SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID = 'scrap-rival-ridge-guide';
 export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID = 'scrap-rival-collapse-warning';
 export const SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID = 'scrap-rival-yard-deep-guide';
@@ -3092,6 +3093,31 @@ export const SCRAP_AWAKENING_MAP = defineMap({
                 '흔들리면 바로 방패를 들어. 확인이 끝나면 같이 흉곽 아래 표식으로 가자.',
               ],
               presentationProfileId: 'rival-scout',
+              scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_RIDGE,
+              enabled: false,
+            },
+            {
+              id: SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1196, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '흉갑 조각은 확인했어. 능선 아래 회수팔이 넓게 휘둘러서 방패로 막기보다 구르기로 빠져나와야 해.',
+                '네가 Strong으로 끊으면 내가 표식을 붙일게. 흔들리면 바로 뒤로 빠져.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: 'scrap-yard-ridge-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'yard-ridge-collector',
+              position: { x: 1280, y: 426 },
+              maxHealth: 96,
               scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
               enabled: false,
             },
@@ -4593,8 +4619,29 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
     {
-      id: 'scrap-prologue-yard-search',
+      id: 'scrap-prologue-yard-ridge',
       priority: 9,
+      when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_RIDGE },
+      operations: [
+        { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
+        { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-plate-fragment-mark', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-upper', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-forearm', value: true },
+        { op: 'set-enabled', target: 'scrap-retrieval-arm-dormant-claw', value: true },
+        { op: 'set-enabled', target: 'scrap-yard-ridge-collector', value: true },
+      ],
+    },
+    {
+      id: 'scrap-prologue-yard-search',
+      priority: 10,
       when: { fact: 'scrapAwakeningStageId', eq: SCRAP_AWAKENING_STAGE.YARD_SEARCH },
       operations: [
         { op: 'set-enabled', target: 'scrap-rival-search-torso', value: true },
