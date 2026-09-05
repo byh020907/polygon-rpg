@@ -268,6 +268,8 @@ const primaryIssues = [
         objective: '온실 기술자와 파열 배관을 조사해 압력 버팀쇠 규격을 확인하세요.',
         completionStageKind: 'facility-observed',
         completionEvidence: '온실 지열 배관 현장 확인',
+        encounterLabel: '파열 배관 기생 기계 제압',
+        requiredEncounterIds: ['greenhouse-pipe-parasite'],
       },
     ],
   }),

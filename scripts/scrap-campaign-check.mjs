@@ -437,6 +437,7 @@ focusedObserve('harbor-shipyard');
 focusedCampaign = clearLinkedEncounters(focusedCampaign, 'harbor-shipyard', 'focused');
 focusedReturn();
 focusedObserve('greenhouse-plains');
+focusedCampaign = clearLinkedEncounters(focusedCampaign, 'greenhouse-plains', 'focused');
 focusedReturn();
 focusedResolve('abandoned-mine');
 focusedReturn();
@@ -641,11 +642,73 @@ crossRegionIssues = progressRegionToStage(
 );
 crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(crossRegionReadModel.issueWindow.linkedCount, 2);
+assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(crossRegionReadModel.issueWindow.linked[1].completed, false);
+assert.equal(crossRegionReadModel.issueWindow.linked[1].statusLabel, '현장 전투 필요');
+assert.equal(crossRegionReadModel.issueWindow.linked[1].encounterLabel, '파열 배관 기생 기계 제압');
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[1].requiredEncounterIds, [
+  'greenhouse-pipe-parasite',
+]);
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[1].remainingEncounterIds, [
+  'greenhouse-pipe-parasite',
+]);
+assert.equal(
+  crossRegionReadModel.issueWindow.linked[1].completionEvidence,
+  '온실 지열 배관 현장 확인',
+);
+assert.ok(
+  ENCOUNTER_PROFILES['greenhouse-pipe-parasite'],
+  '연결 전투 profile이 필요합니다: greenhouse-pipe-parasite',
+);
+assert.equal(ENCOUNTER_PROFILES['greenhouse-pipe-parasite'].role, 'field');
+const blockedBraceEventPreview = previewScrapCampaignAction(
+  crossRegionIssues,
+  regionEventStartAction('abandoned-mine'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedBraceEventPreview.allowed, false);
+assert.deepEqual(blockedBraceEventPreview.blockingIssueIds, ['mine-greenhouse-pressure-brace']);
+const braceEncounterPreview = previewScrapCampaignAction(
+  crossRegionIssues,
+  linkedEncounterAction('greenhouse-plains', 'greenhouse-pipe-parasite', 'preview'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(braceEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(braceEncounterPreview.costSegments, 0);
+assert.equal(braceEncounterPreview.willGameOver, false);
+crossRegionIssues = commit(
+  crossRegionIssues,
+  linkedEncounterAction('greenhouse-plains', 'greenhouse-pipe-parasite', 'brace'),
+);
+crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
 assert.equal(crossRegionReadModel.issueWindow.completedLinkedCount, 2);
 assert.deepEqual(
   crossRegionReadModel.issueWindow.linked.map((issue) => issue.completed),
   [true, true],
 );
+assert.equal(crossRegionReadModel.issueWindow.linked[1].statusLabel, '현장 해결');
+assert.deepEqual(crossRegionReadModel.issueWindow.linked[1].remainingEncounterIds, []);
+assert.deepEqual(crossRegionIssues.clearedEncounterIds, [
+  'shipyard-drydock-collector',
+  'dock-salvage-raider',
+  'greenhouse-pipe-parasite',
+]);
+assert.throws(
+  () =>
+    commit(
+      crossRegionIssues,
+      linkedEncounterAction('greenhouse-plains', 'greenhouse-pipe-parasite', 'brace-retry'),
+    ),
+  /이미 기록한 연결 전투/,
+  '같은 연결 전투를 중복 기록할 수 없습니다.',
+);
+const repeatedBraceEncounter = commitScrapCampaignAction(
+  crossRegionIssues,
+  linkedEncounterAction('greenhouse-plains', 'greenhouse-pipe-parasite', 'brace'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(repeatedBraceEncounter.changed, false);
+assert.deepEqual(repeatedBraceEncounter.snapshot, crossRegionIssues);
 const activeIssueStorage = new MemoryStorage();
 const activeIssuePersistence = new ProgressionStorage(
   activeIssueStorage,
@@ -1052,7 +1115,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
-      'harbor-crane-cable-linked-encounter-requirement-and-order-independent-clearance',
+      'mine-harbor-greenhouse-linked-encounter-requirement-and-order-independent-clearance',
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
