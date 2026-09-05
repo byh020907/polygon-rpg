@@ -118,6 +118,13 @@ export const SCRAP_QUARRY_CUT_ROOM_ID = 'red-quarry-final-cut';
 export const SCRAP_QUARRY_CUTTER_ROOM_ID = 'red-quarry-cutter-yard';
 export const SCRAP_QUARRY_WORKER_CONVERSATION_ID = 'red-quarry:worker-briefing';
 export const SCRAP_QUARRY_FACILITY_CONVERSATION_ID = 'red-quarry:facility-observed';
+export const SCRAP_QUARRY_WAITING_CONVERSATION_ID = 'red-quarry:waiting-filler';
+export const SCRAP_QUARRY_WAITING_WORKING_CONVERSATION_ID = 'red-quarry:waiting-filler-working';
+export const SCRAP_QUARRY_WAITING_AFTER_CONVERSATION_ID = 'red-quarry:waiting-filler-after';
+export const SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID = 'quarry-rival-scout';
+export const SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID = 'quarry-waiting-filler';
+export const SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID = 'quarry-waiting-filler-working';
+export const SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID = 'quarry-waiting-filler-after';
 export const SCRAP_QUARRY_REPLACEMENT_CONVERSATION_ID = 'red-quarry:replacement-complete';
 export const SCRAP_QUARRY_SEPARATION_CONVERSATION_ID = 'red-quarry:machine-separated';
 export const SCRAP_QUARRY_PART_CONVERSATION_ID = 'red-quarry:part-claimed';
@@ -2963,6 +2970,84 @@ const quarryRoadheadRenderItems = [
     order: 17,
     role: 'facility-warning-signal',
   }),
+  item('quarry-waiting-filler-coat', rectangle(468, 338, 32, 88), '#8f483a', {
+    stroke: '#3a201c',
+    lineWidth: 3,
+    order: 18,
+    label: '대기 채석공 · 적갈색 방진 작업복',
+    role: 'quarry-worker',
+  }),
+  item('quarry-waiting-filler-helmet', polygon(484, 324, 19, 14, 8, Math.PI / 8), '#e0a358', {
+    stroke: '#5d3a20',
+    lineWidth: 2,
+    order: 20,
+    label: '대기 채석공 · 안전모',
+    role: 'quarry-hard-hat',
+  }),
+  item('quarry-waiting-filler-drill', rectangle(496, 350, 52, 14), '#5b6564', {
+    stroke: '#202727',
+    lineWidth: 3,
+    order: 20,
+    label: '대기 채석공 · 압축 공기 드릴',
+    role: 'quarry-air-drill',
+  }),
+  item('quarry-rival-scout-torso', rectangle(1077, 334, 26, 92), '#56666a', {
+    stroke: '#232c2e',
+    lineWidth: 3,
+    order: 18,
+    label: '라이벌 · 정찰 작업복',
+    role: 'rival-apprentice',
+  }),
+  item('quarry-rival-scout-head', polygon(1090, 320, 13, 15, 7), '#c69c76', {
+    stroke: '#3a2c21',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 측량 고글',
+    role: 'rival-head',
+  }),
+  item('quarry-rival-scout-hook', rectangle(1105, 348, 8, 54), '#b9a66c', {
+    stroke: '#4d4223',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 정찰 갈고리',
+    role: 'salvage-hook',
+  }),
+  item('quarry-rival-scout-band', rectangle(1079, 358, 22, 7), '#75d6c4', {
+    stroke: '#2c4a47',
+    lineWidth: 1,
+    order: 21,
+    label: '라이벌 · 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item('quarry-gate-filler-coat', rectangle(1224, 338, 32, 88), '#8f483a', {
+    stroke: '#3a201c',
+    lineWidth: 3,
+    order: 18,
+    label: '절개 갱도 앞 대기 채석공 · 적갈색 방진 작업복',
+    role: 'quarry-worker',
+  }),
+  item('quarry-gate-filler-helmet', polygon(1240, 324, 19, 14, 8, Math.PI / 8), '#e0a358', {
+    stroke: '#5d3a20',
+    lineWidth: 2,
+    order: 20,
+    label: '절개 갱도 앞 대기 채석공 · 안전모',
+    role: 'quarry-hard-hat',
+  }),
+  item('quarry-gate-blast-dim', rectangle(1262, 366, 14, 20), '#6b5a3e', {
+    stroke: '#2b251c',
+    lineWidth: 2,
+    order: 20,
+    label: '절개 갱도 앞 꺼진 발파 신호등',
+    role: 'quarry-blast-lamp',
+  }),
+  item('quarry-gate-blast-lit', rectangle(1262, 366, 14, 20), '#f7e7aa', {
+    stroke: '#5f4a24',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '절개 갱도 앞 켜진 발파 신호등',
+    role: 'quarry-blast-lamp-lit',
+  }),
   ...createEnvironmentPortalLandmarkItems('quarry-final-cut-gate', 1372, 426, {
     style: 'sealed-stone',
     enabled: false,
@@ -4680,6 +4765,21 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               campaignStageKind: 'npc-briefing',
             },
             {
+              id: SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 486, y: 354 },
+              interactionRange: 84,
+              speaker: '대기 채석공',
+              conversationId: SCRAP_QUARRY_WAITING_CONVERSATION_ID,
+              conversationTitle: '마지막 석재를 기다리는 채석공',
+              lines: [
+                '마지막 석재 절개가 남았어. 반장은 지지대 얘기만 하지만, 난 저 운반로에 마지막 돌이 실리는 걸 보고 싶어.',
+                '네가 발파선의 수거반을 치우면 내가 먼저 들어가서 절개면을 정리할게. 압축 드릴은 이미 챙겼어.',
+                '오른쪽 안전 작업판은 봤어? 작업 시간 안에 끝내야 고대 병기가 채석장 절벽을 우회한다더군.',
+              ],
+              presentationProfileId: 'quarry-worker',
+            },
+            {
               id: 'quarry-facility-inspection',
               kind: 'story-interaction',
               position: { x: 842, y: 354 },
@@ -4694,6 +4794,52 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               campaignRegionId: SCRAP_QUARRY_REGION_ID,
               campaignStageKind: 'facility-observed',
               requestCampaignEventStart: true,
+              enabled: false,
+            },
+            {
+              id: SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1090, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '먼저 와서 마지막 절개면을 봤어. 폐광 반장의 버팀목 규격과 설산 터널의 내한 cable을 확인하면 발파 지지대를 세울 수 있대.',
+                '항구 용접공도 운반로 보수 철판 규격을 알고 있으니 들렀다 가. 온실 기술자는 방진 밀폐포를 내어준대.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 채석공',
+              conversationId: SCRAP_QUARRY_WAITING_WORKING_CONVERSATION_ID,
+              conversationTitle: '절개 갱도 앞에 선 대기 채석공',
+              lines: [
+                '통로가 열렸어. 발파 신호등이 켜지면 내가 먼저 들어가서 절개면을 정리할게.',
+                '넌 절단기 쪽을 맡아줘. 선점 수거반이 또 발파선을 노릴지도 몰라.',
+              ],
+              presentationProfileId: 'quarry-worker',
+              enabled: false,
+            },
+            {
+              id: SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 채석공',
+              conversationId: SCRAP_QUARRY_WAITING_AFTER_CONVERSATION_ID,
+              conversationTitle: '폐쇄를 마친 대기 채석공',
+              lines: [
+                '마지막 석재가 운반로를 떠났어! 발파 신호등은 켜 둘게. 이제 이 절벽은 지지대로 지탱하면 돼.',
+                '초대형 절단검은 가져가. 네 로봇 검이 우리 채석장 절벽을 우회시킨 셈이니까.',
+              ],
+              presentationProfileId: 'quarry-worker',
               enabled: false,
             },
           ],
@@ -6577,6 +6723,21 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       operations: [{ op: 'set-enabled', target: 'quarry-facility-inspection', value: true }],
     },
     {
+      id: 'quarry-cast-rival-scout',
+      priority: 402,
+      when: { fact: 'scrapRegionStatuses.red-quarry', in: ['available', 'in-progress'] },
+      operations: [{ op: 'set-enabled', target: SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID, value: true }],
+    },
+    {
+      id: 'quarry-cast-working',
+      priority: 404,
+      when: { fact: 'scrapRegionStatuses.red-quarry', eq: 'in-progress' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID, value: true },
+      ],
+    },
+    {
       id: 'quarry-core-event-started',
       priority: 410,
       when: { fact: 'scrapRegionStatuses.red-quarry', in: ['in-progress', 'resolved'] },
@@ -6683,6 +6844,22 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           property: 'label',
           value: 'ROCK CUTTER SWORD · 차고 수송 완료',
         },
+      ],
+    },
+    {
+      id: 'quarry-cast-after',
+      priority: 462,
+      when: {
+        fact: 'scrapRegionStageIds.red-quarry',
+        eq: 'red-quarry:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'quarry-gate-blast-dim', value: false },
+        { op: 'set-enabled', target: 'quarry-gate-blast-lit', value: true },
       ],
     },
   ],

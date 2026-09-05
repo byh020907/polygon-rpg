@@ -36,6 +36,10 @@ import {
   SCRAP_SNOW_WAITING_WORKING_ENTITY_ID,
   SCRAP_SNOW_WAITING_AFTER_ENTITY_ID,
   SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID,
+  SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID,
+  SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID,
+  SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID,
+  SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
@@ -3647,6 +3651,145 @@ assert.doesNotMatch(
   /Academy|교관|마법 생물/,
 );
 
+const quarryRoadheadEntityIds = () =>
+  quarryFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  quarryRoadheadEntityIds().includes(SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID),
+  '채석장 roadhead에는 마지막 석재를 기다리는 생활 당사자 채석공이 필요합니다.',
+);
+assert.ok(
+  quarryRoadheadEntityIds().includes(SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID),
+  '채석장 roadhead에는 버팀목 소문을 가져오는 라이벌 연결 정찰이 필요합니다.',
+);
+assert.equal(
+  quarryRoadheadEntityIds().includes(SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID),
+  false,
+  '사건 시작 전에는 절개 갱도 앞 작업 상태의 대기 채석공이 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  quarryRoadheadEntityIds().includes(SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID),
+  false,
+  '해결 전에는 폐쇄를 마친 상태의 대기 채석공이 미리 열리면 안 됩니다.',
+);
+assert.ok(itemIds(quarryFlowScene).includes('quarry-waiting-filler-coat'));
+assert.ok(itemIds(quarryFlowScene).includes('quarry-waiting-filler-drill'));
+assert.ok(itemIds(quarryFlowScene).includes('quarry-rival-scout-torso'));
+assert.ok(itemIds(quarryFlowScene).includes('quarry-rival-scout-band'));
+assert.ok(itemIds(quarryFlowScene).includes('quarry-gate-blast-dim'));
+assert.equal(
+  itemIds(quarryFlowScene).includes('quarry-gate-blast-lit'),
+  false,
+  '해결 전에는 켜진 발파 신호등을 보여주면 안 됩니다.',
+);
+const waitingFillerLines = mapEntityLines(SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID).join('\n');
+assert.match(waitingFillerLines, /절개면|운반로/);
+assert.match(waitingFillerLines, /작업판/);
+const quarryRivalScoutLines = mapEntityLines(SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID).join('\n');
+assert.match(quarryRivalScoutLines, /버팀목|지지대/);
+assert.match(quarryRivalScoutLines, /폐광|설산/);
+assert.match(quarryRivalScoutLines, /항구|온실/);
+
+const quarryCastScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: quarryFlowScene.getProgressionSnapshot(),
+});
+let quarryCastSequence = 200;
+const quarryCastRegionBefore = quarryCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
+quarryCastScene.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+  x: 486,
+});
+quarryCastSequence = completeDialogue(quarryCastScene, quarryCastSequence);
+const quarryCastRegionAfterFiller = quarryCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
+assert.equal(
+  quarryCastRegionAfterFiller.eventStageKind,
+  quarryCastRegionBefore.eventStageKind,
+  '대기 채석공 대화는 지역 사건 stage를 바꾸면 안 됩니다.',
+);
+assert.equal(
+  quarryCastRegionAfterFiller.status,
+  quarryCastRegionBefore.status,
+  '대기 채석공 대화는 지역 상태를 바꾸면 안 됩니다.',
+);
+quarryCastScene.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+  x: 1090,
+});
+quarryCastScene.update(STEP_SECONDS, input({ right: true }));
+const quarryRivalDialogue = quarryCastScene.getWorldStatus().dialogue;
+assert.equal(
+  quarryRivalDialogue.active,
+  true,
+  '라이벌 연결 정찰 ambient가 자동으로 시작되어야 합니다.',
+);
+assert.equal(quarryRivalDialogue.presentationMode, 'ambient');
+assert.equal(quarryRivalDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(quarryRivalDialogue.interactionId, SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID);
+const quarryRivalStartX = quarryCastScene.position.x;
+quarryCastScene.update(
+  STEP_SECONDS,
+  input({ right: true, jump: true, jumpSequence: quarryCastSequence }),
+);
+quarryCastSequence += 1;
+assert.ok(
+  quarryCastScene.position.x > quarryRivalStartX,
+  '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  quarryCastScene
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID).status,
+  quarryCastRegionBefore.status,
+  '라이벌 연결 정찰 ambient는 지역 상태를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && quarryCastScene.getWorldStatus().dialogue.active; tick += 1) {
+  quarryCastScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  quarryCastScene.getWorldStatus().dialogue.active,
+  false,
+  '라이벌 연결 정찰 ambient는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+const quarryRoadheadQaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+quarryRoadheadQaScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  stageKind: 'npc-briefing',
+  status: 'available',
+});
+quarryRoadheadQaScene.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+  x: 730,
+});
+assert.ok(
+  quarryRoadheadQaScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('quarry-cast-rival-scout'),
+  'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
+);
+assert.ok(itemIds(quarryRoadheadQaScene).includes('quarry-waiting-filler-helmet'));
+assert.ok(itemIds(quarryRoadheadQaScene).includes('quarry-rival-scout-hook'));
+assert.equal(
+  itemIds(quarryRoadheadQaScene).includes('quarry-gate-blast-lit'),
+  false,
+  'roadhead QA 상태에서는 켜진 발파 신호등이 없어야 합니다.',
+);
+const quarryRoadheadQaRequest = readVisualQaRequest(
+  '?visualQa=1&gameStart=scrap-quarry-roadhead&visualQaRenderer=polygon&visualQaPhase=active',
+);
+assert.equal(quarryRoadheadQaRequest.scenario.roomId, SCRAP_QUARRY_ROAD_ROOM_ID);
+assert.equal(quarryRoadheadQaRequest.scenario.x, 730);
+assert.ok(
+  quarryRoadheadQaRequest.scenario.expectation.expectedItems.includes('quarry-rival-scout-torso'),
+);
+
 setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, 'npc-briefing');
 quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
 let quarryRegion = quarryFlowScene
@@ -3681,6 +3824,33 @@ quarryRegion = quarryFlowScene
   .getWorldStatus()
   .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
 assert.equal(quarryRegion.status, 'in-progress');
+
+const quarryInProgressEntityIds = () =>
+  quarryFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.equal(
+  quarryInProgressEntityIds().includes(SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID),
+  false,
+  '사건 진행 중에는 입구에서 기다리던 대기 채석공이 절개 갱도 앞으로 이동해야 합니다.',
+);
+assert.ok(
+  quarryInProgressEntityIds().includes(SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID),
+  '사건 진행 중에는 절개 갱도 앞에서 마지막 석재를 맞이할 준비를 하는 대기 채석공이 필요합니다.',
+);
+assert.ok(
+  quarryInProgressEntityIds().includes(SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID),
+  '사건 진행 중에도 라이벌 연결 정찰이 roadhead에 남아 있어야 합니다.',
+);
+quarryFlowScene.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+  x: 1240,
+});
+quarryJumpSequence = completeDialogue(quarryFlowScene, quarryJumpSequence);
+quarryRegion = quarryFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID);
+assert.equal(quarryRegion.status, 'in-progress');
+assert.equal(quarryRegion.collected, false);
 
 setAtPortalToRoom(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, SCRAP_QUARRY_CUT_ROOM_ID);
 quarryFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: quarryJumpSequence }));
@@ -3811,6 +3981,50 @@ assert.deepEqual(
   completedQuarryReload.getProgressionSnapshot(),
   beforeRepeatedQuarryClaim,
   '완료 reload의 반복 채석장 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
+completedQuarryReload.setVisualQaLocation({
+  regionId: SCRAP_QUARRY_REGION_ID,
+  roomId: SCRAP_QUARRY_ROAD_ROOM_ID,
+  x: 1240,
+});
+const quarryResolvedEntityIds = () =>
+  completedQuarryReload.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  quarryResolvedEntityIds().includes(SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID),
+  '해결 뒤에는 폐쇄를 마치고 절개 갱도 앞에 남은 대기 채석공이 필요합니다.',
+);
+assert.equal(
+  quarryResolvedEntityIds().includes(SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID),
+  false,
+  '해결 뒤에는 입구 대기 상태의 채석공이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  quarryResolvedEntityIds().includes(SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID),
+  false,
+  '해결 뒤에는 작업 준비 상태의 채석공이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  quarryResolvedEntityIds().includes(SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID),
+  false,
+  '해결 뒤 라이벌 연결 정찰은 다음 지역으로 먼저 이동해야 합니다.',
+);
+assert.ok(itemIds(completedQuarryReload).includes('quarry-gate-blast-lit'));
+assert.equal(
+  itemIds(completedQuarryReload).includes('quarry-gate-blast-dim'),
+  false,
+  '해결 뒤에는 꺼진 발파 신호등이 남아 있으면 안 됩니다.',
+);
+const quarryAfterLines = mapEntityLines(SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID).join('\n');
+assert.match(quarryAfterLines, /운반로|지지대/);
+let quarryAfterSequence = 7_100;
+quarryAfterSequence = completeDialogue(completedQuarryReload, quarryAfterSequence);
+assert.equal(
+  completedQuarryReload
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_QUARRY_REGION_ID).status,
+  'resolved',
+  '폐쇄 완료 대화는 해결 상태를 바꾸면 안 됩니다.',
 );
 
 const completionLabelIds = [

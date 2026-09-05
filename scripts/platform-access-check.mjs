@@ -389,6 +389,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-snow-roadhead',
       'scrap-snow-boss',
       'scrap-snow-resolved',
+      'scrap-quarry-roadhead',
       'scrap-quarry-boss',
       'scrap-quarry-resolved',
       'scrap-garage-20',
