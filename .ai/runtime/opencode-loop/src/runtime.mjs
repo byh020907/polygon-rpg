@@ -413,7 +413,7 @@ function workerPrompt(execution, resumed) {
     "Implement and run focused tests. The runtime will launch the configured product-goal-loop-verifier in a separate fresh Full access session after you exit.",
     "Do not push, force, rebase, tag, release or deploy; the external adapter owns final integration.",
     "The runtime synchronized its own vendored adapter and OpenCode agent/tool files into this candidate. Preserve and commit those managed files together with the candidate when they are changed.",
-    "On success update STATE.md, remove the completed Active Execution Goal, commit all intended changes and leave the worktree clean.",
+    "On success update STATE.md, remove the completed Active Execution Goal and leave that section as 없음. with no replacement text, record the next flow only in Current Phase, then commit all intended changes and leave the worktree clean. A non-empty Active Execution Goal blocks publication, so never write the next plan there.",
     "If Human input or an external condition is required, preserve the candidate, record the blocker in STATE.md and do not claim completion.",
   ].join("\n")
 }
