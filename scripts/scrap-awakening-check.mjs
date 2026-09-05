@@ -23,6 +23,8 @@ import {
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID,
+  SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID,
+  SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID,
   SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
@@ -775,6 +777,20 @@ assert.equal(
   false,
   '흉갑 조각 점검 저장 뒤에 뒤처진 경계 안내가 다시 생기면 안 됩니다.',
 );
+assert.equal(
+  plateReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
+  false,
+  '흉갑 조각 점검 저장 뒤에 심부 동행 안내가 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  plateReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID),
+  false,
+  '흉갑 조각 점검 저장 뒤에 심부 관찰 독백이 미리 열리면 안 됩니다.',
+);
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-plate');
 prologueSequence = completeDialogue(scene, prologueSequence);
@@ -852,6 +868,18 @@ assert.equal(
     .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
   false,
   '현장 조사 저장 뒤에 흉갑 이동 안내가 다시 생기면 안 됩니다.',
+);
+assert.ok(
+  surveyReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
+  '현장 조사 저장 뒤에는 심부 동행 안내가 유지되어야 합니다.',
+);
+assert.ok(
+  surveyReload.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID),
+  '현장 조사 저장 뒤에는 심부 관찰 독백이 유지되어야 합니다.',
 );
 
 assert.ok(
@@ -941,6 +969,104 @@ assert.equal(
   scene.getWorldStatus().dialogue.active,
   false,
   '붕괴 경고 ambient는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
+  `현장 조사 단계에서 흉곽 심부로 동행하는 ${SCRAP_CAST.RIVAL.name}의 ambient 안내가 필요합니다.`,
+);
+const deepGuideLines = mapEntityLines(SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID).join('\n');
+assert.match(deepGuideLines, /회수팔/);
+assert.match(deepGuideLines, /방패/);
+assert.doesNotMatch(deepGuideLines, /winch.*전원/);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 1272,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const deepGuideDialogue = scene.getWorldStatus().dialogue;
+assert.equal(
+  deepGuideDialogue.active,
+  true,
+  '흉곽 심부 동행 ambient 안내는 자동으로 시작되어야 합니다.',
+);
+assert.equal(deepGuideDialogue.presentationMode, 'ambient');
+assert.equal(deepGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(deepGuideDialogue.interactionId, SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID);
+assert.equal(deepGuideDialogue.prompt, '이동 중 대화');
+const deepGuideStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x > deepGuideStartX,
+  '심부 동행 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  '심부 동행 ambient 안내는 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  '심부 동행 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+assert.ok(
+  scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID),
+  `현장 조사 단계에서 ${SCRAP_CAST.PROTAGONIST.monologueName}의 심부 관찰 독백이 필요합니다.`,
+);
+const deepNoticeLines = mapEntityLines(SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID).join('\n');
+assert.match(deepNoticeLines, /흉곽/);
+assert.match(deepNoticeLines, /회수팔/);
+assert.doesNotMatch(deepNoticeLines, /winch.*전원/);
+scene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: SCRAP_AWAKENING_ROOM_ID,
+  x: 1302,
+});
+scene.update(STEP_SECONDS, input({ right: true }));
+const deepNoticeDialogue = scene.getWorldStatus().dialogue;
+assert.equal(deepNoticeDialogue.active, true, '심부 관찰 독백은 자동으로 시작되어야 합니다.');
+assert.equal(deepNoticeDialogue.presentationMode, 'ambient');
+assert.equal(deepNoticeDialogue.speaker, SCRAP_CAST.PROTAGONIST.monologueName);
+assert.equal(deepNoticeDialogue.worldAnchor.x, scene.position.x);
+const deepNoticeStartX = scene.position.x;
+scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
+prologueSequence += 1;
+assert.ok(
+  scene.position.x > deepNoticeStartX,
+  '심부 관찰 독백은 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  stage(scene),
+  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+  '심부 관찰 독백은 stage를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  scene.getWorldStatus().dialogue.active,
+  false,
+  '심부 관찰 독백은 입력 없이 짧게 종료되어야 합니다.',
+);
+
+const deepSearchInteraction = scene.mapRuntime
+  .getResolvedSnapshot()
+  .entities.find((entity) => entity.id === 'scrap-rival-yard-search');
+assert.ok(deepSearchInteraction, '현장 조사 interaction이 현재 stage에 있어야 합니다.');
+assert.ok(
+  deepSearchInteraction.position.x > 1302,
+  '현장 조사는 심부 동선을 마친 뒤 동쪽에서 시작되어야 합니다.',
 );
 
 setAtStoryInteraction(scene, 'scrap-rival-yard-search');

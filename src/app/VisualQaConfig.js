@@ -356,7 +356,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
     roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1240,
+    x: 1332,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
