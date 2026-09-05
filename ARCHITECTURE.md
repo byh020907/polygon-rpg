@@ -105,6 +105,8 @@ Keyboard / Touch / DOM intent
 
 - Combat authored timing은 60Hz integer frame이며 120Hz simulation이 각 frame을 두 tick 동안 sample한다.
 - Command owner는 stamina, startup/active/recovery, damaging-hit-confirm cancel, just guard, Basic-only shield counter, Strong guard break/interrupt와 shield/Boss posture를 단일 transition으로 기록한다.
+- 구르기 pose strip은 머리-선행 진입→접지 tuck→진행 방향 unfold의 authored local-3D frame이며 RollTimeline marker의 evade 구간에 그대로 mapping하고 회피 판정·이동 거리를 바꾸지 않는다.
+- 지상·점프 중 공격을 포함한 Player 전 모션과 몹 계열 8-action은 같은 authored local-3D strip과 side-view projection contract를 사용하며 낡은 2D 전용 클립을 남기지 않는다.
 - Weapon hit는 shared swept blade↔hurt geometry 접촉으로 승인하고 renderer/effect는 hit authority가 아니다.
 - Giant final-battle profile은 scale·pose·arena presentation을 바꾸되 같은 command owner, contact/result와 stamina rules를 사용한다.
 - Character Presentation Profile은 role silhouette, front/side proportions, equipment/tool landmarks, representative pose와 minimum viewport readability를 immutable data로 정의한다. Encounter profile은 인간 수거반과 기계 적을 같은 combat DTO로 투영하되 renderer가 family별 presentation만 읽는다.
@@ -133,7 +135,9 @@ Keyboard / Touch / DOM intent
 - Camera feedback, interpolation과 giant scale은 gameplay position/collider를 암묵적으로 변경하지 않는다.
 - Polygon cutout과 smooth vector cartoon은 같은 source geometry를 공유한다. Scene art profile은 실제
   camera에서 character scale, 5개 안팎 parallax layer, low-saturation palette, landmark density와
-  material vocabulary를 정의하며 region code가 renderer drawing procedure를 복제하지 않는다.
+  material vocabulary를 정의하며 region code가 renderer drawing procedure를 복제하지 않는다. 인간형은
+  desktop viewport 높이의 약 18~22%로 작게 읽히는 framing을 유지해 캐릭터·NPC·집·설비가 한 화면에
+  생활 공간과 함께 들어오며 oversized fallback zoom을 사용하지 않는다.
 - Directional/point light는 position, direction, intensity, range와 functional accent를 frozen data로
   제공한다. Renderer의 lighting pass는 surface normal, material response와 explicit occluder를 계산한
   뒤 luminance를 3~4단계로 quantize하고 contact/projected shadow를 합성한다. 단순 원형 overlay나
