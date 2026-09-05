@@ -23,6 +23,7 @@ export const SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID = 'scrap-rival-brace-guide';
 export const SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID = 'scrap-rival-perimeter-guide';
 export const SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID = 'scrap-rival-survey-guide';
 export const SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID = 'scrap-rival-approach-guide';
+export const SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID = 'scrap-rival-plate-guide';
 export const SCRAP_RIVAL_PLATE_ENTITY_ID = 'scrap-rival-yard-plate';
 export const SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID = 'scrap-player-search-notice';
 export const SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID = 'scrap-rival-collapse-warning';
@@ -2994,9 +2995,25 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1112, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '경계 유닛은 멈췄어. 저기 떨어진 흉갑 조각까지 같이 가자. 흔들리면 네 방패 뒤로 붙을게.',
+                '조각 표식을 내가 붙일 테니 넌 cable이 어디서 내려앉았는지 봐 줘. 점검만 하고 흉곽 아래로 가자.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
               id: SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
               kind: 'story-interaction',
-              position: { x: 1078, y: 354 },
+              position: { x: 1188, y: 354 },
               interactionRange: 76,
               autoStart: true,
               autoStartRange: 36,
@@ -3013,7 +3030,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             {
               id: SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID,
               kind: 'story-interaction',
-              position: { x: 1104, y: 354 },
+              position: { x: 1214, y: 354 },
               interactionRange: 76,
               autoStart: true,
               autoStartRange: 44,
@@ -3046,7 +3063,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
             {
               id: SCRAP_RIVAL_SEARCH_ENTITY_ID,
               kind: 'story-interaction',
-              position: { x: 1180, y: 354 },
+              position: { x: 1240, y: 354 },
               interactionRange: 88,
               speaker: SCRAP_CAST.RIVAL.name,
               conversationId: SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
@@ -4528,7 +4545,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
-        { op: 'set-enabled', target: SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID, value: true },
         { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
         { op: 'set-enabled', target: 'scrap-yard-winch-base-mark', value: true },
         { op: 'set-enabled', target: 'scrap-yard-chest-plate-mark', value: true },
@@ -4549,7 +4566,6 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'scrap-rival-search-head', value: true },
         { op: 'set-enabled', target: 'scrap-rival-search-hook', value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_WALK_ENTITY_ID, value: true },
-        { op: 'set-enabled', target: SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID, value: true },
         { op: 'set-enabled', target: SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID, value: true },
         { op: 'set-enabled', target: SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID, value: true },
         { op: 'set-enabled', target: 'scrap-yard-winch-base', value: true },
