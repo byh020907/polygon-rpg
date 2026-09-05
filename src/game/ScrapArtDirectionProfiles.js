@@ -18,7 +18,7 @@ const MINE_TUNNEL_ART_DIRECTION = freezeRecord({
   saturationRetention: 0.12,
   quantizationLevels: 4,
   ambientIntensity: 0.2,
-  cameraZoom: 2.65,
+  cameraZoom: 1.0,
   cameraFocusY: 0.72,
   mobileCameraScale: 1.08,
   lights: [

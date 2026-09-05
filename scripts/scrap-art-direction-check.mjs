@@ -78,7 +78,7 @@ const artDirection = createSceneArtDirectionReadModel(SCRAP_ART_DIRECTION_PROFIL
 assert.ok(Object.isFrozen(artDirection));
 assert.equal(artDirection.saturationRetention, 0.12);
 assert.equal(artDirection.quantizationLevels, 4);
-assert.equal(artDirection.cameraZoom, 2.65);
+assert.equal(artDirection.cameraZoom, 1.0);
 assert.equal(artDirection.mobileCameraScale, 1.08);
 assert.equal(artDirection.shadowCasters.length, 3);
 assert.equal(artDirection.lights.filter((light) => light.kind === 'directional').length, 1);
