@@ -153,6 +153,38 @@ assert.ok(
     authoredMidRoll.projectedJoints.farShoulder.depth,
   'orthographic projection must preserve authored near/far depth order',
 );
+// Classic head-first forward roll: the head drives forward at entry, tucks to its
+// lowest and most forward point at ground contact with the hands planted near the
+// feet, then uncurls forward toward travel without a backward back-arch.
+const rollEntry = rollPose(0);
+const rollDive = rollPose(0.14);
+const rollContact = rollPose(0.36);
+const rollUnfold = rollPose(0.62);
+assert.ok(
+  rollEntry.projectedJoints.head.x > 10,
+  'roll entry must drive the head forward, not start upright or backward',
+);
+assert.ok(
+  rollDive.projectedJoints.nearHand.y > rollEntry.projectedJoints.nearHand.y,
+  'roll dive must reach the weapon hand down toward the ground ahead',
+);
+assert.ok(
+  rollContact.projectedJoints.head.y > rollDive.projectedJoints.head.y &&
+    rollContact.projectedJoints.head.x > rollDive.projectedJoints.head.x,
+  'roll contact must tuck the head to its lowest and most forward ground point',
+);
+assert.ok(
+  Math.abs(rollContact.projectedJoints.head.y - rollContact.projectedJoints.nearFoot.y) < 20,
+  'roll contact head must arrive near ground level with the tucked feet',
+);
+assert.ok(
+  Math.abs(rollContact.projectedJoints.nearHand.y - rollContact.projectedJoints.nearFoot.y) < 12,
+  'roll contact hands must plant near the ground with the tucked feet',
+);
+assert.ok(
+  rollUnfold.projectedJoints.head.x > rollEntry.projectedJoints.head.x,
+  'roll unfold must exit forward, never snap the head backward',
+);
 
 for (const progress of [0, 0.5, 0.999_999, 1]) {
   const rollMotionPose = samplePlayerMotionPose({
@@ -207,6 +239,13 @@ for (const [motionId, contactFrameId] of Object.entries({
   heavy: 'heavy-contact',
   rising: 'rising-contact',
   shieldBash: 'counter-contact',
+  thrust: 'thrust-contact',
+  spin: 'spin-contact',
+  airSlash: 'air-slash-contact',
+  airHeavy: 'air-heavy-contact',
+  airReturn: 'air-return-contact',
+  airSpin: 'air-spin-contact',
+  airCross: 'air-cross-contact',
 })) {
   for (const timingProfile of [{}, ...EQUIPMENT_PROFILES.map(({ combatTiming }) => combatTiming)]) {
     const frame = combatMotionFrameData(motionId, timingProfile);
@@ -254,6 +293,13 @@ for (const { id: equipmentId, combatTiming } of EQUIPMENT_PROFILES) {
     heavy: 'heavy-contact',
     rising: 'rising-contact',
     shieldBash: 'counter-contact',
+    thrust: 'thrust-contact',
+    spin: 'spin-contact',
+    airSlash: 'air-slash-contact',
+    airHeavy: 'air-heavy-contact',
+    airReturn: 'air-return-contact',
+    airSpin: 'air-spin-contact',
+    airCross: 'air-cross-contact',
   })) {
     const controller = new CombatCommandController({ timingProfile: combatTiming });
     controller.start(motionId);
@@ -453,10 +499,12 @@ console.log(
     probe: 'combat-motion-continuity',
     assertions: [
       'authored-roll-pose-strip',
+      'head-first-roll-entry-contact-unfold',
       '3d-skeleton-side-projection',
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',
       'authored-basic-strong-launcher-and-counter-pose-strips',
+      'authored-thrust-spin-and-all-air-pose-strips',
       'authored-idle-run-jump-fall-landing-guard-hit-pose-strips',
       'normal-enemy-body-collision',
       'normal-enemy-roll-through',
