@@ -386,6 +386,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-greenhouse-roadhead',
       'scrap-greenhouse-boss',
       'scrap-greenhouse-resolved',
+      'scrap-snow-roadhead',
       'scrap-snow-boss',
       'scrap-snow-resolved',
       'scrap-quarry-boss',

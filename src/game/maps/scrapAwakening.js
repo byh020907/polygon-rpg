@@ -101,6 +101,13 @@ export const SCRAP_SNOW_TUNNEL_ROOM_ID = 'snow-trade-road-old-tunnel';
 export const SCRAP_SNOW_TRAIN_ROOM_ID = 'snow-trade-road-snowplow-siding';
 export const SCRAP_SNOW_CREW_CONVERSATION_ID = 'snow-trade-road:crew-briefing';
 export const SCRAP_SNOW_FACILITY_CONVERSATION_ID = 'snow-trade-road:facility-observed';
+export const SCRAP_SNOW_WAITING_CONVERSATION_ID = 'snow-trade-road:waiting-keeper';
+export const SCRAP_SNOW_WAITING_WORKING_CONVERSATION_ID = 'snow-trade-road:waiting-keeper-working';
+export const SCRAP_SNOW_WAITING_AFTER_CONVERSATION_ID = 'snow-trade-road:waiting-keeper-after';
+export const SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID = 'snow-rival-scout';
+export const SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID = 'snow-waiting-keeper';
+export const SCRAP_SNOW_WAITING_WORKING_ENTITY_ID = 'snow-waiting-keeper-working';
+export const SCRAP_SNOW_WAITING_AFTER_ENTITY_ID = 'snow-waiting-keeper-after';
 export const SCRAP_SNOW_REPLACEMENT_CONVERSATION_ID = 'snow-trade-road:replacement-complete';
 export const SCRAP_SNOW_SEPARATION_CONVERSATION_ID = 'snow-trade-road:machine-separated';
 export const SCRAP_SNOW_PART_CONVERSATION_ID = 'snow-trade-road:part-claimed';
@@ -2624,6 +2631,94 @@ const snowRoadheadRenderItems = [
     order: 20,
     role: 'rail-signal-lamp',
   }),
+  item('snow-waiting-keeper-coat', rectangle(468, 338, 32, 88), '#3f5566', {
+    stroke: '#1c2831',
+    lineWidth: 3,
+    order: 18,
+    label: '대기 신호원 · 방한 외투',
+    role: 'snow-train-crew',
+  }),
+  item('snow-waiting-keeper-hat', rectangle(466, 320, 36, 12), '#8fb6cc', {
+    stroke: '#2c4453',
+    lineWidth: 2,
+    order: 20,
+    label: '대기 신호원 · 방한 모자',
+    role: 'winter-cap',
+  }),
+  item(
+    'snow-waiting-keeper-lamp',
+    [
+      { x: 446, y: 426 },
+      { x: 452, y: 422 },
+      { x: 476, y: 352 },
+      { x: 470, y: 350 },
+    ],
+    '#d8efff',
+    {
+      stroke: '#2c4453',
+      lineWidth: 2,
+      order: 20,
+      label: '대기 신호원 · 휴대 신호등',
+      role: 'rail-signal-lamp',
+    },
+  ),
+  item('snow-rival-scout-torso', rectangle(1077, 334, 26, 92), '#56666a', {
+    stroke: '#232c2e',
+    lineWidth: 3,
+    order: 18,
+    label: '라이벌 · 정찰 작업복',
+    role: 'rival-apprentice',
+  }),
+  item('snow-rival-scout-head', polygon(1090, 320, 13, 15, 7), '#c69c76', {
+    stroke: '#3a2c21',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 측량 고글',
+    role: 'rival-head',
+  }),
+  item('snow-rival-scout-hook', rectangle(1105, 348, 8, 54), '#b9a66c', {
+    stroke: '#4d4223',
+    lineWidth: 2,
+    order: 20,
+    label: '라이벌 · 정찰 갈고리',
+    role: 'salvage-hook',
+  }),
+  item('snow-rival-scout-band', rectangle(1079, 358, 22, 7), '#75d6c4', {
+    stroke: '#2c4a47',
+    lineWidth: 1,
+    order: 21,
+    label: '라이벌 · 청록 수거 표식띠',
+    role: 'rival-marker',
+  }),
+  item('snow-gate-keeper-coat', rectangle(1224, 338, 32, 88), '#3f5566', {
+    stroke: '#1c2831',
+    lineWidth: 3,
+    order: 18,
+    label: '터널 앞 대기 신호원 · 방한 외투',
+    role: 'snow-train-crew',
+  }),
+  item('snow-gate-keeper-hat', rectangle(1222, 320, 36, 12), '#8fb6cc', {
+    stroke: '#2c4453',
+    lineWidth: 2,
+    order: 20,
+    label: '터널 앞 대기 신호원 · 방한 모자',
+    role: 'winter-cap',
+  }),
+  item('snow-gate-lamp-dim', rectangle(1262, 366, 14, 20), '#5a6b76', {
+    stroke: '#2b353b',
+    lineWidth: 2,
+    order: 20,
+    label: '터널 앞 꺼진 신호등',
+    role: 'rail-signal-lamp',
+  }),
+  item('snow-gate-lamp-lit', rectangle(1262, 366, 14, 20), '#d8f2ff', {
+    stroke: '#2f6a7a',
+    lineWidth: 2,
+    order: 20,
+    enabled: false,
+    label: '터널 앞 켜진 신호등',
+    role: 'rail-signal-lamp-lit',
+  }),
   item('snow-tunnel-status-board', rectangle(790, 324, 92, 102), '#607684', {
     stroke: '#273b48',
     lineWidth: 4,
@@ -4339,6 +4434,67 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               presentationProfileId: 'snow-train-crew',
               campaignRegionId: SCRAP_SNOW_REGION_ID,
               campaignStageKind: 'npc-briefing',
+            },
+            {
+              id: SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 486, y: 354 },
+              interactionRange: 84,
+              speaker: '대기 신호원',
+              conversationId: SCRAP_SNOW_WAITING_CONVERSATION_ID,
+              conversationTitle: '교역대를 기다리는 신호원',
+              lines: [
+                '터널이 막힌 채로 있어. 승무원은 열선 얘기만 하지만, 난 저 신호등이 다시 켜지는 걸 보고 싶어.',
+                '네가 길목 수거반을 치우면 내가 먼저 들어가서 교역대를 맞이할게. 휴대 신호등은 이미 챙겼어.',
+                '오른쪽 현황판은 봤어? 개통 시간 안에 끝내야 고대 병기가 터널 경계를 우회한다더군.',
+              ],
+              presentationProfileId: 'snow-train-crew',
+            },
+            {
+              id: SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1090, y: 354 },
+              interactionRange: 76,
+              autoStart: true,
+              autoStartRange: 64,
+              speaker: SCRAP_CAST.RIVAL.name,
+              lines: [
+                '먼저 와서 터널 입구를 봤어. 막힌 열선 cable을 살리려면 온실 평원의 저압 지열 규격을 확인해야 한대.',
+                '항구 용접공도 절연 이음쇠 규격을 알고 있으니 들렀다 가. 채석장 반장은 발파 신호 순서를 알려준대.',
+              ],
+              presentationProfileId: 'rival-scout',
+              presentationMode: 'ambient',
+              enabled: false,
+            },
+            {
+              id: SCRAP_SNOW_WAITING_WORKING_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 신호원',
+              conversationId: SCRAP_SNOW_WAITING_WORKING_CONVERSATION_ID,
+              conversationTitle: '터널 앞에 선 대기 신호원',
+              lines: [
+                '통로가 열렸어. 신호등이 켜지면 내가 먼저 들어가서 교역대를 맞이할게.',
+                '넌 대피선 쪽을 맡아줘. 길목 수거반이 또 열선을 노릴지도 몰라.',
+              ],
+              presentationProfileId: 'snow-train-crew',
+              enabled: false,
+            },
+            {
+              id: SCRAP_SNOW_WAITING_AFTER_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 1240, y: 354 },
+              interactionRange: 78,
+              speaker: '대기 신호원',
+              conversationId: SCRAP_SNOW_WAITING_AFTER_CONVERSATION_ID,
+              conversationTitle: '개통을 마친 대기 신호원',
+              lines: [
+                '교역대가 지나갔어! 신호등은 켜 둘게. 이제 이 터널은 열선으로 안전하게 유지돼.',
+                '제설 열차 장갑은 가져가. 네 로봇 장갑이 우리 교역로를 우회시킨 셈이니까.',
+              ],
+              presentationProfileId: 'snow-train-crew',
+              enabled: false,
             },
             {
               id: 'snow-facility-inspection',
@@ -6268,6 +6424,21 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       operations: [{ op: 'set-enabled', target: 'snow-facility-inspection', value: true }],
     },
     {
+      id: 'snow-cast-rival-scout',
+      priority: 332,
+      when: { fact: 'scrapRegionStatuses.snow-trade-road', in: ['available', 'in-progress'] },
+      operations: [{ op: 'set-enabled', target: SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID, value: true }],
+    },
+    {
+      id: 'snow-cast-working',
+      priority: 334,
+      when: { fact: 'scrapRegionStatuses.snow-trade-road', eq: 'in-progress' },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SNOW_WAITING_WORKING_ENTITY_ID, value: true },
+      ],
+    },
+    {
       id: 'snow-core-event-started',
       priority: 340,
       when: { fact: 'scrapRegionStatuses.snow-trade-road', in: ['in-progress', 'resolved'] },
@@ -6373,6 +6544,22 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           property: 'label',
           value: 'SNOWPLOW ARMOR · 차고 수송 완료',
         },
+      ],
+    },
+    {
+      id: 'snow-cast-after',
+      priority: 392,
+      when: {
+        fact: 'scrapRegionStageIds.snow-trade-road',
+        eq: 'snow-trade-road:campaign-updated',
+      },
+      operations: [
+        { op: 'set-enabled', target: SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SNOW_WAITING_WORKING_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAP_SNOW_WAITING_AFTER_ENTITY_ID, value: true },
+        { op: 'set-enabled', target: 'snow-gate-lamp-dim', value: false },
+        { op: 'set-enabled', target: 'snow-gate-lamp-lit', value: true },
       ],
     },
     {

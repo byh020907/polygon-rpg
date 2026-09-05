@@ -32,6 +32,10 @@ import {
   SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID,
   SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID,
   SCRAP_GREENHOUSE_RIVAL_SCOUT_ENTITY_ID,
+  SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID,
+  SCRAP_SNOW_WAITING_WORKING_ENTITY_ID,
+  SCRAP_SNOW_WAITING_AFTER_ENTITY_ID,
+  SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
@@ -3244,6 +3248,145 @@ assert.doesNotMatch(
   /학원|교관|마법 생물/,
 );
 
+const snowRoadheadEntityIds = () =>
+  snowFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  snowRoadheadEntityIds().includes(SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID),
+  '설산 roadhead에는 교역대를 기다리는 생활 당사자 신호원이 필요합니다.',
+);
+assert.ok(
+  snowRoadheadEntityIds().includes(SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID),
+  '설산 roadhead에는 온실 cable 소문을 가져오는 라이벌 연결 정찰이 필요합니다.',
+);
+assert.equal(
+  snowRoadheadEntityIds().includes(SCRAP_SNOW_WAITING_WORKING_ENTITY_ID),
+  false,
+  '사건 시작 전에는 터널 앞 작업 상태의 대기 신호원이 미리 열리면 안 됩니다.',
+);
+assert.equal(
+  snowRoadheadEntityIds().includes(SCRAP_SNOW_WAITING_AFTER_ENTITY_ID),
+  false,
+  '해결 전에는 개통을 마친 상태의 대기 신호원이 미리 열리면 안 됩니다.',
+);
+assert.ok(itemIds(snowFlowScene).includes('snow-waiting-keeper-coat'));
+assert.ok(itemIds(snowFlowScene).includes('snow-waiting-keeper-lamp'));
+assert.ok(itemIds(snowFlowScene).includes('snow-rival-scout-torso'));
+assert.ok(itemIds(snowFlowScene).includes('snow-rival-scout-band'));
+assert.ok(itemIds(snowFlowScene).includes('snow-gate-lamp-dim'));
+assert.equal(
+  itemIds(snowFlowScene).includes('snow-gate-lamp-lit'),
+  false,
+  '해결 전에는 켜진 터널 신호등을 보여주면 안 됩니다.',
+);
+const waitingKeeperLines = mapEntityLines(SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID).join('\n');
+assert.match(waitingKeeperLines, /터널/);
+assert.match(waitingKeeperLines, /현황판/);
+const snowRivalScoutLines = mapEntityLines(SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID).join('\n');
+assert.match(snowRivalScoutLines, /cable/);
+assert.match(snowRivalScoutLines, /온실/);
+assert.match(snowRivalScoutLines, /항구|채석장/);
+
+const snowCastScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: snowFlowScene.getProgressionSnapshot(),
+});
+let snowCastSequence = 200;
+const snowCastRegionBefore = snowCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+snowCastScene.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+  x: 486,
+});
+snowCastSequence = completeDialogue(snowCastScene, snowCastSequence);
+const snowCastRegionAfterKeeper = snowCastScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+assert.equal(
+  snowCastRegionAfterKeeper.eventStageKind,
+  snowCastRegionBefore.eventStageKind,
+  '대기 신호원 대화는 지역 사건 stage를 바꾸면 안 됩니다.',
+);
+assert.equal(
+  snowCastRegionAfterKeeper.status,
+  snowCastRegionBefore.status,
+  '대기 신호원 대화는 지역 상태를 바꾸면 안 됩니다.',
+);
+snowCastScene.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+  x: 1090,
+});
+snowCastScene.update(STEP_SECONDS, input({ right: true }));
+const snowRivalDialogue = snowCastScene.getWorldStatus().dialogue;
+assert.equal(
+  snowRivalDialogue.active,
+  true,
+  '라이벌 연결 정찰 ambient가 자동으로 시작되어야 합니다.',
+);
+assert.equal(snowRivalDialogue.presentationMode, 'ambient');
+assert.equal(snowRivalDialogue.speaker, SCRAP_CAST.RIVAL.name);
+assert.equal(snowRivalDialogue.interactionId, SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID);
+const snowRivalStartX = snowCastScene.position.x;
+snowCastScene.update(
+  STEP_SECONDS,
+  input({ right: true, jump: true, jumpSequence: snowCastSequence }),
+);
+snowCastSequence += 1;
+assert.ok(
+  snowCastScene.position.x > snowRivalStartX,
+  '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
+);
+assert.equal(
+  snowCastScene
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID).status,
+  snowCastRegionBefore.status,
+  '라이벌 연결 정찰 ambient는 지역 상태를 바꾸면 안 됩니다.',
+);
+for (let tick = 0; tick < 1_200 && snowCastScene.getWorldStatus().dialogue.active; tick += 1) {
+  snowCastScene.update(STEP_SECONDS, EMPTY_INPUT);
+}
+assert.equal(
+  snowCastScene.getWorldStatus().dialogue.active,
+  false,
+  '라이벌 연결 정찰 ambient는 입력 없이 짧게 종료되어야 합니다.',
+);
+
+const snowRoadheadQaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+snowRoadheadQaScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_SNOW_REGION_ID,
+  stageKind: 'npc-briefing',
+  status: 'available',
+});
+snowRoadheadQaScene.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+  x: 730,
+});
+assert.ok(
+  snowRoadheadQaScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('snow-cast-rival-scout'),
+  'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
+);
+assert.ok(itemIds(snowRoadheadQaScene).includes('snow-waiting-keeper-hat'));
+assert.ok(itemIds(snowRoadheadQaScene).includes('snow-rival-scout-hook'));
+assert.equal(
+  itemIds(snowRoadheadQaScene).includes('snow-gate-lamp-lit'),
+  false,
+  'roadhead QA 상태에서는 켜진 터널 신호등이 없어야 합니다.',
+);
+const snowRoadheadQaRequest = readVisualQaRequest(
+  '?visualQa=1&gameStart=scrap-snow-roadhead&visualQaRenderer=polygon&visualQaPhase=active',
+);
+assert.equal(snowRoadheadQaRequest.scenario.roomId, SCRAP_SNOW_ROAD_ROOM_ID);
+assert.equal(snowRoadheadQaRequest.scenario.x, 730);
+assert.ok(
+  snowRoadheadQaRequest.scenario.expectation.expectedItems.includes('snow-rival-scout-torso'),
+);
+
 setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, 'npc-briefing');
 snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
 let snowRegion = snowFlowScene
@@ -3276,6 +3419,33 @@ snowRegion = snowFlowScene
 assert.equal(snowRegion.status, 'in-progress');
 assert.equal(snowFlowScene.getWorldStatus().campaign.phaseLabel, '밤');
 assert.equal(snowFlowScene.getWorldStatus().campaign.deadlineLabel, 'D-25');
+
+const snowInProgressEntityIds = () =>
+  snowFlowScene.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.equal(
+  snowInProgressEntityIds().includes(SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID),
+  false,
+  '사건 진행 중에는 입구에서 기다리던 대기 신호원이 터널 앞으로 이동해야 합니다.',
+);
+assert.ok(
+  snowInProgressEntityIds().includes(SCRAP_SNOW_WAITING_WORKING_ENTITY_ID),
+  '사건 진행 중에는 터널 앞에서 교역대를 맞이할 준비를 하는 대기 신호원이 필요합니다.',
+);
+assert.ok(
+  snowInProgressEntityIds().includes(SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID),
+  '사건 진행 중에도 라이벌 연결 정찰이 roadhead에 남아 있어야 합니다.',
+);
+snowFlowScene.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+  x: 1240,
+});
+snowJumpSequence = completeDialogue(snowFlowScene, snowJumpSequence);
+snowRegion = snowFlowScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID);
+assert.equal(snowRegion.status, 'in-progress');
+assert.equal(snowRegion.collected, false);
 
 setAtPortalToRoom(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, SCRAP_SNOW_TUNNEL_ROOM_ID);
 snowFlowScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: snowJumpSequence }));
@@ -3403,6 +3573,50 @@ assert.deepEqual(
   completedSnowReload.getProgressionSnapshot(),
   beforeRepeatedSnowClaim,
   '완료 reload의 반복 설산 interaction은 부품·시간·보상을 바꾸면 안 됩니다.',
+);
+
+completedSnowReload.setVisualQaLocation({
+  regionId: SCRAP_SNOW_REGION_ID,
+  roomId: SCRAP_SNOW_ROAD_ROOM_ID,
+  x: 1240,
+});
+const snowResolvedEntityIds = () =>
+  completedSnowReload.mapRuntime.getResolvedSnapshot().entities.map((entity) => entity.id);
+assert.ok(
+  snowResolvedEntityIds().includes(SCRAP_SNOW_WAITING_AFTER_ENTITY_ID),
+  '해결 뒤에는 개통을 마치고 터널 앞에 남은 대기 신호원이 필요합니다.',
+);
+assert.equal(
+  snowResolvedEntityIds().includes(SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID),
+  false,
+  '해결 뒤에는 입구 대기 상태의 신호원이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  snowResolvedEntityIds().includes(SCRAP_SNOW_WAITING_WORKING_ENTITY_ID),
+  false,
+  '해결 뒤에는 작업 준비 상태의 신호원이 다시 나타나면 안 됩니다.',
+);
+assert.equal(
+  snowResolvedEntityIds().includes(SCRAP_SNOW_RIVAL_SCOUT_ENTITY_ID),
+  false,
+  '해결 뒤 라이벌 연결 정찰은 다음 지역으로 먼저 이동해야 합니다.',
+);
+assert.ok(itemIds(completedSnowReload).includes('snow-gate-lamp-lit'));
+assert.equal(
+  itemIds(completedSnowReload).includes('snow-gate-lamp-dim'),
+  false,
+  '해결 뒤에는 꺼진 터널 신호등이 남아 있으면 안 됩니다.',
+);
+const snowAfterLines = mapEntityLines(SCRAP_SNOW_WAITING_AFTER_ENTITY_ID).join('\n');
+assert.match(snowAfterLines, /교역대/);
+let snowAfterSequence = 5_100;
+snowAfterSequence = completeDialogue(completedSnowReload, snowAfterSequence);
+assert.equal(
+  completedSnowReload
+    .getWorldStatus()
+    .campaign.regions.find((region) => region.id === SCRAP_SNOW_REGION_ID).status,
+  'resolved',
+  '개통 완료 대화는 해결 상태를 바꾸면 안 됩니다.',
 );
 
 const quarryFlowScene = createTestGameScene({
