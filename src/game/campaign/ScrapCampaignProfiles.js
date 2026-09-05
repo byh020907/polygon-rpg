@@ -314,6 +314,8 @@ const primaryIssues = [
         objective: '눈 막힌 옛 터널에서 지열 배관용 내한 cable 상태를 확인하세요.',
         completionStageKind: 'facility-observed',
         completionEvidence: '설산 터널 내한 cable 현장 확인',
+        encounterLabel: '내한 케이블 절취 세력 제압',
+        requiredEncounterIds: ['snow-thermal-raider'],
       },
       {
         id: 'greenhouse-mine-seal-plate',

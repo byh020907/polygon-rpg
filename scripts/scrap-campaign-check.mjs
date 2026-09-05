@@ -1013,6 +1013,149 @@ const greenhouseEventPreview = previewScrapCampaignAction(
 );
 assert.equal(greenhouseEventPreview.costSegments, 17);
 assert.equal(greenhouseEventPreview.successExtensionDays, 4);
+let greenhouseIssue = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'greenhouse-plains' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+greenhouseIssue = commit(greenhouseIssue, regionStageAction('greenhouse-plains', 'npc-briefing'));
+greenhouseIssue = commit(
+  greenhouseIssue,
+  regionStageAction('greenhouse-plains', 'facility-observed'),
+);
+greenhouseIssue = commit(greenhouseIssue, issueFocusAction('greenhouse-plains'));
+const greenhouseIssueWindow = getScrapCampaignReadModel(
+  greenhouseIssue,
+  SCRAP_CAMPAIGN_PROFILE,
+).issueWindow;
+assert.equal(greenhouseIssueWindow.primary.id, 'greenhouse-restoration-operation');
+assert.equal(greenhouseIssueWindow.primary.regionId, 'greenhouse-plains');
+assert.equal(greenhouseIssueWindow.linkedCount, 2);
+assert.equal(greenhouseIssueWindow.completedLinkedCount, 0);
+assert.deepEqual(
+  greenhouseIssueWindow.linked.map((issue) => issue.targetRegionId),
+  ['snow-trade-road', 'abandoned-mine'],
+);
+greenhouseIssue = progressRegionToStage(greenhouseIssue, 'snow-trade-road', 'facility-observed');
+let greenhouseSnowReadModel = getScrapCampaignReadModel(greenhouseIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(greenhouseSnowReadModel.issueWindow.primary.id, 'greenhouse-restoration-operation');
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[0].completed, false);
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[0].statusLabel, '현장 전투 필요');
+assert.equal(
+  greenhouseSnowReadModel.issueWindow.linked[0].encounterLabel,
+  '내한 케이블 절취 세력 제압',
+);
+assert.deepEqual(greenhouseSnowReadModel.issueWindow.linked[0].requiredEncounterIds, [
+  'snow-thermal-raider',
+]);
+assert.deepEqual(greenhouseSnowReadModel.issueWindow.linked[0].remainingEncounterIds, [
+  'snow-thermal-raider',
+]);
+assert.equal(
+  greenhouseSnowReadModel.issueWindow.linked[0].completionEvidence,
+  '설산 터널 내한 cable 현장 확인',
+);
+assert.ok(
+  ENCOUNTER_PROFILES['snow-thermal-raider'],
+  '연결 전투 profile이 필요합니다: snow-thermal-raider',
+);
+assert.equal(ENCOUNTER_PROFILES['snow-thermal-raider'].role, 'field');
+assert.equal(ENCOUNTER_PROFILES['snow-thermal-raider'].species, 'human-salvager');
+const blockedThermalEventPreview = previewScrapCampaignAction(
+  greenhouseIssue,
+  regionEventStartAction('greenhouse-plains'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(blockedThermalEventPreview.allowed, false);
+assert.deepEqual(blockedThermalEventPreview.blockingIssueIds, [
+  'greenhouse-snow-thermal-cable',
+  'greenhouse-mine-seal-plate',
+]);
+const thermalEncounterPreview = previewScrapCampaignAction(
+  greenhouseIssue,
+  linkedEncounterAction('snow-trade-road', 'snow-thermal-raider', 'preview'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(thermalEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(thermalEncounterPreview.costSegments, 0);
+assert.equal(thermalEncounterPreview.willGameOver, false);
+greenhouseIssue = commit(
+  greenhouseIssue,
+  linkedEncounterAction('snow-trade-road', 'snow-thermal-raider', 'thermal'),
+);
+greenhouseSnowReadModel = getScrapCampaignReadModel(greenhouseIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(greenhouseSnowReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[0].completed, true);
+assert.equal(greenhouseSnowReadModel.issueWindow.linked[0].statusLabel, '현장 해결');
+assert.deepEqual(greenhouseSnowReadModel.issueWindow.linked[0].remainingEncounterIds, []);
+assert.deepEqual(greenhouseIssue.clearedEncounterIds, ['snow-thermal-raider']);
+assert.throws(
+  () =>
+    commit(
+      greenhouseIssue,
+      linkedEncounterAction('snow-trade-road', 'snow-thermal-raider', 'thermal-retry'),
+    ),
+  /이미 기록한 연결 전투/,
+  '같은 연결 전투를 중복 기록할 수 없습니다.',
+);
+const repeatedThermalEncounter = commitScrapCampaignAction(
+  greenhouseIssue,
+  linkedEncounterAction('snow-trade-road', 'snow-thermal-raider', 'thermal'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(repeatedThermalEncounter.changed, false);
+assert.deepEqual(repeatedThermalEncounter.snapshot, greenhouseIssue);
+let reversedThermalOrder = toScrapCampaignSnapshot(
+  { ...fresh, currentLocationId: 'greenhouse-plains' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+reversedThermalOrder = commit(
+  reversedThermalOrder,
+  regionStageAction('greenhouse-plains', 'npc-briefing'),
+);
+reversedThermalOrder = commit(
+  reversedThermalOrder,
+  regionStageAction('greenhouse-plains', 'facility-observed'),
+);
+reversedThermalOrder = commit(reversedThermalOrder, issueFocusAction('greenhouse-plains'));
+reversedThermalOrder = progressRegionToStage(
+  reversedThermalOrder,
+  'snow-trade-road',
+  'npc-briefing',
+);
+reversedThermalOrder = toScrapCampaignSnapshot(
+  { ...reversedThermalOrder, currentLocationId: 'snow-trade-road' },
+  SCRAP_CAMPAIGN_PROFILE,
+);
+reversedThermalOrder = commit(
+  reversedThermalOrder,
+  linkedEncounterAction('snow-trade-road', 'snow-thermal-raider', 'reversed'),
+);
+reversedThermalOrder = progressRegionToStage(
+  reversedThermalOrder,
+  'snow-trade-road',
+  'facility-observed',
+);
+const reversedThermalReadModel = getScrapCampaignReadModel(
+  reversedThermalOrder,
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(reversedThermalReadModel.issueWindow.completedLinkedCount, 1);
+assert.equal(reversedThermalReadModel.issueWindow.linked[0].completed, true);
+greenhouseIssue = progressRegionToStage(greenhouseIssue, 'abandoned-mine', 'facility-observed');
+greenhouseSnowReadModel = getScrapCampaignReadModel(greenhouseIssue, SCRAP_CAMPAIGN_PROFILE);
+assert.equal(greenhouseSnowReadModel.issueWindow.completedLinkedCount, 2);
+assert.deepEqual(
+  greenhouseSnowReadModel.issueWindow.linked.map((issue) => issue.completed),
+  [true, true],
+);
+const greenhouseBothLinksResolvedPreview = previewScrapCampaignAction(
+  toScrapCampaignSnapshot({ ...greenhouseIssue, currentLocationId: 'greenhouse-plains' }),
+  regionEventStartAction('greenhouse-plains'),
+  SCRAP_CAMPAIGN_PROFILE,
+);
+assert.equal(greenhouseBothLinksResolvedPreview.allowed, true);
+assert.equal(greenhouseBothLinksResolvedPreview.costSegments, 17);
+assert.equal(greenhouseBothLinksResolvedPreview.successExtensionDays, 4);
 const greenhouseSuccess = resolveRegion(fresh, 'greenhouse-plains');
 assert.equal(greenhouseSuccess.regionStates['greenhouse-plains'], 'resolved');
 assert.equal(greenhouseSuccess.collectedPartIds.includes(greenhouseProfile.part.id), true);
@@ -1290,7 +1433,7 @@ console.log(
       'ordered-region-stages-event-start-cost-and-success-detour',
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
-      'mine-harbor-greenhouse-and-shipyard-coolant-snow-linked-encounter-requirement-and-order-independent-clearance',
+      'mine-harbor-greenhouse-and-shipyard-coolant-snow-and-greenhouse-thermal-linked-encounter-requirement-and-order-independent-clearance',
       'active-issue-window-schema-v5-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
