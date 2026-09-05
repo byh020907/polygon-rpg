@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { prerequisite, blocked, conflict, partial, RuntimeError, EXIT } from "./errors.mjs"
 import { exists, localDataRoot, nowIso, readJson, runChecked, sha256, shortId, writeJsonAtomic, removeOwnedPath } from "./system.mjs"
@@ -218,24 +218,41 @@ export async function reconcileAndPush(project, config, execution, options = {})
   throw conflict("PUSH_RACE", `Could not publish candidate to ${config.remote}/${config.branch}.`)
 }
 
+async function isWorktreeRepo(worktree) {
+  return runChecked("git", ["-C", worktree, "rev-parse", "--absolute-git-dir"], { timeoutMs: 60_000 }).then(() => true).catch(() => false)
+}
+
+async function deleteCandidateRef(project, execution, expectedCommit) {
+  const ref = await runChecked("git", ["-C", project.root, "rev-parse", "--verify", `refs/heads/${execution.branch}`], {
+    errorCode: "CANDIDATE_REF_MISSING",
+    exitCode: EXIT.PARTIAL,
+    timeoutMs: 60_000,
+  }).then((result) => result.stdout.trim()).catch(() => null)
+  if (!ref) return { worktreeRemoved: true, refRemoved: true, alreadyClean: true }
+  if (expectedCommit && ref !== expectedCommit) throw partial("CANDIDATE_REF_CHANGED", "Candidate worktree is gone but its branch ref no longer matches the published commit; ref deletion was refused.", [{ command: `git show-ref --verify refs/heads/${execution.branch}`, reason: "Inspect the changed ref before any manual cleanup." }], { branch: execution.branch, expectedCommit, actualCommit: ref })
+  await git(project.root, ["update-ref", "-d", `refs/heads/${execution.branch}`, ref], {
+    errorCode: "CANDIDATE_REF_CLEANUP_FAILED",
+    exitCode: EXIT.PARTIAL,
+    sideEffects: "none",
+  })
+  return { worktreeRemoved: true, refRemoved: true, recovered: true }
+}
+
 export async function cleanupCandidate(project, execution, expectedCommit) {
   const worktree = path.resolve(execution.worktree)
   const allowedRoot = path.resolve(project.worktreeRoot)
   if (!worktree.startsWith(`${allowedRoot}${path.sep}`)) throw partial("UNSAFE_WORKTREE_CLEANUP", "Candidate worktree is outside the managed root.", [], { worktree, allowedRoot })
   if (!(await exists(worktree))) {
-    const ref = await runChecked("git", ["-C", project.root, "rev-parse", "--verify", `refs/heads/${execution.branch}`], {
-      errorCode: "CANDIDATE_REF_MISSING",
-      exitCode: EXIT.PARTIAL,
-      timeoutMs: 60_000,
-    }).then((result) => result.stdout.trim()).catch(() => null)
-    if (!ref) return { worktreeRemoved: true, refRemoved: true, alreadyClean: true }
-    if (expectedCommit && ref !== expectedCommit) throw partial("CANDIDATE_REF_CHANGED", "Candidate worktree is gone but its branch ref no longer matches the published commit; ref deletion was refused.", [{ command: `git show-ref --verify refs/heads/${execution.branch}`, reason: "Inspect the changed ref before any manual cleanup." }], { branch: execution.branch, expectedCommit, actualCommit: ref })
-    await git(project.root, ["update-ref", "-d", `refs/heads/${execution.branch}`, ref], {
-      errorCode: "CANDIDATE_REF_CLEANUP_FAILED",
-      exitCode: EXIT.PARTIAL,
-      sideEffects: "none",
-    })
-    return { worktreeRemoved: true, refRemoved: true, recovered: true }
+    return deleteCandidateRef(project, execution, expectedCommit)
+  }
+  if (!(await isWorktreeRepo(worktree))) {
+    // Remnant of an interrupted `git worktree remove`: admin unregistered and
+    // files gone, but the empty directory survived (Windows file locks). Only
+    // auto-recover when nothing is left to preserve.
+    const entries = await readdir(worktree).catch(() => null)
+    if (!entries || entries.length > 0) throw partial("CANDIDATE_CHANGED_BEFORE_CLEANUP", "Candidate worktree directory is not a git repository and is not empty; cleanup was refused and all files were preserved.", [{ command: "pgl-opencode status --json", reason: "Inspect the preserved candidate and any Human interaction." }], { worktree, expectedCommit })
+    await removeOwnedPath(worktree, allowedRoot)
+    return deleteCandidateRef(project, execution, expectedCommit)
   }
   const cleanliness = await isWorktreeClean(worktree)
   const head = (await git(worktree, ["rev-parse", "HEAD"])).stdout.trim()

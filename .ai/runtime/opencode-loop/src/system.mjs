@@ -46,11 +46,26 @@ export async function readJson(target, fallback = null) {
   }
 }
 
-export async function writeJsonAtomic(target, value) {
+export async function writeJsonAtomic(target, value, options = {}) {
   await mkdir(path.dirname(target), { recursive: true })
   const temporary = `${target}.${process.pid}.${shortId()}.tmp`
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8")
-  await rename(temporary, target)
+  const attempts = options.renameAttempts ?? 5
+  let lastError = null
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await rename(temporary, target)
+      return
+    } catch (error) {
+      lastError = error
+      // Transient Windows file locks (AV scanners, indexers) surface as
+      // EPERM/EBUSY/EACCES on rename; back off briefly instead of failing the tick.
+      if (!["EPERM", "EBUSY", "EACCES"].includes(error?.code) || attempt === attempts) break
+      await sleep(options.renameRetryDelayMs ?? 250 * attempt)
+    }
+  }
+  await rm(temporary, { force: true }).catch(() => null)
+  throw lastError
 }
 
 export async function removeOwnedPath(target, allowedRoot, options = {}) {
