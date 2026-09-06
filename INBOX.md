@@ -463,6 +463,331 @@
   - 실제 Release A → Release B browser 검증을 site data 초기화 없이 통과한다.
   - 설치형 PWA 실제 환경에서 확인할 수 없는 항목은 PASS로 추정하지 않고 정확히 unverified로 남긴다.
 
+- 현재 플레이어의 공격이 적 몸에 시각적으로 명확히 닿는데도 피해가 전혀 발생하지 않는 문제가 있다. 보이는 검과 공격 궤적에 비해 실제 공격 판정 또는 적 hurtbox가 크게 어긋난 것으로 보인다. 원인을 추정만 해서 특정 hitbox 크기를 임의로 키우지 말고, 실제 플레이에서 문제를 먼저 재현한 뒤 플레이어의 시각적 공격 범위와 authoritative 피해 판정을 일치시켜.
+
+  이번 작업의 핵심 결과는 다음과 같다.
+
+  1. 플레이어의 검이나 피해를 주는 공격 궤적이 적의 보이는 몸에 명확히 접촉하면 해당 공격의 정상적인 피해가 발생한다.
+  2. 검이나 공격 궤적이 적에게 닿지 않았는데 피해가 발생하는 보이지 않는 원거리 판정도 없어야 한다.
+  3. 공격 animation, 무기 polygon, swept hit geometry, 적 hurt geometry와 damage active window가 같은 시간과 좌표계를 사용해야 한다.
+  4. 모든 플레이어 공격과 주요 적 체형에서 동일한 contact 원칙을 사용해야 한다.
+
+  이 요청은 플레이어 공격 범위를 전반적으로 크게 만들어 쉽게 맞게 하라는 뜻이 아니다. 보이는 공격과 실제 판정을 같은 위치·크기·방향·시간에 존재하도록 맞추라는 뜻이다.
+
+  ## 현재 문제를 먼저 재현한다
+
+  구현 전에 실제 게임 화면에서 플레이어가 적에게 공격하는 장면을 직접 조작해 문제를 재현해.
+
+  최소한 다음 조건을 확인한다.
+
+  - 플레이어와 적이 서로 오른쪽을 향하는 일반적인 전투
+  - 플레이어가 적의 왼쪽에서 오른쪽으로 공격하는 경우
+  - 플레이어가 적의 오른쪽에서 왼쪽으로 공격하는 경우
+  - 플레이어와 적이 거의 붙어 있는 경우
+  - 검 끝부분이 적 몸에 닿는 거리
+  - 검의 중간 부분이 적 몸을 통과하는 거리
+  - 플레이어가 이동하면서 공격하는 경우
+  - 적이 접근하거나 공격 동작 중일 때 맞히는 경우
+  - 지상 기본 공격, 강공격과 공중 공격
+  - machine 계열 적과 human 계열 적
+
+  각 재현 장면에서 다음 정보를 같은 시점에 확인할 수 있게 해.
+
+  - 화면에 렌더링된 플레이어의 검 또는 공격 무기 형상
+  - 실제 피해 판정에 사용하는 현재 weapon polygon
+  - 프레임 사이 이동을 포함한 swept weapon polygon
+  - 적에게 실제로 적용되는 hurt polygon
+  - 공격의 startup, active, recovery 중 현재 phase
+  - 현재 공격이 이미 해당 적을 타격한 것으로 기록되었는지
+  - contact 계산 결과
+  - 실제 damage 또는 hit event 발생 여부
+
+  적에게 검이 닿는 화면만 캡처하고 끝내지 말고, 그 순간 판정 geometry와 damage 결과를 함께 기록해. 현재 문제를 재현하지 못한 상태에서 기존 테스트가 통과한다는 이유로 수정 없이 완료하지 마.
+
+  ## 보이는 공격의 기준
+
+  여기서 “시각적으로 맞았다”는 것은 다음 중 하나가 적의 보이는 취약 신체와 겹치는 경우를 뜻한다.
+
+  - 실제 검날 polygon
+  - 방패 공격처럼 공격에 사용하는 장비 polygon
+  - 공격 설계상 피해 범위로 의도한 명시적인 공격 arc
+  - 해당 프레임의 무기 이동 경로를 나타내는 실제 damaging sweep
+
+  단순한 장식용 잔상, 먼지, 빛, 화면 흔들림 전체를 피해 판정으로 사용하지는 않는다.
+
+  다만 현재 slash trail이나 공격 arc가 실제 피해 범위보다 훨씬 크게 표시되어 사용자가 적을 맞혔다고 오해하게 만든다면 다음 중 하나로 일치시켜.
+
+  - 그 시각 효과가 실제 damaging sweep을 나타내도록 판정을 맞춘다.
+  - 실제 피해 범위 밖의 장식 효과를 줄이거나 명확히 비접촉 효과로 보이게 한다.
+
+  공격 효과는 크게 보이는데 실제 판정은 검 주변의 작은 일부에만 있는 상태를 그대로 두지 마.
+
+  hit spark, hit ring, hit-stop, 적 피격 자세와 피해 숫자는 authoritative contact가 승인된 뒤에만 표시해야 한다. 반대로 authoritative contact가 승인되었는데 아무 피격 표현이 없는 상태도 허용하지 않는다.
+
+  ## 좌표계와 transform 일치
+
+  플레이어의 시각 geometry와 전투 판정이 다음 transform을 정확히 같은 순서와 같은 값으로 적용하는지 확인해.
+
+  - animation에서 계산된 관절 pose
+  - root와 body offset
+  - 손 위치와 검 시작점
+  - sword angle
+  - weapon length 및 장비별 길이 보정
+  - 캐릭터 geometry scale
+  - 현재 facing에 따른 좌우 반전
+  - 공격 중 이동한 플레이어의 world position
+  - 지상과 공중 상태의 높이
+  - 구르기·점프·피격 등 다른 pose에서 전환된 직후의 위치
+  - 적의 position
+  - 적 presentation scale
+  - 적 facing과 attack facing
+  - 적 animation에 따른 torso, head와 limb 이동
+  - 적의 피격·공격·회복 상태에 따른 body rotation과 offset
+
+  카메라 zoom과 viewport scaling은 world-space 피해 판정을 바꾸면 안 된다. 다만 visual QA overlay를 화면에 표시할 때에는 world geometry를 실제 renderer와 동일한 camera transform으로 투영해야 한다.
+
+  렌더러와 combat owner가 서로 별도의 공식으로 손 위치, 검 각도, scale 또는 facing을 다시 계산하지 않게 해. 가능한 한 한 번 샘플링한 combat geometry를 다음 양쪽이 공유하도록 한다.
+
+  - Canvas에 표시하는 실제 무기 및 신체 형상
+  - authoritative contact와 damage 판정
+
+  렌더링 쪽에서 geometry를 다시 추정하거나, 판정 쪽에서 보이는 pose와 별도의 단순 사각형을 만드는 구조를 남기지 마.
+
+  코드에서 `renderedBlade.points`와 `sceneGeometry.weapon.points`가 같다는 assertion이 이미 존재하거나 추가되더라도 그것만으로 완료하지 마. 다음 단계인 swept geometry, 적 hurt geometry, active timing과 실제 damage 승인까지 같은 좌표와 시점에서 연결되어야 한다.
+
+  ## 시간축과 active window 일치
+
+  시각적으로 검이 적을 통과하는 프레임과 피해 판정의 active window가 어긋나 있는지 확인해.
+
+  다음과 같은 상태가 없어야 한다.
+
+  - 검이 적을 통과하기 전에 active window가 끝남
+  - 검이 적을 통과한 뒤에 active window가 시작됨
+  - startup에서는 검이 이미 적을 관통하지만 판정은 아직 없음
+  - recovery에서 검이 크게 움직이지만 판정은 지나치게 일찍 제거됨
+  - simulation에서는 접촉했지만 renderer interpolation 때문에 화면에서는 다른 위치로 보임
+  - renderer에서는 접촉했지만 damage check는 이전 또는 다음 pose를 사용함
+  - 한 simulation tick 사이에 검이 적을 완전히 통과해 discrete current-frame 검사에서 접촉을 놓침
+  - 이전 공격의 sweep history가 다음 공격에 남음
+  - facing이 바뀐 뒤 이전 방향의 sweep history가 유지됨
+
+  검이 빠르게 이동하는 공격은 현재 프레임의 weapon polygon만 검사하지 말고 이전 simulation sample부터 현재 sample까지의 연속 swept geometry를 사용해 tunneling을 방지해.
+
+  다만 sweep history를 지나치게 길게 유지해 실제 검이 지나간 지 오래된 공간까지 맞는 상태를 만들지 마. sweep은 현재 공격의 유효한 active 구간과 연결되어야 하며 다음 상황에서 적절히 초기화되어야 한다.
+
+  - 새로운 공격 시작
+  - 공격 취소
+  - 공격 종료
+  - facing의 불연속 변경
+  - scene 또는 encounter 전환
+  - 저장 복원
+  - 플레이어가 공격 불가능 상태로 전환
+
+  공격별 active window를 단순히 넓혀서 해결하지 말고, 각 공격의 실제 시각적 contact 구간에 맞춰 정렬해.
+
+  ## 적 hurtbox 일치
+
+  적 hurtbox는 사용자가 보는 적의 실제 취약 신체와 대체로 일치해야 한다.
+
+  최소한 다음 부위를 확인해.
+
+  - torso
+  - head
+  - 팔과 전완
+  - 골반과 다리
+  - 기계형 적의 실제 본체와 공격 가능한 부품
+  - 인간형 적의 보이는 신체
+
+  일반 공격이 적 몸 전체에 피해를 줄 수 있는 설계라면 tiny eye, 중심점 또는 작은 torso 일부만 맞아야 피해가 발생하는 구조로 두지 마.
+
+  특정 부위만 약점인 적이라면 다음을 분리해.
+
+  - 일반 피해를 받는 기본 hurt geometry
+  - 추가 효과 또는 추가 피해를 받는 weak-point geometry
+
+  약점에 맞지 않았다는 이유로 보이는 몸 전체가 무적이 되는 구조를 만들지 않는다. 정말로 특정 부위만 공격 가능한 적이라면, 일반적인 적과 혼동되지 않도록 그 방어 상태와 취약 부위를 시각적으로 분명히 보여야 한다.
+
+  적 animation이 windup, attack, recovery, hit, guard 또는 surrender로 변할 때 hurtbox도 보이는 몸을 따라 움직여야 한다. idle 상태의 고정 사각형을 모든 동작에 계속 사용하는 방식은 피한다.
+
+  다만 cape, 장식, 얇은 안테나처럼 실제 신체 밖으로 크게 돌출된 비전투 장식까지 모두 hurtbox로 만들 필요는 없다. 허용 가능한 차이는 외곽선과 작은 장식 정도여야 하며, 검이 몸통을 관통했는데 판정이 없는 수준의 차이는 허용하지 않는다.
+
+  ## 모든 플레이어 공격 확인
+
+  다음 공격을 모두 확인하고 동일한 geometry/contact 계약을 적용해.
+
+  - 기본 공격
+  - 강공격
+  - 올려치기
+  - 방패 공격
+  - thrust
+  - spin
+  - airSlash
+  - airHeavy
+  - airReturn
+  - airSpin
+  - airCross
+  - 실제 gameplay에서 추가로 노출되는 다른 공격
+
+  각 공격에 대해 다음 세 가지 거리를 확인해.
+
+  1. 확실한 miss
+  2. 검 끝 또는 attack arc 끝이 닿는 경계 contact
+  3. 무기가 적 몸을 명확히 통과하는 확실한 hit
+
+  경계 contact는 양쪽 방향에서 일관되어야 한다. 오른쪽 공격은 맞지만 왼쪽 공격은 빗나가거나, 지상에서는 맞지만 동일한 공중 높이에서 공격하면 전혀 맞지 않는 mirror 오류를 남기지 마.
+
+  방패 공격은 검 polygon을 억지로 재사용하지 말고 실제로 화면에 보이는 방패 또는 몸통 충돌 범위를 사용해.
+
+  공중 공격은 지상 hurtbox를 그대로 사용해 높이가 어긋나지 않도록 실제 공중 pose의 무기 높이와 적 신체 위치를 기준으로 검사해.
+
+  ## 피해 승인 경로 확인
+
+  geometry가 겹치는데도 피해가 발생하지 않는 경우 다음 damage gate 전체를 추적해.
+
+  - 현재 command가 실제 공격 command인지
+  - 현재 frame이 active window인지
+  - stamina 또는 cancel 상태 때문에 공격이 무효화되지 않았는지
+  - 해당 공격 인스턴스가 적을 이미 타격한 것으로 잘못 기록되어 있지 않은지
+  - 공격 ID가 이전 공격과 재사용되지 않는지
+  - 적이 실제 invulnerable 상태인지
+  - guard, posture 또는 armor 판정으로 피해가 막힌 것인지
+  - encounter가 올바른 적 instance를 contact 대상으로 사용하고 있는지
+  - weapon sweep과 hurt polygon 교차 결과가 damage owner까지 전달되는지
+  - contact 승인 후 HIT event와 health 감소가 동일한 target에 적용되는지
+
+  적의 guard나 무적 상태 때문에 피해가 차단되는 경우에는 공격이 허공에 빗나간 것처럼 처리하지 마. 방어 spark, guard sound, posture 반응 등 사용자가 공격 접촉과 방어 성공을 구분할 수 있는 결과가 나와야 한다.
+
+  실제로 겹침은 감지되었지만 attack instance의 중복 방지 상태가 잘못되어 피해가 계속 거부되는 경우, hitbox 크기를 변경하지 말고 해당 lifecycle을 수정해.
+
+  ## 전투 balance 보존
+
+  이번 요청을 해결하기 위해 다음 값을 이유 없이 전반적으로 강화하지 마.
+
+  - 공격 damage
+  - stamina cost
+  - hit-stop 길이
+  - 적 health
+  - 적 이동 속도
+  - 플레이어 자동 접근 거리
+  - 검 길이
+  - 공격 active duration
+  - 플레이어 이동 거리
+
+  현재 보이는 검 자체가 잘못된 길이거나 animation상 잘못된 위치에 있다면 수정할 수 있지만, 판정 문제를 감추기 위해 모든 무기를 길게 늘리거나 모든 적 hurtbox를 큰 원으로 교체하지 마.
+
+  auto-aim, 적에게 순간적으로 끌려가는 보정 또는 화면 밖까지 확장된 보이지 않는 hitbox를 추가하지 않는다.
+
+  ## 디버그 및 시각 검증 surface
+
+  실제 combat geometry를 확인할 수 있는 controllable visual QA 또는 debug overlay를 제공해.
+
+  최소한 다음을 서로 구분해 표시한다.
+
+  - 현재 visible weapon polygon
+  - authoritative current weapon polygon
+  - active 구간의 swept weapon polygon
+  - 적의 hurt polygons
+  - weak-point가 있다면 별도의 weak-point polygon
+  - 승인된 contact point 또는 overlap 영역
+  - 공격 phase
+  - attack instance ID
+  - 이번 공격에서 이미 맞은 target ID
+
+  이 overlay는 일반 사용자 화면에 항상 노출하지 않고 기존 debug/visual QA 경로에서만 사용한다.
+
+  단순히 overlay가 표시된다는 이유로 완료하지 말고, 실제 공격 재생 중 visible weapon과 authoritative polygon이 함께 이동하며 적 contact 순간에 overlap과 피해가 동시에 발생하는지 직접 판독해.
+
+  ## 자동 검증
+
+  기존 geometry equality 테스트를 유지하되 다음 검증을 추가해.
+
+  1. renderer가 사용하는 플레이어 무기 polygon과 authoritative current weapon polygon이 동일한 pose sample에서 나온다.
+  2. 양쪽 facing에서 geometry가 정확히 mirror된다.
+  3. character scale과 weapon length 보정이 render와 contact에 동일하게 적용된다.
+  4. 각 공격의 확실한 miss 거리에서는 피해가 발생하지 않는다.
+  5. 각 공격의 확실한 hit 거리에서는 정확히 한 번 피해가 발생한다.
+  6. 검 끝 경계 contact가 좌우 방향에서 대칭적으로 처리된다.
+  7. 빠른 무기 이동이 한 tick 사이에 적을 통과해도 swept contact가 이를 놓치지 않는다.
+  8. sweep history가 새 공격과 방향 전환 때 초기화된다.
+  9. active window 밖의 장식 동작은 피해를 만들지 않는다.
+  10. 시각적으로 실제 접촉하는 active frame과 damage 승인 frame이 일치한다.
+  11. 적의 idle, windup, attack, recovery와 hit pose에서 hurt geometry가 보이는 몸을 따라간다.
+  12. machine과 human 적 모두 몸통에 명확히 맞는 공격을 정상적으로 받는다.
+  13. guard 상태의 적은 공격을 허공 miss가 아니라 guard contact로 처리한다.
+  14. 한 공격이 같은 적에게 의도치 않게 여러 번 피해를 주지 않는다.
+  15. spin처럼 다중 타격이 의도된 공격만 명시된 횟수만큼 피해를 준다.
+  16. simulation update rate와 renderer frame rate가 달라도 같은 접촉 결과를 낸다.
+  17. camera zoom과 viewport 크기가 달라도 world-space contact 결과는 변하지 않는다.
+
+  단위 테스트에서 polygon 객체 또는 point 배열이 같다는 것만 확인하지 말고, 실제 combat damage owner까지 실행해 적 health 감소와 HIT 또는 GUARD event를 검증해.
+
+  ## 실제 플레이 검증
+
+  자동 테스트와 별도로 실제 브라우저 gameplay에서 확인해.
+
+  최소한 다음 장면을 실제 입력으로 플레이한다.
+
+  - 도입부 첫 수거 유닛과 기본 공격
+  - 가까운 거리와 검 끝 거리의 강공격
+  - 적 공격 준비 중 punish
+  - 왼쪽과 오른쪽 방향의 동일 공격
+  - 점프 후 공중 공격
+  - 이동하면서 실행하는 공격
+  - guard 가능한 적 또는 guard 상태
+  - machine 적과 human 적
+
+  debug 위치 이동 후 공격 결과를 강제로 resolve하는 방식만 사용하지 말고, 실제 입력으로 공격을 시작하고 animation이 진행되는 동안 contact가 발생해 health가 줄어드는지 확인해.
+
+  각 대표 공격은 다음 시각 evidence를 남겨.
+
+  - 공격 직전
+  - 무기가 적에게 접근하는 active frame
+  - 무기와 hurtbox가 겹치는 contact frame
+  - 피해 또는 guard 결과가 표시된 frame
+  - 공격 회수 후 상태
+
+  가능하면 연속 frame strip 또는 짧은 영상으로 확인해. 한 장의 정지 PNG에서 검과 적이 겹쳐 보이는 것만으로 시간축 정합성을 증명했다고 판단하지 마.
+
+  desktop 1280×720과 mobile 844×390 모두에서 확인하되, viewport 차이가 world-space 공격 성공 여부를 바꾸면 안 된다.
+
+  ## 구현 시 피해야 할 잘못된 해결
+
+  다음 중 하나만 수행하고 완료 처리하지 마.
+
+  - 플레이어 공격 hitbox를 일괄적으로 두세 배 확대
+  - 모든 적 hurtbox를 큰 사각형 또는 원 하나로 교체
+  - 검 길이를 시각적으로 보이는 것보다 길게 설정
+  - 공격 active window를 animation 전체로 확대
+  - 화면에 보이지 않는 auto-aim 또는 magnetism 추가
+  - 적 health를 직접 줄여 contact 검사를 우회
+  - hit effect만 추가하고 실제 damage 누락을 방치
+  - snapshot digest만 갱신
+  - rendered blade와 current geometry 배열이 같다는 기존 assertion만 재실행
+  - fake geometry fixture만 통과시키고 실제 `GameScene` damage 경로를 검증하지 않음
+  - 한 공격과 한 적만 수정하고 다른 공격·방향·체형의 동일 문제를 남김
+  - 사용자에게 적에게 더 가까이 붙어서 공격하라고 안내
+  - 시각 효과와 실제 판정이 다르다는 것을 의도된 연출이라고 사후 문서화
+
+  ## 완료 조건
+
+  다음 조건을 모두 만족하기 전에는 이 Human Feedback을 완료 처리하거나 INBOX에서 제거하지 마.
+
+  - 현재 사용자가 관찰한 “검이 적에게 닿는데도 전혀 맞지 않는” 문제를 실제 gameplay에서 재현하고 원인을 확인했다.
+  - 플레이어의 보이는 damaging weapon 또는 attack arc와 authoritative hit geometry가 같은 pose, 위치, scale, facing과 시간축을 사용한다.
+  - 적의 hurt geometry가 현재 보이는 취약 신체를 따라간다.
+  - 기본 공격, 강공격, 지상·공중 공격의 대표 동작이 확실한 contact에서 피해를 준다.
+  - 왼쪽과 오른쪽 공격이 대칭적으로 동작한다.
+  - 빠른 공격도 simulation tick 사이 contact를 놓치지 않는다.
+  - 확실한 miss에서는 피해가 발생하지 않는다.
+  - guard와 무적에 의해 피해가 막힌 경우 사용자가 접촉 결과를 구분할 수 있다.
+  - 공격당 타격 횟수와 중복 방지가 기존 전투 설계대로 유지된다.
+  - hit spark, hit-stop과 적 피격 반응이 실제 승인된 contact와 일치한다.
+  - 공격 범위와 적 hurtbox를 무차별적으로 확대하지 않고 문제를 해결했다.
+  - desktop과 mobile의 실제 플레이에서 동일한 공격 결과를 확인했다.
+  - 단위 geometry 테스트뿐 아니라 실제 `GameScene` 또는 동등한 production damage 경로에서 적 health 감소를 검증했다.
+  - 연속 동작 또는 frame strip으로 시각 접촉과 피해 발생이 같은 순간에 일어나는 것을 확인했다.
+  - 실제 브라우저에서 검증하지 못한 공격이나 적 체형은 PASS로 추정하지 않고 정확히 미검증 상태로 남긴다.
+
 ## Feedback Guide
 
 실제 제품을 사용하며 느낀 문제, 기대한 결과와 관찰한 상황을 가능한 한 원문에 가깝게 적는다.
