@@ -83,6 +83,7 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/game/room/RoomNode.js',
   './src/game/story/FirstJourneyStory.js',
   './src/game/story/ScrapPrologueStory.js',
+  './src/game/story/ScrapRegionStory.js',
   './src/game/story/StoryInteractionOwner.js',
   './src/game/training/TrainingEncounterNode.js',
   './src/game/training/TrainingEncounterPresentation.js',
