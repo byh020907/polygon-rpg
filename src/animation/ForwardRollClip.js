@@ -1,23 +1,37 @@
 import { projectSideViewSkeletonFrame } from './SkeletonPoseProjection.js';
-import { axisAngleQuaternion, multiplyQuaternions, quaternionFromEuler } from './Quaternion.js';
+import {
+  axisAngleQuaternion,
+  multiplyQuaternions,
+  quaternionFromEuler,
+  conjugateQuaternion,
+} from './Quaternion.js';
 
 // Local joint rotations, in radians. Positive pelvis winding carries every child forward
 // through the side camera; flexion is articulated independently, never a rotated image.
 const KEYS = [
   // time, turn, pelvis height, spine flexion, neck tuck, hip flexion, knee flexion, tool yaw
-  [0, 0, 48, 0, 0, 0, 0, 0],
-  [0.12, 0.4, 53, 0.25, 0.3, -0.9, 1.25, 1.42],
-  [0.25, 1.25, 31, 0.55, 1.65, -1.65, 2.1, 1.3],
-  [0.43, 2.8, 15, 0.5, 1.8, -1.85, 2.3, 1.3],
-  [0.59, 4.15, 29, 0.45, 1.7, -1.8, 2.25, 1.3],
-  [0.75, 5.5, 30, 0.3, 0.8, -1.2, 1.5, 1.05],
-  [0.88, 6.1, 53, 0.12, 0.1, -0.6, 0.8, 0.45],
-  [1, Math.PI * 2, 48, 0, 0, 0, 0, 0],
+  [0, 0, 17, 0, 0, 0, 0, 0],
+  [0.12, 0.4, 28, 0.25, 0.3, -0.9, 1.25, 1.42],
+  [0.25, 1.25, 25, 0.55, 1.65, -1.65, 2.1, 1.3],
+  [0.43, 2.8, 4, 0.5, 1.8, -1.85, 2.3, 1.3],
+  [0.59, 4.15, 22, 0.45, 1.7, -1.8, 2.25, 1.3],
+  [0.75, 5.5, 40, 0.3, 0.8, -1.2, 1.5, 1.05],
+  [0.88, 6.1, 26, 0.12, 0.1, -0.6, 0.8, 0.45],
+  [1, Math.PI * 2, 17, 0, 0, 0, 0, 0],
 ];
 
 export function createForwardRollFrames(neutralFrame) {
+  const authoredKeys = Array.from({ length: 101 }, (_, index) => {
+    const at = index / 100;
+    const nextIndex = KEYS.findIndex((key) => key[0] >= at);
+    if (nextIndex <= 0) return [...KEYS[0]];
+    const from = KEYS[nextIndex - 1];
+    const to = KEYS[nextIndex];
+    const amount = (at - from[0]) / (to[0] - from[0]);
+    return from.map((value, column) => value + (to[column] - value) * amount);
+  });
   return Object.freeze(
-    KEYS.map(([at, turn, height, spine, neck, hip, knee, toolYaw], index) => {
+    authoredKeys.map(([at, turn, height, spine, neck, hip, knee, toolYaw], index) => {
       const tuck = Math.min(1, Math.abs(hip) / 1.65);
       const joints = Object.fromEntries(
         Object.entries(neutralFrame.joints).map(([id, joint]) => [id, { ...joint }]),
@@ -48,11 +62,19 @@ export function createForwardRollFrames(neutralFrame) {
           zRotation(tuck * (sign > 0 ? 1.1 : -1.1)),
           joints[`${side}Elbow`].quaternion,
         );
-        joints[`${side}Hand`].quaternion = quaternionFromEuler({
-          y: toolYaw,
-          z: side === 'near' ? Math.atan2(joints.nearHand.y, joints.nearHand.x) : 0.06,
-        });
       }
+      const posed = projectSideViewSkeletonFrame({ joints });
+      for (const side of ['near', 'far']) {
+        joints[`${side}Hand`].quaternion = multiplyQuaternions(
+          conjugateQuaternion(posed.worldJoints[`${side}Elbow`].quaternion),
+          quaternionFromEuler({ y: toolYaw, z: turn + (side === 'near' ? 0.35 : -0.06) }),
+        );
+      }
+      const lowestFoot = Math.max(
+        posed.projectedJoints.nearFoot.y,
+        posed.projectedJoints.farFoot.y,
+      );
+      if (lowestFoot > 82) joints.root.y -= lowestFoot - 82;
       const frame = Object.freeze({
         id: `forward-roll-${index}`,
         at,

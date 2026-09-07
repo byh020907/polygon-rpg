@@ -490,6 +490,96 @@ for (const { id: equipmentId, combatTiming } of EQUIPMENT_PROFILES) {
   }
 }
 
+// Measure composed world wrist travel, not a curve constant or a pose ID.
+// A linear active interpolation would give equal thirds and fail this check.
+for (const motionId of ['slash', 'heavy']) {
+  const frame = combatMotionFrameData(motionId);
+  const rotations = Array.from(
+    { length: 61 },
+    (_, index) =>
+      sampleCharacterBonePose({
+        motionState: {
+          id: motionId,
+          frame,
+          progress:
+            (frame.startupFrames + (frame.activeFrames * index) / 60) / frame.durationFrames,
+        },
+      }).worldJoints.nearHand.quaternion,
+  );
+  const angularTravel = (start, end) => {
+    let travel = 0;
+    for (let index = start; index < end; index += 1) {
+      const from = rotations[index],
+        to = rotations[index + 1];
+      const dot = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w;
+      travel += 2 * Math.acos(Math.min(1, Math.abs(dot)));
+    }
+    return travel;
+  };
+  const firstThird = angularTravel(0, 20);
+  const finalThird = angularTravel(40, 60);
+  assert.ok(
+    firstThird > finalThird * 2.5,
+    motionId +
+      ': actual world wrist must cut rapidly then settle (first=' +
+      firstThird +
+      ', last=' +
+      finalThird +
+      ')',
+  );
+}
+
+// Sample the production range-sized rig and shared weapon, rather than accepting
+// an animation label or scalar sword angle as evidence of a cross-body cut.
+const sideCutScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+try {
+  for (const id of ['slash', 'heavy', 'airSlash', 'airHeavy', 'airReturn', 'airCross']) {
+    const frame = sideCutScene.combatCommands.getMotionFrameData(id);
+    for (const facing of [-1, 1]) {
+      sideCutScene.facing = facing;
+      let rearLoad = Infinity;
+      let frontContact = -Infinity;
+      for (let tick = 0; tick < (frame.startupFrames + frame.activeFrames) * 4; tick += 1) {
+        const progress = tick / (frame.durationFrames * 4);
+        const state = { id, frame, progress };
+        const geometry = sideCutScene.samplePlayerCombatGeometry(state);
+        const tip = (geometry.weapon.points[2].x - sideCutScene.position.x) * facing;
+        if (tick < frame.startupFrames * 4) {
+          rearLoad = Math.min(rearLoad, tip);
+          const head = geometry.hurt.find(({ part }) => part === 'head');
+          const headTop = Math.min(...head.points.map(({ y }) => y));
+          const headBottom = Math.max(...head.points.map(({ y }) => y));
+          assert.ok(
+            Math.min(...geometry.weapon.points.map(({ y }) => y)) >= headTop - 1e-7,
+            id + ': loading weapon must never rise above the head',
+          );
+          const pose = sideCutScene.sampleSizedPlayerMotionPose({
+            motionState: state,
+            boneInput: {},
+          });
+          const gripY =
+            sideCutScene.position.y +
+            PLAYER_CHARACTER_FOOT_OFFSET +
+            (pose.bonePose.projectedJoints.nearHand.y - PLAYER_CHARACTER_FOOT_OFFSET) *
+              CHARACTER_RENDER_SCALE;
+          assert.ok(gripY >= headBottom - 1e-7, id + ': loading grip remains below the head');
+        } else frontContact = Math.max(frontContact, tip);
+      }
+      assert.ok(
+        rearLoad < -10 && frontContact > 10,
+        id +
+          ': actual range-sized blade must load behind and cut in front (' +
+          rearLoad +
+          ' to ' +
+          frontContact +
+          ')',
+      );
+    }
+  }
+} finally {
+  sideCutScene.exitTree();
+}
+
 function withScene(run) {
   const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
   scene.enterTree();
@@ -683,6 +773,8 @@ console.log(
       'dense-both-facing-equipment-attachment-and-floor-clearance',
       '3d-skeleton-side-projection',
       'canonical-quaternion-and-fixed-player-enemy-bone-lengths',
+      'actual-world-wrist-fast-cut-and-controlled-settle',
+      'range-sized-cross-body-backload-without-overhead-raise',
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',
       'authored-basic-strong-launcher-and-counter-pose-strips',

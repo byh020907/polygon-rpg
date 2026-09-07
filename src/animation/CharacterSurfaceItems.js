@@ -6,14 +6,14 @@ import {
 } from './ProjectedBodySurface.js';
 
 const PLAYER_SEGMENTS = Object.freeze({
-  'back-thigh': ['farHip', 'farKnee', 11],
-  'back-shin': ['farKnee', 'farFoot', 8],
-  'front-thigh': ['nearHip', 'nearKnee', 11],
-  'front-shin': ['nearKnee', 'nearFoot', 8],
-  'sword-upper-arm': ['nearShoulder', 'nearElbow', 10],
-  'sword-forearm': ['nearElbow', 'nearHand', 8],
-  'shield-upper-arm': ['farShoulder', 'farElbow', 10],
-  'shield-forearm': ['farElbow', 'farHand', 8],
+  'back-thigh': ['farHip', 'farKnee', 9],
+  'back-shin': ['farKnee', 'farFoot', 5],
+  'front-thigh': ['nearHip', 'nearKnee', 9],
+  'front-shin': ['nearKnee', 'nearFoot', 5],
+  'sword-upper-arm': ['nearShoulder', 'nearElbow', 7],
+  'sword-forearm': ['nearElbow', 'nearHand', 5],
+  'shield-upper-arm': ['farShoulder', 'farElbow', 7],
+  'shield-forearm': ['farElbow', 'farHand', 5],
 });
 
 // Attachment rules remain presentation data. Nearer camera depth is positive.
@@ -23,7 +23,9 @@ function attachment(id) {
   if (/shield/.test(id)) return ['farHand', 8];
   if (id === 'back-boot') return ['farFoot', 4];
   if (id === 'front-boot') return ['nearFoot', 4];
-  if (/bag|cable|back-panel/.test(id)) return ['chest', -7];
+  if (/bag|cable/.test(id)) return ['farHip', 2];
+  if (/back-panel/.test(id)) return ['pelvis', -3];
+  if (/cross-body-strap|work-collar/.test(id)) return ['chest', 7];
   if (/rivet|patch|plate|belt|front-panel/.test(id)) return ['chest', 6];
   return ['chest', 3];
 }

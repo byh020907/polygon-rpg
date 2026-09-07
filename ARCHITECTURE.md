@@ -116,7 +116,10 @@ Keyboard / Touch / DOM intent
 - 주요 humanoid clip은 root·pelvis·chest·neck/head·near/far limb의 local 3D skeleton frame을 immutable data로 소유하고, fixed side-view orthographic projection이 Canvas cutout의 2D joint/depth order를 만든다. z는 presentation depth만이며 2D map/collider/hit authority를 바꾸지 않는다. raw 외부 motion은 runtime에 넣지 않고 license·URL·mapping을 기록한 development-time retarget/import로 local key frame만 남긴다.
 - 3D 단계는 본 계층·local translation·정규화 Quaternion만 소유한다. SLERP와 계층형 FK가 부모 방향을 상속하고 본 길이를 유지한다. 정투영은 위치와 local axis를 screen XY 및 camera depth로 나누며, 3D mesh·skinning·texture renderer를 만들지 않는다.
 - 캐릭터 surface는 투영 이후 본 선분의 가변 폭 profile을 길이·폭 방향으로 나누어 생성한다. 원형 limb·타원 torso·얇은 cloth/blade의 단면 profile이 방향에 따른 폭·두께를 정의한다. 2D vertex와 surface depth channel은 분리하며 같은 triangle 안에서 보간한 깊이로 pixel Z를 판정한다. 기본색·cell shading·외곽선은 가림을 공유하고 반투명 검 궤적은 불투명 depth를 검사하되 depth를 쓰지 않는다.
+- 깊이 raster는 불투명 pixel의 surface 소유와 동률 순서를 결정적으로 기록한다. 외곽선은 실제로 보이는 surface 경계만 그리며 자기 곡면 깊이 때문에 점선처럼 잘리거나 뒤쪽 부위의 선이 앞쪽 면을 긁지 않는다. Retro는 hue를 보존하는 소수의 명도 band와 불투명 외곽선을 사용하고, RGB 채널별 양자화로 피부·천·금속에 다른 원색 반점을 만들지 않는다.
+- 주인공 rig와 appearance는 작은 단순한 머리, 약 7등신의 가늘고 긴 팔다리, 짧은 작업상의·바지·크로스스트랩과 넓은 검의 일관된 profile을 사용한다. 머리·의상·장비의 표면 정의와 shared hurt/weapon outline은 같은 silhouette에서 파생한다. 겹친 장식 면을 무작정 늘리거나 별도 머리 크기·무기 형상을 renderer마다 유지하지 않는다.
 - 게임·미리보기·timeline·투명 PNG·frame sheet는 같은 pose sampler와 renderer를 호출한다. 검 공격은 준비→빠른 연속 베기→감속→복귀, 골반·가슴·팔·손목 시차, 팔꿈치 굽힘 제약과 고정된 파지 방향을 유지하며 별도의 QA용 그림을 만들지 않는다.
+- 기본·강공격은 머리 위로 검을 올리는 windup을 사용하지 않는다. 몸 옆의 낮은 준비 위치에서 골반·흉곽의 XYZ 회전과 팔 사슬이 앞을 가로지르는 횡·사선 arc를 만들며, 새로운 pose에도 기존 spatial reach와 integer contact timeline을 적용한다.
 - Character/Enemy 구현 전에는 protagonist, core NPC job family, collector unit, industrial creature와 regional boss의 front/side/pose board를 실제 gameplay scale로 비교한다.
 - Render items는 rivet, plate, cable, work cloth와 repair-mark 공통 language 및 region-specific color/material tag를 읽는다. 기존 academy/fantasy presentation을 fallback으로 사용하지 않는다.
 

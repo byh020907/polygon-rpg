@@ -59,16 +59,17 @@ try {
   for (const id of attacks) {
     const profile = scene.getAttackHitProfile(id);
     let hitCase = null;
-    // Discover a real articulated contact; no fabricated polygons or enlarged hitboxes.
-    for (let step = 0; step <= 12 && !hitCase; step += 1) {
-      const progress = profile.start + ((profile.end - profile.start) * step) / 12;
-      if (profile.hitPulses && progress < profile.hitPulses[0]) continue;
-      for (const dy of [0, -35, -70, -110]) {
+    // Search the full grounded active strip first. A high early swing must not
+    // force a later grounded guard test to reuse an airborne-only sample.
+    for (const dy of [0, -35, -70, -110]) {
+      for (let step = 0; step < 24 && !hitCase; step += 1) {
+        const progress = profile.start + ((profile.end - profile.start) * step) / 24;
+        if (profile.hitPulses && progress < profile.hitPulses[0]) continue;
         for (let dx = 15; dx <= 190; dx += 5) {
           if (prepare(id, 1, progress, dx, dy).contact.contact) hitCase = { progress, dx, dy };
         }
-        if (hitCase) break;
       }
+      if (hitCase) break;
     }
     assert.ok(hitCase, `${id}: actual authored weapon must reach a body at active time`);
     hitCases.set(id, hitCase);
@@ -200,25 +201,28 @@ try {
     ['slash', 'guard'],
     ['heavy', 'guard-break'],
   ]) {
-    const sample = hitCases.get(id);
-    const test = prepare(id, 1, sample.progress, sample.dx, sample.dy);
-    test.enemy.aiState = 'guard';
-    test.enemy.position.y = test.enemy.groundY;
-    // Guard changes the pose; place the body along the sampled weapon without changing geometry.
-    let contact = false;
-    for (let dx = 0; dx <= 180; dx += 2) {
-      test.enemy.position.x = scene.position.x + dx;
-      if (
-        closestCombatContact(
-          [test.frame.playerGeometry.weapon],
-          sampleTrainingEnemyCombatGeometry(test.enemy, encounter.attackProfiles).hurt,
-        ).contact
-      ) {
-        contact = true;
-        break;
+    const guardProfile = scene.getAttackHitProfile(id);
+    let test = null;
+    for (let step = 0; step < 24 && !test; step += 1) {
+      const progress = guardProfile.start + ((guardProfile.end - guardProfile.start) * step) / 24;
+      const candidate = prepare(id, 1, progress, 0, 0);
+      candidate.enemy.aiState = 'guard';
+      // Guard changes the body pose. Find a grounded guarded contact during the
+      // complete active motion, without moving it to an airborne idle fixture.
+      for (let dx = 0; dx <= 180; dx += 2) {
+        candidate.enemy.position.x = scene.position.x + dx;
+        if (
+          closestCombatContact(
+            [candidate.frame.playerGeometry.weapon],
+            sampleTrainingEnemyCombatGeometry(candidate.enemy, encounter.attackProfiles).hurt,
+          ).contact
+        ) {
+          test = candidate;
+          break;
+        }
       }
     }
-    assert.ok(contact, `${id}: guarded body is reachable`);
+    assert.ok(test, id + ': grounded guarded body is reachable during active motion');
     const before = test.enemy.health;
     const eventId = scene.combatEvents.sequence;
     assert.equal(encounter.resolvePlayerAttack(test.frame), true);

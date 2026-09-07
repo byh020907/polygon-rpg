@@ -1,4 +1,3 @@
-import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 import { sampleEnemyBonePoseFor } from '../animation/EnemyBonePoseLibrary.js';
 import {
   createProjectedBoneSurface,
@@ -11,8 +10,6 @@ import {
 // viewport). This scale is shared by its visible cutout and authoritative swept/body geometry.
 export const PLAYER_COMBAT_GEOMETRY_SCALE = 0.77;
 export const PLAYER_CHARACTER_FOOT_OFFSET = 82;
-
-const PLAYER_IK_SOLVER = new TwoBoneIKSolver();
 
 function freezePoint(point) {
   return Object.freeze({ x: point.x, y: point.y });
@@ -55,13 +52,10 @@ function skeletonTorsoPolygon(position, joints) {
 }
 
 function skeletonHeadPolygon(position, joints) {
-  // Keep the hurt head aligned with the cutout head: headTilt is vertical-referenced
-  // (atan2(dx, -dy)), matching SkeletonPoseProjection. atan2(dy, dx) would yaw it ~90 deg.
-  // The projected direction alone stays near-upright while the torso anchors lean, so the
-  // authored body lean is carried here so a roll tuck reads as one connected silhouette.
+  // The small head follows the projected quaternion basis without a second body rotation.
   const headDirection = Math.atan2(joints.head.axisX.y, joints.head.axisX.x);
   const headRotation = headDirection;
-  return transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
+  return transformPoints(regularPolygon(8, 10, 10, Math.PI / 10), {
     x: position.x + joints.head.x,
     y: position.y + joints.head.y,
     rotation: headRotation,
@@ -84,32 +78,11 @@ function enemySkeletonPolygon(part, joints) {
   return freezePolygon(part, joints);
 }
 
-function posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale }) {
+function posePlayerPoints(points, { position, facing, geometryScale }) {
   const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
-  const usesAuthoredSkeleton = Boolean(bonePose.projectedJoints && bonePose.frameId);
-  // Authored clips have already projected every limb from local 3D joints into the side-view
-  // plane. Applying the legacy whole-body lean here would rotate that finished pose a second
-  // time, making a roll read like a tilted paper doll instead of a changing body silhouette.
-  if (usesAuthoredSkeleton) {
-    return points.map((point) => {
-      const scaledX = position.x + (point.x - position.x) * geometryScale;
-      const scaledY = footY + (point.y - footY) * geometryScale;
-      return {
-        x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
-        y: scaledY,
-      };
-    });
-  }
-  const lean = targetPose.bodyLean + bonePose.bodyLean;
-  const cosine = Math.cos(lean);
-  const sine = Math.sin(lean);
   return points.map((point) => {
-    const relativeX = (point.x - position.x) * bonePose.bodyScaleX;
-    const relativeY = (point.y - footY) * targetPose.bodyScaleY;
-    const posedX = position.x + relativeX * cosine - relativeY * sine;
-    const posedY = footY + relativeX * sine + relativeY * cosine;
-    const scaledX = position.x + (posedX - position.x) * geometryScale;
-    const scaledY = footY + (posedY - footY) * geometryScale;
+    const scaledX = position.x + (point.x - position.x) * geometryScale;
+    const scaledY = footY + (point.y - footY) * geometryScale;
     return {
       x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
       y: scaledY,
@@ -125,104 +98,92 @@ export function samplePlayerCombatGeometry({
   geometryScale,
   weaponLengthScale = 1,
 }) {
+  if (
+    !bonePose?.projectedJoints ||
+    !bonePose.worldJoints ||
+    !bonePose.skeletonFrame ||
+    !targetPose?.weaponBasis ||
+    !targetPose.shieldBasis
+  ) {
+    throw new TypeError(
+      'Player combat geometry requires the canonical projected quaternion rig and wrist attachments.',
+    );
+  }
   const poseWeaponLengthScale =
     Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0
       ? targetPose.weaponLengthScale
       : 1;
   const resolvedWeaponLengthScale = weaponLengthScale * poseWeaponLengthScale;
-  const bodyX = position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
-  const bodyY = position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
-  const projectedJoints = bonePose.projectedJoints ?? null;
+  const projectedJoints = bonePose.projectedJoints;
   const projectedArm = (shoulder, elbow, hand) =>
     Object.freeze({
       root: { x: position.x + shoulder.x, y: position.y + shoulder.y },
       elbow: { x: position.x + elbow.x, y: position.y + elbow.y },
       hand: { x: position.x + hand.x, y: position.y + hand.y },
     });
-  const rightArm =
-    projectedJoints && bonePose.frameId
-      ? projectedArm(
-          projectedJoints.nearShoulder,
-          projectedJoints.nearElbow,
-          projectedJoints.nearHand,
-        )
-      : PLAYER_IK_SOLVER.solve({
-          root: { x: bodyX + 17, y: bodyY - 25 },
-          target: { x: bodyX + targetPose.handTarget.x, y: bodyY + targetPose.handTarget.y },
-          upperLength: 38,
-          lowerLength: 35,
-          bendDirection: 1,
-        });
-  const leftArm =
-    projectedJoints && bonePose.frameId
-      ? projectedArm(projectedJoints.farShoulder, projectedJoints.farElbow, projectedJoints.farHand)
-      : PLAYER_IK_SOLVER.solve({
-          root: { x: bodyX - 17, y: bodyY - 24 },
-          target: { x: bodyX + targetPose.shieldTarget.x, y: bodyY + targetPose.shieldTarget.y },
-          upperLength: 34,
-          lowerLength: 31,
-          bendDirection: -1,
-        });
+  const rightArm = projectedArm(
+    projectedJoints.nearShoulder,
+    projectedJoints.nearElbow,
+    projectedJoints.nearHand,
+  );
+  const leftArm = projectedArm(
+    projectedJoints.farShoulder,
+    projectedJoints.farElbow,
+    projectedJoints.farHand,
+  );
   const bladeOrigin = {
-    x: rightArm.hand.x + (targetPose.weaponBasis?.xx ?? Math.cos(targetPose.swordAngle)) * 5,
-    y: rightArm.hand.y + (targetPose.weaponBasis?.yx ?? Math.sin(targetPose.swordAngle)) * 5,
+    x: rightArm.hand.x + targetPose.weaponBasis.xx * 5,
+    y: rightArm.hand.y + targetPose.weaponBasis.yx * 5,
   };
   const weaponPoints = transformPoints(
     [
       { x: 0, y: -3 },
-      { x: 100 * resolvedWeaponLengthScale, y: -3 },
+      { x: 100 * resolvedWeaponLengthScale, y: -9 },
       { x: 126 * resolvedWeaponLengthScale, y: 0 },
-      { x: 100 * resolvedWeaponLengthScale, y: 4 },
+      { x: 100 * resolvedWeaponLengthScale, y: 9 },
       { x: 0, y: 4 },
     ],
-    { ...bladeOrigin, rotation: targetPose.swordAngle, basis: targetPose.weaponBasis },
+    { ...bladeOrigin, basis: targetPose.weaponBasis },
   );
   const shieldPoints = transformPoints(
     [
-      { x: -12, y: -29 },
-      { x: 9, y: -32 },
-      { x: 17, y: -2 },
-      { x: 8, y: 28 },
-      { x: -9, y: 23 },
-      { x: -17, y: 0 },
+      { x: -10, y: -17 },
+      { x: 8, y: -19 },
+      { x: 13, y: -2 },
+      { x: 7, y: 18 },
+      { x: -8, y: 15 },
+      { x: -12, y: 0 },
     ],
-    { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1, basis: targetPose.shieldBasis },
+    { x: leftArm.hand.x, y: leftArm.hand.y, basis: targetPose.shieldBasis },
   );
-  const usesAuthoredSkeleton = Boolean(projectedJoints && bonePose.frameId);
   const rawHurtPolygons = [
     {
       part: 'torso',
-      points: usesAuthoredSkeleton
-        ? skeletonTorsoPolygon(position, projectedJoints)
-        : transformPoints(
-            [
-              { x: -21, y: -36 },
-              { x: 17, y: -38 },
-              { x: 23, y: 13 },
-              { x: 13, y: 34 },
-              { x: -15, y: 32 },
-              { x: -25, y: 9 },
-            ],
-            { x: bodyX, y: bodyY },
-          ),
+      points: skeletonTorsoPolygon(position, projectedJoints),
     },
     {
       part: 'head',
-      points: usesAuthoredSkeleton
-        ? skeletonHeadPolygon(position, projectedJoints, bonePose.bodyLean ?? 0)
-        : transformPoints(regularPolygon(17, 21, 8, Math.PI / 8), {
-            x: bodyX - 1,
-            y: bodyY - 63,
-            rotation: bonePose.headTilt,
-          }),
+      points: skeletonHeadPolygon(position, projectedJoints),
     },
-    { part: 'weapon-arm', points: limbPolygon(rightArm.root, rightArm.elbow, 10) },
-    { part: 'weapon-forearm', points: limbPolygon(rightArm.elbow, rightArm.hand, 8) },
-    { part: 'shield-arm', points: limbPolygon(leftArm.root, leftArm.elbow, 10) },
-    { part: 'shield-forearm', points: limbPolygon(leftArm.elbow, leftArm.hand, 8) },
+    { part: 'weapon-arm', points: limbPolygon(rightArm.root, rightArm.elbow, 7) },
+    { part: 'weapon-forearm', points: limbPolygon(rightArm.elbow, rightArm.hand, 5) },
+    { part: 'shield-arm', points: limbPolygon(leftArm.root, leftArm.elbow, 7) },
+    { part: 'shield-forearm', points: limbPolygon(leftArm.elbow, leftArm.hand, 5) },
+    ...[
+      ['back-thigh', 'farHip', 'farKnee', 9],
+      ['back-shin', 'farKnee', 'farFoot', 5],
+      ['front-thigh', 'nearHip', 'nearKnee', 9],
+      ['front-shin', 'nearKnee', 'nearFoot', 5],
+    ].map(([part, from, to, width]) => ({
+      part,
+      points: limbPolygon(
+        { x: position.x + projectedJoints[from].x, y: position.y + projectedJoints[from].y },
+        { x: position.x + projectedJoints[to].x, y: position.y + projectedJoints[to].y },
+        width,
+      ),
+    })),
   ];
-  const pose = (points) =>
-    posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale });
+  const pose = (points) => posePlayerPoints(points, { position, facing, geometryScale });
   return Object.freeze({
     actor: 'player',
     origin: freezePoint(position),

@@ -1,31 +1,14 @@
 import {
-  defineSkeletonFrame,
   interpolateSideViewSkeletonFrames,
   projectSideViewSkeletonFrame,
 } from './SkeletonPoseProjection.js';
+import { authorPlayerRigFrame } from './PlayerRig.js';
 import { createForwardRollFrames } from './ForwardRollClip.js';
 import { rollTimelineMarkerAt } from './RollTimeline.js';
+import { quaternionFromEuler, multiplyQuaternions, conjugateQuaternion } from './Quaternion.js';
 
-const CHARACTER_FOOT_Y = 80;
+const CHARACTER_FOOT_Y = 82;
 const REFERENCE_JUMP_SPEED = 470;
-const PLAYER_BONE_LENGTHS = Object.freeze({
-  chest: 34,
-  neck: Math.hypot(1, 18),
-  head: 17,
-  nearShoulder: Math.hypot(8, 5, 4),
-  farShoulder: Math.hypot(8, 5, 4),
-  nearElbow: Math.hypot(15, 18, 3),
-  nearHand: Math.hypot(15, 15, 2),
-  farElbow: Math.hypot(15, 15, 3),
-  farHand: Math.hypot(20, 13, 2),
-  nearHip: Math.hypot(8, 4, 2),
-  farHip: Math.hypot(8, 4, 2),
-  nearKnee: Math.hypot(12, 1),
-  farKnee: Math.hypot(12, 1),
-  nearFoot: 16,
-  farFoot: 16,
-});
-
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.max(minimum, Math.min(maximum, value));
 }
@@ -58,19 +41,7 @@ function sampleGuard(animationTime) {
 
 function sampleBlockReaction(progress, strength) {
   const recoil = smoothStep(progress) * clamp(strength, 0.4, 1);
-  return authoredCharacterFrame({
-    id: 'block-recoil',
-    at: 0,
-    rootX: -2 - recoil * 6,
-    rootY: 3 + recoil * 2,
-    bodyLean: -0.075 - recoil * 0.11,
-    headTilt: 0.045 + recoil * 0.08,
-    rearFootX: -16 - recoil * 3,
-    rearFootY: CHARACTER_FOOT_Y,
-    leadFootX: 15,
-    leadFootY: CHARACTER_FOOT_Y - recoil * 2,
-    capeLift: 0.18 + recoil * 0.35,
-  }).value;
+  return sampleAuthoredPoseFrames(AUTHORED_BLOCK_FRAMES, recoil);
 }
 
 function sampleLanding(recovery) {
@@ -79,154 +50,101 @@ function sampleLanding(recovery) {
 
 function sampleHitReaction(intensity, knockedOut) {
   return knockedOut
-    ? authoredCharacterFrame({
-        id: 'knocked-out',
-        at: 0,
-        rootX: -6,
-        rootY: 14,
-        bodyLean: 1.18,
-        headTilt: -0.42,
-        rearFootX: -15,
-        rearFootY: 76,
-        leadFootX: 18,
-        leadFootY: 78,
-      }).value
+    ? KNOCKED_OUT_FRAME.value
     : sampleAuthoredPoseFrames(AUTHORED_PLAYER_UTILITY_FRAMES.hit, clamp(intensity));
 }
 
-const AUTHORED_ARM_TRANSFORMS = Object.freeze({
-  neutral: Object.freeze({
-    nearElbow: Object.freeze({ x: 15, y: -18, z: 3, rotation: 0.3 }),
-    nearHand: Object.freeze({ x: 15, y: -15, z: 2, rotation: 0.12 }),
-    farElbow: Object.freeze({ x: -15, y: -15, z: -3, rotation: -0.3 }),
-    farHand: Object.freeze({ x: -20, y: -13, z: -2, rotation: -0.12 }),
-  }),
-  windup: Object.freeze({
-    nearElbow: Object.freeze({ x: -10, y: -29, z: 5, rotation: -0.42 }),
-    nearHand: Object.freeze({ x: -16, y: -23, z: 4, rotation: -0.3 }),
-    farElbow: Object.freeze({ x: -9, y: -11, z: -3, rotation: 0.16 }),
-    farHand: Object.freeze({ x: -14, y: -10, z: -2, rotation: 0.08 }),
-  }),
-  contact: Object.freeze({
-    nearElbow: Object.freeze({ x: 22, y: 5, z: 5, rotation: 0.45 }),
-    nearHand: Object.freeze({ x: 26, y: 1, z: 4, rotation: 0.2 }),
-    farElbow: Object.freeze({ x: 8, y: -5, z: -3, rotation: -0.16 }),
-    farHand: Object.freeze({ x: 11, y: -6, z: -2, rotation: -0.08 }),
-  }),
-  followThrough: Object.freeze({
-    nearElbow: Object.freeze({ x: 24, y: 13, z: 4, rotation: 0.32 }),
-    nearHand: Object.freeze({ x: 29, y: 8, z: 3, rotation: 0.12 }),
-    farElbow: Object.freeze({ x: 3, y: -10, z: -3, rotation: -0.12 }),
-    farHand: Object.freeze({ x: 7, y: -11, z: -2, rotation: -0.08 }),
-  }),
-});
-
-function authoredCharacterFrame({
-  id,
-  at,
-  transition,
-  rootX = 0,
-  rootY = 0,
-  bodyLean = 0,
-  headTilt = 0,
-  rearFootX = -8,
-  rearFootY = CHARACTER_FOOT_Y,
-  leadFootX = 8,
-  leadFootY = CHARACTER_FOOT_Y,
-  depth = 0,
-  capeLift = 0,
-  armPose = 'neutral',
-  wristFlex = 0,
-}) {
-  const arm = AUTHORED_ARM_TRANSFORMS[armPose];
-  if (!arm) throw new RangeError(`알 수 없는 authored arm pose입니다: ${armPose}`);
-  const chestLength = 34;
-  const headLength = 17;
-  const chestX = Math.sin(bodyLean) * chestLength;
-  const chestY = -Math.cos(bodyLean) * chestLength;
-  const headX = Math.sin(headTilt) * headLength;
-  const headY = -Math.cos(headTilt) * headLength;
-  const pelvisY = 48;
-  const hipY = 4;
-  const kneeY = 12;
-  const legBaseY = rootY + pelvisY + hipY + kneeY;
-  const localRotation = Object.freeze({
-    root: 0,
-    pelvis: bodyLean * 0.18,
-    chest: bodyLean * 0.72,
-    neck: headTilt * 0.28,
-    head: headTilt * 0.72,
-    nearShoulder: -0.14,
-    nearElbow: arm.nearElbow.rotation,
-    nearHand: arm.nearHand.rotation,
-    farShoulder: 0.14,
-    farElbow: arm.farElbow.rotation,
-    farHand: arm.farHand.rotation,
-    nearHip: -bodyLean * 0.1,
-    nearKnee: bodyLean * 0.12,
-    nearFoot: 0,
-    farHip: bodyLean * 0.1,
-    farKnee: -bodyLean * 0.12,
-    farFoot: 0,
+function authoredCharacterFrame(options) {
+  if (!/^(slash-|heavy-|air-(?:slash|heavy|return|cross)-)/.test(options.id))
+    return authorPlayerRigFrame(options);
+  const phase = /(?:windup|load)$/.test(options.id)
+    ? 'load'
+    : options.id.endsWith('contact')
+      ? 'contact'
+      : options.id.endsWith('follow-through')
+        ? 'followThrough'
+        : 'settle';
+  const yaw = { load: 0.85, contact: 0.25, followThrough: -0.6, settle: 0 }[phase];
+  const bladeAngle = { load: 0.2, contact: 0.2, followThrough: 0.3, settle: 0.35 }[phase];
+  const bladeYaw = { load: 2.35, contact: 1.9, followThrough: -0.55, settle: 0 }[phase];
+  const handTarget = {
+    load: { x: options.id.startsWith('heavy-') ? -20 : -12, y: 3 },
+    contact: { x: 8, y: 5 },
+    followThrough: { x: 35, y: 15 },
+  }[phase];
+  // Main cuts load beside the ribs and travel across the body in XYZ. The shoulder
+  // and wrist remain local joints; no overhead arm target or screen-space blade turn.
+  const frame = authorPlayerRigFrame({
+    ...options,
+    depth: 0,
+    armPose: phase === 'load' ? 'followThrough' : options.armPose,
+    wristFlex: bladeAngle,
+    nearHandTarget: handTarget,
   });
-  const frame = Object.freeze({
-    id,
-    at,
-    transition,
-    capeLift,
-    joints: Object.freeze(
-      Object.fromEntries(
-        Object.entries({
-          root: { x: rootX, y: rootY, z: 0 },
-          pelvis: { x: 0, y: pelvisY, z: 0 },
-          chest: { x: chestX, y: chestY, z: depth },
-          neck: { x: 1, y: -18, z: depth },
-          head: { x: headX, y: headY, z: depth },
-          nearShoulder: { x: 8, y: -5, z: 4 + depth },
-          nearElbow: { x: arm.nearElbow.x, y: arm.nearElbow.y, z: arm.nearElbow.z + depth },
-          nearHand: { x: arm.nearHand.x, y: arm.nearHand.y, z: arm.nearHand.z + depth },
-          farShoulder: { x: -8, y: -5, z: -4 + depth },
-          farElbow: { x: arm.farElbow.x, y: arm.farElbow.y, z: arm.farElbow.z + depth },
-          farHand: { x: arm.farHand.x, y: arm.farHand.y, z: arm.farHand.z + depth },
-          nearHip: { x: 8, y: hipY, z: 2 },
-          nearKnee: { x: 0, y: kneeY, z: 1 },
-          nearFoot: { x: leadFootX - 8, y: leadFootY - legBaseY, z: 0 },
-          farHip: { x: -8, y: hipY, z: -2 },
-          farKnee: { x: 0, y: kneeY, z: -1 },
-          farFoot: { x: rearFootX + 8, y: rearFootY - legBaseY, z: 0 },
-        }).map(([jointId, value]) => {
-          // The authored strip stores a true local transform: z separates near/far limbs and
-          // pitch/yaw make that depth participate in parent-child composition before the fixed
-          // side camera projects it.  `rotation` remains the local roll for compact authoring.
-          const depthYaw = value.z * 0.026 + depth * 0.045;
-          const bodyPitch = ['pelvis', 'chest', 'neck', 'head'].includes(jointId)
-            ? bodyLean * 0.09
-            : 0;
-          return [
-            jointId,
-            Object.freeze({
-              ...value,
-              pitch: bodyPitch,
-              yaw:
-                jointId === 'nearHand'
-                  ? -Math.atan2(value.z, Math.hypot(value.x, value.y))
-                  : depthYaw,
-              rotation:
-                jointId === 'nearHand'
-                  ? Math.atan2(value.y, value.x) + wristFlex
-                  : localRotation[jointId],
-            }),
-          ];
-        }),
+  const joints = {
+    ...frame.joints,
+    pelvis: Object.freeze({
+      ...frame.joints.pelvis,
+      quaternion: multiplyQuaternions(
+        frame.joints.pelvis.quaternion,
+        quaternionFromEuler({ y: -yaw * 0.25 }),
       ),
+    }),
+    chest: Object.freeze({
+      ...frame.joints.chest,
+      quaternion: multiplyQuaternions(
+        frame.joints.chest.quaternion,
+        quaternionFromEuler({ y: yaw * 1.25 }),
+      ),
+    }),
+  };
+  const posed = projectSideViewSkeletonFrame({ ...frame, joints });
+  joints.nearHand = Object.freeze({
+    ...joints.nearHand,
+    quaternion: multiplyQuaternions(
+      conjugateQuaternion(posed.worldJoints.nearElbow.quaternion),
+      quaternionFromEuler({ y: bladeYaw, z: bladeAngle }),
     ),
   });
-  const canonical = defineSkeletonFrame(frame, { boneLengths: PLAYER_BONE_LENGTHS });
+  const authored = Object.freeze({ ...frame, joints: Object.freeze(joints) });
   return Object.freeze({
-    ...canonical,
-    value: Object.freeze({ ...projectSideViewSkeletonFrame(canonical), frameId: id }),
+    ...authored,
+    value: Object.freeze({
+      ...projectSideViewSkeletonFrame(authored),
+      frameId: options.id,
+    }),
   });
 }
+const AUTHORED_BLOCK_FRAMES = Object.freeze(
+  [0, 1].map((recoil) =>
+    authoredCharacterFrame({
+      id: `block-recoil-${recoil}`,
+      at: recoil,
+      transition: 'linear',
+      rootX: -2 - recoil * 6,
+      rootY: 3 + recoil * 2,
+      bodyLean: -0.075 - recoil * 0.11,
+      headTilt: 0.045 + recoil * 0.08,
+      rearFootX: -16 - recoil * 3,
+      rearFootY: CHARACTER_FOOT_Y,
+      leadFootX: 15,
+      leadFootY: CHARACTER_FOOT_Y - recoil * 2,
+      capeLift: 0.18 + recoil * 0.35,
+    }),
+  ),
+);
+const KNOCKED_OUT_FRAME = authoredCharacterFrame({
+  id: 'knocked-out',
+  at: 0,
+  rootX: -6,
+  rootY: 14,
+  bodyLean: 1.18,
+  headTilt: -0.42,
+  rearFootX: -15,
+  rearFootY: 76,
+  leadFootX: 18,
+  leadFootY: 78,
+});
 
 const ROLL_POSE_FRAMES = createForwardRollFrames(
   authoredCharacterFrame({ id: 'roll-neutral', at: 0 }),
@@ -1331,17 +1249,14 @@ function remapAuthoredCombatProgress(motionId, progress, frame) {
   const durationFrames = frame?.durationFrames ?? frame?.duration;
   const startupFrames = frame?.startupFrames ?? frame?.startupEnd;
   const activeFrames = frame?.activeFrames ?? frame?.activeEnd - startupFrames;
-  if (
-    !anchors ||
-    !Number.isFinite(durationFrames) ||
-    !Number.isFinite(startupFrames) ||
-    !Number.isFinite(activeFrames) ||
-    durationFrames <= 0
-  ) {
-    return progress;
-  }
-  const activeStart = startupFrames / durationFrames;
-  const activeEnd = (startupFrames + activeFrames) / durationFrames;
+  if (!anchors) return progress;
+  const timed =
+    Number.isFinite(durationFrames) &&
+    durationFrames > 0 &&
+    Number.isFinite(startupFrames) &&
+    Number.isFinite(activeFrames);
+  const activeStart = timed ? startupFrames / durationFrames : anchors.contact;
+  const activeEnd = timed ? (startupFrames + activeFrames) / durationFrames : anchors.followThrough;
   const bounded = clamp(progress);
   if (bounded <= activeStart) {
     return activeStart <= Number.EPSILON
@@ -1350,12 +1265,16 @@ function remapAuthoredCombatProgress(motionId, progress, frame) {
   }
   if (bounded <= activeEnd) {
     const span = Math.max(Number.EPSILON, activeEnd - activeStart);
-    return (
-      anchors.contact + ((bounded - activeStart) / span) * (anchors.followThrough - anchors.contact)
-    );
+    const phase = (bounded - activeStart) / span;
+    // Commit most of a cut early, then let its weight settle. Spinning multi-hit
+    // actions keep their sustained angular travel across the active interval.
+    const travel = ['spin', 'airSpin'].includes(motionId) ? phase : 1 - (1 - phase) ** 3;
+    return anchors.contact + travel * (anchors.followThrough - anchors.contact);
   }
   const span = Math.max(Number.EPSILON, 1 - activeEnd);
-  return anchors.followThrough + ((bounded - activeEnd) / span) * (1 - anchors.followThrough);
+  return (
+    anchors.followThrough + smoothStep((bounded - activeEnd) / span) * (1 - anchors.followThrough)
+  );
 }
 
 function sampleAuthoredCombat(motionState) {

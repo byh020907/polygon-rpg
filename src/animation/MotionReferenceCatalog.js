@@ -1,6 +1,23 @@
 // Development-time provenance only. Runtime always consumes normalized local clip frames.
 // No third-party animation files are checked in or fetched by the game/PWA.
 export const MOTION_REFERENCE_CATALOG = Object.freeze({
+  swordActions: Object.freeze({
+    id: 'authored-sword-action-study',
+    consulted: Object.freeze([
+      Object.freeze({
+        source: 'GDQuest — Juicing up your game attacks',
+        url: 'https://www.gdquest.com/library/juicy_attack/',
+        license: 'study only; no assets or source code imported',
+        use: 'short anticipation, accelerated strike-only smear, eased follow-through and contact-driven reaction',
+      }),
+      Object.freeze({
+        source: 'imonk — Pixel Tutorial: Sword Slash Animation',
+        url: 'https://itch.io/t/2489691/pixel-tutorial-sword-slash-animation',
+        license: 'study only; no assets imported',
+        use: 'body counterbalance, torso and rear-foot rotation, snappy anticipation and visible recovery pose',
+      }),
+    ]),
+  }),
   humanLocomotion: Object.freeze({
     id: 'human-locomotion-reference-survey-2026-09-02',
     consulted: Object.freeze([

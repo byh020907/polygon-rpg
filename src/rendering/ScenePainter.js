@@ -3,7 +3,16 @@ import { rasterizeDepthPolygons } from './DepthPolygonRasterizer.js';
 
 const depthCanvases = new WeakMap();
 
-function paintDepthGroup(context, items, frame, project, worldScale, occluders, showMesh) {
+function paintDepthGroup(
+  context,
+  items,
+  frame,
+  project,
+  worldScale,
+  occluders,
+  showMesh,
+  translucentPixels,
+) {
   const projected = items.map((item) => {
     const projectPoint = (point) => project(point, item.parallax ?? 1);
     return {
@@ -54,6 +63,13 @@ function paintDepthGroup(context, items, frame, project, worldScale, occluders, 
     data: pixels.data,
   });
   target.putImageData(pixels, 0, 0);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha = pixels.data[(y * width + x) * 4 + 3];
+      if (alpha > 0 && alpha < 255)
+        translucentPixels.add((top + y) * context.canvas.width + left + x);
+    }
+  }
   context.globalAlpha = 1;
   context.drawImage(canvas, left, top);
 }
@@ -110,7 +126,9 @@ function resolveCellFill(item, frame, occluders) {
     lights: artDirection.lights,
     occluders: occluders.filter((occluder) => occluder.id !== item.id),
     quantizationLevels: artDirection.quantizationLevels,
-    saturationRetention: artDirection.saturationRetention,
+    // Actor palettes are already authored muted; repeated desaturation erases
+    // the skin / cloth / steel distinction before the low-resolution pass.
+    saturationRetention: item.depthGroup ? 1 : artDirection.saturationRetention,
   });
   return sample.shadedColor;
 }
@@ -231,9 +249,12 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
   context.lineCap = 'round';
   const degenerateItemIds = [];
   const rasterCollapseItemIds = [];
-  const occluders = frame.items
-    .filter((item) => item.lightOccluder === true)
-    .map((item) => ({ id: item.id, points: item.points }));
+  const translucentPixels = new Set();
+  const occluders =
+    frame.lightingOccluders ??
+    frame.items
+      .filter((item) => item.lightOccluder === true)
+      .map((item) => ({ id: item.id, points: item.points }));
   let shadowsPainted = false;
 
   for (let itemIndex = 0; itemIndex < frame.items.length; itemIndex += 1) {
@@ -260,7 +281,16 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
           else if (screenArea <= 0.0001) rasterCollapseItemIds.push(member.id);
         }
       }
-      paintDepthGroup(context, group, frame, project, worldScale, occluders, showMesh);
+      paintDepthGroup(
+        context,
+        group,
+        frame,
+        project,
+        worldScale,
+        occluders,
+        showMesh,
+        translucentPixels,
+      );
       continue;
     }
     const rawOpacity = item.opacity ?? 1;
@@ -301,6 +331,7 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
 
   context.globalAlpha = 1;
   return Object.freeze({
+    translucentPixels,
     degenerateItemIds: Object.freeze(degenerateItemIds),
     rasterCollapseItemIds: Object.freeze(rasterCollapseItemIds),
   });

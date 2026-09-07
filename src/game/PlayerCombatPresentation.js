@@ -1,4 +1,3 @@
-import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
 import { createPlayerSurfaceItems } from '../animation/CharacterSurfaceItems.js';
 import { COMBAT_EVENT_TYPE } from '../combat/CombatEvent.js';
 import {
@@ -8,26 +7,6 @@ import {
 
 export const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 
-const ARM_IK_SOLVER = new TwoBoneIKSolver();
-const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
-  shadow: -100,
-  'shield-sleeve-repair-bandage': 9.5,
-  'shield-upper-arm': 10,
-  'shield-forearm': 11,
-  'shield-glove': 11.5,
-  shield: 12,
-  'shield-rivet-plate': 13,
-  'sword-trail': 16.5,
-  'sword-sleeve-repair-bandage': 16.75,
-  'sword-upper-arm': 17,
-  'sword-forearm': 18,
-  'sword-glove': 18.5,
-  'sword-hilt': 19,
-  'sword-blade': 20,
-  'sword-shine': 21,
-});
-const SCALED_HEX_COLOR_CACHE = new Map();
-const MAX_SCALED_HEX_COLOR_CACHE_ENTRIES = 512;
 const REQUIRED_PROPORTIONS = Object.freeze(['shoulder', 'hip', 'head', 'sideDepth']);
 
 function validateAppearanceProfile(profile) {
@@ -76,31 +55,6 @@ function lerp(start, end, amount) {
 function smoothStep(amount) {
   const bounded = Math.max(0, Math.min(1, amount));
   return bounded * bounded * (3 - 2 * bounded);
-}
-
-function scaleHexColor(color, scale) {
-  if (!/^#[0-9a-f]{6}$/i.test(color)) return color;
-  const scaleLevel = Math.max(0, Math.min(255, Math.round(scale * 255)));
-  if (scaleLevel === 255) return color;
-  const cacheKey = `${color}:${scaleLevel}`;
-  const cached = SCALED_HEX_COLOR_CACHE.get(cacheKey);
-  if (cached) return cached;
-  const normalizedScale = scaleLevel / 255;
-  const channels = [1, 3, 5].map((offset) =>
-    Math.max(
-      0,
-      Math.min(
-        255,
-        Math.round(Number.parseInt(color.slice(offset, offset + 2), 16) * normalizedScale),
-      ),
-    ),
-  );
-  const result = `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
-  if (SCALED_HEX_COLOR_CACHE.size >= MAX_SCALED_HEX_COLOR_CACHE_ENTRIES) {
-    SCALED_HEX_COLOR_CACHE.delete(SCALED_HEX_COLOR_CACHE.keys().next().value);
-  }
-  SCALED_HEX_COLOR_CACHE.set(cacheKey, result);
-  return result;
 }
 
 function transformPoints(points, { x, y, rotation = 0, scaleX = 1, scaleY = 1, basis = null }) {
@@ -183,639 +137,236 @@ function createCharacterItems(
   renderScale,
   renderOrder,
   weaponLengthScale = 1,
-  combatGeometry = null,
+  combatGeometry,
 ) {
-  const accentColor = appearanceProfile.accent;
-  const materialColor = appearanceProfile.material;
-  const materialShadow = scaleHexColor(materialColor, 0.58);
-  const materialEdge = scaleHexColor(materialColor, 0.42);
-  const accentShadow = scaleHexColor(accentColor, 0.58);
-  const projectedJoints = bonePose.projectedJoints ?? null;
-  const usesAuthoredSkeleton = Boolean(projectedJoints && bonePose.frameId);
-  const bodyX = usesAuthoredSkeleton
-    ? position.x + (projectedJoints.chest.x + projectedJoints.pelvis.x) / 2
-    : position.x + targetPose.bodyOffset.x + bonePose.rootOffset.x;
-  const bodyY = usesAuthoredSkeleton
-    ? position.y + (projectedJoints.chest.y + projectedJoints.pelvis.y) / 2
-    : position.y + targetPose.bodyOffset.y + bonePose.rootOffset.y;
-  const headX = usesAuthoredSkeleton ? position.x + projectedJoints.head.x : bodyX - 1;
-  const headY = usesAuthoredSkeleton ? position.y + projectedJoints.head.y : bodyY - 63;
-  // Authored torso shapes are local cutouts placed at the skeleton midpoint. The final
-  // authored projection intentionally skips the legacy whole-body lean, so rigid torso
-  // clothing must carry the authored lean here. Limbs already follow projected joints.
-  const authoredBodyLean = usesAuthoredSkeleton ? bonePose.bodyLean : 0;
-  // Authored headTilt is vertical-referenced (atan2(dx, -dy)). atan2(dy, dx) would pitch the
-  // head/goggles/hair ~90 degrees sideways, which reads as a broken idle/roll portrait.
-  // The projected head direction alone stays near-upright while the torso leans, so the
-  // authored lean is carried here so head, goggles and hair tuck with the rolling body.
-  const headRotation = bonePose.worldJoints.head.rotation;
-  const bodyAttachment = (x = 0, y = 0, rotation = 0) => ({
-    x: bodyX + x * Math.cos(authoredBodyLean) - y * Math.sin(authoredBodyLean),
-    y: bodyY + x * Math.sin(authoredBodyLean) + y * Math.cos(authoredBodyLean),
-    rotation: authoredBodyLean + rotation,
-  });
-  const swordRotation = targetPose.swordAngle;
-  const poseWeaponLengthScale =
-    Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0
-      ? targetPose.weaponLengthScale
-      : 1;
-  const resolvedWeaponLengthScale = weaponLengthScale * poseWeaponLengthScale;
-  const projectedArm = (shoulder, elbow, hand) =>
-    Object.freeze({
-      root: { x: position.x + shoulder.x, y: position.y + shoulder.y },
-      elbow: { x: position.x + elbow.x, y: position.y + elbow.y },
-      hand: { x: position.x + hand.x, y: position.y + hand.y },
-    });
-  const rightArm =
-    projectedJoints && bonePose.frameId
-      ? projectedArm(
-          projectedJoints.nearShoulder,
-          projectedJoints.nearElbow,
-          projectedJoints.nearHand,
-        )
-      : ARM_IK_SOLVER.solve({
-          root: { x: bodyX + 17, y: bodyY - 25 },
-          target: { x: bodyX + targetPose.handTarget.x, y: bodyY + targetPose.handTarget.y },
-          upperLength: 38,
-          lowerLength: 35,
-          bendDirection: 1,
-        });
-  const leftArm =
-    projectedJoints && bonePose.frameId
-      ? projectedArm(projectedJoints.farShoulder, projectedJoints.farElbow, projectedJoints.farHand)
-      : ARM_IK_SOLVER.solve({
-          root: { x: bodyX - 17, y: bodyY - 24 },
-          target: { x: bodyX + targetPose.shieldTarget.x, y: bodyY + targetPose.shieldTarget.y },
-          upperLength: 34,
-          lowerLength: 31,
-          bendDirection: -1,
-        });
-  const rearHip = usesAuthoredSkeleton
-    ? { x: position.x + projectedJoints.farHip.x, y: position.y + projectedJoints.farHip.y }
-    : { x: bodyX - 8, y: bodyY + 27 };
-  const rearLeg = usesAuthoredSkeleton
-    ? {
-        root: rearHip,
-        elbow: {
-          x: position.x + projectedJoints.farKnee.x,
-          y: position.y + projectedJoints.farKnee.y,
-        },
-        hand: {
-          x: position.x + projectedJoints.farFoot.x,
-          y: position.y + projectedJoints.farFoot.y,
-        },
-      }
-    : ARM_IK_SOLVER.solve({
-        root: rearHip,
-        target: {
-          x: position.x + bonePose.rearFootTarget.x,
-          y: position.y + bonePose.rearFootTarget.y,
-        },
-        upperLength: 28,
-        lowerLength: 27,
-        bendDirection: -1,
-      });
-  const leadHip = usesAuthoredSkeleton
-    ? { x: position.x + projectedJoints.nearHip.x, y: position.y + projectedJoints.nearHip.y }
-    : { x: bodyX + 8, y: bodyY + 27 };
-  const leadLeg = usesAuthoredSkeleton
-    ? {
-        root: leadHip,
-        elbow: {
-          x: position.x + projectedJoints.nearKnee.x,
-          y: position.y + projectedJoints.nearKnee.y,
-        },
-        hand: {
-          x: position.x + projectedJoints.nearFoot.x,
-          y: position.y + projectedJoints.nearFoot.y,
-        },
-      }
-    : ARM_IK_SOLVER.solve({
-        root: leadHip,
-        target: {
-          x: position.x + bonePose.leadFootTarget.x,
-          y: position.y + bonePose.leadFootTarget.y,
-        },
-        upperLength: 28,
-        lowerLength: 27,
-        bendDirection: 1,
-      });
-  const swordOrigin = rightArm.hand;
-  const bladeOrigin = {
-    x: swordOrigin.x + (targetPose.weaponBasis?.xx ?? Math.cos(swordRotation)) * 5,
-    y: swordOrigin.y + (targetPose.weaponBasis?.yx ?? Math.sin(swordRotation)) * 5,
+  if (!bonePose.worldJoints || !combatGeometry)
+    throw new TypeError('Character drawing requires the shared projected rig.');
+  const cloth = appearanceProfile.material,
+    trim = appearanceProfile.accent;
+  const outline = '#252a2b',
+    skin = '#c4bbaa',
+    leather = '#665440';
+  const joints = Object.fromEntries(
+    Object.entries(bonePose.projectedJoints).map(([id, value]) => [
+      id,
+      {
+        x: position.x + value.x * renderScale * facing,
+        y:
+          position.y +
+          PLAYER_CHARACTER_FOOT_OFFSET +
+          (value.y - PLAYER_CHARACTER_FOOT_OFFSET) * renderScale,
+      },
+    ]),
+  );
+  const at = (id, x = 0, y = 0) => {
+    const m = bonePose.worldJoints[id].matrix;
+    return {
+      x: joints[id].x + (m[0][0] * x + m[0][1] * y) * renderScale * facing,
+      y: joints[id].y + (m[1][0] * x + m[1][1] * y) * renderScale,
+      basis: {
+        xx: m[0][0] * renderScale * facing,
+        xy: m[0][1] * renderScale * facing,
+        yx: m[1][0] * renderScale,
+        yy: m[1][1] * renderScale,
+      },
+    };
   };
-  const trailItems = [
-    polygon(
-      'sword-trail',
-      arcRibbonPoints(
-        swordOrigin,
-        swordRotation - targetPose.trailArc,
-        swordRotation,
-        42,
-        111 * resolvedWeaponLengthScale,
-      ),
-      { x: 0, y: 0 },
-      '#bff8ef',
-      { opacity: targetPose.trailOpacity * 0.5 },
-    ),
-  ];
-
+  const shape = (id, points, transform, fill, order, width = 1.2) =>
+    polygon(id, points, transform, fill, {
+      stroke: outline,
+      lineWidth: width * renderScale,
+      order,
+    });
+  const limb = (id, from, to, width, fill, order) =>
+    limbSegment(id, joints[from], joints[to], width * renderScale, fill, {
+      stroke: outline,
+      lineWidth: 1.1 * renderScale,
+      order,
+    });
   const items = [
-    polygon('shadow', regularPolygon(35, 8, 12), { x: bodyX, y: position.y + 68 }, '#05080d', {
-      opacity: 0.62,
-    }),
     polygon(
+      'shadow',
+      regularPolygon(22 * renderScale, 4 * renderScale, 12),
+      { x: position.x, y: position.y + PLAYER_CHARACTER_FOOT_OFFSET },
+      '#111516',
+      { opacity: 0.36, order: -100 },
+    ),
+    limb('back-thigh', 'farHip', 'farKnee', 9, '#4b5150', 1),
+    limb('back-shin', 'farKnee', 'farFoot', 5, '#b5ae9d', 2),
+    shape(
+      'back-boot',
+      [
+        { x: -4, y: -5 },
+        { x: 4, y: -5 },
+        { x: 8, y: 0 },
+        { x: 5, y: 3 },
+        { x: -5, y: 3 },
+      ],
+      at('farFoot'),
+      leather,
+      3,
+    ),
+    shape(
       'tool-bag',
       [
-        { x: -15, y: -2 },
+        { x: -7, y: -4 },
         { x: 5, y: -4 },
-        { x: 10, y: 8 },
-        { x: 8, y: 29 },
-        { x: -11, y: 32 },
-        { x: -16, y: 22 },
+        { x: 6, y: 10 },
+        { x: -6, y: 11 },
       ],
-      bodyAttachment(-9, 13, -bonePose.capeLift * 0.025),
-      materialShadow,
-      { stroke: materialEdge, lineWidth: 2 },
+      at('farHip', -5, 0),
+      leather,
+      4,
     ),
-    polygon(
-      'tool-bag-cable',
+    shape(
+      'workwear-back-panel',
       [
-        { x: -2, y: -3 },
-        { x: -19 - bonePose.capeLift * 8, y: 2 },
-        { x: -24 - bonePose.capeLift * 7, y: 17 },
-        { x: -20, y: 20 },
-        { x: -14, y: 7 },
-        { x: 2, y: 3 },
+        { x: -14, y: -2 },
+        { x: 12, y: -2 },
+        { x: 16, y: 10 },
+        { x: 7, y: 13 },
+        { x: -2, y: 9 },
+        { x: -13, y: 12 },
       ],
-      bodyAttachment(-10, 10),
-      accentShadow,
-      { stroke: materialEdge, lineWidth: 1.5 },
+      at('pelvis'),
+      cloth,
+      5,
     ),
-    limbSegment('back-thigh', rearLeg.root, rearLeg.elbow, 11, '#27364d', {
-      stroke: '#121a29',
-      lineWidth: 2,
-    }),
-    limbSegment('back-shin', rearLeg.elbow, rearLeg.hand, 8, '#31425c', {
-      stroke: '#121a29',
-      lineWidth: 2,
-    }),
-    limbSegment('front-thigh', leadLeg.root, leadLeg.elbow, 11, '#405779', {
-      stroke: '#121a29',
-      lineWidth: 2,
-    }),
-    limbSegment('front-shin', leadLeg.elbow, leadLeg.hand, 8, '#4c6688', {
-      stroke: '#121a29',
-      lineWidth: 2,
-    }),
+    limb('front-thigh', 'nearHip', 'nearKnee', 9, '#555c5b', 6),
+    limb('front-shin', 'nearKnee', 'nearFoot', 5, '#d0c7b4', 7),
+    shape(
+      'front-boot',
+      [
+        { x: -4, y: -5 },
+        { x: 4, y: -5 },
+        { x: 8, y: 0 },
+        { x: 5, y: 3 },
+        { x: -5, y: 3 },
+      ],
+      at('nearFoot'),
+      leather,
+      8,
+    ),
+    limb('shield-upper-arm', 'farShoulder', 'farElbow', 7, cloth, 9),
+    limb('shield-forearm', 'farElbow', 'farHand', 5, skin, 10),
     polygon(
       'torso',
-      [
-        { x: -21, y: -36 },
-        { x: 17, y: -38 },
-        { x: 23, y: 13 },
-        { x: 13, y: 34 },
-        { x: -15, y: 32 },
-        { x: -25, y: 9 },
-      ],
-      bodyAttachment(),
-      materialColor,
-      { stroke: materialEdge, lineWidth: 2 },
+      combatGeometry.hurt.find(({ part }) => part === 'torso').points,
+      { x: 0, y: 0 },
+      cloth,
+      { stroke: outline, lineWidth: 1.3 * renderScale, order: 11 },
     ),
-    polygon(
-      'patched-chest-plate',
+    limb('neck', 'chest', 'head', 5, skin, 12),
+    shape(
+      'work-collar',
       [
-        { x: -14, y: -28 },
-        { x: 13, y: -30 },
-        { x: 17, y: 1 },
-        { x: 7, y: 22 },
-        { x: -12, y: 17 },
+        { x: -10, y: -2 },
+        { x: -4, y: 5 },
+        { x: 0, y: 11 },
+        { x: 5, y: 4 },
+        { x: 11, y: -2 },
+        { x: 5, y: 0 },
+        { x: 0, y: 4 },
+        { x: -5, y: 0 },
       ],
-      bodyAttachment(),
-      scaleHexColor(materialColor, 0.82),
-      { stroke: materialEdge, lineWidth: 1.5 },
+      at('chest'),
+      trim,
+      13,
     ),
-    polygon(
+    limbSegment(
+      'cross-body-strap',
+      at('farShoulder', 2, 4),
+      at('nearHip', -2, -1),
+      3.5 * renderScale,
+      leather,
+      { stroke: outline, lineWidth: 0.7 * renderScale, order: 14 },
+    ),
+    shape(
       'work-belt',
       [
-        { x: -20, y: -4 },
-        { x: 20, y: -5 },
-        { x: 20, y: 5 },
-        { x: -20, y: 7 },
+        { x: -12, y: -2 },
+        { x: 12, y: -2 },
+        { x: 12, y: 2 },
+        { x: -12, y: 2 },
       ],
-      bodyAttachment(0, 27),
-      materialShadow,
-      { stroke: materialEdge, lineWidth: 1.5 },
-    ),
-    limbSegment('shield-upper-arm', leftArm.root, leftArm.elbow, 10, '#b77b67', {
-      stroke: '#442a30',
-      lineWidth: 2,
-    }),
-    limbSegment('shield-forearm', leftArm.elbow, leftArm.hand, 8, '#cf8f78', {
-      stroke: '#442a30',
-      lineWidth: 2,
-    }),
-    polygon(
-      'shield',
-      [
-        { x: -12, y: -29 },
-        { x: 9, y: -32 },
-        { x: 17, y: -2 },
-        { x: 8, y: 28 },
-        { x: -9, y: 23 },
-        { x: -17, y: 0 },
-      ],
-      { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1, basis: targetPose.shieldBasis },
-      materialColor,
-      { stroke: materialEdge, lineWidth: 3 },
-    ),
-    polygon(
-      'shield-rivet-plate',
-      [
-        { x: 0, y: -17 },
-        { x: 5, y: -5 },
-        { x: 11, y: 0 },
-        { x: 5, y: 6 },
-        { x: 0, y: 18 },
-        { x: -5, y: 6 },
-        { x: -11, y: 0 },
-        { x: -5, y: -5 },
-      ],
-      { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1, basis: targetPose.shieldBasis },
-      accentColor,
-      { stroke: accentShadow, lineWidth: 1.5 },
+      at('pelvis'),
+      leather,
+      15,
     ),
     polygon(
       'head',
-      regularPolygon(17, 21, 8, Math.PI / 8),
-      { x: headX, y: headY, rotation: headRotation },
-      '#cf8f78',
-      { stroke: '#3d2832', lineWidth: 2 },
+      combatGeometry.hurt.find(({ part }) => part === 'head').points,
+      { x: 0, y: 0 },
+      skin,
+      { stroke: outline, lineWidth: 1.1 * renderScale, order: 16 },
     ),
-    polygon(
-      'goggles-band',
-      [
-        { x: -18, y: -7 },
-        { x: -13, y: -13 },
-        { x: 13, y: -13 },
-        { x: 18, y: -7 },
-        { x: 15, y: -2 },
-        { x: -15, y: -2 },
-      ],
-      { x: headX, y: headY, rotation: headRotation },
-      materialShadow,
-      { stroke: materialEdge, lineWidth: 2 },
-    ),
-    polygon(
-      'goggles-lenses',
-      [
-        { x: -13, y: -12 },
-        { x: -2, y: -12 },
-        { x: -1, y: -3 },
-        { x: -12, y: -3 },
-        { x: -13, y: -12 },
-        { x: 2, y: -12 },
-        { x: 13, y: -12 },
-        { x: 12, y: -3 },
-        { x: 1, y: -3 },
-      ],
-      { x: headX, y: headY, rotation: headRotation },
-      accentColor,
-      { stroke: accentShadow, lineWidth: 1.25, opacity: 0.94 },
-    ),
-    ...trailItems,
-    limbSegment('sword-upper-arm', rightArm.root, rightArm.elbow, 10, '#ba7665', {
-      stroke: '#422832',
-      lineWidth: 2,
-    }),
-    limbSegment('sword-forearm', rightArm.elbow, rightArm.hand, 8, '#cf8f78', {
-      stroke: '#422832',
-      lineWidth: 2,
-    }),
-    polygon(
-      'sword-hilt',
-      [
-        { x: -5, y: -12 },
-        { x: 5, y: -12 },
-        { x: 5, y: 13 },
-        { x: -5, y: 13 },
-      ],
-      {
-        x: swordOrigin.x,
-        y: swordOrigin.y,
-        rotation: swordRotation,
-        basis: targetPose.weaponBasis,
-      },
-      '#d7a95d',
-      { stroke: '#4b3526', lineWidth: 2 },
-    ),
-    polygon(
-      'sword-blade',
-      [
-        { x: 0, y: -3 },
-        { x: 100 * resolvedWeaponLengthScale, y: -3 },
-        { x: 126 * resolvedWeaponLengthScale, y: 0 },
-        { x: 100 * resolvedWeaponLengthScale, y: 4 },
-        { x: 0, y: 4 },
-      ],
-      {
-        x: bladeOrigin.x,
-        y: bladeOrigin.y,
-        rotation: swordRotation,
-        basis: targetPose.weaponBasis,
-      },
-      '#dce8e8',
-      { stroke: '#456171', lineWidth: 2 },
-    ),
-    polygon(
-      'sword-shine',
-      [
-        { x: 12, y: -2 },
-        { x: 99 * resolvedWeaponLengthScale, y: -2 },
-        { x: 117 * resolvedWeaponLengthScale, y: -0.5 },
-        { x: 22, y: 0 },
-      ],
-      {
-        x: bladeOrigin.x,
-        y: bladeOrigin.y,
-        rotation: swordRotation,
-        basis: targetPose.weaponBasis,
-      },
-      '#ffffff',
-      { opacity: 0.8 },
-    ),
-  ];
-
-  items.push(
-    polygon(
-      'worker-hair-back',
-      [
-        { x: -17, y: -8 },
-        { x: -14, y: -20 },
-        { x: -3, y: -27 },
-        { x: 12, y: -21 },
-        { x: 18, y: -7 },
-        { x: 12, y: 8 },
-        { x: 2, y: 4 },
-        { x: -5, y: 15 },
-        { x: -15, y: 8 },
-      ],
-      { x: headX, y: headY, rotation: headRotation },
-      materialEdge,
-      { stroke: scaleHexColor(materialColor, 0.25), lineWidth: 2, order: 13.75 },
-    ),
-    polygon(
-      'worker-hair-fringe',
-      [
-        { x: -11, y: -13 },
-        { x: -2, y: -22 },
-        { x: 13, y: -16 },
-        { x: 18, y: -6 },
-        { x: 8, y: -3 },
-        { x: 12, y: 6 },
-        { x: 2, y: 1 },
-        { x: -4, y: 10 },
-        { x: -9, y: -1 },
-      ],
-      // The fringe is head hair: anchor it to the projected head like the back hair so it
-      // cannot detach from the face when the authored body leans or rolls.
-      { x: headX, y: headY, rotation: headRotation },
-      materialShadow,
-      { stroke: scaleHexColor(materialColor, 0.25), lineWidth: 1.5, order: 16.25 },
-    ),
-    polygon(
-      'workwear-back-panel',
-      [
-        { x: -18, y: 3 },
-        { x: 15, y: 4 },
-        { x: 19, y: 18 },
-        { x: 12, y: 30 },
-        { x: 1, y: 27 },
-        { x: -10, y: 31 },
-        { x: -18, y: 25 },
-        { x: -21, y: 15 },
-      ],
-      bodyAttachment(-1, 8, -bonePose.capeLift * 0.035),
-      materialColor,
-      { stroke: materialEdge, lineWidth: 2, order: 2.75 },
-    ),
-    polygon(
-      'workwear-front-panel',
-      [
-        { x: -13, y: -25 },
-        { x: 11, y: -27 },
-        { x: 16, y: 4 },
-        { x: 9, y: 30 },
-        { x: -10, y: 28 },
-        { x: -16, y: 4 },
-      ],
-      bodyAttachment(1, 0),
-      accentColor,
-      { stroke: accentShadow, lineWidth: 1.5, order: 9.25 },
-    ),
-    polygon(
-      'workwear-repair-patch',
-      [
-        { x: -10, y: -7 },
-        { x: 5, y: -9 },
-        { x: 9, y: 6 },
-        { x: -7, y: 9 },
-      ],
-      bodyAttachment(7, 12, -0.08),
-      accentShadow,
-      { stroke: materialEdge, lineWidth: 1.5, order: 9.4 },
-    ),
-    limbSegment(
-      'shield-sleeve-repair-bandage',
-      {
-        x: lerp(leftArm.root.x, leftArm.elbow.x, 0.18),
-        y: lerp(leftArm.root.y, leftArm.elbow.y, 0.18),
-      },
-      {
-        x: lerp(leftArm.root.x, leftArm.elbow.x, 0.48),
-        y: lerp(leftArm.root.y, leftArm.elbow.y, 0.48),
-      },
-      12,
-      '#d7c8a5',
-      { stroke: '#71644e', lineWidth: 1.5 },
-    ),
-    limbSegment(
-      'sword-sleeve-repair-bandage',
-      {
-        x: lerp(rightArm.root.x, rightArm.elbow.x, 0.18),
-        y: lerp(rightArm.root.y, rightArm.elbow.y, 0.18),
-      },
-      {
-        x: lerp(rightArm.root.x, rightArm.elbow.x, 0.48),
-        y: lerp(rightArm.root.y, rightArm.elbow.y, 0.48),
-      },
-      12,
-      '#d7c8a5',
-      { stroke: '#71644e', lineWidth: 1.5 },
-    ),
-    ...[-7, 0, 7].map((offset, index) =>
-      polygon(
-        `workwear-rivet-${index}`,
-        regularPolygon(2.2, 2.2, 6, Math.PI / 6),
-        bodyAttachment(offset, -15),
-        accentColor,
-        { stroke: accentShadow, lineWidth: 0.75, order: 9.6 + index * 0.01 },
-      ),
-    ),
-    polygon(
-      'shield-glove',
-      [
-        { x: -8, y: -6 },
-        { x: 7, y: -6 },
-        { x: 11, y: 0 },
-        { x: 5, y: 8 },
-        { x: -7, y: 7 },
-        { x: -10, y: 0 },
-      ],
-      {
-        x: leftArm.hand.x,
-        y: leftArm.hand.y,
-        rotation: Math.atan2(leftArm.hand.y - leftArm.elbow.y, leftArm.hand.x - leftArm.elbow.x),
-      },
-      '#684331',
-      { stroke: '#281b19', lineWidth: 1.5 },
-    ),
-    polygon(
+    limb('sword-upper-arm', 'nearShoulder', 'nearElbow', 7, cloth, 17),
+    limb('sword-forearm', 'nearElbow', 'nearHand', 5, skin, 18),
+    shape(
       'sword-glove',
       [
-        { x: -8, y: -6 },
-        { x: 7, y: -6 },
-        { x: 11, y: 0 },
-        { x: 5, y: 8 },
-        { x: -7, y: 7 },
-        { x: -10, y: 0 },
+        { x: -3, y: -4 },
+        { x: 3, y: -4 },
+        { x: 4, y: 3 },
+        { x: -3, y: 4 },
       ],
-      {
-        x: rightArm.hand.x,
-        y: rightArm.hand.y,
-        rotation: Math.atan2(
-          rightArm.hand.y - rightArm.elbow.y,
-          rightArm.hand.x - rightArm.elbow.x,
-        ),
-      },
-      '#82533b',
-      { stroke: '#2e201c', lineWidth: 1.5 },
+      at('nearHand'),
+      leather,
+      19,
     ),
-    polygon(
-      'back-boot',
+    shape(
+      'shield-glove',
       [
-        { x: -7, y: -8 },
-        { x: 6, y: -8 },
-        { x: 15, y: -3 },
-        { x: 17, y: 4 },
-        { x: 4, y: 8 },
-        { x: -9, y: 6 },
-        { x: -11, y: 0 },
+        { x: -3, y: -4 },
+        { x: 3, y: -4 },
+        { x: 4, y: 3 },
+        { x: -3, y: 4 },
       ],
-      {
-        ...rearLeg.hand,
-        // The joint is the ankle; keep the sole above the foot contact plane.
-        x:
-          rearLeg.hand.x +
-          (usesAuthoredSkeleton ? 8 * Math.sin(bonePose.worldJoints.farFoot.rotation) : 0),
-        y:
-          rearLeg.hand.y -
-          (usesAuthoredSkeleton ? 8 * Math.cos(bonePose.worldJoints.farFoot.rotation) : 0),
-        rotation: usesAuthoredSkeleton ? bonePose.worldJoints.farFoot.rotation : 0,
-      },
-      '#5a392d',
-      { stroke: '#241918', lineWidth: 1.5, order: 4.5 },
+      at('farHand'),
+      leather,
+      19,
     ),
-    polygon(
-      'front-boot',
+    polygon('shield', combatGeometry.shield.points, { x: 0, y: 0 }, '#7b817b', {
+      stroke: outline,
+      lineWidth: 1.5 * renderScale,
+      order: 20,
+    }),
+    shape('shield-rivet-plate', regularPolygon(3, 3, 6), at('farHand'), trim, 21, 0.8),
+    polygon('sword-trail', [], { x: 0, y: 0 }, '#d5dfd5', { opacity: 0, order: 22 }),
+    shape(
+      'sword-hilt',
       [
-        { x: -7, y: -8 },
-        { x: 7, y: -8 },
-        { x: 17, y: -3 },
-        { x: 19, y: 4 },
-        { x: 5, y: 9 },
-        { x: -9, y: 6 },
-        { x: -11, y: 0 },
+        { x: -9, y: -2 },
+        { x: 2, y: -2 },
+        { x: 3, y: -9 },
+        { x: 6, y: -10 },
+        { x: 6, y: 10 },
+        { x: 3, y: 9 },
+        { x: 2, y: 2 },
+        { x: -9, y: 2 },
       ],
-      {
-        ...leadLeg.hand,
-        // The joint is the ankle; keep the sole above the foot contact plane.
-        x:
-          leadLeg.hand.x +
-          (usesAuthoredSkeleton ? 8 * Math.sin(bonePose.worldJoints.nearFoot.rotation) : 0),
-        y:
-          leadLeg.hand.y -
-          (usesAuthoredSkeleton ? 8 * Math.cos(bonePose.worldJoints.nearFoot.rotation) : 0),
-        rotation: usesAuthoredSkeleton ? bonePose.worldJoints.nearFoot.rotation : 0,
-      },
-      '#80513a',
-      { stroke: '#2c1e1a', lineWidth: 1.5, order: 6.5 },
+      at('nearHand'),
+      '#777e77',
+      23,
     ),
-  );
-
-  return items.map((item, index) => {
-    const depthGroup = item.id.startsWith('sword')
-      ? 'sword'
-      : item.id.startsWith('shield')
-        ? 'shield'
-        : null;
-    const swordFrontAmount = (bonePose.depthPhase + 1) / 2;
-    const frontAmount =
-      depthGroup === 'sword'
-        ? swordFrontAmount
-        : depthGroup === 'shield'
-          ? 1 - swordFrontAmount
-          : 0.5;
-    const depthOrderOffset = depthGroup ? (frontAmount - 0.5) * 30 : 0;
-    const depthBias = depthGroup === 'sword' ? bonePose.depthPhase : -bonePose.depthPhase;
-    const depthColorScale = 1 - Math.max(0, -depthBias) * 0.16;
-    const baseOrder = CHARACTER_DEPTH_ITEM_ORDERS[item.id] ?? item.order ?? index;
-    const geometryPoints =
+    polygon('sword-blade', combatGeometry.weapon.points, { x: 0, y: 0 }, '#acb7b0', {
+      stroke: outline,
+      lineWidth: 1.2 * renderScale,
+      order: 24,
+    }),
+  ];
+  void weaponLengthScale;
+  void targetPose;
+  return items.map((item) => {
+    const shared =
       item.id === 'sword-blade'
-        ? combatGeometry?.weapon?.points
+        ? combatGeometry.weapon
         : item.id === 'shield'
-          ? combatGeometry?.shield?.points
-          : item.id === 'torso' || item.id === 'head'
-            ? combatGeometry?.hurt?.find(({ part }) => part === item.id)?.points
+          ? combatGeometry.shield
+          : ['torso', 'head'].includes(item.id)
+            ? combatGeometry.hurt.find(({ part }) => part === item.id)
             : null;
-    const usesAuthoredSkeleton = Boolean(bonePose.projectedJoints && bonePose.frameId);
-    return Object.freeze({
-      ...item,
-      renderOrder,
-      order: baseOrder + depthOrderOffset,
-      opacity: item.opacity,
-      fill: depthGroup ? scaleHexColor(item.fill, depthColorScale) : item.fill,
-      lineWidth: item.lineWidth * renderScale,
-      points: geometryPoints
-        ? Object.freeze(geometryPoints)
-        : Object.freeze(
-            item.points.map((point) => {
-              const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
-              if (usesAuthoredSkeleton && item.id !== 'shadow') {
-                const scaledX = position.x + (point.x - position.x) * renderScale;
-                const scaledY = footY + (point.y - footY) * renderScale;
-                return Object.freeze({
-                  x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
-                  y: scaledY,
-                });
-              }
-              const relativeX =
-                (point.x - position.x) * (item.id === 'shadow' ? 1 : bonePose.bodyScaleX);
-              const relativeY =
-                (point.y - footY) * (item.id === 'shadow' ? 1 : targetPose.bodyScaleY);
-              const lean = item.id === 'shadow' ? 0 : targetPose.bodyLean + bonePose.bodyLean;
-              const posedX = position.x + relativeX * Math.cos(lean) - relativeY * Math.sin(lean);
-              const posedY = footY + relativeX * Math.sin(lean) + relativeY * Math.cos(lean);
-              const scaledX = position.x + (posedX - position.x) * renderScale;
-              const scaledY = footY + (posedY - footY) * renderScale;
-              return Object.freeze({
-                x: facing >= 0 ? scaledX : position.x * 2 - scaledX,
-                y: scaledY,
-              });
-            }),
-          ),
-    });
+    return Object.freeze({ ...item, points: shared?.points ?? item.points, renderOrder });
   });
 }
 

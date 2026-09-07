@@ -25,11 +25,12 @@ export class RetroPostProcessor {
       posterizationLevels = 4,
       outlineWidth = 1,
       outlineColor = '#171525',
+      preservedTranslucentPixels = new Set(),
     } = {},
   ) {
     const imageData = context.getImageData(0, 0, width, height);
     if (alphaThresholdEnabled) {
-      this.applyAlphaThreshold(imageData, alphaThreshold);
+      this.applyAlphaThreshold(imageData, alphaThreshold, preservedTranslucentPixels);
     }
     this.applyPosterization(imageData, posterizationLevels);
     if (outlineWidth > 0) {
@@ -39,10 +40,11 @@ export class RetroPostProcessor {
     return imageData;
   }
 
-  applyAlphaThreshold(imageData, threshold) {
+  applyAlphaThreshold(imageData, threshold, preservedTranslucentPixels = new Set()) {
     const pixels = imageData.data;
     const boundedThreshold = Math.max(0, Math.min(255, threshold));
     for (let index = 0; index < pixels.length; index += 4) {
+      if (preservedTranslucentPixels.has(index / 4) && pixels[index + 3] < 255) continue;
       if (pixels[index + 3] >= boundedThreshold) {
         pixels[index + 3] = 255;
         continue;
@@ -60,9 +62,20 @@ export class RetroPostProcessor {
     const interval = 255 / (boundedLevels - 1);
     for (let index = 0; index < pixels.length; index += 4) {
       if (pixels[index + 3] === 0) continue;
-      pixels[index] = Math.round(pixels[index] / interval) * interval;
-      pixels[index + 1] = Math.round(pixels[index + 1] / interval) * interval;
-      pixels[index + 2] = Math.round(pixels[index + 2] / interval) * interval;
+      const luminance =
+        pixels[index] * 0.2126 + pixels[index + 1] * 0.7152 + pixels[index + 2] * 0.0722;
+      if (luminance <= 0) continue;
+      // One intensity band preserves the material's RGB ratios instead of inventing hues.
+      const band = Math.max(interval * 0.35, Math.round(luminance / interval) * interval);
+      const gain = Math.min(
+        // Cell lighting already quantizes illumination. A second absolute snap
+        // must not collapse different material albedos into one gray band.
+        Math.max(0.875, Math.min(1.125, band / luminance)),
+        255 / Math.max(pixels[index], pixels[index + 1], pixels[index + 2]),
+      );
+      pixels[index] *= gain;
+      pixels[index + 1] *= gain;
+      pixels[index + 2] *= gain;
     }
   }
 
@@ -91,7 +104,7 @@ export class RetroPostProcessor {
             const neighborX = x + offsetX;
             if (neighborX < 0 || neighborX >= width) continue;
             const neighborIndex = (neighborY * width + neighborX) * 4;
-            if (sourcePixels[neighborIndex + 3] > 0) {
+            if (sourcePixels[neighborIndex + 3] === 255) {
               touchesOpaquePixel = true;
               break;
             }

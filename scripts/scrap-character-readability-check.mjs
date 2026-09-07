@@ -182,12 +182,14 @@ assert.ok(
   playerSilhouetteHeight >= 540 * 0.18 && playerSilhouetteHeight <= 540 * 0.22,
   `Player body/equipment silhouette must occupy 18–22% of the gameplay viewport, received ${playerSilhouetteHeight / 540}`,
 );
-for (const itemId of [
-  'tool-bag',
-  'goggles-lenses',
-  'workwear-repair-patch',
-  'shield-sleeve-repair-bandage',
-]) {
+const headY = playerFrame.items.find(({ id }) => id === 'head').points.map(({ y }) => y);
+const headHeight = Math.max(...headY) - Math.min(...headY);
+const headCount = playerSilhouetteHeight / headHeight;
+assert.ok(
+  headCount >= 6 && headCount <= 8,
+  'slim protagonist must read as roughly seven heads tall, received ' + headCount,
+);
+for (const itemId of ['tool-bag', 'work-collar', 'cross-body-strap', 'workwear-back-panel']) {
   assert.ok(
     playerFrame.items.some((item) => item.id === itemId),
     `실제 Player frame에는 ${itemId} landmark가 필요합니다.`,

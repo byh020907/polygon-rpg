@@ -131,7 +131,7 @@ class CdpClient {
         },
         reject: (error) => {
           clearTimeout(timeout);
-          reject(error);
+          reject(new Error(`${method}: ${error.message}`));
         },
       });
       this.socket.send(JSON.stringify({ id, method, params }));
@@ -278,8 +278,13 @@ async function run() {
     const mobile = args.get('input') === 'touch';
     if (mobile) await client.send('Emulation.setTouchEmulationEnabled', { enabled: true });
     await click(mobile ? '#menu-mobile-start-control' : '#menu-start-control');
-    await wait(1200);
+    await wait(Number(args.get('start-wait') ?? 1200));
     await click('.qa-input-relay-toggle');
+    const mobilePoints = mobile
+      ? await evaluate(
+          `Object.fromEntries([...document.querySelectorAll('[data-mobile-action]')].map(n=>{const r=n.getBoundingClientRect();return [n.dataset.mobileAction,{x:r.x+r.width/2,y:r.y+r.height/2}]}))`,
+        )
+      : null;
     const touches = new Map();
     const key = async (code, down) => {
       if (!mobile)
@@ -306,9 +311,7 @@ async function run() {
       }[code];
       const releasedPoint = touches.get(code);
       if (down) {
-        const point = await evaluate(
-          `(() => {const r=document.querySelector('[data-mobile-action="${action}"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`,
-        );
+        const point = mobilePoints[action];
         touches.set(code, {
           ...point,
           id: ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'KeyA', 'KeyS'].indexOf(code) + 1,
@@ -386,8 +389,26 @@ async function run() {
       captures.push({ file, milliseconds: Date.now() - start, state });
     };
     const makeStrip = async (name) => {
+      if (name.endsWith('-actor')) {
+        const strip = await evaluate(`(async()=>{
+          const fs=globalThis.__motionFrames;
+          const images=await Promise.all(fs.map(async f=>{const im=new Image();im.src=f.actorPng;await im.decode();return im}));
+          const measure=document.createElement('canvas');measure.width=images[0].width;measure.height=images[0].height;
+          const mc=measure.getContext('2d',{willReadFrequently:true});let x0=measure.width,y0=measure.height,x1=0,y1=0;
+          for(const im of images){mc.clearRect(0,0,measure.width,measure.height);mc.drawImage(im,0,0);const pixels=mc.getImageData(0,0,measure.width,measure.height).data;for(let y=0;y<measure.height;y++)for(let x=0;x<measure.width;x++)if(pixels[(y*measure.width+x)*4+3]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}}
+          const crop={x:Math.max(0,x0-8),y:Math.max(0,y0-8),width:x1-x0+17,height:y1-y0+17};
+          const c=document.createElement('canvas');c.width=1200;c.height=972;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;
+          const scale=Math.min(300/crop.width,300/crop.height),w=crop.width*scale,h=crop.height*scale;
+          for(let i=0;i<12;i++){const index=Math.round(i*(fs.length-1)/11),f=fs[index],dx=(i%4)*300,dy=Math.floor(i/4)*324;ctx.drawImage(images[index],crop.x,crop.y,crop.width,crop.height,dx+(300-w)/2,dy+(300-h)/2,w,h);ctx.fillStyle='white';ctx.font='14px sans-serif';ctx.fillText(Math.round(Math.max(0,f.milliseconds))+' ms · '+f.telemetry.combatMotion.id,dx+8,dy+318)}return c.toDataURL('image/png')
+        })()`);
+        writeFileSync(
+          join(output, `${name}-strip.png`),
+          Buffer.from(strip.split(',')[1], 'base64'),
+        );
+        return;
+      }
       const strip = await evaluate(
-        `(async()=>{const fs=globalThis.__motionFrames.map(f=>({...f,png:${name.endsWith('-actor') ? 'f.actorPng' : 'f.png'}}));const selected=Array.from({length:12},(_,i)=>fs[Math.round(i*(fs.length-1)/11)]);const c=document.createElement('canvas');c.width=1200;c.height=660;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);for(let i=0;i<selected.length;i++){const f=selected[i];const im=new Image();im.src=f.png;await im.decode();const t=f.telemetry;const p=t?.projection;const scale=p?Math.min(im.width/p.worldWidth,im.height/p.worldHeight)*p.zoom:im.width/960;const z=(t?.artDirection?.cameraZoom??1)*(im.width<=900?(t?.artDirection?.mobileCameraScale??1):1);const focus=im.height*(t?.artDirection?.cameraFocusY??.5);const x=t?(t.player.position.x-480-(t.cameraOffset?.x??0))*scale*z+im.width/2:im.width*.4;const y=t?focus+((t.player.position.y-270-(t.cameraOffset?.y??0))*scale+im.height/2-focus)*z:im.height*.8;const dx=(i%4)*300,dy=Math.floor(i/4)*220;ctx.imageSmoothingEnabled=false;ctx.drawImage(im,x-110,y-105,220,200,dx,dy,300,200);ctx.fillStyle='white';ctx.font='14px sans-serif';ctx.fillText(Math.round(f.milliseconds)+' ms · roll '+(t?.player.roll?.progress.toFixed(2)??'—'),dx+8,dy+215)}return c.toDataURL('image/png')})()`,
+        `(async()=>{const fs=globalThis.__motionFrames.map(f=>({...f,png:${name.endsWith('-actor') ? 'f.actorPng' : 'f.png'}}));const selected=Array.from({length:12},(_,i)=>fs[Math.round(i*(fs.length-1)/11)]);const c=document.createElement('canvas');c.width=1200;c.height=660;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);for(let i=0;i<selected.length;i++){const f=selected[i];const im=new Image();im.src=f.png;await im.decode();const t=f.telemetry;const p=t?.projection;const scale=p?Math.min(im.width/p.worldWidth,im.height/p.worldHeight)*p.zoom:im.width/960;const z=(t?.artDirection?.cameraZoom??1)*(im.width<=900?(t?.artDirection?.mobileCameraScale??1):1);const focus=im.height*(t?.artDirection?.cameraFocusY??.5);const x=t?(t.player.position.x-480-(t.cameraOffset?.x??0))*scale*z+im.width/2:im.width*.4;const y=t?focus+((t.player.position.y-270-(t.cameraOffset?.y??0))*scale+im.height/2-focus)*z:im.height*.8;const dx=(i%4)*300,dy=Math.floor(i/4)*220;ctx.imageSmoothingEnabled=false;ctx.drawImage(im,x-110,y-105,220,200,dx,dy,300,200);ctx.fillStyle='white';ctx.font='14px sans-serif';ctx.fillText(Math.round(f.milliseconds)+' ms · '+(t?.player.roll?'roll '+t.player.roll.progress.toFixed(2):t.combatMotion.id+'/'+t.combatMotion.phase),dx+8,dy+215)}return c.toDataURL('image/png')})()`,
       );
       writeFileSync(join(output, `${name}-strip.png`), Buffer.from(strip.split(',')[1], 'base64'));
     };
@@ -438,6 +459,46 @@ async function run() {
       }
       await key(code, false);
       await wait(1200);
+    }
+    if (args.get('motions') === '1') {
+      for (const motion of ['idle', 'run', 'guard', 'slash', 'heavy', 'air']) {
+        await evaluate(
+          `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+        );
+        if (motion === 'idle') await wait(450);
+        else if (motion === 'air') {
+          await key('ArrowUp', true);
+          await wait(70);
+          await key('ArrowUp', false);
+          await wait(220);
+          await key('KeyA', true);
+          await wait(70);
+          await key('KeyA', false);
+          await wait(650);
+        } else {
+          const code = { run: 'ArrowRight', guard: 'ArrowDown', slash: 'KeyA', heavy: 'KeyS' }[
+            motion
+          ];
+          await key(code, true);
+          await wait(['run', 'guard'].includes(motion) ? 450 : 70);
+          await key(code, false);
+          await wait(650);
+        }
+        const frames = await finishCapture(motion);
+        await makeStrip(motion);
+        if (args.get('actor') === '1') await makeStrip(`${motion}-actor`);
+        for (let i = 0; i < frames.length; i++) {
+          const file = `${motion}-${String(i).padStart(2, '0')}.png`;
+          writeFileSync(join(output, file), Buffer.from(frames[i].png.split(',')[1], 'base64'));
+          saveActor(frames[i], file);
+          captures.push({
+            file,
+            milliseconds: frames[i].milliseconds,
+            telemetry: frames[i].telemetry,
+          });
+        }
+        await wait(500);
+      }
     }
     if (args.get('journey') === '1' || args.get('start')) {
       const moveTo = async (x) => {
@@ -490,19 +551,39 @@ async function run() {
         await key('ArrowLeft', false);
       }
       await capture('collector-before', Date.now());
+      await evaluate(
+        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+      );
       if (args.get('air') === '1') {
         await key('ArrowUp', true);
         await wait(70);
         await key('ArrowUp', false);
-        await wait(Number(args.get('air-delay') ?? 350));
+        if (args.get('air-falling') === '1') {
+          let previousY = Infinity;
+          let found = false;
+          for (let i = 0; i < 80; i++) {
+            const player = await evaluate('globalThis.__POLYGON_RPG_INPUT_QA__.player');
+            if (!player.isGrounded && player.position.y > previousY && player.position.y >= 265) {
+              found = true;
+              break;
+            }
+            previousY = player.position.y;
+            await wait(10);
+          }
+          if (!found)
+            throw new Error('Normal jump did not reach the observed falling attack position');
+        } else await wait(Number(args.get('air-delay') ?? 350));
       }
-      await evaluate(
-        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
-      );
       const attackKey = args.get('attack') === 'strong' ? 'KeyS' : 'KeyA';
       await key(attackKey, true);
       await wait(70);
       await key(attackKey, false);
+      for (let tap = 1; tap < Number(args.get('taps') ?? 1); tap++) {
+        await wait(430);
+        await key(attackKey, true);
+        await wait(70);
+        await key(attackKey, false);
+      }
       if (args.get('air-combo') === '1') {
         await wait(180);
         await key('ArrowUp', true);
@@ -533,6 +614,10 @@ async function run() {
       join(output, 'evidence.json'),
       JSON.stringify(
         {
+          capturedAt: new Date().toISOString(),
+          renderer: args.get('renderer') ?? 'retro',
+          input: mobile ? 'touch' : 'keyboard',
+          scenario: args.get('start') ?? 'fresh-game',
           width,
           height,
           captures,

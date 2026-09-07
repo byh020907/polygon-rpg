@@ -65,19 +65,31 @@ const arm = (pose) =>
   });
 assert.notDeepEqual(arm(turned).points, arm(neutral).points);
 assert.notDeepEqual(arm(turned).depths, arm(neutral).depths);
-const chest = neutral.projectedJoints.chest;
-const cloak = {
-  id: 'coat-back-panel',
+const turnedPelvis = projectSideViewSkeletonFrame({
+  ...frame,
+  joints: {
+    ...frame.joints,
+    pelvis: {
+      ...frame.joints.pelvis,
+      quaternion: axisAngleQuaternion({ x: 0, y: 1, z: 0 }, Math.PI / 2),
+    },
+  },
+});
+const pelvis = neutral.projectedJoints.pelvis;
+const hem = {
+  id: 'workwear-back-panel',
   fill: '#708090',
   points: [
-    { x: chest.x - 15, y: chest.y },
-    { x: chest.x + 15, y: chest.y },
-    { x: chest.x + 20, y: chest.y + 40 },
-    { x: chest.x - 20, y: chest.y + 40 },
+    { x: pelvis.x - 14, y: pelvis.y - 2 },
+    { x: pelvis.x + 12, y: pelvis.y - 2 },
+    { x: pelvis.x + 16, y: pelvis.y + 10 },
+    { x: pelvis.x + 7, y: pelvis.y + 13 },
+    { x: pelvis.x - 2, y: pelvis.y + 9 },
+    { x: pelvis.x - 13, y: pelvis.y + 12 },
   ],
 };
 const adapt = (bonePose) =>
-  createPlayerSurfaceItems([cloak], {
+  createPlayerSurfaceItems([hem], {
     bonePose,
     position: { x: 0, y: 0 },
     facing: 1,
@@ -86,12 +98,12 @@ const adapt = (bonePose) =>
   })[0];
 const spanX = (points) => Math.max(...points.map((p) => p.x)) - Math.min(...points.map((p) => p.x));
 assert.ok(
-  spanX(adapt(turned).points) < spanX(adapt(neutral).points) * 0.1,
-  'thin cloak must foreshorten at a 90 degree chest turn',
+  spanX(adapt(turnedPelvis).points) < spanX(adapt(neutral).points) * 0.1,
+  'thin workwear hem must foreshorten at a 90 degree pelvis turn',
 );
 assert.deepEqual(
-  adapt(turned),
-  adapt(projectSideViewSkeletonFrame(turned.skeletonFrame)),
+  adapt(turnedPelvis),
+  adapt(projectSideViewSkeletonFrame(turnedPelvis.skeletonFrame)),
   'same sampler reproduces attachment geometry',
 );
 const item = withBoneSurface({ id: 'limb', fill: '#708090' }, round, 'actor');
@@ -125,5 +137,5 @@ for (const [id, indices] of groups) {
   assert.ok(pixels.data.some(Boolean), `${id} production geometry rasterizes visible pixels`);
 }
 console.log(
-  'Projected body sections, XYZ inheritance, cloak foreshortening, deterministic raster and production depth groups PASS',
+  'Projected body sections, XYZ inheritance, pelvis hem foreshortening, deterministic raster and production depth groups PASS',
 );

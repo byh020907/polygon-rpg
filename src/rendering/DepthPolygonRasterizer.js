@@ -64,6 +64,9 @@ export function rasterizeDepthPolygons(
   }
   data.fill(0);
   depthBuffer.fill(-Infinity);
+  const owners = new Int32Array(width * height).fill(-1);
+  const outlineDepth = new Float64Array(width * height).fill(-Infinity);
+  const outlineOwners = new Int32Array(width * height).fill(-1);
   const surfaces = items
     .filter((item) => (item.surface?.points ?? item.points).length >= 3)
     .map((item, order) => ({
@@ -76,6 +79,14 @@ export function rasterizeDepthPolygons(
       })),
       alpha: Math.max(0, Math.min(1, item.opacity ?? 1)),
     }));
+  // Stable keys resolve only numerically coplanar samples, never replace depth ordering.
+  const stableKey = (item) =>
+    `${item.id ?? ''}:${item.fill}:${JSON.stringify(item.points)}:${item.depths.join(',')}`;
+  for (const item of surfaces) item.stableKey = stableKey(item);
+  const ranked = [...surfaces].sort((a, b) => a.stableKey.localeCompare(b.stableKey));
+  ranked.forEach((item, rank) => {
+    item.rank = rank;
+  });
   const opaque = surfaces.filter((item) => item.alpha === 1 && item.depthWrite !== false);
   const transparent = surfaces.filter(
     (item) => item.alpha > 0 && (item.alpha < 1 || item.depthWrite === false),
@@ -83,7 +94,7 @@ export function rasterizeDepthPolygons(
   transparent.sort(
     (a, b) =>
       a.depths.reduce((sum, z) => sum + z, 0) / a.depths.length -
-        b.depths.reduce((sum, z) => sum + z, 0) / b.depths.length || a.order - b.order,
+        b.depths.reduce((sum, z) => sum + z, 0) / b.depths.length || a.rank - b.rank,
   );
   function paint(item, write, outline = false) {
     let rgb = color(outline ? item.stroke : item.fill);
@@ -91,7 +102,40 @@ export function rasterizeDepthPolygons(
     function sample(x, y, z) {
       if (x < 0 || y < 0 || x >= width || y >= height) return;
       const index = y * width + x;
-      if (z + 1e-7 < depthBuffer[index]) return;
+      if (outline && item.alpha === 1 && item.depthWrite !== false) {
+        if (owners[index] !== item.rank) {
+          if (owners[index] !== -1) return;
+          // An exposed contour must border this final visible surface, not a hidden edge.
+          let visibleNeighbor = false;
+          const reach = Math.ceil(Math.max(0.5, ((item.lineWidth ?? 1) * scale) / 2));
+          for (let oy = -reach; oy <= reach && !visibleNeighbor; oy += 1) {
+            for (let ox = -reach; ox <= reach; ox += 1) {
+              const px = x + ox;
+              const py = y + oy;
+              if (
+                px >= 0 &&
+                py >= 0 &&
+                px < width &&
+                py < height &&
+                owners[py * width + px] === item.rank
+              ) {
+                visibleNeighbor = true;
+                break;
+              }
+            }
+          }
+          if (!visibleNeighbor) return;
+        }
+        if (
+          z < outlineDepth[index] - 1e-7 ||
+          (Math.abs(z - outlineDepth[index]) <= 1e-7 && item.rank < outlineOwners[index])
+        )
+          return;
+      } else if (
+        z < depthBuffer[index] - 1e-7 ||
+        (write && Math.abs(z - depthBuffer[index]) <= 1e-7 && item.rank < owners[index])
+      )
+        return;
       if (z > (coverage.get(index)?.z ?? -Infinity)) coverage.set(index, { z, rgb });
     }
     if (outline) {
@@ -158,7 +202,14 @@ export function rasterizeDepthPolygons(
     }
     for (const [index, sample] of coverage) {
       blend(data, index, sample.rgb, item.alpha);
-      if (write) depthBuffer[index] = sample.z;
+      if (write) {
+        depthBuffer[index] = sample.z;
+        owners[index] = item.rank;
+      }
+      if (outline && item.alpha === 1 && item.depthWrite !== false) {
+        outlineDepth[index] = sample.z;
+        outlineOwners[index] = item.rank;
+      }
     }
   }
   for (const item of opaque) paint(item, true);
@@ -168,5 +219,5 @@ export function rasterizeDepthPolygons(
     paint(item, false);
     if (item.stroke) paint(item, false, true);
   }
-  return { width, height, data, depthBuffer };
+  return { width, height, data, depthBuffer, owners };
 }

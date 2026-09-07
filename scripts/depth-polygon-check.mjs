@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { rasterizeDepthPolygons } from '../src/rendering/DepthPolygonRasterizer.js';
+import { RetroPostProcessor } from '../src/rendering/RetroPostProcessor.js';
 
 const points = [
   { x: 1, y: 1 },
@@ -80,6 +81,87 @@ assert.equal(
   render([collapsed]).data.some(Boolean),
   false,
   'degenerate surfaces finish without raster loops',
+);
+const coplanarA = { ...blue, id: 'material-a', fill: '#a06030' };
+const coplanarB = { ...blue, id: 'material-b', fill: '#507080' };
+assert.deepEqual(
+  render([coplanarA, coplanarB]).data,
+  render([coplanarB, coplanarA]).data,
+  'coplanar material owner is stable across submission order',
+);
+const curved = {
+  id: 'curved',
+  fill: '#708090',
+  stroke: '#111111',
+  lineWidth: 4,
+  points: [
+    { x: 1, y: 1 },
+    { x: 15, y: 1 },
+    { x: 15, y: 15 },
+    { x: 1, y: 15 },
+    { x: 8, y: 8 },
+  ],
+  depths: [0, 0, 0, 0, 10],
+  triangles: [
+    [0, 1, 4],
+    [1, 2, 4],
+    [2, 3, 4],
+    [3, 0, 4],
+  ],
+  outlineIndices: [0, 1, 2, 3],
+};
+assert.deepEqual(
+  pixel(render([curved]), 2, 7),
+  [17, 17, 17, 255],
+  'visible curved contour cannot reject its own interior surface depth',
+);
+assert.deepEqual(
+  pixel(
+    render([
+      curved,
+      { ...curved, id: 'cover', fill: '#ff0000', stroke: null, depths: [20, 20, 20, 20, 20] },
+    ]),
+    2,
+    7,
+  ),
+  [255, 0, 0, 255],
+  'hidden curved contour cannot scratch the foreground',
+);
+const processor = new RetroPostProcessor();
+const material = { data: new Uint8ClampedArray([146, 92, 48, 255]) };
+processor.applyPosterization(material, 4);
+assert.ok(
+  Math.abs(material.data[0] / material.data[1] - 146 / 92) < 0.03,
+  'retro brightness bands retain material hue ratios',
+);
+assert.ok(Math.abs(material.data[1] / material.data[2] - 92 / 48) < 0.05);
+const alpha = { data: new Uint8ClampedArray([60, 160, 180, 70, 60, 160, 180, 70]) };
+const litMaterials = {
+  data: new Uint8ClampedArray([54, 55, 54, 255, 96, 95, 94, 255, 92, 93, 92, 255]),
+};
+processor.applyPosterization(litMaterials, 5);
+assert.ok(
+  litMaterials.data[4] - litMaterials.data[0] >= 20,
+  'cell-lit skin remains visibly lighter than cloth after retro quantization',
+);
+assert.ok(
+  litMaterials.data[8] - litMaterials.data[0] >= 15,
+  'cell-lit steel remains visibly lighter than cloth',
+);
+processor.applyAlphaThreshold(alpha, 128, new Set([0]));
+assert.equal(
+  alpha.data[3],
+  70,
+  'authored translucent trail survives threshold without becoming opaque',
+);
+assert.equal(alpha.data[7], 0, 'ordinary unprotected alpha threshold stays functional');
+const isolatedTrail = { data: new Uint8ClampedArray(3 * 3 * 4) };
+isolatedTrail.data.set([60, 160, 180, 70], 16);
+processor.applyOutline(isolatedTrail, 3, 3, 1, '#111111');
+assert.equal(
+  isolatedTrail.data.filter((value, i) => i % 4 === 3 && value > 0).length,
+  1,
+  'translucent trail cannot acquire an opaque post-outline',
 );
 console.log(
   'Depth polygon raster: crossing, interpolation, trail, outline, surface shading and deterministic sampling PASS',

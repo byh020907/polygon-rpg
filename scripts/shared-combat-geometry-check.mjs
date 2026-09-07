@@ -5,8 +5,7 @@ import {
   createProjectedBoneSurface,
   surfaceOutline,
 } from '../src/animation/ProjectedBodySurface.js';
-import { sampleCombatTargetPose } from '../src/animation/CombatPoseLibrary.js';
-import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibrary.js';
+import { samplePlayerMotionPose } from '../src/animation/PlayerMotionPose.js';
 import {
   closestCombatContact,
   createSweptWeaponGeometry,
@@ -14,6 +13,11 @@ import {
   sampleTrainingEnemyCombatGeometry,
   sampleTrainingEnemyWeaponLength,
 } from '../src/combat/SharedCombatGeometry.js';
+import {
+  createPlayerCombatPresentation,
+  CHARACTER_RENDER_SCALE,
+} from '../src/game/PlayerCombatPresentation.js';
+import { PLAYER_CHARACTER_FOOT_OFFSET } from '../src/combat/SharedCombatGeometry.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
@@ -48,19 +52,9 @@ function playerGeometry({ facing = 1, weaponLengthScale = 1 } = {}) {
     sequence: 1,
     comboCycle: 1,
   });
-  const targetPose = sampleCombatTargetPose(motionState);
-  const bonePose = sampleCharacterBonePose({
-    animationTime: 0.25,
-    movementIntent: 0,
-    isGrounded: true,
-    verticalVelocity: 0,
-    landingRecovery: 0,
-    hitstunProgress: 0,
-    blockstunProgress: 0,
-    blockStrength: 0,
-    knockedOut: false,
-    rollProgress: null,
+  const { targetPose, bonePose } = samplePlayerMotionPose({
     motionState,
+    boneInput: { animationTime: 0.25, movementIntent: 0, isGrounded: true },
   });
   return samplePlayerCombatGeometry({
     position: Object.freeze({ x: 300, y: 352 }),
@@ -94,11 +88,54 @@ function enemyState(attackKind) {
   });
 }
 
+assert.throws(
+  () =>
+    samplePlayerCombatGeometry({
+      position: { x: 300, y: 352 },
+      facing: 1,
+      geometryScale: CHARACTER_RENDER_SCALE,
+      targetPose: { handTarget: { x: 20, y: 0 }, swordAngle: 0 },
+      bonePose: { bodyLean: 0, rootOffset: { x: 0, y: 0 } },
+    }),
+  /canonical projected quaternion rig/,
+  'old scalar 2D pose cannot silently create fallback hit geometry',
+);
+const canonicalIdle = samplePlayerMotionPose({
+  motionState: { id: 'idle', progress: 0 },
+  boneInput: {},
+});
+assert.throws(
+  () =>
+    samplePlayerCombatGeometry({
+      position: { x: 300, y: 352 },
+      facing: 1,
+      geometryScale: CHARACTER_RENDER_SCALE,
+      bonePose: canonicalIdle.bonePose,
+      targetPose: { ...canonicalIdle.targetPose, weaponBasis: null },
+    }),
+  /wrist attachments/,
+  'canonical bones cannot fall back to a separate scalar weapon angle',
+);
+
 const forward = playerGeometry({ facing: 1, weaponLengthScale: 1 });
 const reverse = playerGeometry({ facing: -1, weaponLengthScale: 1 });
 const longWeapon = playerGeometry({ facing: 1, weaponLengthScale: 1.18 });
 assert.ok(Object.isFrozen(forward) && Object.isFrozen(forward.weapon.points));
-assert.equal(forward.hurt.length, 6);
+assert.deepEqual(
+  forward.hurt.map(({ part }) => part),
+  [
+    'torso',
+    'head',
+    'weapon-arm',
+    'weapon-forearm',
+    'shield-arm',
+    'shield-forearm',
+    'back-thigh',
+    'back-shin',
+    'front-thigh',
+    'front-shin',
+  ],
+);
 assert.ok(forward.shield.points.length >= 6);
 const forwardReach = Math.max(...forward.weapon.points.map(({ x }) => x)) - forward.origin.x;
 const reverseReach = reverse.origin.x - Math.min(...reverse.weapon.points.map(({ x }) => x));
@@ -108,6 +145,73 @@ assert.ok(
   'facing은 weapon reach를 대칭으로 보존한다.',
 );
 assert.ok(longReach > forwardReach + 10, '장비 weapon length scale은 실제 contact reach를 늘린다.');
+
+for (const facing of [-1, 1]) {
+  for (const rollProgress of [null, 0.25, 0.5, 0.75, 1]) {
+    const position = { x: 300, y: 352 };
+    const pose = samplePlayerMotionPose({
+      motionState: { id: 'idle', progress: 0 },
+      boneInput: { rollProgress },
+    });
+    const geometry = samplePlayerCombatGeometry({
+      position,
+      facing,
+      ...pose,
+      geometryScale: CHARACTER_RENDER_SCALE,
+    });
+    const output = createPlayerCombatPresentation({
+      position,
+      facing,
+      ...pose,
+      combatGeometry: geometry,
+      appearanceProfile: CHARACTER_PRESENTATION_PROFILE.getProfile('scrapyard-apprentice'),
+      renderScale: CHARACTER_RENDER_SCALE,
+      renderOrder: 30.5,
+      weaponLengthScale: 1,
+      combatEvents: [],
+      enemyRenderOrder: 30.49,
+    });
+    for (const [part, from, to, width] of [
+      ['back-thigh', 'farHip', 'farKnee', 9],
+      ['back-shin', 'farKnee', 'farFoot', 5],
+      ['front-thigh', 'nearHip', 'nearKnee', 9],
+      ['front-shin', 'nearKnee', 'nearFoot', 5],
+    ]) {
+      const hurt = geometry.hurt.find((entry) => entry.part === part);
+      const rendered = output.characterItems.find(({ id }) => id === part);
+      assert.equal(rendered.points.length, hurt.points.length);
+      assert.ok(
+        rendered.points.every(
+          (point, index) =>
+            Math.hypot(point.x - hurt.points[index].x, point.y - hurt.points[index].y) < 1e-7,
+        ),
+        part + ': rendered leg must equal actual hurt outline',
+      );
+      const transform = (joint) => ({
+        x: position.x + joint.x * facing * CHARACTER_RENDER_SCALE,
+        y:
+          position.y +
+          PLAYER_CHARACTER_FOOT_OFFSET +
+          (joint.y - PLAYER_CHARACTER_FOOT_OFFSET) * CHARACTER_RENDER_SCALE,
+      });
+      const start = transform(pose.bonePose.projectedJoints[from]);
+      const end = transform(pose.bonePose.projectedJoints[to]);
+      const center = (i, j) => ({
+        x: (hurt.points[i].x + hurt.points[j].x) / 2,
+        y: (hurt.points[i].y + hurt.points[j].y) / 2,
+      });
+      assert.ok(Math.hypot(center(0, 4).x - start.x, center(0, 4).y - start.y) < 1e-7);
+      assert.ok(Math.hypot(center(7, 11).x - end.x, center(7, 11).y - end.y) < 1e-7);
+      assert.ok(
+        Math.abs(
+          Math.hypot(hurt.points[5].x - hurt.points[13].x, hurt.points[5].y - hurt.points[13].y) -
+            width * CHARACTER_RENDER_SCALE,
+        ) < 1e-7,
+        part + ': hurt width follows actual slim leg, not a broad rectangle',
+      );
+    }
+  }
+}
 
 for (const attackKind of ['light', 'heavy', 'antiAir', 'sweep']) {
   const enemy = enemyState(attackKind);
@@ -343,6 +447,8 @@ console.log(
     probe: 'shared-combat-geometry',
     checks: [
       'player-facing-equipment-and-immutability',
+      'strict-canonical-rig-and-wrist-no-2d-fallback',
+      'slim-player-leg-render-hurt-outline-and-width-parity',
       'enemy-four-attack-semantic-geometry',
       'complete-enemy-six-limb-rendered-hurt-outline-parity',
       'renderer-gameplay-weapon-polygon-parity',

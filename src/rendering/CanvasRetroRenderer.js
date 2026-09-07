@@ -110,6 +110,7 @@ export class CanvasRetroRenderer {
       posterizationLevels,
       outlineWidth,
       outlineColor: frame.palette.outline,
+      preservedTranslucentPixels: diagnostics.translucentPixels,
     });
     this.sceneContext.drawImage(this.foregroundCanvas, 0, 0);
 

@@ -211,7 +211,11 @@ export class GameApp extends SceneNode {
         progressionSnapshot,
       }),
     );
-    if (qaInputEnabled) this.scene.setVisualQaCombatOverlay(true);
+    if (qaInputEnabled) {
+      this.scene.setVisualQaCombatOverlay(
+        new URLSearchParams(globalThis.location?.search ?? '').get('inputQaOverlay') === '1',
+      );
+    }
     this.camera = new Camera2D();
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
@@ -1163,11 +1167,15 @@ export class GameApp extends SceneNode {
         renderer.render(
           Object.freeze({
             ...renderFrame,
+            lightingOccluders: Object.freeze(
+              renderFrame.items
+                .filter((item) => item.lightOccluder === true)
+                .map((item) => Object.freeze({ id: item.id, points: item.points })),
+            ),
             items: Object.freeze(renderFrame.items.filter((item) => item.depthGroup === 'player')),
-            artDirection: Object.freeze({
-              ...renderFrame.artDirection,
-              shadowCasters: Object.freeze([]),
-            }),
+            artDirection: renderFrame.artDirection
+              ? Object.freeze({ ...renderFrame.artDirection, shadowCasters: Object.freeze([]) })
+              : null,
           }),
           { ...GAME_RENDER_SETTINGS, transparent: true },
         );
