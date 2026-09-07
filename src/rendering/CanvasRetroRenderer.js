@@ -102,6 +102,7 @@ export class CanvasRetroRenderer {
     }
     const diagnostics = paintSceneItems(this.foregroundContext, frame, project, logicalWorldScale, {
       showMesh,
+      hardEdges: true,
     });
 
     this.postProcessor.process(this.foregroundContext, logicalWidth, logicalHeight, {

@@ -38,7 +38,7 @@ export const GAME_SCREEN = Object.freeze({
 });
 
 const GAME_RENDER_SETTINGS = Object.freeze({
-  pixelSize: 4,
+  pixelSize: 3,
   pixelSnap: true,
   alphaThresholdEnabled: true,
   alphaThreshold: 128,

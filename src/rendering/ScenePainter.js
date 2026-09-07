@@ -1,5 +1,6 @@
 import { createCellLightingSample } from './CellLighting.js';
 import { rasterizeDepthPolygons } from './DepthPolygonRasterizer.js';
+import { paintHardEdgePolygon } from './HardEdgePolygonPainter.js';
 
 const depthCanvases = new WeakMap();
 
@@ -143,7 +144,7 @@ function ellipsePoints(center, radiusX, radiusY, pointCount = 12) {
   });
 }
 
-function paintSceneShadows(context, frame, project) {
+function paintSceneShadows(context, frame, project, hardEdges = false) {
   const shadowCasters = frame.artDirection?.shadowCasters ?? [];
   if (shadowCasters.length === 0) return;
   const directionalLight = frame.artDirection.lights.find((light) => light.kind === 'directional');
@@ -158,7 +159,13 @@ function paintSceneShadows(context, frame, project) {
     );
     context.globalAlpha = caster.opacity;
     context.fillStyle = '#080909';
-    if (drawPolygonPath(context, contactPoints, (point) => project(point, 1))) context.fill();
+    if (hardEdges)
+      paintHardEdgePolygon(
+        context,
+        contactPoints.map((point) => project(point, 1)),
+        { fill: '#080909' },
+      );
+    else if (drawPolygonPath(context, contactPoints, (point) => project(point, 1))) context.fill();
 
     const castLength = Math.min(96, caster.height * 0.72);
     const castX = shadowDirection.x * castLength;
@@ -175,7 +182,14 @@ function paintSceneShadows(context, frame, project) {
       },
     ];
     context.globalAlpha = caster.opacity * 0.52;
-    if (drawPolygonPath(context, projectedPoints, (point) => project(point, 1))) context.fill();
+    if (hardEdges)
+      paintHardEdgePolygon(
+        context,
+        projectedPoints.map((point) => project(point, 1)),
+        { fill: '#080909' },
+      );
+    else if (drawPolygonPath(context, projectedPoints, (point) => project(point, 1)))
+      context.fill();
   }
   context.restore();
 }
@@ -244,7 +258,13 @@ export function paintBackdrop(
   }
 }
 
-export function paintSceneItems(context, frame, project, worldScale, { showMesh = false } = {}) {
+export function paintSceneItems(
+  context,
+  frame,
+  project,
+  worldScale,
+  { showMesh = false, hardEdges = false } = {},
+) {
   context.lineJoin = 'round';
   context.lineCap = 'round';
   const degenerateItemIds = [];
@@ -260,7 +280,7 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
   for (let itemIndex = 0; itemIndex < frame.items.length; itemIndex += 1) {
     const item = frame.items[itemIndex];
     if (!shadowsPainted && (item.renderOrder ?? 0) >= 30.4) {
-      paintSceneShadows(context, frame, project);
+      paintSceneShadows(context, frame, project, hardEdges);
       shadowsPainted = true;
     }
     if (item.depthGroup && item.depths) {
@@ -297,12 +317,18 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
     const itemOpacity = Number.isFinite(rawOpacity) ? Math.max(0, Math.min(1, rawOpacity)) : 1;
     if (itemOpacity <= 0) continue;
     const itemProject = (point) => project(point, item.parallax ?? 1);
-    if (!drawPolygonPath(context, item.points, itemProject)) continue;
+    if (item.points.length < 3) continue;
     context.globalAlpha = itemOpacity;
     context.fillStyle = resolveCellFill(item, frame, occluders);
-    context.fill();
+    if (hardEdges) {
+      paintHardEdgePolygon(context, item.points.map(itemProject), {
+        fill: context.fillStyle,
+        stroke: item.stroke,
+        lineWidth: Math.max(0.5, (item.lineWidth ?? 1) * worldScale),
+      });
+    } else if (drawPolygonPath(context, item.points, itemProject)) context.fill();
 
-    if (item.stroke) {
+    if (item.stroke && !hardEdges) {
       context.strokeStyle = item.stroke;
       context.lineWidth = Math.max(0.5, (item.lineWidth ?? 1) * worldScale);
       context.stroke();
@@ -316,18 +342,26 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
       context.globalAlpha = 0.82 * itemOpacity;
       context.strokeStyle = '#67e8f9';
       context.lineWidth = Math.max(0.6, worldScale * 0.7);
-      context.stroke();
+      if (hardEdges)
+        paintHardEdgePolygon(context, item.points.map(itemProject), {
+          stroke: '#67e8f9',
+          lineWidth: context.lineWidth,
+        });
+      else context.stroke();
       for (const point of item.points) {
         const screenPoint = itemProject(point);
         context.fillStyle = '#f8fafc';
-        context.beginPath();
-        context.arc(screenPoint.x, screenPoint.y, Math.max(1, worldScale * 1.6), 0, Math.PI * 2);
-        context.fill();
+        if (hardEdges) context.fillRect(Math.round(screenPoint.x), Math.round(screenPoint.y), 1, 1);
+        else {
+          context.beginPath();
+          context.arc(screenPoint.x, screenPoint.y, Math.max(1, worldScale * 1.6), 0, Math.PI * 2);
+          context.fill();
+        }
       }
     }
   }
 
-  if (!shadowsPainted) paintSceneShadows(context, frame, project);
+  if (!shadowsPainted) paintSceneShadows(context, frame, project, hardEdges);
 
   context.globalAlpha = 1;
   return Object.freeze({
