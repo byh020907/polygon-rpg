@@ -13,6 +13,7 @@ function paintDepthGroup(
   occluders,
   showMesh,
   translucentPixels,
+  silhouetteWidth,
 ) {
   const projected = items.map((item) => {
     const projectPoint = (point) => project(point, item.parallax ?? 1);
@@ -34,7 +35,7 @@ function paintDepthGroup(
   const transform = context.getTransform();
   const viewportWidth = (context.canvas.width - transform.e) / Math.max(1e-6, transform.a);
   const viewportHeight = (context.canvas.height - transform.f) / Math.max(1e-6, transform.d);
-  const pad = Math.max(2, ...projected.map((item) => item.lineWidth));
+  const pad = Math.max(2, silhouetteWidth + 1, ...projected.map((item) => item.lineWidth));
   const left = Math.max(0, Math.floor(Math.min(...points.map((p) => p.x)) - pad));
   const top = Math.max(0, Math.floor(Math.min(...points.map((p) => p.y)) - pad));
   const right = Math.min(viewportWidth, Math.ceil(Math.max(...points.map((p) => p.x)) + pad));
@@ -44,6 +45,27 @@ function paintDepthGroup(
   if (!Number.isFinite(width) || !Number.isFinite(height) || width * height > 4194304)
     throw new RangeError('Projected actor raster exceeds bounded viewport.');
   if (width <= 0 || height <= 0) return;
+  const result = rasterizeDepthPolygons(projected, {
+    width,
+    height,
+    offsetX: left,
+    offsetY: top,
+    silhouetteWidth,
+    silhouetteColor: showMesh ? '#67e8f9' : frame.palette.outline,
+  });
+  const pixels = { data: result.data };
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha = pixels.data[(y * width + x) * 4 + 3];
+      if (alpha > 0 && alpha < 255)
+        translucentPixels.add((top + y) * context.canvas.width + left + x);
+    }
+  }
+  context.globalAlpha = 1;
+  if (context.isIntegerPixelSurface) {
+    context.compositePixels(pixels.data, width, height, left, top);
+    return;
+  }
   let canvas = depthCanvases.get(context);
   if (!canvas) {
     canvas =
@@ -55,23 +77,9 @@ function paintDepthGroup(
   if (canvas.width !== width) canvas.width = width;
   if (canvas.height !== height) canvas.height = height;
   const target = canvas.getContext('2d');
-  const pixels = target.createImageData(width, height);
-  rasterizeDepthPolygons(projected, {
-    width,
-    height,
-    offsetX: left,
-    offsetY: top,
-    data: pixels.data,
-  });
-  target.putImageData(pixels, 0, 0);
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const alpha = pixels.data[(y * width + x) * 4 + 3];
-      if (alpha > 0 && alpha < 255)
-        translucentPixels.add((top + y) * context.canvas.width + left + x);
-    }
-  }
-  context.globalAlpha = 1;
+  const image = target.createImageData(width, height);
+  image.data.set(pixels.data);
+  target.putImageData(image, 0, 0);
   context.drawImage(canvas, left, top);
 }
 
@@ -210,15 +218,26 @@ export function paintBackdrop(
   frame,
   viewport,
   project,
-  { retro = false, showWorldGrid = true } = {},
+  { retro = false, showWorldGrid = true, hardEdges = false } = {},
 ) {
+  const fillRect = (x, y, width, height) => {
+    if (!hardEdges) {
+      context.fillRect(x, y, width, height);
+      return;
+    }
+    const left = Math.ceil(Math.min(x, x + width) - 0.5);
+    const top = Math.ceil(Math.min(y, y + height) - 0.5);
+    const right = Math.ceil(Math.max(x, x + width) - 0.5);
+    const bottom = Math.ceil(Math.max(y, y + height) - 0.5);
+    context.fillRect(left, top, right - left, bottom - top);
+  };
   context.fillStyle = frame.palette.background;
-  context.fillRect(0, 0, viewport.width, viewport.height);
+  fillRect(0, 0, viewport.width, viewport.height);
 
   const worldTopLeft = project({ x: 0, y: 0 });
   const worldBottomRight = project({ x: frame.worldSize.width, y: frame.worldSize.height });
   context.fillStyle = frame.palette.arena;
-  context.fillRect(
+  fillRect(
     worldTopLeft.x,
     worldTopLeft.y,
     worldBottomRight.x - worldTopLeft.x,
@@ -231,25 +250,39 @@ export function paintBackdrop(
     for (let worldX = 0; worldX <= frame.worldSize.width; worldX += frame.gridSize) {
       const start = project({ x: worldX, y: 0 });
       const end = project({ x: worldX, y: frame.worldSize.height });
-      context.beginPath();
-      context.moveTo(start.x, start.y);
-      context.lineTo(end.x, end.y);
-      context.stroke();
+      if (hardEdges)
+        paintHardEdgePolygon(context, [start, end], {
+          stroke: context.strokeStyle,
+          lineWidth: context.lineWidth,
+        });
+      else {
+        context.beginPath();
+        context.moveTo(start.x, start.y);
+        context.lineTo(end.x, end.y);
+        context.stroke();
+      }
     }
     for (let worldY = 0; worldY <= frame.worldSize.height; worldY += frame.gridSize) {
       const start = project({ x: 0, y: worldY });
       const end = project({ x: frame.worldSize.width, y: worldY });
-      context.beginPath();
-      context.moveTo(start.x, start.y);
-      context.lineTo(end.x, end.y);
-      context.stroke();
+      if (hardEdges)
+        paintHardEdgePolygon(context, [start, end], {
+          stroke: context.strokeStyle,
+          lineWidth: context.lineWidth,
+        });
+      else {
+        context.beginPath();
+        context.moveTo(start.x, start.y);
+        context.lineTo(end.x, end.y);
+        context.stroke();
+      }
     }
   }
 
   if (Number.isFinite(frame.groundY)) {
     const groundTop = project({ x: 0, y: frame.groundY });
     context.fillStyle = frame.palette.ground;
-    context.fillRect(
+    fillRect(
       worldTopLeft.x,
       groundTop.y,
       worldBottomRight.x - worldTopLeft.x,
@@ -263,7 +296,7 @@ export function paintSceneItems(
   frame,
   project,
   worldScale,
-  { showMesh = false, hardEdges = false } = {},
+  { showMesh = false, hardEdges = false, silhouetteWidth = 1 } = {},
 ) {
   context.lineJoin = 'round';
   context.lineCap = 'round';
@@ -310,6 +343,7 @@ export function paintSceneItems(
         occluders,
         showMesh,
         translucentPixels,
+        silhouetteWidth,
       );
       continue;
     }

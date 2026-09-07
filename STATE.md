@@ -27,7 +27,9 @@
 
 ## Verification
 
-- 외곽선 누락 수리:0.5px 선과 채움 pixel이 없는 얇은 도형의 윤곽0개를 재현하고, 정수 stroke coverage 및 가림 검사를 분리해 수정했다. 독립 desktop/mobile 정상 입력에서 머리·검·팔다리 윤곽 복원과 뒤쪽 가림 유지 확인.
+- Rendering reference: [Godot integer viewport scaling](https://docs.godotengine.org/en/stable/tutorials/rendering/multiple_resolutions.html#stretch-scale-mode)과 [Unity Pixel Perfect / Upscale Render Texture](https://docs.unity3d.com/kr/Packages/com.unity.render-pipelines.universal@8.2/manual/2d-pixelperfect.html)을 참고했다. game world·actor·그림자를 정수 RGBA 버퍼에서 처리하고 최종 Canvas는 putImageData 1회로 출력한다.
+
+- 정지 외곽선 재검증: 기존 global alpha 외곽선은 불투명 world에 합친 캐릭터를 찾지 못했다. 현재는 actor의 실제 불투명 pixel mask에서 윤곽을 완성한 뒤 전용 IntegerPixelSurface로 world를 합성하고 정수 배율로 복제한다. 이전 desktop/mobile/DPR2 정지 상태에서 약98% 달랐던 actor 윤곽 픽셀이 현재 143개 최종 정지 frame 모두 실제 게임과 일치했다. `artifacts/idle-outline-before`, `artifacts/idle-outline-final`에 비교 및 pixel 좌표 evidence를 보존한다.
 
 - 픽셀 표현 조정: 기본 셀4→3, Retro 월드·그림자 경계를 정수 coverage로 생성하고 nearest-neighbor 확대를 유지한다. 독립 1280×720/844×390 실제 입력 캡처 `artifacts/fine-pixel-independent-desktop`, `artifacts/fine-pixel-independent-mobile`에서 작은 픽셀·번짐 없는 경계와 기존 동작을 확인했다. visual/platform/PWA metadata 검사 PASS.
 

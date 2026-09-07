@@ -24,7 +24,7 @@
     "test:character": "node scripts/scrap-character-readability-check.mjs",
     "test:map": "node scripts/glasswind-spatial-check.mjs && node scripts/academy-field-spatial-check.mjs && node scripts/one-way-platform-check.mjs",
     "test:growth": "node scripts/progression-growth-check.mjs",
-    "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs && node scripts/depth-polygon-check.mjs && node scripts/projected-body-check.mjs && node scripts/scrap-workshop-layout-check.mjs && node scripts/hard-edge-polygon-check.mjs",
+    "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs && node scripts/depth-polygon-check.mjs && node scripts/projected-body-check.mjs && node scripts/scrap-workshop-layout-check.mjs && node scripts/hard-edge-polygon-check.mjs && node scripts/integer-pixel-surface-check.mjs",
     "test:platform": "node scripts/platform-access-check.mjs",
     "release:metadata": "node scripts/generate-release-metadata.mjs && prettier --write public/release-metadata.js",
     "release:metadata:check": "node scripts/release-metadata-check.mjs",

@@ -1242,11 +1242,23 @@ export class GameApp extends SceneNode {
           ? this.visualQaPolygonRenderer
           : this.gameRenderer;
       this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      if (this.qaInputEnabled) {
+        globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
+          ...globalThis.__POLYGON_RPG_INPUT_QA__,
+          raster: this.latestRenderStats,
+        });
+      }
       return;
     }
     if (uiState.screen === GAME_SCREEN.GAME) {
       const renderer = this.qaInputPolygon ? this.visualQaPolygonRenderer : this.gameRenderer;
       this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      if (this.qaInputEnabled) {
+        globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
+          ...globalThis.__POLYGON_RPG_INPUT_QA__,
+          raster: this.latestRenderStats,
+        });
+      }
       return;
     }
 

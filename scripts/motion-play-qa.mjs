@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createStaticServer } from './serve.mjs';
 import { writeEvidenceTimeline } from './qa/evidenceTimeline.mjs';
+import { outlineParityExpression } from './qa/outlineParity.mjs';
 
 function parseArgs(argv) {
   const values = new Map();
@@ -179,7 +180,7 @@ async function run() {
     await client.send('Emulation.setDeviceMetricsOverride', {
       width,
       height,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: Number(args.get('dpr') ?? 1),
       mobile: false,
     });
     const evaluate = async (expression) =>
@@ -413,7 +414,47 @@ async function run() {
       writeFileSync(join(output, `${name}-strip.png`), Buffer.from(strip.split(',')[1], 'base64'));
     };
     await capture('start', Date.now());
-    for (const direction of args.get('start') ? [] : ['right', 'left']) {
+    if (args.get('idle-only') === '1') {
+      await evaluate(
+        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__,telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+      );
+      await wait(1500);
+      args.set('actor', '1');
+      const frames = await finishCapture('idle');
+      if (
+        frames.some(
+          (frame) =>
+            frame.telemetry.player.roll ||
+            frame.telemetry.input.left ||
+            frame.telemetry.input.right ||
+            frame.telemetry.combatMotion.id !== 'idle',
+        )
+      )
+        throw new Error('Idle capture must not move or attack');
+      for (let i = 0; i < frames.length; i++) {
+        const file = 'idle-' + String(i).padStart(2, '0') + '.png';
+        writeFileSync(join(output, file), Buffer.from(frames[i].png.split(',')[1], 'base64'));
+        saveActor(frames[i], file);
+        captures.push({
+          file,
+          milliseconds: frames[i].milliseconds,
+          telemetry: frames[i].telemetry,
+        });
+      }
+      await makeStrip('idle');
+      await makeStrip('idle-actor');
+      const parity = await evaluate(outlineParityExpression);
+      writeFileSync(
+        join(output, 'idle-outline-mismatches.png'),
+        Buffer.from(parity.overlayPng.split(',')[1], 'base64'),
+      );
+      delete parity.overlayPng;
+      writeFileSync(join(output, 'idle-outline-parity.json'), JSON.stringify(parity, null, 2));
+      await capture('idle-end', Date.now());
+    }
+    for (const direction of args.get('start') || args.get('idle-only') === '1'
+      ? []
+      : ['right', 'left']) {
       const code = direction === 'right' ? 'ArrowRight' : 'ArrowLeft';
       await key(code, true);
       await wait(100);

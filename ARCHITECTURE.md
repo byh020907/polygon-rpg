@@ -161,9 +161,11 @@ Keyboard / Touch / DOM intent
   정의한다. DOM adapter는 semantic status와 MENU short/hold 경계를 유지하며 Canvas의 attack tell과
   interaction target을 가리지 않는다.
 - Bottom objective ribbon은 현재 action과 command만 compact하게 표시한다. Story title·briefing·감정 설명은 이 HUD surface에 렌더하지 않는다.
-- Retro pipeline은 screen-space snap, low-resolution raster, alpha threshold, posterization, outline과 nearest-neighbor upscale 순서를 유지한다.
+- Retro pipeline은 screen-space snap, 저해상도 depth/material raster와 actor 윤곽 확정, alpha policy·posterization, world 합성, 정수 nearest-neighbor 확대 순서를 사용한다.
 - 일반 게임의 pixel grid는 작은 셀로 세부 형태를 남긴다. Retro의 지형·장식·캐릭터 경계는 정수 pixel coverage로 생성하고 확대는 nearest-neighbor로만 수행한다. 불투명 면이 겹친 경계에 Canvas의 안티앨리어싱 혼합색을 남기지 않는다. 의도한 반투명 효과는 경계 smoothing과 구분한다.
 - 보이는 외곽선은 축소 후에도 최소 한 raster pixel의 연속된 coverage를 보장한다. 정수/소수 좌표나 선의 방향 때문에 윤곽이 통째로 사라지지 않으며, 깊이에 가려진 뒤쪽 선은 계속 숨긴다.
+- Retro는 정수 좌표 전용 RGBA pixel surface에서 저해상도 화면을 완성한 뒤 정수 배율 복사로 출력한다. Canvas의 path·stroke·중간 image resampling에 픽셀 소유권을 맡기지 않는다. world framing을 유지하도록 화면에 맞는 저해상도 grid를 계산하며, 확대 중 픽셀 너비가 번갈아 달라지는 fractional stretch는 사용하지 않는다.
+- 캐릭터 외곽 윤곽은 depth 합성 후 실제로 보이는 불투명 pixel 소유 mask에서 완성하고 배경 합성 전에 확정한다. 완성된 월드 화면의 투명도 경계에서 캐릭터를 뒤늦게 찾지 않는다. 내부 부위선은 depth를 따르고, 반투명 효과는 확정된 외곽선을 지우지 않는다. 배경이 있는 정지 gameplay와 투명 preview의 동일 캐릭터 픽셀을 함께 검증한다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
 - UI screen state, operation-map modal과 debug panel state는 gameplay input에 섞지 않는다.
 - PWA Lifecycle Adapter는 `beforeinstallprompt`, iOS standalone 안내, update waiting과 controller change를 UI command로 변환한다. 설치·갱신은 사용자 입력으로만 시작하며 game screen에서 자동 prompt/reload하지 않는다.

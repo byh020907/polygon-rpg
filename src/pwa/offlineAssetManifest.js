@@ -103,6 +103,7 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/rendering/RetroPostProcessor.js',
   './src/rendering/ScenePainter.js',
   './src/rendering/HardEdgePolygonPainter.js',
+  './src/rendering/IntegerPixelSurface.js',
   './src/ui/DebugConfigurationAdapter.js',
   './src/ui/gameShell.js',
   './src/ui/HoldActivationController.js',

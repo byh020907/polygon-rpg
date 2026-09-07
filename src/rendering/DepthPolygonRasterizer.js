@@ -21,7 +21,17 @@ function blend(data, index, rgb, alpha) {
 
 export function rasterizeDepthPolygons(
   items,
-  { width, height, offsetX = 0, offsetY = 0, scale = 1, data = null, depthBuffer = null },
+  {
+    width,
+    height,
+    offsetX = 0,
+    offsetY = 0,
+    scale = 1,
+    data = null,
+    depthBuffer = null,
+    silhouetteWidth = 1,
+    silhouetteColor = null,
+  },
 ) {
   if (
     !Number.isInteger(width) ||
@@ -209,9 +219,43 @@ export function rasterizeDepthPolygons(
   for (const item of opaque) paint(item, true);
   // Outlines are checked against the complete opaque surface buffer, including later limbs.
   for (const item of opaque) if (item.stroke) paint(item, false, true);
+  // The actor owns its silhouette before compositing with an opaque world. It
+  // cannot depend on empty alpha surviving in the merged scene framebuffer.
+  const ringWidth = Math.max(0, Math.min(2, Math.round(silhouetteWidth)));
+  for (let y = 0; y < height && ringWidth > 0; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const source = y * width + x;
+      const owner = owners[source];
+      if (owner < 0 || !ranked[owner].stroke) continue;
+      for (let oy = -ringWidth; oy <= ringWidth; oy += 1) {
+        for (let ox = -ringWidth; ox <= ringWidth; ox += 1) {
+          const px = x + ox;
+          const py = y + oy;
+          if (px < 0 || py < 0 || px >= width || py >= height) continue;
+          const destination = py * width + px;
+          if (owners[destination] >= 0) continue;
+          const z = depthBuffer[source];
+          if (
+            z > outlineDepth[destination] + 1e-7 ||
+            (Math.abs(z - outlineDepth[destination]) <= 1e-7 && owner >= outlineOwners[destination])
+          ) {
+            outlineDepth[destination] = z;
+            outlineOwners[destination] = owner;
+          }
+        }
+      }
+    }
+  }
   for (const item of transparent) {
     paint(item, false);
     if (item.stroke) paint(item, false, true);
+  }
+  // Preserve the exact opaque contour even under a translucent trail. This
+  // does not write body depth and therefore cannot turn a trail into geometry.
+  for (let index = 0; index < owners.length; index += 1) {
+    if (owners[index] < 0 && outlineOwners[index] >= 0) {
+      blend(data, index, color(silhouetteColor ?? ranked[outlineOwners[index]].stroke), 1);
+    }
   }
   return { width, height, data, depthBuffer, owners };
 }

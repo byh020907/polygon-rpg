@@ -128,6 +128,29 @@ assert.deepEqual(
   'hidden curved contour cannot scratch the foreground',
 );
 const processor = new RetroPostProcessor();
+const sceneOutline = rasterizeDepthPolygons(
+  [
+    {
+      id: 'actor',
+      points: [
+        { x: 3, y: 3 },
+        { x: 10, y: 3 },
+        { x: 10, y: 10 },
+        { x: 3, y: 10 },
+      ],
+      depths: [0, 0, 0, 0],
+      fill: '#ffffff',
+      stroke: '#383838',
+      lineWidth: 1,
+    },
+  ],
+  { width: 18, height: 18, silhouetteColor: '#111416' },
+);
+assert.deepEqual(
+  pixel(sceneOutline, 2, 5),
+  [17, 20, 22, 255],
+  'actor exterior preserves scene outline palette instead of a lighter material edge',
+);
 const material = { data: new Uint8ClampedArray([146, 92, 48, 255]) };
 processor.applyPosterization(material, 4);
 assert.ok(
@@ -278,6 +301,52 @@ assert.deepEqual(
   pixel(render([edgeOn, cover]), 2, 5),
   [255, 0, 0, 255],
   'edge-on outline behind a near surface remains hidden',
+);
+const silhouette = render([thinBox]);
+for (let coordinate = 1; coordinate <= 10; coordinate++) {
+  assert.deepEqual(
+    pixel(silhouette, 1, coordinate),
+    [17, 17, 17, 255],
+    'opaque owner mask closes left silhouette before world composition',
+  );
+  assert.deepEqual(
+    pixel(silhouette, coordinate, 1),
+    [17, 17, 17, 255],
+    'opaque owner mask closes top silhouette',
+  );
+}
+const noRing = rasterizeDepthPolygons([thinBox], { width: 18, height: 18, silhouetteWidth: 0 });
+assert.deepEqual(pixel(noRing, 1, 5), [0, 0, 0, 0], 'lab can disable the generated silhouette');
+const worldComposite = { data: silhouette.data.slice() };
+for (let i = 0; i < worldComposite.data.length; i += 4)
+  if (worldComposite.data[i + 3] === 0) worldComposite.data.set([100, 80, 60, 255], i);
+processor.applyPosterization(worldComposite, 5);
+const actorOnly = { data: silhouette.data.slice() };
+processor.applyPosterization(actorOnly, 5);
+assert.deepEqual(
+  pixel(worldComposite, 1, 5),
+  pixel(actorOnly, 1, 5),
+  'idle actor outline is identical over opaque world and transparent preview',
+);
+const trailedSilhouette = render([
+  thinBox,
+  { ...frontTrail, points: backdrop.points, depths: [30, 30, 30, 30] },
+]);
+assert.deepEqual(
+  pixel(trailedSilhouette, 1, 5),
+  [17, 17, 17, 255],
+  'translucent trail cannot dilute the outer contour',
+);
+assert.deepEqual(
+  trailedSilhouette.depthBuffer,
+  silhouette.depthBuffer,
+  'trail and generated outline do not change body depth',
+);
+const plain = render([{ ...thinBox, stroke: null }]);
+assert.deepEqual(
+  pixel(plain, 1, 5),
+  [0, 0, 0, 0],
+  'unoutlined glow or plain surface does not seed a silhouette',
 );
 console.log(
   'Depth polygon raster: crossing, interpolation, trail, outline, surface shading and deterministic sampling PASS',
