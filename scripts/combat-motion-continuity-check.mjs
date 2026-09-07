@@ -83,9 +83,10 @@ const rollStrip = [0, 0.16, 0.4, 0.66, 0.86, 1].map(rollPose);
 assert.equal(new Set(rollStrip.map((pose) => pose.bodyLean)).size, rollStrip.length);
 assert.notEqual(rollStrip[1].rearFootTarget.y, rollStrip[3].rearFootTarget.y);
 assert.notEqual(rollStrip[1].headTilt, rollStrip[3].headTilt);
+const strongestRollTurn = Math.max(...rollStrip.map((pose) => Math.abs(pose.bodyLean)));
 assert.ok(
-  Math.max(...rollStrip.map((pose) => Math.abs(pose.bodyLean))) < 1,
-  'roll pose must be articulated, not a full-group 360-degree rotation',
+  strongestRollTurn >= 1.15 && strongestRollTurn < Math.PI,
+  'roll pose must carry a readable forward torso turn without becoming a full-group 360-degree spin',
 );
 assert.deepEqual(
   ROLL_TIMELINE_MARKERS.map(({ id }) => id),

@@ -167,6 +167,21 @@ assert.equal(
 const gameplayScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
 const playerFrame = gameplayScene.createRenderFrame(1);
 assert.equal(playerFrame.player.presentationProfileId, 'scrapyard-apprentice');
+const playerSilhouetteItems = playerFrame.items.filter(
+  (item) =>
+    item.renderOrder === 30.5 &&
+    !item.id.startsWith('sword-') &&
+    item.id !== 'shadow' &&
+    Array.isArray(item.points),
+);
+const playerSilhouetteY = playerSilhouetteItems.flatMap((item) =>
+  item.points.map((point) => point.y),
+);
+const playerSilhouetteHeight = Math.max(...playerSilhouetteY) - Math.min(...playerSilhouetteY);
+assert.ok(
+  playerSilhouetteHeight >= 540 * 0.18 && playerSilhouetteHeight <= 540 * 0.22,
+  `Player body/equipment silhouette must occupy 18–22% of the gameplay viewport, received ${playerSilhouetteHeight / 540}`,
+);
 for (const itemId of [
   'tool-bag',
   'goggles-lenses',

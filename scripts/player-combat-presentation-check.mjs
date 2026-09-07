@@ -42,7 +42,7 @@ const POSE_PARITY = Object.freeze({
   }),
   'pose-roll': Object.freeze({
     count: 37,
-    digest: '3b7157c2857da0e7d32affffe2fa1f08dbc308cd51e31e49e391eb4fae225556',
+    digest: '02edf9707e697be0a52821da1b2a8a0663aad8868e4c0ba62f513509e678105b',
   }),
   'pose-ground-attack': Object.freeze({
     count: 37,
@@ -73,7 +73,7 @@ const EFFECT_PARITY = Object.freeze({
   }),
   'combat-evade': Object.freeze({
     count: 40,
-    digest: '8cea5b8f14cdfaaacd1dece5d12614494f5494c4d02a92f085aa657fb8308894',
+    digest: 'c61e732efd4f07525613a0de62194a8e9c473531767e0f25ae019e8feaa7737e',
   }),
   'combat-punish': Object.freeze({
     count: 43,

@@ -238,16 +238,17 @@ function authoredRollFrame({
 // This authored strip is a local 3D joint hierarchy. It is projected to 2D cutout anchors,
 // never rendered as a 3D mesh or used by 2D collision authority.
 // Classic head-first forward roll: the head and hands drive forward-down at entry,
-// the head tucks to its lowest/forward-most point at ground contact, then the body
-// uncurls toward travel. Stylized cutout roll (no full 360 rotation by contract).
+// then shoulder, back and pelvis carry one continuous forward turn through contact before
+// the feet receive the body and it uncurls into travel. The cutout never needs a literal
+// 360-degree spin, but the torso must turn far enough to read as a roll rather than a bow.
 const ROLL_POSE_FRAMES = Object.freeze([
   authoredRollFrame({
     id: 'roll-plant',
     at: 0,
     transition: 'hold',
     rootY: 8,
-    bodyLean: 0.24,
-    headTilt: 0.24,
+    bodyLean: 0.2,
+    headTilt: 0.18,
     rearFootX: -18,
     leadFootX: 17,
     capeLift: 0.3,
@@ -257,9 +258,9 @@ const ROLL_POSE_FRAMES = Object.freeze([
     at: 0.14,
     transition: 'linear',
     rootX: 5,
-    rootY: 20,
-    bodyLean: 0.6,
-    headTilt: 0.5,
+    rootY: 22,
+    bodyLean: 0.82,
+    headTilt: 0.78,
     rearFootX: -9,
     rearFootY: 62,
     leadFootX: 11,
@@ -272,29 +273,29 @@ const ROLL_POSE_FRAMES = Object.freeze([
     id: 'roll-contact',
     at: 0.36,
     transition: 'linear',
-    rootX: 8,
-    rootY: 26,
-    bodyLean: 0.8,
-    headTilt: 0.72,
-    rearFootX: -2,
-    rearFootY: 58,
+    rootX: 9,
+    rootY: 29,
+    bodyLean: 1.28,
+    headTilt: 1.18,
+    rearFootX: -1,
+    rearFootY: 83,
     leadFootX: 3,
-    leadFootY: 56,
+    leadFootY: 81,
     depth: 1,
     capeLift: 1,
     armPose: 'rollTuck',
   }),
   // A forward roll stays curled forward and uncurls toward travel: unfold/recover keep
-  // a decreasing positive lean so the mid-roll never snaps into a backward back-arch.
+  // a decreasing positive turn so the mid-roll never snaps into a backward back-arch.
   // The head stays forward through the unfold so the exit reads as rolling out head-first.
   authoredRollFrame({
     id: 'roll-unfold',
     at: 0.62,
     transition: 'linear',
-    rootX: 10,
-    rootY: 14,
-    bodyLean: 0.34,
-    headTilt: 0.12,
+    rootX: 12,
+    rootY: 16,
+    bodyLean: 0.72,
+    headTilt: 0.52,
     rearFootX: -4,
     rearFootY: 60,
     leadFootX: 9,
@@ -309,8 +310,8 @@ const ROLL_POSE_FRAMES = Object.freeze([
     transition: 'linear',
     rootX: 4,
     rootY: 5,
-    bodyLean: 0.08,
-    headTilt: 0.03,
+    bodyLean: 0.18,
+    headTilt: 0.08,
     rearFootX: -13,
     rearFootY: 77,
     leadFootX: 13,
