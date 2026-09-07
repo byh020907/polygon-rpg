@@ -2708,6 +2708,13 @@ kbd {
     padding: 4px 8px;
   }
 
+  /* The centered region label repeats the two compact HUD read-models above it.
+     In a 390px-tall landscape viewport it crosses both panels and turns the
+     top edge into unreadable chrome, so keep the canvas clear for play. */
+  .game-area-label {
+    display: none;
+  }
+
   .encounter-readout {
     top: 42px;
     min-width: min(280px, 46vw);
