@@ -1,54 +1,42 @@
 # Product Goal Loop State
 
-현재 Desired State 대비 제품 상태의 파생 snapshot이다. Human이 main `21f4b56`의 주인공 동작 스타일이 원하는 느낌에 가깝다고 확인하고 문서 반영 후 Codex 루프 재개를 요청했다.
+현재 Desired State 대비 제품 상태의 파생 snapshot이다.
 
 ## Runtime Status
 
-`RUNNING` — 현재 동작 스타일을 유지하며 남은 Human Feedback과 전체 제품 Gap을 처리한다.
+`RUNNING` — PWA 실기기 검증은 Human 확인 대기이지만 전역 blocker가 아니며, 폐광 산촌 전선을 계속 검증·구현한다.
 
 ## Current Phase
 
-`Human Feedback Priority — PWA의 실제 지속 profile Release A → B 전환은 Human 확인 대기이며 PASS로 추정하지 않는다. 이 대기는 전역 blocker가 아니다. 폐광 산촌의 새 Day 1 입력은 작업반장 대화 종료→현황판 대화→9구간 핵심 사건 미리보기까지 실제 Browser에서 통과했다. 연결 이슈·전투·마지막 작업과 mobile 연속 입력 evidence가 남아 같은 전선을 유지한다.`
+`Human Feedback Priority / Verified Playable Frontier — 새 Day 1 폐광 입력에서 작업반장 대화 3줄 뒤 현황판 목표가 활성화되고, 실제 held 이동은 730→874 좌표로 확인해 현황판 대화를 열었다. 다음 미완료 흐름은 두 연결 이슈의 실제 진행과 갱도·전투·마지막 작업을 거친 지역 after-state 및 mobile 연속 입력이다.`
 
 ## Active Execution Goal
 
-`PG-CAST-CONTINUITY` / Architecture Story Interaction·Authored Campaign Content·Rendering, Input and Accessibility — 새 저장에서 도입을 거쳐 폐광 산촌의 작업반장·대기 광부·라이벌이 사건 전/진행/해결 후의 위치·작업·대사 변화와 구조·굴착기 흐름을 실제 Browser 입력·desktop/mobile viewport에서 끊김 없이 보여 준다. `inputQaStart=scrap-mine-roadhead`는 persisted ledger가 섞이지 않는 Day 1 start를 만들고, QA 단발 입력은 held release 없이 새 sequence를 만든다. Codex 인앱 Browser에서 작업반장 3줄 종료→구조 현황판 2줄→연결 이슈 2개 때문에 비활성인 9구간 핵심 사건 미리보기까지 실제 입력을 판독했다. 이제 새 저장의 연결 이슈·전투·마지막 작업과 mobile 연속 입력을 증명한다. PWA persistent A→B waiting/apply/save/offline은 Human 검증 대기로만 보존한다.`
+`PG-CAST-CONTINUITY` / Architecture Story Interaction·Authored Campaign Content·Rendering, Input and Accessibility — 새 저장의 폐광 산촌에서 작업반장·대기 광부·라이벌과 굴착기 흐름이 before/in-progress/resolved 상태로 실제 입력에 따라 변하고, 연결 이슈·갱도 전투·마지막 작업·부품 회수 후 같은 지역의 생활/설비 변화가 desktop과 mobile에서 읽힌다. 이번 tick은 direct QA state 대입 없이 held input의 실제 월드 좌표 read model을 추가해 CUA 입력을 판독 가능하게 했고, UI bridge 교체 버퍼까지 보완했다. 다음 tick은 이 계약으로 연결 이슈 및 전투 이후를 계속 검증한다.`
 
 ## Desired-State Comparison
 
-| Area                          | Status                                  | Current evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ----------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pixel depth / clean rendering | satisfied                               | 결정적인 불투명 surface 소유와 깊이 동률, 곡면 윤곽의 자기 가림/뒤쪽 선 침범 방지. Hue 보존 명도 처리와 불투명 외곽선. 실제 게임 연속 frame에서 기존 면 구멍·원색 반점이 사라지고 피부·천·금속이 읽힌다.                                                                                                                                                                                                                                                                                                  |
-| Protagonist reference design  | satisfied                               | Photo1의 작은 단순 타원형 머리, 약6.85등신의 긴 팔다리, 짧은 옷자락과 크로스스트랩, 넓은 낮은 검. 작성 시 IK→Quaternion key만 저장하며 runtime은 SLERP/FK. 큰 머리·머리카락·고글·앞치마 장식 경로는 제거했다.                                                                                                                                                                                                                                                                                             |
-| Sword motion and roll         | satisfied                               | 검을 머리 위로 들지 않고 진행 방향 반대쪽 몸 뒤로 낮게 준비→몸 앞을 가로질러 진행 방향으로 빠른 횡·사선 베기→후반 감속→복귀. 독립 실제 touch trace에서 초기 각변위가 후반보다 확연히 크고 포즈도 같은 결과로 읽힌다. 이전 full forward roll·방향 유지 달리기·stamina18·회피/이동/충돌 계약은 유지된다.                                                                                                                                                                                                    |
-| Shared geometry / contact     | satisfied                               | 11종×5장비 canonical reach/타이밍·좌우·중복 피해·guard 검증 PASS. 새 긴 다리도 실제 outline의 hurt를 공유한다. 최신 횡·사선 모션의 fresh collector heavy58→38 및 mobile airSlash58→46 공중 접촉→착지를 실제 입력으로 확인했다.                                                                                                                                                                                                                                                                            |
-| PWA release update            | unverified · Human 확인 대기            | `v0.1.1`과 deterministic buildId가 메뉴와 Service Worker에서 같은 release metadata를 읽고 focused metadata/lifecycle fixture는 PASS. 실제 persistent profile의 A → B waiting discovery → 사용자 apply → 저장 유지 → offline B 재실행은 Human이 확인하며, 이 대기만으로 다른 개발을 막지 않는다.                                                                                                                                                                                                           |
-| Story terminology             | satisfied                               | 도입부와 다섯 지역의 핵심·생활 NPC 전/진행/후 20개 대사는 현장과 transcript가 하나의 immutable authored catalog를 공유한다. 처음 나오는 작업 용어는 눈앞의 물건·행동·결과로 풀며, `test:intro`와 폐광 실제 Browser input 말풍선으로 확인했다.                                                                                                                                                                                                                                                             |
-| Mine cast frontier            | partial · later/mobile continuation unverified | `scrap-awakening-check`의 폐광 계약은 before 대기 광부·라이벌 → in-progress 대기 광부 작업 전환 → resolved 구조등·after 광부와 굴착기 분리/부품 회수/reload를 고정한다. Codex 인앱 Browser의 clean Day 1 input route가 작업반장 3줄 종료 뒤 현황판 목표로 전환되고, 오른쪽 이동 후 현황판 2줄과 9구간 핵심 사건 미리보기(연결 이슈 2개가 남아 비활성)를 실제 표시했다. cross-region 연결 이슈·전투·마지막 작업과 mobile continuous input은 아직 판독하지 않았으므로 전체 PASS로 추정하지 않는다. |
-| Remaining product             | gap                                     | 미검증 전체 캠페인은 이 범위에서 완료로 추정하지 않는다. INBOX 원문과 이전 OpenCode candidate는 보존한다.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Area | Status | Current evidence |
+| --- | --- | --- |
+| Pixel depth / protagonist design / sword and roll | satisfied | 작은 머리·긴 팔다리·낮은 횡·사선 베기와 실제 전방 회전을 actual frame strip 및 combat/character/visual fixture로 검증했다. |
+| Shared geometry / contact | satisfied | 보이는 weapon·sweep·hurt geometry와 damage owner의 공통 계약을 11종 공격, 좌우, 중복 피해, guard fixture 및 실제 representative input으로 확인했다. |
+| PWA release update | unverified · Human 확인 대기 | release metadata/cache/save-before-apply fixture는 PASS. persistent profile A→B waiting/apply/save/offline 재실행은 Human이 확인하며 자동 PASS로 닫지 않는다. |
+| Story terminology | satisfied | 도입·다섯 지역 cast의 현장 대사와 transcript가 동일 authored catalog를 사용하며 현장 행동·결과로 용어를 푼다. |
+| Mine cast frontier | partial | Browser 새 Day 1에서 작업반장 3줄→현황판 목표→실제 held 이동 730→874→현황판 1/2 대화를 확인했다. 연결 이슈, 실제 갱도 전투·마지막 작업, resolved after-state와 mobile continuous input은 아직 unverified다. |
+| Remaining product | gap | 전체 캠페인/최종전/PWA 실기기 등 미검증 Desired State를 완료로 추정하지 않는다. |
 
 ## Verification
 
-- Full permission preflight 적용, guard free 확인 후 인수. 사용자 첨부만 untracked였고 수정·삭제·stage하지 않았다.
-- 독립 실제 mobile touch: `artifacts/independent-backload-mobile`의 실제 touch 연속 frame. 새 비율·깨끗한 pixel·좌우 roll·머리 위 들기 없는 뒤→앞 횡사선 베기와 감속 판독 PASS.
-- 실제 게임/동일 renderer 투명 frame sheet: `artifacts/crossbody-final-desktop`, `artifacts/crossbody-final-mobile`, `artifacts/crossbody-final-air-mobile`. 캡처의 원래 timestamp로 timeline 재생한다.
-- Reference는 사용자 Photo1 및 MotionReferenceCatalog에 기록한 GDQuest/itch.io 원문 tutorial을 study-only로 사용했다. 외부 동작 asset은 import하지 않았다.
-- 독립 motion/body/depth 검증 및 `test:combat`, `test:character`, `test:visual` PASS. 전체 `npm run check` PASS. 최신 횡·사선 pose에서 contact·continuity·공간/복구 journey 및 PWA inventory를 재검증했다.
-- 현재 tick: `npm run test:intro` PASS. Codex 인앱 Browser의 `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`에서 `게임 시작 / 계속하기` 뒤 작업반장 1/3→3/3 말풍선을 실제 ↑로 확인했다. 마지막 line의 `↑ 대화 마치기`은 canvas focus·ArrowUp과 UI-held 입력 재시도에도 transition하지 않았으므로, stable QA scene을 연속 새 저장 증거로 대체하지 않았다.
-- `3e47cc1`·`fb75a91` feedback-only commit을 최신 main에서 비재작성 통합했고 모든 INBOX 문구를 보존했다.
-- `npm run release:metadata`, `npm run test:pwa`, `npm run lint`, `npm run format:check`, `git diff --check` PASS. 인앱 Browser의 fresh local origin에서 `PRE-ALPHA · v0.1.1`과 `BUILD · c35413ae33e3` 메뉴 표시를 판독했다. 독립 verifier는 fixture와 구현 경로는 PASS, 실제 Release A → B/offline browser flow는 미검증이라고 판정했다.
-- 2026-09-07 PWA 배포 inventory 재검증: 지역 대사 module 추가 뒤 stale `public/release-metadata.js`를 발견했다. metadata generator가 `ScrapRegionStory.js`와 새 buildId를 반영했고, Service Worker offline inventory에도 같은 module을 추가했다. `npm run test:pwa`의 metadata fingerprint·atomic cache inventory·update-save boundary와 `npm run test:intro`, `git diff --check`가 PASS했다. Codex 인앱 Browser의 포트별 Service Worker/profile surface는 서로 다른 release를 안정적으로 격리·유지하지 않아 실제 persistent A → B 적용 검증의 PASS 근거로 쓰지 않는다.
-- 2026-09-07 Codex in-app Browser의 새 localhost origin에서 A(`v0.1.0`/`d68e332bb9da`)를 처음 연 뒤 같은 A를 다시 열어 활성화를 기다리고, site data를 지우지 않은 채 같은 origin server를 B(`v0.1.1`/`13324b6b163c`)로 교체했다. B 재열기에서 update waiting·apply UI 없이 B metadata가 직접 표시됐다. 이 surface가 persistent worker/controller를 증명하지 못했으므로 PWA gap을 유지한다.
-- Fresh-context independent verifier: `npm run test:pwa`와 `git diff --check` PASS. release metadata·cache·save-before-apply 구현 계약은 code inspection상 정합하지만 fixture는 waiting worker를 주입하는 fake adapter라 persistent A→B discovery·controller change·save 유지·offline B를 증명하지 못한다고 판정했다. 따라서 PWA Goal은 partial pass이며 gap을 유지한다.
-- `npm run test:intro` PASS: 도입 stage·저장·대화·지역 흐름 32개 check를 통과했고, 구조 줄을 포함한 현장 대사와 replay transcript의 동일성 및 용어의 기능 설명을 고정했다. Codex in-app Browser의 interactive `inputQaStart=scrap-intro-before`와 `scrap-intro-after`에서 실제 ↑ 입력으로 제어핵 선택·고물상 분석 말풍선을 확인했다.
-- 2026-09-07 지역 대사 catalog slice: `npm run test:intro` PASS (32 checks), `npm run test:story` PASS, targeted Prettier/ESLint와 `git diff --check` PASS. 다섯 지역의 작업반장/생활 인물 20개 전·진행·후 대사를 한 frozen authored catalog로 만들고 map/transcript 일치를 fixture로 고정했다. Codex in-app Browser `?inputQa=1&inputQaStart=scrap-mine-roadhead`에서 실제 ↑ 입력으로 폐광 작업반장의 "사람을 꺼낼 레일" 말풍선과 현장 목표를 확인했다. fresh-context independent verifier PASS.
-- 2026-09-07 폐광 전선 재검증: `npm run test:campaign`, `npm run test:intro`, `npm run test:story`, `git diff --check`를 대상으로 실행했고 campaign fixture는 PASS했다. Codex 인앱 Browser의 `inputQaStart=scrap-mine-roadhead&inputQaX=667`에서 실제 ↑로 폐광 작업반장 3줄 말풍선을 열었다. 별도 stable before/in-progress/resolved canvas는 작업반장·광부·라이벌, 굴착기 Boss 및 부품 회수 HUD를 각각 보였다. CUA input surface에서는 완성된 마지막 대화의 후속 ↑가 재현되지 않았고 mobile continuous input도 판독하지 못했으므로 이 결함을 제품 PASS나 자동 test PASS로 바꾸지 않았다. 독립 verifier도 code/fixture 3상태는 PASS, actual continuous desktop/mobile은 unverified로 판정했다.
-- 2026-09-07 폐광 QA 입력 수리: interactive QA scenario가 static `npc-briefing` snapshot과 persisted action ledger를 재사용해 대화 종료에서 같은 stage를 다시 commit하던 오류를 확인했다. clean campaign start와 action-sequence 단발 relay로 분리했다. Codex 인앱 Browser에서 Day 1/D-30 새 시작 → 작업반장 3줄 종료 → 현황판 목표 → 현황판 2줄 → 9구간 core-event preview까지 실제 입력으로 확인했고, 연결 이슈 2개가 남아 확정 버튼이 disabled인 것을 판독했다. targeted Prettier, ESLint와 `git diff --check` PASS. 이후 cross-region/mobile은 미검증으로 유지한다.
+- Highest permission preflight와 loop guard verified. 사용자 첨부 원본은 수정·stage·commit하지 않았다.
+- `npm run test:intro`, `npm run test:platform`, `npm run lint`, `npm run format:check`, `git diff --check` PASS.
+- `npm run release:metadata`, `npm run test:pwa` PASS. current release metadata is regenerated from deployable sources.
+- Codex in-app Browser `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`: Day 1/D-30 새 시작, 작업반장 3줄 완료, held right actual input 730→874, `붕괴 광산 구조 현황판` 1/2 dialogue 확인.
+- Independent verifier PASS: QA read model is inputQa-only, immutable/read-only; buffered UI bridge replacement path and fixture are aligned. No gameplay/persistence writer added.
 
 ## Blockers
 
-없음. `.codex-remote-attachments/`는 사용자 원본 자료이며 배포·commit 대상이 아니다.
+없음. PWA persistent A→B는 Human 확인 대기이며 다른 개발을 멈추지 않는다.
 
 ## Preserved Work Reference
 
-OpenCode candidate `opencode/product-goal-loop/20260905142359-2188ab1adfbe` at `0d5a9dc` remains unmerged in `C:/Users/byh02/AppData/Local/ProductGoalLoop/OpenCode/d76ddb28cc8ea5fa/worktrees/20260905142359-2188ab1adfbe`. Its reports remain in `.git/product-goal-loop/opencode/executions/20260905142359-2188ab1adfbe.json`. Its contact ideas were compared; this task independently replaced the blocking assumptions and did not merge or delete the candidate.
+OpenCode candidate `opencode/product-goal-loop/20260905142359-2188ab1adfbe` at `0d5a9dc` remains unmerged in `C:/Users/byh02/AppData/Local/ProductGoalLoop/OpenCode/d76ddb28cc8ea5fa/worktrees/20260905142359-2188ab1adfbe`. Its reports remain in `.git/product-goal-loop/opencode/executions/20260905142359-2188ab1adfbe.json`; it was compared but not merged or deleted.

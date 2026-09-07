@@ -887,7 +887,16 @@
               연속 입력 확인
             </button>
             <div class="qa-input-relay-panel" x-show="qaInputPanelOpen">
-              <p>실제 입력 경로의 동시 held action을 확인합니다. 장면·진행은 바꾸지 않습니다.</p>
+              <p>
+                실제 입력 경로의 동시 held action을 확인합니다. QA는 입력을 주입할 뿐 장면·진행을
+                직접 바꾸지 않습니다.
+              </p>
+              <output class="qa-input-relay-status" aria-live="polite">
+                <span
+                  x-text="`좌표 ${qaInputStatus.playerPosition.x}, ${qaInputStatus.playerPosition.y}`"
+                ></span>
+                <span x-text="qaInputStatus.roomId"></span>
+              </output>
               <button
                 type="button"
                 class="qa-input-relay-pulse"

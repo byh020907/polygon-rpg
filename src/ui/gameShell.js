@@ -163,6 +163,11 @@ export function registerGameShell(
     qaInputEnabled,
     qaInputPanelOpen: qaInputEnabled,
     qaHeldInput: Object.freeze({}),
+    qaInputStatus: Object.freeze({
+      heldActions: Object.freeze({}),
+      playerPosition: Object.freeze({ x: 0, y: 0 }),
+      roomId: '',
+    }),
     operationMapOpen: false,
     operationMapAvailable: false,
     campaignActionPreviewOpen: false,
@@ -395,6 +400,9 @@ export function registerGameShell(
         },
         setGameStats: (stats) => {
           this.gameStats = formatGameStats(stats);
+        },
+        setQaInputStatus: (status) => {
+          this.qaInputStatus = status;
         },
         setPlayerStatus: (status) => {
           this.health = status.health;

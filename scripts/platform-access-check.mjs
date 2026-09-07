@@ -492,6 +492,7 @@ function verifySamePageGameApplicationReplacement() {
         this.uiBridge.setSaveStatus('player-game-started');
       },
       runVisualQa(request) {
+        this.uiBridge.setQaInputStatus(Object.freeze({ playerPosition: { x: 730, y: 344 } }));
         this.uiBridge.setSaveStatus(`visual-qa:${request.start}`);
         options.gameCanvas.pixel = failNextVisualQa ? 'failed-candidate-frame' : 'next-game-frame';
         if (failNextVisualQa) throw new Error('fixture visual QA failure');
@@ -514,6 +515,7 @@ function verifySamePageGameApplicationReplacement() {
     snapshot: () => Object.freeze({ screen: GAME_SCREEN.GAME, debugPanelOpen: true }),
     setRenderStats: (value) => uiWrites.push(['render', value]),
     setGameStats: (value) => uiWrites.push(['game', value]),
+    setQaInputStatus: (value) => uiWrites.push(['qa-input', value]),
     setPlayerStatus: (value) => uiWrites.push(['player', value]),
     setWorldStatus: (value) => uiWrites.push(['world', value]),
     setDialoguePresentation: (value) => uiWrites.push(['dialogue', value]),
@@ -530,7 +532,10 @@ function verifySamePageGameApplicationReplacement() {
   assert.equal(result.ready, true);
   assert.equal(apps[0].destroyed, true);
   assert.equal(application.currentApp, apps[1]);
-  assert.deepEqual(uiWrites, [['save', 'visual-qa:academy-dialogue']]);
+  assert.deepEqual(uiWrites, [
+    ['qa-input', Object.freeze({ playerPosition: { x: 730, y: 344 } })],
+    ['save', 'visual-qa:academy-dialogue'],
+  ]);
 
   failNextVisualQa = true;
   const previousApp = application.currentApp;

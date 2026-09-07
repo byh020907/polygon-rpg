@@ -5,6 +5,7 @@ function createBufferedUiBridge(uiBridge) {
   const writerNames = Object.freeze([
     'setRenderStats',
     'setGameStats',
+    'setQaInputStatus',
     'setPlayerStatus',
     'setWorldStatus',
     'setDialoguePresentation',

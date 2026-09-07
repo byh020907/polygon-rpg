@@ -67,6 +67,7 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.snapshot !== 'function' ||
     typeof uiBridge.setRenderStats !== 'function' ||
     typeof uiBridge.setGameStats !== 'function' ||
+    typeof uiBridge.setQaInputStatus !== 'function' ||
     typeof uiBridge.setPlayerStatus !== 'function' ||
     typeof uiBridge.setWorldStatus !== 'function' ||
     typeof uiBridge.setDialoguePresentation !== 'function' ||
@@ -1150,6 +1151,16 @@ export class GameApp extends SceneNode {
 
   renderFrame(renderFrame) {
     if (this.qaInputEnabled) {
+      this.uiBridge.setQaInputStatus(
+        Object.freeze({
+          heldActions: this.input.snapshot(),
+          playerPosition: Object.freeze({
+            x: Math.round(renderFrame.player.position.x),
+            y: Math.round(renderFrame.player.position.y),
+          }),
+          roomId: renderFrame.map.activeRoomId,
+        }),
+      );
       const qaCamera = new Camera2D({
         x: this.camera.position.x,
         y: this.camera.position.y,
