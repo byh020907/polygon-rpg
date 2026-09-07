@@ -124,7 +124,11 @@ function focusGameOverPresentation(browserDocument, recoveryAvailable) {
   target?.focus();
 }
 
-export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = {}) {
+export function registerGameShell(
+  Alpine,
+  gameApp,
+  { visualQaRequest = null, qaInputEnabled = false } = {},
+) {
   const mobileViewport = createMobileViewportController(globalThis.screen);
   const standaloneViewport = createStandaloneViewportAdapter({ browserWindow: globalThis });
   const pwaLifecycle = createPwaLifecycleAdapter({ browserWindow: globalThis });
@@ -156,6 +160,9 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
   Alpine.data('gameShell', () => ({
     screen: initialScreen,
     visualQa: Boolean(visualQaRequest),
+    qaInputEnabled,
+    qaInputPanelOpen: qaInputEnabled,
+    qaHeldInput: Object.freeze({}),
     operationMapOpen: false,
     operationMapAvailable: false,
     campaignActionPreviewOpen: false,
@@ -322,6 +329,15 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       Object.freeze({ id: 'strongAttack', label: 'Y', hint: '강한', slot: 'strong' }),
     ]),
 
+    qaInputActions: Object.freeze([
+      Object.freeze({ id: 'left', label: '← 이동' }),
+      Object.freeze({ id: 'right', label: '→ 이동' }),
+      Object.freeze({ id: 'jump', label: '↑ 점프' }),
+      Object.freeze({ id: 'guard', label: '↓ 방어 / 구르기' }),
+      Object.freeze({ id: 'basicAttack', label: 'A 기본' }),
+      Object.freeze({ id: 'strongAttack', label: 'S 강한' }),
+    ]),
+
     init() {
       debugMenuHold = new HoldActivationController({
         onProgress: (progress) => {
@@ -335,6 +351,18 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       globalThis.addEventListener('blur', () => debugMenuHold?.interrupt(), {
         signal: debugHoldAbortController.signal,
       });
+      if (qaInputEnabled) {
+        globalThis.addEventListener('blur', () => this.clearQaInput(), {
+          signal: debugHoldAbortController.signal,
+        });
+        globalThis.document.addEventListener(
+          'visibilitychange',
+          () => {
+            if (globalThis.document.hidden) this.clearQaInput();
+          },
+          { signal: debugHoldAbortController.signal },
+        );
+      }
       globalThis.document.addEventListener(
         'visibilitychange',
         () => {
@@ -609,6 +637,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       operationMapOpenerId = openerId;
       this.operationMapOpen = true;
       setOperationMapBackgroundInert(globalThis.document, true);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() =>
         globalThis.requestAnimationFrame(() => focusOperationMap(globalThis.document)),
@@ -619,6 +648,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       if (!this.operationMapOpen) return;
       this.operationMapOpen = false;
       setOperationMapBackgroundInert(globalThis.document, false);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => globalThis.document.getElementById(operationMapOpenerId)?.focus());
     },
@@ -650,6 +680,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.campaignActionPreview = preview;
       this.campaignActionPreviewOpen = true;
       setCampaignActionBackgroundInert(globalThis.document, true);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() =>
         globalThis.requestAnimationFrame(() => focusCampaignActionPreview(globalThis.document)),
@@ -662,6 +693,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       if (!result.started) return;
       this.campaignActionPreviewOpen = false;
       setCampaignActionBackgroundInert(globalThis.document, false);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => globalThis.document.getElementById('game-canvas')?.focus());
     },
@@ -671,6 +703,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       gameApp.cancelCampaignActionPreview();
       this.campaignActionPreviewOpen = false;
       setCampaignActionBackgroundInert(globalThis.document, false);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => globalThis.document.getElementById('game-canvas')?.focus());
     },
@@ -739,6 +772,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       }
       this.debugPanelOpen = true;
       setDebugBackgroundInert(globalThis.document, true);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => focusDebugPanel(globalThis.document));
     },
@@ -772,6 +806,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.debugPanelOpen = false;
       debugMenuHold?.cancel();
       setDebugBackgroundInert(globalThis.document, false);
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => globalThis.document.getElementById('game-menu-control')?.focus());
     },
@@ -843,6 +878,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.screen = focusRequest.screen;
       this.isPlaying = true;
       this.$nextTick(() => {
+        this.clearQaInput();
         gameApp.onScreenChanged();
         applyFocusAfterPaint(focusRequest);
       });
@@ -863,6 +899,7 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
       this.screen = focusRequest.screen;
       this.isPlaying = false;
       this.forceMobileControls = false;
+      this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => applyFocusAfterPaint(focusRequest));
     },
@@ -877,6 +914,17 @@ export function registerGameShell(Alpine, gameApp, { visualQaRequest = null } = 
 
     toggleWorldTime() {
       gameApp.toggleWorldTime();
+    },
+
+    toggleQaInput(actionId) {
+      const held = this.qaHeldInput[actionId] !== true;
+      if (!gameApp.setQaInputAction(actionId, held)) return;
+      this.qaHeldInput = Object.freeze({ ...this.qaHeldInput, [actionId]: held });
+    },
+
+    clearQaInput() {
+      for (const action of this.qaInputActions) gameApp.setQaInputAction(action.id, false);
+      this.qaHeldInput = Object.freeze({});
     },
 
     trainCombatSkill() {

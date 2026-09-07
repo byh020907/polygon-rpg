@@ -4,8 +4,10 @@ import { readFileSync } from 'node:fs';
 import { GameApplication } from '../src/app/GameApplication.js';
 import { GAME_SCREEN, resolveReducedMotionPreference } from '../src/app/GameApp.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
+import { GameInputController } from '../src/input/GameInputController.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
+import { QaInputAdapter } from '../src/input/QaInputAdapter.js';
 import { createStandaloneViewportAdapter } from '../src/pwa/StandaloneViewportAdapter.js';
 import {
   buildDebugQaUrl,
@@ -758,6 +760,76 @@ function verifyMobileVisibilityCleanup() {
   adapter.detach();
 }
 
+function verifyLatchedQaInputUsesTheSharedActionGrammar() {
+  const disabled = new GameInputController({ qaInputEnabled: false });
+  assert.equal(
+    disabled.setQaHeld('right', true),
+    false,
+    '일반 플레이에는 QA input이 열리면 안 된다.',
+  );
+  assert.equal(disabled.snapshot().right, false);
+
+  const adapter = new GameInputController({ qaInputEnabled: true });
+  assert.equal(adapter.setQaHeld('right', true), true);
+  assert.equal(adapter.setQaHeld('guard', true), true);
+  let snapshot = adapter.snapshot();
+  assert.equal(
+    snapshot.right,
+    true,
+    'QA surface도 held 이동을 같은 input snapshot으로 보내야 한다.',
+  );
+  assert.equal(snapshot.guard, true, 'QA surface는 이동과 guard를 동시에 유지해야 한다.');
+  assert.equal(
+    snapshot.guardSequence,
+    1,
+    'latched guard의 첫 press는 기존 sequence 계약을 따라야 한다.',
+  );
+
+  adapter.setQaHeld('guard', false);
+  snapshot = adapter.snapshot();
+  assert.equal(snapshot.right, true, 'guard를 풀어도 held 이동은 유지되어야 한다.');
+  assert.equal(snapshot.guard, false);
+  adapter.clear();
+  assert.equal(
+    adapter.snapshot().right,
+    false,
+    '화면 전환 cleanup은 QA held input도 해제해야 한다.',
+  );
+
+  const listeners = new Map();
+  const documentTarget = {
+    hidden: false,
+    addEventListener(eventName, listener) {
+      listeners.set(eventName, listener);
+    },
+    removeEventListener(eventName) {
+      listeners.delete(eventName);
+    },
+  };
+  const target = {
+    addEventListener(eventName, listener) {
+      listeners.set(eventName, listener);
+    },
+    removeEventListener(eventName) {
+      listeners.delete(eventName);
+    },
+  };
+  const lifecycleAdapter = new QaInputAdapter({ enabled: true, target, documentTarget });
+  lifecycleAdapter.attach();
+  lifecycleAdapter.setHeld('right', true);
+  listeners.get('blur')();
+  assert.equal(lifecycleAdapter.snapshot().right, false, 'blur는 QA held 이동도 해제해야 한다.');
+  lifecycleAdapter.setHeld('guard', true);
+  documentTarget.hidden = true;
+  listeners.get('visibilitychange')();
+  assert.equal(
+    lifecycleAdapter.snapshot().guard,
+    false,
+    'background 전환은 QA held guard도 해제해야 한다.',
+  );
+  lifecycleAdapter.detach();
+}
+
 verifyScreenFocusTransitions();
 verifyFocusPortAndNoFocusSteal();
 verifySemanticStatusAndFocusTargets();
@@ -768,6 +840,7 @@ verifyVisualQaReducedMotionOverride();
 verifyInteractiveControlKeyboardBoundary();
 verifyReducedMotionVisualQaRequest();
 verifyMobileVisibilityCleanup();
+verifyLatchedQaInputUsesTheSharedActionGrammar();
 verifyStandaloneViewportSynchronization();
 
 console.log(
@@ -801,6 +874,7 @@ console.log(
         'reduced-motion-in-app-visual-qa-request',
         'visual-qa-explicit-reduced-motion-override',
         'mobile-visibility-and-window-blur-cleanup',
+        'qa-latched-simultaneous-held-action-grammar',
         'standalone-visible-viewport-safe-area-synchronization',
       ],
     },

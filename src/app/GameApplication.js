@@ -70,12 +70,13 @@ export class GameApplication {
     polygonCanvas,
     retroCanvas,
     visualQaRequest = null,
+    qaInputEnabled = false,
     createGameApp = (options) => new GameApp(options),
   }) {
     if (typeof createGameApp !== 'function') {
       throw new TypeError('GameApplication에는 GameApp factory가 필요합니다.');
     }
-    this.canvases = Object.freeze({ gameCanvas, polygonCanvas, retroCanvas });
+    this.canvases = Object.freeze({ gameCanvas, polygonCanvas, retroCanvas, qaInputEnabled });
     this.createGameApp = createGameApp;
     this.uiBridge = null;
     this.currentApp = this.create(visualQaRequest);
@@ -208,6 +209,10 @@ export class GameApplication {
 
   releaseMobilePointer(pointerId) {
     return this.currentApp.releaseMobilePointer(pointerId);
+  }
+
+  setQaInputAction(actionId, held) {
+    return this.currentApp.setQaInputAction(actionId, held);
   }
 
   destroy() {

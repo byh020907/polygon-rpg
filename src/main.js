@@ -12,14 +12,16 @@ function requireCanvas(id) {
 }
 
 const visualQaRequest = readDebugQaRequest();
+const qaInputEnabled = new URLSearchParams(globalThis.location.search).get('inputQa') === '1';
 const gameApplication = new GameApplication({
   gameCanvas: requireCanvas('game-canvas'),
   polygonCanvas: requireCanvas('polygon-canvas'),
   retroCanvas: requireCanvas('retro-canvas'),
   visualQaRequest,
+  qaInputEnabled,
 });
 
-registerGameShell(Alpine, gameApplication, { visualQaRequest });
+registerGameShell(Alpine, gameApplication, { visualQaRequest, qaInputEnabled });
 globalThis.Alpine = Alpine;
 Alpine.start();
 globalThis.addEventListener('pagehide', () => gameApplication.destroy(), { once: true });

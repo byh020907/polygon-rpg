@@ -84,6 +84,7 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/input/InputAction.js',
   './src/input/KeyboardInputAdapter.js',
   './src/input/MobileInputAdapter.js',
+  './src/input/QaInputAdapter.js',
   './src/rendering/Camera2D.js',
   './src/rendering/CanvasHost.js',
   './src/rendering/CanvasPolygonRenderer.js',

@@ -140,7 +140,13 @@ function createTrainingEncounter(options) {
 }
 
 export class GameApp extends SceneNode {
-  constructor({ gameCanvas, polygonCanvas, retroCanvas, visualQaRequest = null }) {
+  constructor({
+    gameCanvas,
+    polygonCanvas,
+    retroCanvas,
+    visualQaRequest = null,
+    qaInputEnabled = false,
+  }) {
     super('GameApp');
     const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
     this.equipmentIds = Object.freeze([...equipmentIds]);
@@ -214,6 +220,7 @@ export class GameApp extends SceneNode {
     this.uiBridge = null;
     this.manualMode = false;
     this.input = new GameInputController({
+      qaInputEnabled,
       isActive: () => {
         const uiState = this.uiBridge?.snapshot();
         return (
@@ -1050,6 +1057,11 @@ export class GameApp extends SceneNode {
 
   releaseMobilePointer(pointerId) {
     return this.input.releaseMobile(pointerId);
+  }
+
+  setQaInputAction(actionId, held) {
+    if (this.uiBridge.snapshot().screen === GAME_SCREEN.MENU) return false;
+    return this.input.setQaHeld(actionId, held);
   }
 
   update(deltaSeconds, inputSnapshot) {
