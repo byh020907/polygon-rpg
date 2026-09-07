@@ -7,6 +7,10 @@ import { retargetMotionKeyframes } from '../src/animation/MotionClipRetargeter.j
 import { MOTION_REFERENCE_CATALOG } from '../src/animation/MotionReferenceCatalog.js';
 import { ROLL_TIMELINE_MARKERS, rollTimelineMarkerAt } from '../src/animation/RollTimeline.js';
 import {
+  projectSideViewSkeletonFrame,
+  SIDE_VIEW_SKELETON_JOINTS,
+} from '../src/animation/SkeletonPoseProjection.js';
+import {
   CombatCommandController,
   combatMotionFrameData,
 } from '../src/combat/CombatCommandController.js';
@@ -152,6 +156,29 @@ assert.ok(
   authoredMidRoll.projectedJoints.nearShoulder.depth >
     authoredMidRoll.projectedJoints.farShoulder.depth,
   'orthographic projection must preserve authored near/far depth order',
+);
+assert.ok(
+  authoredMidRoll.worldJoints.nearHand.rotation3d &&
+    Number.isFinite(authoredMidRoll.worldJoints.nearHand.rotation3d.y),
+  'authored combat joints must retain a real local 3D rotation, not only a screen-plane angle',
+);
+const threeAxisParentProbe = projectSideViewSkeletonFrame({
+  joints: Object.fromEntries(
+    SIDE_VIEW_SKELETON_JOINTS.map((jointId) => [
+      jointId,
+      {
+        x: jointId === 'chest' ? 0 : 0,
+        y: jointId === 'pelvis' ? 10 : jointId === 'chest' ? -10 : 0,
+        z: jointId === 'chest' ? 10 : 0,
+        rotation: jointId === 'pelvis' ? { x: 0, y: Math.PI / 2, z: 0 } : { x: 0, y: 0, z: 0 },
+      },
+    ]),
+  ),
+});
+assert.ok(
+  threeAxisParentProbe.worldJoints.chest.x > 9 &&
+    Math.abs(threeAxisParentProbe.worldJoints.chest.z) < 0.001,
+  'a parent yaw must rotate a child local z offset into its world x position before side-view projection',
 );
 // Classic head-first forward roll: the head drives forward at entry, tucks to its
 // lowest and most forward point at ground contact with the hands planted near the

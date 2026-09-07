@@ -208,10 +208,24 @@ function authoredRollFrame({
           farHip: { x: -8, y: hipY, z: -2 },
           farKnee: { x: 0, y: kneeY, z: -1 },
           farFoot: { x: rearFootX + 8, y: rearFootY - legBaseY, z: 0 },
-        }).map(([jointId, value]) => [
-          jointId,
-          Object.freeze({ ...value, rotation: localRotation[jointId] }),
-        ]),
+        }).map(([jointId, value]) => {
+          // The authored strip stores a true local transform: z separates near/far limbs and
+          // pitch/yaw make that depth participate in parent-child composition before the fixed
+          // side camera projects it.  `rotation` remains the local roll for compact authoring.
+          const depthYaw = value.z * 0.026 + depth * 0.045;
+          const bodyPitch = ['pelvis', 'chest', 'neck', 'head'].includes(jointId)
+            ? bodyLean * 0.09
+            : 0;
+          return [
+            jointId,
+            Object.freeze({
+              ...value,
+              pitch: bodyPitch,
+              yaw: depthYaw,
+              rotation: localRotation[jointId],
+            }),
+          ];
+        }),
       ),
     ),
   });

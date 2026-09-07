@@ -20,27 +20,86 @@ const JOINT_PARENT = Object.freeze({
 
 const JOINT_IDS = Object.freeze(Object.keys(JOINT_PARENT));
 
+function freezeRotation(point) {
+  if (Number.isFinite(point.rotation)) {
+    return Object.freeze({ x: point.pitch ?? 0, y: point.yaw ?? 0, z: point.rotation });
+  }
+  if (
+    point.rotation &&
+    Number.isFinite(point.rotation.x) &&
+    Number.isFinite(point.rotation.y) &&
+    Number.isFinite(point.rotation.z)
+  ) {
+    return Object.freeze({ ...point.rotation });
+  }
+  throw new TypeError('3D skeleton joint는 유한한 local rotation이 필요합니다.');
+}
+
 function freezePoint(point) {
   if (
     !point ||
     !Number.isFinite(point.x) ||
     !Number.isFinite(point.y) ||
-    !Number.isFinite(point.z) ||
-    !Number.isFinite(point.rotation)
+    !Number.isFinite(point.z)
   ) {
     throw new TypeError('3D skeleton joint는 유한한 x/y/z와 local rotation이 필요합니다.');
   }
-  return Object.freeze({ x: point.x, y: point.y, z: point.z, rotation: point.rotation });
+  const rotation3d = freezeRotation(point);
+  return Object.freeze({ x: point.x, y: point.y, z: point.z, rotation: rotation3d.z, rotation3d });
+}
+
+function rotationMatrix({ x, y, z }) {
+  const cosineX = Math.cos(x);
+  const sineX = Math.sin(x);
+  const cosineY = Math.cos(y);
+  const sineY = Math.sin(y);
+  const cosineZ = Math.cos(z);
+  const sineZ = Math.sin(z);
+  return Object.freeze([
+    Object.freeze([
+      cosineZ * cosineY,
+      cosineZ * sineY * sineX - sineZ * cosineX,
+      cosineZ * sineY * cosineX + sineZ * sineX,
+    ]),
+    Object.freeze([
+      sineZ * cosineY,
+      sineZ * sineY * sineX + cosineZ * cosineX,
+      sineZ * sineY * cosineX - cosineZ * sineX,
+    ]),
+    Object.freeze([-sineY, cosineY * sineX, cosineY * cosineX]),
+  ]);
+}
+
+function multiplyMatrix(left, right) {
+  return Object.freeze(
+    left.map((row) =>
+      Object.freeze(
+        right[0].map((_, column) =>
+          row.reduce((sum, value, index) => sum + value * right[index][column], 0),
+        ),
+      ),
+    ),
+  );
+}
+
+function rotatePoint(matrix, point) {
+  return Object.freeze({
+    x: matrix[0][0] * point.x + matrix[0][1] * point.y + matrix[0][2] * point.z,
+    y: matrix[1][0] * point.x + matrix[1][1] * point.y + matrix[1][2] * point.z,
+    z: matrix[2][0] * point.x + matrix[2][1] * point.y + matrix[2][2] * point.z,
+  });
 }
 
 function composeTransform(parent, local) {
-  const cosine = Math.cos(parent.rotation);
-  const sine = Math.sin(parent.rotation);
+  const offset = rotatePoint(parent.matrix, local);
+  const matrix = multiplyMatrix(parent.matrix, rotationMatrix(local.rotation3d));
   return Object.freeze({
-    x: parent.x + local.x * cosine - local.y * sine,
-    y: parent.y + local.x * sine + local.y * cosine,
-    z: parent.z + local.z,
-    rotation: parent.rotation + local.rotation,
+    x: parent.x + offset.x,
+    y: parent.y + offset.y,
+    z: parent.z + offset.z,
+    rotation: Math.atan2(matrix[1][0], matrix[0][0]),
+    rotation3d: local.rotation3d,
+    matrix,
   });
 }
 
@@ -51,7 +110,7 @@ function worldJoint(jointId, localJoints, cache) {
   const parentId = JOINT_PARENT[jointId];
   const value = parentId
     ? composeTransform(worldJoint(parentId, localJoints, cache), local)
-    : local;
+    : Object.freeze({ ...local, matrix: rotationMatrix(local.rotation3d) });
   cache[jointId] = value;
   return value;
 }
@@ -101,6 +160,7 @@ export function projectSideViewSkeletonFrame(frame) {
     rearFootTarget: Object.freeze({ x: projectedJoints.farFoot.x, y: projectedJoints.farFoot.y }),
     leadFootTarget: Object.freeze({ x: projectedJoints.nearFoot.x, y: projectedJoints.nearFoot.y }),
     capeLift: frame.capeLift ?? 0,
+    worldJoints,
     projectedJoints,
   });
 }

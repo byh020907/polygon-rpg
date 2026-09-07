@@ -246,29 +246,53 @@ function createCharacterItems(
   const rearHip = usesAuthoredSkeleton
     ? { x: position.x + projectedJoints.farHip.x, y: position.y + projectedJoints.farHip.y }
     : { x: bodyX - 8, y: bodyY + 27 };
-  const rearLeg = ARM_IK_SOLVER.solve({
-    root: rearHip,
-    target: {
-      x: position.x + (projectedJoints?.farFoot.x ?? bonePose.rearFootTarget.x),
-      y: position.y + (projectedJoints?.farFoot.y ?? bonePose.rearFootTarget.y),
-    },
-    upperLength: 28,
-    lowerLength: 27,
-    bendDirection: -1,
-  });
+  const rearLeg = usesAuthoredSkeleton
+    ? {
+        root: rearHip,
+        elbow: {
+          x: position.x + projectedJoints.farKnee.x,
+          y: position.y + projectedJoints.farKnee.y,
+        },
+        hand: {
+          x: position.x + projectedJoints.farFoot.x,
+          y: position.y + projectedJoints.farFoot.y,
+        },
+      }
+    : ARM_IK_SOLVER.solve({
+        root: rearHip,
+        target: {
+          x: position.x + bonePose.rearFootTarget.x,
+          y: position.y + bonePose.rearFootTarget.y,
+        },
+        upperLength: 28,
+        lowerLength: 27,
+        bendDirection: -1,
+      });
   const leadHip = usesAuthoredSkeleton
     ? { x: position.x + projectedJoints.nearHip.x, y: position.y + projectedJoints.nearHip.y }
     : { x: bodyX + 8, y: bodyY + 27 };
-  const leadLeg = ARM_IK_SOLVER.solve({
-    root: leadHip,
-    target: {
-      x: position.x + (projectedJoints?.nearFoot.x ?? bonePose.leadFootTarget.x),
-      y: position.y + (projectedJoints?.nearFoot.y ?? bonePose.leadFootTarget.y),
-    },
-    upperLength: 28,
-    lowerLength: 27,
-    bendDirection: 1,
-  });
+  const leadLeg = usesAuthoredSkeleton
+    ? {
+        root: leadHip,
+        elbow: {
+          x: position.x + projectedJoints.nearKnee.x,
+          y: position.y + projectedJoints.nearKnee.y,
+        },
+        hand: {
+          x: position.x + projectedJoints.nearFoot.x,
+          y: position.y + projectedJoints.nearFoot.y,
+        },
+      }
+    : ARM_IK_SOLVER.solve({
+        root: leadHip,
+        target: {
+          x: position.x + bonePose.leadFootTarget.x,
+          y: position.y + bonePose.leadFootTarget.y,
+        },
+        upperLength: 28,
+        lowerLength: 27,
+        bendDirection: 1,
+      });
   const swordOrigin = rightArm.hand;
   const bladeOrigin = {
     x: swordOrigin.x + Math.cos(swordRotation) * 5,
