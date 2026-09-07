@@ -237,6 +237,7 @@ export class GameApp extends SceneNode {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.frameSamples = { count: 0, startTime: performance.now(), fps: 0 };
     this.latestRenderStats = { logicalWidth: 1, logicalHeight: 1 };
+    this.latestVisualQaRenderFrame = null;
     this.reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)') ?? {
       matches: false,
     };
@@ -1030,6 +1031,9 @@ export class GameApp extends SceneNode {
     this.gameHost.resize();
     this.polygonHost.resize();
     this.retroHost.resize();
+    if (this.isVisualQa && this.manualMode && this.latestVisualQaRenderFrame) {
+      this.renderFrame(this.latestVisualQaRenderFrame);
+    }
   }
 
   createInputSnapshot() {
@@ -1086,6 +1090,7 @@ export class GameApp extends SceneNode {
   }
 
   renderFrame(renderFrame) {
+    if (this.isVisualQa && this.manualMode) this.latestVisualQaRenderFrame = renderFrame;
     const uiState = this.uiBridge.snapshot();
     this.uiBridge.setDialoguePresentation(
       projectDialogue(

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { GameApplication } from '../src/app/GameApplication.js';
-import { GAME_SCREEN, resolveReducedMotionPreference } from '../src/app/GameApp.js';
+import { GAME_SCREEN, GameApp, resolveReducedMotionPreference } from '../src/app/GameApp.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { GameInputController } from '../src/input/GameInputController.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -663,6 +663,53 @@ function verifyVisualQaReducedMotionOverride() {
   );
 }
 
+function verifyVisualQaResizeReplaysLatestFrame() {
+  const resizedHosts = [];
+  const renderedFrames = [];
+  const app = {
+    isVisualQa: true,
+    manualMode: true,
+    latestVisualQaRenderFrame: null,
+    gameHost: { resize: () => resizedHosts.push('game') },
+    polygonHost: { resize: () => resizedHosts.push('polygon') },
+    retroHost: { resize: () => resizedHosts.push('retro') },
+    uiBridge: {
+      snapshot: () => ({ screen: GAME_SCREEN.GAME }),
+      setDialoguePresentation: () => {},
+    },
+    scene: { getWorldStatus: () => ({ dialogue: { active: false } }) },
+    gameHostViewport: { cssWidth: 1, cssHeight: 1 },
+    gameRenderer: { render: () => ({}) },
+    visualQaRequest: { renderer: 'polygon' },
+    visualQaPolygonRenderer: {
+      render(frame) {
+        renderedFrames.push(frame);
+        return { logicalWidth: 1440, logicalHeight: 810 };
+      },
+    },
+    camera: { worldSize: { width: 960, height: 540 } },
+  };
+  app.gameHost.viewport = app.gameHostViewport;
+  Object.setPrototypeOf(app, GameApp.prototype);
+
+  const frame = Object.freeze({ cameraOffset: Object.freeze({ x: 0, y: 0 }) });
+  GameApp.prototype.renderFrame.call(app, frame);
+  assert.equal(
+    app.latestVisualQaRenderFrame,
+    frame,
+    'QA가 마지막 immutable frame을 보존해야 한다.',
+  );
+
+  GameApp.prototype.resize.call(app);
+  assert.deepEqual(resizedHosts, ['game', 'polygon', 'retro']);
+  assert.equal(renderedFrames.length, 2, 'resize 뒤 frame을 다시 그려야 한다.');
+  assert.equal(renderedFrames[1], frame, 'resize는 같은 immutable frame을 재사용해야 한다.');
+
+  app.isVisualQa = false;
+  GameApp.prototype.resize.call(app);
+  assert.equal(renderedFrames.length, 2, '일반 gameplay resize는 추가 render를 만들면 안 된다.');
+}
+
 function verifyInteractiveControlKeyboardBoundary() {
   const adapter = new KeyboardInputAdapter({ isActive: () => true });
   let prevented = false;
@@ -837,6 +884,7 @@ verifyDebugConfigurationRoundTrip();
 verifySamePageGameApplicationReplacement();
 verifyDebugMenuHoldBoundary();
 verifyVisualQaReducedMotionOverride();
+verifyVisualQaResizeReplaysLatestFrame();
 verifyInteractiveControlKeyboardBoundary();
 verifyReducedMotionVisualQaRequest();
 verifyMobileVisibilityCleanup();
@@ -873,6 +921,7 @@ console.log(
         'reduced-motion-presentation-policy',
         'reduced-motion-in-app-visual-qa-request',
         'visual-qa-explicit-reduced-motion-override',
+        'visual-qa-resize-replays-latest-frame',
         'mobile-visibility-and-window-blur-cleanup',
         'qa-latched-simultaneous-held-action-grammar',
         'standalone-visible-viewport-safe-area-synchronization',
