@@ -1,4 +1,7 @@
-import { projectSideViewSkeletonFrame } from './SkeletonPoseProjection.js';
+import {
+  interpolateSideViewSkeletonFrames,
+  projectSideViewSkeletonFrame,
+} from './SkeletonPoseProjection.js';
 import { rollTimelineMarkerAt } from './RollTimeline.js';
 
 const CHARACTER_FOOT_Y = 80;
@@ -1388,10 +1391,12 @@ function sampleAuthoredPoseFrames(frames, progress) {
   if (amount <= Number.EPSILON) return Object.freeze({ ...previous.value, frameId: previous.id });
   if (amount >= 1 - Number.EPSILON)
     return Object.freeze({ ...next.value, frameId: next.id ?? null });
-  return Object.freeze({
-    ...blendBonePose(previous.value, next.value, next.transition === 'hold' ? 0 : amount),
-    frameId: previous.id,
-  });
+  const localFrame = interpolateSideViewSkeletonFrames(
+    previous,
+    next,
+    next.transition === 'hold' ? 0 : amount,
+  );
+  return Object.freeze({ ...projectSideViewSkeletonFrame(localFrame), frameId: previous.id });
 }
 
 function sampleAuthoredCycle(frames, animationTime, rate) {
@@ -1591,6 +1596,15 @@ function sampleCombat(motionState) {
 }
 
 function blendBonePose(previousPose, currentPose, amount) {
+  if (previousPose.skeletonFrame && currentPose.skeletonFrame) {
+    return projectSideViewSkeletonFrame(
+      interpolateSideViewSkeletonFrames(
+        previousPose.skeletonFrame,
+        currentPose.skeletonFrame,
+        amount,
+      ),
+    );
+  }
   const blendPoint = (key) =>
     point(
       previousPose[key].x + (currentPose[key].x - previousPose[key].x) * amount,

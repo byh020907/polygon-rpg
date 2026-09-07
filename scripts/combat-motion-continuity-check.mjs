@@ -7,6 +7,7 @@ import { retargetMotionKeyframes } from '../src/animation/MotionClipRetargeter.j
 import { MOTION_REFERENCE_CATALOG } from '../src/animation/MotionReferenceCatalog.js';
 import { ROLL_TIMELINE_MARKERS, rollTimelineMarkerAt } from '../src/animation/RollTimeline.js';
 import {
+  interpolateSideViewSkeletonFrames,
   projectSideViewSkeletonFrame,
   SIDE_VIEW_SKELETON_JOINTS,
 } from '../src/animation/SkeletonPoseProjection.js';
@@ -179,6 +180,26 @@ assert.ok(
   threeAxisParentProbe.worldJoints.chest.x > 9 &&
     Math.abs(threeAxisParentProbe.worldJoints.chest.z) < 0.001,
   'a parent yaw must rotate a child local z offset into its world x position before side-view projection',
+);
+const interpolationStart = rollPose(0.14);
+const interpolationEnd = rollPose(0.36);
+const localInterpolatedRoll = projectSideViewSkeletonFrame(
+  interpolateSideViewSkeletonFrames(
+    interpolationStart.skeletonFrame,
+    interpolationEnd.skeletonFrame,
+    0.5,
+  ),
+);
+const projectedMidpoint =
+  (interpolationStart.projectedJoints.nearHand.x + interpolationEnd.projectedJoints.nearHand.x) / 2;
+assert.ok(
+  Math.abs(localInterpolatedRoll.projectedJoints.nearHand.x - projectedMidpoint) > 0.001,
+  'fractional pose samples must interpolate local transforms and recompose the parent chain, never blend projected joints',
+);
+assert.ok(
+  localInterpolatedRoll.worldJoints.nearHand.matrix &&
+    Number.isFinite(localInterpolatedRoll.worldJoints.nearHand.matrix[0][0]),
+  'interpolated pose samples must retain composed world joints for renderer and geometry consumers',
 );
 // Classic head-first forward roll: the head drives forward at entry, tucks to its
 // lowest and most forward point at ground contact with the hands planted near the

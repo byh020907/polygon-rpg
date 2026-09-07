@@ -1,4 +1,7 @@
-import { projectSideViewSkeletonFrame } from './SkeletonPoseProjection.js';
+import {
+  interpolateSideViewSkeletonFrames,
+  projectSideViewSkeletonFrame,
+} from './SkeletonPoseProjection.js';
 
 const ENEMY_FOOT_Y = 78;
 
@@ -572,13 +575,24 @@ function sampleStrip(frames, progress) {
   if (amount <= Number.EPSILON) return Object.freeze({ ...previous.value, frameId: previous.id });
   if (amount >= 1 - Number.EPSILON)
     return Object.freeze({ ...next.value, frameId: next.id ?? null });
-  return Object.freeze({
-    ...blendProjected(previous.value, next.value, next.transition === 'hold' ? 0 : amount),
-    frameId: previous.id,
-  });
+  const localFrame = interpolateSideViewSkeletonFrames(
+    previous,
+    next,
+    next.transition === 'hold' ? 0 : amount,
+  );
+  return Object.freeze({ ...projectSideViewSkeletonFrame(localFrame), frameId: previous.id });
 }
 
 function blendProjected(previousPose, currentPose, amount) {
+  if (previousPose.skeletonFrame && currentPose.skeletonFrame) {
+    return projectSideViewSkeletonFrame(
+      interpolateSideViewSkeletonFrames(
+        previousPose.skeletonFrame,
+        currentPose.skeletonFrame,
+        amount,
+      ),
+    );
+  }
   const blendPoint = (key) => ({
     x: previousPose[key].x + (currentPose[key].x - previousPose[key].x) * amount,
     y: previousPose[key].y + (currentPose[key].y - previousPose[key].y) * amount,

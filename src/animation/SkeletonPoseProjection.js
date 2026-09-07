@@ -120,6 +120,50 @@ function projectJoint(world) {
   return Object.freeze({ x: world.x, y: world.y, depth: world.z });
 }
 
+function interpolateAngle(from, to, amount) {
+  const turn = Math.PI * 2;
+  const delta = ((((to - from + Math.PI) % turn) + turn) % turn) - Math.PI;
+  return from + delta * amount;
+}
+
+/**
+ * Blends authored local transforms before their parent chain is composed.  Projected screen
+ * anchors must never be interpolated directly: that would discard the parent's intermediate
+ * rotation and make a child slide independently of its limb.
+ */
+export function interpolateSideViewSkeletonFrames(previousFrame, currentFrame, amount) {
+  const bounded = Math.max(0, Math.min(1, amount));
+  const previous = previousFrame?.joints;
+  const current = currentFrame?.joints;
+  if (!previous || !current) {
+    throw new TypeError('skeleton interpolation에는 두 authored local frame이 필요합니다.');
+  }
+  return Object.freeze({
+    capeLift:
+      (previousFrame.capeLift ?? 0) +
+      ((currentFrame.capeLift ?? 0) - (previousFrame.capeLift ?? 0)) * bounded,
+    joints: Object.freeze(
+      Object.fromEntries(
+        JOINT_IDS.map((jointId) => {
+          const from = freezePoint(previous[jointId]);
+          const to = freezePoint(current[jointId]);
+          return [
+            jointId,
+            Object.freeze({
+              x: from.x + (to.x - from.x) * bounded,
+              y: from.y + (to.y - from.y) * bounded,
+              z: from.z + (to.z - from.z) * bounded,
+              pitch: interpolateAngle(from.rotation3d.x, to.rotation3d.x, bounded),
+              yaw: interpolateAngle(from.rotation3d.y, to.rotation3d.y, bounded),
+              rotation: interpolateAngle(from.rotation3d.z, to.rotation3d.z, bounded),
+            }),
+          ];
+        }),
+      ),
+    ),
+  });
+}
+
 function angleFromTo(from, to) {
   return Math.atan2(to.x - from.x, from.y - to.y);
 }
@@ -160,6 +204,7 @@ export function projectSideViewSkeletonFrame(frame) {
     rearFootTarget: Object.freeze({ x: projectedJoints.farFoot.x, y: projectedJoints.farFoot.y }),
     leadFootTarget: Object.freeze({ x: projectedJoints.nearFoot.x, y: projectedJoints.nearFoot.y }),
     capeLift: frame.capeLift ?? 0,
+    skeletonFrame: Object.freeze({ capeLift: frame.capeLift ?? 0, joints: localJoints }),
     worldJoints,
     projectedJoints,
   });

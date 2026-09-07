@@ -46,6 +46,10 @@ for (const family of ENEMY_BONE_FAMILIES) {
       assert.equal(pose.action, action);
       assert.ok(pose.frameId, `${family} ${action}에는 authored frameId가 필요합니다.`);
       assert.ok(pose.projectedJoints, `${family} ${action}에는 projected joints가 필요합니다.`);
+      assert.ok(
+        pose.skeletonFrame && pose.worldJoints?.nearHand?.matrix,
+        `${family} ${action}의 중간 sample은 local 3D transform을 재합성한 world joint를 유지해야 합니다.`,
+      );
       assert.deepEqual(Object.keys(pose.projectedJoints).sort(), EXPECTED_JOINTS);
       assert.ok(
         pose.projectedJoints.nearShoulder.depth > pose.projectedJoints.farShoulder.depth,
