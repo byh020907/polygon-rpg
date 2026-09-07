@@ -1,5 +1,4 @@
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
-import { sampleEnemyBonePoseFor } from '../../animation/EnemyBonePoseLibrary.js';
 import {
   sampleTrainingEnemyCombatGeometry,
   sampleTrainingEnemyWeaponLength,
@@ -956,75 +955,23 @@ export function createTrainingEnemyItems(
         },
       )
     : null;
-  const presentationScale = enemy.presentationScale ?? TRAINING_ENEMY_PRESENTATION_SCALE;
   const attackProfile = profiles[enemy.attackKind];
-  // Authored enemy skeleton: the same local-3D side-view projection contract as the
-  // player. It only nudges presentation anchors; contact/collider authority stays in
-  // SharedCombatGeometry with the identical offsets applied there.
-  const enemyBonePose = sampleEnemyBonePoseFor(enemy, profiles);
-  const authoredBodyOffset = enemyBonePose.bodyLean * 0.25;
-  const authoredWeaponOffset = enemyBonePose.bodyLean * 0.12;
-  const authoredHandOffsetX = enemyBonePose.rootOffset.x * 0.6;
-  const authoredHandOffsetY = enemyBonePose.rootOffset.y * 0.6;
-  const attackProgress =
-    enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackProfile.attackSeconds : 0;
-  const recoveryProgress =
-    enemy.aiState === 'recovery' && enemy.recoveryDurationSeconds > 0
-      ? 1 - enemy.aiSeconds / enemy.recoveryDurationSeconds
-      : 0;
-  const weaponLength = sampleTrainingEnemyWeaponLength(enemy, profiles);
-  const baseWeaponAngle = surrendering
-    ? 0.85
-    : fleeing
-      ? 0.42
-      : enemy.aiState === 'hitstun'
-        ? enemy.hitReactionWeaponAngle
-        : enemy.aiState === 'windup'
-          ? enemy.attackKind === 'sweep'
-            ? -1.4
-            : enemy.attackKind === 'heavy'
-              ? -1.8
-              : enemy.attackKind === 'antiAir'
-                ? 0.1
-                : -1.2
-          : enemy.aiState === 'attack'
-            ? enemy.attackKind === 'sweep'
-              ? -0.3 + attackProgress * 0.55
-              : enemy.attackKind === 'antiAir'
-                ? 0.1 - attackProgress * 3
-                : enemy.attackKind === 'heavy'
-                  ? -1.8 + attackProgress * 2.4
-                  : -1.2 + attackProgress * 1.8
-            : enemy.aiState === 'recovery'
-              ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
-              : -0.65;
-  const weaponAngle = baseWeaponAngle + authoredWeaponOffset;
-  const renderFacing = ['windup', 'attack', 'recovery'].includes(enemy.aiState)
-    ? enemy.attackFacing
-    : enemy.facing;
-  const basePoseRotation = surrendering
-    ? 0.18
-    : fleeing
-      ? enemy.resolutionDirection * 0.22
-      : enemy.aiState === 'recovery'
-        ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
-        : enemy.rotation +
-          (groggy ? -0.18 : 0) +
-          (enemy.aiState === 'windup'
-            ? -0.14
-            : enemy.aiState === 'attack'
-              ? -0.14 + attackProgress * 0.42
-              : 0);
-  const poseRotation = basePoseRotation + authoredBodyOffset;
-  const weaponHand = {
-    x: x + 8 + authoredHandOffsetX,
-    y: y - (enemy.attackKind === 'sweep' ? 20 : 56) + authoredHandOffsetY,
-  };
-  const weaponShoulder = { x: x - 8, y: y - (enemy.attackKind === 'sweep' ? 45 : 59) };
-  const weaponElbow = {
-    x: lerp(weaponShoulder.x, weaponHand.x, 0.5) + Math.sin(weaponAngle) * 8,
-    y: lerp(weaponShoulder.y, weaponHand.y, 0.5) - Math.cos(weaponAngle) * 8,
-  };
+  // Combat owns the world-space sampled skeleton. Rendering consumes those same immutable
+  // anchors and polygons, so a limb cannot appear in one place while the hurt/weapon geometry
+  // is evaluated somewhere else.
+  const {
+    skeleton,
+    body,
+    head,
+    weaponAngle,
+    weaponLength,
+    renderFacing,
+    poseRotation,
+    presentationScale,
+  } = resolvedCombatGeometry.presentation;
+  const weaponHand = skeleton.nearHand;
+  const weaponShoulder = skeleton.nearShoulder;
+  const weaponElbow = skeleton.nearElbow;
   const antiAirGlowOpacity =
     enemy.attackKind === 'antiAir'
       ? Math.max(0, Math.min(0.42, ((weaponLength - profiles.light.weaponLength) / 134) * 0.42))
@@ -1174,9 +1121,9 @@ export function createTrainingEnemyItems(
         ]
       : []),
     limbSegment(
-      'combat-enemy-back-leg',
-      { x: x - 7, y: y - 29 },
-      { x: x - 9, y },
+      'combat-enemy-back-thigh',
+      skeleton.farHip,
+      skeleton.farKnee,
       8,
       presentationProfile.material,
       {
@@ -1185,9 +1132,20 @@ export function createTrainingEnemyItems(
       },
     ),
     limbSegment(
-      'combat-enemy-front-leg',
-      { x: x + 7, y: y - 29 },
-      { x: x + 10, y },
+      'combat-enemy-back-shin',
+      skeleton.farKnee,
+      skeleton.farFoot,
+      7,
+      presentationProfile.material,
+      {
+        stroke: '#20272b',
+        lineWidth: 1.5,
+      },
+    ),
+    limbSegment(
+      'combat-enemy-front-thigh',
+      skeleton.nearHip,
+      skeleton.nearKnee,
       8,
       presentationProfile.material,
       {
@@ -1195,30 +1153,25 @@ export function createTrainingEnemyItems(
         lineWidth: 1.5,
       },
     ),
-    polygon(
-      'combat-enemy-body',
-      [
-        { x: -17, y: -36 },
-        { x: 16, y: -38 },
-        { x: 21, y: 8 },
-        { x: 11, y: 29 },
-        { x: -13, y: 28 },
-        { x: -21, y: 6 },
-      ],
-      { x, y: y - 31 },
-      bodyFill,
-      { stroke: '#20272b', lineWidth: 2 },
-    ),
-    polygon(
-      'combat-enemy-head',
-      regularPolygon(15, 18, 8),
-      { x, y: y - 79 },
+    limbSegment(
+      'combat-enemy-front-shin',
+      skeleton.nearKnee,
+      skeleton.nearFoot,
+      7,
       presentationProfile.material,
       {
         stroke: '#20272b',
-        lineWidth: 2,
+        lineWidth: 1.5,
       },
     ),
+    polygon('combat-enemy-body', body.points, { x: 0, y: 0 }, bodyFill, {
+      stroke: '#20272b',
+      lineWidth: 2,
+    }),
+    polygon('combat-enemy-head', head.points, { x: 0, y: 0 }, presentationProfile.material, {
+      stroke: '#20272b',
+      lineWidth: 2,
+    }),
     ...(presentationProfile.family === 'machine'
       ? [
           polygon(
@@ -1278,14 +1231,8 @@ export function createTrainingEnemyItems(
       : []),
     polygon(
       'combat-enemy-weapon',
-      [
-        { x: 0, y: -3 },
-        { x: weaponLength - 16, y: -3 },
-        { x: weaponLength, y: 0 },
-        { x: weaponLength - 16, y: 4 },
-        { x: 0, y: 4 },
-      ],
-      { ...weaponHand, rotation: weaponAngle },
+      resolvedCombatGeometry.weapon.points,
+      { x: 0, y: 0 },
       presentationProfile.accent,
       { stroke: '#37434b', lineWidth: 2 },
     ),
@@ -1405,6 +1352,9 @@ export function createTrainingEnemyItems(
   );
 
   return items.map((item, index) => {
+    const isSampledSkeletonLimb =
+      /^combat-enemy-(?:back|front)-(?:thigh|shin)$/.test(item.id) ||
+      /^combat-enemy-(?:upper|lower)-weapon-arm$/.test(item.id);
     const geometryPoints =
       item.id === 'combat-enemy-weapon'
         ? resolvedCombatGeometry.weapon.points
@@ -1413,7 +1363,9 @@ export function createTrainingEnemyItems(
           : item.id === 'combat-enemy-head'
             ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'head')
                 ?.points
-            : null;
+            : isSampledSkeletonLimb
+              ? item.points
+              : null;
     return Object.freeze({
       ...item,
       opacity: (item.opacity ?? 1) * opacity,

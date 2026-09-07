@@ -73,6 +73,21 @@ function skeletonHeadPolygon(position, joints, bodyLean = 0) {
   });
 }
 
+function enemySkeletonPoint(point, { origin, facing, rotation, scale, embeddedOffset }) {
+  const cosine = Math.cos(rotation);
+  const sine = Math.sin(rotation);
+  const rotatedX = point.x * scale * cosine - point.y * scale * sine;
+  const rotatedY = point.x * scale * sine + point.y * scale * cosine;
+  return freezePoint({
+    x: origin.x + (facing < 0 ? -rotatedX : rotatedX),
+    y: origin.y + rotatedY + embeddedOffset,
+  });
+}
+
+function enemySkeletonPolygon(part, joints) {
+  return freezePolygon(part, joints);
+}
+
 function posePlayerPoints(points, { position, facing, targetPose, bonePose, geometryScale }) {
   const footY = position.y + PLAYER_CHARACTER_FOOT_OFFSET;
   const usesAuthoredSkeleton = Boolean(bonePose.projectedJoints && bonePose.frameId);
@@ -260,13 +275,10 @@ export function sampleTrainingEnemyWeaponLength(enemy, attackProfiles) {
 export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
   const { x, y } = enemy.position;
   const attackProfile = attackProfiles[enemy.attackKind];
-  // Same authored skeleton offsets as the presentation owner so hurt/weapon authority
-  // and the visible cutout never drift apart. Sizes and contact rules are unchanged.
+  // A sampled local-3D skeleton is the single source for the visible cutout and collision
+  // anchors. Do not reduce it to scalar offsets here: interpolated limbs must retain their
+  // parent-composed world position for both renderer and combat authority.
   const enemyBonePose = sampleEnemyBonePoseFor(enemy, attackProfiles);
-  const authoredBodyOffset = enemyBonePose.bodyLean * 0.25;
-  const authoredWeaponOffset = enemyBonePose.bodyLean * 0.12;
-  const authoredHandOffsetX = enemyBonePose.rootOffset.x * 0.6;
-  const authoredHandOffsetY = enemyBonePose.rootOffset.y * 0.6;
   const attackProgress =
     enemy.aiState === 'attack' ? 1 - enemy.aiSeconds / attackProfile.attackSeconds : 0;
   const recoveryProgress =
@@ -296,40 +308,33 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
           : enemy.aiState === 'recovery'
             ? lerp(enemy.recoveryStartAngle, -0.65, smoothStep(recoveryProgress))
             : -0.65;
-  const weaponAngle = baseWeaponAngle + authoredWeaponOffset;
+  const weaponAngle = baseWeaponAngle;
   const renderFacing = ['windup', 'attack', 'recovery'].includes(enemy.aiState)
     ? enemy.attackFacing
     : enemy.facing;
-  const basePoseRotation =
+  const poseRotation =
     enemy.aiState === 'recovery'
       ? lerp(enemy.recoveryBodyStartRotation, 0, smoothStep(recoveryProgress))
-      : enemy.rotation +
-        (enemy.aiState === 'windup'
-          ? -0.14
-          : enemy.aiState === 'attack'
-            ? -0.14 + attackProgress * 0.42
-            : 0);
-  const poseRotation = basePoseRotation + authoredBodyOffset;
+      : enemy.rotation;
   const presentationScale = enemy.presentationScale ?? 0.48;
-  const poseEnemyPoints = (points) =>
-    points.map((point) => {
-      const centerY = y - 50;
-      const relativeX = point.x - x;
-      const relativeY = point.y - centerY;
-      const rotatedX = x + relativeX * Math.cos(poseRotation) - relativeY * Math.sin(poseRotation);
-      const rotatedY =
-        centerY + relativeX * Math.sin(poseRotation) + relativeY * Math.cos(poseRotation);
-      const facedX = renderFacing < 0 ? x * 2 - rotatedX : rotatedX;
-      const embeddedOffset = enemy.groundBounceDelaySeconds > 0 ? 8 : 0;
-      return {
-        x: x + (facedX - x) * presentationScale,
-        y: y + (rotatedY - y) * presentationScale + embeddedOffset,
-      };
-    });
-  const weaponHand = {
-    x: x + 8 + authoredHandOffsetX,
-    y: y - (enemy.attackKind === 'sweep' ? 20 : 56) + authoredHandOffsetY,
+  const embeddedOffset = enemy.groundBounceDelaySeconds > 0 ? 8 : 0;
+  const skeletonOrigin = { x, y: y - 78 * presentationScale };
+  const skeletonTransform = {
+    origin: skeletonOrigin,
+    facing: renderFacing,
+    rotation: poseRotation,
+    scale: presentationScale,
+    embeddedOffset,
   };
+  const skeleton = Object.freeze(
+    Object.fromEntries(
+      Object.entries(enemyBonePose.projectedJoints).map(([jointId, joint]) => [
+        jointId,
+        enemySkeletonPoint(joint, skeletonTransform),
+      ]),
+    ),
+  );
+  const weaponHand = skeleton.nearHand;
   const weaponPoints = transformPoints(
     [
       { x: 0, y: -3 },
@@ -340,29 +345,35 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
     ],
     { ...weaponHand, rotation: weaponAngle },
   );
-  const bodyPoints = transformPoints(
-    [
-      { x: -17, y: -36 },
-      { x: 16, y: -38 },
-      { x: 21, y: 8 },
-      { x: 11, y: 29 },
-      { x: -13, y: 28 },
-      { x: -21, y: 6 },
-    ],
-    { x, y: y - 31 },
-  );
+  const bodyPoints = [
+    skeleton.farShoulder,
+    skeleton.nearShoulder,
+    skeleton.nearHip,
+    skeleton.farHip,
+  ];
+  const headPoints = transformPoints(regularPolygon(15, 18, 8), {
+    x: skeleton.head.x,
+    y: skeleton.head.y,
+    rotation: poseRotation,
+  });
+  const body = enemySkeletonPolygon('body', bodyPoints);
+  const head = freezePolygon('head', headPoints);
   return Object.freeze({
     actor: 'enemy',
     origin: freezePoint(enemy.position),
-    weapon: freezePolygon('weapon', poseEnemyPoints(weaponPoints)),
+    weapon: freezePolygon('weapon', weaponPoints),
     shield: null,
-    hurt: Object.freeze([
-      freezePolygon('body', poseEnemyPoints(bodyPoints)),
-      freezePolygon(
-        'head',
-        poseEnemyPoints(transformPoints(regularPolygon(15, 18, 8), { x, y: y - 79 })),
-      ),
-    ]),
+    hurt: Object.freeze([body, head]),
+    presentation: Object.freeze({
+      skeleton,
+      body,
+      head,
+      weaponAngle,
+      weaponLength,
+      renderFacing,
+      poseRotation,
+      presentationScale,
+    }),
   });
 }
 

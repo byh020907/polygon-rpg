@@ -106,6 +106,103 @@ for (const attackKind of ['light', 'heavy', 'antiAir', 'sweep']) {
     geometry.weapon.points,
     `${attackKind} renderer와 gameplay는 같은 weapon polygon을 읽어야 한다.`,
   );
+  const renderedBody = createTrainingEnemyItems(
+    enemy,
+    0,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+    geometry,
+    CHARACTER_PRESENTATION_PROFILE.getProfile('collector-unit'),
+  ).find(({ id }) => id === 'combat-enemy-body');
+  const renderedHead = createTrainingEnemyItems(
+    enemy,
+    0,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+    geometry,
+    CHARACTER_PRESENTATION_PROFILE.getProfile('collector-unit'),
+  ).find(({ id }) => id === 'combat-enemy-head');
+  assert.deepEqual(renderedBody.points, geometry.presentation.body.points);
+  assert.deepEqual(renderedHead.points, geometry.presentation.head.points);
+  const renderedArm = createTrainingEnemyItems(
+    enemy,
+    0,
+    TRAINING_ENEMY_ATTACK_PROFILES,
+    geometry,
+    CHARACTER_PRESENTATION_PROFILE.getProfile('collector-unit'),
+  ).find(({ id }) => id === 'combat-enemy-lower-weapon-arm');
+  const armStart = {
+    x: (renderedArm.points[0].x + renderedArm.points[3].x) / 2,
+    y: (renderedArm.points[0].y + renderedArm.points[3].y) / 2,
+  };
+  const armEnd = {
+    x: (renderedArm.points[1].x + renderedArm.points[2].x) / 2,
+    y: (renderedArm.points[1].y + renderedArm.points[2].y) / 2,
+  };
+  assert.deepEqual(armStart, geometry.presentation.skeleton.nearElbow);
+  assert.deepEqual(armEnd, geometry.presentation.skeleton.nearHand);
+}
+
+// Every authored enemy action, including the human family, must retain the exact sampled
+// skeleton anchors after the presentation boundary. This catches a renderer fallback to a
+// scalar body/hand offset between action frames.
+for (const { species, profileId } of [
+  { species: 'industrial-collector', profileId: 'collector-unit' },
+  { species: 'human-salvager', profileId: 'dock-salvage-raider' },
+]) {
+  for (const [aiState, aiSeconds, resolutionState] of [
+    ['idle', 0, null],
+    ['windup', TRAINING_ENEMY_ATTACK_PROFILES.light.windupSeconds * 0.4, null],
+    ['attack', TRAINING_ENEMY_ATTACK_PROFILES.light.attackSeconds * 0.5, null],
+    ['recovery', TRAINING_ENEMY_ATTACK_PROFILES.light.recoverySeconds * 0.4, null],
+    ['hitstun', 0, null],
+    ['guard', 0.2, null],
+    ['surrendered', 0, 'surrendered'],
+  ]) {
+    const enemy = {
+      ...enemyState('light'),
+      species,
+      aiState,
+      aiSeconds,
+      resolutionState,
+    };
+    const geometry = sampleTrainingEnemyCombatGeometry(enemy, TRAINING_ENEMY_ATTACK_PROFILES);
+    const items = createTrainingEnemyItems(
+      enemy,
+      0,
+      TRAINING_ENEMY_ATTACK_PROFILES,
+      geometry,
+      CHARACTER_PRESENTATION_PROFILE.getProfile(profileId),
+    );
+    assert.deepEqual(
+      items.find(({ id }) => id === 'combat-enemy-body').points,
+      geometry.presentation.body.points,
+      `${species} ${aiState} body는 sampled skeleton hurt geometry를 그대로 그려야 한다.`,
+    );
+    assert.deepEqual(
+      items.find(({ id }) => id === 'combat-enemy-head').points,
+      geometry.presentation.head.points,
+      `${species} ${aiState} head는 sampled skeleton hurt geometry를 그대로 그려야 한다.`,
+    );
+    for (const [itemId, startJoint, endJoint] of [
+      ['combat-enemy-back-thigh', 'farHip', 'farKnee'],
+      ['combat-enemy-back-shin', 'farKnee', 'farFoot'],
+      ['combat-enemy-front-thigh', 'nearHip', 'nearKnee'],
+      ['combat-enemy-front-shin', 'nearKnee', 'nearFoot'],
+      ['combat-enemy-upper-weapon-arm', 'nearShoulder', 'nearElbow'],
+      ['combat-enemy-lower-weapon-arm', 'nearElbow', 'nearHand'],
+    ]) {
+      const limb = items.find(({ id }) => id === itemId);
+      const start = {
+        x: (limb.points[0].x + limb.points[3].x) / 2,
+        y: (limb.points[0].y + limb.points[3].y) / 2,
+      };
+      const end = {
+        x: (limb.points[1].x + limb.points[2].x) / 2,
+        y: (limb.points[1].y + limb.points[2].y) / 2,
+      };
+      assert.deepEqual(start, geometry.presentation.skeleton[startJoint]);
+      assert.deepEqual(end, geometry.presentation.skeleton[endJoint]);
+    }
+  }
 }
 assert.deepEqual(createTrainingEnemyItems(null, 0, TRAINING_ENEMY_ATTACK_PROFILES), []);
 
