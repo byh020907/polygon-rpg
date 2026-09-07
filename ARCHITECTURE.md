@@ -163,6 +163,7 @@ Keyboard / Touch / DOM intent
 - Bottom objective ribbon은 현재 action과 command만 compact하게 표시한다. Story title·briefing·감정 설명은 이 HUD surface에 렌더하지 않는다.
 - Retro pipeline은 screen-space snap, low-resolution raster, alpha threshold, posterization, outline과 nearest-neighbor upscale 순서를 유지한다.
 - 일반 게임의 pixel grid는 작은 셀로 세부 형태를 남긴다. Retro의 지형·장식·캐릭터 경계는 정수 pixel coverage로 생성하고 확대는 nearest-neighbor로만 수행한다. 불투명 면이 겹친 경계에 Canvas의 안티앨리어싱 혼합색을 남기지 않는다. 의도한 반투명 효과는 경계 smoothing과 구분한다.
+- 보이는 외곽선은 축소 후에도 최소 한 raster pixel의 연속된 coverage를 보장한다. 정수/소수 좌표나 선의 방향 때문에 윤곽이 통째로 사라지지 않으며, 깊이에 가려진 뒤쪽 선은 계속 숨긴다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
 - UI screen state, operation-map modal과 debug panel state는 gameplay input에 섞지 않는다.
 - PWA Lifecycle Adapter는 `beforeinstallprompt`, iOS standalone 안내, update waiting과 controller change를 UI command로 변환한다. 설치·갱신은 사용자 입력으로만 시작하며 game screen에서 자동 prompt/reload하지 않는다.

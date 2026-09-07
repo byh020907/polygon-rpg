@@ -163,6 +163,122 @@ assert.equal(
   1,
   'translucent trail cannot acquire an opaque post-outline',
 );
+const thinBox = {
+  id: 'thin-box',
+  points: [
+    { x: 2, y: 2 },
+    { x: 10, y: 2 },
+    { x: 10, y: 10 },
+    { x: 2, y: 10 },
+  ],
+  depths: [5, 5, 5, 5],
+  fill: '#708090',
+  stroke: '#111111',
+  lineWidth: 0.5,
+};
+for (const offset of [0, 0.2, 0.8]) {
+  const shifted = {
+    ...thinBox,
+    points: thinBox.points.map((p) => ({ x: p.x + offset, y: p.y + offset })),
+  };
+  const pixels = render([shifted]);
+  const start = Math.round(2 + offset),
+    end = Math.round(10 + offset);
+  for (let coordinate = start; coordinate <= end; coordinate++) {
+    assert.deepEqual(
+      pixel(pixels, coordinate, start),
+      [17, 17, 17, 255],
+      'thin top outline remains continuous',
+    );
+    assert.deepEqual(
+      pixel(pixels, start, coordinate),
+      [17, 17, 17, 255],
+      'thin side outline remains continuous',
+    );
+  }
+}
+const backdrop = {
+  id: 'backdrop',
+  points: [
+    { x: 0, y: 0 },
+    { x: 17, y: 0 },
+    { x: 17, y: 17 },
+    { x: 0, y: 17 },
+  ],
+  depths: [0, 0, 0, 0],
+  fill: '#335577',
+};
+assert.deepEqual(
+  pixel(render([backdrop, thinBox]), 10, 5),
+  [17, 17, 17, 255],
+  'front contour extends continuously over the rear-owned adjacent pixel',
+);
+const cover = { ...backdrop, id: 'cover-front', depths: [20, 20, 20, 20], fill: '#ff0000' };
+assert.deepEqual(
+  pixel(render([thinBox, cover]), 10, 5),
+  [255, 0, 0, 255],
+  'fully hidden contour stays occluded',
+);
+for (const offset of [0, 0.2, 0.8]) {
+  const diagonal = {
+    ...thinBox,
+    points: [
+      { x: 2 + offset, y: 2 + offset },
+      { x: 10 + offset, y: 10 + offset },
+      { x: 2 + offset, y: 10 + offset },
+    ],
+    depths: [5, 5, 5],
+  };
+  const result = render([backdrop, diagonal]);
+  for (let coordinate = Math.round(2 + offset); coordinate <= Math.round(10 + offset); coordinate++)
+    assert.deepEqual(
+      pixel(result, coordinate, coordinate),
+      [17, 17, 17, 255],
+      'subpixel diagonal remains connected without anti-aliasing',
+    );
+}
+const partialCover = {
+  ...cover,
+  points: [
+    { x: 6, y: 0 },
+    { x: 17, y: 0 },
+    { x: 17, y: 17 },
+    { x: 6, y: 17 },
+  ],
+};
+const partial = render([thinBox, partialCover]);
+assert.deepEqual(pixel(partial, 4, 2), [17, 17, 17, 255]);
+assert.deepEqual(
+  pixel(partial, 8, 2),
+  [255, 0, 0, 255],
+  'near cover hides only the covered contour',
+);
+assert.deepEqual(
+  render([thinBox, backdrop]).data,
+  render([backdrop, thinBox]).data,
+  'stroke and opaque ownership stay submission-order independent',
+);
+const edgeOn = {
+  ...thinBox,
+  id: 'edge-on',
+  points: [
+    { x: 2, y: 2 },
+    { x: 2.1, y: 2 },
+    { x: 2.1, y: 10 },
+    { x: 2, y: 10 },
+  ],
+};
+for (let y = 2; y <= 10; y++)
+  assert.deepEqual(
+    pixel(render([edgeOn]), 2, y),
+    [17, 17, 17, 255],
+    'edge-on outlined shape retains a one-pixel silhouette without fill samples',
+  );
+assert.deepEqual(
+  pixel(render([edgeOn, cover]), 2, 5),
+  [255, 0, 0, 255],
+  'edge-on outline behind a near surface remains hidden',
+);
 console.log(
   'Depth polygon raster: crossing, interpolation, trail, outline, surface shading and deterministic sampling PASS',
 );

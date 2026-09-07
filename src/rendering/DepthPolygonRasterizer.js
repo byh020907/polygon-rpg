@@ -1,3 +1,5 @@
+import { polygonStrokePixels } from './HardEdgePolygonPainter.js';
+
 // Camera depth stays separate from screen vertices. Larger depth faces the camera.
 function color(value) {
   const hex = String(value ?? '#000000').replace('#', '');
@@ -102,9 +104,12 @@ export function rasterizeDepthPolygons(
     function sample(x, y, z) {
       if (x < 0 || y < 0 || x >= width || y >= height) return;
       const index = y * width + x;
+      // Record geometric coverage before depth rejection: a fully hidden broad
+      // surface is different from a thin/edge-on surface with no pixel centers.
+      if (!outline) item.hasRasterInterior = true;
       if (outline && item.alpha === 1 && item.depthWrite !== false) {
         if (owners[index] !== item.rank) {
-          if (owners[index] !== -1) return;
+          if (owners[index] !== -1 && z <= depthBuffer[index] + 1e-7) return;
           // An exposed contour must border this final visible surface, not a hidden edge.
           let visibleNeighbor = false;
           const reach = Math.ceil(Math.max(0.5, ((item.lineWidth ?? 1) * scale) / 2));
@@ -124,7 +129,7 @@ export function rasterizeDepthPolygons(
               }
             }
           }
-          if (!visibleNeighbor) return;
+          if (!visibleNeighbor && item.hasRasterInterior) return;
         }
         if (
           z < outlineDepth[index] - 1e-7 ||
@@ -139,7 +144,7 @@ export function rasterizeDepthPolygons(
       if (z > (coverage.get(index)?.z ?? -Infinity)) coverage.set(index, { z, rgb });
     }
     if (outline) {
-      const radius = Math.max(0.25, ((item.lineWidth ?? 1) * scale) / 2);
+      const strokeWidth = Math.max(1, (item.lineWidth ?? 1) * scale);
       const boundary = item.outlineIndices ?? item.points.map((_, index) => index);
       for (let edge = 0; edge < boundary.length; edge += 1) {
         const i = boundary[edge];
@@ -149,23 +154,12 @@ export function rasterizeDepthPolygons(
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const length2 = dx * dx + dy * dy;
-        for (
-          let y = Math.max(0, Math.floor(Math.min(a.y, b.y) - radius));
-          y <= Math.min(height - 1, Math.ceil(Math.max(a.y, b.y) + radius));
-          y += 1
-        ) {
-          for (
-            let x = Math.max(0, Math.floor(Math.min(a.x, b.x) - radius));
-            x <= Math.min(width - 1, Math.ceil(Math.max(a.x, b.x) + radius));
-            x += 1
-          ) {
-            const t = length2
-              ? Math.max(0, Math.min(1, ((x + 0.5 - a.x) * dx + (y + 0.5 - a.y) * dy) / length2))
-              : 0;
-            if (Math.hypot(x + 0.5 - a.x - t * dx, y + 0.5 - a.y - t * dy) <= radius)
-              sample(x, y, item.depths[i] + (item.depths[j] - item.depths[i]) * t);
-          }
-        }
+        polygonStrokePixels([a, b], width, height, strokeWidth, (x, y) => {
+          const t = length2
+            ? Math.max(0, Math.min(1, ((x + 0.5 - a.x) * dx + (y + 0.5 - a.y) * dy) / length2))
+            : 0;
+          sample(x, y, item.depths[i] + (item.depths[j] - item.depths[i]) * t);
+        });
       }
     } else {
       const triangles =

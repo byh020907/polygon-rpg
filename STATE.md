@@ -16,16 +16,18 @@
 
 ## Desired-State Comparison
 
-| Area                                              | Status                       | Current evidence                                                                                                                                                                                            |
-| ------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pixel depth / protagonist design / sword and roll | satisfied                    | 작은 셀의 약한 픽셀화와 안티앨리어싱 없는 단단한 경계를 유지한다. 작은 머리·긴 팔다리·낮은 횡·사선 베기와 실제 전방 회전을 actual frame strip 및 combat/character/visual fixture로 검증했다.                |
-| Shared geometry / contact                         | satisfied                    | 보이는 weapon·sweep·hurt geometry와 damage owner의 공통 계약을 11종 공격, 좌우, 중복 피해, guard fixture 및 실제 representative input으로 확인했다.                                                         |
-| PWA release update                                | unverified · Human 확인 대기 | release metadata/cache/save-before-apply fixture는 PASS. persistent profile A→B waiting/apply/save/offline 재실행은 Human이 확인하며 자동 PASS로 닫지 않는다.                                               |
-| Story terminology                                 | satisfied                    | 도입·다섯 지역 cast의 현장 대사와 transcript가 동일 authored catalog를 사용하며 현장 행동·결과로 용어를 푼다.                                                                                               |
-| Mine cast frontier                                | partial                      | Browser 새 Day 1에서 작업반장 3줄→현황판 목표→실제 held 이동 730→874→현황판 1/2 대화를 확인했다. 연결 이슈, 실제 갱도 전투·마지막 작업, resolved after-state와 mobile continuous input은 아직 unverified다. |
-| Remaining product                                 | gap                          | 전체 캠페인/최종전/PWA 실기기 등 미검증 Desired State를 완료로 추정하지 않는다.                                                                                                                             |
+| Area                                              | Status                       | Current evidence                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pixel depth / protagonist design / sword and roll | satisfied                    | 작은 셀의 약한 픽셀화와 안티앨리어싱 없는 단단한 경계를 유지한다. 가는 선·소수 위치·측면의 얇은 도형도 최소1픽셀 윤곽을 유지하고 뒤쪽 가림은 보존한다. 작은 머리·긴 팔다리·낮은 횡·사선 베기와 실제 전방 회전을 actual frame strip 및 combat/character/visual fixture로 검증했다. |
+| Shared geometry / contact                         | satisfied                    | 보이는 weapon·sweep·hurt geometry와 damage owner의 공통 계약을 11종 공격, 좌우, 중복 피해, guard fixture 및 실제 representative input으로 확인했다.                                                                                                                               |
+| PWA release update                                | unverified · Human 확인 대기 | release metadata/cache/save-before-apply fixture는 PASS. persistent profile A→B waiting/apply/save/offline 재실행은 Human이 확인하며 자동 PASS로 닫지 않는다.                                                                                                                     |
+| Story terminology                                 | satisfied                    | 도입·다섯 지역 cast의 현장 대사와 transcript가 동일 authored catalog를 사용하며 현장 행동·결과로 용어를 푼다.                                                                                                                                                                     |
+| Mine cast frontier                                | partial                      | Browser 새 Day 1에서 작업반장 3줄→현황판 목표→실제 held 이동 730→874→현황판 1/2 대화를 확인했다. 연결 이슈, 실제 갱도 전투·마지막 작업, resolved after-state와 mobile continuous input은 아직 unverified다.                                                                       |
+| Remaining product                                 | gap                          | 전체 캠페인/최종전/PWA 실기기 등 미검증 Desired State를 완료로 추정하지 않는다.                                                                                                                                                                                                   |
 
 ## Verification
+
+- 외곽선 누락 수리:0.5px 선과 채움 pixel이 없는 얇은 도형의 윤곽0개를 재현하고, 정수 stroke coverage 및 가림 검사를 분리해 수정했다. 독립 desktop/mobile 정상 입력에서 머리·검·팔다리 윤곽 복원과 뒤쪽 가림 유지 확인.
 
 - 픽셀 표현 조정: 기본 셀4→3, Retro 월드·그림자 경계를 정수 coverage로 생성하고 nearest-neighbor 확대를 유지한다. 독립 1280×720/844×390 실제 입력 캡처 `artifacts/fine-pixel-independent-desktop`, `artifacts/fine-pixel-independent-mobile`에서 작은 픽셀·번짐 없는 경계와 기존 동작을 확인했다. visual/platform/PWA metadata 검사 PASS.
 
