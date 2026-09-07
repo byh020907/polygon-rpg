@@ -1,3 +1,5 @@
+import { defineSkeletonFrame } from './SkeletonPoseProjection.js';
+
 const REQUIRED_TARGET_JOINTS = Object.freeze([
   'root',
   'pelvis',
@@ -15,7 +17,7 @@ function assertTransform(transform, sourceJoint) {
     !Number.isFinite(transform.x) ||
     !Number.isFinite(transform.y) ||
     !Number.isFinite(transform.z) ||
-    !Number.isFinite(transform.rotation)
+    (!transform.quaternion && !Number.isFinite(transform.rotation))
   ) {
     throw new TypeError(`${sourceJoint} motion transform에는 x/y/z/rotation이 필요합니다.`);
   }
@@ -35,6 +37,15 @@ export function retargetMotionKeyframes({ source, frames, jointMap, scale = 1 })
       throw new TypeError(`${targetJoint} target joint mapping이 필요합니다.`);
     }
   }
+  const boneLengths = Object.fromEntries(
+    Object.entries(jointMap)
+      .filter(([id]) => id !== 'root')
+      .map(([target, sourceJoint]) => {
+        const transform = frames[0].joints?.[sourceJoint];
+        assertTransform(transform, sourceJoint);
+        return [target, Math.hypot(transform.x, transform.y, transform.z) * scale];
+      }),
+  );
   return Object.freeze(
     frames.map((frame) => {
       if (!Number.isFinite(frame.at))
@@ -50,18 +61,27 @@ export function retargetMotionKeyframes({ source, frames, jointMap, scale = 1 })
                 x: transform.x * scale,
                 y: transform.y * scale,
                 z: transform.z * scale,
-                rotation: transform.rotation,
+                ...(transform.quaternion
+                  ? { quaternion: transform.quaternion }
+                  : {
+                      rotation: transform.rotation,
+                      pitch: transform.pitch ?? 0,
+                      yaw: transform.yaw ?? 0,
+                    }),
               }),
             ];
           }),
         ),
       );
-      return Object.freeze({
-        id: frame.id,
-        at: frame.at,
-        transition: frame.transition ?? 'linear',
-        joints,
-      });
+      return defineSkeletonFrame(
+        {
+          id: frame.id,
+          at: frame.at,
+          transition: frame.transition ?? 'linear',
+          joints,
+        },
+        { boneLengths },
+      );
     }),
   );
 }

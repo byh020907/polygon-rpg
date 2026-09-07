@@ -1,4 +1,5 @@
 import { TwoBoneIKSolver } from '../animation/TwoBoneIKSolver.js';
+import { createPlayerSurfaceItems } from '../animation/CharacterSurfaceItems.js';
 import { COMBAT_EVENT_TYPE } from '../combat/CombatEvent.js';
 import {
   PLAYER_CHARACTER_FOOT_OFFSET,
@@ -9,6 +10,7 @@ export const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 
 const ARM_IK_SOLVER = new TwoBoneIKSolver();
 const CHARACTER_DEPTH_ITEM_ORDERS = Object.freeze({
+  shadow: -100,
   'shield-sleeve-repair-bandage': 9.5,
   'shield-upper-arm': 10,
   'shield-forearm': 11,
@@ -101,15 +103,15 @@ function scaleHexColor(color, scale) {
   return result;
 }
 
-function transformPoints(points, { x, y, rotation = 0, scaleX = 1, scaleY = 1 }) {
+function transformPoints(points, { x, y, rotation = 0, scaleX = 1, scaleY = 1, basis = null }) {
   const cosine = Math.cos(rotation);
   const sine = Math.sin(rotation);
   return points.map((point) => {
     const scaledX = point.x * scaleX;
     const scaledY = point.y * scaleY;
     return Object.freeze({
-      x: x + scaledX * cosine - scaledY * sine,
-      y: y + scaledX * sine + scaledY * cosine,
+      x: x + scaledX * (basis?.xx ?? cosine) + scaledY * (basis?.xy ?? -sine),
+      y: y + scaledX * (basis?.yx ?? sine) + scaledY * (basis?.yy ?? cosine),
     });
   });
 }
@@ -206,7 +208,12 @@ function createCharacterItems(
   // head/goggles/hair ~90 degrees sideways, which reads as a broken idle/roll portrait.
   // The projected head direction alone stays near-upright while the torso leans, so the
   // authored lean is carried here so head, goggles and hair tuck with the rolling body.
-  const headRotation = authoredBodyLean + bonePose.headTilt;
+  const headRotation = bonePose.worldJoints.head.rotation;
+  const bodyAttachment = (x = 0, y = 0, rotation = 0) => ({
+    x: bodyX + x * Math.cos(authoredBodyLean) - y * Math.sin(authoredBodyLean),
+    y: bodyY + x * Math.sin(authoredBodyLean) + y * Math.cos(authoredBodyLean),
+    rotation: authoredBodyLean + rotation,
+  });
   const swordRotation = targetPose.swordAngle;
   const poseWeaponLengthScale =
     Number.isFinite(targetPose.weaponLengthScale) && targetPose.weaponLengthScale > 0
@@ -295,8 +302,8 @@ function createCharacterItems(
       });
   const swordOrigin = rightArm.hand;
   const bladeOrigin = {
-    x: swordOrigin.x + Math.cos(swordRotation) * 5,
-    y: swordOrigin.y + Math.sin(swordRotation) * 5,
+    x: swordOrigin.x + (targetPose.weaponBasis?.xx ?? Math.cos(swordRotation)) * 5,
+    y: swordOrigin.y + (targetPose.weaponBasis?.yx ?? Math.sin(swordRotation)) * 5,
   };
   const trailItems = [
     polygon(
@@ -324,15 +331,11 @@ function createCharacterItems(
         { x: -15, y: -2 },
         { x: 5, y: -4 },
         { x: 10, y: 8 },
-        { x: 8, y: 40 },
-        { x: -11, y: 45 },
-        { x: -16, y: 31 },
+        { x: 8, y: 29 },
+        { x: -11, y: 32 },
+        { x: -16, y: 22 },
       ],
-      {
-        x: bodyX - 9,
-        y: bodyY + 13,
-        rotation: authoredBodyLean - bonePose.capeLift * 0.025,
-      },
+      bodyAttachment(-9, 13, -bonePose.capeLift * 0.025),
       materialShadow,
       { stroke: materialEdge, lineWidth: 2 },
     ),
@@ -346,7 +349,7 @@ function createCharacterItems(
         { x: -14, y: 7 },
         { x: 2, y: 3 },
       ],
-      { x: bodyX - 10, y: bodyY + 10, rotation: authoredBodyLean },
+      bodyAttachment(-10, 10),
       accentShadow,
       { stroke: materialEdge, lineWidth: 1.5 },
     ),
@@ -376,7 +379,7 @@ function createCharacterItems(
         { x: -15, y: 32 },
         { x: -25, y: 9 },
       ],
-      { x: bodyX, y: bodyY, rotation: authoredBodyLean },
+      bodyAttachment(),
       materialColor,
       { stroke: materialEdge, lineWidth: 2 },
     ),
@@ -389,7 +392,7 @@ function createCharacterItems(
         { x: 7, y: 22 },
         { x: -12, y: 17 },
       ],
-      { x: bodyX, y: bodyY, rotation: authoredBodyLean },
+      bodyAttachment(),
       scaleHexColor(materialColor, 0.82),
       { stroke: materialEdge, lineWidth: 1.5 },
     ),
@@ -401,7 +404,7 @@ function createCharacterItems(
         { x: 20, y: 5 },
         { x: -20, y: 7 },
       ],
-      { x: bodyX, y: bodyY + 27, rotation: authoredBodyLean },
+      bodyAttachment(0, 27),
       materialShadow,
       { stroke: materialEdge, lineWidth: 1.5 },
     ),
@@ -423,7 +426,7 @@ function createCharacterItems(
         { x: -9, y: 23 },
         { x: -17, y: 0 },
       ],
-      { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1 },
+      { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1, basis: targetPose.shieldBasis },
       materialColor,
       { stroke: materialEdge, lineWidth: 3 },
     ),
@@ -439,7 +442,7 @@ function createCharacterItems(
         { x: -11, y: 0 },
         { x: -5, y: -5 },
       ],
-      { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1 },
+      { x: leftArm.hand.x, y: leftArm.hand.y, rotation: -0.1, basis: targetPose.shieldBasis },
       accentColor,
       { stroke: accentShadow, lineWidth: 1.5 },
     ),
@@ -498,7 +501,12 @@ function createCharacterItems(
         { x: 5, y: 13 },
         { x: -5, y: 13 },
       ],
-      { x: swordOrigin.x, y: swordOrigin.y, rotation: swordRotation },
+      {
+        x: swordOrigin.x,
+        y: swordOrigin.y,
+        rotation: swordRotation,
+        basis: targetPose.weaponBasis,
+      },
       '#d7a95d',
       { stroke: '#4b3526', lineWidth: 2 },
     ),
@@ -511,7 +519,12 @@ function createCharacterItems(
         { x: 100 * resolvedWeaponLengthScale, y: 4 },
         { x: 0, y: 4 },
       ],
-      { x: bladeOrigin.x, y: bladeOrigin.y, rotation: swordRotation },
+      {
+        x: bladeOrigin.x,
+        y: bladeOrigin.y,
+        rotation: swordRotation,
+        basis: targetPose.weaponBasis,
+      },
       '#dce8e8',
       { stroke: '#456171', lineWidth: 2 },
     ),
@@ -523,7 +536,12 @@ function createCharacterItems(
         { x: 117 * resolvedWeaponLengthScale, y: -0.5 },
         { x: 22, y: 0 },
       ],
-      { x: bladeOrigin.x, y: bladeOrigin.y, rotation: swordRotation },
+      {
+        x: bladeOrigin.x,
+        y: bladeOrigin.y,
+        rotation: swordRotation,
+        basis: targetPose.weaponBasis,
+      },
       '#ffffff',
       { opacity: 0.8 },
     ),
@@ -572,17 +590,13 @@ function createCharacterItems(
         { x: -18, y: 3 },
         { x: 15, y: 4 },
         { x: 19, y: 18 },
-        { x: 12, y: 41 },
-        { x: 1, y: 38 },
-        { x: -10, y: 43 },
-        { x: -18, y: 35 },
+        { x: 12, y: 30 },
+        { x: 1, y: 27 },
+        { x: -10, y: 31 },
+        { x: -18, y: 25 },
         { x: -21, y: 15 },
       ],
-      {
-        x: bodyX - 1,
-        y: bodyY + 8,
-        rotation: authoredBodyLean - bonePose.capeLift * 0.035,
-      },
+      bodyAttachment(-1, 8, -bonePose.capeLift * 0.035),
       materialColor,
       { stroke: materialEdge, lineWidth: 2, order: 2.75 },
     ),
@@ -596,7 +610,7 @@ function createCharacterItems(
         { x: -10, y: 28 },
         { x: -16, y: 4 },
       ],
-      { x: bodyX + 1, y: bodyY, rotation: authoredBodyLean },
+      bodyAttachment(1, 0),
       accentColor,
       { stroke: accentShadow, lineWidth: 1.5, order: 9.25 },
     ),
@@ -608,7 +622,7 @@ function createCharacterItems(
         { x: 9, y: 6 },
         { x: -7, y: 9 },
       ],
-      { x: bodyX + 7, y: bodyY + 12, rotation: authoredBodyLean - 0.08 },
+      bodyAttachment(7, 12, -0.08),
       accentShadow,
       { stroke: materialEdge, lineWidth: 1.5, order: 9.4 },
     ),
@@ -644,7 +658,7 @@ function createCharacterItems(
       polygon(
         `workwear-rivet-${index}`,
         regularPolygon(2.2, 2.2, 6, Math.PI / 6),
-        { x: bodyX + offset, y: bodyY - 15 },
+        bodyAttachment(offset, -15),
         accentColor,
         { stroke: accentShadow, lineWidth: 0.75, order: 9.6 + index * 0.01 },
       ),
@@ -699,7 +713,17 @@ function createCharacterItems(
         { x: -9, y: 6 },
         { x: -11, y: 0 },
       ],
-      rearLeg.hand,
+      {
+        ...rearLeg.hand,
+        // The joint is the ankle; keep the sole above the foot contact plane.
+        x:
+          rearLeg.hand.x +
+          (usesAuthoredSkeleton ? 8 * Math.sin(bonePose.worldJoints.farFoot.rotation) : 0),
+        y:
+          rearLeg.hand.y -
+          (usesAuthoredSkeleton ? 8 * Math.cos(bonePose.worldJoints.farFoot.rotation) : 0),
+        rotation: usesAuthoredSkeleton ? bonePose.worldJoints.farFoot.rotation : 0,
+      },
       '#5a392d',
       { stroke: '#241918', lineWidth: 1.5, order: 4.5 },
     ),
@@ -714,7 +738,17 @@ function createCharacterItems(
         { x: -9, y: 6 },
         { x: -11, y: 0 },
       ],
-      leadLeg.hand,
+      {
+        ...leadLeg.hand,
+        // The joint is the ankle; keep the sole above the foot contact plane.
+        x:
+          leadLeg.hand.x +
+          (usesAuthoredSkeleton ? 8 * Math.sin(bonePose.worldJoints.nearFoot.rotation) : 0),
+        y:
+          leadLeg.hand.y -
+          (usesAuthoredSkeleton ? 8 * Math.cos(bonePose.worldJoints.nearFoot.rotation) : 0),
+        rotation: usesAuthoredSkeleton ? bonePose.worldJoints.nearFoot.rotation : 0,
+      },
       '#80513a',
       { stroke: '#2c1e1a', lineWidth: 1.5, order: 6.5 },
     ),
@@ -734,8 +768,6 @@ function createCharacterItems(
           ? 1 - swordFrontAmount
           : 0.5;
     const depthOrderOffset = depthGroup ? (frontAmount - 0.5) * 30 : 0;
-    const depthMagnitude = Math.abs(bonePose.depthPhase);
-    const depthOpacity = depthGroup ? 1 - (1 - frontAmount) * 0.28 * depthMagnitude : 1;
     const depthBias = depthGroup === 'sword' ? bonePose.depthPhase : -bonePose.depthPhase;
     const depthColorScale = 1 - Math.max(0, -depthBias) * 0.16;
     const baseOrder = CHARACTER_DEPTH_ITEM_ORDERS[item.id] ?? item.order ?? index;
@@ -752,7 +784,7 @@ function createCharacterItems(
       ...item,
       renderOrder,
       order: baseOrder + depthOrderOffset,
-      opacity: item.opacity * depthOpacity,
+      opacity: item.opacity,
       fill: depthGroup ? scaleHexColor(item.fill, depthColorScale) : item.fill,
       lineWidth: item.lineWidth * renderScale,
       points: geometryPoints
@@ -1210,15 +1242,15 @@ export function createPlayerCombatPresentation({
     contactGeometry &&
     contactProfile &&
     contactProgress >= contactProfile.start &&
-    contactProgress <= contactProfile.end;
-  const characterItems = Object.freeze(
+    contactProgress < contactProfile.end;
+  const characterItems = createPlayerSurfaceItems(
     sampledCharacterItems.map((item) =>
-      item.id === 'sword-trail' && contactGeometry?.sweep
+      item.id === 'sword-trail'
         ? Object.freeze({
             ...item,
-            opacity: Math.max(item.opacity, contactSweepVisible ? 0.25 : 0),
+            opacity: contactSweepVisible && contactGeometry?.sweep ? 0.25 : 0,
             points: Object.freeze(
-              contactGeometry.sweep.points.map((pointValue) =>
+              (contactGeometry?.sweep?.points ?? []).map((pointValue) =>
                 Object.freeze({
                   x: pointValue.x + contactOffset.x,
                   y: pointValue.y + contactOffset.y,
@@ -1235,6 +1267,7 @@ export function createPlayerCombatPresentation({
             })
           : item,
     ),
+    { bonePose, position, facing, scale: renderScale, footOffset: PLAYER_CHARACTER_FOOT_OFFSET },
   );
   const justGuardEvent = latestCombatEvent(
     combatEvents,

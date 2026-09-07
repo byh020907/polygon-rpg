@@ -2,8 +2,15 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
+import {
+  createProjectedTorsoSurface,
+  surfaceOutline,
+} from '../src/animation/ProjectedBodySurface.js';
 import { samplePlayerMotionPose } from '../src/animation/PlayerMotionPose.js';
-import { samplePlayerCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
+import {
+  samplePlayerCombatGeometry,
+  PLAYER_CHARACTER_FOOT_OFFSET,
+} from '../src/combat/SharedCombatGeometry.js';
 import {
   CHARACTER_RENDER_SCALE,
   createPlayerCombatPresentation,
@@ -30,70 +37,70 @@ const SCRAPYARD_APPRENTICE_FIXTURE = deepFreezeFixture({
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
     count: 37,
-    digest: '980abdb327497f5f2b6bbe4c53faf718a5517570c25b540b9cb591234d7f4aed',
+    digest: '2923b7f811269461e1619cbb470ccf5d9fd7f4d2a61516e49816861fc3885a90',
   }),
   'pose-move': Object.freeze({
     count: 37,
-    digest: 'a1ed173b9c57ffca91b432663c22e553d544b96f194830d7ebb1d3acfc7cfa20',
+    digest: '9625e5731317ce2b82d375adb73c610990a748d028abfbf3829e7fd40d3b5f80',
   }),
   'pose-guard': Object.freeze({
     count: 37,
-    digest: 'a8ec6b82dafd019d4866cef990277c2ff7610389cef365c77646bf2ddbdcbd18',
+    digest: '9dfdee080f3c7e31c73486c2981cfcf94a52db3684781fec01f89e318f163f62',
   }),
   'pose-roll': Object.freeze({
     count: 37,
-    digest: '02edf9707e697be0a52821da1b2a8a0663aad8868e4c0ba62f513509e678105b',
+    digest: '7324650960bccf41be64ae335f3279f482843ac22156d16748e08dc2408d5bde',
   }),
   'pose-ground-attack': Object.freeze({
     count: 37,
-    digest: '6a1b071c0b2322e39073030f66a9f353a583d366e62a6e46ccfef55597edc99e',
+    digest: 'a90ae1aef148f21cd7c06ba963f2a143a3fd651fba007358df84459653d17d81',
   }),
   'pose-air-attack': Object.freeze({
     count: 37,
-    digest: '0c895556c82584439431c4c8fd0379f1a1b7fdc38fe3d2493e2c604641837e7f',
+    digest: '45e9195f204894081be92a6d5d09339bdc0ff9cdb4b9183eb360849ecf8d25af',
   }),
   'pose-hit': Object.freeze({
     count: 37,
-    digest: '9bc20655016d63a1d0b17416dc3d11a6728d68da6b20d26dbb90f3224b6aced1',
+    digest: '06045939cc0acdebfc8f79abb03ab451351ee1ece1b8749cf3fbd307506d76a9',
   }),
 });
 
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
     count: 44,
-    digest: 'aaf240260e88a79cc4a097d4f4eacaa49a34d90d8cfdb7e2ff18d22d9f63c012',
+    digest: 'b7daca22f1bc6a8f3465d1840ff03226487c22bb007c9d319347c78c5477c171',
   }),
   'combat-player-hit': Object.freeze({
     count: 44,
-    digest: '9f46b1327f0770729b531fd2c2d679ea73e622a52e84dc5028afdcbaa510b29f',
+    digest: 'cfd2eaa58a377fba5a0ab71268e5f479367f2fc54050bfc7aa577fa51fe93727',
   }),
   'combat-block': Object.freeze({
     count: 43,
-    digest: 'ea8f0a0d3581b15bf9f6f9fa9d08bfe0142886dc27bf249f26e80119da630bcc',
+    digest: 'ba5983e7a55bd5abcda3666d67bef4c2971d9b2f0687838b7c3b5a5d9b9fc71e',
   }),
   'combat-evade': Object.freeze({
     count: 40,
-    digest: 'c61e732efd4f07525613a0de62194a8e9c473531767e0f25ae019e8feaa7737e',
+    digest: 'fd276503bc114eb67ae3b66433824478621d064b967f2272a0022bd999667a25',
   }),
   'combat-punish': Object.freeze({
     count: 43,
-    digest: '6ae953b9d72a44c06338b252d44632f36dd7c97d56baa6bca1b55c68c2ffccfa',
+    digest: '89341c98ee79dd40386fe21458cedf56a2f6921e02d9d4df0fa37c4b0ca2be1e',
   }),
   'combat-launch': Object.freeze({
     count: 44,
-    digest: '8c58c9fa4e4ead054c706adfeb5027dd1641e97338b68af5ab3fa846f2f1c755',
+    digest: '465e40af05bc0dbcbc995f40954890c8e9596dfe911bb997b9678f83c379ed12',
   }),
   'combat-guard-break': Object.freeze({
     count: 43,
-    digest: 'c771bb481c813c72b4089d4ff2561348eeb7ba126894d1dec3d936f41c3a8514',
+    digest: '9c6f6cf02ddd1f80d4caa1c76696c59253ff24d39308cd94bc02293ea124fe07',
   }),
   'combat-just-guard': Object.freeze({
     count: 48,
-    digest: '6d2c87b963ed2e150b92d39cb4853fa01fb2b5e1e1a50bcb5b956f17b1b0be00',
+    digest: '875c3389c3b3f7b28f77c77eea8d748dd14d375679f6feca28cfeee64e56d754',
   }),
   'combat-guard-counter': Object.freeze({
     count: 44,
-    digest: 'f37628c08982fb32423ae5690f0d7dd5e8e42b2662b21b6359849817163c6e2b',
+    digest: 'b08b3cddc29e2fafeea68f9d0d976df31add08cccee7b60f1e7501118bd128ca',
   }),
 });
 
@@ -328,10 +335,26 @@ assert.strictEqual(
   fixedOutput.combatGeometry.hurt.find(({ part }) => part === 'head').points,
   'rendered head must reuse shared gameplay hurt geometry exactly',
 );
-assert.equal(
-  torsoItem.points.length,
-  4,
-  'an authored 3D pose must build the torso from projected shoulder and hip anchors, not a static hex',
+const torsoSurface = createProjectedTorsoSurface(fixedPose.bonePose.projectedJoints);
+const expectedTorsoOutline = surfaceOutline(torsoSurface).map(({ x, y }) => ({
+  x: fixedPosition.x + x * CHARACTER_RENDER_SCALE,
+  y:
+    fixedPosition.y +
+    PLAYER_CHARACTER_FOOT_OFFSET +
+    (y - PLAYER_CHARACTER_FOOT_OFFSET) * CHARACTER_RENDER_SCALE,
+}));
+assert.equal(torsoItem.points.length, expectedTorsoOutline.length);
+assert.ok(
+  torsoItem.points.every(
+    (point, index) =>
+      Math.hypot(point.x - expectedTorsoOutline[index].x, point.y - expectedTorsoOutline[index].y) <
+      1e-7,
+  ),
+  'authored torso must use the projected shoulder/hip section surface and shared foot pivot',
+);
+assert.ok(
+  torsoItem.points.length > 4,
+  'torso silhouette must include authored section widths instead of a four-corner stick',
 );
 function pointSegmentDistance(point, start, end) {
   const deltaX = end.x - start.x;
@@ -359,6 +382,40 @@ assert.ok(
   hiltBladeGap < 1e-7,
   `rendered sword hilt edge and shared blade root must stay connected: ${hiltBladeGap}`,
 );
+
+// Inspect the rendered cutout too: a geometry-only probe cannot catch a bag or boot
+// left behind by a rotating joint. Transparent trail buffers are not visible surfaces.
+for (let sample = 0; sample <= 100; sample += 1) {
+  const progress = sample / 100;
+  const motion = samplePlayerMotionPose({
+    motionState: { id: 'idle', progress: 0 },
+    boneInput: { rollProgress: progress },
+  });
+  for (const facing of [-1, 1]) {
+    const input = { ...fixedPresentationInput, facing, ...motion };
+    const combatGeometry = samplePlayerCombatGeometry({
+      ...input,
+      geometryScale: CHARACTER_RENDER_SCALE,
+    });
+    const output = createPlayerCombatPresentation({ ...input, combatGeometry });
+    for (const [itemId, shared] of [
+      ['sword-blade', combatGeometry.weapon],
+      ['shield', combatGeometry.shield],
+    ]) {
+      assert.strictEqual(
+        output.characterItems.find(({ id }) => id === itemId).points,
+        shared.points,
+        itemId + ' must reuse rotated shared geometry throughout roll',
+      );
+    }
+    for (const item of output.characterItems.filter(({ opacity }) => opacity > 0)) {
+      assert.ok(
+        item.points.every(({ y }) => y <= fixedPosition.y + PLAYER_CHARACTER_FOOT_OFFSET + 4),
+        item.id + ' penetrates floor at roll ' + progress + ', facing ' + facing,
+      );
+    }
+  }
+}
 
 const [gameSceneSource, presentationSource] = await Promise.all([
   readFile(new URL('../src/game/GameScene.js', import.meta.url), 'utf8'),
@@ -402,6 +459,7 @@ console.log(
       'shared-sword-shield-torso-head-geometry-identity',
       'authored-skeleton-torso-anchor-projection',
       'shared-body-foot-pivot-and-connected-sword',
+      'dense-roll-rendered-equipment-parity-and-visible-floor-clearance',
       'player-hit-contact-not-head-marker',
       'immutable-injected-profile-validation',
       'scrap-workwear-landmark-ids-and-profile-colors',

@@ -162,12 +162,23 @@ function scaleAround(points, originX, originY, scaleX, scaleY = scaleX) {
 }
 
 function item(id, points, fill, options = {}) {
+  // The workshop is one authored set: shell, crane, wall fixtures and every
+  // robot assembly share its grounded scale. People and their workbench retain
+  // their human proportions and interaction positions in the open foreground.
+  const workshopSet =
+    id.startsWith('scrapyard-workshop-') ||
+    id.startsWith('salvage-crane-') ||
+    id.startsWith('scrapyard-garage-door-') ||
+    id.startsWith('garage-robot-') ||
+    id.startsWith('scrapyard-wall-map-') ||
+    id.startsWith('scrapyard-dialogue-archive-');
+  const authoredScale = workshopSet ? 0.8 : 1;
   return {
     id,
-    points,
+    points: workshopSet ? scaleAround(points, 300, 426, authoredScale) : points,
     fill,
     stroke: options.stroke ?? '#17191a',
-    lineWidth: options.lineWidth ?? 2,
+    lineWidth: (options.lineWidth ?? 2) * authoredScale,
     opacity: options.opacity ?? 1,
     order: options.order ?? 0,
     renderOrder: options.renderOrder ?? 30,

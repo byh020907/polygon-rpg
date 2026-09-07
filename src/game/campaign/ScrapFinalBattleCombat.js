@@ -1,4 +1,5 @@
 import { closestCombatContact } from '../../combat/SharedCombatGeometry.js';
+import { isAttackContactFrame } from '../../combat/CombatMotionTimingProfiles.js';
 import { SCRAP_FINAL_BATTLE_STAGE } from './ScrapFinalBattleState.js';
 
 function point(x, y) {
@@ -85,12 +86,7 @@ export function resolveScrapFinalBattleCombatContact({
       reason: 'wrong-command',
     });
   }
-  if (
-    !attackProfile ||
-    !Number.isFinite(combatState.progress) ||
-    combatState.progress < attackProfile.start ||
-    combatState.progress > attackProfile.end
-  ) {
+  if (!isAttackContactFrame(combatState, attackProfile)) {
     return Object.freeze({
       state,
       contact: null,

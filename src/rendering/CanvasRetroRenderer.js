@@ -44,6 +44,7 @@ export class CanvasRetroRenderer {
       showMesh = false,
       showPixelGrid = false,
       showWorldGrid = true,
+      transparent = false,
     } = {},
   ) {
     const { context: outputContext, viewport } = this.canvasHost;
@@ -93,10 +94,12 @@ export class CanvasRetroRenderer {
     const logicalWorldScale =
       (this.camera.getScale(viewport) * presentationZoom) / boundedPixelSize;
 
-    paintBackdrop(this.sceneContext, frame, logicalViewport, project, {
-      retro: true,
-      showWorldGrid,
-    });
+    if (!transparent) {
+      paintBackdrop(this.sceneContext, frame, logicalViewport, project, {
+        retro: true,
+        showWorldGrid,
+      });
+    }
     const diagnostics = paintSceneItems(this.foregroundContext, frame, project, logicalWorldScale, {
       showMesh,
     });
@@ -112,8 +115,10 @@ export class CanvasRetroRenderer {
 
     outputContext.setTransform(1, 0, 0, 1, 0, 0);
     outputContext.clearRect(0, 0, viewport.backingWidth, viewport.backingHeight);
-    outputContext.fillStyle = frame.palette.background;
-    outputContext.fillRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    if (!transparent) {
+      outputContext.fillStyle = frame.palette.background;
+      outputContext.fillRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    }
     outputContext.imageSmoothingEnabled = false;
     outputContext.drawImage(
       this.sceneCanvas,

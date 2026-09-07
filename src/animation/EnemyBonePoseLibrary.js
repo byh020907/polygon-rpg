@@ -1,9 +1,28 @@
 import {
+  defineSkeletonFrame,
   interpolateSideViewSkeletonFrames,
   projectSideViewSkeletonFrame,
 } from './SkeletonPoseProjection.js';
+import { axisAngleQuaternion, multiplyQuaternions } from './Quaternion.js';
 
 const ENEMY_FOOT_Y = 78;
+const ENEMY_BONE_LENGTHS = Object.freeze({
+  chest: 32,
+  neck: Math.hypot(1, 17),
+  head: 16,
+  nearShoulder: Math.hypot(8, 5, 4),
+  farShoulder: Math.hypot(8, 5, 4),
+  nearElbow: Math.hypot(14, 16, 3),
+  nearHand: Math.hypot(14, 13, 2),
+  farElbow: Math.hypot(14, 13, 3),
+  farHand: Math.hypot(19, 11, 2),
+  nearHip: Math.hypot(8, 4, 2),
+  farHip: Math.hypot(8, 4, 2),
+  nearKnee: Math.hypot(11, 1),
+  farKnee: Math.hypot(11, 1),
+  nearFoot: 17,
+  farFoot: 17,
+});
 
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.max(minimum, Math.min(maximum, value));
@@ -57,6 +76,7 @@ function authoredEnemyFrame({
   depth = 0,
   signal = 0,
   armPose = 'neutral',
+  wristFlexion = 0,
 }) {
   const arm = ENEMY_ARM_POSES[armPose];
   if (!arm) throw new RangeError(`알 수 없는 enemy arm pose입니다: ${armPose}`);
@@ -124,15 +144,22 @@ function authoredEnemyFrame({
             Object.freeze({
               ...value,
               pitch: bodyPitch,
-              yaw: depthYaw,
-              rotation: localRotation[jointId],
+              yaw:
+                jointId === 'nearHand'
+                  ? -Math.atan2(value.z, Math.hypot(value.x, value.y))
+                  : depthYaw,
+              rotation:
+                jointId === 'nearHand'
+                  ? Math.atan2(value.y, value.x) + wristFlexion
+                  : localRotation[jointId],
             }),
           ];
         }),
       ),
     ),
   });
-  return Object.freeze({ ...frame, value: projectSideViewSkeletonFrame(frame) });
+  const canonical = defineSkeletonFrame(frame, { boneLengths: ENEMY_BONE_LENGTHS });
+  return Object.freeze({ ...canonical, value: projectSideViewSkeletonFrame(canonical) });
 }
 
 // Enemy authored strips share the player skeleton contract: local 3D joints projected
@@ -167,6 +194,7 @@ function machineStrip(action) {
       return Object.freeze([
         authoredEnemyFrame({
           id: 'enemy-attack-contact',
+          wristFlexion: -0.25,
           at: 0,
           transition: 'hold',
           rootX: 9,
@@ -181,6 +209,7 @@ function machineStrip(action) {
         }),
         authoredEnemyFrame({
           id: 'enemy-attack-follow',
+          wristFlexion: 0.35,
           at: 1,
           transition: 'linear',
           rootX: 11,
@@ -369,6 +398,7 @@ function humanStrip(action) {
       return Object.freeze([
         authoredEnemyFrame({
           id: 'enemy-attack-contact',
+          wristFlexion: -0.25,
           at: 0,
           transition: 'hold',
           rootX: 11,
@@ -383,6 +413,7 @@ function humanStrip(action) {
         }),
         authoredEnemyFrame({
           id: 'enemy-attack-follow',
+          wristFlexion: 0.35,
           at: 1,
           transition: 'linear',
           rootX: 12,
@@ -555,10 +586,44 @@ export const ENEMY_BONE_ACTIONS = Object.freeze([
 
 export const ENEMY_BONE_FAMILIES = Object.freeze(['machine', 'human']);
 
-function stripFor(family, action) {
+const ENEMY_WRIST_ARCS = Object.freeze({
+  light: Object.freeze({ windup: [0, -0.1], attack: [-0.35, -0.35], recovery: [-0.35, 0] }),
+  heavy: Object.freeze({ windup: [0, -0.6], attack: [-1.25, 0.05], recovery: [0.05, 0] }),
+  antiAir: Object.freeze({ windup: [0, 0.4], attack: [0.1, -2.9], recovery: [-2.9, 0] }),
+  sweep: Object.freeze({ windup: [0, 0.35], attack: [-0.35, -0.55], recovery: [-0.55, 0] }),
+});
+const STRIP_CACHE = new Map();
+
+function stripFor(family, action, attackKind) {
   const normalizedFamily = family === 'human' ? 'human' : 'machine';
   const normalizedAction = ENEMY_BONE_ACTIONS.includes(action) ? action : 'idle';
-  return (normalizedFamily === 'human' ? humanStrip : machineStrip)(normalizedAction);
+  const kind = ENEMY_WRIST_ARCS[attackKind] ? attackKind : 'light';
+  const key = `${normalizedFamily}:${normalizedAction}:${kind}`;
+  if (STRIP_CACHE.has(key)) return STRIP_CACHE.get(key);
+  const frames = (normalizedFamily === 'human' ? humanStrip : machineStrip)(normalizedAction);
+  const arc = ENEMY_WRIST_ARCS[kind][normalizedAction];
+  const result = !arc
+    ? frames
+    : Object.freeze(
+        frames.map((frame) => {
+          const hand = frame.joints.nearHand;
+          const angle = arc[0] + (arc[1] - arc[0]) * frame.at;
+          const nearHand = Object.freeze({
+            ...hand,
+            quaternion: multiplyQuaternions(
+              axisAngleQuaternion({ x: 0, y: 0, z: 1 }, angle),
+              hand.quaternion,
+            ),
+          });
+          const authored = Object.freeze({
+            ...frame,
+            joints: Object.freeze({ ...frame.joints, nearHand }),
+          });
+          return Object.freeze({ ...authored, value: projectSideViewSkeletonFrame(authored) });
+        }),
+      );
+  STRIP_CACHE.set(key, result);
+  return result;
 }
 
 function sampleStrip(frames, progress) {
@@ -583,56 +648,13 @@ function sampleStrip(frames, progress) {
   return Object.freeze({ ...projectSideViewSkeletonFrame(localFrame), frameId: previous.id });
 }
 
-function blendProjected(previousPose, currentPose, amount) {
-  if (previousPose.skeletonFrame && currentPose.skeletonFrame) {
-    return projectSideViewSkeletonFrame(
-      interpolateSideViewSkeletonFrames(
-        previousPose.skeletonFrame,
-        currentPose.skeletonFrame,
-        amount,
-      ),
-    );
-  }
-  const blendPoint = (key) => ({
-    x: previousPose[key].x + (currentPose[key].x - previousPose[key].x) * amount,
-    y: previousPose[key].y + (currentPose[key].y - previousPose[key].y) * amount,
-  });
-  const projectedJoints =
-    previousPose.projectedJoints && currentPose.projectedJoints
-      ? Object.freeze(
-          Object.fromEntries(
-            Object.keys(previousPose.projectedJoints).map((jointId) => {
-              const previousJoint = previousPose.projectedJoints[jointId];
-              const currentJoint = currentPose.projectedJoints[jointId];
-              return [
-                jointId,
-                Object.freeze({
-                  x: previousJoint.x + (currentJoint.x - previousJoint.x) * amount,
-                  y: previousJoint.y + (currentJoint.y - previousJoint.y) * amount,
-                  depth: previousJoint.depth + (currentJoint.depth - previousJoint.depth) * amount,
-                }),
-              ];
-            }),
-          ),
-        )
-      : null;
-  return Object.freeze({
-    rootOffset: blendPoint('rootOffset'),
-    bodyLean: previousPose.bodyLean + (currentPose.bodyLean - previousPose.bodyLean) * amount,
-    bodyScaleX:
-      previousPose.bodyScaleX + (currentPose.bodyScaleX - previousPose.bodyScaleX) * amount,
-    depthPhase:
-      previousPose.depthPhase + (currentPose.depthPhase - previousPose.depthPhase) * amount,
-    headTilt: previousPose.headTilt + (currentPose.headTilt - previousPose.headTilt) * amount,
-    rearFootTarget: blendPoint('rearFootTarget'),
-    leadFootTarget: blendPoint('leadFootTarget'),
-    capeLift: previousPose.capeLift + (currentPose.capeLift - previousPose.capeLift) * amount,
-    ...(projectedJoints ? { projectedJoints } : {}),
-  });
-}
-
-export function sampleEnemyBonePose({ family = 'machine', action = 'idle', progress = 0 } = {}) {
-  const frames = stripFor(family, action);
+export function sampleEnemyBonePose({
+  family = 'machine',
+  action = 'idle',
+  progress = 0,
+  attackKind = 'light',
+} = {}) {
+  const frames = stripFor(family, action, attackKind);
   const sampled = sampleStrip(frames, progress);
   return Object.freeze({
     ...sampled,
@@ -688,5 +710,8 @@ export function resolveEnemyBonePoseInput(enemy, attackProfiles = null) {
 }
 
 export function sampleEnemyBonePoseFor(enemy, attackProfiles = null) {
-  return sampleEnemyBonePose(resolveEnemyBonePoseInput(enemy, attackProfiles));
+  return sampleEnemyBonePose({
+    ...resolveEnemyBonePoseInput(enemy, attackProfiles),
+    attackKind: enemy?.attackKind,
+  });
 }

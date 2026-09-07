@@ -1,4 +1,5 @@
 import { SpinContactConstraint } from '../../combat/SpinContactConstraint.js';
+import { isAttackContactFrame } from '../../combat/CombatMotionTimingProfiles.js';
 import { COMBAT_EVENT_TYPE } from '../../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
 import { resolveRecoveryPunish } from '../../combat/RecoveryPunish.js';
@@ -11,7 +12,7 @@ import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
 import { resolveSwordEnchantment } from '../enchantment/EnchantmentPolicy.js';
-import { resolveEncounterBodyCollider } from '../encounter/EncounterProfiles.js';
+import { resolveEncounterBodyCollider } from '../encounter/EncounterBodyCollider.js';
 
 const GRAVITY = 1180;
 const RESET_SECONDS = combatFramesToSeconds(60);
@@ -290,6 +291,7 @@ export class TrainingEncounterNode extends SceneNode {
     };
     this.completionEmitted = false;
     this.lastHitMotionSequence = '';
+    this.lastProtectedMotionSequence = '';
     this.lastVisualContact = null;
     this.contactSeconds = 0;
     this.confirmedComboCycle = 0;
@@ -1053,22 +1055,13 @@ export class TrainingEncounterNode extends SceneNode {
       player.health <= 0 ||
       player.hitstunSeconds > 0 ||
       player.blockstunSeconds > 0 ||
-      enemy.retaliationInvulnerableSeconds > 0 ||
-      enemy.retaliationProtectedComboCycle === combatState.comboCycle ||
       !profile ||
       (enemy.juggleLocked && enemy.position.y < enemy.groundY) ||
-      combatState.progress < profile.start ||
-      combatState.progress > profile.end
+      !isAttackContactFrame(combatState, profile)
     )
       return false;
-    const deltaX = enemy.position.x - player.position.x;
-    const forwardDistance = deltaX * player.facing;
-    if (
-      forwardDistance < -18 ||
-      forwardDistance > profile.range + 4 ||
-      Math.abs(enemy.position.y - (player.position.y + 82)) > 116
-    )
-      return false;
+    // Current articulated geometry owns reach and height. Center-distance gates can
+    // discard a visible blade/limb overlap, particularly in aerial or mirrored poses.
     const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, this.attackProfiles);
     const playerWeapons = frame.playerGeometry
       ? [
@@ -1089,6 +1082,37 @@ export class TrainingEncounterNode extends SceneNode {
     if (pulseIndex < 0) return false;
     const hitKey = `${combatState.sequence}:${pulseIndex}`;
     if (hitKey === this.lastHitMotionSequence) return false;
+    const protectedOutcome =
+      enemy.aiState === 'evade'
+        ? 'evade'
+        : enemy.retaliationInvulnerableSeconds > 0 ||
+            enemy.retaliationProtectedComboCycle === combatState.comboCycle
+          ? 'retaliation-protected'
+          : null;
+    if (protectedOutcome) {
+      if (this.lastProtectedMotionSequence !== hitKey) {
+        this.lastProtectedMotionSequence = hitKey;
+        this.lastVisualContact = Object.freeze({
+          attacker: 'player',
+          sequence: combatState.sequence,
+          pulseIndex,
+          ...visualContact,
+          simulationGap: visualContact.gap,
+          outcome: protectedOutcome,
+        });
+        this.contactSeconds = 0.18;
+        this.emitCombatEvent(COMBAT_EVENT_TYPE.EVADE, {
+          actor: 'enemy',
+          target: 'player',
+          attackId: combatState.id,
+          outcome: protectedOutcome,
+          position: visualContact.position,
+          direction: player.facing,
+          strength: 0.8,
+        });
+      }
+      return false;
+    }
     this.lastHitMotionSequence = hitKey;
     this.lastVisualContact = Object.freeze({
       attacker: 'player',
@@ -1098,7 +1122,6 @@ export class TrainingEncounterNode extends SceneNode {
       simulationGap: visualContact.gap,
     });
     this.contactSeconds = 0.18;
-    if (enemy.aiState === 'evade') return false;
     const recoveryPunish = resolveRecoveryPunish({
       enemyRole: enemy.role,
       recoveryWindowOpen: enemy.punishWindowOpen,

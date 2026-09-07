@@ -178,7 +178,9 @@ function nearestInteraction(entities, playerPosition) {
   if (!Array.isArray(entities) || !playerPosition) return null;
   return (
     entities
-      .filter((interaction) => isStoryInteraction(interaction) && !isAmbientInteraction(interaction))
+      .filter(
+        (interaction) => isStoryInteraction(interaction) && !isAmbientInteraction(interaction),
+      )
       .map((interaction) => ({
         interaction,
         distance: distanceBetween(interaction.position, playerPosition),
@@ -205,9 +207,13 @@ function nearestAmbientInteraction(entities, playerPosition, completedInteractio
         interaction,
         distance: distanceBetween(interaction.position, playerPosition),
       }))
-      .filter(({ interaction, distance }) => distance <= (interaction.autoStartRange ?? interaction.interactionRange))
+      .filter(
+        ({ interaction, distance }) =>
+          distance <= (interaction.autoStartRange ?? interaction.interactionRange),
+      )
       .sort(
-        (left, right) => left.distance - right.distance || left.interaction.id.localeCompare(right.interaction.id),
+        (left, right) =>
+          left.distance - right.distance || left.interaction.id.localeCompare(right.interaction.id),
       )[0]?.interaction ?? null
   );
 }

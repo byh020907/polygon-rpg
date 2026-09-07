@@ -1,11 +1,30 @@
 import {
+  defineSkeletonFrame,
   interpolateSideViewSkeletonFrames,
   projectSideViewSkeletonFrame,
 } from './SkeletonPoseProjection.js';
+import { createForwardRollFrames } from './ForwardRollClip.js';
 import { rollTimelineMarkerAt } from './RollTimeline.js';
 
 const CHARACTER_FOOT_Y = 80;
 const REFERENCE_JUMP_SPEED = 470;
+const PLAYER_BONE_LENGTHS = Object.freeze({
+  chest: 34,
+  neck: Math.hypot(1, 18),
+  head: 17,
+  nearShoulder: Math.hypot(8, 5, 4),
+  farShoulder: Math.hypot(8, 5, 4),
+  nearElbow: Math.hypot(15, 18, 3),
+  nearHand: Math.hypot(15, 15, 2),
+  farElbow: Math.hypot(15, 15, 3),
+  farHand: Math.hypot(20, 13, 2),
+  nearHip: Math.hypot(8, 4, 2),
+  farHip: Math.hypot(8, 4, 2),
+  nearKnee: Math.hypot(12, 1),
+  farKnee: Math.hypot(12, 1),
+  nearFoot: 16,
+  farFoot: 16,
+});
 
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.max(minimum, Math.min(maximum, value));
@@ -14,35 +33,6 @@ function clamp(value, minimum = 0, maximum = 1) {
 function smoothStep(value) {
   const bounded = clamp(value);
   return bounded * bounded * (3 - 2 * bounded);
-}
-
-function point(x, y) {
-  return Object.freeze({ x, y });
-}
-
-function pose({
-  rootX = 0,
-  rootY = 0,
-  bodyLean = 0,
-  bodyScaleX = 1,
-  depthPhase = 0,
-  headTilt = 0,
-  rearFootX = -8,
-  rearFootY = CHARACTER_FOOT_Y,
-  leadFootX = 8,
-  leadFootY = CHARACTER_FOOT_Y,
-  capeLift = 0,
-} = {}) {
-  return Object.freeze({
-    rootOffset: point(rootX, rootY),
-    bodyLean,
-    bodyScaleX,
-    depthPhase,
-    headTilt,
-    rearFootTarget: point(rearFootX, rearFootY),
-    leadFootTarget: point(leadFootX, leadFootY),
-    capeLift,
-  });
 }
 
 function sampleIdle(animationTime) {
@@ -68,7 +58,9 @@ function sampleGuard(animationTime) {
 
 function sampleBlockReaction(progress, strength) {
   const recoil = smoothStep(progress) * clamp(strength, 0.4, 1);
-  return pose({
+  return authoredCharacterFrame({
+    id: 'block-recoil',
+    at: 0,
     rootX: -2 - recoil * 6,
     rootY: 3 + recoil * 2,
     bodyLean: -0.075 - recoil * 0.11,
@@ -78,7 +70,7 @@ function sampleBlockReaction(progress, strength) {
     leadFootX: 15,
     leadFootY: CHARACTER_FOOT_Y - recoil * 2,
     capeLift: 0.18 + recoil * 0.35,
-  });
+  }).value;
 }
 
 function sampleLanding(recovery) {
@@ -87,7 +79,9 @@ function sampleLanding(recovery) {
 
 function sampleHitReaction(intensity, knockedOut) {
   return knockedOut
-    ? pose({
+    ? authoredCharacterFrame({
+        id: 'knocked-out',
+        at: 0,
         rootX: -6,
         rootY: 14,
         bodyLean: 1.18,
@@ -96,7 +90,7 @@ function sampleHitReaction(intensity, knockedOut) {
         rearFootY: 76,
         leadFootX: 18,
         leadFootY: 78,
-      })
+      }).value
     : sampleAuthoredPoseFrames(AUTHORED_PLAYER_UTILITY_FRAMES.hit, clamp(intensity));
 }
 
@@ -125,21 +119,9 @@ const AUTHORED_ARM_TRANSFORMS = Object.freeze({
     farElbow: Object.freeze({ x: 3, y: -10, z: -3, rotation: -0.12 }),
     farHand: Object.freeze({ x: 7, y: -11, z: -2, rotation: -0.08 }),
   }),
-  rollTuck: Object.freeze({
-    nearElbow: Object.freeze({ x: -7, y: 2, z: 5, rotation: 0.7 }),
-    nearHand: Object.freeze({ x: -2, y: 15, z: 4, rotation: 1.2 }),
-    farElbow: Object.freeze({ x: -8, y: 1, z: -3, rotation: -0.58 }),
-    farHand: Object.freeze({ x: -3, y: 12, z: -2, rotation: -1.05 }),
-  }),
-  rollRelease: Object.freeze({
-    nearElbow: Object.freeze({ x: 10, y: 7, z: 5, rotation: 0.35 }),
-    nearHand: Object.freeze({ x: 18, y: 10, z: 4, rotation: 0.12 }),
-    farElbow: Object.freeze({ x: 0, y: -4, z: -3, rotation: -0.2 }),
-    farHand: Object.freeze({ x: 4, y: -5, z: -2, rotation: -0.08 }),
-  }),
 });
 
-function authoredRollFrame({
+function authoredCharacterFrame({
   id,
   at,
   transition,
@@ -154,6 +136,7 @@ function authoredRollFrame({
   depth = 0,
   capeLift = 0,
   armPose = 'neutral',
+  wristFlex = 0,
 }) {
   const arm = AUTHORED_ARM_TRANSFORMS[armPose];
   if (!arm) throw new RangeError(`알 수 없는 authored arm pose입니다: ${armPose}`);
@@ -224,121 +207,37 @@ function authoredRollFrame({
             Object.freeze({
               ...value,
               pitch: bodyPitch,
-              yaw: depthYaw,
-              rotation: localRotation[jointId],
+              yaw:
+                jointId === 'nearHand'
+                  ? -Math.atan2(value.z, Math.hypot(value.x, value.y))
+                  : depthYaw,
+              rotation:
+                jointId === 'nearHand'
+                  ? Math.atan2(value.y, value.x) + wristFlex
+                  : localRotation[jointId],
             }),
           ];
         }),
       ),
     ),
   });
-  return Object.freeze({ ...frame, value: projectSideViewSkeletonFrame(frame) });
+  const canonical = defineSkeletonFrame(frame, { boneLengths: PLAYER_BONE_LENGTHS });
+  return Object.freeze({
+    ...canonical,
+    value: Object.freeze({ ...projectSideViewSkeletonFrame(canonical), frameId: id }),
+  });
 }
 
-// This authored strip is a local 3D joint hierarchy. It is projected to 2D cutout anchors,
-// never rendered as a 3D mesh or used by 2D collision authority.
-// Classic head-first forward roll: the head and hands drive forward-down at entry,
-// then shoulder, back and pelvis carry one continuous forward turn through contact before
-// the feet receive the body and it uncurls into travel. The cutout never needs a literal
-// 360-degree spin, but the torso must turn far enough to read as a roll rather than a bow.
-const ROLL_POSE_FRAMES = Object.freeze([
-  authoredRollFrame({
-    id: 'roll-plant',
-    at: 0,
-    transition: 'hold',
-    rootY: 8,
-    bodyLean: 0.2,
-    headTilt: 0.18,
-    rearFootX: -18,
-    leadFootX: 17,
-    capeLift: 0.3,
-  }),
-  authoredRollFrame({
-    id: 'roll-tuck',
-    at: 0.14,
-    transition: 'linear',
-    rootX: 5,
-    rootY: 22,
-    bodyLean: 0.82,
-    headTilt: 0.78,
-    rearFootX: -9,
-    rearFootY: 62,
-    leadFootX: 11,
-    leadFootY: 60,
-    depth: 0.6,
-    capeLift: 0.8,
-    armPose: 'contact',
-  }),
-  authoredRollFrame({
-    id: 'roll-contact',
-    at: 0.36,
-    transition: 'linear',
-    rootX: 9,
-    rootY: 29,
-    bodyLean: 1.28,
-    headTilt: 1.18,
-    rearFootX: -1,
-    rearFootY: 83,
-    leadFootX: 3,
-    leadFootY: 81,
-    depth: 1,
-    capeLift: 1,
-    armPose: 'rollTuck',
-  }),
-  // A forward roll stays curled forward and uncurls toward travel: unfold/recover keep
-  // a decreasing positive turn so the mid-roll never snaps into a backward back-arch.
-  // The head stays forward through the unfold so the exit reads as rolling out head-first.
-  authoredRollFrame({
-    id: 'roll-unfold',
-    at: 0.62,
-    transition: 'linear',
-    rootX: 12,
-    rootY: 16,
-    bodyLean: 0.72,
-    headTilt: 0.52,
-    rearFootX: -4,
-    rearFootY: 60,
-    leadFootX: 9,
-    leadFootY: 64,
-    depth: -1,
-    capeLift: 0.94,
-    armPose: 'rollRelease',
-  }),
-  authoredRollFrame({
-    id: 'roll-recover',
-    at: 0.84,
-    transition: 'linear',
-    rootX: 4,
-    rootY: 5,
-    bodyLean: 0.18,
-    headTilt: 0.08,
-    rearFootX: -13,
-    rearFootY: 77,
-    leadFootX: 13,
-    leadFootY: 79,
-    depth: -0.35,
-    capeLift: 0.46,
-    armPose: 'rollRelease',
-  }),
-  authoredRollFrame({
-    id: 'roll-ready',
-    at: 1,
-    transition: 'linear',
-    rootY: 0,
-    bodyLean: 0.02,
-    headTilt: 0,
-    rearFootX: -9,
-    leadFootX: 9,
-    capeLift: 0.18,
-  }),
-]);
+const ROLL_POSE_FRAMES = createForwardRollFrames(
+  authoredCharacterFrame({ id: 'roll-neutral', at: 0 }),
+);
 
 // These Player actions are pose strips, not a global bob/lean equation.  The fixed frames share
 // the same local 3D skeleton and projection contract as the combat clips below.
 const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
   idle: Object.freeze([
-    authoredRollFrame({ id: 'idle-rest', at: 0, transition: 'linear', capeLift: 0.12 }),
-    authoredRollFrame({
+    authoredCharacterFrame({ id: 'idle-rest', at: 0, transition: 'linear', capeLift: 0.12 }),
+    authoredCharacterFrame({
       id: 'idle-breath',
       at: 0.5,
       transition: 'linear',
@@ -347,10 +246,10 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       headTilt: -0.02,
       capeLift: 0.18,
     }),
-    authoredRollFrame({ id: 'idle-return', at: 1, transition: 'linear', capeLift: 0.12 }),
+    authoredCharacterFrame({ id: 'idle-return', at: 1, transition: 'linear', capeLift: 0.12 }),
   ]),
   run: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'run-contact-near',
       at: 0,
       transition: 'linear',
@@ -360,7 +259,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       leadFootX: 19,
       capeLift: 0.68,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'run-pass',
       at: 0.25,
       transition: 'linear',
@@ -372,7 +271,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       leadFootY: 71,
       capeLift: 0.88,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'run-contact-far',
       at: 0.5,
       transition: 'linear',
@@ -382,7 +281,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       leadFootX: 24,
       capeLift: 0.68,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'run-recover',
       at: 0.75,
       transition: 'linear',
@@ -394,7 +293,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       leadFootY: 65,
       capeLift: 0.88,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'run-loop',
       at: 1,
       transition: 'linear',
@@ -406,20 +305,20 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
     }),
   ]),
   jumpRise: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'jump-crouch',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 5,
       bodyLean: 0.13,
       rearFootX: -18,
       leadFootX: 17,
       capeLift: 0.32,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'jump-rise',
       at: 1,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 2,
       rootY: -6,
       bodyLean: 0.12,
@@ -432,10 +331,10 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
     }),
   ]),
   jumpFall: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'fall-tuck',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 2,
       rootY: -5,
       bodyLean: 0.04,
@@ -446,7 +345,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       leadFootY: 63,
       capeLift: 0.84,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'fall-brace',
       at: 1,
       transition: 'linear',
@@ -462,17 +361,17 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
     }),
   ]),
   landing: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'landing-compress',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 7,
       bodyLean: 0.08,
       rearFootX: -15,
       leadFootX: 15,
       capeLift: 0.36,
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'landing-release',
       at: 1,
       transition: 'linear',
@@ -484,7 +383,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
     }),
   ]),
   guard: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'guard-brace',
       at: 0,
       transition: 'linear',
@@ -497,7 +396,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       capeLift: 0.2,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'guard-settle',
       at: 1,
       transition: 'linear',
@@ -512,10 +411,10 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
     }),
   ]),
   hit: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'hit-contact',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -8,
       rootY: 4,
       bodyLean: -0.2,
@@ -525,7 +424,7 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
       capeLift: 0.42,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'hit-recover',
       at: 1,
       transition: 'linear',
@@ -544,10 +443,10 @@ const AUTHORED_PLAYER_UTILITY_FRAMES = Object.freeze({
 // Combat owns timing/contact; these stable pose IDs only project that timeline into cutout joints.
 const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
   slash: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'slash-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 1,
       bodyLean: -0.04,
       headTilt: 0.03,
@@ -556,10 +455,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.2,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'slash-windup',
       at: 0.24,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -5,
       rootY: 2,
       bodyLean: -0.22,
@@ -570,10 +469,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.46,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'slash-contact',
+      wristFlex: -1.3,
       at: 11 / 31,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 8,
       rootY: 3,
       bodyLean: 0.18,
@@ -584,8 +484,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.88,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'slash-follow-through',
+      wristFlex: 0.25,
       at: 21 / 31,
       transition: 'linear',
       rootX: 11,
@@ -598,7 +499,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.75,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'slash-recover',
       at: 1,
       transition: 'linear',
@@ -613,10 +514,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   heavy: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'heavy-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 2,
       bodyLean: -0.06,
       headTilt: 0.03,
@@ -625,10 +526,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.2,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'heavy-load',
       at: 0.27,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -8,
       rootY: 7,
       bodyLean: -0.34,
@@ -639,10 +540,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.58,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'heavy-contact',
+      wristFlex: -1.3,
       at: 16 / 46,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 10,
       rootY: 10,
       bodyLean: 0.31,
@@ -653,8 +555,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 1,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'heavy-follow-through',
+      wristFlex: 0.25,
       at: 31 / 46,
       transition: 'linear',
       rootX: 13,
@@ -667,7 +570,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.86,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'heavy-recover',
       at: 1,
       transition: 'linear',
@@ -682,10 +585,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   rising: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'rising-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 3,
       bodyLean: 0.08,
       headTilt: -0.04,
@@ -694,10 +597,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.3,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'rising-load',
       at: 0.25,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -4,
       rootY: 10,
       bodyLean: 0.3,
@@ -708,10 +611,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.66,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'rising-contact',
+      wristFlex: 0.35,
       at: 13 / 36,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 6,
       rootY: -7,
       bodyLean: -0.27,
@@ -724,8 +628,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.98,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'rising-follow-through',
+      wristFlex: -1.7,
       at: 25 / 36,
       transition: 'linear',
       rootX: 8,
@@ -740,7 +645,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.78,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'rising-recover',
       at: 1,
       transition: 'linear',
@@ -754,10 +659,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   shieldBash: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'counter-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -3,
       rootY: 4,
       bodyLean: -0.15,
@@ -768,10 +673,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.18,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'counter-load',
       at: 0.24,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -8,
       rootY: 5,
       bodyLean: -0.26,
@@ -782,10 +687,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.36,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'counter-contact',
       at: 9 / 26,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 14,
       rootY: 4,
       bodyLean: 0.26,
@@ -796,7 +701,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.76,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'counter-follow-through',
       at: 18 / 26,
       transition: 'linear',
@@ -810,7 +715,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.54,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'counter-recover',
       at: 1,
       transition: 'linear',
@@ -825,10 +730,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   thrust: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'thrust-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 1,
       bodyLean: -0.03,
       headTilt: 0.02,
@@ -837,10 +742,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.2,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'thrust-load',
       at: 0.24,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -6,
       rootY: 2,
       bodyLean: -0.2,
@@ -851,10 +756,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.4,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'thrust-contact',
       at: 9 / 25,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 12,
       rootY: 2,
       bodyLean: 0.22,
@@ -865,7 +770,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.82,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'thrust-follow-through',
       at: 16 / 25,
       transition: 'linear',
@@ -879,7 +784,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.7,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'thrust-recover',
       at: 1,
       transition: 'linear',
@@ -894,10 +799,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   spin: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'spin-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootY: 2,
       bodyLean: -0.05,
       headTilt: 0.02,
@@ -906,10 +811,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.24,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'spin-windup',
       at: 0.22,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -7,
       rootY: 4,
       bodyLean: -0.28,
@@ -920,10 +825,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.55,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'spin-contact',
       at: 17 / 49,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 6,
       rootY: 1,
       bodyLean: 0.14,
@@ -934,7 +839,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.95,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'spin-follow-through',
       at: 33 / 49,
       transition: 'linear',
@@ -948,7 +853,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.8,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'spin-recover',
       at: 1,
       transition: 'linear',
@@ -963,10 +868,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   airSlash: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-slash-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 1,
       rootY: -4,
       bodyLean: 0.06,
@@ -978,10 +883,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.85,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-slash-windup',
       at: 0.22,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -4,
       rootY: -5,
       bodyLean: -0.18,
@@ -994,10 +899,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.9,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-slash-contact',
+      wristFlex: -1.3,
       at: 9 / 25,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 9,
       rootY: -3,
       bodyLean: 0.2,
@@ -1010,8 +916,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 1,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-slash-follow-through',
+      wristFlex: 0.25,
       at: 16 / 25,
       transition: 'linear',
       rootX: 11,
@@ -1026,7 +933,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.9,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-slash-recover',
       at: 1,
       transition: 'linear',
@@ -1043,10 +950,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   airHeavy: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-heavy-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 0,
       rootY: -5,
       bodyLean: -0.05,
@@ -1058,10 +965,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.85,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-heavy-load',
       at: 0.26,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -6,
       rootY: -7,
       bodyLean: -0.3,
@@ -1074,10 +981,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.92,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-heavy-contact',
+      wristFlex: -1.3,
       at: 11 / 30,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 10,
       rootY: 2,
       bodyLean: 0.3,
@@ -1090,8 +998,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 1,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-heavy-follow-through',
+      wristFlex: 0.25,
       at: 20 / 30,
       transition: 'linear',
       rootX: 12,
@@ -1106,7 +1015,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.9,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-heavy-recover',
       at: 1,
       transition: 'linear',
@@ -1123,10 +1032,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   airReturn: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-return-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 2,
       rootY: -3,
       bodyLean: 0.1,
@@ -1138,10 +1047,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.88,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-return-load',
       at: 0.22,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 7,
       rootY: -2,
       bodyLean: 0.24,
@@ -1154,10 +1063,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.92,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-return-contact',
+      wristFlex: -1.3,
       at: 8 / 24,
-      transition: 'snap',
+      transition: 'linear',
       rootX: -7,
       rootY: 0,
       bodyLean: -0.24,
@@ -1170,8 +1080,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 1,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-return-follow-through',
+      wristFlex: 0.25,
       at: 15 / 24,
       transition: 'linear',
       rootX: -9,
@@ -1186,7 +1097,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.9,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-return-recover',
       at: 1,
       transition: 'linear',
@@ -1203,10 +1114,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   airSpin: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-spin-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 0,
       rootY: -5,
       bodyLean: 0.04,
@@ -1218,10 +1129,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.88,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-spin-windup',
       at: 0.2,
-      transition: 'hold',
+      transition: 'linear',
       rootX: -5,
       rootY: -6,
       bodyLean: -0.22,
@@ -1234,10 +1145,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.94,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-spin-contact',
       at: 14 / 41,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 5,
       rootY: -4,
       bodyLean: 0.16,
@@ -1250,7 +1161,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 1,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-spin-follow-through',
       at: 28 / 41,
       transition: 'linear',
@@ -1266,7 +1177,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.92,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-spin-recover',
       at: 1,
       transition: 'linear',
@@ -1283,10 +1194,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
   ]),
   airCross: Object.freeze([
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-cross-ready',
       at: 0,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 1,
       rootY: -4,
       bodyLean: 0.08,
@@ -1298,10 +1209,10 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.88,
       armPose: 'neutral',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-cross-load',
       at: 0.24,
-      transition: 'hold',
+      transition: 'linear',
       rootX: 6,
       rootY: -3,
       bodyLean: 0.22,
@@ -1314,10 +1225,11 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.92,
       armPose: 'contact',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-cross-contact',
+      wristFlex: -1.3,
       at: 11 / 30,
-      transition: 'snap',
+      transition: 'linear',
       rootX: 7,
       rootY: -6,
       bodyLean: -0.26,
@@ -1330,8 +1242,9 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 1,
       armPose: 'windup',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-cross-follow-through',
+      wristFlex: 0.25,
       at: 20 / 30,
       transition: 'linear',
       rootX: 8,
@@ -1346,7 +1259,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       capeLift: 0.9,
       armPose: 'followThrough',
     }),
-    authoredRollFrame({
+    authoredCharacterFrame({
       id: 'air-cross-recover',
       at: 1,
       transition: 'linear',
@@ -1407,7 +1320,10 @@ function sampleAuthoredCycle(frames, animationTime, rate) {
 
 function sampleRoll(progress) {
   const sampled = sampleAuthoredPoseFrames(ROLL_POSE_FRAMES, progress);
-  return Object.freeze({ ...sampled, rollMarker: rollTimelineMarkerAt(progress) });
+  return Object.freeze({
+    ...sampled,
+    rollMarker: rollTimelineMarkerAt(progress),
+  });
 }
 
 function remapAuthoredCombatProgress(motionId, progress, frame) {
@@ -1454,194 +1370,20 @@ function sampleAuthoredCombat(motionState) {
 
 function sampleCombat(motionState) {
   const authored = sampleAuthoredCombat(motionState);
-  if (authored) return authored;
-  const progress = clamp(motionState.progress);
-  const action = Math.sin(progress * Math.PI);
-
-  switch (motionState.id) {
-    case 'slash':
-      return pose({
-        rootX: action * 3,
-        rootY: action * 1.5,
-        bodyLean: action * 0.035,
-        headTilt: -action * 0.1,
-        rearFootX: -13,
-        leadFootX: 15 + action * 3,
-        capeLift: 0.42 + action * 0.34,
-      });
-    case 'heavy':
-      return pose({
-        rootX: action * 2,
-        rootY: action * 4,
-        bodyLean: -0.035 + action * 0.025,
-        headTilt: action * 0.075,
-        rearFootX: -17,
-        leadFootX: 17,
-        capeLift: 0.3 + action * 0.25,
-      });
-    case 'thrust':
-      return pose({
-        rootX: action * 8,
-        rootY: action,
-        bodyLean: action * 0.085,
-        headTilt: -action * 0.08,
-        rearFootX: -15,
-        leadFootX: 18 + action * 10,
-        capeLift: 0.5 + action * 0.38,
-      });
-    case 'rising':
-      return pose({
-        rootX: action * 3,
-        rootY: 5 - action * 7,
-        bodyLean: -0.06 + action * 0.11,
-        headTilt: -action * 0.12,
-        rearFootX: -16,
-        rearFootY: CHARACTER_FOOT_Y - action * 2,
-        leadFootX: 15,
-        leadFootY: CHARACTER_FOOT_Y - action * 5,
-        capeLift: 0.56 + action * 0.32,
-      });
-    case 'spin': {
-      const spinPhase = smoothStep(Math.max(0, Math.min(1, (progress - 0.08) / 0.8))) * Math.PI * 2;
-      const yaw = Math.cos(spinPhase);
-      const sweep = Math.sin(spinPhase);
-      const hop = Math.sin(clamp(progress) * Math.PI);
-      const depthEnvelope =
-        smoothStep(clamp(progress / 0.14)) * smoothStep(clamp((1 - progress) / 0.14));
-      return pose({
-        rootX: sweep * 4,
-        rootY: -hop * 12,
-        bodyLean: sweep * 0.09,
-        bodyScaleX: 0.72 + Math.abs(yaw) * 0.28,
-        depthPhase: yaw * depthEnvelope,
-        headTilt: -sweep * 0.12,
-        rearFootX: -10 + sweep * 3,
-        rearFootY: 63 - Math.max(0, yaw) * 3,
-        leadFootX: 10 + sweep * 3,
-        leadFootY: 63 - Math.max(0, -yaw) * 3,
-        capeLift: 0.76 + hop * 0.24,
-      });
-    }
-    case 'airSlash':
-      return pose({
-        rootX: action * 6,
-        rootY: action * 4,
-        bodyLean: action * 0.15,
-        headTilt: -action * 0.12,
-        rearFootX: -14,
-        rearFootY: 65,
-        leadFootX: 11,
-        leadFootY: 60,
-        capeLift: 0.88,
-      });
-    case 'airHeavy':
-      return pose({
-        rootX: action * 5,
-        rootY: -1,
-        bodyLean: action * 0.12,
-        headTilt: -action * 0.09,
-        rearFootX: -12,
-        rearFootY: 64,
-        leadFootX: 12,
-        leadFootY: 60,
-        capeLift: 0.92,
-      });
-    case 'airReturn':
-      return pose({
-        rootX: -action * 5,
-        rootY: action * 5,
-        bodyLean: -action * 0.14,
-        headTilt: action * 0.11,
-        rearFootX: -10,
-        rearFootY: 61,
-        leadFootX: 15,
-        leadFootY: 67,
-        capeLift: 0.9,
-      });
-    case 'airSpin':
-      return pose({
-        rootY: -3,
-        bodyLean: progress * Math.PI * 2,
-        headTilt: -progress * Math.PI * 2,
-        rearFootX: -8,
-        rearFootY: 62,
-        leadFootX: 9,
-        leadFootY: 60,
-        capeLift: 1,
-      });
-    case 'airCross':
-      return pose({
-        rootX: action * 5,
-        rootY: -1,
-        bodyLean: -action * 0.12,
-        headTilt: action * 0.1,
-        rearFootX: -13,
-        rearFootY: 61,
-        leadFootX: 12,
-        leadFootY: 66,
-        capeLift: 0.9,
-      });
-    case 'shieldBash':
-      return pose({
-        rootX: action * 11,
-        rootY: 2 + action,
-        bodyLean: -0.06 + action * 0.2,
-        headTilt: -action * 0.08,
-        rearFootX: -17,
-        leadFootX: 18 + action * 7,
-        capeLift: 0.3 + action * 0.34,
-      });
-    default:
-      return pose();
-  }
+  if (!authored) throw new RangeError(`Unknown authored motion: ${motionState.id}`);
+  return authored;
 }
 
 function blendBonePose(previousPose, currentPose, amount) {
-  if (previousPose.skeletonFrame && currentPose.skeletonFrame) {
-    return projectSideViewSkeletonFrame(
+  return Object.freeze({
+    ...projectSideViewSkeletonFrame(
       interpolateSideViewSkeletonFrames(
         previousPose.skeletonFrame,
         currentPose.skeletonFrame,
         amount,
       ),
-    );
-  }
-  const blendPoint = (key) =>
-    point(
-      previousPose[key].x + (currentPose[key].x - previousPose[key].x) * amount,
-      previousPose[key].y + (currentPose[key].y - previousPose[key].y) * amount,
-    );
-  const projectedJoints =
-    previousPose.projectedJoints && currentPose.projectedJoints
-      ? Object.freeze(
-          Object.fromEntries(
-            Object.keys(previousPose.projectedJoints).map((jointId) => {
-              const previousJoint = previousPose.projectedJoints[jointId];
-              const currentJoint = currentPose.projectedJoints[jointId];
-              return [
-                jointId,
-                Object.freeze({
-                  x: previousJoint.x + (currentJoint.x - previousJoint.x) * amount,
-                  y: previousJoint.y + (currentJoint.y - previousJoint.y) * amount,
-                  depth: previousJoint.depth + (currentJoint.depth - previousJoint.depth) * amount,
-                }),
-              ];
-            }),
-          ),
-        )
-      : null;
-  return Object.freeze({
-    rootOffset: blendPoint('rootOffset'),
-    bodyLean: previousPose.bodyLean + (currentPose.bodyLean - previousPose.bodyLean) * amount,
-    bodyScaleX:
-      previousPose.bodyScaleX + (currentPose.bodyScaleX - previousPose.bodyScaleX) * amount,
-    depthPhase:
-      previousPose.depthPhase + (currentPose.depthPhase - previousPose.depthPhase) * amount,
-    headTilt: previousPose.headTilt + (currentPose.headTilt - previousPose.headTilt) * amount,
-    rearFootTarget: blendPoint('rearFootTarget'),
-    leadFootTarget: blendPoint('leadFootTarget'),
-    capeLift: previousPose.capeLift + (currentPose.capeLift - previousPose.capeLift) * amount,
-    ...(projectedJoints ? { projectedJoints } : {}),
+    ),
+    frameId: currentPose.frameId,
   });
 }
 

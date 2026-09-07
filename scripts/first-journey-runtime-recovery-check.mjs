@@ -223,7 +223,7 @@ class RuntimeDriver {
         combat.id === 'idle' &&
         combat.stamina >= 24
       ) {
-        this.press('strongAttack');
+        this.press('strongAttack', gap > 0 ? { right: true } : { left: true });
         continue;
       }
       if (['windup', 'attack'].includes(enemy.aiState)) {
@@ -236,7 +236,7 @@ class RuntimeDriver {
       }
       const attackOpportunity = enemy.punishWindowOpen;
       if (attackOpportunity && combat.id === 'idle' && combat.stamina >= 24) {
-        this.press('strongAttack');
+        this.press('strongAttack', gap > 0 ? { right: true } : { left: true });
         continue;
       }
       if (!enemy.punishWindowOpen && Math.abs(gap) < 92) {
@@ -252,7 +252,14 @@ class RuntimeDriver {
     const enemy = this.scene.roomSceneNode?.getEncounterGameplaySnapshot();
     assert.fail(
       `${label}: 제한 tick 안에 encounter를 끝내지 못했습니다. HP ${enemy?.health} ${JSON.stringify(
-        stateCounts,
+        {
+          states: stateCounts,
+          player: this.scene.position,
+          facing: this.scene.facing,
+          enemy: enemy?.position,
+          combat: this.scene.combatCommands.snapshot(),
+          contact: this.scene.roomSceneNode?.encounter?.lastVisualContact,
+        },
       )}`,
     );
   }

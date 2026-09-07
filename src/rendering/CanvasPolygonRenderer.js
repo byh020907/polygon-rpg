@@ -7,13 +7,15 @@ export class CanvasPolygonRenderer {
     this.camera = camera;
   }
 
-  render(frame, { showMesh = false, showWorldGrid = true } = {}) {
+  render(frame, { showMesh = false, showWorldGrid = true, transparent = false } = {}) {
     const { context, viewport } = this.canvasHost;
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.imageSmoothingEnabled = true;
     context.clearRect(0, 0, viewport.backingWidth, viewport.backingHeight);
-    context.fillStyle = frame.palette.background;
-    context.fillRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    if (!transparent) {
+      context.fillStyle = frame.palette.background;
+      context.fillRect(0, 0, viewport.backingWidth, viewport.backingHeight);
+    }
     context.save();
     context.translate(viewport.presentationX, viewport.presentationY);
     context.scale(
@@ -40,7 +42,7 @@ export class CanvasPolygonRenderer {
       };
     };
     const worldScale = this.camera.getScale(viewport) * presentationZoom;
-    paintBackdrop(context, frame, viewport, project, { showWorldGrid });
+    if (!transparent) paintBackdrop(context, frame, viewport, project, { showWorldGrid });
     const diagnostics = paintSceneItems(context, frame, project, worldScale, { showMesh });
     context.restore();
     return Object.freeze({

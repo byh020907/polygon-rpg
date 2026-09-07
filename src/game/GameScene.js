@@ -6,12 +6,17 @@ import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
 import {
+  COMBAT_MOTION_TIMING_PROFILES,
+  isAttackContactFrame,
+} from '../combat/CombatMotionTimingProfiles.js';
+import {
   PLAYER_CHARACTER_FOOT_OFFSET,
   PLAYER_COMBAT_GEOMETRY_SCALE,
   createSweptWeaponGeometry,
   samplePlayerCombatGeometry as sampleSharedPlayerCombatGeometry,
 } from '../combat/SharedCombatGeometry.js';
 import { samplePlayerMotionPose } from '../animation/PlayerMotionPose.js';
+import { ATTACK_SPATIAL_PROFILES, sizeAttackMotionPose } from '../combat/AttackSpatialProfiles.js';
 import { rollTimelineMarkerAt } from '../animation/RollTimeline.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
@@ -123,9 +128,12 @@ function resolveConversationTranscripts(viewedConversationIds) {
 }
 
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
-function attackHitProfile(motionId, { startFrame, endFrame, hitPulseFrames, ...profile }) {
+function attackHitProfile(motionId, profile) {
   const motionFrame = combatMotionFrameData(motionId);
   if (!motionFrame) throw new Error(`${motionId}에는 CombatFrame data가 필요합니다.`);
+  const startFrame = motionFrame.startupFrames;
+  const endFrame = startFrame + motionFrame.activeFrames;
+  const hitPulseFrames = COMBAT_MOTION_TIMING_PROFILES[motionId].hitPulseFrames;
   if (startFrame < 0 || endFrame > motionFrame.durationFrames || endFrame < startFrame) {
     throw new RangeError(`${motionId} hit frame window가 motion duration을 벗어났습니다.`);
   }
@@ -147,32 +155,20 @@ function attackHitProfile(motionId, { startFrame, endFrame, hitPulseFrames, ...p
 
 const BASE_ATTACK_HIT_PROFILES = Object.freeze({
   slash: attackHitProfile('slash', {
-    startFrame: 11,
-    endFrame: 22,
     damage: 12,
-    range: 28,
     launchY: -90,
   }),
   heavy: attackHitProfile('heavy', {
-    startFrame: 19,
-    endFrame: 33,
     damage: 22,
-    range: 68,
     launchY: -150,
     guardBreak: true,
   }),
   thrust: attackHitProfile('thrust', {
-    startFrame: 10,
-    endFrame: 18,
     damage: 15,
-    range: 82,
     launchY: -80,
   }),
   rising: attackHitProfile('rising', {
-    startFrame: 15,
-    endFrame: 27,
     damage: 18,
-    range: 66,
     launchY: -470,
     juggleRole: 'launcher',
     relaunchSpeed: 310,
@@ -180,51 +176,35 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     guardBreak: true,
   }),
   spin: attackHitProfile('spin', {
-    startFrame: 12,
-    endFrame: 41,
     damage: 8,
-    range: 72,
     launchY: -70,
     relaunchSpeed: 260,
     floatSeconds: 0.08,
-    hitPulseFrames: [14, 25, 36],
     contactSpacings: Object.freeze([23, 17, 5]),
   }),
   airSlash: attackHitProfile('airSlash', {
-    startFrame: 9,
-    endFrame: 18,
     damage: 13,
-    range: 70,
     launchY: -110,
     juggleRole: 'sustain',
     relaunchSpeed: 190,
     floatSeconds: 0.1,
   }),
   airHeavy: attackHitProfile('airHeavy', {
-    startFrame: 12,
-    endFrame: 23,
     damage: 26,
-    range: 72,
     launchY: 300,
     juggleRole: 'finisher',
     groundBounce: true,
     guardBreak: true,
   }),
   airReturn: attackHitProfile('airReturn', {
-    startFrame: 8,
-    endFrame: 17,
     damage: 15,
-    range: 70,
     launchY: -90,
     juggleRole: 'sustain',
     relaunchSpeed: 170,
     floatSeconds: 0.09,
   }),
   airSpin: attackHitProfile('airSpin', {
-    startFrame: 4,
-    endFrame: 8,
     damage: 20,
-    range: 76,
     launchY: -150,
     juggleRole: 'sustain',
     relaunchSpeed: 250,
@@ -232,18 +212,12 @@ const BASE_ATTACK_HIT_PROFILES = Object.freeze({
     guardBreak: true,
   }),
   airCross: attackHitProfile('airCross', {
-    startFrame: 11,
-    endFrame: 23,
     damage: 24,
-    range: 74,
     launchY: 250,
     juggleRole: 'finisher',
   }),
   shieldBash: attackHitProfile('shieldBash', {
-    startFrame: 8,
-    endFrame: 17,
     damage: 16,
-    range: 34,
     launchY: -90,
     contactPart: 'shield',
   }),
@@ -269,8 +243,8 @@ function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, 
   if (!baseProfile || !motionFrame) return null;
   const baseMotionFrame = combatMotionFrameData(motionId);
   const startupShift = motionFrame.startupFrames - baseMotionFrame.startupFrames;
-  const startFrame = baseProfile.frame.startFrame + startupShift;
-  const endFrame = baseProfile.frame.endFrame + startupShift;
+  const startFrame = motionFrame.startupFrames;
+  const endFrame = motionFrame.startupFrames + motionFrame.activeFrames;
   const hitPulseCount = Math.max(1, skillProfile.spinHitCount);
   const hitPulseFrames = baseProfile.hitPulseFrames
     ?.slice(0, hitPulseCount)
@@ -278,7 +252,7 @@ function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, 
   return Object.freeze({
     ...baseProfile,
     damage: baseProfile.damage * equipmentProfile.attack.damageScale * skillProfile.damageScale,
-    range: baseProfile.range * equipmentProfile.attack.rangeScale,
+    range: ATTACK_SPATIAL_PROFILES[motionId].reach * equipmentProfile.attack.rangeScale,
     hitstunScale: equipmentProfile.attack.hitstunScale,
     postureDamageScale: equipmentProfile.attack.postureDamageScale ?? 1,
     backPunishDamageScale: equipmentProfile.attack.backPunishDamageScale ?? 1,
@@ -689,10 +663,15 @@ export class GameScene extends SceneNode {
     this.combatCommands.reset();
     this.combatCommands.setTimingProfile(this.equipmentProfile.combatTiming);
     this.combatCommands.setCommandProfile(this.getCombatSkillProfile());
+    this.prepareAttackSpatialProfiles();
     this.combatCameraFeedback.reset();
     this.combatEvents.reset();
     this.replaceRoomScene(mapSnapshot, { resetExisting: true });
     this.statusNode.publish({ force: true });
+  }
+
+  setVisualQaCombatOverlay(enabled) {
+    this.visualQaCombatOverlay = enabled === true;
   }
 
   setVisualQaLocation({ regionId, roomId, x }) {
@@ -2569,6 +2548,7 @@ export class GameScene extends SceneNode {
     this.progressionSnapshot = nextSnapshot;
     this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
     this.equipmentProfile = nextEquipment;
+    if (equipmentChanged || skillChanged) this.prepareAttackSpatialProfiles();
     this.journeyProgress.restore(nextSnapshot.firstJourney);
     this.regionExpansionProgress.restore(nextSnapshot.regionExpansion);
     this.progressionChanged.emit(this.progressionSnapshot);
@@ -2777,6 +2757,7 @@ export class GameScene extends SceneNode {
       roomScene.dispose();
       throw error;
     }
+    this.playerWeaponContactHistory = [];
     this.roomSceneNode = roomScene;
     this.connectRoomSceneSignals(roomScene);
     return roomScene;
@@ -3117,6 +3098,41 @@ export class GameScene extends SceneNode {
     }
   }
 
+  prepareAttackSpatialProfiles() {
+    for (const id of Object.keys(ATTACK_SPATIAL_PROFILES)) {
+      this.sampleSizedPlayerMotionPose({ motionState: { id, progress: 0 }, boneInput: {} });
+    }
+  }
+
+  sampleSizedPlayerMotionPose(input) {
+    const timingFrame = this.combatCommands.getMotionFrameData(input.motionState.id);
+    const pose = samplePlayerMotionPose({
+      ...input,
+      motionState: {
+        ...input.motionState,
+        frame: input.motionState.frame ?? timingFrame,
+      },
+    });
+    const profile = this.getAttackHitProfile(input.motionState.id);
+    return profile
+      ? sizeAttackMotionPose(pose, {
+          id: input.motionState.id,
+          reach: profile.range,
+          start: profile.start,
+          end: profile.end,
+          geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+          timingFrame,
+        })
+      : pose;
+  }
+
+  getPresentationWeaponLengthScale(motionId) {
+    const profile = this.getAttackHitProfile(motionId);
+    return profile && profile.contactPart !== 'shield'
+      ? 1
+      : this.equipmentProfile.geometry.weaponLengthScale;
+  }
+
   samplePlayerCombatGeometry(
     combatState,
     { position = this.position, animationTime = this.animationTime } = {},
@@ -3131,7 +3147,7 @@ export class GameScene extends SceneNode {
             phase: 'guard',
           })
         : combatState;
-    const pose = samplePlayerMotionPose(
+    const pose = this.sampleSizedPlayerMotionPose(
       Object.freeze({
         motionState: poseCombatState,
         boneInput: Object.freeze({
@@ -3159,27 +3175,33 @@ export class GameScene extends SceneNode {
       targetPose: pose.targetPose,
       bonePose: pose.bonePose,
       geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
-      weaponLengthScale: this.equipmentProfile.geometry.weaponLengthScale,
+      weaponLengthScale: this.getPresentationWeaponLengthScale(poseCombatState.id),
     });
   }
 
   updatePlayerCombatGeometry(combatState) {
     const geometry = this.samplePlayerCombatGeometry(combatState);
-    if (!this.getAttackHitProfile(combatState.id)) {
+    const profile = this.getAttackHitProfile(combatState.id);
+    if (!isAttackContactFrame(combatState, profile)) {
       this.playerWeaponContactHistory = [];
       this.playerCombatGeometry = Object.freeze({
         ...geometry,
         sequence: combatState.sequence,
         comboCycle: combatState.comboCycle,
+        facing: this.facing,
         sweep: null,
       });
       return this.playerCombatGeometry;
     }
-    if (this.playerCombatGeometry?.comboCycle !== combatState.comboCycle) {
+    if (
+      this.playerCombatGeometry?.comboCycle !== combatState.comboCycle ||
+      this.playerCombatGeometry?.sequence !== combatState.sequence ||
+      this.playerCombatGeometry?.facing !== this.facing
+    ) {
       this.playerWeaponContactHistory = [];
     }
     const swept = createSweptWeaponGeometry({
-      current: combatState.id === 'shieldBash' ? geometry.shield : geometry.weapon,
+      current: profile.contactPart === 'shield' ? geometry.shield : geometry.weapon,
       history: this.playerWeaponContactHistory,
     });
     this.playerWeaponContactHistory = [...swept.history];
@@ -3187,6 +3209,7 @@ export class GameScene extends SceneNode {
       ...geometry,
       sequence: combatState.sequence,
       comboCycle: combatState.comboCycle,
+      facing: this.facing,
       sweep: swept.swept,
     });
     return this.playerCombatGeometry;
@@ -4071,7 +4094,7 @@ export class GameScene extends SceneNode {
       this.playerCombatGeometry?.sequence === combatState.sequence
         ? this.playerCombatGeometry
         : null;
-    const pose = samplePlayerMotionPose(
+    const pose = this.sampleSizedPlayerMotionPose(
       Object.freeze({
         motionState: poseCombatState,
         boneInput: Object.freeze({
@@ -4099,7 +4122,7 @@ export class GameScene extends SceneNode {
       targetPose: pose.targetPose,
       bonePose: pose.bonePose,
       geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
-      weaponLengthScale: this.equipmentProfile.geometry.weaponLengthScale,
+      weaponLengthScale: this.getPresentationWeaponLengthScale(poseCombatState.id),
     });
     const playerPresentation = createPlayerCombatPresentation(
       Object.freeze({
@@ -4110,7 +4133,7 @@ export class GameScene extends SceneNode {
         combatGeometry: renderCombatGeometry,
         renderScale: characterRenderScale,
         renderOrder: characterRenderOrder,
-        weaponLengthScale: this.equipmentProfile.geometry.weaponLengthScale,
+        weaponLengthScale: this.getPresentationWeaponLengthScale(poseCombatState.id),
         contactGeometry,
         contactProfile: this.getAttackHitProfile(combatState.id),
         contactProgress: combatState.progress,
@@ -4182,6 +4205,49 @@ export class GameScene extends SceneNode {
         ...encounterItems,
         ...playerItems,
         ...combatEffectItems,
+        ...(this.visualQaCombatOverlay
+          ? [
+              [renderCombatGeometry.weapon, '#ffffff'],
+              [contactGeometry?.weapon, '#00ffff'],
+              [contactGeometry?.shield, '#6688ff'],
+              [contactGeometry?.sweep, '#ffcc00'],
+              [
+                encounterRender.contact?.position
+                  ? {
+                      part: 'contact-point',
+                      points: Object.freeze(
+                        [
+                          [-3, -3],
+                          [3, -3],
+                          [3, 3],
+                          [-3, 3],
+                        ].map(([x, y]) =>
+                          Object.freeze({
+                            x: encounterRender.contact.position.x + x,
+                            y: encounterRender.contact.position.y + y,
+                          }),
+                        ),
+                      ),
+                    }
+                  : null,
+                '#66ff44',
+              ],
+              ...(encounterRender.geometry?.hurt ?? []).map((shape) => [shape, '#ff4488']),
+            ]
+              .filter(([shape]) => shape)
+              .map(([shape, color], index) =>
+                Object.freeze({
+                  id: `qa-contact-${index}-${shape.part}`,
+                  points: shape.points,
+                  fill: color,
+                  stroke: color,
+                  lineWidth: 1,
+                  opacity: 0.3,
+                  renderOrder: activeRoom.renderOrder + 10,
+                  order: index,
+                }),
+              )
+          : []),
       ]
         .filter((item) => item.enabled !== false)
         .sort(
@@ -4244,6 +4310,18 @@ export class GameScene extends SceneNode {
       }),
       combatEvents,
       combatContact: encounterRender.contact,
+      combatGeometry: Object.freeze({
+        visibleWeapon: renderCombatGeometry.weapon,
+        visibleShield: renderCombatGeometry.shield,
+        authoritativeWeapon: contactGeometry?.weapon ?? null,
+        authoritativeShield: contactGeometry?.shield ?? null,
+        activeSweep: contactGeometry?.sweep ?? null,
+        enemyHurt: encounterRender.geometry?.hurt ?? Object.freeze([]),
+        attackInstance: combatState.sequence,
+        phase: combatState.phase,
+        targetId: encounterRender.enemy?.id ?? null,
+        consumedHitKey: this.roomSceneNode?.encounter?.lastHitMotionSequence ?? null,
+      }),
       player: Object.freeze({
         presentationProfileId: this.playerPresentationProfile.id,
         position: renderPosition,

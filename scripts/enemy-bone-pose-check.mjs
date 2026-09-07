@@ -7,7 +7,10 @@ import {
   sampleEnemyBonePose,
   sampleEnemyBonePoseFor,
 } from '../src/animation/EnemyBonePoseLibrary.js';
-import { projectSideViewSkeletonFrame } from '../src/animation/SkeletonPoseProjection.js';
+import {
+  defineSkeletonFrame,
+  projectSideViewSkeletonFrame,
+} from '../src/animation/SkeletonPoseProjection.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 
@@ -55,6 +58,14 @@ for (const family of ENEMY_BONE_FAMILIES) {
         pose.projectedJoints.nearShoulder.depth > pose.projectedJoints.farShoulder.depth,
         `${family} ${action}은 near/far depth 순서를 보존해야 합니다.`,
       );
+      for (const joint of Object.values(pose.skeletonFrame.joints)) {
+        assert.ok(Math.abs(Math.hypot(...Object.values(joint.quaternion)) - 1) < 1e-7);
+        assert.equal(
+          'rotation' in joint,
+          false,
+          'runtime skeleton must use canonical quaternion only',
+        );
+      }
       seenFrameIds.add(pose.frameId);
     }
   }
@@ -235,7 +246,19 @@ assert.ok(
 );
 for (const geometry of [idleGeometry, windupGeometry, attackGeometry]) {
   assert.equal(geometry.actor, 'enemy');
-  assert.equal(geometry.hurt.length, 2);
+  assert.deepEqual(
+    geometry.hurt.map(({ part }) => part),
+    [
+      'body',
+      'head',
+      'back-thigh',
+      'back-shin',
+      'front-thigh',
+      'front-shin',
+      'upper-weapon-arm',
+      'lower-weapon-arm',
+    ],
+  );
   assert.ok(geometry.weapon.points.length >= 4);
 }
 
@@ -245,7 +268,7 @@ const probeFrame = {
     EXPECTED_JOINTS.map((jointId) => [jointId, { x: 1, y: 2, z: 3, rotation: 0.1 }]),
   ),
 };
-const projected = projectSideViewSkeletonFrame(probeFrame);
+const projected = projectSideViewSkeletonFrame(defineSkeletonFrame(probeFrame));
 assert.ok(projected.projectedJoints.root && Number.isFinite(projected.bodyLean));
 
 console.log(

@@ -9,23 +9,45 @@ import { fullAccess, parseResult, run } from '../loop.mjs';
 // Fake-server tests must never send notifications using a developer's environment.
 delete process.env.PGL_NTFY_URL;
 
-const agent = { name: 'product-goal-loop-worker', mode: 'primary', permission: [{ permission: '*', pattern: '*', action: 'allow' }], tools: { bash: true, read: true, edit: true, write: true, task: true } };
+const agent = {
+  name: 'product-goal-loop-worker',
+  mode: 'primary',
+  permission: [{ permission: '*', pattern: '*', action: 'allow' }],
+  tools: { bash: true, read: true, edit: true, write: true, task: true },
+};
 test('Full access rejects later restrictions and disabled tools', () => {
   assert.equal(fullAccess(agent), true);
-  assert.equal(fullAccess({ ...agent, permission: [...agent.permission, { permission: 'bash', pattern: '*', action: 'ask' }] }), false);
+  assert.equal(
+    fullAccess({
+      ...agent,
+      permission: [...agent.permission, { permission: 'bash', pattern: '*', action: 'ask' }],
+    }),
+    false,
+  );
   assert.equal(fullAccess({ ...agent, tools: { ...agent.tools, task: false } }), false);
   assert.equal(fullAccess({ ...agent, mode: 'subagent' }), false);
 });
 test('only final structured self-report is accepted', () => {
-  assert.deepEqual(parseResult('done\nPGL_RESULT {"status":"goal_complete","summary":"Tested"}'), { status: 'goal_complete', summary: 'Tested' });
-  for (const text of ['IMPLEMENTATION_COMPLETE', 'PGL_RESULT {}', 'PGL_RESULT {"status":"blocked","summary":"x"}', 'PGL_RESULT {"status":"no_op","summary":"x"}\nextra']) assert.throws(() => parseResult(text));
+  assert.deepEqual(parseResult('done\nPGL_RESULT {"status":"goal_complete","summary":"Tested"}'), {
+    status: 'goal_complete',
+    summary: 'Tested',
+  });
+  for (const text of [
+    'IMPLEMENTATION_COMPLETE',
+    'PGL_RESULT {}',
+    'PGL_RESULT {"status":"blocked","summary":"x"}',
+    'PGL_RESULT {"status":"no_op","summary":"x"}\nextra',
+  ])
+    assert.throws(() => parseResult(text));
 });
 async function fixture(t, mode = 'success') {
   const root = await mkdtemp(path.join(os.tmpdir(), 'pgl 한글 '));
   t.after(() => rm(root, { recursive: true, force: true }));
   const ctx = { root, state: path.join(root, 'state'), lock: path.join(root, 'state/lock') };
   const script = path.join(root, 'fake.mjs');
-  await writeFile(script, `
+  await writeFile(
+    script,
+    `
 import http from 'node:http';
 import {writeFileSync} from 'node:fs';
 const agent=${JSON.stringify(agent)};
@@ -51,13 +73,14 @@ else {
  });
  server.listen(0,'127.0.0.1',()=>console.log('http://127.0.0.1:'+server.address().port));
 }
-`);
+`,
+  );
   return { ctx, bin: [process.execPath, script] };
 }
-test('one authenticated worker preserves durable result and releases owned guard', async t => {
+test('one authenticated worker preserves durable result and releases owned guard', async (t) => {
   const { ctx, bin } = await fixture(t);
   const first = run(ctx, bin);
-  while (!existsSync(ctx.lock)) await new Promise(r => setTimeout(r, 10));
+  while (!existsSync(ctx.lock)) await new Promise((r) => setTimeout(r, 10));
   const second = await run(ctx, bin);
   assert.ok(['running', 'recovery_required'].includes(second.status));
   const result = await first;
@@ -65,23 +88,26 @@ test('one authenticated worker preserves durable result and releases owned guard
   assert.equal(result.source, 'worker_self_report');
   assert.equal(result.sessionId, 'ses_test');
   assert.equal(existsSync(ctx.lock), false);
-  assert.equal(JSON.parse(await readFile(path.join(ctx.state, 'last.json'))).summary, 'Fake verified result');
+  assert.equal(
+    JSON.parse(await readFile(path.join(ctx.state, 'last.json'))).summary,
+    'Fake verified result',
+  );
 });
-test('session permission failure never sends worker prompt', async t => {
+test('session permission failure never sends worker prompt', async (t) => {
   const { ctx, bin } = await fixture(t, 'denied');
   const result = await run(ctx, bin);
   assert.equal(result.status, 'blocked');
   assert.equal(existsSync(path.join(ctx.root, 'prompt-sent')), false);
   assert.equal(existsSync(path.join(ctx.state, 'paused')), true);
 });
-test('server crash fails promptly and retains session id', async t => {
+test('server crash fails promptly and retains session id', async (t) => {
   const { ctx, bin } = await fixture(t, 'crash');
   const result = await run(ctx, bin);
   assert.equal(result.status, 'failed');
   assert.equal(result.sessionId, 'ses_test');
   assert.equal(existsSync(ctx.lock), false);
 });
-test('completion pauses and a stale unknown guard is never reclaimed', async t => {
+test('completion pauses and a stale unknown guard is never reclaimed', async (t) => {
   const { ctx, bin } = await fixture(t, 'complete');
   assert.equal((await run(ctx, bin)).status, 'implementation_complete');
   assert.equal((await run(ctx, bin)).status, 'paused');

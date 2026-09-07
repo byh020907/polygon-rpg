@@ -1,0 +1,172 @@
+// Camera depth stays separate from screen vertices. Larger depth faces the camera.
+function color(value) {
+  const hex = String(value ?? '#000000').replace('#', '');
+  if (/^[\da-f]{3}$/i.test(hex)) return [...hex].map((c) => parseInt(c + c, 16));
+  if (/^[\da-f]{6}$/i.test(hex)) return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  throw new TypeError(`Depth surface requires a hexadecimal color: ${value}`);
+}
+
+function blend(data, index, rgb, alpha) {
+  const start = index * 4;
+  const oldAlpha = data[start + 3] / 255;
+  const resultAlpha = alpha + oldAlpha * (1 - alpha);
+  for (let channel = 0; channel < 3; channel += 1) {
+    data[start + channel] =
+      (rgb[channel] * alpha + data[start + channel] * oldAlpha * (1 - alpha)) / resultAlpha;
+  }
+  data[start + 3] = resultAlpha * 255;
+}
+
+export function rasterizeDepthPolygons(
+  items,
+  { width, height, offsetX = 0, offsetY = 0, scale = 1, data = null, depthBuffer = null },
+) {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width < 1 ||
+    height < 1 ||
+    width * height > 4194304 ||
+    ![offsetX, offsetY, scale].every(Number.isFinite) ||
+    scale <= 0
+  ) {
+    throw new RangeError(
+      'Depth raster requires a finite bounded viewport (at most 4194304 pixels).',
+    );
+  }
+  data ??= new Uint8ClampedArray(width * height * 4);
+  depthBuffer ??= new Float64Array(width * height);
+  if (data.length !== width * height * 4 || depthBuffer.length !== width * height)
+    throw new RangeError('Depth raster buffers must match viewport.');
+  for (const item of items) {
+    const surface = item.surface ?? item;
+    if (
+      surface.points.length !== surface.depths?.length ||
+      !surface.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y)) ||
+      !surface.depths.every(Number.isFinite) ||
+      !Number.isFinite(item.opacity ?? 1) ||
+      !Number.isFinite(item.lineWidth ?? 1)
+    ) {
+      throw new TypeError(
+        'Depth surfaces require matching finite screen vertices and depth channels.',
+      );
+    }
+    if (
+      surface.triangles?.some(
+        (triangle) =>
+          triangle.length !== 3 ||
+          triangle.some(
+            (index) => !Number.isInteger(index) || index < 0 || index >= surface.points.length,
+          ),
+      )
+    )
+      throw new RangeError('Depth triangle index outside surface.');
+  }
+  data.fill(0);
+  depthBuffer.fill(-Infinity);
+  const surfaces = items
+    .filter((item) => (item.surface?.points ?? item.points).length >= 3)
+    .map((item, order) => ({
+      ...item,
+      ...(item.surface ?? {}),
+      order,
+      points: (item.surface?.points ?? item.points).map((p) => ({
+        x: (p.x - offsetX) * scale,
+        y: (p.y - offsetY) * scale,
+      })),
+      alpha: Math.max(0, Math.min(1, item.opacity ?? 1)),
+    }));
+  const opaque = surfaces.filter((item) => item.alpha === 1 && item.depthWrite !== false);
+  const transparent = surfaces.filter(
+    (item) => item.alpha > 0 && (item.alpha < 1 || item.depthWrite === false),
+  );
+  transparent.sort(
+    (a, b) =>
+      a.depths.reduce((sum, z) => sum + z, 0) / a.depths.length -
+        b.depths.reduce((sum, z) => sum + z, 0) / b.depths.length || a.order - b.order,
+  );
+  function paint(item, write, outline = false) {
+    let rgb = color(outline ? item.stroke : item.fill);
+    const coverage = new Map();
+    function sample(x, y, z) {
+      if (x < 0 || y < 0 || x >= width || y >= height) return;
+      const index = y * width + x;
+      if (z + 1e-7 < depthBuffer[index]) return;
+      if (z > (coverage.get(index)?.z ?? -Infinity)) coverage.set(index, { z, rgb });
+    }
+    if (outline) {
+      const radius = Math.max(0.25, ((item.lineWidth ?? 1) * scale) / 2);
+      const boundary = item.outlineIndices ?? item.points.map((_, index) => index);
+      for (let edge = 0; edge < boundary.length; edge += 1) {
+        const i = boundary[edge];
+        const j = boundary[(edge + 1) % boundary.length];
+        const a = item.points[i];
+        const b = item.points[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const length2 = dx * dx + dy * dy;
+        for (
+          let y = Math.max(0, Math.floor(Math.min(a.y, b.y) - radius));
+          y <= Math.min(height - 1, Math.ceil(Math.max(a.y, b.y) + radius));
+          y += 1
+        ) {
+          for (
+            let x = Math.max(0, Math.floor(Math.min(a.x, b.x) - radius));
+            x <= Math.min(width - 1, Math.ceil(Math.max(a.x, b.x) + radius));
+            x += 1
+          ) {
+            const t = length2
+              ? Math.max(0, Math.min(1, ((x + 0.5 - a.x) * dx + (y + 0.5 - a.y) * dy) / length2))
+              : 0;
+            if (Math.hypot(x + 0.5 - a.x - t * dx, y + 0.5 - a.y - t * dy) <= radius)
+              sample(x, y, item.depths[i] + (item.depths[j] - item.depths[i]) * t);
+          }
+        }
+      }
+    } else {
+      const triangles =
+        item.triangles ??
+        Array.from({ length: Math.max(0, item.points.length - 2) }, (_, i) => [0, i + 1, i + 2]);
+      const base = rgb;
+      for (const [triangleIndex, [ia, ib, ic]] of triangles.entries()) {
+        rgb = base.map((channel) =>
+          Math.max(0, Math.min(255, channel * (item.triangleShades?.[triangleIndex] ?? 1))),
+        );
+        const a = item.points[ia];
+        const b = item.points[ib];
+        const c = item.points[ic];
+        const denominator = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
+        if (!Number.isFinite(denominator) || Math.abs(denominator) < 1e-10) continue;
+        for (
+          let y = Math.max(0, Math.floor(Math.min(a.y, b.y, c.y)));
+          y <= Math.min(height - 1, Math.ceil(Math.max(a.y, b.y, c.y)));
+          y += 1
+        ) {
+          for (
+            let x = Math.max(0, Math.floor(Math.min(a.x, b.x, c.x)));
+            x <= Math.min(width - 1, Math.ceil(Math.max(a.x, b.x, c.x)));
+            x += 1
+          ) {
+            const u = ((b.y - c.y) * (x + 0.5 - c.x) + (c.x - b.x) * (y + 0.5 - c.y)) / denominator;
+            const v = ((c.y - a.y) * (x + 0.5 - c.x) + (a.x - c.x) * (y + 0.5 - c.y)) / denominator;
+            const w = 1 - u - v;
+            if (u >= -1e-9 && v >= -1e-9 && w >= -1e-9)
+              sample(x, y, u * item.depths[ia] + v * item.depths[ib] + w * item.depths[ic]);
+          }
+        }
+      }
+    }
+    for (const [index, sample] of coverage) {
+      blend(data, index, sample.rgb, item.alpha);
+      if (write) depthBuffer[index] = sample.z;
+    }
+  }
+  for (const item of opaque) paint(item, true);
+  // Outlines are checked against the complete opaque surface buffer, including later limbs.
+  for (const item of opaque) if (item.stroke) paint(item, false, true);
+  for (const item of transparent) {
+    paint(item, false);
+    if (item.stroke) paint(item, false, true);
+  }
+  return { width, height, data, depthBuffer };
+}

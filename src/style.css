@@ -630,7 +630,7 @@ dd {
   z-index: 2;
   top: clamp(12px, 1.7vw, 20px);
   left: 50%;
-  display: grid;
+  display: none;
   gap: 2px;
   color: #c9cbbf;
   text-align: center;

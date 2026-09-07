@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict';
 
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
+import {
+  sampleEnemyBonePose,
+  ENEMY_BONE_ACTIONS,
+  ENEMY_BONE_FAMILIES,
+} from '../src/animation/EnemyBonePoseLibrary.js';
 import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibrary.js';
 import { samplePlayerMotionPose } from '../src/animation/PlayerMotionPose.js';
 import { retargetMotionKeyframes } from '../src/animation/MotionClipRetargeter.js';
 import { MOTION_REFERENCE_CATALOG } from '../src/animation/MotionReferenceCatalog.js';
 import { ROLL_TIMELINE_MARKERS, rollTimelineMarkerAt } from '../src/animation/RollTimeline.js';
 import {
+  defineSkeletonFrame,
   interpolateSideViewSkeletonFrames,
   projectSideViewSkeletonFrame,
   SIDE_VIEW_SKELETON_JOINTS,
@@ -15,14 +21,15 @@ import {
   CombatCommandController,
   combatMotionFrameData,
 } from '../src/combat/CombatCommandController.js';
-import { samplePlayerCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
+import {
+  samplePlayerCombatGeometry,
+  PLAYER_CHARACTER_FOOT_OFFSET,
+} from '../src/combat/SharedCombatGeometry.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 import { CHARACTER_RENDER_SCALE } from '../src/game/PlayerCombatPresentation.js';
 import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
-import {
-  ENCOUNTER_PROFILES,
-  resolveEncounterBodyCollider,
-} from '../src/game/encounter/EncounterProfiles.js';
+import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
+import { resolveEncounterBodyCollider } from '../src/game/encounter/EncounterBodyCollider.js';
 import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
@@ -80,13 +87,55 @@ function rollPose(progress) {
 }
 
 const rollStrip = [0, 0.16, 0.4, 0.66, 0.86, 1].map(rollPose);
-assert.equal(new Set(rollStrip.map((pose) => pose.bodyLean)).size, rollStrip.length);
+assert.equal(
+  new Set(rollStrip.slice(1, -1).map((pose) => pose.bodyLean)).size,
+  rollStrip.length - 2,
+  'interior roll poses must articulate distinct orientations; complete-turn endpoints may coincide',
+);
 assert.notEqual(rollStrip[1].rearFootTarget.y, rollStrip[3].rearFootTarget.y);
 assert.notEqual(rollStrip[1].headTilt, rollStrip[3].headTilt);
-const strongestRollTurn = Math.max(...rollStrip.map((pose) => Math.abs(pose.bodyLean)));
+const windingStrip = Array.from({ length: 101 }, (_, index) => rollPose(index / 100));
 assert.ok(
-  strongestRollTurn >= 1.15 && strongestRollTurn < Math.PI,
-  'roll pose must carry a readable forward torso turn without becoming a full-group 360-degree spin',
+  windingStrip.every((pose) => pose.skeletonFrame.joints.pelvis.winding?.id === 'forward-roll'),
+);
+assert.ok(
+  windingStrip.every(
+    (pose, index) =>
+      index === 0 ||
+      pose.skeletonFrame.joints.pelvis.winding.angle >=
+        windingStrip[index - 1].skeletonFrame.joints.pelvis.winding.angle,
+  ),
+);
+assert.ok(
+  Math.abs(
+    windingStrip.at(-1).skeletonFrame.joints.pelvis.winding.angle -
+      windingStrip[0].skeletonFrame.joints.pelvis.winding.angle -
+      Math.PI * 2,
+  ) < 1e-7,
+  'forward roll must preserve a complete authored pelvis winding through the local hierarchy',
+);
+const startFrame = windingStrip[0].skeletonFrame;
+const endFrame = windingStrip.at(-1).skeletonFrame;
+const windingMidpoint = interpolateSideViewSkeletonFrames(startFrame, endFrame, 0.5);
+assert.ok(
+  Math.abs(windingMidpoint.joints.pelvis.winding.angle - Math.PI) < 1e-7 &&
+    Math.abs(Math.abs(windingMidpoint.joints.pelvis.quaternion.z) - 1) < 1e-7,
+  'interpolating projected skeletonFrame endpoints must retain a full-turn midpoint',
+);
+const ordinaryFrame = (frame) => ({
+  ...frame,
+  joints: Object.fromEntries(
+    Object.entries(frame.joints).map(([id, joint]) => [id, { ...joint, winding: null }]),
+  ),
+});
+assert.ok(
+  Math.abs(
+    Math.abs(
+      interpolateSideViewSkeletonFrames(ordinaryFrame(startFrame), ordinaryFrame(endFrame), 0.5)
+        .joints.pelvis.quaternion.w,
+    ) - 1,
+  ) < 1e-7,
+  'ordinary clips must retain shortest-arc interpolation',
 );
 assert.deepEqual(
   ROLL_TIMELINE_MARKERS.map(({ id }) => id),
@@ -129,7 +178,10 @@ const retargetedFixture = retargetMotionKeyframes({
     },
   ],
 });
-assert.equal(retargetedFixture[0].joints.chest.rotation, 0.2);
+assert.ok(
+  Math.abs(retargetedFixture[0].joints.chest.quaternion.z - Math.sin(0.1)) < 1e-7,
+  'retargeting must convert authored rotation to canonical local quaternion',
+);
 const authoredMidRoll = rollPose(0.36);
 assert.deepEqual(
   Object.keys(authoredMidRoll.projectedJoints).sort(),
@@ -160,27 +212,35 @@ assert.ok(
   'orthographic projection must preserve authored near/far depth order',
 );
 assert.ok(
-  authoredMidRoll.worldJoints.nearHand.rotation3d &&
-    Number.isFinite(authoredMidRoll.worldJoints.nearHand.rotation3d.y),
+  authoredMidRoll.worldJoints.nearHand.quaternion &&
+    Math.abs(Math.hypot(...Object.values(authoredMidRoll.worldJoints.nearHand.quaternion)) - 1) <
+      1e-7,
   'authored combat joints must retain a real local 3D rotation, not only a screen-plane angle',
 );
-const threeAxisParentProbe = projectSideViewSkeletonFrame({
-  joints: Object.fromEntries(
-    SIDE_VIEW_SKELETON_JOINTS.map((jointId) => [
-      jointId,
-      {
-        x: jointId === 'chest' ? 0 : 0,
-        y: jointId === 'pelvis' ? 10 : jointId === 'chest' ? -10 : 0,
-        z: jointId === 'chest' ? 10 : 0,
-        rotation: jointId === 'pelvis' ? { x: 0, y: Math.PI / 2, z: 0 } : { x: 0, y: 0, z: 0 },
-      },
-    ]),
-  ),
-});
+const threeAxisParentProbe = projectSideViewSkeletonFrame(
+  defineSkeletonFrame({
+    joints: Object.fromEntries(
+      SIDE_VIEW_SKELETON_JOINTS.map((jointId) => [
+        jointId,
+        {
+          x: jointId === 'chest' ? 0 : 0,
+          y: jointId === 'pelvis' ? 10 : jointId === 'chest' ? -10 : 0,
+          z: jointId === 'chest' ? 10 : 0,
+          rotation: jointId === 'pelvis' ? { x: 0, y: Math.PI / 2, z: 0 } : { x: 0, y: 0, z: 0 },
+        },
+      ]),
+    ),
+  }),
+);
 assert.ok(
   threeAxisParentProbe.worldJoints.chest.x > 9 &&
     Math.abs(threeAxisParentProbe.worldJoints.chest.z) < 0.001,
   'a parent yaw must rotate a child local z offset into its world x position before side-view projection',
+);
+assert.ok(
+  Math.abs(threeAxisParentProbe.projectedJoints.pelvis.axisX.depth + 1) < 1e-7 &&
+    Math.abs(threeAxisParentProbe.projectedJoints.pelvis.axisZ.x - 1) < 1e-7,
+  'projected local axes must retain the parent yaw depth and screen directions',
 );
 const interpolationStart = rollPose(0.14);
 const interpolationEnd = rollPose(0.36);
@@ -202,64 +262,115 @@ assert.ok(
     Number.isFinite(localInterpolatedRoll.worldJoints.nearHand.matrix[0][0]),
   'interpolated pose samples must retain composed world joints for renderer and geometry consumers',
 );
-// Classic head-first forward roll: the head drives forward at entry, tucks to its
-// lowest and most forward point at ground contact with the hands planted near the
-// feet, then uncurls forward toward travel without a backward back-arch.
 const rollEntry = rollPose(0);
-const rollDive = rollPose(0.14);
-const rollContact = rollPose(0.36);
-const rollUnfold = rollPose(0.62);
+const rollDive = rollPose(0.25);
+const rollInverted = rollPose(0.5);
 assert.ok(
-  rollEntry.projectedJoints.head.x > 10,
-  'roll entry must drive the head forward, not start upright or backward',
+  rollDive.projectedJoints.head.y > rollEntry.projectedJoints.head.y + 30,
+  'head must descend into the forward tumble',
 );
 assert.ok(
-  rollDive.projectedJoints.nearHand.y > rollEntry.projectedJoints.nearHand.y,
-  'roll dive must reach the weapon hand down toward the ground ahead',
+  rollInverted.projectedJoints.pelvis.y < rollInverted.projectedJoints.nearShoulder.y,
+  'pelvis must pass over shoulders during inversion',
 );
-assert.ok(
-  rollContact.projectedJoints.head.y > rollDive.projectedJoints.head.y &&
-    rollContact.projectedJoints.head.x > rollDive.projectedJoints.head.x,
-  'roll contact must tuck the head to its lowest and most forward ground point',
-);
-assert.ok(
-  Math.abs(rollContact.projectedJoints.head.y - rollContact.projectedJoints.nearFoot.y) < 20,
-  'roll contact head must arrive near ground level with the tucked feet',
-);
-assert.ok(
-  Math.abs(rollContact.projectedJoints.nearHand.y - rollContact.projectedJoints.nearFoot.y) < 12,
-  'roll contact hands must plant near the ground with the tucked feet',
-);
-assert.ok(
-  rollUnfold.projectedJoints.head.x > rollEntry.projectedJoints.head.x,
-  'roll unfold must exit forward, never snap the head backward',
-);
-
-for (const progress of [0, 0.5, 0.999_999, 1]) {
+for (const side of ['near', 'far']) {
+  assert.ok(
+    rollInverted.projectedJoints[side + 'Foot'].y < rollInverted.projectedJoints.pelvis.y,
+    'both feet must travel airborne above the inverted pelvis',
+  );
+  assert.ok(
+    Math.abs(
+      rollPose(1).projectedJoints[side + 'Foot'].y - rollEntry.projectedJoints[side + 'Foot'].y,
+    ) < 1e-7,
+    'roll must recover its grounded foot placement',
+  );
+}
+for (let index = 0; index <= 100; index += 1) {
+  const progress = index / 100;
   const rollMotionPose = samplePlayerMotionPose({
     motionState: Object.freeze({ id: 'idle', progress: 0 }),
     boneInput: Object.freeze({ rollProgress: progress }),
   });
   assert.equal(
     rollMotionPose.targetPose.weaponLengthScale,
-    0.3,
-    `roll pose ${progress} must keep the blade tucked rather than rendering an idle-length weapon`,
+    1,
+    'roll must articulate equipment in 3D rather than shrink the blade',
   );
-  const rollGeometry = samplePlayerCombatGeometry({
-    position: Object.freeze({ x: 300, y: 352 }),
-    facing: 1,
-    targetPose: rollMotionPose.targetPose,
-    bonePose: rollMotionPose.bonePose,
-    geometryScale: CHARACTER_RENDER_SCALE,
-  });
-  const rollBladeSpan = Math.hypot(
-    rollGeometry.weapon.points[2].x - rollGeometry.weapon.points[0].x,
-    rollGeometry.weapon.points[2].y - rollGeometry.weapon.points[0].y,
-  );
-  assert.ok(
-    rollBladeSpan < 40,
-    `rolled Player blade must remain inside the compact roll silhouette at ${progress}`,
-  );
+  for (const facing of [-1, 1]) {
+    const position = { x: 300, y: 352 };
+    const rollGeometry = samplePlayerCombatGeometry({
+      position,
+      facing,
+      targetPose: rollMotionPose.targetPose,
+      bonePose: rollMotionPose.bonePose,
+      geometryScale: CHARACTER_RENDER_SCALE,
+    });
+    const basis = rollMotionPose.targetPose.weaponBasis;
+    assert.ok(basis && Number.isFinite(basis.xx) && Number.isFinite(basis.yx));
+    const hand = rollMotionPose.bonePose.projectedJoints.nearHand;
+    const root = rollGeometry.weapon.points[0];
+    const expectedRoot = {
+      x: position.x + facing * (hand.x + basis.xx * 5 - basis.xy * 3) * CHARACTER_RENDER_SCALE,
+      y:
+        position.y +
+        PLAYER_CHARACTER_FOOT_OFFSET +
+        (hand.y + basis.yx * 5 - basis.yy * 3 - PLAYER_CHARACTER_FOOT_OFFSET) *
+          CHARACTER_RENDER_SCALE,
+    };
+    assert.ok(
+      Math.hypot(root.x - expectedRoot.x, root.y - expectedRoot.y) < 1e-7,
+      'weapon root must stay on its projected hand basis at ' + progress + ', facing ' + facing,
+    );
+    assert.ok(
+      [...rollGeometry.hurt, rollGeometry.weapon, rollGeometry.shield]
+        .flatMap(({ points }) => points)
+        .every(({ y }) => y <= position.y + PLAYER_CHARACTER_FOOT_OFFSET + 4),
+      'body and equipment must not penetrate the floor beyond 4px at ' +
+        progress +
+        ', facing ' +
+        facing,
+    );
+  }
+}
+
+function assertFixedLengths(pose, baseline, label) {
+  for (const jointId of SIDE_VIEW_SKELETON_JOINTS.filter((id) => id !== 'root')) {
+    const joint = pose.skeletonFrame.joints[jointId];
+    const base = baseline.skeletonFrame.joints[jointId];
+    assert.ok(
+      Math.abs(Math.hypot(joint.x, joint.y, joint.z) - Math.hypot(base.x, base.y, base.z)) < 1e-7,
+      label + ' must preserve fixed bone length: ' + jointId,
+    );
+    assert.ok(Math.abs(Math.hypot(...Object.values(joint.quaternion)) - 1) < 1e-7);
+  }
+}
+const neutralBones = sampleCharacterBonePose({});
+for (const pose of windingStrip) assertFixedLengths(pose, neutralBones, 'roll');
+for (const family of ENEMY_BONE_FAMILIES) {
+  const baseline = sampleEnemyBonePose({ family });
+  for (const action of ENEMY_BONE_ACTIONS) {
+    for (let index = 0; index <= 20; index += 1) {
+      assertFixedLengths(
+        sampleEnemyBonePose({ family, action, progress: index / 20 }),
+        baseline,
+        family + ' ' + action,
+      );
+    }
+  }
+}
+
+for (let index = 0; index <= 20; index += 1) {
+  const progress = index / 20;
+  for (const input of [
+    { animationTime: progress },
+    { animationTime: progress, movementIntent: 1 },
+    { isGrounded: false, verticalVelocity: -470 * progress },
+    { isGrounded: false, verticalVelocity: 470 * progress },
+    { landingRecovery: progress },
+    { hitstunProgress: progress },
+    { motionState: { id: 'guard', progress } },
+  ])
+    assertFixedLengths(sampleCharacterBonePose(input), neutralBones, 'utility interpolation');
 }
 
 const authoredUtilityClips = [
@@ -271,6 +382,7 @@ const authoredUtilityClips = [
   sampleCharacterBonePose({ motionState: Object.freeze({ id: 'guard', progress: 0 }) }),
   sampleCharacterBonePose({ hitstunProgress: 0.65 }),
 ];
+for (const pose of authoredUtilityClips) assertFixedLengths(pose, neutralBones, 'utility');
 assert.ok(
   authoredUtilityClips.every(
     (pose) => pose.frameId && pose.projectedJoints?.chest && pose.projectedJoints?.nearFoot,
@@ -298,6 +410,13 @@ for (const [motionId, contactFrameId] of Object.entries({
 })) {
   for (const timingProfile of [{}, ...EQUIPMENT_PROFILES.map(({ combatTiming }) => combatTiming)]) {
     const frame = combatMotionFrameData(motionId, timingProfile);
+    for (let index = 0; index <= 20; index += 1) {
+      assertFixedLengths(
+        sampleCharacterBonePose({ motionState: { id: motionId, progress: index / 20, frame } }),
+        neutralBones,
+        motionId,
+      );
+    }
     const activeProgress = frame.startupFrames / frame.durationFrames;
     const lastActiveProgress =
       (frame.startupFrames + frame.activeFrames - 1) / frame.durationFrames;
@@ -402,7 +521,18 @@ withScene((scene) => {
 withScene((scene) => {
   const enemy = scene.roomSceneNode.encounter.enemy;
   const startX = scene.position.x;
+  const startingStamina = scene.combatCommands.snapshot().stamina;
   scene.update(STEP, { ...EMPTY_INPUT, right: true, guard: true });
+  assert.equal(
+    scene.rollState.durationSeconds,
+    25 / 60,
+    'authored replacement must preserve 25-frame dodge duration',
+  );
+  assert.equal(
+    startingStamina - scene.combatCommands.snapshot().stamina,
+    18,
+    'authored replacement must preserve the 18-stamina dodge cost',
+  );
   for (let tick = 0; tick < 55; tick += 1) scene.update(STEP, { ...EMPTY_INPUT, right: true });
   assert.equal(scene.rollState, null, 'roll must complete');
   assert.ok(scene.position.x > enemy.position.x + 48, 'active roll must cross a normal enemy');
@@ -548,8 +678,11 @@ console.log(
     probe: 'combat-motion-continuity',
     assertions: [
       'authored-roll-pose-strip',
-      'head-first-roll-entry-contact-unfold',
+      'full-forward-winding-and-default-shortest-arc',
+      'head-first-entry-inverted-pelvis-and-airborne-feet',
+      'dense-both-facing-equipment-attachment-and-floor-clearance',
       '3d-skeleton-side-projection',
+      'canonical-quaternion-and-fixed-player-enemy-bone-lengths',
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',
       'authored-basic-strong-launcher-and-counter-pose-strips',

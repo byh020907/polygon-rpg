@@ -105,12 +105,18 @@ Keyboard / Touch / DOM intent
 
 - Combat authored timing은 60Hz integer frame이며 120Hz simulation이 각 frame을 두 tick 동안 sample한다.
 - Command owner는 stamina, startup/active/recovery, damaging-hit-confirm cancel, just guard, Basic-only shield counter, Strong guard break/interrupt와 shield/Boss posture를 단일 transition으로 기록한다.
-- 구르기 pose strip은 머리-선행 진입→접지 tuck→진행 방향 unfold의 authored local-3D frame이며 RollTimeline marker의 evade 구간에 그대로 mapping하고 회피 판정·이동 거리를 바꾸지 않는다.
+- 구르기 pose strip은 머리·어깨 선행 진입→골반과 두 발의 공중 뒤집힘→전방 한 바퀴→발 접지→달리기의 authored local-3D frame이다. 골반 계층의 명시적 누적 회전은 clip 내부 보간에서 winding을 보존하고 다른 clip의 shortest-arc 보간과 구분한다. RollTimeline의 회피 시간·이동 거리·stamina·충돌 계약은 그대로 유지한다.
+- 머리·의상·가방·검·방패는 투영된 해당 관절의 위치와 방향에 부착한다. roll 전용 검 축소, 고정 화면 각도, 이미 합성된 머리 방향에 몸통 회전을 재합산하는 보정과 완성 그림 전체 회전을 금지한다. Render/contact는 동일한 attachment transform을 사용한다.
+- 공격 접촉은 같은 공격 인스턴스·facing·active sample의 swept geometry와 현재 적의 신체 geometry가 결정한다. 오래된 중심 거리·높이 상수로 실제 polygon 접촉을 사전 거부하지 않으며 공격 변경·취소·복구·방향 변경은 sweep history를 초기화한다.
+- 공격별 world-space 도달 범위는 하나의 authored spatial profile이 먼저 정의하고 장비는 그 범위의 명시적 modifier만 제공한다. 애니메이션은 해당 범위에 맞게 무기와 관절 사슬을 사이징하며 공격 도중 길이를 매 frame 늘렸다 줄이지 않는다. 같은 크기로 구성된 pose·무기·방패·sweep가 renderer와 피해 승인의 공통 geometry다. 별도 hitbox 거리나 독립 무기 길이 배율로 같은 공격 범위를 이중 관리하지 않는다.
 - 지상·점프 중 공격을 포함한 Player 전 모션과 몹 계열 8-action은 같은 authored local-3D strip과 side-view projection contract를 사용하며 낡은 2D 전용 클립을 남기지 않는다.
 - Weapon hit는 shared swept blade↔hurt geometry 접촉으로 승인하고 renderer/effect는 hit authority가 아니다.
 - Giant final-battle profile은 scale·pose·arena presentation을 바꾸되 같은 command owner, contact/result와 stamina rules를 사용한다.
 - Character Presentation Profile은 role silhouette, front/side proportions, equipment/tool landmarks, representative pose와 minimum viewport readability를 immutable data로 정의한다. Encounter profile은 인간 수거반과 기계 적을 같은 combat DTO로 투영하되 renderer가 family별 presentation만 읽는다.
 - 주요 humanoid clip은 root·pelvis·chest·neck/head·near/far limb의 local 3D skeleton frame을 immutable data로 소유하고, fixed side-view orthographic projection이 Canvas cutout의 2D joint/depth order를 만든다. z는 presentation depth만이며 2D map/collider/hit authority를 바꾸지 않는다. raw 외부 motion은 runtime에 넣지 않고 license·URL·mapping을 기록한 development-time retarget/import로 local key frame만 남긴다.
+- 3D 단계는 본 계층·local translation·정규화 Quaternion만 소유한다. SLERP와 계층형 FK가 부모 방향을 상속하고 본 길이를 유지한다. 정투영은 위치와 local axis를 screen XY 및 camera depth로 나누며, 3D mesh·skinning·texture renderer를 만들지 않는다.
+- 캐릭터 surface는 투영 이후 본 선분의 가변 폭 profile을 길이·폭 방향으로 나누어 생성한다. 원형 limb·타원 torso·얇은 cloth/blade의 단면 profile이 방향에 따른 폭·두께를 정의한다. 2D vertex와 surface depth channel은 분리하며 같은 triangle 안에서 보간한 깊이로 pixel Z를 판정한다. 기본색·cell shading·외곽선은 가림을 공유하고 반투명 검 궤적은 불투명 depth를 검사하되 depth를 쓰지 않는다.
+- 게임·미리보기·timeline·투명 PNG·frame sheet는 같은 pose sampler와 renderer를 호출한다. 검 공격은 준비→빠른 연속 베기→감속→복귀, 골반·가슴·팔·손목 시차, 팔꿈치 굽힘 제약과 고정된 파지 방향을 유지하며 별도의 QA용 그림을 만들지 않는다.
 - Character/Enemy 구현 전에는 protagonist, core NPC job family, collector unit, industrial creature와 regional boss의 front/side/pose board를 실제 gameplay scale로 비교한다.
 - Render items는 rivet, plate, cable, work cloth와 repair-mark 공통 language 및 region-specific color/material tag를 읽는다. 기존 academy/fantasy presentation을 fallback으로 사용하지 않는다.
 
@@ -174,6 +180,7 @@ Keyboard / Touch / DOM intent
 
 ## Performance, Security and Compatibility
 
+- Human의 릴리즈 선언 전 제품 버전은 0.x.y이며 개발용 save·내부 API·옛 형식의 하위 호환 유지 의무는 없다. 현재 기획을 막는 호환 계층은 제거할 수 있으며 호환되지 않는 저장은 정상 복구로 위장하지 않고 초기화 사실을 알린다.
 - Fixed runner는 catch-up 상한과 dropped-step diagnostics로 runaway simulation을 막는다.
 - Canvas backing size는 CSS size와 DPR을 고려하되 logical viewport/gameplay scale을 변경하지 않는다.
 - Static server는 repository root 탈출, backslash traversal과 허용되지 않은 method/path를 거부하고 올바른 MIME과 `nosniff`를 제공한다.

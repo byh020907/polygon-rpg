@@ -1,8 +1,6 @@
+import { createEnemySurfaceItems } from '../../animation/CharacterSurfaceItems.js';
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
-import {
-  sampleTrainingEnemyCombatGeometry,
-  sampleTrainingEnemyWeaponLength,
-} from '../../combat/SharedCombatGeometry.js';
+import { sampleTrainingEnemyCombatGeometry } from '../../combat/SharedCombatGeometry.js';
 
 export const TRAINING_ENEMY_PRESENTATION_SCALE = 0.48;
 
@@ -75,11 +73,6 @@ function assertCharacterPresentationProfile(profile) {
 
 function lerp(start, end, amount) {
   return start + (end - start) * amount;
-}
-
-function smoothStep(amount) {
-  const clamped = Math.max(0, Math.min(1, amount));
-  return clamped * clamped * (3 - 2 * clamped);
 }
 
 function transformPoints(points, { x, y, rotation = 0, scaleX = 1, scaleY = 1 }) {
@@ -1351,58 +1344,64 @@ export function createTrainingEnemyItems(
     }),
   );
 
-  return items.map((item, index) => {
-    const isSampledSkeletonLimb =
-      /^combat-enemy-(?:back|front)-(?:thigh|shin)$/.test(item.id) ||
-      /^combat-enemy-(?:upper|lower)-weapon-arm$/.test(item.id);
-    const geometryPoints =
-      item.id === 'combat-enemy-weapon'
-        ? resolvedCombatGeometry.weapon.points
-        : item.id === 'combat-enemy-body'
-          ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'body')?.points
-          : item.id === 'combat-enemy-head'
-            ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'head')
+  return createEnemySurfaceItems(
+    items.map((item, index) => {
+      const isSampledSkeletonLimb =
+        /^combat-enemy-(?:back|front)-(?:thigh|shin)$/.test(item.id) ||
+        /^combat-enemy-(?:upper|lower)-weapon-arm$/.test(item.id);
+      const geometryPoints =
+        item.id === 'combat-enemy-weapon'
+          ? resolvedCombatGeometry.weapon.points
+          : item.id === 'combat-enemy-body'
+            ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'body')
                 ?.points
-            : isSampledSkeletonLimb
-              ? item.points
-              : null;
-    return Object.freeze({
-      ...item,
-      opacity: (item.opacity ?? 1) * opacity,
-      lineWidth: (item.lineWidth ?? 1) * presentationScale,
-      points: geometryPoints
-        ? Object.freeze(geometryPoints)
-        : Object.freeze(
-            item.points.map((point) => {
-              const rotatesWithBody =
-                item.id !== 'combat-enemy-shadow' &&
-                !item.id.startsWith('combat-enemy-health') &&
-                !item.id.startsWith('combat-enemy-posture');
-              const centerY = y - 50;
-              const relativeX = point.x - x;
-              const relativeY = point.y - centerY;
-              const rotatedX = rotatesWithBody
-                ? x + relativeX * Math.cos(poseRotation) - relativeY * Math.sin(poseRotation)
-                : point.x;
-              const rotatedY = rotatesWithBody
-                ? centerY + relativeX * Math.sin(poseRotation) + relativeY * Math.cos(poseRotation)
-                : point.y;
-              const facedX = renderFacing < 0 ? x * 2 - rotatedX : rotatedX;
-              const embeddedOffset =
-                enemy.groundBounceDelaySeconds > 0 &&
-                item.id !== 'combat-enemy-shadow' &&
-                !item.id.startsWith('combat-enemy-health') &&
-                !item.id.startsWith('combat-enemy-posture')
-                  ? 8
-                  : 0;
-              return Object.freeze({
-                x: x + (facedX - x) * presentationScale,
-                y: y + (rotatedY - y) * presentationScale + embeddedOffset,
-              });
-            }),
-          ),
-      renderOrder,
-      order: item.order ?? index,
-    });
-  });
+            : item.id === 'combat-enemy-head'
+              ? resolvedCombatGeometry.hurt.find((polygonValue) => polygonValue.part === 'head')
+                  ?.points
+              : isSampledSkeletonLimb
+                ? item.points
+                : null;
+      return Object.freeze({
+        ...item,
+        opacity: (item.opacity ?? 1) * opacity,
+        lineWidth: (item.lineWidth ?? 1) * presentationScale,
+        points: geometryPoints
+          ? Object.freeze(geometryPoints)
+          : Object.freeze(
+              item.points.map((point) => {
+                const rotatesWithBody =
+                  item.id !== 'combat-enemy-shadow' &&
+                  !item.id.startsWith('combat-enemy-health') &&
+                  !item.id.startsWith('combat-enemy-posture');
+                const centerY = y - 50;
+                const relativeX = point.x - x;
+                const relativeY = point.y - centerY;
+                const rotatedX = rotatesWithBody
+                  ? x + relativeX * Math.cos(poseRotation) - relativeY * Math.sin(poseRotation)
+                  : point.x;
+                const rotatedY = rotatesWithBody
+                  ? centerY +
+                    relativeX * Math.sin(poseRotation) +
+                    relativeY * Math.cos(poseRotation)
+                  : point.y;
+                const facedX = renderFacing < 0 ? x * 2 - rotatedX : rotatedX;
+                const embeddedOffset =
+                  enemy.groundBounceDelaySeconds > 0 &&
+                  item.id !== 'combat-enemy-shadow' &&
+                  !item.id.startsWith('combat-enemy-health') &&
+                  !item.id.startsWith('combat-enemy-posture')
+                    ? 8
+                    : 0;
+                return Object.freeze({
+                  x: x + (facedX - x) * presentationScale,
+                  y: y + (rotatedY - y) * presentationScale + embeddedOffset,
+                });
+              }),
+            ),
+        renderOrder,
+        order: item.order ?? index,
+      });
+    }),
+    resolvedCombatGeometry,
+  );
 }

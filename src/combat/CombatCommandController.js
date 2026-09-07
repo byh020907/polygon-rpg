@@ -1,4 +1,5 @@
 import { combatFramesToSeconds, defineCombatFrame, sampleCombatFrame } from './CombatFrame.js';
+import { COMBAT_MOTION_TIMING_PROFILES } from './CombatMotionTimingProfiles.js';
 
 const COMMAND_INPUTS = Object.freeze([
   Object.freeze({ input: 'strongAttack', motion: 'heavy' }),
@@ -80,13 +81,13 @@ function motionPolicy(
   label,
   durationFrames,
   movementScale,
-  { canJump = false, chainStartFrame } = {},
+  { canJump = false, chainStartFrame, timing } = {},
 ) {
   if (durationFrames === 0) {
     return Object.freeze({ label, durationFrames, durationSeconds: 0, movementScale, canJump });
   }
-  const startupFrames = Math.max(1, Math.round(durationFrames * 0.35));
-  const activeFrames = Math.max(1, Math.round(durationFrames * 0.33));
+  if (!timing) throw new TypeError('Attack motion requires authored integer timing.');
+  const { startupFrames, activeFrames } = timing;
   const frame = defineCombatFrame({
     durationFrames,
     startupFrames,
@@ -105,17 +106,38 @@ function motionPolicy(
 
 const BASE_COMBAT_MOTION_POLICIES = Object.freeze({
   idle: motionPolicy('대기', 0, 1, { canJump: true }),
-  slash: motionPolicy('기본 베기', 31, 0.28),
-  thrust: motionPolicy('찌르기', 25, 0.18),
-  heavy: motionPolicy('강한 내려베기', 46, 0.08),
-  rising: motionPolicy('올려베기', 36, 0.16),
-  spin: motionPolicy('회전 공격', 49, 0.45, { chainStartFrame: 38 }),
-  airSlash: motionPolicy('공중 베기', 25, 1, { chainStartFrame: 16 }),
-  airHeavy: motionPolicy('공중 내려베기', 30, 0.82, { chainStartFrame: 17 }),
-  airReturn: motionPolicy('공중 되베기', 24, 1, { chainStartFrame: 15 }),
-  airSpin: motionPolicy('공중 회전', 41, 1, { chainStartFrame: 29 }),
-  airCross: motionPolicy('공중 교차 베기', 30, 1, { chainStartFrame: 22 }),
-  shieldBash: motionPolicy('저스트 가드 방패 반격', 26, 0, { chainStartFrame: 22 }),
+  slash: motionPolicy('기본 베기', 31, 0.28, { timing: COMBAT_MOTION_TIMING_PROFILES.slash }),
+  thrust: motionPolicy('찌르기', 25, 0.18, { timing: COMBAT_MOTION_TIMING_PROFILES.thrust }),
+  heavy: motionPolicy('강한 내려베기', 46, 0.08, { timing: COMBAT_MOTION_TIMING_PROFILES.heavy }),
+  rising: motionPolicy('올려베기', 36, 0.16, { timing: COMBAT_MOTION_TIMING_PROFILES.rising }),
+  spin: motionPolicy('회전 공격', 49, 0.45, {
+    chainStartFrame: 38,
+    timing: COMBAT_MOTION_TIMING_PROFILES.spin,
+  }),
+  airSlash: motionPolicy('공중 베기', 25, 1, {
+    chainStartFrame: 16,
+    timing: COMBAT_MOTION_TIMING_PROFILES.airSlash,
+  }),
+  airHeavy: motionPolicy('공중 내려베기', 30, 0.82, {
+    chainStartFrame: 17,
+    timing: COMBAT_MOTION_TIMING_PROFILES.airHeavy,
+  }),
+  airReturn: motionPolicy('공중 되베기', 24, 1, {
+    chainStartFrame: 15,
+    timing: COMBAT_MOTION_TIMING_PROFILES.airReturn,
+  }),
+  airSpin: motionPolicy('공중 회전', 41, 1, {
+    chainStartFrame: 29,
+    timing: COMBAT_MOTION_TIMING_PROFILES.airSpin,
+  }),
+  airCross: motionPolicy('공중 교차 베기', 30, 1, {
+    chainStartFrame: 22,
+    timing: COMBAT_MOTION_TIMING_PROFILES.airCross,
+  }),
+  shieldBash: motionPolicy('저스트 가드 방패 반격', 26, 0, {
+    chainStartFrame: 22,
+    timing: COMBAT_MOTION_TIMING_PROFILES.shieldBash,
+  }),
   guard: motionPolicy('방어', 0, 0.22),
 });
 

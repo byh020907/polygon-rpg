@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
+import {
+  createProjectedBoneSurface,
+  surfaceOutline,
+} from '../src/animation/ProjectedBodySurface.js';
 import { sampleCombatTargetPose } from '../src/animation/CombatPoseLibrary.js';
 import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibrary.js';
 import {
@@ -15,6 +19,26 @@ import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterP
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
+
+function assertBoneSurface(item, start, end, width) {
+  assert.deepEqual(
+    item.points,
+    surfaceOutline(createProjectedBoneSurface({ start, end, width })),
+    item.id + ' must use the shared projected bone surface outline',
+  );
+  // Independent geometric evidence: each end closes around its joint, while the
+  // interior section is wider than the tapered ends (not a four-corner stick).
+  const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const near = midpoint(item.points[0], item.points[4]);
+  const far = midpoint(item.points[7], item.points[11]);
+  assert.ok(Math.hypot(near.x - start.x, near.y - start.y) < 1e-7);
+  assert.ok(Math.hypot(far.x - end.x, far.y - end.y) < 1e-7);
+  const span = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const interiorWidth = span(item.points[5], item.points[13]);
+  assert.ok(Math.abs(interiorWidth - width) < 1e-7);
+  assert.ok(interiorWidth > span(item.points[0], item.points[4]));
+  assert.ok(interiorWidth > span(item.points[7], item.points[11]));
+}
 
 function playerGeometry({ facing = 1, weaponLengthScale = 1 } = {}) {
   const motionState = Object.freeze({
@@ -93,7 +117,20 @@ for (const attackKind of ['light', 'heavy', 'antiAir', 'sweep']) {
     TRAINING_ENEMY_ATTACK_PROFILES[attackKind].weaponLength,
   );
   assert.ok(geometry.weapon.points.length >= 5);
-  assert.equal(geometry.hurt.length, 2);
+  assert.deepEqual(
+    geometry.hurt.map(({ part }) => part),
+    [
+      'body',
+      'head',
+      'back-thigh',
+      'back-shin',
+      'front-thigh',
+      'front-shin',
+      'upper-weapon-arm',
+      'lower-weapon-arm',
+    ],
+    'enemy hurt geometry must cover the complete rendered body and all six limb segments',
+  );
   const renderedWeapon = createTrainingEnemyItems(
     enemy,
     0,
@@ -129,16 +166,12 @@ for (const attackKind of ['light', 'heavy', 'antiAir', 'sweep']) {
     geometry,
     CHARACTER_PRESENTATION_PROFILE.getProfile('collector-unit'),
   ).find(({ id }) => id === 'combat-enemy-lower-weapon-arm');
-  const armStart = {
-    x: (renderedArm.points[0].x + renderedArm.points[3].x) / 2,
-    y: (renderedArm.points[0].y + renderedArm.points[3].y) / 2,
-  };
-  const armEnd = {
-    x: (renderedArm.points[1].x + renderedArm.points[2].x) / 2,
-    y: (renderedArm.points[1].y + renderedArm.points[2].y) / 2,
-  };
-  assert.deepEqual(armStart, geometry.presentation.skeleton.nearElbow);
-  assert.deepEqual(armEnd, geometry.presentation.skeleton.nearHand);
+  assertBoneSurface(
+    renderedArm,
+    geometry.presentation.skeleton.nearElbow,
+    geometry.presentation.skeleton.nearHand,
+    10,
+  );
 }
 
 // Every authored enemy action, including the human family, must retain the exact sampled
@@ -182,25 +215,26 @@ for (const { species, profileId } of [
       geometry.presentation.head.points,
       `${species} ${aiState} head는 sampled skeleton hurt geometry를 그대로 그려야 한다.`,
     );
-    for (const [itemId, startJoint, endJoint] of [
-      ['combat-enemy-back-thigh', 'farHip', 'farKnee'],
-      ['combat-enemy-back-shin', 'farKnee', 'farFoot'],
-      ['combat-enemy-front-thigh', 'nearHip', 'nearKnee'],
-      ['combat-enemy-front-shin', 'nearKnee', 'nearFoot'],
-      ['combat-enemy-upper-weapon-arm', 'nearShoulder', 'nearElbow'],
-      ['combat-enemy-lower-weapon-arm', 'nearElbow', 'nearHand'],
+    for (const [itemId, startJoint, endJoint, width] of [
+      ['combat-enemy-back-thigh', 'farHip', 'farKnee', 8],
+      ['combat-enemy-back-shin', 'farKnee', 'farFoot', 7],
+      ['combat-enemy-front-thigh', 'nearHip', 'nearKnee', 8],
+      ['combat-enemy-front-shin', 'nearKnee', 'nearFoot', 7],
+      ['combat-enemy-upper-weapon-arm', 'nearShoulder', 'nearElbow', 11],
+      ['combat-enemy-lower-weapon-arm', 'nearElbow', 'nearHand', 10],
     ]) {
       const limb = items.find(({ id }) => id === itemId);
-      const start = {
-        x: (limb.points[0].x + limb.points[3].x) / 2,
-        y: (limb.points[0].y + limb.points[3].y) / 2,
-      };
-      const end = {
-        x: (limb.points[1].x + limb.points[2].x) / 2,
-        y: (limb.points[1].y + limb.points[2].y) / 2,
-      };
-      assert.deepEqual(start, geometry.presentation.skeleton[startJoint]);
-      assert.deepEqual(end, geometry.presentation.skeleton[endJoint]);
+      assert.deepEqual(
+        limb.points,
+        geometry.hurt.find(({ part }) => 'combat-enemy-' + part === itemId).points,
+        species + ' ' + aiState + ' rendered limb must equal its authoritative hurt polygon',
+      );
+      assertBoneSurface(
+        limb,
+        geometry.presentation.skeleton[startJoint],
+        geometry.presentation.skeleton[endJoint],
+        width,
+      );
     }
   }
 }
@@ -264,7 +298,10 @@ assert.deepEqual(renderedBlade.points, sceneGeometry.weapon.points);
 scene.enterTree();
 scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 560 });
 const liveEnemy = scene.roomSceneNode.encounter.enemy;
-liveEnemy.position = { x: scene.position.x + 25, y: 420 };
+// Begin outside the movement bodies: an overlapping fixture is separated on the
+// first tick and tests depenetration, not a normal attack contact.
+const enemyBody = scene.roomSceneNode.getEncounterGameplaySnapshot().bodyCollider;
+liveEnemy.position = { x: scene.position.x + 20 + enemyBody.halfWidth + 1, y: 420 };
 liveEnemy.aiState = 'idle';
 liveEnemy.aiSeconds = 1;
 let liveHit = null;
@@ -307,6 +344,7 @@ console.log(
     checks: [
       'player-facing-equipment-and-immutability',
       'enemy-four-attack-semantic-geometry',
+      'complete-enemy-six-limb-rendered-hurt-outline-parity',
       'renderer-gameplay-weapon-polygon-parity',
       'null-enemy-presentation-boundary',
       'bounded-three-sample-sweep',

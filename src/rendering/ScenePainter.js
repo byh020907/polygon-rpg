@@ -1,4 +1,62 @@
 import { createCellLightingSample } from './CellLighting.js';
+import { rasterizeDepthPolygons } from './DepthPolygonRasterizer.js';
+
+const depthCanvases = new WeakMap();
+
+function paintDepthGroup(context, items, frame, project, worldScale, occluders, showMesh) {
+  const projected = items.map((item) => {
+    const projectPoint = (point) => project(point, item.parallax ?? 1);
+    return {
+      ...item,
+      points: item.points.map(projectPoint),
+      ...(item.surface
+        ? { surface: { ...item.surface, points: item.surface.points.map(projectPoint) } }
+        : {}),
+      fill: resolveCellFill(item, frame, occluders),
+      stroke: showMesh ? '#67e8f9' : item.stroke,
+      lineWidth: Math.max(0.5, (item.lineWidth ?? 1) * worldScale),
+    };
+  });
+  const points = projected.flatMap((item) => item.surface?.points ?? item.points);
+  if (!points.length) return;
+  if (!points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y)))
+    throw new TypeError('Projected actor has a non-finite screen vertex.');
+  const transform = context.getTransform();
+  const viewportWidth = (context.canvas.width - transform.e) / Math.max(1e-6, transform.a);
+  const viewportHeight = (context.canvas.height - transform.f) / Math.max(1e-6, transform.d);
+  const pad = Math.max(2, ...projected.map((item) => item.lineWidth));
+  const left = Math.max(0, Math.floor(Math.min(...points.map((p) => p.x)) - pad));
+  const top = Math.max(0, Math.floor(Math.min(...points.map((p) => p.y)) - pad));
+  const right = Math.min(viewportWidth, Math.ceil(Math.max(...points.map((p) => p.x)) + pad));
+  const bottom = Math.min(viewportHeight, Math.ceil(Math.max(...points.map((p) => p.y)) + pad));
+  const width = Math.ceil(right - left);
+  const height = Math.ceil(bottom - top);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width * height > 4194304)
+    throw new RangeError('Projected actor raster exceeds bounded viewport.');
+  if (width <= 0 || height <= 0) return;
+  let canvas = depthCanvases.get(context);
+  if (!canvas) {
+    canvas =
+      typeof OffscreenCanvas === 'function'
+        ? new OffscreenCanvas(width, height)
+        : context.canvas.ownerDocument.createElement('canvas');
+    depthCanvases.set(context, canvas);
+  }
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
+  const target = canvas.getContext('2d');
+  const pixels = target.createImageData(width, height);
+  rasterizeDepthPolygons(projected, {
+    width,
+    height,
+    offsetX: left,
+    offsetY: top,
+    data: pixels.data,
+  });
+  target.putImageData(pixels, 0, 0);
+  context.globalAlpha = 1;
+  context.drawImage(canvas, left, top);
+}
 
 function drawPolygonPath(context, points, project) {
   if (points.length < 3) return false;
@@ -178,10 +236,32 @@ export function paintSceneItems(context, frame, project, worldScale, { showMesh 
     .map((item) => ({ id: item.id, points: item.points }));
   let shadowsPainted = false;
 
-  for (const item of frame.items) {
+  for (let itemIndex = 0; itemIndex < frame.items.length; itemIndex += 1) {
+    const item = frame.items[itemIndex];
     if (!shadowsPainted && (item.renderOrder ?? 0) >= 30.4) {
       paintSceneShadows(context, frame, project);
       shadowsPainted = true;
+    }
+    if (item.depthGroup && item.depths) {
+      const group = [item];
+      while (
+        frame.items[itemIndex + 1]?.depthGroup === item.depthGroup &&
+        frame.items[itemIndex + 1]?.depths
+      ) {
+        group.push(frame.items[++itemIndex]);
+      }
+      if (showMesh) {
+        for (const member of group) {
+          const sourceArea = polygonArea(member.points);
+          const screenArea = polygonArea(
+            member.points.map((point) => project(point, member.parallax ?? 1)),
+          );
+          if (sourceArea <= 0.0001) degenerateItemIds.push(member.id);
+          else if (screenArea <= 0.0001) rasterCollapseItemIds.push(member.id);
+        }
+      }
+      paintDepthGroup(context, group, frame, project, worldScale, occluders, showMesh);
+      continue;
     }
     const rawOpacity = item.opacity ?? 1;
     const itemOpacity = Number.isFinite(rawOpacity) ? Math.max(0, Math.min(1, rawOpacity)) : 1;

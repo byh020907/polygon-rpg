@@ -25,6 +25,7 @@ import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPrese
 import { SCRAP_ART_DIRECTION_PROFILE } from '../game/ScrapArtDirectionProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
+import { readVisualQaRequest } from './VisualQaConfig.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
 import { CanvasRetroRenderer } from '../rendering/CanvasRetroRenderer.js';
@@ -148,6 +149,10 @@ export class GameApp extends SceneNode {
     qaInputEnabled = false,
   }) {
     super('GameApp');
+    this.qaInputEnabled = qaInputEnabled;
+    this.qaInputPolygon =
+      qaInputEnabled &&
+      new URLSearchParams(globalThis.location?.search ?? '').get('inputQaRenderer') === 'polygon';
     const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
     this.equipmentIds = Object.freeze([...equipmentIds]);
     const freshProgression = createProgressionSnapshot(
@@ -206,6 +211,7 @@ export class GameApp extends SceneNode {
         progressionSnapshot,
       }),
     );
+    if (qaInputEnabled) this.scene.setVisualQaCombatOverlay(true);
     this.camera = new Camera2D();
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
@@ -313,6 +319,19 @@ export class GameApp extends SceneNode {
     this.abortController?.abort();
     this.abortController = null;
     this.resizeObserver.disconnect();
+    if (
+      this.qaInputEnabled &&
+      globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__ === this.qaPixelExporter
+    ) {
+      delete globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__;
+      delete globalThis.__POLYGON_RPG_INPUT_QA__;
+    }
+    if (this.qaActorSurface) {
+      this.qaActorSurface.canvas.width = 0;
+      this.qaActorSurface.canvas.height = 0;
+      this.qaActorSurface = null;
+    }
+    this.qaPixelExporter = null;
   }
 
   attachEvents() {
@@ -982,6 +1001,32 @@ export class GameApp extends SceneNode {
   }
 
   onScreenChanged() {
+    if (
+      this.qaInputEnabled &&
+      !this.qaInputScenarioInitialized &&
+      this.uiBridge.snapshot().screen === GAME_SCREEN.GAME
+    ) {
+      this.qaInputScenarioInitialized = true;
+      const start = new URLSearchParams(globalThis.location?.search ?? '').get('inputQaStart');
+      if (start) {
+        const { scenario } = readVisualQaRequest(
+          `?visualQa=1&gameStart=${encodeURIComponent(start)}`,
+        );
+        // Only establish an existing scene. Do not run its scripted combat,
+        // input timeline, forced contact, or expectation-resolution helpers.
+        if (scenario.scrapAwakeningStageId)
+          this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
+        if (scenario.scrapGarageRevealStageId)
+          this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
+        for (const state of scenario.scrapRegionStates ??
+          (scenario.scrapRegionState ? [scenario.scrapRegionState] : []))
+          this.scene.setVisualQaScrapRegionState(state);
+        const qaX = new URLSearchParams(globalThis.location?.search ?? '').get('inputQaX');
+        const x = qaX === null || qaX === '' ? scenario.x : Number(qaX);
+        if (!Number.isFinite(x)) throw new TypeError('inputQaX must be a finite scene coordinate');
+        this.scene.setVisualQaLocation({ ...scenario, x });
+      }
+    }
     this.input.clear();
     this.frameSamples = { count: 0, startTime: performance.now(), fps: 0 };
     this.runner.reset(performance.now());
@@ -1090,6 +1135,68 @@ export class GameApp extends SceneNode {
   }
 
   renderFrame(renderFrame) {
+    if (this.qaInputEnabled) {
+      const qaCamera = new Camera2D({
+        x: this.camera.position.x,
+        y: this.camera.position.y,
+        zoom: this.camera.zoom,
+        worldWidth: this.camera.worldSize.width,
+        worldHeight: this.camera.worldSize.height,
+      });
+      const qaViewport = this.gameHost.viewport;
+      // The QA consumer receives pixels only; the immutable production frame
+      // remains private and cannot be used to move actors or resolve combat.
+      this.qaPixelExporter = () => {
+        if (!this.qaActorSurface) {
+          const canvas = document.createElement('canvas');
+          const host = new CanvasHost(canvas);
+          const renderer = this.qaInputPolygon
+            ? new CanvasPolygonRenderer(host, this.camera)
+            : new CanvasRetroRenderer(host, this.camera);
+          this.qaActorSurface = { canvas, host, renderer };
+        }
+        const { canvas, host, renderer } = this.qaActorSurface;
+        if (canvas.width !== qaViewport.backingWidth) canvas.width = qaViewport.backingWidth;
+        if (canvas.height !== qaViewport.backingHeight) canvas.height = qaViewport.backingHeight;
+        host.viewport = qaViewport;
+        renderer.camera = qaCamera;
+        renderer.render(
+          Object.freeze({
+            ...renderFrame,
+            items: Object.freeze(renderFrame.items.filter((item) => item.depthGroup === 'player')),
+            artDirection: Object.freeze({
+              ...renderFrame.artDirection,
+              shadowCasters: Object.freeze([]),
+            }),
+          }),
+          { ...GAME_RENDER_SETTINGS, transparent: true },
+        );
+        return canvas.toDataURL('image/png');
+      };
+      globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__ = this.qaPixelExporter;
+      globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
+        input: this.input.snapshot(),
+        player: renderFrame.player,
+        camera: renderFrame.camera,
+        cameraOffset: renderFrame.cameraOffset,
+        artDirection: Object.freeze({
+          cameraZoom: renderFrame.artDirection?.cameraZoom,
+          mobileCameraScale: renderFrame.artDirection?.mobileCameraScale,
+          cameraFocusY: renderFrame.artDirection?.cameraFocusY,
+        }),
+        projection: Object.freeze({
+          worldWidth: this.camera.worldSize.width,
+          worldHeight: this.camera.worldSize.height,
+          zoom: this.camera.zoom,
+        }),
+        combatMotion: renderFrame.combatMotion,
+        combatEnemy: renderFrame.combatEnemy,
+        combatEvents: renderFrame.combatEvents,
+        combatContact: renderFrame.combatContact,
+        combatGeometry: renderFrame.combatGeometry,
+        map: Object.freeze({ id: renderFrame.map.id, roomId: renderFrame.map.activeRoomId }),
+      });
+    }
     if (this.isVisualQa && this.manualMode) this.latestVisualQaRenderFrame = renderFrame;
     const uiState = this.uiBridge.snapshot();
     this.uiBridge.setDialoguePresentation(
@@ -1109,7 +1216,8 @@ export class GameApp extends SceneNode {
       return;
     }
     if (uiState.screen === GAME_SCREEN.GAME) {
-      this.latestRenderStats = this.gameRenderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      const renderer = this.qaInputPolygon ? this.visualQaPolygonRenderer : this.gameRenderer;
+      this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
       return;
     }
 

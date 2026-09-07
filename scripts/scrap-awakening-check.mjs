@@ -2092,7 +2092,6 @@ mineCastScene.update(
   STEP_SECONDS,
   input({ right: true, jump: true, jumpSequence: mineCastSequence }),
 );
-mineCastSequence += 1;
 assert.ok(
   mineCastScene.position.x > mineRivalStartX,
   '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
@@ -2365,8 +2364,8 @@ assert.equal(
 );
 const mineAfterLines = mapEntityLines(SCRAP_MINE_WAITING_AFTER_ENTITY_ID).join('\n');
 assert.match(mineAfterLines, /나왔어/);
-let mineAfterSequence = 500;
-mineAfterSequence = completeDialogue(completedMineReload, mineAfterSequence);
+const mineAfterSequence = 500;
+completeDialogue(completedMineReload, mineAfterSequence);
 assert.equal(
   completedMineReload
     .getWorldStatus()
@@ -2500,7 +2499,6 @@ shipyardCastScene.update(
   STEP_SECONDS,
   input({ right: true, jump: true, jumpSequence: shipyardCastSequence }),
 );
-shipyardCastSequence += 1;
 assert.ok(
   shipyardCastScene.position.x > shipyardRivalStartX,
   '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
@@ -2758,8 +2756,8 @@ assert.equal(
 );
 const shipyardAfterLines = mapEntityLines(SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID).join('\n');
 assert.match(shipyardAfterLines, /출항/);
-let shipyardAfterSequence = 1_100;
-shipyardAfterSequence = completeDialogue(completedShipyardReload, shipyardAfterSequence);
+const shipyardAfterSequence = 1_100;
+completeDialogue(completedShipyardReload, shipyardAfterSequence);
 assert.equal(
   completedShipyardReload
     .getWorldStatus()
@@ -2899,7 +2897,6 @@ greenhouseCastScene.update(
   STEP_SECONDS,
   input({ right: true, jump: true, jumpSequence: greenhouseCastSequence }),
 );
-greenhouseCastSequence += 1;
 assert.ok(
   greenhouseCastScene.position.x > greenhouseRivalStartX,
   '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
@@ -3214,8 +3211,8 @@ assert.equal(
 );
 const greenhouseAfterLines = mapEntityLines(SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID).join('\n');
 assert.match(greenhouseAfterLines, /모종/);
-let greenhouseAfterSequence = 3_100;
-greenhouseAfterSequence = completeDialogue(completedGreenhouseReload, greenhouseAfterSequence);
+const greenhouseAfterSequence = 3_100;
+completeDialogue(completedGreenhouseReload, greenhouseAfterSequence);
 assert.equal(
   completedGreenhouseReload
     .getWorldStatus()
@@ -3337,7 +3334,6 @@ snowCastScene.update(
   STEP_SECONDS,
   input({ right: true, jump: true, jumpSequence: snowCastSequence }),
 );
-snowCastSequence += 1;
 assert.ok(
   snowCastScene.position.x > snowRivalStartX,
   '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
@@ -3613,8 +3609,8 @@ assert.equal(
 );
 const snowAfterLines = mapEntityLines(SCRAP_SNOW_WAITING_AFTER_ENTITY_ID).join('\n');
 assert.match(snowAfterLines, /교역대/);
-let snowAfterSequence = 5_100;
-snowAfterSequence = completeDialogue(completedSnowReload, snowAfterSequence);
+const snowAfterSequence = 5_100;
+completeDialogue(completedSnowReload, snowAfterSequence);
 assert.equal(
   completedSnowReload
     .getWorldStatus()
@@ -3736,7 +3732,6 @@ quarryCastScene.update(
   STEP_SECONDS,
   input({ right: true, jump: true, jumpSequence: quarryCastSequence }),
 );
-quarryCastSequence += 1;
 assert.ok(
   quarryCastScene.position.x > quarryRivalStartX,
   '라이벌 연결 정찰 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
@@ -4017,8 +4012,8 @@ assert.equal(
 );
 const quarryAfterLines = mapEntityLines(SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID).join('\n');
 assert.match(quarryAfterLines, /운반로|지지대/);
-let quarryAfterSequence = 7_100;
-quarryAfterSequence = completeDialogue(completedQuarryReload, quarryAfterSequence);
+const quarryAfterSequence = 7_100;
+completeDialogue(completedQuarryReload, quarryAfterSequence);
 assert.equal(
   completedQuarryReload
     .getWorldStatus()
