@@ -2221,6 +2221,21 @@ assert.equal(mineRoadheadQaRequest.scenario.x, 730);
 assert.ok(
   mineRoadheadQaRequest.scenario.expectation.expectedItems.includes('mine-rival-scout-torso'),
 );
+assert.equal(mineRoadheadQaRequest.scenario.inputQaFreshRegion, true);
+
+const mineInputQaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+mineInputQaScene.setInputQaScrapRegionStart({ regionId: SCRAP_MINE_ROAD_REGION_ID });
+mineInputQaScene.setVisualQaLocation({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+  roomId: SCRAP_MINE_ROAD_ROOM_ID,
+  x: 667,
+});
+const mineInputQaSequence = completeDialogue(mineInputQaScene, 1);
+const mineInputQaRegion = mineInputQaScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_MINE_ROAD_REGION_ID);
+assert.ok(mineInputQaSequence > 1);
+assert.equal(mineInputQaRegion.eventStageKind, 'npc-briefing');
 
 const mineFlowScene = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,

@@ -1022,9 +1022,15 @@ export class GameApp extends SceneNode {
           this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
         if (scenario.scrapGarageRevealStageId)
           this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
-        for (const state of scenario.scrapRegionStates ??
-          (scenario.scrapRegionState ? [scenario.scrapRegionState] : []))
-          this.scene.setVisualQaScrapRegionState(state);
+        const regionStates =
+          scenario.scrapRegionStates ??
+          (scenario.scrapRegionState ? [scenario.scrapRegionState] : []);
+        if (scenario.inputQaFreshRegion) {
+          for (const state of regionStates)
+            this.scene.setInputQaScrapRegionStart({ regionId: state.regionId });
+        } else {
+          for (const state of regionStates) this.scene.setVisualQaScrapRegionState(state);
+        }
         const qaX = new URLSearchParams(globalThis.location?.search ?? '').get('inputQaX');
         const x = qaX === null || qaX === '' ? scenario.x : Number(qaX);
         if (!Number.isFinite(x)) throw new TypeError('inputQaX must be a finite scene coordinate');
@@ -1087,6 +1093,10 @@ export class GameApp extends SceneNode {
 
   createInputSnapshot() {
     return this.input.snapshot();
+  }
+
+  pulseQaInputAction(actionId) {
+    return this.input.pulseQa(actionId);
   }
 
   createSimulationSettings(uiState) {

@@ -34,6 +34,10 @@ export class GameInputController {
     return this.qa.setHeld(actionId, held);
   }
 
+  pulseQa(actionId) {
+    return this.qa.pulse(actionId);
+  }
+
   clear({ resetSequences = false } = {}) {
     this.keyboard.clear({ resetSequences });
     this.mobile.clear({ resetSequences });

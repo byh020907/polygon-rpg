@@ -58,6 +58,16 @@ export class QaInputAdapter {
     return true;
   }
 
+  // A verification click represents one complete button press.  Unlike the held relay,
+  // it must not rely on a second click to release the action before the next dialogue line.
+  pulse(actionId) {
+    if (!this.enabled) return false;
+    assertInputAction(actionId);
+    if (!SEQUENCED_INPUT_ACTIONS.includes(actionId)) return false;
+    this.sequences[actionId] += 1;
+    return true;
+  }
+
   clear({ resetSequences = false } = {}) {
     this.heldActions.clear();
     if (resetSequences) this.sequences = createSequences();

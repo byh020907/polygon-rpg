@@ -215,6 +215,10 @@ export class GameApplication {
     return this.currentApp.setQaInputAction(actionId, held);
   }
 
+  pulseQaInputAction(actionId) {
+    return this.currentApp.pulseQaInputAction(actionId);
+  }
+
   destroy() {
     this.currentApp.destroy();
   }

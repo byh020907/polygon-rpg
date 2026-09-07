@@ -888,6 +888,14 @@
             </button>
             <div class="qa-input-relay-panel" x-show="qaInputPanelOpen">
               <p>실제 입력 경로의 동시 held action을 확인합니다. 장면·진행은 바꾸지 않습니다.</p>
+              <button
+                type="button"
+                class="qa-input-relay-pulse"
+                data-qa-input-pulse="jump"
+                @click="pulseQaInput('jump')"
+              >
+                ↑ 한 번 입력
+              </button>
               <div class="qa-input-relay-actions">
                 <template x-for="action in qaInputActions" x-bind:key="action.id">
                   <button

@@ -926,6 +926,10 @@ export function registerGameShell(
       this.qaHeldInput = Object.freeze({ ...this.qaHeldInput, [actionId]: held });
     },
 
+    pulseQaInput(actionId) {
+      gameApp.pulseQaInputAction(actionId);
+    },
+
     clearQaInput() {
       for (const action of this.qaInputActions) gameApp.setQaInputAction(action.id, false);
       this.qaHeldInput = Object.freeze({});

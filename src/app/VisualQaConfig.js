@@ -626,6 +626,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       stageKind: 'npc-briefing',
       status: 'available',
     }),
+    // The interactive QA route begins before the foreman conversation commits this stage.
+    inputQaFreshRegion: true,
     expectation: Object.freeze({
       expectedPatchIds: Object.freeze(['mine-briefing-complete', 'mine-cast-rival-scout']),
       expectedItems: Object.freeze([

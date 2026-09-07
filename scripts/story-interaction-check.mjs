@@ -15,6 +15,7 @@ import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.j
 import { FIRST_JOURNEY_CONVERSATION } from '../src/game/story/FirstJourneyStory.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
+import { QaInputAdapter } from '../src/input/QaInputAdapter.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
@@ -816,6 +817,20 @@ function verifyStaleDialogueConsumesOneJump() {
   assert.ok(scene.position.y < beforeNextJumpY);
 }
 
+function verifyQaDialoguePulse() {
+  const qa = new QaInputAdapter({ enabled: true, target: null, documentTarget: null });
+  assert.equal(qa.pulse('jump'), true);
+  assert.equal(qa.snapshot().jump, false, 'QA 단발 입력은 held 상태를 남기면 안 된다.');
+  assert.equal(qa.snapshot().jumpSequence, 1);
+  assert.equal(qa.pulse('jump'), true);
+  assert.equal(qa.snapshot().jumpSequence, 2, '연속 대화는 매 클릭마다 새 sequence여야 한다.');
+  assert.equal(
+    qa.pulse('left'),
+    false,
+    '연속 sequence가 없는 이동은 QA 단발 입력으로 만들지 않는다.',
+  );
+}
+
 verifyInteractionRangeAndTargets();
 verifyDialogueProgressionAndSequenceConsumption();
 verifyTypewriterRevealAndCompletionJump();
@@ -825,6 +840,7 @@ verifyKeyboardTouchParity();
 verifyFirstJourneyStoryChain();
 verifyCoreConversationTranscriptReplayPersistence();
 verifyStaleDialogueConsumesOneJump();
+verifyQaDialoguePulse();
 
 console.log(
   JSON.stringify(
@@ -851,6 +867,7 @@ console.log(
         'viewed-conversation-v9-round-trip-and-v6-migration',
         'stale-target-single-jump-consumption',
         'journey-portal-availability-regression',
+        'qa-dialogue-pulse-sequence',
       ],
     },
     null,

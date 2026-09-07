@@ -69,6 +69,7 @@ import {
   advanceScrapGarageReveal,
   advanceScrapAwakening,
   commitScrapCampaignAction,
+  createScrapCampaignSnapshot,
   getScrapCampaignReadModel,
   previewScrapCampaignAction,
   SCRAP_CAMPAIGN_ACTION_KIND,
@@ -76,6 +77,7 @@ import {
   startScrapAwakening,
   toScrapCampaignSnapshot,
 } from './campaign/ScrapCampaignState.js';
+import { SCRAP_CAMPAIGN_REGION_STATUS } from './campaign/ScrapCampaignContract.js';
 import {
   SCRAP_AWAKENING_STAGE,
   assertScrapAwakeningStageId,
@@ -799,6 +801,33 @@ export class GameScene extends SceneNode {
           ? [...new Set([...current.collectedPartIds, region.part.id])]
           : current.collectedPartIds.filter((partId) => partId !== region.part.id),
         lastChangeLabel: `${region.label} · ${stage.label}`,
+      },
+      this.scrapCampaignProfile,
+    );
+    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign,
+    });
+    this.syncScrapAwakeningWorldContext();
+    this.statusNode.publish({ force: true });
+    return scrapCampaign;
+  }
+
+  setInputQaScrapRegionStart({ regionId, currentLocationId = regionId }) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    if (!region) throw new Error(`지원하지 않는 Scrap region 입력 QA 시작점입니다: ${regionId}`);
+    const fresh = createScrapCampaignSnapshot(this.scrapCampaignProfile);
+    const scrapCampaign = toScrapCampaignSnapshot(
+      {
+        ...fresh,
+        currentLocationId,
+        awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+        garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+        regionStates: {
+          ...fresh.regionStates,
+          [region.id]: SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE,
+        },
+        regionEventStageIds: { ...fresh.regionEventStageIds, [region.id]: null },
+        lastChangeLabel: `${region.label} · 현장 대화 시작`,
       },
       this.scrapCampaignProfile,
     );
