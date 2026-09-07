@@ -600,6 +600,10 @@ export function registerGameShell(
       void pwaLifecycle.applyUpdate(() => gameApp.saveCurrentProgress());
     },
 
+    restartForPwaRelease() {
+      pwaLifecycle.restartForActivatedRelease();
+    },
+
     startDebugMenuHold(event) {
       if (event?.repeat) return;
       debugMenuHold?.begin();

@@ -1,7 +1,7 @@
-importScripts('./src/pwa/offlineAssetManifest.js');
+importScripts('./public/release-metadata.js', './src/pwa/offlineAssetManifest.js');
 
-const CACHE_VERSION = 'polygon-rpg-release-2026-09-04-pwa-8';
-const CACHE_NAME = `polygon-rpg-${CACHE_VERSION}`;
+const RELEASE = self.POLYGON_RPG_RELEASE;
+const CACHE_NAME = `polygon-rpg-release-${RELEASE.buildId}`;
 const SHELL_URL = new URL('./index.html', self.location).href;
 const OFFLINE_URL = new URL('./offline.html', self.location).href;
 
@@ -50,11 +50,18 @@ self.addEventListener('activate', (event) => {
           .map((key) => caches.delete(key)),
       );
       await self.clients.claim();
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      clients.forEach((client) =>
+        client.postMessage({ type: 'PWA_RELEASE_ACTIVATED', release: RELEASE }),
+      );
     }),
   );
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'GET_RELEASE_METADATA') {
+    event.ports[0]?.postMessage({ type: 'RELEASE_METADATA', release: RELEASE });
+  }
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 

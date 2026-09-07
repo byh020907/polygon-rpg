@@ -106,5 +106,7 @@ self.POLYGON_RPG_OFFLINE_ASSETS = Object.freeze([
   './src/ui/HoldActivationController.js',
   './src/ui/ScreenFocusOwner.js',
   './src/pwa/PwaLifecycleAdapter.js',
+  './src/pwa/ReleaseMetadata.js',
   './src/pwa/StandaloneViewportAdapter.js',
+  './public/release-metadata.js',
 ]);

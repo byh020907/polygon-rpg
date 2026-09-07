@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -26,7 +26,9 @@
     "test:growth": "node scripts/progression-growth-check.mjs",
     "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs && node scripts/depth-polygon-check.mjs && node scripts/projected-body-check.mjs && node scripts/scrap-workshop-layout-check.mjs",
     "test:platform": "node scripts/platform-access-check.mjs",
-    "test:pwa": "node scripts/pwa-offline-check.mjs",
+    "release:metadata": "node scripts/generate-release-metadata.mjs && prettier --write public/release-metadata.js",
+    "release:metadata:check": "node scripts/release-metadata-check.mjs",
+    "test:pwa": "node scripts/release-metadata-check.mjs && node scripts/pwa-offline-check.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

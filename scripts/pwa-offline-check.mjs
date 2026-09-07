@@ -3,12 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createPwaLifecycleAdapter } from '../src/pwa/PwaLifecycleAdapter.js';
+import '../public/release-metadata.js';
 
 const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 const manifest = JSON.parse(read('manifest.webmanifest'));
 const serviceWorker = read('sw.js');
 const inventory = read('src/pwa/offlineAssetManifest.js');
+const releaseMetadata = read('public/release-metadata.js');
 
 assert.equal(manifest.display, 'standalone');
 assert.equal(manifest.orientation, 'landscape');
@@ -40,6 +42,9 @@ for (const source of fs.readdirSync(path.join(root, 'src'), { recursive: true })
   );
 }
 assert.match(serviceWorker, /cacheCompleteRelease\(cache\)/);
+assert.match(serviceWorker, /POLYGON_RPG_RELEASE/);
+assert.match(serviceWorker, /polygon-rpg-release-\$\{RELEASE\.buildId\}/);
+assert.match(serviceWorker, /PWA_RELEASE_ACTIVATED/);
 assert.match(serviceWorker, /new Request\(asset, \{ cache: 'reload' \}\)/);
 assert.doesNotMatch(serviceWorker, /event\.request\.cache === 'reload'/);
 assert.match(serviceWorker, /if \(!hasActiveRelease\) await self\.skipWaiting\(\)/);
@@ -49,17 +54,34 @@ assert.match(read('index.html'), /apple-touch-startup-image/);
 assert.match(read('index.html'), /<details class="menu-data-notice">/);
 assert.match(read('index.html'), /browser data를 삭제하면 복구\s+지점도/);
 assert.match(read('index.html'), /PWA 진단/);
+assert.match(read('index.html'), /pwa\.currentVersion/);
+assert.match(read('index.html'), /pwa\.currentBuildId/);
+assert.match(read('index.html'), /restartForPwaRelease/);
+assert.match(releaseMetadata, /POLYGON_RPG_RELEASE/);
 assert.match(
   read('src/app/GameApplication.js'),
   /saveCurrentProgress\(\) \{\s*return this\.currentApp\.saveCurrentProgress\(\);/,
 );
 
+const release = globalThis.POLYGON_RPG_RELEASE;
 const registrationListeners = new Map();
 const serviceWorkerListeners = new Map();
 let skipWaitingMessage = null;
-const waiting = { postMessage: (message) => (skipWaitingMessage = message) };
+const waiting = {
+  postMessage: (message, ports = []) => {
+    if (message.type === 'GET_RELEASE_METADATA') {
+      ports[0]?.postMessage({
+        type: 'RELEASE_METADATA',
+        release: { ...release, buildId: 'next-build-01' },
+      });
+      return;
+    }
+    skipWaitingMessage = message;
+  },
+};
 const registration = {
   waiting,
+  update: async () => {},
   addEventListener: (type, listener) => registrationListeners.set(type, listener),
 };
 const fakeWindowListeners = new Map();
@@ -82,9 +104,20 @@ const fakeWindow = {
 };
 const lifecycle = createPwaLifecycleAdapter({ browserWindow: fakeWindow });
 await lifecycle.start();
+await new Promise((resolve) => setTimeout(resolve, 10));
 assert.equal(lifecycle.getState().updateReady, true);
+assert.equal(lifecycle.getState().currentVersion, release.appVersion);
+assert.equal(lifecycle.getState().availableBuildId, 'next-build-01');
 assert.equal(await lifecycle.applyUpdate(async () => ({ ok: false, message: '저장 실패' })), false);
 assert.equal(skipWaitingMessage, null);
+serviceWorkerListeners.get('message')({
+  data: {
+    type: 'PWA_RELEASE_ACTIVATED',
+    release: { appVersion: '0.1.2', buildId: 'next-build-02' },
+  },
+});
+assert.equal(lifecycle.getState().restartRequired, true);
+assert.match(lifecycle.getState().status, /다른 창/);
 assert.equal(await lifecycle.applyUpdate(async () => ({ ok: true })), true);
 assert.deepEqual(skipWaitingMessage, { type: 'SKIP_WAITING' });
 serviceWorkerListeners.get('message')({

@@ -86,16 +86,29 @@
               <button
                 class="menu-button menu-button--update"
                 type="button"
-                x-show="pwa.updateReady"
+                x-show="pwa.updateReady && !pwa.restartRequired"
                 @click="applyPwaUpdate"
               >
-                <span>새 버전 적용</span>
+                <span
+                  x-text="pwa.availableVersion ? `v${pwa.availableVersion} 적용` : '새 버전 적용'"
+                ></span>
                 <small>진행을 먼저 저장하고 한 번만 전환</small>
+              </button>
+              <button
+                class="menu-button menu-button--update"
+                type="button"
+                x-show="pwa.restartRequired"
+                @click="restartForPwaRelease"
+              >
+                <span>새 버전으로 다시 열기</span>
+                <small>다른 창에서 적용된 릴리스를 안전하게 불러옵니다.</small>
               </button>
             </div>
 
             <p class="menu-version" x-text="saveStatus" aria-live="polite"></p>
             <p class="menu-version" x-text="pwa.status" aria-live="polite"></p>
+            <p class="menu-version" x-text="`PRE-ALPHA · v${pwa.currentVersion}`"></p>
+            <p class="menu-version" x-text="`BUILD · ${pwa.currentBuildId}`"></p>
             <details class="menu-data-notice">
               <summary>저장 데이터 안내</summary>
               <p>
@@ -103,7 +116,6 @@
                 지점도 지워질 수 있습니다.
               </p>
             </details>
-            <p class="menu-version">PRE-ALPHA · STATIC CANVAS BUILD</p>
           </section>
 
           <aside class="journey-card">
