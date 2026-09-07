@@ -1,10 +1,10 @@
 # Product Goal Loop State
 
-현재 Desired State 대비 제품 상태의 파생 snapshot이다. 자동 루프는 Human pause를 유지한다.
+현재 Desired State 대비 제품 상태의 파생 snapshot이다. Human이 main `21f4b56`의 주인공 동작 스타일이 원하는 느낌에 가깝다고 확인하고 문서 반영 후 Codex 루프 재개를 요청했다.
 
 ## Runtime Status
 
-`RUNNING` — 이번 수동 작업은 깊이 픽셀 정리·첨부 기반 주인공 재설계·머리 위 들기 없는 횡·사선 베기에 한정한다.
+`RUNNING` — 현재 동작 스타일을 유지하며 남은 Human Feedback과 전체 제품 Gap을 처리한다.
 
 ## Current Phase
 
@@ -12,7 +12,7 @@
 
 ## Active Execution Goal
 
-불투명 pixel 소유/외곽선과 Retro 색 처리 → 작은 머리·긴 팔다리·짧은 작업상의·스트랩·넓은 검의 공용 rig/geometry → 준비보다 빠른 베기와 감속 → 정상 입력·투명 출력·desktop/mobile 연속 frame 및 독립 검증 순서다. 최신 요청대로 검을 몸 옆·뒤로 당겨 앞을 가로지르는 횡·사선 베기로 구성했다. 디자인·픽셀·구르기·베기 속도감과 실제 공중 접촉은 독립 판독을 통과했다. 자동 실행은 Human pause를 유지하며 전체 캠페인의 완료를 뜻하지 않는다.
+없음. Human이 현재 주인공 동작을 선호하는 스타일 기준으로 확인했다. 다음 worker는 기존 INBOX와 현재 Product Goal·Architecture·실행 evidence를 대조해 이미 반영된 범위를 정리하고 남은 요구를 선택한다. 이전 재작업 요청만으로 현재 구르기·캐릭터 비율·횡사선 베기를 다시 폐기하지 않는다. 이 확인은 미검증 공격·적·전체 캠페인까지 완료했다는 뜻이 아니다.
 
 ## Desired-State Comparison
 
@@ -35,7 +35,7 @@
 
 ## Blockers
 
-없음. Codex heartbeat/OpenCode runner 정지 유지. `.codex-remote-attachments/`는 사용자 원본 자료이며 배포·commit 대상이 아니다.
+없음. `.codex-remote-attachments/`는 사용자 원본 자료이며 배포·commit 대상이 아니다.
 
 ## Preserved Work Reference
 

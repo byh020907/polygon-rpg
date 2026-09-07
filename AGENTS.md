@@ -34,6 +34,8 @@ Before product work, read the selected Method and all four Project Sources compl
 
 ## Development Order
 
+- Human이 main `21f4b56`의 주인공 동작 스타일을 원하는 느낌에 가깝다고 확인했다. 작은 머리·길고 가는 팔다리, 낮은 준비에서 몸 앞을 가로지르는 빠른 횡·사선 베기와 후반 감속, 실제 전방 회전 구르기를 앞으로의 스타일 기준으로 유지·발전시킨다. 이는 모든 모션·게임의 최종 완료 승인이 아니다. 이전 INBOX의 모션 폐기·재작업 문구는 이 확인보다 앞선 결과를 지적한 것이므로 현재 스타일 전체를 다시 폐기하는 근거로 사용하지 않는다. 남은 구체적 결함과 요구는 현재 기준을 보존하며 검증·수리한다.
+
 - **Human Feedback Priority:** `INBOX.md`의 pending feedback과 그것이 만든 아직 검증되지 않은 제품 결과가 다른 자율 Gap보다 항상 우선한다. fresh worker는 이를 Desired State에 반영하는 데서 끝내지 않고, 해당 feedback이 요구한 관찰 가능한 제품 결과를 구현·검증할 Execution Goal을 먼저 선택한다.
 - 여러 Human Feedback Priority가 같은 영역에서 맞물리면 INBOX의 기록 순서를 구현 순서로 간주하지 않는다. 뒤 항목이 앞 항목의 구현 기반을 바꾸는 경우에는 재작업을 피하도록 선행 계약과 기반 구조부터 세우고, 그 위에 표현과 동작을 구현한다. 새 기반과 무관하게 계속 유효한 수정은 버리지 않고 보존·이식하며, 선택한 dependency chain을 `STATE.md`의 Active Execution Goal에 명시한다.
 - INBOX 원문을 Product Goal·Architecture·Project Direction이 소유해 queue에서 제거했더라도 실제 제품 결과가 아직 충족되지 않았다면 우선순위를 잃지 않는다. `STATE.md`에 현재형 `Human Feedback Priority` Gap과 evidence를 유지하고, 결과가 검증된 뒤 해당 임시 표시를 제거한다.
