@@ -54,6 +54,7 @@ import {
   resolveFirstJourneyStory,
 } from './story/FirstJourneyStory.js';
 import { resolveScrapPrologueConversationTranscripts } from './story/ScrapPrologueStory.js';
+import { resolveScrapRegionConversationTranscripts } from './story/ScrapRegionStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
 import {
   createTrainingEnemyItems,
@@ -124,6 +125,7 @@ function resolveConversationTranscripts(viewedConversationIds) {
   return Object.freeze([
     ...resolveFirstJourneyConversationTranscripts(viewedConversationIds),
     ...resolveScrapPrologueConversationTranscripts(viewedConversationIds),
+    ...resolveScrapRegionConversationTranscripts(viewedConversationIds),
   ]);
 }
 

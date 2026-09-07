@@ -12,6 +12,10 @@ import {
   resolveScrapPrologueConversationTranscripts,
 } from '../src/game/story/ScrapPrologueStory.js';
 import {
+  SCRAP_REGION_CONVERSATION,
+  resolveScrapRegionConversationTranscripts,
+} from '../src/game/story/ScrapRegionStory.js';
+import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
@@ -242,6 +246,12 @@ const prologueTranscriptById = new Map(
   ]).map((entry) => [entry.id, entry]),
 );
 
+const regionalTranscriptById = new Map(
+  resolveScrapRegionConversationTranscripts(
+    Object.values(SCRAP_REGION_CONVERSATION).map((conversation) => conversation.id),
+  ).map((entry) => [entry.id, entry]),
+);
+
 function assertMapEntityLinesMatchTranscript(entityId, conversationId) {
   const transcript = prologueTranscriptById.get(conversationId);
   assert.ok(transcript, `${conversationId} authored transcript가 필요합니다.`);
@@ -249,6 +259,26 @@ function assertMapEntityLinesMatchTranscript(entityId, conversationId) {
     [...mapEntityLines(entityId)],
     [...transcript.lines],
     `${entityId} 현장 대사는 authored transcript와 같아야 합니다.`,
+  );
+}
+
+function assertRegionalMapDialogue(entityId, conversation) {
+  const transcript = regionalTranscriptById.get(conversation.id);
+  assert.ok(transcript, `${conversation.id} regional authored transcript가 필요합니다.`);
+  assert.equal(
+    Object.isFrozen(transcript),
+    true,
+    `${conversation.id} transcript는 immutable이어야 합니다.`,
+  );
+  assert.equal(
+    Object.isFrozen(transcript.lines),
+    true,
+    `${conversation.id} lines는 immutable이어야 합니다.`,
+  );
+  assert.deepEqual(
+    [...mapEntityLines(entityId)],
+    [...transcript.lines],
+    `${entityId} 현장 대사는 regional authored transcript와 같아야 합니다.`,
   );
 }
 
@@ -279,6 +309,40 @@ assertMapEntityLinesMatchTranscript(
 assertMapEntityLinesMatchTranscript(
   SCRAPYARD_OWNER_ENTITY_ID,
   SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_ANALYSIS,
+);
+
+for (const [entityId, conversation] of [
+  ['mine-foreman-briefing', SCRAP_REGION_CONVERSATION.MINE_FOREMAN],
+  [SCRAP_MINE_WAITING_MINER_ENTITY_ID, SCRAP_REGION_CONVERSATION.MINE_WAITING],
+  [SCRAP_MINE_WAITING_WORKING_ENTITY_ID, SCRAP_REGION_CONVERSATION.MINE_WORKING],
+  [SCRAP_MINE_WAITING_AFTER_ENTITY_ID, SCRAP_REGION_CONVERSATION.MINE_AFTER],
+  ['shipyard-worker-briefing', SCRAP_REGION_CONVERSATION.SHIPYARD_WELDER],
+  [SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID, SCRAP_REGION_CONVERSATION.SHIPYARD_WAITING],
+  [SCRAP_SHIPYARD_WAITING_WORKING_ENTITY_ID, SCRAP_REGION_CONVERSATION.SHIPYARD_WORKING],
+  [SCRAP_SHIPYARD_WAITING_AFTER_ENTITY_ID, SCRAP_REGION_CONVERSATION.SHIPYARD_AFTER],
+  ['greenhouse-technician-briefing', SCRAP_REGION_CONVERSATION.GREENHOUSE_TECHNICIAN],
+  [SCRAP_GREENHOUSE_WAITING_GROWER_ENTITY_ID, SCRAP_REGION_CONVERSATION.GREENHOUSE_WAITING],
+  [SCRAP_GREENHOUSE_WAITING_WORKING_ENTITY_ID, SCRAP_REGION_CONVERSATION.GREENHOUSE_WORKING],
+  [SCRAP_GREENHOUSE_WAITING_AFTER_ENTITY_ID, SCRAP_REGION_CONVERSATION.GREENHOUSE_AFTER],
+  ['snow-crew-briefing', SCRAP_REGION_CONVERSATION.SNOW_CREW],
+  [SCRAP_SNOW_WAITING_KEEPER_ENTITY_ID, SCRAP_REGION_CONVERSATION.SNOW_WAITING],
+  [SCRAP_SNOW_WAITING_WORKING_ENTITY_ID, SCRAP_REGION_CONVERSATION.SNOW_WORKING],
+  [SCRAP_SNOW_WAITING_AFTER_ENTITY_ID, SCRAP_REGION_CONVERSATION.SNOW_AFTER],
+  ['quarry-worker-briefing', SCRAP_REGION_CONVERSATION.QUARRY_FOREMAN],
+  [SCRAP_QUARRY_WAITING_FILLER_ENTITY_ID, SCRAP_REGION_CONVERSATION.QUARRY_WAITING],
+  [SCRAP_QUARRY_WAITING_WORKING_ENTITY_ID, SCRAP_REGION_CONVERSATION.QUARRY_WORKING],
+  [SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID, SCRAP_REGION_CONVERSATION.QUARRY_AFTER],
+]) {
+  assertRegionalMapDialogue(entityId, conversation);
+}
+
+const regionalDialogueText = Object.values(SCRAP_REGION_CONVERSATION)
+  .flatMap((conversation) => conversation.lines)
+  .join('\n');
+assert.doesNotMatch(
+  regionalDialogueText,
+  /cable|winch|건선거|지열|저압|열선|적설|발파선|절개면/,
+  '지역 핵심·생활 인물의 첫 현장 대사는 용어만 나열하지 않고 눈앞의 물건과 결과를 먼저 말해야 합니다.',
 );
 
 const rescueDialogueText = mapEntityLines(SCRAP_RIVAL_RESCUE_ENTITY_ID).join('\n');
@@ -2459,7 +2523,7 @@ assert.equal(
   '해결 전에는 켜진 도크 작업등을 보여주면 안 됩니다.',
 );
 const waitingCrewLines = mapEntityLines(SCRAP_SHIPYARD_WAITING_CREW_ENTITY_ID).join('\n');
-assert.match(waitingCrewLines, /cable/);
+assert.match(waitingCrewLines, /끌어올림 줄/);
 assert.match(waitingCrewLines, /현황판/);
 const shipyardRivalScoutLines = mapEntityLines(SCRAP_SHIPYARD_RIVAL_SCOUT_ENTITY_ID).join('\n');
 assert.match(shipyardRivalScoutLines, /cable/);

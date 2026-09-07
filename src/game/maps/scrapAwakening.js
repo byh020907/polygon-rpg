@@ -5,6 +5,7 @@ import {
   SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
 } from '../campaign/ScrapGarageRevealState.js';
 import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../story/ScrapPrologueStory.js';
+import { SCRAP_REGION_CONVERSATION } from '../story/ScrapRegionStory.js';
 import { defineMap } from '../map/MapDefinition.js';
 import { createEnvironmentPortalLandmarkItems } from './PortalRenderItems.js';
 
@@ -3790,11 +3791,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '폐광 작업반장',
               conversationId: SCRAP_MINE_FOREMAN_CONVERSATION_ID,
               conversationTitle: '붕괴 광산 구조 요청',
-              lines: [
-                '갱도 안 작업자 셋은 살아 있어. 문제는 선점 수거반이 구조 레일을 뜯어 자기 몫으로 챙긴다는 거야.',
-                '보행식 굴착기로 마지막 버팀목을 세우면 모두 빼낼 수 있어. 그 뒤 기계 하체는 네가 가져가.',
-                '먼저 오른쪽 현황판에서 붕괴 범위와 작업 시간을 확인해 줘.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.MINE_FOREMAN.lines,
               presentationProfileId: 'mine-worker',
               campaignRegionId: 'abandoned-mine',
               campaignStageKind: 'npc-briefing',
@@ -3807,11 +3804,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 광부',
               conversationId: SCRAP_MINE_WAITING_CONVERSATION_ID,
               conversationTitle: '갇힌 동료를 기다리는 광부',
-              lines: [
-                '셋이 아직 갱도 안에 있어. 반장은 버팀목 얘기만 하지만, 난 저 레일이 다시 깔리는 걸 보고 싶어.',
-                '네가 구조 길을 열면 내가 먼저 들어가서 동료들을 데리고 나올게. 곡괭이는 이미 챙겼어.',
-                '오른쪽 현황판은 봤어? 작업 시간 안에 끝내야 고대 병기가 산길을 우회한다더군.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.MINE_WAITING.lines,
               presentationProfileId: 'mine-worker',
             },
             {
@@ -3855,10 +3848,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 광부',
               conversationId: SCRAP_MINE_WAITING_WORKING_CONVERSATION_ID,
               conversationTitle: '갱도 앞에 선 대기 광부',
-              lines: [
-                '통로가 열렸어. 구조 등이 켜지면 내가 먼저 들어가서 동료들 손을 잡을게.',
-                '넌 굴착기 쪽을 맡아줘. 선점 수거반이 또 레일을 노릴지도 몰라.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.MINE_WORKING.lines,
               presentationProfileId: 'mine-worker',
               enabled: false,
             },
@@ -3870,10 +3860,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 광부',
               conversationId: SCRAP_MINE_WAITING_AFTER_CONVERSATION_ID,
               conversationTitle: '구조를 마친 대기 광부',
-              lines: [
-                '셋 다 나왔어! 구조 등을 켜 둘게. 이제 이 갱도는 다시 버팀목으로 지탱하면 돼.',
-                '굴착기 하체는 가져가. 네 로봇 다리가 우리 산길을 우회시킨 셈이니까.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.MINE_AFTER.lines,
               presentationProfileId: 'mine-worker',
               enabled: false,
             },
@@ -4034,11 +4021,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '조선소 용접공',
               conversationId: SCRAP_SHIPYARD_WORKER_CONVERSATION_ID,
               conversationTitle: '점거된 조선소 탈환 요청',
-              lines: [
-                '부두 선점 수거반이 건선거를 점거해 마지막 선박의 외판 수리가 멈췄어.',
-                '도크를 되찾아 수리를 끝내면 퇴역할 쌍둥이 크레인의 유압 장치를 넘겨줄게.',
-                '왼쪽 현황판에서 점거 범위와 작업 시간을 먼저 확인해 줘.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SHIPYARD_WELDER.lines,
               presentationProfileId: 'shipyard-worker',
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
               campaignStageKind: 'npc-briefing',
@@ -4051,11 +4034,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 갑판원',
               conversationId: SCRAP_SHIPYARD_WAITING_CONVERSATION_ID,
               conversationTitle: '출항을 기다리는 갑판원',
-              lines: [
-                '마지막 선박이 도크에 묶인 채로 있어. 용접공은 외판 얘기만 하지만, 난 저 크레인 cable이 다시 감기는 걸 보고 싶어.',
-                '네가 점거를 풀면 내가 먼저 올라가서 갑판을 정리할게. 계류 갈고리는 이미 챙겼어.',
-                '오른쪽 현황판은 봤어? 작업 시간 안에 끝내야 고대 병기가 해안 운송로를 우회한다더군.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SHIPYARD_WAITING.lines,
               presentationProfileId: 'shipyard-worker',
             },
             {
@@ -4082,10 +4061,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 갑판원',
               conversationId: SCRAP_SHIPYARD_WAITING_WORKING_CONVERSATION_ID,
               conversationTitle: '건선거 앞에 선 대기 갑판원',
-              lines: [
-                '통로가 열렸어. 도크 작업등이 켜지면 내가 먼저 들어가서 갑판을 정리할게.',
-                '넌 크레인 쪽을 맡아줘. 선점 수거반이 또 cable을 노릴지도 몰라.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SHIPYARD_WORKING.lines,
               presentationProfileId: 'shipyard-worker',
               enabled: false,
             },
@@ -4097,10 +4073,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 갑판원',
               conversationId: SCRAP_SHIPYARD_WAITING_AFTER_CONVERSATION_ID,
               conversationTitle: '수리를 마친 대기 갑판원',
-              lines: [
-                '마지막 선박이 출항했어! 도크 작업등은 켜 둘게. 이제 이 부두는 크레인 없이도 돌아가.',
-                '크레인 유압 장치는 가져가. 네 로봇 팔이 우리 해안 운송로를 우회시킨 셈이니까.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SHIPYARD_AFTER.lines,
               presentationProfileId: 'shipyard-worker',
               enabled: false,
             },
@@ -4278,11 +4251,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '온실 기술자',
               conversationId: SCRAP_GREENHOUSE_TECHNICIAN_CONVERSATION_ID,
               conversationTitle: '파열된 지열 설비 복구 요청',
-              lines: [
-                '주 배관이 터져 온실 작물 난방이 멈췄어. 기생 기계가 압력선을 뜯어 먹고 있고.',
-                '안전한 저압 배관을 연결하면 불안정한 구형 고출력 동력로를 완전히 떼어낼 수 있어.',
-                '오른쪽 압력판에서 파손 범위와 복구 시간을 먼저 확인해 줘.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.GREENHOUSE_TECHNICIAN.lines,
               presentationProfileId: 'greenhouse-technician',
               campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
               campaignStageKind: 'npc-briefing',
@@ -4295,11 +4264,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 재배원',
               conversationId: SCRAP_GREENHOUSE_WAITING_CONVERSATION_ID,
               conversationTitle: '모종을 지키는 재배원',
-              lines: [
-                '주 배관이 터진 채로 있어. 기술자는 저압 얘기만 하지만, 난 저 지열 배관이 다시 데워지는 걸 보고 싶어.',
-                '네가 기생 기계를 치우면 내가 먼저 들어가서 모종을 옮길게. 휴대 센서는 이미 챙겼어.',
-                '오른쪽 압력판은 봤어? 복구 시간 안에 끝내야 고대 병기가 평원 습지를 우회한다더군.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.GREENHOUSE_WAITING.lines,
               presentationProfileId: 'greenhouse-technician',
             },
             {
@@ -4326,10 +4291,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 재배원',
               conversationId: SCRAP_GREENHOUSE_WAITING_WORKING_CONVERSATION_ID,
               conversationTitle: '배관 앞에 선 대기 재배원',
-              lines: [
-                '통로가 열렸어. 재배등이 켜지면 내가 먼저 들어가서 모종을 옮길게.',
-                '넌 동력로 쪽을 맡아줘. 기생 기계가 또 배관을 노릴지도 몰라.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.GREENHOUSE_WORKING.lines,
               presentationProfileId: 'greenhouse-technician',
               enabled: false,
             },
@@ -4341,10 +4303,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 재배원',
               conversationId: SCRAP_GREENHOUSE_WAITING_AFTER_CONVERSATION_ID,
               conversationTitle: '복구를 마친 대기 재배원',
-              lines: [
-                '모종을 다 옮겼어! 재배등은 켜 둘게. 이제 이 온실은 저압 배관으로도 돌아가.',
-                '구형 동력로는 가져가. 네 로봇 동력원이 우리 평원을 습지로 바꾼 셈이니까.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.GREENHOUSE_AFTER.lines,
               presentationProfileId: 'greenhouse-technician',
               enabled: false,
             },
@@ -4522,11 +4481,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '제설 열차 승무원',
               conversationId: SCRAP_SNOW_CREW_CONVERSATION_ID,
               conversationTitle: '막힌 옛 터널 개통 요청',
-              lines: [
-                '눈사태가 옛 터널을 막아 교역대가 다시 위험한 산길로 몰렸어. 열선 케이블도 길목 수거반이 뜯어 가고 있고.',
-                '터널을 다시 열면 이 장갑 제설 열차는 더 이상 생활 노선을 지킬 필요가 없어.',
-                '오른쪽 운행 현황판에서 적설 범위와 개통 시간을 먼저 확인해 줘.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SNOW_CREW.lines,
               presentationProfileId: 'snow-train-crew',
               campaignRegionId: SCRAP_SNOW_REGION_ID,
               campaignStageKind: 'npc-briefing',
@@ -4539,11 +4494,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 신호원',
               conversationId: SCRAP_SNOW_WAITING_CONVERSATION_ID,
               conversationTitle: '교역대를 기다리는 신호원',
-              lines: [
-                '터널이 막힌 채로 있어. 승무원은 열선 얘기만 하지만, 난 저 신호등이 다시 켜지는 걸 보고 싶어.',
-                '네가 길목 수거반을 치우면 내가 먼저 들어가서 교역대를 맞이할게. 휴대 신호등은 이미 챙겼어.',
-                '오른쪽 현황판은 봤어? 개통 시간 안에 끝내야 고대 병기가 터널 경계를 우회한다더군.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SNOW_WAITING.lines,
               presentationProfileId: 'snow-train-crew',
             },
             {
@@ -4570,10 +4521,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 신호원',
               conversationId: SCRAP_SNOW_WAITING_WORKING_CONVERSATION_ID,
               conversationTitle: '터널 앞에 선 대기 신호원',
-              lines: [
-                '통로가 열렸어. 신호등이 켜지면 내가 먼저 들어가서 교역대를 맞이할게.',
-                '넌 대피선 쪽을 맡아줘. 길목 수거반이 또 열선을 노릴지도 몰라.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SNOW_WORKING.lines,
               presentationProfileId: 'snow-train-crew',
               enabled: false,
             },
@@ -4585,10 +4533,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 신호원',
               conversationId: SCRAP_SNOW_WAITING_AFTER_CONVERSATION_ID,
               conversationTitle: '개통을 마친 대기 신호원',
-              lines: [
-                '교역대가 지나갔어! 신호등은 켜 둘게. 이제 이 터널은 열선으로 안전하게 유지돼.',
-                '제설 열차 장갑은 가져가. 네 로봇 장갑이 우리 교역로를 우회시킨 셈이니까.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.SNOW_AFTER.lines,
               presentationProfileId: 'snow-train-crew',
               enabled: false,
             },
@@ -4766,11 +4711,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '채석공 작업반장',
               conversationId: SCRAP_QUARRY_WORKER_CONVERSATION_ID,
               conversationTitle: '마지막 채굴과 안전 폐쇄 요청',
-              lines: [
-                '왕국이 쓸 마지막 석재만 잘라 내면 이 붉은 채석장은 안전하게 닫을 수 있어. 그런데 수거 유닛이 발파선을 뜯고 절단기를 깨웠지.',
-                '폐쇄 지지대를 세우면 초대형 암반 절단기는 더 이상 현장에 남을 이유가 없어.',
-                '오른쪽 안전 작업판에서 남은 절개면과 필요한 시간을 먼저 확인해 줘.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.QUARRY_FOREMAN.lines,
               presentationProfileId: 'quarry-worker',
               campaignRegionId: SCRAP_QUARRY_REGION_ID,
               campaignStageKind: 'npc-briefing',
@@ -4783,11 +4724,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 채석공',
               conversationId: SCRAP_QUARRY_WAITING_CONVERSATION_ID,
               conversationTitle: '마지막 석재를 기다리는 채석공',
-              lines: [
-                '마지막 석재 절개가 남았어. 반장은 지지대 얘기만 하지만, 난 저 운반로에 마지막 돌이 실리는 걸 보고 싶어.',
-                '네가 발파선의 수거반을 치우면 내가 먼저 들어가서 절개면을 정리할게. 압축 드릴은 이미 챙겼어.',
-                '오른쪽 안전 작업판은 봤어? 작업 시간 안에 끝내야 고대 병기가 채석장 절벽을 우회한다더군.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.QUARRY_WAITING.lines,
               presentationProfileId: 'quarry-worker',
             },
             {
@@ -4831,10 +4768,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 채석공',
               conversationId: SCRAP_QUARRY_WAITING_WORKING_CONVERSATION_ID,
               conversationTitle: '절개 갱도 앞에 선 대기 채석공',
-              lines: [
-                '통로가 열렸어. 발파 신호등이 켜지면 내가 먼저 들어가서 절개면을 정리할게.',
-                '넌 절단기 쪽을 맡아줘. 선점 수거반이 또 발파선을 노릴지도 몰라.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.QUARRY_WORKING.lines,
               presentationProfileId: 'quarry-worker',
               enabled: false,
             },
@@ -4846,10 +4780,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               speaker: '대기 채석공',
               conversationId: SCRAP_QUARRY_WAITING_AFTER_CONVERSATION_ID,
               conversationTitle: '폐쇄를 마친 대기 채석공',
-              lines: [
-                '마지막 석재가 운반로를 떠났어! 발파 신호등은 켜 둘게. 이제 이 절벽은 지지대로 지탱하면 돼.',
-                '초대형 절단검은 가져가. 네 로봇 검이 우리 채석장 절벽을 우회시킨 셈이니까.',
-              ],
+              lines: SCRAP_REGION_CONVERSATION.QUARRY_AFTER.lines,
               presentationProfileId: 'quarry-worker',
               enabled: false,
             },

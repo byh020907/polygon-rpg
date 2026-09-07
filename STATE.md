@@ -8,11 +8,11 @@
 
 ## Current Phase
 
-`Human Feedback Priority — PWA의 실제 지속 profile Release A → B 전환은 Human 확인 대기이며 PASS로 추정하지 않는다. 이 대기는 전역 blocker가 아니므로, 현재는 도입부의 대사 용어를 장면 안에서 풀어 말하는 다음 자율 slice를 진행한다.`
+`Human Feedback Priority — PWA의 실제 지속 profile Release A → B 전환은 Human 확인 대기이며 PASS로 추정하지 않는다. 이 대기는 전역 blocker가 아니므로, 도입 뒤 처음 만나는 폐광 산촌의 반복 인물·시설·전투가 실제 Browser 입력과 viewport에서 한 연속 흐름으로 읽히는 다음 검증 전선을 진행한다.`
 
 ## Active Execution Goal
 
-`PG-STORY-DELIVERY` / Architecture Story Interaction·Authored Campaign Content — 도입의 구조 요청 → 제어핵 선택 → 고물상 분석에서 제어핵·중앙 지휘소·군수 인장을 처음 등장할 때 눈앞의 기능과 일상어로 함께 설명한다. transcript와 현장 대사는 같은 immutable authored line을 유지한다. 다음 slice는 다섯 지역의 반복 NPC 대사를 같은 기준으로 점검·수리하는 것이며, PWA persistent A→B waiting/apply/save/offline은 Human 검증 대기로만 보존한다.
+`PG-CAST-CONTINUITY` / Architecture Story Interaction·Authored Campaign Content·Rendering, Input and Accessibility — 새 저장에서 도입을 거쳐 폐광 산촌의 작업반장·대기 광부·라이벌이 사건 전/진행/해결 후의 위치·작업·대사 변화와 구조·굴착기 흐름을 실제 Browser 입력·desktop/mobile viewport에서 끊김 없이 보여 준다. PWA persistent A→B waiting/apply/save/offline은 Human 검증 대기로만 보존한다.
 
 ## Desired-State Comparison
 
@@ -23,7 +23,7 @@
 | Sword motion and roll         | satisfied                    | 검을 머리 위로 들지 않고 진행 방향 반대쪽 몸 뒤로 낮게 준비→몸 앞을 가로질러 진행 방향으로 빠른 횡·사선 베기→후반 감속→복귀. 독립 실제 touch trace에서 초기 각변위가 후반보다 확연히 크고 포즈도 같은 결과로 읽힌다. 이전 full forward roll·방향 유지 달리기·stamina18·회피/이동/충돌 계약은 유지된다. |
 | Shared geometry / contact     | satisfied                    | 11종×5장비 canonical reach/타이밍·좌우·중복 피해·guard 검증 PASS. 새 긴 다리도 실제 outline의 hurt를 공유한다. 최신 횡·사선 모션의 fresh collector heavy58→38 및 mobile airSlash58→46 공중 접촉→착지를 실제 입력으로 확인했다.                                                                         |
 | PWA release update            | unverified · Human 확인 대기 | `v0.1.1`과 deterministic buildId가 메뉴와 Service Worker에서 같은 release metadata를 읽고 focused metadata/lifecycle fixture는 PASS. 실제 persistent profile의 A → B waiting discovery → 사용자 apply → 저장 유지 → offline B 재실행은 Human이 확인하며, 이 대기만으로 다른 개발을 막지 않는다.        |
-| Story terminology             | gap                          | 도입부 제어핵 선택·고물상 분석은 장면 안에서 기능과 일상어로 뜻을 풀고 transcript/map 일치를 fixture와 실제 input Browser flow로 확인했다. 다섯 지역의 반복 NPC 대사는 같은 기준으로 아직 점검·검증되지 않았다.                                                                                        |
+| Story terminology             | satisfied                    | 도입부와 다섯 지역의 핵심·생활 NPC 전/진행/후 20개 대사는 현장과 transcript가 하나의 immutable authored catalog를 공유한다. 처음 나오는 작업 용어는 눈앞의 물건·행동·결과로 풀며, `test:intro`와 폐광 실제 Browser input 말풍선으로 확인했다.                                                          |
 | Remaining product             | gap                          | 미검증 전체 캠페인은 이 범위에서 완료로 추정하지 않는다. INBOX 원문과 이전 OpenCode candidate는 보존한다.                                                                                                                                                                                              |
 
 ## Verification
@@ -38,6 +38,7 @@
 - 2026-09-07 Codex in-app Browser의 새 localhost origin에서 A(`v0.1.0`/`d68e332bb9da`)를 처음 연 뒤 같은 A를 다시 열어 활성화를 기다리고, site data를 지우지 않은 채 같은 origin server를 B(`v0.1.1`/`13324b6b163c`)로 교체했다. B 재열기에서 update waiting·apply UI 없이 B metadata가 직접 표시됐다. 이 surface가 persistent worker/controller를 증명하지 못했으므로 PWA gap을 유지한다.
 - Fresh-context independent verifier: `npm run test:pwa`와 `git diff --check` PASS. release metadata·cache·save-before-apply 구현 계약은 code inspection상 정합하지만 fixture는 waiting worker를 주입하는 fake adapter라 persistent A→B discovery·controller change·save 유지·offline B를 증명하지 못한다고 판정했다. 따라서 PWA Goal은 partial pass이며 gap을 유지한다.
 - `npm run test:intro` PASS: 도입 stage·저장·대화·지역 흐름 32개 check를 통과했고, 구조 줄을 포함한 현장 대사와 replay transcript의 동일성 및 용어의 기능 설명을 고정했다. Codex in-app Browser의 interactive `inputQaStart=scrap-intro-before`와 `scrap-intro-after`에서 실제 ↑ 입력으로 제어핵 선택·고물상 분석 말풍선을 확인했다.
+- 2026-09-07 지역 대사 catalog slice: `npm run test:intro` PASS (32 checks), `npm run test:story` PASS, targeted Prettier/ESLint와 `git diff --check` PASS. 다섯 지역의 작업반장/생활 인물 20개 전·진행·후 대사를 한 frozen authored catalog로 만들고 map/transcript 일치를 fixture로 고정했다. Codex in-app Browser `?inputQa=1&inputQaStart=scrap-mine-roadhead`에서 실제 ↑ 입력으로 폐광 작업반장의 "사람을 꺼낼 레일" 말풍선과 현장 목표를 확인했다. fresh-context independent verifier PASS.
 
 ## Blockers
 
