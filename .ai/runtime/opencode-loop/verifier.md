@@ -1,7 +1,6 @@
 ---
 description: Independently verify the current Product Goal Loop candidate
 mode: subagent
-model: opencode-go/muse-spark-1.3-contributor
 permission: allow
 ---
 

@@ -39,3 +39,7 @@
 ## Blockers
 
 없음.
+
+## Preserved Work Reference
+
+OpenCode candidate `opencode/product-goal-loop/20260905142359-2188ab1adfbe` at `0d5a9dc` remains unmerged in `C:/Users/byh02/AppData/Local/ProductGoalLoop/OpenCode/d76ddb28cc8ea5fa/worktrees/20260905142359-2188ab1adfbe`. Its execution and verification reports remain in `.git/product-goal-loop/opencode/executions/20260905142359-2188ab1adfbe.json`. It contains skeleton/roll/framing work and ground attack contact fixes; required continuous desktop/mobile visual evidence was not completed. Before reusing it, compare against the newer main and pending INBOX, preserve both implementations, and independently verify the relevant changes. This reference is recovery evidence, not completion or permission to overwrite current work.

@@ -5,6 +5,7 @@
 This project uses exactly one Engineering Method:
 
 - `.ai/methods/product-goal-loop/METHOD.md`
+- Product Goal Loop Updated: `2026-09-07T15:08:33+09:00`
 
 The local Method is vendored verbatim from:
 
@@ -55,6 +56,9 @@ Before product work, read the selected Method and all four Project Sources compl
 - The worktree is transport isolation only. `INBOX.md` remains the sole Human Feedback source and loop correctness does not depend on a persistent worktree.
 
 ## Project Instructions
+
+- Codex and OpenCode completion/blocker notifications use `.ai/runtime/common/notify.mjs`; its `--help` defines the input contract. Use the existing account-level `PGL_NTFY_URL` and optional `PGL_NTFY_TOKEN`, never commit their values. Codex sends one verified completion or blocker summary with a stable event key; OpenCode's runner sends its result automatically. Busy/no-op and status queries do not notify.
+- Keep only one development trigger enabled for this repository: Codex heartbeat and OpenCode runner have independent guards. Preserve a Human pause when feedback arrives. Before changing execution engines, finish or preserve the current worker and inspect the preserved-work reference in `STATE.md`.
 
 - Preserve existing Human changes and immutable feedback wording.
 - Infer routine implementation choices from the Product and Engineering Desired States instead of repeatedly asking for approval.

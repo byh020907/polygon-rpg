@@ -1,62 +1,43 @@
-# OpenCode Product Goal Loop Adapter
+# Small OpenCode Product Goal Loop
 
-이 adapter는 Product Goal Loop의 Runtime Contract를 Windows, Git과 OpenCode에서 실행하는 선택적 구현입니다. Product Goal Loop의 canonical definition은 [`METHOD.md`](../../METHOD.md)이며, 이 디렉터리의 구현과 문서는 특정 환경을 위한 비규범적 adapter입니다.
+사람은 일반 OpenCode의 `product-goal-loop-manager` 관리 대화에서 요청합니다. 작은 실행기는 중복 실행 방지, Full access worker 한 번 실행, 결과 기록과 알림을 담당합니다. AI가 선택한 Method를 읽고 Goal 선택·worktree·구현·독립 검증·최신 main 병합·commit·push를 수행합니다.
 
-## Operating Model
+Live TUI 연결, 상시 backend, 별도 reconciliation agent, custom tool, Git 통합 상태 머신과 자동 세션 삭제는 없습니다. 실행 중에만 private localhost OpenCode server를 사용해 session의 Full access를 명시하고 확인합니다. 실행 후 server를 종료하며 대화는 OpenCode의 저장된 session과 로컬 결과에서 확인합니다. 실행기는 worker의 검증 보고를 기록하며 그 자체로 제품 완료를 독립 증명하지 않습니다.
 
-사람은 최초 설치와 장애 복구를 제외하면 script를 직접 다루지 않습니다. 설치 시 만들어지는 지속적인 `개발 loop 관리 대화`가 기본 인터페이스이며, 다음 요청을 자연어로 처리합니다.
+## 시작
 
-- Product, UX, Quality와 Project Direction에 관한 Human Feedback 등록
-- 현재 Execution Goal, blocker와 verification 상태 확인
-- scheduler pause/resume과 즉시 실행
-- active worker 열기, 중단과 보존된 candidate 복구
+이 프로젝트의 기존 OpenCode 모델 지정은 `.opencode/agents/product-goal-loop-worker.md`와 `product-goal-loop-verifier.md`에 보존한다. 설치 시 다른 role 파일이 감지되면 덮어쓰지 말고 프로젝트 설정을 다시 확인한다. `PGL_MODEL`은 worker 실행의 명시적 override다. Codex 트리거가 활성인 동안 OpenCode 예약과 실행기는 paused로 유지한다. 구형 candidate 복구 참조는 프로젝트 `STATE.md`에 있다.
 
-manager는 feedback을 임의의 구현 Task로 번역하지 않고 Human 원문 그대로 feedback-only 경로에 전달합니다. 상태 조회와 Runtime control 요청은 `INBOX.md`에 넣지 않습니다.
-
-manager와 자동 worker는 localhost에만 열린 같은 OpenCode backend를 사용합니다. 각 실행은 이름 있는 Live TUI session이므로 사용자는 진행 중 worker를 열어 대화, tool call과 결과를 실시간으로 볼 수 있습니다. worker에 Human이 직접 참여한 session은 자동 정리 대상에서 제외됩니다.
-
-## Execution and Integration
-
-기본 scheduler는 한 tick에 Execution Goal 하나를 최신 `origin/main` 기반의 전용 Git worktree에서 수행합니다. atomic lease가 같은 제품의 development writer를 하나로 제한하고, crash 시 candidate와 evidence를 보존합니다.
-
-완료 candidate는 최신 `origin/main`을 history rewrite 없이 다시 통합하고, 실행 중 추가된 feedback을 보존한 상태에서 fresh verification을 통과해야 합니다. clean worktree, 완료된 Active Execution Goal과 verification evidence가 확인된 뒤에만 일반 fast-forward push로 `origin/main`에 반영합니다. push race는 재통합과 재검증으로 처리하며 rebase와 force-push는 사용하지 않습니다.
-
-자동화 경계는 검증된 `main` 반영까지입니다. tag 생성, release와 production 배포는 Human이 수행합니다.
-
-## Full Access
-
-manager, worker, verifier와 reconciliation을 포함한 모든 OpenCode agent는 effective wildcard permission이 `allow`이고 그 뒤에 `ask`나 `deny`가 없는 Full access 상태에서만 시작합니다. adapter는 agent configuration만 믿지 않고 각 session도 wildcard `allow`로 명시해 먼저 생성한 뒤 해당 session에 attach합니다. `--auto`만으로 Full access를 추측하지 않습니다. `ask`, `deny` 또는 확인 불가 상태에서는 제품 파일을 건드리지 않고 permission blocker를 보고합니다.
-
-Full access는 implementation, verification, integration과 cleanup을 승인 대기 없이 끝낼 수 있는 기술 capability입니다. production 배포, 결제, 외부 전송, destructive action 또는 Method가 허용하지 않은 작업을 승인하는 뜻이 아닙니다.
-
-## Self-Describing CLI
-
-CLI의 command registry가 parsing, text help와 machine-readable help의 단일 source of truth입니다. 별도 CLI 규칙 문서나 agent skill을 먼저 읽지 않아도 executable help만으로 명령을 선택하고 안전하게 복구할 수 있어야 합니다.
+Node 20+, PowerShell 7+, OpenCode, Git과 프로젝트에서 선택한 Product Goal Loop sources가 필요합니다.
 
 ```powershell
-pgl-opencode --help
-pgl-opencode <command> --help
-pgl-opencode help --json
-pgl-opencode <command> --help --json
+pwsh -File .\methods\product-goal-loop\adapters\opencode\install.ps1 -ProjectPath C:\projects\my-product -DryRun
+pwsh -File .\methods\product-goal-loop\adapters\opencode\install.ps1 -ProjectPath C:\projects\my-product -Schedule
 ```
 
-root help는 quick start, 전체 command tree, Runtime 위치, 상태와 exit code를 설명합니다. 각 command help는 prerequisites, 읽거나 변경하는 대상, side effect, concurrency와 idempotency, dry-run, 출력 형태, 실패 뒤 실행할 recovery command를 함께 설명합니다. JSON 출력은 자동화가 안정적으로 소비할 수 있는 versioned envelope를 사용하고 stdout에는 결과만 기록합니다.
-
-README의 command 예시는 발견을 위한 최소 진입점일 뿐입니다. 설치 옵션, command argument, flag, exit code와 복구 절차의 canonical source는 현재 설치된 executable의 `--help`와 JSON help입니다.
-
-## Getting Started
-
-source repository의 installer로 adapter를 제품 저장소의 `.ai/runtime/opencode-loop/`에 vendoring하고 setup을 한 번 수행합니다.
+`-Schedule`을 생략하면 파일만 설치합니다. 최초 설치 후 일반 OpenCode에서 manager agent를 선택한 관리 대화를 유지합니다. 세부 동작·명령·복구 방법은 실행 도구의 help가 정본입니다.
 
 ```powershell
-pwsh -File .\methods\product-goal-loop\adapters\opencode\install.ps1 -ProjectPath C:\projects\my-product
+node .ai/runtime/opencode-loop/loop.mjs --help
+node .ai/runtime/common/notify.mjs --help
 ```
 
-이후 다음 순서로 executable help를 따라 운영합니다. 설치된 wrapper는 `.ai\runtime\opencode-loop\pgl-opencode.cmd`이며, PATH에 등록한 경우 같은 명령을 `pgl-opencode`로 줄여 사용할 수 있습니다.
+## 공통 ntfy 알림
 
-1. `.\.ai\runtime\opencode-loop\pgl-opencode.cmd --help`에서 환경 요구사항과 quick start를 확인합니다.
-2. `pgl-opencode doctor --help`로 Node, Git, OpenCode, `origin/main`과 Full access preflight를 확인합니다.
-3. `pgl-opencode setup --help`에 표시된 dry-run과 setup 절차로 localhost backend, scheduler와 manager session을 구성합니다.
-4. `pgl-opencode manager --help`에 따라 `개발 loop 관리 대화`를 엽니다.
+Codex와 OpenCode 모두 [공통 notify.mjs](../common/notify.mjs)를 사용합니다. `PGL_NTFY_URL`에 프로젝트가 구독하는 topic 전체 URL을 설정하면 활성화됩니다. 필요하면 `PGL_NTFY_TOKEN`을 환경 변수로 제공합니다. 스케줄러 계정에도 같은 환경 설정이 필요합니다. 기존 프로젝트 topic이나 token은 카탈로그에 포함하지 않습니다.
 
-정확한 flag나 복구 command를 이 문서에서 추측하지 마십시오. 실행 환경에 설치된 CLI의 해당 subcommand help를 조회하면 현재 동작과 side effect를 함께 확인할 수 있습니다.
+- 한 Goal 완료: 변경 요약, 검증 요약, published commit.
+- 전체 루프 완료: 최종 제품 상태 요약.
+- Blocker/실패: 원인과 필요한 다음 행동.
+- Busy/no-op은 알리지 않고 같은 event/key의 반복을 억제합니다.
+- 알림 전달 실패는 경고로 남기며 이미 완료한 개발을 다시 실행시키지 않습니다.
+
+OpenCode는 worker 결과를 자동 전송합니다. Codex에서는 완료/차단을 판단한 AI가 같은 notifier를 호출하면 됩니다. 원문 transcript·코드·비밀정보는 보내지 않고 사용자가 허용한 요약만 전송합니다. ntfy를 쓰지 않아도 결과와 blocker는 로컬에 남습니다. 자세한 입력 형식과 재시도는 notifier help에서 확인합니다.
+
+## 기존 0.1 설치에서 이동
+
+현재 실행의 종료를 확인하고 기존 loop를 pause합니다. 기존 Backend/Tick Scheduled Tasks와 외부 watchdog을 비활성화한 뒤, 기존 `.ai/runtime/opencode-loop`를 백업합니다. 이전 `.opencode/agents/product-goal-loop-*`와 `.opencode/tools/product_goal_loop.js`도 백업해 중복 role/tool 로딩을 막습니다. 기존 candidate worktree, `.git/product-goal-loop` evidence와 OpenCode 대화는 보존하고, 미완료 작업의 경로와 다음 행동을 STATE.md에 연결합니다.
+
+그 후 새 installer를 실행합니다. 기존 watchdog의 topic은 같은 계정의 환경 변수로 옮기고, 중복 ntfy 알림을 보내는 watchdog은 재시작하지 않습니다. 이 카탈로그 변경은 이미 설치된 프로젝트나 예약 작업을 자동 변경하지 않습니다. 새 guard는 이전 adapter/Codex guard와 상호 운용하지 않으므로 동일 제품에 두 개발 trigger를 동시에 켜지 않습니다.
+
+Method의 정본은 [METHOD.md](../../METHOD.md)입니다. 최고 권한은 기술 capability이며, tag·release·production 배포는 Human이 관리합니다.

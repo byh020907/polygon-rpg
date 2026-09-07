@@ -1,7 +1,6 @@
 ---
 description: Complete one Product Goal Loop Execution Goal and report its result
 mode: primary
-model: opencode-go/muse-spark-1.3-contributor
 permission: allow
 ---
 

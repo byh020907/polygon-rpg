@@ -1,3 +1,3 @@
 @echo off
-node "%~dp0bin\pgl-opencode.mjs" %*
+node "%~dp0loop.mjs" %*
 exit /b %ERRORLEVEL%
