@@ -15,6 +15,7 @@ import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
+  SCRAPYARD_OWNER_COMMISSION_ENTITY_ID,
   SCRAPYARD_REST_ENTITY_ID,
   SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID,
@@ -44,6 +45,7 @@ import {
   SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID,
+  SCRAP_RIVAL_SURVEY_ENTITY_ID,
   SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID,
   SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID,
   SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID,
@@ -230,6 +232,8 @@ function mapEntityLines(entityId) {
 
 const prologueTranscriptById = new Map(
   resolveScrapPrologueConversationTranscripts([
+    SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
+    SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
     SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
     SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
     SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_RESCUE,
@@ -248,6 +252,14 @@ function assertMapEntityLinesMatchTranscript(entityId, conversationId) {
   );
 }
 
+assertMapEntityLinesMatchTranscript(
+  SCRAPYARD_OWNER_COMMISSION_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
+);
+assertMapEntityLinesMatchTranscript(
+  SCRAP_RIVAL_SURVEY_ENTITY_ID,
+  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
+);
 assertMapEntityLinesMatchTranscript(
   SCRAP_RIVAL_PLATE_ENTITY_ID,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
@@ -271,14 +283,16 @@ assertMapEntityLinesMatchTranscript(
 
 const rescueDialogueText = mapEntityLines(SCRAP_RIVAL_RESCUE_ENTITY_ID).join('\n');
 assert.match(rescueDialogueText, /회수팔/);
+assert.match(rescueDialogueText, /청록 장치/);
 assert.match(rescueDialogueText, /빼야 멈출/);
 assert.doesNotMatch(rescueDialogueText, /winch|전원만 들어오면/);
 const playerDecisionText = mapEntityLines(SCRAP_PLAYER_DECISION_ENTITY_ID).join('\n');
-assert.match(playerDecisionText, /제어핵을 빼면/);
+assert.match(playerDecisionText, /제어핵은 회수팔을 움직이는 장치/);
 assert.doesNotMatch(playerDecisionText, /winch에 연결/);
 const ownerAnalysisText = mapEntityLines(SCRAPYARD_OWNER_ENTITY_ID).join('\n');
-assert.match(ownerAnalysisText, /위치를 보내지 않는 수동 제어핵/);
-assert.match(ownerAnalysisText, /중앙 지휘소 좌표/);
+assert.match(ownerAnalysisText, /회수팔을 움직이던 장치/);
+assert.match(ownerAnalysisText, /중앙 지휘소.*옛 본부/);
+assert.match(ownerAnalysisText, /군수 인장.*전쟁 때 쓰던 잠금/);
 const collapseBriefing = getScrapAwakeningPresentation(SCRAP_AWAKENING_STAGE.COLLAPSE).briefing;
 assert.match(collapseBriefing, /회수팔/);
 assert.match(collapseBriefing, /끌고 가/);
@@ -531,16 +545,16 @@ assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
-  `두 번째 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 끊긴 winch를 점검해야 합니다.`,
+  `두 번째 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 끊긴 구조 줄을 점검해야 합니다.`,
 );
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID),
-  `두 번째 전투 뒤 winch 받침으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
+  `두 번째 전투 뒤 구조 줄 받침으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
 );
 const surveyGuideLines = mapEntityLines(SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID).join('\n');
-assert.match(surveyGuideLines, /winch/);
+assert.match(surveyGuideLines, /구조 줄/);
 assert.match(surveyGuideLines, /방패/);
 assert.doesNotMatch(surveyGuideLines, /winch.*전원/);
 scene.setVisualQaLocation({
@@ -553,7 +567,7 @@ const surveyGuideDialogue = scene.getWorldStatus().dialogue;
 assert.equal(
   surveyGuideDialogue.active,
   true,
-  '두 번째 전투 뒤 winch 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
+  '두 번째 전투 뒤 구조 줄 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
 );
 assert.equal(surveyGuideDialogue.presentationMode, 'ambient');
 assert.equal(surveyGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);

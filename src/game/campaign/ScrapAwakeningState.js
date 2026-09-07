@@ -114,20 +114,20 @@ export function getScrapAwakeningPresentation(stageId) {
       cue: '통로 수거 유닛 · Guard / Strong',
     },
     [SCRAP_AWAKENING_STAGE.YARD_SURVEY]: {
-      title: '끊긴 구조 winch 점검',
-      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 끊긴 구조 winch 받침과 흉곽 지지대 표식을 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
-      objective: '끊긴 winch 받침으로 다가가 ↑로 점검하세요.',
-      cue: 'winch 점검 · 상호작용 ↑',
+      title: '끊긴 구조 줄 점검',
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 끊긴 구조 줄 받침과 흉곽 지지대를 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
+      objective: '끊긴 구조 줄 받침으로 다가가 ↑로 점검하세요.',
+      cue: '구조 줄 점검 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.YARD_APPROACH]: {
       title: '흉곽 안쪽 경계',
-      briefing: `winch 받침을 확인한 두 견습생 앞을 흉곽 경계 수거 유닛이 막습니다. ${SCRAP_CAST.RIVAL.name}이 표식을 붙이는 동안 방패로 간격을 만드세요.`,
+      briefing: `구조 줄 받침을 확인한 두 견습생 앞을 흉곽 경계 수거 유닛이 막습니다. ${SCRAP_CAST.RIVAL.name}이 표식을 붙이는 동안 방패로 간격을 만드세요.`,
       objective: '경계 수거 유닛을 Strong과 guard로 막고 안쪽 현장으로 길을 여세요.',
       cue: '경계 수거 유닛 · Strong / Guard',
     },
     [SCRAP_AWAKENING_STAGE.YARD_PLATE]: {
       title: '떨어진 흉갑 조각 점검',
-      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉곽 아래로 가는 길에 떨어진 흉갑 조각과 cable을 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
+      briefing: `${SCRAP_CAST.RIVAL.name}과 함께 흉곽 아래로 가는 길에 떨어진 흉갑 조각과 연결 줄을 직접 확인한 뒤 안쪽 현장으로 들어갑니다.`,
       objective: '떨어진 흉갑 조각으로 다가가 ↑로 점검하세요.',
       cue: '흉갑 조각 점검 · 상호작용 ↑',
     },
@@ -164,13 +164,13 @@ export function getScrapAwakeningPresentation(stageId) {
     },
     [SCRAP_AWAKENING_STAGE.PLAYER_DECISION]: {
       title: '구조 장치의 유일한 전원',
-      briefing: `${SCRAP_CAST.RIVAL.name}을 끌고 간 회수팔의 직접 제어는 폐병기 흉곽의 제어핵에만 연결돼 있습니다.`,
+      briefing: `${SCRAP_CAST.RIVAL.name}을 끌고 간 회수팔은 폐병기 흉곽의 청록 제어핵으로 움직입니다.`,
       objective: '청록 제어핵에 다가가 ↑로 조사하세요.',
       cue: '제어핵 조사 · 상호작용 ↑',
     },
     [SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED]: {
       title: '사람을 먼저 구한다',
-      briefing: `제어핵을 떼면 비상 운용이 시작될 수 있지만, 회수팔을 멈춰 ${SCRAP_CAST.RIVAL.name}을 구할 다른 방법은 없습니다.`,
+      briefing: `제어핵을 떼면 잠들어 있던 폐병기가 깨어날 수 있지만, 회수팔을 멈춰 ${SCRAP_CAST.RIVAL.name}을 구할 다른 방법은 없습니다.`,
       objective: '제어핵 앞에서 ↑를 눌러 회수팔의 정상 제어를 끊으세요.',
       cue: '구조용 제어핵 회수 · 상호작용 ↑',
     },
@@ -201,7 +201,7 @@ export function getScrapAwakeningPresentation(stageId) {
     [SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED]: {
       title: '수도까지 남은 시간',
       briefing:
-        '제어핵 응답 없음. 고대 병기가 저장된 중앙 지휘소 좌표를 향해 움직입니다. 왕도 도착까지 D-30.',
+        '제어핵 응답 없음. 고대 병기가 "중앙 지휘소", 옛 본부의 위치를 따라 왕도로 갑니다. 도착까지 D-30.',
       objective: 'D-30 안내 뒤 조작이 돌아올 때까지 기다리세요.',
       cue: 'D-30 · 수도 도착까지',
     },
