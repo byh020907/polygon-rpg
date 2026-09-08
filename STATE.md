@@ -4,57 +4,34 @@
 
 ## Runtime Status
 
-`RUNNING` — PWA 실기기 검증은 Human 확인 대기이지만 전역 blocker가 아니며, 폐광 산촌 전선을 계속 검증·구현한다.
+`RUNNING` — PWA 설치형 A→B 검증은 Human 확인 대기지만 전역 blocker가 아니다. Human Feedback Priority의 실제 폐광 연결 이슈 전선을 계속 검증한다.
 
 ## Current Phase
 
-`Human Feedback Priority / Verified Playable Frontier — 메뉴 화면 전환이 input-QA 시작 씬을 먼저 배치한 뒤 enterGame reset이 덮어 쓰던 순서를 수리했다. 새 in-app session의 actual URL route는 이제 폐광 연결로 진입부·작업반장 목표에서 시작한다. 다음 전선은 항구 부두 선점 수거반을 실제로 끝내 연결 이슈 귀환을 확인하고, 온실 연결 이슈→폐광 core/after-state와 mobile 연속 입력을 검증하는 일이다.`
+`Human Feedback Priority / Verified Playable Frontier — 새 저장에서 폐광의 작업반장·구조 현황판을 실제 입력으로 마쳐 두 연결 이슈가 열리고, 폐광→고물상→항구 실제 연결로를 확정해 건선거까지 진행했다. 항구 케이블 수거 유닛을 Strong으로 HP 76→56까지 맞혔으나, 연속 재접근 중 KO가 현재 조우를 HP 76으로 되돌리고 Day 1 저녁→Day 2 아침으로 전진시켰다. 따라서 항구 연결 이슈 완료·귀환은 아직 검증되지 않았다.`
 
 ## Active Execution Goal
 
-`PG-CAST-CONTINUITY` / Architecture Story Interaction·Authored Campaign Content·Rendering, Input and Accessibility — 새 저장의 폐광 산촌에서 작업반장·대기 광부·라이벌과 굴착기 흐름이 before/in-progress/resolved 상태로 실제 입력에 따라 변하고, 연결 이슈·갱도 전투·마지막 작업·부품 회수 후 같은 지역의 생활/설비 변화가 desktop과 mobile에서 읽힌다. input-QA URL은 menu reset 뒤에도 지정한 fresh campaign scene을 다시 배치하며 pulse는 shared sequence만 전달한다. 다음 실행은 production one-shot Strong/guard/roll input으로 건선거의 남은 부두 선점 수거반을 실제로 끝내 연결 이슈 완료·귀환을 확인한 뒤, 온실 연결 이슈→폐광 core event→갱도/마지막 작업/after-state와 mobile을 검증한다.`
+`PG-CAST-CONTINUITY` / Architecture Authored Campaign Content·Campaign Domain·Story Interaction·Rendering/Input — dependency chain은 항구 건선거 cable 확보 → 온실 압력 버팀쇠 확보 → 폐광 core event/갱도/마지막 작업/after-state다. 새 저장의 production input으로 이 흐름을 끝까지 완료하고, 작업반장·대기 광부·라이벌과 설비가 before/in-progress/resolved 상태로 변하는지 desktop/mobile에서 판독한다. 범위에는 linked encounter의 실제 combat/recovery 결과와 portal 귀환이 포함되며, 성공하지 못한 actual 전투를 fixture PASS로 대체하지 않는다.`
 
 ## Desired-State Comparison
 
-| Area                                              | Status                       | Current evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Pixel depth / protagonist design / sword and roll | satisfied                    | 작은 셀의 약한 픽셀화와 안티앨리어싱 없는 단단한 경계를 유지한다. 가는 선·소수 위치·측면의 얇은 도형도 최소1픽셀 윤곽을 유지하고 뒤쪽 가림은 보존한다. 작은 머리·긴 팔다리·낮은 횡·사선 베기와 실제 전방 회전을 actual frame strip 및 combat/character/visual fixture로 검증했다.                                                                                                                                                                                                                                                                                                                      |
-| Shared geometry / contact                         | satisfied                    | 보이는 weapon·sweep·hurt geometry와 damage owner의 공통 계약을 11종 공격, 좌우, 중복 피해, guard fixture와 항구 인간 수거반의 실제 Basic 명중(HP 84→73)으로 확인했다. input QA의 legacy combat start는 현재 map이 아니라 해당 academy training map을 초기 구성해 같은 geometry surface에서 console 오류 없이 검증한다.                                                                                                                                                                                                                                                                                 |
-| PWA release update                                | unverified · Human 확인 대기 | 현재 deployable asset fingerprint와 canonical release metadata를 build `7da922c954bb`로 일치시켰다. `npm run test:pwa`의 release metadata·atomic cache/save-before-apply fixture는 PASS. persistent profile A→B waiting/apply/save/offline 재실행은 Human이 확인하며 자동 PASS로 닫지 않는다.                                                                                                                                                                                                                                                                                                          |
-| Story terminology                                 | satisfied                    | 도입·다섯 지역 cast의 현장 대사와 transcript가 동일 authored catalog를 사용하며 현장 행동·결과로 용어를 푼다.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Mine cast frontier                                | partial                      | In-app 새 저장에서 폐광 현황판의 두 연결 이슈 때문에 9구간 core-event 시작이 disabled인 것을 확인했고, 취소 후 HUD가 항구·온실 설비 확보를 안내했다. 실제 폐광→고물상→항구 1구간 연결로, 항구 용접공·현황판·건선거 physical portal, 케이블 수거 유닛의 Strong 4회 actual HP `76→56→36→16→격파`와 인간 수거반 spawn을 판독했다. menu transition 뒤 `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`가 폐광 연결로 진입부와 작업반장 목표에서 시작하는 것을 actual in-app Browser로 재확인했다. `test:platform`, lint, PWA metadata/offline check와 diff check는 PASS. 인간 수거반 actual 완료·연결 이슈 귀환·폐광 core/after-state와 mobile continuous input은 unverified다. |
-| Remaining product                                 | gap                          | 전체 캠페인/최종전/PWA 실기기 등 미검증 Desired State를 완료로 추정하지 않는다.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Area | Status | Current evidence |
+| --- | --- | --- |
+| Pixel depth / protagonist design / sword and roll | satisfied | IntegerPixelSurface와 실제 게임 정지 프레임에서 외곽선·저해상도 nearest-neighbor 확대·작은 머리/긴 팔다리·낮은 횡/사선 베기와 전방 구르기를 확인했다. |
+| Shared geometry / contact | satisfied | 항구 건선거의 production Strong 1회가 보이는 수거 유닛 HP 76→56으로 반영됐다. combat fixture는 renderer/authoritative sweep/hurt/damage contract를 통과한다. |
+| PWA release update | unverified · Human 확인 대기 | release metadata, cache/save-before-apply fixture는 PASS. persistent installed PWA의 A→B waiting/apply/offline 재실행은 Human 확인이 필요하다. |
+| Story terminology | satisfied | 도입과 다섯 지역 cast는 같은 authored catalog의 현장 bubble/transcript로 행동·결과를 먼저 전달한다. |
+| Mine linked-region frontier | partial | 실제 폐광 briefing·facility·disabled core preview와 항구 briefing·facility·건선거 portal까지 확인했다. 첫 linked enemy damage와 KO reset은 actual로 확인했지만, 양 linked encounter 완료, portal return, greenhouse branch, mine core/after-state, mobile 연속 입력은 unverified다. |
+| Remaining product | gap | 전체 캠페인/최종전과 Human PWA 확인을 포함한 Product/Architecture의 미검증 조건을 완료로 추정하지 않는다. |
 
 ## Verification
 
-- Rendering reference: [Godot integer viewport scaling](https://docs.godotengine.org/en/stable/tutorials/rendering/multiple_resolutions.html#stretch-scale-mode)과 [Unity Pixel Perfect / Upscale Render Texture](https://docs.unity3d.com/kr/Packages/com.unity.render-pipelines.universal@8.2/manual/2d-pixelperfect.html)을 참고했다. game world·actor·그림자를 정수 RGBA 버퍼에서 처리하고 최종 Canvas는 putImageData 1회로 출력한다.
-
-- 정지 외곽선 재검증: 기존 global alpha 외곽선은 불투명 world에 합친 캐릭터를 찾지 못했다. 현재는 actor의 실제 불투명 pixel mask에서 윤곽을 완성한 뒤 전용 IntegerPixelSurface로 world를 합성하고 정수 배율로 복제한다. 이전 desktop/mobile/DPR2 정지 상태에서 약98% 달랐던 actor 윤곽 픽셀이 현재 143개 최종 정지 frame 모두 실제 게임과 일치했다. `artifacts/idle-outline-before`, `artifacts/idle-outline-final`에 비교 및 pixel 좌표 evidence를 보존한다.
-
-- 픽셀 표현 조정: 기본 셀4→3, Retro 월드·그림자 경계를 정수 coverage로 생성하고 nearest-neighbor 확대를 유지한다. 독립 1280×720/844×390 실제 입력 캡처 `artifacts/fine-pixel-independent-desktop`, `artifacts/fine-pixel-independent-mobile`에서 작은 픽셀·번짐 없는 경계와 기존 동작을 확인했다. visual/platform/PWA metadata 검사 PASS.
-
 - Highest permission preflight와 loop guard verified. 사용자 첨부 원본은 수정·stage·commit하지 않았다.
-- QA route repair: Alpine screen transition의 먼저 실행된 `onScreenChanged()`가 scenario를 배치한 뒤 menu `enterGame()` reset이 덮어쓰는 실제 in-app 재현을 확인했다. `enterGame()`이 reset 직후 QA latch를 해제하고 scene setup을 재호출한다. 새 port의 in-app Browser에서 mine route가 `폐광 산촌 · 연결로 진입부`, coordinate `730,344`, 작업반장 목표와 QA panel을 보였다. 독립 verifier는 shipyard route 및 일반 `/` menu start를 각각 판독해 QA leakage·console error가 없음을 확인했고 파일을 수정하지 않았다.
-- 이번 Human Feedback Priority 검증: in-app Browser의 항구 점거 건선거에서 player x=846 근처 실제 Basic 입력이 부두 선점 수거반 HP `84→73`과 stamina `100→92`를 만들었다. `?inputQa=1&inputQaStart=combat-hit`은 이제 독립 훈련장과 수거 유닛 모의체를 열며 console map error 없이 geometry overlay를 판독했다. `npm run test:combat`, `npm run test:platform`, lint, release metadata check와 `git diff --check` PASS.
-- QA combat pulse: `?inputQa=1` UI의 `A 기본 한 번`/`S 강한 한 번`은 기존 `pulseQaInput → GameApplication → GameApp → GameInputController → QaInputAdapter` sequence 경로만 사용한다. in-app Canvas에서 Basic 1회가 held checkbox를 바꾸지 않고 stamina `100 → 88`을 만들었다. independent verifier는 adapter boundary·frozen common grammar와 focused platform/format/diff verification을 PASS로 판정했고 파일을 수정하지 않았다.
-- `npm run test:campaign`, `npm run lint`, changed-file Prettier check, `git diff --check` PASS. `npm run release:metadata`와 `npm run release:metadata:check` PASS; deployable release metadata regenerated.
-- Codex in-app Browser `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`: Day 1/D-30 새 시작에서 mine briefing·시설 확인 뒤 연결 이슈를 열고, actual long-road travel과 shipyard briefing·시설 확인을 거쳐 core event는 blocked인 채 점거 건선거로 전이했다. 첫 active linked enemy `건선거 케이블 수거 유닛 · HP 76/76`을 확인했다.
-- Independent verifier: shipyard linked route/bridge and focused fixture PASS; 발견한 active-primary ownership defect는 GameScene 및 campaign domain validation으로 수리했고 campaign regression PASS. Greenhouse runtime route는 다음 actual flow에서 확인한다.
-- 이번 actual desktop 판독: 건선거 spawn 직후 Player x=126, 케이블 수거 유닛 x=720이며 사거리 밖의 Basic 반복은 완료 증거가 아니다. Player를 x=602까지 이동한 뒤 physical `A` 1회가 `HP 76/76 → 65/76`, stamina `100 → 93`을 만들었다. `npm run test:intro` PASS; 독립 verifier는 production completion signal→zero-cost immutable linked action→`clearedEncounterIds`→남은 부두 수거반 투영 fixture(`scripts/scrap-awakening-check.mjs:2675-2709`)를 재확인했다.
-
-- linked-route return repair: 항구 두 연결 전투를 actual desktop Basic 입력으로 끝낸 직후 마지막 적 처치가 `scrapPendingLinkedIssueRegionIds`에서 항구를 제외해 bidirectional 건선거 출구를 비활성화하는 것을 관찰했다. route patch는 active issue의 immutable `scrapLinkedIssueRegionIds`를 읽도록 바꿨다. `node scripts/scrap-awakening-check.mjs`는 항구와 온실에서 production encounter completion 뒤 출구 patch 유지와 실제 jump portal 귀환을 확인했고, `npm run test:campaign`, `npm run lint`, release metadata check, changed-file Prettier 및 `git diff --check`도 PASS했다.
-
-- 이번 in-app QA desktop 판독: `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`에서 실제 held input으로 x=730→558→676→849를 이동하며 대기 광부·작업반장(각 3문장)·구조 현황판(2문장)을 순서대로 완료했다. core-event preview는 `연결 이슈 2개를 현장에서 먼저 해결해야 합니다`를 보이며 `사건 시작 · 9구간`이 disabled였다. 이는 아직 target-region encounter를 끝낸 새 저장의 연속 흐름이나 mobile evidence는 아니다.
-
-- 이번 in-app QA desktop 판독: 같은 새 시작에서 폐광 작업반장·구조 현황판을 실제 held/↑ 입력으로 완료한 뒤 9구간 core-event가 연결 이슈 2개 때문에 disabled인 것을 확인했다. 취소 뒤 HUD가 `항구와 온실에서 구조 설비를 확보한 뒤 폐광 산촌으로 돌아오세요`로 바뀌었다. 실제 장거리 연결로를 통해 항구 조선소에 도착해 도크 확인→건선거 portal 진입→`건선거 케이블 수거 유닛 · HP 76/76` spawn을 확인했고, Basic 입력의 contact가 `76→65`를 만들었다. 이 목표의 cross-region 전투 완료와 mobile은 아직 미검증이다.
-
-- 이번 linked-region repair: `facility-observed`의 active mine linked issue는 map room이 stale QA snapshot이어도 garage-map objective보다 먼저 투영되어 `파열 배관 기생 기계 제압 … 승강기 압력 버팀쇠 설계 확인`을 보인다. `npm run test:intro`(32 checks), `npm run test:campaign`, lint, targeted Prettier와 `git diff --check` PASS; 독립 verifier는 linked entity ID와 shared combat profile 분리, portal return과 ledger 경로를 재판독했다. 실제 browser/mobile 연결 전투 완료는 여전히 unverified다.
-
-- Independent verifier: `npm run test:intro`, `npm run test:campaign`, targeted Prettier/ESLint 및 `git diff --check` PASS. `GameScene`의 fallback은 primary 지역에 남은 cross-region linked issue가 있을 때 primary objective를 우선하고, target 지역에서는 기존 encounter guidance가 우선함을 확인했다. verifier는 파일을 수정하지 않았다.
-
-- 이번 in-app QA desktop 판독: 새 저장에서 폐광 작업반장 3문장과 구조 현황판 2문장을 실제 `↑` 입력으로 마치고 disabled core-event preview를 취소했다. 폐광→고물상→항구의 실제 1구간 연결로를 확정한 뒤 용접공·도크 현황판을 조사하고 건선거 portal에 실제 진입했다. `건선거 케이블 수거 유닛`은 `HP 76/76 → 65/76 → 32/76 → 10/76 → 격파`까지 Basic과 이동+roll 이탈을 반복해 실제로 끝냈고, 후속 `부두 선점 수거반 · HP 84/84`가 등장했다. 인간 수거반·항구 연결 이슈 완료와 귀환, 온실 및 mobile은 이 evidence만으로 PASS 처리하지 않는다. `npm run test:intro`, `npm run test:campaign`, `npm run lint`은 PASS했다.
-
-- 이번 in-app QA desktop 판독: 새 저장에서 폐광 작업반장·대기 광부·현황판 대화를 `↑` 입력으로 끝내 9구간 core event가 두 연결 이슈 때문에 disabled인 것을 확인했다. 취소 후 실제 두 장거리 연결로를 통해 항구로 갔고, 용접공·대기 갑판원·도크 현황판 뒤 `건선거 케이블 수거 유닛`을 one-shot Strong 입력으로 `76→56→36→16→격파`해 후속 `부두 선점 수거반 · HP 84/84` spawn까지 확인했다. 이 실제 combat은 KO 시 현재 encounter만 reset하므로, 인간 수거반 격파와 return portal은 아직 증명하지 않았다. `npm run test:campaign`, `npm run lint`, `npm run release:metadata:check`, `git diff --check` PASS. `npm run test:intro`는 90초 이상 결과 출력 없이 실행되어 중단했으며 PASS가 아니다.
+- Codex in-app Browser (`?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`)에서 새 저장의 폐광 작업반장 3문장·구조 현황판 2문장·연결 이슈 2개 표시를 실제 `↑`/이동 입력으로 확인했다.
+- 같은 session에서 폐광→고물상→항구의 1구간 연결로를 확정하고 조선소 용접공·도크 현황판을 완료한 뒤 건선거 portal에 들어갔다. 케이블 수거 유닛은 Strong 1회에 `76/76 → 56/76`; 이후 KO는 encounter를 `76/76`으로 reset하고 campaign clock을 한 segment 전진시켰다. 완료·귀환 evidence가 아니므로 남은 링크를 PASS로 처리하지 않는다.
+- `node scripts/scrap-awakening-check.mjs`, `npm run test:campaign`, `npm run lint`, `npm run release:metadata:check`, `git diff --check` PASS.
+- Independent verifier는 linked-flow fixture가 `encounter.completeForVisualQa()`로 shipyard/greenhouse 완료를 seed한다는 점을 확인했다. domain wiring은 통과하지만 fresh-save production combat·귀환 증거가 아니므로 Active Execution Goal을 완료 처리하지 않았다.
 
 ## Blockers
 
@@ -62,4 +39,4 @@
 
 ## Preserved Work Reference
 
-OpenCode candidate `opencode/product-goal-loop/20260905142359-2188ab1adfbe` at `0d5a9dc` remains unmerged in `C:/Users/byh02/AppData/Local/ProductGoalLoop/OpenCode/d76ddb28cc8ea5fa/worktrees/20260905142359-2188ab1adfbe`. Its reports remain in `.git/product-goal-loop/opencode/executions/20260905142359-2188ab1adfbe.json`; it was compared but not merged or deleted.
+OpenCode candidate `opencode/product-goal-loop/20260905142359-2188ab1adfbe` at `0d5a9dc` remains unmerged in `C:/Users/byh02/AppData/Local/ProductGoalLoop/OpenCode/d76ddb28cc8ea5fa/worktrees/20260905142359-2188ab1adfbe`. Its report remains in `.git/product-goal-loop/opencode/executions/20260905142359-2188ab1adfbe.json`.
