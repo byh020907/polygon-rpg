@@ -401,7 +401,8 @@ function assertEnchantmentCatalog(catalog) {
 }
 
 function scrapCampaignWorldFacts(campaign) {
-  const pendingLinked = campaign.issueWindow?.linked ?? [];
+  const linkedIssues = campaign.issueWindow?.linked ?? [];
+  const pendingLinked = linkedIssues.filter((issue) => !issue.completed);
   return Object.freeze({
     scrapAwakeningStageId: campaign.awakeningStageId,
     scrapGarageRevealStageId: campaign.garageRevealStageId,
@@ -420,8 +421,13 @@ function scrapCampaignWorldFacts(campaign) {
     // the authored issue window as read-only world facts so map patches can open
     // exactly the required side route without taking ownership of campaign state.
     scrapPendingLinkedIssueRegionIds: Object.freeze(
-      pendingLinked.filter((issue) => !issue.completed).map((issue) => issue.targetRegionId),
+      pendingLinked.map((issue) => issue.targetRegionId),
     ),
+    // A linked field route must remain usable after its last encounter is cleared:
+    // the player still needs its bidirectional exit to return to the active primary
+    // issue.  This stays a read-only projection of the active issue window; map
+    // patches do not own campaign completion or invent a separate route state.
+    scrapLinkedIssueRegionIds: Object.freeze(linkedIssues.map((issue) => issue.targetRegionId)),
     scrapPendingLinkedEncounterIds: Object.freeze(
       pendingLinked.flatMap((issue) => (issue.completed ? [] : issue.remainingEncounterIds)),
     ),

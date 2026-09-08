@@ -2708,6 +2708,83 @@ assert.equal(
   true,
   '첫 연결 전투 뒤에는 남은 항구 수거반만 이어서 나타나야 합니다.',
 );
+shipyardLinkedIssueScene.roomSceneNode.encounter.completeForVisualQa();
+assert.deepEqual(
+  shipyardLinkedIssueScene.getProgressionSnapshot().scrapCampaign.clearedEncounterIds,
+  ['shipyard-drydock-collector', 'dock-salvage-raider'],
+  '두 번째 연결 전투도 production encounter completion 경로에서 한 번만 기록되어야 합니다.',
+);
+assert.ok(
+  shipyardLinkedIssueScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('shipyard-mine-linked-route-open'),
+  '마지막 연결 전투 뒤에도 현재 주목표로 돌아갈 건선거 출구를 유지해야 합니다.',
+);
+setAtPortalToRoom(
+  shipyardLinkedIssueScene,
+  SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+  SCRAP_SHIPYARD_ROAD_ROOM_ID,
+);
+shipyardLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 2 }));
+finishPortalTransition(shipyardLinkedIssueScene);
+assert.equal(
+  shipyardLinkedIssueScene.mapRuntime.getCurrentRoom().id,
+  SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  '연결 전투 완료 뒤에도 실제 portal 입력으로 roadhead에 되돌아가야 합니다.',
+);
+
+const greenhouseLinkedIssueScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+greenhouseLinkedIssueScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  stageKind: 'facility-observed',
+  status: 'available',
+});
+greenhouseLinkedIssueScene.setVisualQaScrapIssueState({
+  activePrimaryIssueId: 'mine-rescue-operation',
+});
+greenhouseLinkedIssueScene.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 1372,
+});
+assert.ok(
+  greenhouseLinkedIssueScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('greenhouse-mine-linked-route-open'),
+  '폐광 구조 연결 이슈는 온실의 파열 배관 진입로도 열어야 합니다.',
+);
+setAtPortalToRoom(
+  greenhouseLinkedIssueScene,
+  SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+);
+greenhouseLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
+finishPortalTransition(greenhouseLinkedIssueScene);
+greenhouseLinkedIssueScene.enterTree();
+assert.equal(
+  greenhouseLinkedIssueScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'greenhouse-linked-pressure-brace-parasite',
+  '폐광 연결 이슈는 온실의 pressure-brace 기생 기계 전투를 열어야 합니다.',
+);
+greenhouseLinkedIssueScene.roomSceneNode.encounter.completeForVisualQa();
+assert.ok(
+  greenhouseLinkedIssueScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('greenhouse-mine-linked-route-open'),
+  '온실 연결 전투 완료 뒤에도 현재 주목표로 돌아갈 배관 출구를 유지해야 합니다.',
+);
+setAtPortalToRoom(
+  greenhouseLinkedIssueScene,
+  SCRAP_GREENHOUSE_PIPE_ROOM_ID,
+  SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+);
+greenhouseLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 2 }));
+finishPortalTransition(greenhouseLinkedIssueScene);
+assert.equal(
+  greenhouseLinkedIssueScene.mapRuntime.getCurrentRoom().id,
+  SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  '온실 연결 전투 완료 뒤에도 실제 portal 입력으로 roadhead에 되돌아가야 합니다.',
+);
 
 setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, 'npc-briefing');
 shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);

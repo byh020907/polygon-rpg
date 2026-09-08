@@ -6231,7 +6231,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       priority: 205,
       when: {
         all: [
-          { fact: 'scrapPendingLinkedIssueRegionIds', includes: SCRAP_SHIPYARD_REGION_ID },
+          { fact: 'scrapLinkedIssueRegionIds', includes: SCRAP_SHIPYARD_REGION_ID },
           { fact: 'scrapRegionStageIds.harbor-shipyard', eq: 'harbor-shipyard:facility-observed' },
           { fact: 'scrapRegionStatuses.harbor-shipyard', eq: 'available' },
         ],
@@ -6435,7 +6435,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       priority: 275,
       when: {
         all: [
-          { fact: 'scrapPendingLinkedIssueRegionIds', includes: SCRAP_GREENHOUSE_REGION_ID },
+          { fact: 'scrapLinkedIssueRegionIds', includes: SCRAP_GREENHOUSE_REGION_ID },
           {
             fact: 'scrapRegionStageIds.greenhouse-plains',
             eq: 'greenhouse-plains:facility-observed',
