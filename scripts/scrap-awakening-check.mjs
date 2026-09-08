@@ -2647,6 +2647,68 @@ assert.ok(
   ),
 );
 
+// A focused mine issue must open the target-region field route without starting
+// that region's own time-costing core event. Each completed field encounter is
+// committed through the production encounter signal, then reveals the next one.
+const shipyardLinkedIssueScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
+shipyardLinkedIssueScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  stageKind: 'facility-observed',
+  status: 'available',
+});
+shipyardLinkedIssueScene.setVisualQaScrapIssueState({
+  activePrimaryIssueId: 'mine-rescue-operation',
+});
+shipyardLinkedIssueScene.setVisualQaLocation({
+  regionId: SCRAP_SHIPYARD_REGION_ID,
+  roomId: SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  x: 1372,
+});
+assert.ok(
+  shipyardLinkedIssueScene.mapRuntime
+    .getResolvedSnapshot()
+    .appliedPatchIds.includes('shipyard-mine-linked-route-open'),
+  '폐광 구조 연결 이슈는 항구 자체 핵심 사건을 시작하지 않아도 건선거 진입로를 열어야 합니다.',
+);
+setAtPortalToRoom(
+  shipyardLinkedIssueScene,
+  SCRAP_SHIPYARD_ROAD_ROOM_ID,
+  SCRAP_SHIPYARD_DRYDOCK_ROOM_ID,
+);
+shipyardLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
+finishPortalTransition(shipyardLinkedIssueScene);
+shipyardLinkedIssueScene.enterTree();
+assert.equal(
+  shipyardLinkedIssueScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'shipyard-drydock-collector',
+  '첫 연결 전투는 케이블 수거 유닛이어야 합니다.',
+);
+shipyardLinkedIssueScene.roomSceneNode.encounter.completeForVisualQa();
+assert.deepEqual(
+  shipyardLinkedIssueScene.getProgressionSnapshot().scrapCampaign.clearedEncounterIds,
+  ['shipyard-drydock-collector'],
+  '연결 전투 결과는 실제 encounter completion 경로에서 campaign에 기록되어야 합니다.',
+);
+const shipyardLinkedRegion = shipyardLinkedIssueScene
+  .getWorldStatus()
+  .campaign.regions.find((region) => region.id === SCRAP_SHIPYARD_REGION_ID);
+assert.equal(shipyardLinkedRegion.status, 'available');
+assert.equal(shipyardLinkedRegion.eventStageKind, 'facility-observed');
+assert.equal(
+  shipyardLinkedIssueScene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'shipyard-drydock-collector-unit'),
+  false,
+  '연결 전투는 항구 자체 핵심 사건의 전투를 미리 시작하면 안 됩니다.',
+);
+assert.equal(
+  shipyardLinkedIssueScene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.some((entity) => entity.id === 'shipyard-linked-dock-raider'),
+  true,
+  '첫 연결 전투 뒤에는 남은 항구 수거반만 이어서 나타나야 합니다.',
+);
+
 setAtCampaignInteraction(shipyardFlowScene, SCRAP_SHIPYARD_ROAD_ROOM_ID, 'npc-briefing');
 shipyardJumpSequence = completeDialogue(shipyardFlowScene, shipyardJumpSequence);
 let shipyardRegion = shipyardFlowScene

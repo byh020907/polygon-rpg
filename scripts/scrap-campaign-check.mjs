@@ -167,11 +167,21 @@ function satisfyActiveLinkedIssues(snapshot, primaryRegionId) {
       linkedIssue.targetRegionId,
       linkedIssue.completionStageKind,
     );
-    current = clearLinkedEncounters(
-      current,
-      linkedIssue.targetRegionId,
-      `satisfy:${primaryRegionId}`,
+    current = toScrapCampaignSnapshot(
+      { ...current, currentLocationId: linkedIssue.targetRegionId },
+      SCRAP_CAMPAIGN_PROFILE,
     );
+    for (const encounterId of linkedIssue.requiredEncounterIds ?? []) {
+      if (current.clearedEncounterIds.includes(encounterId)) continue;
+      current = commit(
+        current,
+        linkedEncounterAction(
+          linkedIssue.targetRegionId,
+          encounterId,
+          `satisfy:${primaryRegionId}`,
+        ),
+      );
+    }
   }
   return toScrapCampaignSnapshot(
     { ...current, currentLocationId: primaryRegionId },

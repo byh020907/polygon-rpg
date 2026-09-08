@@ -8,11 +8,11 @@
 
 ## Current Phase
 
-`Human Feedback Priority / Verified Playable Frontier — 새 Day 1 폐광 입력에서 작업반장 대화 3줄 뒤 현황판 목표가 활성화되고, 실제 held 이동은 730→874 좌표로 확인해 현황판 대화를 열었다. 다음 미완료 흐름은 두 연결 이슈의 실제 진행과 갱도·전투·마지막 작업을 거친 지역 after-state 및 mobile 연속 입력이다.`
+`Human Feedback Priority / Verified Playable Frontier — 새 Day 1 폐광 입력으로 작업반장 3줄→현황판→연결 이슈 modal→항구 용접공·현황판을 실제 입력으로 진행했다. 현황판 뒤 연결 전투 경로가 막혀 있던 gap을 수리했고, 갱도·전투·마지막 작업을 거친 지역 after-state 및 mobile 연속 입력은 계속 미검증이다.`
 
 ## Active Execution Goal
 
-`PG-CAST-CONTINUITY` / Architecture Story Interaction·Authored Campaign Content·Rendering, Input and Accessibility — 새 저장의 폐광 산촌에서 작업반장·대기 광부·라이벌과 굴착기 흐름이 before/in-progress/resolved 상태로 실제 입력에 따라 변하고, 연결 이슈·갱도 전투·마지막 작업·부품 회수 후 같은 지역의 생활/설비 변화가 desktop과 mobile에서 읽힌다. 이번 tick은 direct QA state 대입 없이 held input의 실제 월드 좌표 read model을 추가해 CUA 입력을 판독 가능하게 했고, UI bridge 교체 버퍼까지 보완했다. 다음 tick은 이 계약으로 연결 이슈 및 전투 이후를 계속 검증한다.`
+`PG-CAST-CONTINUITY` / Architecture Story Interaction·Authored Campaign Content·Rendering, Input and Accessibility — 새 저장의 폐광 산촌에서 작업반장·대기 광부·라이벌과 굴착기 흐름이 before/in-progress/resolved 상태로 실제 입력에 따라 변하고, 연결 이슈·갱도 전투·마지막 작업·부품 회수 후 같은 지역의 생활/설비 변화가 desktop과 mobile에서 읽힌다. 이번 tick은 주목표가 활성화된 뒤 항구·온실의 required field-combat route를 열고, encounter completion을 active issue window만 소유하는 domain action으로 연결했다. 실제 desktop에서 항구 현황판 뒤 점거 건선거 portal과 케이블 수거 유닛(HP 76/76) spawn까지 확인했다. 다음 tick은 두 linked combat 완료→폐광 core event→갱도/마지막 작업/after-state를 실제 입력으로 검증한다.`
 
 ## Desired-State Comparison
 
@@ -22,16 +22,15 @@
 | Shared geometry / contact | satisfied | 보이는 weapon·sweep·hurt geometry와 damage owner의 공통 계약을 11종 공격, 좌우, 중복 피해, guard fixture 및 실제 representative input으로 확인했다. |
 | PWA release update | unverified · Human 확인 대기 | release metadata/cache/save-before-apply fixture는 PASS. persistent profile A→B waiting/apply/save/offline 재실행은 Human이 확인하며 자동 PASS로 닫지 않는다. |
 | Story terminology | satisfied | 도입·다섯 지역 cast의 현장 대사와 transcript가 동일 authored catalog를 사용하며 현장 행동·결과로 용어를 푼다. |
-| Mine cast frontier | partial | Browser 새 Day 1에서 작업반장 3줄→현황판 목표→실제 held 이동 730→874→현황판 1/2 대화를 확인했다. 연결 이슈, 실제 갱도 전투·마지막 작업, resolved after-state와 mobile continuous input은 아직 unverified다. |
+| Mine cast frontier | partial | Browser 새 Day 1에서 작업반장 3줄→현황판→연결 이슈 2개 modal→항구 용접공·현황판을 actual held input으로 진행했다. 항구 core event는 mine 주목표 때문에 계속 blocked이며, 수리 뒤 점거 건선거 portal과 케이블 수거 유닛 spawn을 실제 확인했다. linked combat 완료·온실 연결·폐광 core/after-state와 mobile continuous input은 아직 unverified다. |
 | Remaining product | gap | 전체 캠페인/최종전/PWA 실기기 등 미검증 Desired State를 완료로 추정하지 않는다. |
 
 ## Verification
 
 - Highest permission preflight와 loop guard verified. 사용자 첨부 원본은 수정·stage·commit하지 않았다.
-- `npm run test:intro`, `npm run test:platform`, `npm run lint`, `npm run format:check`, `git diff --check` PASS.
-- `npm run release:metadata`, `npm run test:pwa` PASS. current release metadata is regenerated from deployable sources.
-- Codex in-app Browser `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`: Day 1/D-30 새 시작, 작업반장 3줄 완료, held right actual input 730→874, `붕괴 광산 구조 현황판` 1/2 dialogue 확인.
-- Independent verifier PASS: QA read model is inputQa-only, immutable/read-only; buffered UI bridge replacement path and fixture are aligned. No gameplay/persistence writer added.
+- `npm run test:campaign`, `npm run lint`, changed-file Prettier check, `git diff --check` PASS. `npm run release:metadata`와 `npm run release:metadata:check` PASS; deployable release metadata regenerated.
+- Codex in-app Browser `?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`: Day 1/D-30 새 시작에서 mine briefing·시설 확인 뒤 연결 이슈를 열고, actual long-road travel과 shipyard briefing·시설 확인을 거쳐 core event는 blocked인 채 점거 건선거로 전이했다. 첫 active linked enemy `건선거 케이블 수거 유닛 · HP 76/76`을 확인했다.
+- Independent verifier: shipyard linked route/bridge and focused fixture PASS; 발견한 active-primary ownership defect는 GameScene 및 campaign domain validation으로 수리했고 campaign regression PASS. Greenhouse runtime route는 다음 actual flow에서 확인한다.
 
 ## Blockers
 

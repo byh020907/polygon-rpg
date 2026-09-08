@@ -4127,6 +4127,25 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               maxHealth: 84,
               campaignRegionId: SCRAP_SHIPYARD_REGION_ID,
               campaignStageKind: 'journey-combat',
+              enabled: false,
+            },
+            {
+              id: 'shipyard-linked-cable-collector',
+              kind: 'combat-enemy',
+              encounterProfileId: 'shipyard-drydock-collector',
+              linkedEncounterId: 'shipyard-drydock-collector',
+              position: { x: 720, y: 426 },
+              maxHealth: 76,
+              enabled: false,
+            },
+            {
+              id: 'shipyard-linked-dock-raider',
+              kind: 'combat-enemy',
+              encounterProfileId: 'dock-salvage-raider',
+              linkedEncounterId: 'dock-salvage-raider',
+              position: { x: 940, y: 426 },
+              maxHealth: 84,
+              enabled: false,
             },
           ],
           triggers: [],
@@ -4357,6 +4376,16 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               maxHealth: 88,
               campaignRegionId: SCRAP_GREENHOUSE_REGION_ID,
               campaignStageKind: 'journey-combat',
+              enabled: false,
+            },
+            {
+              id: 'greenhouse-linked-pressure-brace-parasite',
+              kind: 'combat-enemy',
+              encounterProfileId: 'greenhouse-pipe-parasite',
+              linkedEncounterId: 'greenhouse-pipe-parasite',
+              position: { x: 968, y: 426 },
+              maxHealth: 88,
+              enabled: false,
             },
           ],
           triggers: [],
@@ -6178,6 +6207,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'shipyard-facility-inspection', value: false },
         { op: 'set-enabled', target: SCRAP_SHIPYARD_ROAD_PORTAL_ID, value: false },
         { op: 'set-enabled', target: 'shipyard-roadhead-drydock-portal', value: true },
+        { op: 'set-enabled', target: 'shipyard-drydock-collector-unit', value: true },
         {
           op: 'set-enabled',
           target: 'shipyard-drydock-gate-landmark-structure',
@@ -6195,6 +6225,30 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         },
         { op: 'set-enabled', target: 'shipyard-drydock-sign', value: true },
       ],
+    },
+    {
+      id: 'shipyard-mine-linked-route-open',
+      priority: 205,
+      when: {
+        all: [
+          { fact: 'scrapPendingLinkedIssueRegionIds', includes: SCRAP_SHIPYARD_REGION_ID },
+          { fact: 'scrapRegionStageIds.harbor-shipyard', eq: 'harbor-shipyard:facility-observed' },
+          { fact: 'scrapRegionStatuses.harbor-shipyard', eq: 'available' },
+        ],
+      },
+      operations: [{ op: 'set-enabled', target: 'shipyard-roadhead-drydock-portal', value: true }],
+    },
+    {
+      id: 'shipyard-mine-linked-cable-combat',
+      priority: 206,
+      when: { fact: 'scrapPendingLinkedEncounterIds', includes: 'shipyard-drydock-collector' },
+      operations: [{ op: 'set-enabled', target: 'shipyard-linked-cable-collector', value: true }],
+    },
+    {
+      id: 'shipyard-mine-linked-raider-combat',
+      priority: 207,
+      when: { fact: 'scrapPendingLinkedEncounterIds', includes: 'dock-salvage-raider' },
+      operations: [{ op: 'set-enabled', target: 'shipyard-linked-dock-raider', value: true }],
     },
     {
       id: 'shipyard-journey-combat-complete',
@@ -6357,6 +6411,7 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'greenhouse-facility-inspection', value: false },
         { op: 'set-enabled', target: SCRAP_GREENHOUSE_ROAD_PORTAL_ID, value: false },
         { op: 'set-enabled', target: 'greenhouse-roadhead-pipeline-portal', value: true },
+        { op: 'set-enabled', target: 'greenhouse-pipe-parasite', value: true },
         {
           op: 'set-enabled',
           target: 'greenhouse-pipeline-gate-landmark-structure',
@@ -6373,6 +6428,31 @@ export const SCRAP_AWAKENING_MAP = defineMap({
           value: true,
         },
         { op: 'set-enabled', target: 'greenhouse-pipeline-sign', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-mine-linked-route-open',
+      priority: 275,
+      when: {
+        all: [
+          { fact: 'scrapPendingLinkedIssueRegionIds', includes: SCRAP_GREENHOUSE_REGION_ID },
+          {
+            fact: 'scrapRegionStageIds.greenhouse-plains',
+            eq: 'greenhouse-plains:facility-observed',
+          },
+          { fact: 'scrapRegionStatuses.greenhouse-plains', eq: 'available' },
+        ],
+      },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-roadhead-pipeline-portal', value: true },
+      ],
+    },
+    {
+      id: 'greenhouse-mine-linked-brace-combat',
+      priority: 276,
+      when: { fact: 'scrapPendingLinkedEncounterIds', includes: 'greenhouse-pipe-parasite' },
+      operations: [
+        { op: 'set-enabled', target: 'greenhouse-linked-pressure-brace-parasite', value: true },
       ],
     },
     {

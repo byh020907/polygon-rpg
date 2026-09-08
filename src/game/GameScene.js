@@ -401,6 +401,7 @@ function assertEnchantmentCatalog(catalog) {
 }
 
 function scrapCampaignWorldFacts(campaign) {
+  const pendingLinked = campaign.issueWindow?.linked ?? [];
   return Object.freeze({
     scrapAwakeningStageId: campaign.awakeningStageId,
     scrapGarageRevealStageId: campaign.garageRevealStageId,
@@ -415,6 +416,15 @@ function scrapCampaignWorldFacts(campaign) {
     ),
     scrapCollectedPartCount: campaign.collectedPartCount,
     scrapRobotCompletionPercent: campaign.completionPercent,
+    // Linked work is a field-combat detour, not a second core-event start.  Keep
+    // the authored issue window as read-only world facts so map patches can open
+    // exactly the required side route without taking ownership of campaign state.
+    scrapPendingLinkedIssueRegionIds: Object.freeze(
+      pendingLinked.filter((issue) => !issue.completed).map((issue) => issue.targetRegionId),
+    ),
+    scrapPendingLinkedEncounterIds: Object.freeze(
+      pendingLinked.flatMap((issue) => (issue.completed ? [] : issue.remainingEncounterIds)),
+    ),
   });
 }
 
@@ -1805,6 +1815,30 @@ export class GameScene extends SceneNode {
     });
   }
 
+  createScrapCampaignLinkedEncounterAction(regionId, encounterId, entityId) {
+    const region = this.scrapCampaignProfile.getRegion(regionId);
+    const linkedIssue = this.getScrapAwakeningReadModel().issueWindow.linked.find(
+      (issue) =>
+        !issue.completed &&
+        issue.targetRegionId === regionId &&
+        issue.remainingEncounterIds.includes(encounterId),
+    );
+    if (!region || typeof encounterId !== 'string' || encounterId.length === 0) {
+      throw new Error(`지원하지 않는 연결 전투입니다: ${regionId}:${encounterId}`);
+    }
+    if (!linkedIssue) {
+      throw new Error(`현재 주목표가 요구하지 않는 연결 전투입니다: ${regionId}:${encounterId}`);
+    }
+    return Object.freeze({
+      actionId: `linked-encounter:${region.id}:${encounterId}:${entityId}`,
+      kind: SCRAP_CAMPAIGN_ACTION_KIND.LINKED_ENCOUNTER,
+      label: `${region.label} · 연결 전투 제압 ${encounterId}`,
+      targetRegionId: region.id,
+      encounterId,
+      costSegments: 0,
+    });
+  }
+
   createScrapCampaignKoReturnAction() {
     const campaignSnapshot = toScrapCampaignSnapshot(
       this.progressionSnapshot.scrapCampaign,
@@ -2841,6 +2875,21 @@ export class GameScene extends SceneNode {
         kind: 'scrap-awakening-combat-stage',
         entityId: result.entityId,
         stageId: transaction.snapshot.awakeningStageId,
+      });
+    }
+    if (result.linkedEncounterId) {
+      const regionId = this.getScrapAwakeningReadModel().currentLocationId;
+      const action = this.createScrapCampaignLinkedEncounterAction(
+        regionId,
+        result.linkedEncounterId,
+        result.entityId,
+      );
+      const transaction = this.commitScrapCampaignDomainAction(action);
+      return Object.freeze({
+        ...transaction,
+        kind: 'scrap-campaign-linked-encounter',
+        regionId,
+        encounterId: result.linkedEncounterId,
       });
     }
     if (result.campaignProgress) {

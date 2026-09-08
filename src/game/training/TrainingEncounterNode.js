@@ -201,6 +201,10 @@ export class TrainingEncounterNode extends SceneNode {
               stageKind: entity.campaignStageKind,
             })
           : null,
+      linkedEncounterId:
+        typeof entity.linkedEncounterId === 'string' && entity.linkedEncounterId.length > 0
+          ? entity.linkedEncounterId
+          : null,
       scrapAwakeningNextStageId:
         typeof entity.scrapAwakeningNextStageId === 'string'
           ? entity.scrapAwakeningNextStageId
@@ -397,6 +401,7 @@ export class TrainingEncounterNode extends SceneNode {
       resolutionState: this.enemy.resolutionState,
       materialReward: this.entity.materialReward,
       campaignProgress: this.entity.campaignProgress,
+      linkedEncounterId: this.entity.linkedEncounterId,
       scrapAwakeningNextStageId: this.entity.scrapAwakeningNextStageId,
     });
   }

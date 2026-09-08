@@ -977,18 +977,28 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
       if (current.currentLocationId !== region.id) {
         throw new Error('현재 위치의 연결 전투만 기록할 수 있습니다.');
       }
-      const demanded = profile.primaryIssues.some((primaryIssue) =>
+      if (clearedEncounterIds.includes(authoredAction.encounterId)) {
+        throw new Error('이미 기록한 연결 전투입니다.');
+      }
+      const activePrimaryIssue = activePrimaryIssueId
+        ? profile.getPrimaryIssue(activePrimaryIssueId)
+        : null;
+      // Free-order campaign fixtures may clear a field threat before a player
+      // fixes a primary issue. Once a primary is active, however, its issue
+      // window exclusively owns which linked encounter can be committed.
+      const candidatePrimaryIssues = activePrimaryIssue
+        ? [activePrimaryIssue]
+        : profile.primaryIssues;
+      const demanded = candidatePrimaryIssues.some((primaryIssue) =>
         primaryIssue.linkedIssues.some(
           (linkedIssue) =>
             linkedIssue.targetRegionId === region.id &&
+            !completedIssueIds.includes(linkedIssue.id) &&
             requiredEncounterIdsOf(linkedIssue).includes(authoredAction.encounterId),
         ),
       );
       if (!demanded) {
         throw new Error('연결 이슈가 요구한 연결 전투만 기록할 수 있습니다.');
-      }
-      if (clearedEncounterIds.includes(authoredAction.encounterId)) {
-        throw new Error('이미 기록한 연결 전투입니다.');
       }
       clearedEncounterIds.push(authoredAction.encounterId);
       const reachedStage = region.eventStages.find(
