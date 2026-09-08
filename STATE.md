@@ -4,11 +4,11 @@
 
 ## Runtime Status
 
-`RUNNING` — PWA 설치형 A→B 검증은 Human 확인 대기지만 전역 blocker가 아니다. Human Feedback Priority의 실제 폐광 연결 이슈 전선을 계속 검증한다.
+`WAITING_FOR_HUMAN` — Human이 Product Goal Loop를 pause하고 별도 Astra/xhigh 대화에서 전반 구조 정합·리팩터링과 그래픽 리소스 검토 환경을 진행하도록 지시했다. 이 loop는 자동 재개하지 않으며, PWA 설치형 A→B 확인과 폐광 연결 이슈 actual 검증은 보존한다.
 
 ## Current Phase
 
-`Human Feedback Priority / Verified Playable Frontier — 새 저장에서 폐광의 작업반장·구조 현황판을 실제 입력으로 마쳐 두 연결 이슈가 열리고, 폐광→고물상→항구 실제 연결로를 확정해 건선거까지 진행했다. 항구 케이블 수거 유닛은 Strong으로 HP 76→56까지 실제로 맞았으나, KO 뒤 held 이동·공격이 그대로 적용되어 재접근·재KO가 이어질 수 있음을 재현했다. KO 복귀 뒤 release 전까지 이전 held input을 중립화하는 수리는 fixture로 검증했으며, 수리된 새 저장의 항구 완료·귀환은 아직 실제 검증되지 않았다.`
+`Paused — Human Feedback Priority / Verified Playable Frontier. 새 저장에서 폐광의 작업반장·구조 현황판을 실제 입력으로 마쳐 두 연결 이슈가 열리고, 폐광→고물상→항구 실제 연결로를 확정해 건선거까지 진행했다. 항구 케이블 수거 유닛은 Strong으로 HP 76→56까지 실제로 맞았으나, KO 뒤 held 이동·공격이 그대로 적용되어 재접근·재KO가 이어질 수 있음을 재현했다. KO 복귀 뒤 release 전까지 이전 held input을 중립화하는 수리는 fixture로 검증했으며, 수리된 새 저장의 항구 완료·귀환은 아직 실제 검증되지 않았다.`
 
 ## Active Execution Goal
 
@@ -39,5 +39,7 @@
 없음. PWA persistent A→B는 Human 확인 대기이며 다른 개발을 멈추지 않는다.
 
 ## Preserved Work Reference
+
+Paused-loop recovery commit `e926ef4` (`KO 복귀 입력 재진입을 막는다`) fences held direction/attack input after KO until release; it is not evidence that the linked encounter is complete. Resume from fresh production input at the mine→shipyard linked path after the Human-directed Astra/xhigh structural/refactor and graphics-review work is integrated or otherwise resolved.
 
 OpenCode candidate `opencode/product-goal-loop/20260905142359-2188ab1adfbe` at `0d5a9dc` remains unmerged in `C:/Users/byh02/AppData/Local/ProductGoalLoop/OpenCode/d76ddb28cc8ea5fa/worktrees/20260905142359-2188ab1adfbe`. Its report remains in `.git/product-goal-loop/opencode/executions/20260905142359-2188ab1adfbe.json`.
