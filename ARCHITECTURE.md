@@ -196,6 +196,9 @@ Keyboard / Touch / DOM intent
 
 ## Graphics Resource Review Boundary
 
+- 몹 유형 reference는 인간형·사족 짐승형·날개 비행형·궤도 기계형의 별도 의미 본 계층과 공용 clip을 가진다. 외형·본 배치/비율과 유형별 motion source를 분리하여 컨셉 아트로부터 새 profile을 만들 때 clip을 복제하지 않는다. 먼저 검토실의 대표 네 개와 본 비율 변형으로 retargeting을 검증하고 실전 몹 전파는 Human의 유형별 시안 검토와 명시적 적용 요청 이후로 둔다.
+- Reference 원본의 부착 위치와 모든 vertex는 부모 축 기준 [-1,1] 로컬 정규좌표다. 부모 extent와 child size ratio가 크기를 소유하고 quaternion rotation을 포함한 부모 transform을 한 번 합성한 뒤 2D로 투영한다. 자식은 부모 위치·크기·회전에 따라간다. CPU에서 매 frame 이미지나 source topology를 다시 만들지 않고 정적 triangulation을 한 번 compile한다. 수동 sprite 재생성은 디자인 원본 계약이 아니다.
+
 - Immutable graphics catalog는 production content와 producer를 연결하는 유일한 등록 경로다. 주인공, NPC, 모든 현재 적, 장비, 배경·전경·지형·건물·설비·소품, 시간에 따른 효과와 UI를 stable resource/action/frame ID로 식별한다. 원본 map의 비활성 item과 patch variant도 inventory에 포함한다. 아직 구현되지 않은 motion이나 리소스를 가짜 preview로 만들지 않는다.
 - 검토 sampler는 게임이 사용하는 pose·공격 크기·shared geometry·presentation producer와 Polygon/Retro renderer를 호출한다. 별도 캐릭터 보드 그림, QA 전용 무기 크기 계산과 복제 UI markup을 유지하지 않는다. 등록된 production data가 바뀌면 같은 ID의 검토 출력도 함께 바뀐다.
 - UI adapter가 선택, 필터, frame index, 60Hz 정상 재생·정지, viewport와 확대 배율을 소유한다. URL codec이 모든 재현 조건을 검증하고 같은 page의 debug 진입/복귀와 정합시킨다. Copy는 사용자 입력에서만 clipboard에 리소스·동작·프레임·renderer·조명·배치·URL을 쓴다. 외부 피드백 전송이나 player save mutation은 하지 않는다.

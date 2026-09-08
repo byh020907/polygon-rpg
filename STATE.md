@@ -4,20 +4,21 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — Human의 PC 저장 초기화 접근성 수리와 실제 저장 오류→초기화→업데이트 검증을 마쳤다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 유형별 대표 네 개와 공용 clip/정규좌표 구조를 검증했다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
-`Human Feedback Priority — PC 저장 초기화 접근성 검증 완료.` 메인 메뉴에 초기화 버튼을 바로 표시하고 삭제 확인 뒤 기존 reset capability를 호출한다. 호환되지 않는 저장의 실제 업데이트 차단, 취소·write 실패 시 저장 보존, 초기화 뒤 새 버전 1회 전환을 확인했다. 이전 디버그 진입·모바일 비율·PWA 수리는 유지한다. 다음 미완료 전선은 폐광→항구 연결 전투와 귀환의 연속 플레이 검증이며, 자동 실행은 Human pause 상태다.
+`Human Feedback Priority — 유형별 몹 제작 기준 검증 완료.` 그래픽 검토실에 인간형·짐승형·비행형·기계형 대표 각각 한 개가 있다. 컨셉 아트별 외형·본 profile과 유형 공용 동작을 분리했고, 부모 [-1,1] 좌표·크기 전파·회전 중 길이 유지·동일 clip 재사용을 확인했다. 주인공과 실전 몹은 기존 기준을 유지한다. 다음 미완료 playable frontier는 폐광→항구 연결 전투와 귀환의 연속 검증이지만 자동 실행은 중지 상태다.
 
 ## Active Execution Goal
 
-없음. 자동 실행은 중지한다. 새 Human feedback 또는 명시적 재개 뒤 현재 미완료 전선과 비교해 다음 Goal을 선택한다.
+없음. 자동 실행은 Human의 명시적 재개 전까지 중지한다. 다음 디자인 변경은 유형별 견본과 보관된 컨셉 아트를 기준으로 판단한다.
 
 ## Desired-State Comparison
 
 | Area                                             | Status                   | Current evidence                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PG-GRAPHICS-REVIEW / 유형별 대표                 | satisfied · 시안         | 대표 네 개, 세 공용 clip, 서로 다른 본 계층. 624 frame·mirror/scale·다른 디자인 ID retarget fixture, native desktop/mobile 24기록 및 실제 변형 비교 PNG. 최종 실전 디자인 승인이나 전투 튜닝 완료는 아니다.                                                                                  |
 | PG-PLATFORM-ACCESS / 시작 구간 디버그 진입       | satisfied                | 제목·MENU·MAP의 1초 hold, 초기 MENU 짧게 누르기, 공통 panel 1개, 실제 touch 해제 뒤 focus와 다음 일반 입력, main에서 QA 적용 뒤 canvas resize·일반 복귀·저장 bytes 보존. 독립 desktop/mobile 34기록 PASS.                                                                                    |
 | PG-PWA-OFFLINE / native update                   | satisfied                | 설치fetch정체·동일빌드false restart 수리. 6개이하다운로드/body즉시소비·SHA256검증·networkprobe·scope/release/client별cache. 지속Chrome A→B→C 10조건/715요청 PASS. 실제hidden→visible복귀 후B준비660ms(로컬서버측정).                                                                         |
 | PWA failure/persistence                          | satisfied                | asset503·stale200 거부, 저장실패활성화차단, 명시적용1회reload, 다른탭A게임·A코드계속유지와명시재시작, C offline/newquery. 진행1219bytes·복구1553bytes 전체동일.                                                                                                                              |
@@ -30,20 +31,15 @@
 
 ## Verification
 
-- PC 초기화 ingress e35fa92의 정확한 항목만 PG-RECOVERY / Persistence가 소유함을 확인하고 queue에서 제거했다. actual danger-full-access / approval never, clean codex/pc-save-reset에서 free guard 획득. Human의 에이전트 사용 축소 요청 뒤 구현·검증·실제 PNG 판독은 부모가 직접 수행했다.
-- npm run test:pwa:save-reset: artifacts/pwa-update/save-reset-evidence.json 7기록 PASS. 실제 native A→B 설치와 schema9 저장 거부, 초기화 버튼 즉시 노출, native 확인 취소, primary write 실패 시 bytes 보존, schema10 초기화 및 복구 지점 교체, 무관한 저장·cache 보존, 재적용 1회 reload와 새 worker/저장 유지, mobile touch 취소·초기화 확인. Test data는 독립 임시 Chrome profile에만 주입했다.
-- 기존 모바일 메뉴 34 viewport/input 기록, platform/PWA fixture·lint·format·diff 확인. PG-RECOVERY의 desktop/mobile/print 출력과 의미 구조, 오류가 있는 실제 PC 및 mobile 메뉴에서 초기화 버튼을 직접 판독했다. 별도 subagent 독립검증을 수행했다고 표시하지 않는다.
-- actual permission danger-full-access / approval never, clean isolated branch codex/debug-entry-start 및 free guard 확인 뒤 획득. feedback-only a8ddd7e는 별도 임시 worktree에서 INBOX 원문만 즉시 등록했다. 해당 원문의 의도는 PG-PLATFORM-ACCESS와 Architecture Rendering/Input이 소유하며 검증 후 그 항목만 queue에서 제거했다. 자동 trigger 둘 다 PAUSED 유지.
-- artifacts/debug-entry/evidence.json 및 REPORT.md: 실제 desktop 1280×720 / mobile 844×390에서 34기록 PASS. 메인/초기 MENU/해금 MAP, 실제 Enter hold·touchCancel·다른 탭 blur, modal focus trap·opener 복귀·배경 inert, 공개 form으로 QA 장면 적용과 일반 게임 복귀를 확인했다. 메인 패널 focus와 touchEnd 뒤 focus 실패를 각각 재현·수리·재검증했다. 실제 PNG에서 초반 MENU, 패널, 적용 후 game canvas를 직접 판독했다.
-- npm run test:platform, test:mobile-menu(34기록), test:pwa, graphics-review-config-check 및 lint/format/diff 검사 PASS. 기존 모바일 메인 화면 비율·PWA cache/lifecycle 계약을 보존한다. 이번 테스트는 실제 설치형 Android/iOS 전체 인증으로 확대하지 않는다.
-- 발행cddcc10 native첫설치가150초에도installing인것을재현. 새SW+구adapter에서동일build false restart도별도로실제재현. 근거 artifacts/pwa-update/published-install-stall-evidence.json 및initial-install-false-restart-evidence.json.
-- npm run test:pwa: metadata/probe/digest, lifecycle, 실제SWcache fixture PASS. platform/graphics URL계약,lint,format,diffcheck PASS. native브라우저flow는가짜registration.waiting/event로대체하지않았다.
-- artifacts/pwa-update/browser-evidence.json 및REPORT.md: 지속native A/B/C, actualforeground/menuapply/offline/savebytes. 다른탭의업데이트후기존game화면과isPlaying이유지됨을actualclick/PNG로확인했다.
-- artifacts/mobile-menu/current/evidence.json 및PNG: 34 layout/input기록. update상태주입과safe-area모사는layout증거로구분했으며실제PWA성공증거는위nativeflow가소유한다.
-- 독립검증 artifacts/pwa-update/independent/REPORT.md: actual223요청의최초설치·3viewport·실패재시도·offlinequery,focusedfixtures 및최종A/B/C소스hash대조 PASS. 이미지직접판독과own자원반환완료.
-
-- 검토실에서 일반 게임으로 돌아올 때에도 PWA owner를 시작하는 경로를 actual native controller/ready로 확인했다(artifacts/pwa-update/review-return.json).
-- 기존 정체 복구 evidence: artifacts/pwa-update/restart-recovery-evidence.json. noRestartMigrationVerified=false / restartRecoveryVerified=true를 구분하며, 실패한 API 복구 진단도 artifacts/pwa-update/recovery-diagnostic-evidence.json에 보존한다.
+- actual danger-full-access / approval never. clean branch에서 free guard를 획득했고 현재 codex/enemy-type-references를 부모가 직접 구현·별도 acceptance pass로 검증했다. 별도 subagent 검증을 수행했다고 표시하지 않는다. Human pause는 유지한다.
+- ingress 986d08b, 2730c4d, 7f8c2c8, 9d92bfa의 변경 의도는 최신 PG-GRAPHICS-REVIEW와 Graphics Resource Review Boundary가 소유한다. 최신 '대표 네 개' 요청이 일괄 교체 요청을 대체하며 해당 네 항목만 queue에서 제거했다.
+- test:enemy-references 624 frame PASS: 원본 [-1,1], 정규 부모 합성, 모든 frame의 크기 불변, root 2배·양방향, 다른 디자인 ID/본 비율에 같은 clip 적용. source topology는 한 번 compile한다.
+- artifacts/enemy-references/evidence.json: actual mouse/touch category 네 개, idle/move/attack 24기록, 정상 재생·정지·Retro/좌측·저장 bytes/console 확인. mobile-evidence.json과 PNG는 canvas까지 스크롤해 읽은 추가 증거다.
+- artifacts/enemy-references/retarget-board.png: 4유형 원본/변형의 동일 move clip, 총8출력을 직접 판독했다. 회전 시 부모 비균등 크기가 자식의 길이를 늘리던 결함을 unit axis/extent 분리로 수리했고 공격 준비→접촉 연결을 연속화했다.
+- 그래픽 catalog/sampler 검증은 base570개·2287sample·435production RenderFrame·107fixedstep PASS, 전체 UI 포함 catalog는592개다. 기존 게임/주인공/몹 source는 변경하지 않았다. PWA fixture, metadata, lint/format/diff PASS.
+- 참고 이미지 원본과 source/size/SHA256은 docs/references/enemy-archetypes에 있다. 최신 주인공 시트는 실제 PNG이며 이전 주인공 파일을 교체했다. 몹 시트는 해당 원본을 유지한다. 원본은 runtime/PWA asset에서 제외한다.
+- 구조 선택·SVG 입력 형태·수정 예시는 docs/enemy-reference-authoring.md. 로컬 Node sample 비용은 artifacts/enemy-references/sampling-cost.json; 휴대폰 FPS 증거가 아니다.
+- 이전 PWA native A→B→C·저장·offline 증거는 artifacts/pwa-update/browser-evidence.json 및 REPORT.md, legacy 정상 브라우저 종료 복구는 restart-recovery-evidence.json에 보존한다.
 
 ## Human 확인 / Pause
 
@@ -52,6 +48,8 @@
 - 자동루프는명시적재개전까지중지한다. 기존모션스타일·원본첨부·이전KO수리·OpenCode미통합candidate는유지한다.
 
 ## Preserved Work Reference
+
+일괄 몹 교체 시안은 Human의 동일 체형/비율 지적으로 중단했다. local `codex/enemy-silhouette-redesign` / `f4f350b37d081bfdc5863773f80521b4cccaf38f`는 미완료/test-failing 보존본이며 main 통합 대상이 아니다. 원본 첨부와 실패/중간 PNG는 artifacts/enemy-redesign에 보존한다.
 
 Paused-loop recovery commit `e926ef4` (`KO 복귀 입력 재진입을 막는다`) fences held direction/attack input after KO until release; it is not evidence that the linked encounter is complete. Resume from fresh production input at the mine→shipyard linked path after the Human-directed Astra/xhigh structural/refactor and graphics-review work is integrated or otherwise resolved.
 

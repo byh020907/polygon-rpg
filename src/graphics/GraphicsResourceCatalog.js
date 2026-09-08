@@ -14,12 +14,14 @@ import { SCRAP_FINAL_BATTLE_STAGE } from '../game/campaign/ScrapFinalBattleState
 import { createScrapFinalBattlePresentation } from '../game/campaign/ScrapFinalBattlePresentation.js';
 import { deepFreeze } from '../game/map/MapDefinition.js';
 import { createMapGraphicResources, graphicsItemCategory } from './MapGraphicResources.js';
+import { ENEMY_REFERENCE_PROFILES, ENEMY_REFERENCE_ACTIONS } from './EnemyReferenceProfiles.js';
 
 export const GRAPHICS_CATEGORIES = deepFreeze(
   [
     ['player', '주인공'],
     ['npc', 'NPC'],
     ['enemy', '몹'],
+    ['enemy-reference', '몹 유형 시안'],
     ['equipment', '무기·장비'],
     ['background', '배경'],
     ['foreground', '전경'],
@@ -267,6 +269,17 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       ],
       notes:
         '게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.',
+    })),
+    ...ENEMY_REFERENCE_PROFILES.map((profile) => ({
+      id: `enemy-reference:${profile.id}`,
+      label: profile.label,
+      category: 'enemy-reference',
+      kind: 'animated',
+      producer: 'enemy-reference',
+      referenceId: profile.id,
+      source: 'src/graphics/EnemyReferenceProfiles.js',
+      actions: ENEMY_REFERENCE_ACTIONS,
+      notes: '유형별 공용 애니메이션 견본 · 외형/본 profile만 바꿔 재사용 · 실전 몹 교체 전 검토용',
     })),
     ...Object.values(ENCOUNTER_PROFILES).map((profile) => ({
       id: `enemy:${profile.id}`,

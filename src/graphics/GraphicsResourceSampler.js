@@ -8,6 +8,7 @@ import {
   playerJumpPhaseTiming,
 } from '../animation/PlayerMotionProfile.js';
 import { sampleEnemyBonePoseFor } from '../animation/EnemyBonePoseLibrary.js';
+import { sampleEnemyReference } from './EnemyReferenceModel.js';
 import {
   PLAYER_COMBAT_GEOMETRY_SCALE,
   PLAYER_CHARACTER_FOOT_OFFSET,
@@ -456,6 +457,15 @@ export function createGraphicsResourceSampler(catalog) {
               resource.itemIds.includes(item.id),
             );
       sourceFrameId = action.id;
+    } else if (resource.producer === 'enemy-reference') {
+      const reference = sampleEnemyReference(resource.referenceId, {
+        action: action.id,
+        frameIndex: index,
+        position: enemyPosition,
+        facing,
+      });
+      items = reference.items;
+      sourceFrameId = reference.frameId;
     } else if (resource.producer === 'enemy' || resource.producer === 'enemy-status') {
       const enemy = enemySample(resource, action, index, facing, enemyPosition);
       items =

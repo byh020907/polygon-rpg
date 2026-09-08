@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "type": "module",
   "engines": {
@@ -35,6 +35,8 @@
     "test:pwa:save-reset": "node scripts/pwa-update-browser-check.mjs --save-reset-only",
     "test:mobile-menu": "node scripts/mobile-menu-qa.mjs",
     "test:debug-entry": "node scripts/debug-entry-qa.mjs",
+    "test:enemy-references": "node scripts/enemy-reference-check.mjs",
+    "test:enemy-references:browser": "node scripts/enemy-reference-qa.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
