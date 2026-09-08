@@ -2237,6 +2237,26 @@ const mineInputQaRegion = mineInputQaScene
 assert.ok(mineInputQaSequence > 1);
 assert.equal(mineInputQaRegion.eventStageKind, 'npc-briefing');
 
+const mineGreenhouseLinkedObjectiveScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+});
+mineGreenhouseLinkedObjectiveScene.setInputQaScrapRegionStart({
+  regionId: SCRAP_MINE_ROAD_REGION_ID,
+});
+mineGreenhouseLinkedObjectiveScene.setVisualQaScrapIssueState({
+  activePrimaryIssueId: 'mine-rescue-operation',
+});
+mineGreenhouseLinkedObjectiveScene.setVisualQaScrapRegionState({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  stageKind: 'facility-observed',
+  status: 'available',
+});
+assert.match(
+  mineGreenhouseLinkedObjectiveScene.getWorldStatus().objective,
+  /파열 배관 기생 기계 제압.*승강기 압력 버팀쇠 설계 확인/,
+  '다른 지역 주목표의 연결 이슈 현장에서는 비활성 핵심 사건 대신 필요한 전투를 안내해야 합니다.',
+);
+
 const mineFlowScene = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
   progressionSnapshot: travelScene.getProgressionSnapshot(),
