@@ -3703,8 +3703,19 @@ export class GameScene extends SceneNode {
     const scrapCampaignRegionReadModel = scrapCampaign.regions.find(
       (region) => region.id === scrapCampaignRegion?.id,
     );
+    const pendingLinkedIssueAtCampaignRegion = scrapCampaign.issueWindow.linked.find(
+      (linkedIssue) =>
+        linkedIssue.targetRegionId === scrapCampaignRegion?.id && !linkedIssue.completed,
+    );
+    // A focused primary issue can send the player to another region before its
+    // own core event can begin. In that linked-region's observed state, its
+    // combat instruction remains the truthful next action even while a QA
+    // snapshot keeps the map room on the originating region.
     const scrapCampaignRegionLocation = Boolean(
-      scrapCampaignRegion && location.regionId === scrapCampaignRegion.id,
+      scrapCampaignRegion &&
+      (location.regionId === scrapCampaignRegion.id ||
+        (scrapCampaignRegionReadModel?.eventStageKind === 'facility-observed' &&
+          pendingLinkedIssueAtCampaignRegion)),
     );
     const scrapIntroPresentation =
       scrapCampaign.garageRevealComplete && scrapCampaign.collectedPartCount > 0
@@ -3773,25 +3784,25 @@ export class GameScene extends SceneNode {
           briefing: scrapCampaign.finalBattle.cue,
           nextObjective: scrapCampaign.finalBattle.objective,
         })
-      : scrapAwakeningLocation
+      : scrapCampaignRegionLocation
         ? Object.freeze({
-            beatId:
-              scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-                ? `scrap-garage-reveal:${scrapCampaign.garageRevealStageId}`
-                : `scrap-awakening:${scrapCampaign.awakeningStageId}`,
-            title: scrapIntroPresentation.title,
-            briefing: scrapIntroPresentation.briefing,
-            nextObjective: scrapIntroPresentation.objective,
+            beatId: `scrap-region:${scrapCampaignRegion.id}:${scrapCampaignRegionReadModel.eventStageKind ?? 'roadhead'}`,
+            title:
+              scrapCampaignRegionReadModel.status === 'resolved'
+                ? `${scrapCampaignRegion.label} 해결 · ${scrapCampaignRegion.part.label}`
+                : `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.eventStageLabel}`,
+            briefing: `${scrapCampaignRegion.visual.material} 지대의 ${scrapCampaignRegion.machineLabel}. ${scrapCampaignRegionReadModel.statusLabel}`,
+            nextObjective: scrapRegionObjective,
           })
-        : scrapCampaignRegionLocation
+        : scrapAwakeningLocation
           ? Object.freeze({
-              beatId: `scrap-region:${scrapCampaignRegion.id}:${scrapCampaignRegionReadModel.eventStageKind ?? 'roadhead'}`,
-              title:
-                scrapCampaignRegionReadModel.status === 'resolved'
-                  ? `${scrapCampaignRegion.label} 해결 · ${scrapCampaignRegion.part.label}`
-                  : `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.eventStageLabel}`,
-              briefing: `${scrapCampaignRegion.visual.material} 지대의 ${scrapCampaignRegion.machineLabel}. ${scrapCampaignRegionReadModel.statusLabel}`,
-              nextObjective: scrapRegionObjective,
+              beatId:
+                scrapCampaign.awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
+                  ? `scrap-garage-reveal:${scrapCampaign.garageRevealStageId}`
+                  : `scrap-awakening:${scrapCampaign.awakeningStageId}`,
+              title: scrapIntroPresentation.title,
+              briefing: scrapIntroPresentation.briefing,
+              nextObjective: scrapIntroPresentation.objective,
             })
           : characterBoardActive
             ? Object.freeze({

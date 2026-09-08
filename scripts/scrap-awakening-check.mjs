@@ -2753,7 +2753,7 @@ setAtPortalToRoom(
 shipyardLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 2 }));
 finishPortalTransition(shipyardLinkedIssueScene);
 assert.equal(
-  shipyardLinkedIssueScene.mapRuntime.getCurrentRoom().id,
+  shipyardLinkedIssueScene.mapRuntime.getActiveRoom().id,
   SCRAP_SHIPYARD_ROAD_ROOM_ID,
   '연결 전투 완료 뒤에도 실제 portal 입력으로 roadhead에 되돌아가야 합니다.',
 );
@@ -2787,9 +2787,14 @@ greenhouseLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence
 finishPortalTransition(greenhouseLinkedIssueScene);
 greenhouseLinkedIssueScene.enterTree();
 assert.equal(
-  greenhouseLinkedIssueScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  greenhouseLinkedIssueScene.roomSceneNode.getEncounterGameplaySnapshot().id,
   'greenhouse-linked-pressure-brace-parasite',
   '폐광 연결 이슈는 온실의 pressure-brace 기생 기계 전투를 열어야 합니다.',
+);
+assert.equal(
+  greenhouseLinkedIssueScene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
+  'greenhouse-pipe-parasite',
+  '연결 전투는 같은 authored 기생 기계 combat profile을 사용해야 합니다.',
 );
 greenhouseLinkedIssueScene.roomSceneNode.encounter.completeForVisualQa();
 assert.deepEqual(
@@ -2811,7 +2816,7 @@ setAtPortalToRoom(
 greenhouseLinkedIssueScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 2 }));
 finishPortalTransition(greenhouseLinkedIssueScene);
 assert.equal(
-  greenhouseLinkedIssueScene.mapRuntime.getCurrentRoom().id,
+  greenhouseLinkedIssueScene.mapRuntime.getActiveRoom().id,
   SCRAP_GREENHOUSE_ROAD_ROOM_ID,
   '온실 연결 전투 완료 뒤에도 실제 portal 입력으로 roadhead에 되돌아가야 합니다.',
 );
