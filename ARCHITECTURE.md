@@ -172,6 +172,7 @@ Keyboard / Touch / DOM intent
 - 캐릭터 외곽 윤곽은 depth 합성 후 실제로 보이는 불투명 pixel 소유 mask에서 완성하고 배경 합성 전에 확정한다. 완성된 월드 화면의 투명도 경계에서 캐릭터를 뒤늦게 찾지 않는다. 내부 부위선은 depth를 따르고, 반투명 효과는 확정된 외곽선을 지우지 않는다. 배경이 있는 정지 gameplay와 투명 preview의 동일 캐릭터 픽셀을 함께 검증한다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
 - UI screen state, operation-map modal과 debug panel state는 gameplay input에 섞지 않는다.
+- Debug panel은 특정 gameplay screen이나 작전 지도 해금에 종속되지 않는 공통 modal이다. 메인 제목과 gameplay MENU/MAP이 같은 hold controller를 사용하고, opener별 focus 복귀·background inert·scene 교체 뒤 viewport 갱신을 UI adapter가 소유한다.
 - PWA Lifecycle Adapter는 `beforeinstallprompt`, iOS standalone 안내, update waiting과 controller change를 UI command로 변환한다. 설치·갱신은 사용자 입력으로만 시작하며 game screen에서 자동 prompt/reload하지 않는다.
 - standalone game start는 orientation lock을 best-effort로 요청하되 fullscreen을 기본 요청하지 않는다. safe-area inset은 UI adapter layout token으로만 소비한다.
 - Semantic controls는 accessible name과 keyboard focus order를 가지며 modal은 focus를 trap하고 opener로 복귀한다.

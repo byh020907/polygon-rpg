@@ -158,7 +158,13 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /id="game-canvas"[\s\S]*tabindex="0"/);
   assert.match(html, /class="scrap-garage-reveal"[\s\S]*role="status"/);
   assert.match(html, /대항 병기 완성도 0%/);
-  assert.match(html, /x-show="operationMapAvailable"/);
+  const gameMenuMarkup = html.slice(
+    html.indexOf('id="game-menu-control"'),
+    html.indexOf('id="game-menu-debug-hint"'),
+  );
+  assert.doesNotMatch(gameMenuMarkup, /x-show="operationMapAvailable"/);
+  assert.match(gameMenuMarkup, /operationMapAvailable \? 'MAP' : 'MENU'/);
+  assert.match(menuMarkup, /id="menu-debug-control"/);
   assert.match(html, /id="debug-panel-title"/);
   assert.match(html, /class="debug-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
   assert.match(html, /@keydown\.tab="trapDebugPanelFocus\(\$event\)"/);
@@ -178,7 +184,7 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(shell, /debugPanelOpen: this\.debugPanelOpen/);
   assert.match(shell, /operationMapOpen: this\.operationMapOpen/);
   assert.match(shell, /operationMapAvailable: false/);
-  assert.match(shell, /if \(!this\.operationMapAvailable\) return/);
+  assert.match(shell, /if \(!this\.operationMapAvailable\) \{\s*this\.showMenu\(\);/);
   assert.match(shell, /this\.openOperationMap\(\)/);
   assert.match(shell, /this\.debugPanelOpen = true;[\s\S]*gameApp\.onScreenChanged\(\)/);
   assert.match(shell, /setDebugBackgroundInert\(globalThis\.document, true\)/);

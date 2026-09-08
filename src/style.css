@@ -314,6 +314,28 @@ dd {
   letter-spacing: 0.04em;
 }
 
+.menu-debug-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: linear-gradient(
+    to right,
+    rgb(225 189 107 / 12%) var(--debug-hold-progress, 0%),
+    transparent 0
+  );
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-shadow: inherit;
+  text-align: left;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .menu-subtitle {
   margin-bottom: 0;
   color: #9cb0ac;
@@ -1770,11 +1792,14 @@ dd {
 }
 
 .debug-panel-backdrop {
-  position: absolute;
-  z-index: 12;
+  position: fixed;
+  z-index: 40;
   inset: 0;
+  bottom: auto;
+  height: var(--app-visible-viewport-height, 100dvh);
   display: grid;
-  padding: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   overflow: auto;
   background: rgb(2 7 9 / 72%);
   place-items: center;

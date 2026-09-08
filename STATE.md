@@ -4,11 +4,11 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — Human이 요청한 모바일 PWA 갱신과 메인 메뉴 비율 수리의 구현·검증을 마쳤다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — Human이 요청한 시작 구간 디버그 진입 수리의 구현·독립 검증을 마쳤다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
-`Human Feedback Priority — 모바일 PWA / 메인 메뉴 수리 검증 완료.` 브라우저 native Service Worker의 지속 A→B→C 갱신·저장·offline을 확인했고, 모바일 가로·세로 메뉴는 실제 보이는 높이 안에서 제목·시작·버전·업데이트를 읽을 수 있다. 설치형 Android/iOS 실기기 최종 확인은 Human이 담당한다. 게임·캐릭터·camera 비율은 이번 요청 범위가 아니다.
+`Human Feedback Priority — 시작 구간 디버그 진입 검증 완료.` 지도 해금 전에도 메인 제목 또는 게임 MENU를 1초 눌러 같은 디버그 패널을 연다. 실제 desktop mouse/keyboard와 mobile touch의 열기·해제·취소·focus·배경 inert·장면 적용·복귀를 확인했다. 이전 모바일 메인 메뉴 비율과 PWA 수리는 유지한다. 다음 미완료 전선은 폐광→항구 연결 전투와 귀환의 연속 플레이 검증이며, 자동 실행은 Human pause 상태다.
 
 ## Active Execution Goal
 
@@ -18,6 +18,7 @@
 
 | Area                                             | Status                   | Current evidence                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PG-PLATFORM-ACCESS / 시작 구간 디버그 진입       | satisfied                | 제목·MENU·MAP의 1초 hold, 초기 MENU 짧게 누르기, 공통 panel 1개, 실제 touch 해제 뒤 focus와 다음 일반 입력, main에서 QA 적용 뒤 canvas resize·일반 복귀·저장 bytes 보존. 독립 desktop/mobile 34기록 PASS.                                                                                    |
 | PG-PWA-OFFLINE / native update                   | satisfied                | 설치fetch정체·동일빌드false restart 수리. 6개이하다운로드/body즉시소비·SHA256검증·networkprobe·scope/release/client별cache. 지속Chrome A→B→C 10조건/715요청 PASS. 실제hidden→visible복귀 후B준비660ms(로컬서버측정).                                                                         |
 | PWA failure/persistence                          | satisfied                | asset503·stale200 거부, 저장실패활성화차단, 명시적용1회reload, 다른탭A게임·A코드계속유지와명시재시작, C offline/newquery. 진행1219bytes·복구1553bytes 전체동일.                                                                                                                              |
 | PG-PLATFORM-ACCESS / 모바일 메인 메뉴            | satisfied                | 기존844×390에서메뉴768px였던overflow수리. 1280×720/844×390/740×360/390×844/360×640 + 회전·주소창높이·safe-area·keyboard/touch 34기록 PASS. 주요버튼44px이상·버전상태12px이상.                                                                                                                |
@@ -29,7 +30,9 @@
 
 ## Verification
 
-- actual permission danger-full-access / approval never, clean isolated branch codex/pwa-mobile-menu 및free guard확인뒤획득. feedback-only88b6f70은별도임시worktree에서INBOX원문만즉시등록했다. 자동trigger 둘다PAUSED유지.
+- actual permission danger-full-access / approval never, clean isolated branch codex/debug-entry-start 및 free guard 확인 뒤 획득. feedback-only a8ddd7e는 별도 임시 worktree에서 INBOX 원문만 즉시 등록했다. 해당 원문의 의도는 PG-PLATFORM-ACCESS와 Architecture Rendering/Input이 소유하며 검증 후 그 항목만 queue에서 제거했다. 자동 trigger 둘 다 PAUSED 유지.
+- artifacts/debug-entry/evidence.json 및 REPORT.md: 실제 desktop 1280×720 / mobile 844×390에서 34기록 PASS. 메인/초기 MENU/해금 MAP, 실제 Enter hold·touchCancel·다른 탭 blur, modal focus trap·opener 복귀·배경 inert, 공개 form으로 QA 장면 적용과 일반 게임 복귀를 확인했다. 메인 패널 focus와 touchEnd 뒤 focus 실패를 각각 재현·수리·재검증했다. 실제 PNG에서 초반 MENU, 패널, 적용 후 game canvas를 직접 판독했다.
+- npm run test:platform, test:mobile-menu(34기록), test:pwa, graphics-review-config-check 및 lint/format/diff 검사 PASS. 기존 모바일 메인 화면 비율·PWA cache/lifecycle 계약을 보존한다. 이번 테스트는 실제 설치형 Android/iOS 전체 인증으로 확대하지 않는다.
 - 발행cddcc10 native첫설치가150초에도installing인것을재현. 새SW+구adapter에서동일build false restart도별도로실제재현. 근거 artifacts/pwa-update/published-install-stall-evidence.json 및initial-install-false-restart-evidence.json.
 - npm run test:pwa: metadata/probe/digest, lifecycle, 실제SWcache fixture PASS. platform/graphics URL계약,lint,format,diffcheck PASS. native브라우저flow는가짜registration.waiting/event로대체하지않았다.
 - artifacts/pwa-update/browser-evidence.json 및REPORT.md: 지속native A/B/C, actualforeground/menuapply/offline/savebytes. 다른탭의업데이트후기존game화면과isPlaying이유지됨을actualclick/PNG로확인했다.

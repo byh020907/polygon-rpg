@@ -82,6 +82,10 @@ function focusDebugPanel(browserDocument) {
   browserDocument.getElementById('debug-panel-title')?.focus();
 }
 
+function afterUiPaint(callback) {
+  globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(callback));
+}
+
 function setOperationMapBackgroundInert(browserDocument, isInert) {
   const operationMap = browserDocument.querySelector('.operation-map-backdrop');
   const viewport = operationMap?.parentElement;
@@ -155,6 +159,10 @@ export function registerGameShell(
   let debugHoldAbortController = null;
   let unsubscribePwa = null;
   let operationMapOpenerId = 'game-menu-control';
+  let debugPanelOpenerId = 'game-menu-control';
+  let debugHoldPointerId = null;
+  let completedHoldPointer = null;
+  let debugReleaseTimer = null;
   const initialScreen = visualQaRequest ? GAME_SCREEN.GAME : GAME_SCREEN.MENU;
   const screenFocusOwner = new ScreenFocusOwner({
     initialScreen,
@@ -351,10 +359,59 @@ export function registerGameShell(
           this.debugMenuHoldProgress = progress;
         },
         onComplete: () => {
+          completedHoldPointer =
+            debugHoldPointerId === null ? null : { id: debugHoldPointerId, released: false };
           this.openDebugPanel();
         },
       });
       debugHoldAbortController = new AbortController();
+      const restoreHoldFocus = () =>
+        afterUiPaint(() => {
+          const panel = globalThis.document.querySelector('.debug-panel');
+          if (this.debugPanelOpen && !panel?.contains(globalThis.document.activeElement))
+            focusDebugPanel(globalThis.document);
+        });
+      const releaseOptions = { capture: true, signal: debugHoldAbortController.signal };
+      globalThis.addEventListener(
+        'pointerup',
+        (event) => {
+          if (completedHoldPointer?.id !== event.pointerId) return;
+          const completed = completedHoldPointer;
+          completed.released = true;
+          restoreHoldFocus();
+          clearTimeout(debugReleaseTimer);
+          debugReleaseTimer = setTimeout(() => {
+            if (completedHoldPointer === completed) completedHoldPointer = null;
+          }, 400);
+        },
+        releaseOptions,
+      );
+      globalThis.addEventListener(
+        'pointerdown',
+        (event) => {
+          if (completedHoldPointer?.released && completedHoldPointer.id === event.pointerId)
+            completedHoldPointer = null;
+        },
+        releaseOptions,
+      );
+      globalThis.addEventListener(
+        'click',
+        (event) => {
+          if (
+            !completedHoldPointer?.released ||
+            ('pointerId' in event && event.pointerId !== completedHoldPointer.id)
+          )
+            return;
+          // The completed hold's synthetic click may target the new backdrop or
+          // refocus the now-inert opener. Consume only that gesture's release.
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          completedHoldPointer = null;
+          debugMenuHold?.consumePrimaryActivation();
+          restoreHoldFocus();
+        },
+        releaseOptions,
+      );
       globalThis.addEventListener('blur', () => debugMenuHold?.interrupt(), {
         signal: debugHoldAbortController.signal,
       });
@@ -627,7 +684,13 @@ export function registerGameShell(
 
     startDebugMenuHold(event) {
       if (event?.repeat) return;
+      debugPanelOpenerId = event?.currentTarget?.id || 'game-menu-control';
+      debugHoldPointerId = Number.isInteger(event?.pointerId) ? event.pointerId : null;
       debugMenuHold?.begin();
+    },
+
+    activateMenuTitle() {
+      debugMenuHold?.consumePrimaryActivation();
     },
 
     releaseDebugMenuHold() {
@@ -648,12 +711,15 @@ export function registerGameShell(
         debugMenuHold.consumePrimaryActivation();
         return;
       }
-      if (result && !result.completed) this.openOperationMap();
+      if (result && !result.completed) this.activateGameMenu();
     },
 
     activateGameMenu() {
       if (!debugMenuHold?.consumePrimaryActivation()) return;
-      if (!this.operationMapAvailable) return;
+      if (!this.operationMapAvailable) {
+        this.showMenu();
+        return;
+      }
       this.openOperationMap();
     },
 
@@ -799,7 +865,11 @@ export function registerGameShell(
       setDebugBackgroundInert(globalThis.document, true);
       this.clearQaInput();
       gameApp.onScreenChanged();
-      this.$nextTick(() => focusDebugPanel(globalThis.document));
+      this.$nextTick(() =>
+        afterUiPaint(() => {
+          if (this.debugPanelOpen) focusDebugPanel(globalThis.document);
+        }),
+      );
     },
 
     async openGraphicsReview(request = undefined) {
@@ -876,7 +946,15 @@ export function registerGameShell(
       setDebugBackgroundInert(globalThis.document, false);
       this.clearQaInput();
       gameApp.onScreenChanged();
-      this.$nextTick(() => globalThis.document.getElementById('game-menu-control')?.focus());
+      this.$nextTick(() => {
+        const opener = globalThis.document.getElementById(debugPanelOpenerId);
+        const target = opener?.getClientRects().length
+          ? opener
+          : globalThis.document.getElementById(
+              this.screen === GAME_SCREEN.MENU ? 'menu-debug-control' : 'game-menu-control',
+            );
+        target?.focus();
+      });
     },
 
     applyDebugConfiguration() {
@@ -891,6 +969,8 @@ export function registerGameShell(
         this.visualQa = true;
         this.screen = GAME_SCREEN.GAME;
         this.isPlaying = false;
+        screenFocusOwner.transitionTo(GAME_SCREEN.GAME);
+        this.$nextTick(() => afterUiPaint(() => gameApp.onScreenChanged()));
         this.reducedMotion = gameApp.prefersReducedMotion();
         this.debugConfigurationStatus = `현재 화면에 적용됨 · ${result.configuration.start}`;
       } catch (error) {
@@ -1009,6 +1089,8 @@ export function registerGameShell(
     },
 
     destroy() {
+      clearTimeout(debugReleaseTimer);
+      completedHoldPointer = null;
       unsubscribePwa?.();
       unsubscribePwa = null;
       debugHoldAbortController?.abort();
