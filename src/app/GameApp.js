@@ -372,6 +372,11 @@ export class GameApp extends SceneNode {
   enterGame() {
     this.input.clear({ resetSequences: true });
     this.scene.reset();
+    // Alpine's screen transition can notify the app before this menu action
+    // resets the scene.  Let the interactive QA scenario establish its fresh
+    // campaign scene again after that reset instead of leaving the URL route
+    // on the generic scrapyard opening.
+    this.qaInputScenarioInitialized = false;
     this.onScreenChanged();
   }
 

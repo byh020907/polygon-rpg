@@ -699,6 +699,36 @@ function verifyQaInputScenarioMapSelection() {
   assert.equal(readQaInputScenario('?inputQa=0&inputQaStart=combat-hit'), null);
 }
 
+function verifyQaInputScenarioReappliesAfterMenuReset() {
+  const calls = [];
+  const app = {
+    qaInputScenarioInitialized: true,
+    input: {
+      clear(options) {
+        calls.push(['clear', options]);
+      },
+    },
+    scene: {
+      reset() {
+        calls.push(['reset']);
+      },
+    },
+    onScreenChanged() {
+      calls.push(['screen', this.qaInputScenarioInitialized]);
+    },
+  };
+  Object.setPrototypeOf(app, GameApp.prototype);
+
+  GameApp.prototype.enterGame.call(app);
+
+  assert.deepEqual(calls, [['clear', { resetSequences: true }], ['reset'], ['screen', false]]);
+  assert.equal(
+    app.qaInputScenarioInitialized,
+    false,
+    'menu screen transition이 먼저 QA scene을 배치했더라도 enterGame reset 뒤 다시 적용할 수 있어야 한다.',
+  );
+}
+
 function verifyVisualQaResizeReplaysLatestFrame() {
   const resizedHosts = [];
   const renderedFrames = [];
@@ -950,6 +980,7 @@ verifySamePageGameApplicationReplacement();
 verifyDebugMenuHoldBoundary();
 verifyVisualQaReducedMotionOverride();
 verifyQaInputScenarioMapSelection();
+verifyQaInputScenarioReappliesAfterMenuReset();
 verifyVisualQaResizeReplaysLatestFrame();
 verifyInteractiveControlKeyboardBoundary();
 verifyReducedMotionVisualQaRequest();
