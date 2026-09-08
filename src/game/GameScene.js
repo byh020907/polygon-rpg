@@ -3740,6 +3740,14 @@ export class GameScene extends SceneNode {
             ? `${incompleteLinkedIssue.encounterLabel}을 완료해 “${incompleteLinkedIssue.label}” 연결 이슈를 해결하세요.`
             : incompleteLinkedIssue.objective;
         }
+        const pendingPrimaryLinkedIssue = scrapCampaign.issueWindow.linked.find(
+          (linkedIssue) => !linkedIssue.completed,
+        );
+        if (pendingPrimaryLinkedIssue) {
+          return (
+            scrapCampaign.issueWindow.primary?.objective ?? pendingPrimaryLinkedIssue.objective
+          );
+        }
         return (
           scrapCampaignRegion.objectives.eventStart ??
           `핵심 사건을 확정해 ${scrapCampaignRegionReadModel.eventSegments}구간 작업을 시작하세요.`

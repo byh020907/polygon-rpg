@@ -2300,6 +2300,11 @@ assert.deepEqual(
   '지역 사건 preview는 시간을 소비하면 안 됩니다.',
 );
 assert.equal(mineFlowScene.cancelScrapCampaignAction().cancelled, true);
+assert.match(
+  mineFlowScene.getWorldStatus().objective,
+  /항구와 온실에서 구조 설비를 확보한 뒤 폐광 산촌으로 돌아오세요/,
+  '폐광에서 막힌 핵심 사건을 취소하면 아직 떠나야 할 연결 이슈를 안내해야 합니다.',
+);
 completeActiveLinkedIssuesForRegion(mineFlowScene, 'abandoned-mine');
 
 mineEventRequest = null;
