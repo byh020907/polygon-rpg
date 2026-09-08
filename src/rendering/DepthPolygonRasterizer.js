@@ -1,3 +1,5 @@
+import { polygonStrokePixels } from './HardEdgePolygonPainter.js';
+
 // Camera depth stays separate from screen vertices. Larger depth faces the camera.
 function color(value) {
   const hex = String(value ?? '#000000').replace('#', '');
@@ -19,7 +21,17 @@ function blend(data, index, rgb, alpha) {
 
 export function rasterizeDepthPolygons(
   items,
-  { width, height, offsetX = 0, offsetY = 0, scale = 1, data = null, depthBuffer = null },
+  {
+    width,
+    height,
+    offsetX = 0,
+    offsetY = 0,
+    scale = 1,
+    data = null,
+    depthBuffer = null,
+    silhouetteWidth = 1,
+    silhouetteColor = null,
+  },
 ) {
   if (
     !Number.isInteger(width) ||
@@ -102,9 +114,12 @@ export function rasterizeDepthPolygons(
     function sample(x, y, z) {
       if (x < 0 || y < 0 || x >= width || y >= height) return;
       const index = y * width + x;
+      // Record geometric coverage before depth rejection: a fully hidden broad
+      // surface is different from a thin/edge-on surface with no pixel centers.
+      if (!outline) item.hasRasterInterior = true;
       if (outline && item.alpha === 1 && item.depthWrite !== false) {
         if (owners[index] !== item.rank) {
-          if (owners[index] !== -1) return;
+          if (owners[index] !== -1 && z <= depthBuffer[index] + 1e-7) return;
           // An exposed contour must border this final visible surface, not a hidden edge.
           let visibleNeighbor = false;
           const reach = Math.ceil(Math.max(0.5, ((item.lineWidth ?? 1) * scale) / 2));
@@ -124,7 +139,7 @@ export function rasterizeDepthPolygons(
               }
             }
           }
-          if (!visibleNeighbor) return;
+          if (!visibleNeighbor && item.hasRasterInterior) return;
         }
         if (
           z < outlineDepth[index] - 1e-7 ||
@@ -139,7 +154,7 @@ export function rasterizeDepthPolygons(
       if (z > (coverage.get(index)?.z ?? -Infinity)) coverage.set(index, { z, rgb });
     }
     if (outline) {
-      const radius = Math.max(0.25, ((item.lineWidth ?? 1) * scale) / 2);
+      const strokeWidth = Math.max(1, (item.lineWidth ?? 1) * scale);
       const boundary = item.outlineIndices ?? item.points.map((_, index) => index);
       for (let edge = 0; edge < boundary.length; edge += 1) {
         const i = boundary[edge];
@@ -149,23 +164,12 @@ export function rasterizeDepthPolygons(
         const dx = b.x - a.x;
         const dy = b.y - a.y;
         const length2 = dx * dx + dy * dy;
-        for (
-          let y = Math.max(0, Math.floor(Math.min(a.y, b.y) - radius));
-          y <= Math.min(height - 1, Math.ceil(Math.max(a.y, b.y) + radius));
-          y += 1
-        ) {
-          for (
-            let x = Math.max(0, Math.floor(Math.min(a.x, b.x) - radius));
-            x <= Math.min(width - 1, Math.ceil(Math.max(a.x, b.x) + radius));
-            x += 1
-          ) {
-            const t = length2
-              ? Math.max(0, Math.min(1, ((x + 0.5 - a.x) * dx + (y + 0.5 - a.y) * dy) / length2))
-              : 0;
-            if (Math.hypot(x + 0.5 - a.x - t * dx, y + 0.5 - a.y - t * dy) <= radius)
-              sample(x, y, item.depths[i] + (item.depths[j] - item.depths[i]) * t);
-          }
-        }
+        polygonStrokePixels([a, b], width, height, strokeWidth, (x, y) => {
+          const t = length2
+            ? Math.max(0, Math.min(1, ((x + 0.5 - a.x) * dx + (y + 0.5 - a.y) * dy) / length2))
+            : 0;
+          sample(x, y, item.depths[i] + (item.depths[j] - item.depths[i]) * t);
+        });
       }
     } else {
       const triangles =
@@ -215,9 +219,43 @@ export function rasterizeDepthPolygons(
   for (const item of opaque) paint(item, true);
   // Outlines are checked against the complete opaque surface buffer, including later limbs.
   for (const item of opaque) if (item.stroke) paint(item, false, true);
+  // The actor owns its silhouette before compositing with an opaque world. It
+  // cannot depend on empty alpha surviving in the merged scene framebuffer.
+  const ringWidth = Math.max(0, Math.min(2, Math.round(silhouetteWidth)));
+  for (let y = 0; y < height && ringWidth > 0; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const source = y * width + x;
+      const owner = owners[source];
+      if (owner < 0 || !ranked[owner].stroke) continue;
+      for (let oy = -ringWidth; oy <= ringWidth; oy += 1) {
+        for (let ox = -ringWidth; ox <= ringWidth; ox += 1) {
+          const px = x + ox;
+          const py = y + oy;
+          if (px < 0 || py < 0 || px >= width || py >= height) continue;
+          const destination = py * width + px;
+          if (owners[destination] >= 0) continue;
+          const z = depthBuffer[source];
+          if (
+            z > outlineDepth[destination] + 1e-7 ||
+            (Math.abs(z - outlineDepth[destination]) <= 1e-7 && owner >= outlineOwners[destination])
+          ) {
+            outlineDepth[destination] = z;
+            outlineOwners[destination] = owner;
+          }
+        }
+      }
+    }
+  }
   for (const item of transparent) {
     paint(item, false);
     if (item.stroke) paint(item, false, true);
+  }
+  // Preserve the exact opaque contour even under a translucent trail. This
+  // does not write body depth and therefore cannot turn a trail into geometry.
+  for (let index = 0; index < owners.length; index += 1) {
+    if (owners[index] < 0 && outlineOwners[index] >= 0) {
+      blend(data, index, color(silhouetteColor ?? ranked[outlineOwners[index]].stroke), 1);
+    }
   }
   return { width, height, data, depthBuffer, owners };
 }

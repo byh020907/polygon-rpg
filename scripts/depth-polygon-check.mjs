@@ -128,6 +128,29 @@ assert.deepEqual(
   'hidden curved contour cannot scratch the foreground',
 );
 const processor = new RetroPostProcessor();
+const sceneOutline = rasterizeDepthPolygons(
+  [
+    {
+      id: 'actor',
+      points: [
+        { x: 3, y: 3 },
+        { x: 10, y: 3 },
+        { x: 10, y: 10 },
+        { x: 3, y: 10 },
+      ],
+      depths: [0, 0, 0, 0],
+      fill: '#ffffff',
+      stroke: '#383838',
+      lineWidth: 1,
+    },
+  ],
+  { width: 18, height: 18, silhouetteColor: '#111416' },
+);
+assert.deepEqual(
+  pixel(sceneOutline, 2, 5),
+  [17, 20, 22, 255],
+  'actor exterior preserves scene outline palette instead of a lighter material edge',
+);
 const material = { data: new Uint8ClampedArray([146, 92, 48, 255]) };
 processor.applyPosterization(material, 4);
 assert.ok(
@@ -162,6 +185,168 @@ assert.equal(
   isolatedTrail.data.filter((value, i) => i % 4 === 3 && value > 0).length,
   1,
   'translucent trail cannot acquire an opaque post-outline',
+);
+const thinBox = {
+  id: 'thin-box',
+  points: [
+    { x: 2, y: 2 },
+    { x: 10, y: 2 },
+    { x: 10, y: 10 },
+    { x: 2, y: 10 },
+  ],
+  depths: [5, 5, 5, 5],
+  fill: '#708090',
+  stroke: '#111111',
+  lineWidth: 0.5,
+};
+for (const offset of [0, 0.2, 0.8]) {
+  const shifted = {
+    ...thinBox,
+    points: thinBox.points.map((p) => ({ x: p.x + offset, y: p.y + offset })),
+  };
+  const pixels = render([shifted]);
+  const start = Math.round(2 + offset),
+    end = Math.round(10 + offset);
+  for (let coordinate = start; coordinate <= end; coordinate++) {
+    assert.deepEqual(
+      pixel(pixels, coordinate, start),
+      [17, 17, 17, 255],
+      'thin top outline remains continuous',
+    );
+    assert.deepEqual(
+      pixel(pixels, start, coordinate),
+      [17, 17, 17, 255],
+      'thin side outline remains continuous',
+    );
+  }
+}
+const backdrop = {
+  id: 'backdrop',
+  points: [
+    { x: 0, y: 0 },
+    { x: 17, y: 0 },
+    { x: 17, y: 17 },
+    { x: 0, y: 17 },
+  ],
+  depths: [0, 0, 0, 0],
+  fill: '#335577',
+};
+assert.deepEqual(
+  pixel(render([backdrop, thinBox]), 10, 5),
+  [17, 17, 17, 255],
+  'front contour extends continuously over the rear-owned adjacent pixel',
+);
+const cover = { ...backdrop, id: 'cover-front', depths: [20, 20, 20, 20], fill: '#ff0000' };
+assert.deepEqual(
+  pixel(render([thinBox, cover]), 10, 5),
+  [255, 0, 0, 255],
+  'fully hidden contour stays occluded',
+);
+for (const offset of [0, 0.2, 0.8]) {
+  const diagonal = {
+    ...thinBox,
+    points: [
+      { x: 2 + offset, y: 2 + offset },
+      { x: 10 + offset, y: 10 + offset },
+      { x: 2 + offset, y: 10 + offset },
+    ],
+    depths: [5, 5, 5],
+  };
+  const result = render([backdrop, diagonal]);
+  for (let coordinate = Math.round(2 + offset); coordinate <= Math.round(10 + offset); coordinate++)
+    assert.deepEqual(
+      pixel(result, coordinate, coordinate),
+      [17, 17, 17, 255],
+      'subpixel diagonal remains connected without anti-aliasing',
+    );
+}
+const partialCover = {
+  ...cover,
+  points: [
+    { x: 6, y: 0 },
+    { x: 17, y: 0 },
+    { x: 17, y: 17 },
+    { x: 6, y: 17 },
+  ],
+};
+const partial = render([thinBox, partialCover]);
+assert.deepEqual(pixel(partial, 4, 2), [17, 17, 17, 255]);
+assert.deepEqual(
+  pixel(partial, 8, 2),
+  [255, 0, 0, 255],
+  'near cover hides only the covered contour',
+);
+assert.deepEqual(
+  render([thinBox, backdrop]).data,
+  render([backdrop, thinBox]).data,
+  'stroke and opaque ownership stay submission-order independent',
+);
+const edgeOn = {
+  ...thinBox,
+  id: 'edge-on',
+  points: [
+    { x: 2, y: 2 },
+    { x: 2.1, y: 2 },
+    { x: 2.1, y: 10 },
+    { x: 2, y: 10 },
+  ],
+};
+for (let y = 2; y <= 10; y++)
+  assert.deepEqual(
+    pixel(render([edgeOn]), 2, y),
+    [17, 17, 17, 255],
+    'edge-on outlined shape retains a one-pixel silhouette without fill samples',
+  );
+assert.deepEqual(
+  pixel(render([edgeOn, cover]), 2, 5),
+  [255, 0, 0, 255],
+  'edge-on outline behind a near surface remains hidden',
+);
+const silhouette = render([thinBox]);
+for (let coordinate = 1; coordinate <= 10; coordinate++) {
+  assert.deepEqual(
+    pixel(silhouette, 1, coordinate),
+    [17, 17, 17, 255],
+    'opaque owner mask closes left silhouette before world composition',
+  );
+  assert.deepEqual(
+    pixel(silhouette, coordinate, 1),
+    [17, 17, 17, 255],
+    'opaque owner mask closes top silhouette',
+  );
+}
+const noRing = rasterizeDepthPolygons([thinBox], { width: 18, height: 18, silhouetteWidth: 0 });
+assert.deepEqual(pixel(noRing, 1, 5), [0, 0, 0, 0], 'lab can disable the generated silhouette');
+const worldComposite = { data: silhouette.data.slice() };
+for (let i = 0; i < worldComposite.data.length; i += 4)
+  if (worldComposite.data[i + 3] === 0) worldComposite.data.set([100, 80, 60, 255], i);
+processor.applyPosterization(worldComposite, 5);
+const actorOnly = { data: silhouette.data.slice() };
+processor.applyPosterization(actorOnly, 5);
+assert.deepEqual(
+  pixel(worldComposite, 1, 5),
+  pixel(actorOnly, 1, 5),
+  'idle actor outline is identical over opaque world and transparent preview',
+);
+const trailedSilhouette = render([
+  thinBox,
+  { ...frontTrail, points: backdrop.points, depths: [30, 30, 30, 30] },
+]);
+assert.deepEqual(
+  pixel(trailedSilhouette, 1, 5),
+  [17, 17, 17, 255],
+  'translucent trail cannot dilute the outer contour',
+);
+assert.deepEqual(
+  trailedSilhouette.depthBuffer,
+  silhouette.depthBuffer,
+  'trail and generated outline do not change body depth',
+);
+const plain = render([{ ...thinBox, stroke: null }]);
+assert.deepEqual(
+  pixel(plain, 1, 5),
+  [0, 0, 0, 0],
+  'unoutlined glow or plain surface does not seed a silhouette',
 );
 console.log(
   'Depth polygon raster: crossing, interpolation, trail, outline, surface shading and deterministic sampling PASS',
