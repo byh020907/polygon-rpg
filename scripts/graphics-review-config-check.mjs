@@ -44,7 +44,7 @@ assert.deepEqual([...player.searchParams.keys()], []);
 const debug = buildDebugQaUrl(href, {
   start: 'scrap-garage-0',
   frame: 0,
-  renderer: 'retro',
+  renderer: 'polygon',
   phase: 'active',
   reducedMotion: false,
 });

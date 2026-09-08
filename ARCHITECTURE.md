@@ -41,7 +41,7 @@
 | Storage Port                   | Versioned snapshot와 recovery slot validation·load/save result                                                                       | Gameplay rule, hidden fallback success                  |
 | Shared Combat Geometry         | Pose에서 weapon/shield/hurt/swept-contact geometry 계산                                                                              | Canvas style, damage write                              |
 | Art Direction Profiles         | 저채도 palette, depth layer, material, light, effect와 HUD presentation token의 immutable 정의                                       | Gameplay rule, Canvas/DOM 직접 write                    |
-| Renderers                      | 같은 immutable RenderFrame을 Polygon/Retro로 투영                                                                                    | Simulation, hit 재판정, state write                     |
+| Renderers                      | 같은 immutable RenderFrame을 Polygon로 투영                                                                                          | Simulation, hit 재판정, state write                     |
 
 Adapter는 policy를 호출하고 policy는 adapter를 import하지 않는다. Concrete map, campaign/equipment profile과 adapter는 composition root에서 주입한다.
 
@@ -57,8 +57,7 @@ Keyboard / Touch / DOM intent
        └─ Progression ─→ Storage Port
              ↓
        Immutable RenderFrame
-       ├─ Polygon Renderer
-       └─ Retro Renderer
+       └─ Polygon Renderer
 ```
 
 ## State Ownership and Data Flow
@@ -120,7 +119,7 @@ Keyboard / Touch / DOM intent
 - 주요 humanoid clip은 root·pelvis·chest·neck/head·near/far limb의 local 3D skeleton frame을 immutable data로 소유하고, fixed side-view orthographic projection이 Canvas cutout의 2D joint/depth order를 만든다. z는 presentation depth만이며 2D map/collider/hit authority를 바꾸지 않는다. raw 외부 motion은 runtime에 넣지 않고 license·URL·mapping을 기록한 development-time retarget/import로 local key frame만 남긴다.
 - 3D 단계는 본 계층·local translation·정규화 Quaternion만 소유한다. SLERP와 계층형 FK가 부모 방향을 상속하고 본 길이를 유지한다. 정투영은 위치와 local axis를 screen XY 및 camera depth로 나누며, 3D mesh·skinning·texture renderer를 만들지 않는다.
 - 캐릭터 surface는 투영 이후 본 선분의 가변 폭 profile을 길이·폭 방향으로 나누어 생성한다. 원형 limb·타원 torso·얇은 cloth/blade의 단면 profile이 방향에 따른 폭·두께를 정의한다. 2D vertex와 surface depth channel은 분리하며 같은 triangle 안에서 보간한 깊이로 pixel Z를 판정한다. 기본색·cell shading·외곽선은 가림을 공유하고 반투명 검 궤적은 불투명 depth를 검사하되 depth를 쓰지 않는다.
-- 깊이 raster는 불투명 pixel의 surface 소유와 동률 순서를 결정적으로 기록한다. 외곽선은 실제로 보이는 surface 경계만 그리며 자기 곡면 깊이 때문에 점선처럼 잘리거나 뒤쪽 부위의 선이 앞쪽 면을 긁지 않는다. Retro는 hue를 보존하는 소수의 명도 band와 불투명 외곽선을 사용하고, RGB 채널별 양자화로 피부·천·금속에 다른 원색 반점을 만들지 않는다.
+- 깊이 raster는 불투명 pixel의 surface 소유와 동률 순서를 결정적으로 기록한다. 외곽선은 실제로 보이는 surface 경계만 그리며 자기 곡면 깊이 때문에 점선처럼 잘리거나 뒤쪽 부위의 선이 앞쪽 면을 긁지 않는다. 피부·천·금속의 색은 후처리 양자화 없이 material과 cell lighting에서 결정한다.
 - 주인공 rig와 appearance는 작은 단순한 머리, 약 7등신의 가늘고 긴 팔다리, 짧은 작업상의·바지·크로스스트랩과 넓은 검의 일관된 profile을 사용한다. 머리·의상·장비의 표면 정의와 shared hurt/weapon outline은 같은 silhouette에서 파생한다. 겹친 장식 면을 무작정 늘리거나 별도 머리 크기·무기 형상을 renderer마다 유지하지 않는다.
 - 게임·미리보기·timeline·투명 PNG·frame sheet는 같은 pose sampler와 renderer를 호출한다. 검 공격은 준비→빠른 연속 베기→감속→복귀, 골반·가슴·팔·손목 시차, 팔꿈치 굽힘 제약과 고정된 파지 방향을 유지하며 별도의 QA용 그림을 만들지 않는다.
 - 기본·강공격은 머리 위로 검을 올리는 windup을 사용하지 않는다. 몸 옆의 낮은 준비 위치에서 골반·흉곽의 XYZ 회전과 팔 사슬이 앞을 가로지르는 횡·사선 arc를 만들며, 새로운 pose에도 기존 spatial reach와 integer contact timeline을 적용한다.
@@ -144,7 +143,7 @@ Keyboard / Touch / DOM intent
 
 ## Rendering, Input and Accessibility
 
-- Game state는 fixed-step에서 한 번 갱신되고 Polygon과 Retro renderer는 같은 immutable RenderFrame을 받는다.
+- Game state는 fixed-step에서 한 번 갱신되고 모든 출력 경로의 Polygon renderer는 같은 immutable RenderFrame을 받는다.
 - Camera feedback, interpolation과 giant scale은 gameplay position/collider를 암묵적으로 변경하지 않는다.
 - Polygon cutout과 smooth vector cartoon은 같은 source geometry를 공유한다. Scene art profile은 실제
   camera에서 character scale, 5개 안팎 parallax layer, low-saturation palette, landmark density와
@@ -156,8 +155,7 @@ Keyboard / Touch / DOM intent
   뒤 luminance를 3~4단계로 quantize하고 contact/projected shadow를 합성한다. 단순 원형 overlay나
   pre-painted shading을 light authority로 사용하지 않는다.
 - Metal highlight, cloth falloff, soil/stone irregular face response는 material profile로 분리한다.
-  Short-lived attack light도 동일한 lighting pass를 사용하며 Retro는 quantized 결과를 기존
-  posterization/outline pipeline에 전달한다.
+  Short-lived attack light도 동일한 lighting pass를 사용한다.
 - Combat presentation cue는 windup/contact/hit-stop/recoil/decay phase, strength와 direction을
   immutable timing으로 제공한다. Camera adapter는 direction-first offset과 빠른 감쇠만 담당하고,
   reduced-motion은 offset amplitude를 줄여도 contact flash, pose recoil과 hit stop을 제거하지 않는다.
@@ -165,10 +163,8 @@ Keyboard / Touch / DOM intent
   정의한다. DOM adapter는 semantic status와 MENU short/hold 경계를 유지하며 Canvas의 attack tell과
   interaction target을 가리지 않는다.
 - Bottom objective ribbon은 현재 action과 command만 compact하게 표시한다. Story title·briefing·감정 설명은 이 HUD surface에 렌더하지 않는다.
-- Retro pipeline은 screen-space snap, 저해상도 depth/material raster와 actor 윤곽 확정, alpha policy·posterization, world 합성, 정수 nearest-neighbor 확대 순서를 사용한다.
-- 일반 게임의 pixel grid는 작은 셀로 세부 형태를 남긴다. Retro의 지형·장식·캐릭터 경계는 정수 pixel coverage로 생성하고 확대는 nearest-neighbor로만 수행한다. 불투명 면이 겹친 경계에 Canvas의 안티앨리어싱 혼합색을 남기지 않는다. 의도한 반투명 효과는 경계 smoothing과 구분한다.
-- 보이는 외곽선은 축소 후에도 최소 한 raster pixel의 연속된 coverage를 보장한다. 정수/소수 좌표나 선의 방향 때문에 윤곽이 통째로 사라지지 않으며, 깊이에 가려진 뒤쪽 선은 계속 숨긴다.
-- Retro는 정수 좌표 전용 RGBA pixel surface에서 저해상도 화면을 완성한 뒤 정수 배율 복사로 출력한다. Canvas의 path·stroke·중간 image resampling에 픽셀 소유권을 맡기지 않는다. world framing을 유지하도록 화면에 맞는 저해상도 grid를 계산하며, 확대 중 픽셀 너비가 번갈아 달라지는 fractional stretch는 사용하지 않는다.
+- 게임·검토실·연구실은 CanvasPolygonRenderer 하나만 사용한다. 저해상도 surface, 좌표 snap, pixel-size/alpha-threshold/posterization 설정, 정수 nearest-neighbor 확대와 비교용 Retro canvas를 두지 않는다. UI/CLI/URL 기본값·검증·문서도 같은 계약을 따른다. 오래된 renderer query는 URL 읽기 경계에서만 polygon으로 정규화하고 폐기된 renderer를 다시 만들지 않는다.
+- 깊이 가림의 raster buffer는 폴리곤 표면의 z/소유권을 판정하는 내부 구현이며 픽셀화 효과가 아니다. 프레임의 geometry와 material을 Canvas backing 좌표에서 rasterize한 뒤 identity transform으로 1:1 합성한다. 검토실 확대는 CSS 크기와 DPR에 맞춰 backing을 다시 만들고 geometry를 재렌더하며 전체 canvas는 3M pixel budget을 넘지 않는다. CSS 확대나 새 evidence sheet에도 pixelated/nearest-neighbor 처리를 적용하지 않는다.
 - 캐릭터 외곽 윤곽은 depth 합성 후 실제로 보이는 불투명 pixel 소유 mask에서 완성하고 배경 합성 전에 확정한다. 완성된 월드 화면의 투명도 경계에서 캐릭터를 뒤늦게 찾지 않는다. 내부 부위선은 depth를 따르고, 반투명 효과는 확정된 외곽선을 지우지 않는다. 배경이 있는 정지 gameplay와 투명 preview의 동일 캐릭터 픽셀을 함께 검증한다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
 - UI screen state, operation-map modal과 debug panel state는 gameplay input에 섞지 않는다.
@@ -200,7 +196,7 @@ Keyboard / Touch / DOM intent
 - Reference 원본의 부착 위치와 모든 vertex는 부모 축 기준 [-1,1] 로컬 정규좌표다. 부모 extent와 child size ratio가 크기를 소유하고 quaternion rotation을 포함한 부모 transform을 한 번 합성한 뒤 2D로 투영한다. 자식은 부모 위치·크기·회전에 따라간다. CPU에서 매 frame 이미지나 source topology를 다시 만들지 않고 정적 triangulation을 한 번 compile한다. 수동 sprite 재생성은 디자인 원본 계약이 아니다.
 
 - Immutable graphics catalog는 production content와 producer를 연결하는 유일한 등록 경로다. 주인공, NPC, 모든 현재 적, 장비, 배경·전경·지형·건물·설비·소품, 시간에 따른 효과와 UI를 stable resource/action/frame ID로 식별한다. 원본 map의 비활성 item과 patch variant도 inventory에 포함한다. 아직 구현되지 않은 motion이나 리소스를 가짜 preview로 만들지 않는다.
-- 검토 sampler는 게임이 사용하는 pose·공격 크기·shared geometry·presentation producer와 Polygon/Retro renderer를 호출한다. 별도 캐릭터 보드 그림, QA 전용 무기 크기 계산과 복제 UI markup을 유지하지 않는다. 등록된 production data가 바뀌면 같은 ID의 검토 출력도 함께 바뀐다.
+- 검토 sampler는 게임이 사용하는 pose·공격 크기·shared geometry·presentation producer와 Polygon renderer를 호출한다. 별도 캐릭터 보드 그림, QA 전용 무기 크기 계산과 복제 UI markup을 유지하지 않는다. 등록된 production data가 바뀌면 같은 ID의 검토 출력도 함께 바뀐다.
 - UI adapter가 선택, 필터, frame index, 60Hz 정상 재생·정지, viewport와 확대 배율을 소유한다. URL codec이 모든 재현 조건을 검증하고 같은 page의 debug 진입/복귀와 정합시킨다. Copy는 사용자 입력에서만 clipboard에 리소스·동작·프레임·renderer·조명·배치·URL을 쓴다. 외부 피드백 전송이나 player save mutation은 하지 않는다.
 - 정적 리소스는 thumbnail·실제 크기·확대로, animated producer는 action별 frame strip과 동일 sample의 연속 재생으로 검토한다. 장면 배치는 실제 map resolution과 광원·차폐를 그대로 사용하고 개별 보기에서도 scene provenance를 표시한다. UI는 production component 자체와 동일 read model을 별도 저장 없는 검토 context에서 표시한다.
 - Catalog coverage fixture는 원본 content/producer inventory와 등록 ID를 비교하고 누락·중복을 실패시킨다. Actual desktop/mobile PNG·연속 frame, 접근 가능한 control, 복사와 URL 왕복, player game debug 비노출은 독립 verifier가 판독한다.

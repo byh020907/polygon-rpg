@@ -17,6 +17,8 @@ function parseArgs(argv) {
     }
     values.set(key.slice(2), value);
   }
+  if (values.has('renderer') && values.get('renderer') !== 'polygon')
+    throw new Error('Only --renderer polygon is supported.');
   return values;
 }
 
@@ -164,7 +166,7 @@ async function run() {
       '--no-default-browser-check',
       `--remote-debugging-port=${debugPort}`,
       `--user-data-dir=${profile}`,
-      `http://127.0.0.1:${port}/?inputQa=1&inputQaRenderer=${args.get('renderer') ?? 'retro'}&inputQaStart=${args.get('start') ?? ''}&inputQaX=${args.get('start-x') ?? ''}`,
+      `http://127.0.0.1:${port}/?inputQa=1&inputQaRenderer=${args.get('renderer') ?? 'polygon'}&inputQaStart=${args.get('start') ?? ''}&inputQaX=${args.get('start-x') ?? ''}`,
     ],
     { stdio: 'ignore', windowsHide: true },
   );
@@ -398,7 +400,7 @@ async function run() {
           const mc=measure.getContext('2d',{willReadFrequently:true});let x0=measure.width,y0=measure.height,x1=0,y1=0;
           for(const im of images){mc.clearRect(0,0,measure.width,measure.height);mc.drawImage(im,0,0);const pixels=mc.getImageData(0,0,measure.width,measure.height).data;for(let y=0;y<measure.height;y++)for(let x=0;x<measure.width;x++)if(pixels[(y*measure.width+x)*4+3]){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}}
           const crop={x:Math.max(0,x0-8),y:Math.max(0,y0-8),width:x1-x0+17,height:y1-y0+17};
-          const c=document.createElement('canvas');c.width=1200;c.height=972;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=false;
+          const c=document.createElement('canvas');c.width=1200;c.height=972;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);ctx.imageSmoothingEnabled=true;
           const scale=Math.min(300/crop.width,300/crop.height),w=crop.width*scale,h=crop.height*scale;
           for(let i=0;i<12;i++){const index=Math.round(i*(fs.length-1)/11),f=fs[index],dx=(i%4)*300,dy=Math.floor(i/4)*324;ctx.drawImage(images[index],crop.x,crop.y,crop.width,crop.height,dx+(300-w)/2,dy+(300-h)/2,w,h);ctx.fillStyle='white';ctx.font='14px sans-serif';ctx.fillText(Math.round(Math.max(0,f.milliseconds))+' ms · '+f.telemetry.combatMotion.id,dx+8,dy+318)}return c.toDataURL('image/png')
         })()`);
@@ -409,7 +411,7 @@ async function run() {
         return;
       }
       const strip = await evaluate(
-        `(async()=>{const fs=globalThis.__motionFrames.map(f=>({...f,png:${name.endsWith('-actor') ? 'f.actorPng' : 'f.png'}}));const selected=Array.from({length:12},(_,i)=>fs[Math.round(i*(fs.length-1)/11)]);const c=document.createElement('canvas');c.width=1200;c.height=660;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);for(let i=0;i<selected.length;i++){const f=selected[i];const im=new Image();im.src=f.png;await im.decode();const t=f.telemetry;const p=t?.projection;const scale=p?Math.min(im.width/p.worldWidth,im.height/p.worldHeight)*p.zoom:im.width/960;const z=(t?.artDirection?.cameraZoom??1)*(im.width<=900?(t?.artDirection?.mobileCameraScale??1):1);const focus=im.height*(t?.artDirection?.cameraFocusY??.5);const x=t?(t.player.position.x-480-(t.cameraOffset?.x??0))*scale*z+im.width/2:im.width*.4;const y=t?focus+((t.player.position.y-270-(t.cameraOffset?.y??0))*scale+im.height/2-focus)*z:im.height*.8;const dx=(i%4)*300,dy=Math.floor(i/4)*220;ctx.imageSmoothingEnabled=false;ctx.drawImage(im,x-110,y-105,220,200,dx,dy,300,200);ctx.fillStyle='white';ctx.font='14px sans-serif';ctx.fillText(Math.round(f.milliseconds)+' ms · '+(t?.player.roll?'roll '+t.player.roll.progress.toFixed(2):t.combatMotion.id+'/'+t.combatMotion.phase),dx+8,dy+215)}return c.toDataURL('image/png')})()`,
+        `(async()=>{const fs=globalThis.__motionFrames.map(f=>({...f,png:${name.endsWith('-actor') ? 'f.actorPng' : 'f.png'}}));const selected=Array.from({length:12},(_,i)=>fs[Math.round(i*(fs.length-1)/11)]);const c=document.createElement('canvas');c.width=1200;c.height=660;const ctx=c.getContext('2d');ctx.fillStyle='#171b22';ctx.fillRect(0,0,c.width,c.height);for(let i=0;i<selected.length;i++){const f=selected[i];const im=new Image();im.src=f.png;await im.decode();const t=f.telemetry;const p=t?.projection;const scale=p?Math.min(im.width/p.worldWidth,im.height/p.worldHeight)*p.zoom:im.width/960;const z=(t?.artDirection?.cameraZoom??1)*(im.width<=900?(t?.artDirection?.mobileCameraScale??1):1);const focus=im.height*(t?.artDirection?.cameraFocusY??.5);const x=t?(t.player.position.x-480-(t.cameraOffset?.x??0))*scale*z+im.width/2:im.width*.4;const y=t?focus+((t.player.position.y-270-(t.cameraOffset?.y??0))*scale+im.height/2-focus)*z:im.height*.8;const dx=(i%4)*300,dy=Math.floor(i/4)*220;ctx.imageSmoothingEnabled=true;ctx.drawImage(im,x-110,y-105,220,200,dx,dy,300,200);ctx.fillStyle='white';ctx.font='14px sans-serif';ctx.fillText(Math.round(f.milliseconds)+' ms · '+(t?.player.roll?'roll '+t.player.roll.progress.toFixed(2):t.combatMotion.id+'/'+t.combatMotion.phase),dx+8,dy+215)}return c.toDataURL('image/png')})()`,
       );
       writeFileSync(join(output, `${name}-strip.png`), Buffer.from(strip.split(',')[1], 'base64'));
     };
@@ -656,7 +658,7 @@ async function run() {
       JSON.stringify(
         {
           capturedAt: new Date().toISOString(),
-          renderer: args.get('renderer') ?? 'retro',
+          renderer: args.get('renderer') ?? 'polygon',
           input: mobile ? 'touch' : 'keyboard',
           scenario: args.get('start') ?? 'fresh-game',
           width,

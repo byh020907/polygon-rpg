@@ -141,7 +141,7 @@ console.log(
       'directional-point-and-transient-contact-light',
       'direction-first-camera-kick-and-fast-decay',
       'explicit-occluders-and-three-ground-shadows',
-      'stable-polygon-retro-url-scenario',
+      'stable-polygon-url-scenario',
     ],
   }),
 );

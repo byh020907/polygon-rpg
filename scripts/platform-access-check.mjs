@@ -169,9 +169,8 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(html, /class="debug-panel"[\s\S]*role="dialog"[\s\S]*aria-modal="true"/);
   assert.match(html, /@keydown\.tab="trapDebugPanelFocus\(\$event\)"/);
   assert.match(html, /id="debug-start"[\s\S]*x-model="debugStart"/);
-  assert.match(html, /id="debug-renderer"[\s\S]*x-model="debugRenderer"/);
+  assert.doesNotMatch(html, /id="debug-renderer"/);
   assert.match(html, /x-bind:selected="scenario\.id === debugStart"/);
-  assert.match(html, /x-bind:selected="rendererId === debugRenderer"/);
   assert.match(html, /x-bind:selected="phaseId === debugPhase"/);
   assert.match(css, /--debug-hold-progress/);
   assert.match(css, /\.debug-panel-backdrop/);
@@ -298,7 +297,7 @@ function verifyDebugConfigurationRoundTrip() {
   const serialized = buildDebugQaUrl(source, {
     start: 'scrap-garage-0',
     frame: 144,
-    renderer: 'retro',
+    renderer: 'polygon',
     phase: 'end',
     reducedMotion: false,
   });
@@ -307,14 +306,14 @@ function verifyDebugConfigurationRoundTrip() {
   assert.equal(serializedUrl.searchParams.get('visualQa'), '1');
   assert.equal(serializedUrl.searchParams.get('gameStart'), 'scrap-garage-0');
   assert.equal(serializedUrl.searchParams.get('gameFrame'), '144');
-  assert.equal(serializedUrl.searchParams.get('visualQaRenderer'), 'retro');
+  assert.equal(serializedUrl.searchParams.get('visualQaRenderer'), 'polygon');
   assert.equal(serializedUrl.searchParams.get('visualQaPhase'), 'end');
   assert.equal(serializedUrl.searchParams.has('reducedMotion'), false);
   assert.equal(serializedUrl.hash, '#capture');
   assert.deepEqual(serialized.configuration, {
     start: 'scrap-garage-0',
     frame: 144,
-    renderer: 'retro',
+    renderer: 'polygon',
     phase: 'end',
     reducedMotion: false,
   });
@@ -500,7 +499,6 @@ function verifySamePageGameApplicationReplacement() {
   }
   const gameCanvas = createCanvas('current-game-frame');
   const polygonCanvas = createCanvas('current-polygon-frame');
-  const retroCanvas = createCanvas('current-retro-frame');
   const createGameApp = (options) => {
     const app = {
       options,
@@ -529,7 +527,6 @@ function verifySamePageGameApplicationReplacement() {
   const application = new GameApplication({
     gameCanvas,
     polygonCanvas,
-    retroCanvas,
     createGameApp,
   });
   const uiBridge = {
@@ -746,16 +743,14 @@ function verifyVisualQaResizeReplaysLatestFrame() {
     latestVisualQaRenderFrame: null,
     gameHost: { resize: () => resizedHosts.push('game') },
     polygonHost: { resize: () => resizedHosts.push('polygon') },
-    retroHost: { resize: () => resizedHosts.push('retro') },
     uiBridge: {
       snapshot: () => ({ screen: GAME_SCREEN.GAME }),
       setDialoguePresentation: () => {},
     },
     scene: { getWorldStatus: () => ({ dialogue: { active: false } }) },
     gameHostViewport: { cssWidth: 1, cssHeight: 1 },
-    gameRenderer: { render: () => ({}) },
     visualQaRequest: { renderer: 'polygon' },
-    visualQaPolygonRenderer: {
+    gameRenderer: {
       render(frame) {
         renderedFrames.push(frame);
         return { logicalWidth: 1440, logicalHeight: 810 };
@@ -775,7 +770,7 @@ function verifyVisualQaResizeReplaysLatestFrame() {
   );
 
   GameApp.prototype.resize.call(app);
-  assert.deepEqual(resizedHosts, ['game', 'polygon', 'retro']);
+  assert.deepEqual(resizedHosts, ['game', 'polygon']);
   assert.equal(renderedFrames.length, 2, 'resize 뒤 frame을 다시 그려야 한다.');
   assert.equal(renderedFrames[1], frame, 'resize는 같은 immutable frame을 재사용해야 한다.');
 

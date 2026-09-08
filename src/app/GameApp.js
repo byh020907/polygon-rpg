@@ -19,7 +19,6 @@ import { Camera2D } from '../rendering/Camera2D.js';
 import { readVisualQaRequest } from './VisualQaConfig.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
-import { CanvasRetroRenderer } from '../rendering/CanvasRetroRenderer.js';
 import { projectDialogue } from './DialoguePresentation.js';
 
 export const GAME_SCREEN = Object.freeze({
@@ -28,17 +27,7 @@ export const GAME_SCREEN = Object.freeze({
   RENDER_LAB: 'render-lab',
 });
 
-const GAME_RENDER_SETTINGS = Object.freeze({
-  pixelSize: 3,
-  pixelSnap: true,
-  alphaThresholdEnabled: true,
-  alphaThreshold: 128,
-  posterizationLevels: 5,
-  outlineWidth: 1,
-  showMesh: false,
-  showPixelGrid: false,
-  showWorldGrid: false,
-});
+const GAME_RENDER_SETTINGS = Object.freeze({ showMesh: false, showWorldGrid: false });
 
 export function resolveReducedMotionPreference({ visualQaRequest, systemMatches }) {
   if (visualQaRequest) return Boolean(visualQaRequest.reducedMotion);
@@ -110,19 +99,10 @@ function createProgressionStorage() {
 }
 
 export class GameApp extends SceneNode {
-  constructor({
-    gameCanvas,
-    polygonCanvas,
-    retroCanvas,
-    visualQaRequest = null,
-    qaInputEnabled = false,
-  }) {
+  constructor({ gameCanvas, polygonCanvas, visualQaRequest = null, qaInputEnabled = false }) {
     super('GameApp');
     this.qaInputEnabled = qaInputEnabled;
     this.qaInputScenario = qaInputEnabled ? readQaInputScenario() : null;
-    this.qaInputPolygon =
-      qaInputEnabled &&
-      new URLSearchParams(globalThis.location?.search ?? '').get('inputQaRenderer') === 'polygon';
     const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
     this.equipmentIds = Object.freeze([...equipmentIds]);
     const freshProgression = createProgressionSnapshot(
@@ -174,12 +154,9 @@ export class GameApp extends SceneNode {
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
     this.polygonHost = new CanvasHost(assertCanvas(polygonCanvas, 'Polygon Canvas'));
-    this.retroHost = new CanvasHost(assertCanvas(retroCanvas, 'Retro Canvas'));
 
-    this.gameRenderer = new CanvasRetroRenderer(this.gameHost, this.camera);
-    this.visualQaPolygonRenderer = new CanvasPolygonRenderer(this.gameHost, this.camera);
+    this.gameRenderer = new CanvasPolygonRenderer(this.gameHost, this.camera);
     this.polygonRenderer = new CanvasPolygonRenderer(this.polygonHost, this.camera);
-    this.retroRenderer = new CanvasRetroRenderer(this.retroHost, this.camera);
 
     this.uiBridge = null;
     this.manualMode = false;
@@ -254,7 +231,6 @@ export class GameApp extends SceneNode {
     if (initialMorningRequest) this.saveRecoveryRequest(initialMorningRequest, { quiet: true });
     this.resizeObserver.observe(this.gameHost.canvas);
     this.resizeObserver.observe(this.polygonHost.canvas);
-    this.resizeObserver.observe(this.retroHost.canvas);
     this.resize();
     if (this.manualMode) return;
 
@@ -1036,7 +1012,6 @@ export class GameApp extends SceneNode {
   resize() {
     this.gameHost.resize();
     this.polygonHost.resize();
-    this.retroHost.resize();
     if (this.isVisualQa && this.manualMode && this.latestVisualQaRenderFrame) {
       this.renderFrame(this.latestVisualQaRenderFrame);
     }
@@ -1127,9 +1102,7 @@ export class GameApp extends SceneNode {
         if (!this.qaActorSurface) {
           const canvas = document.createElement('canvas');
           const host = new CanvasHost(canvas);
-          const renderer = this.qaInputPolygon
-            ? new CanvasPolygonRenderer(host, this.camera)
-            : new CanvasRetroRenderer(host, this.camera);
+          const renderer = new CanvasPolygonRenderer(host, this.camera);
           this.qaActorSurface = { canvas, host, renderer };
         }
         const { canvas, host, renderer } = this.qaActorSurface;
@@ -1189,10 +1162,7 @@ export class GameApp extends SceneNode {
       ),
     );
     if (this.isVisualQa) {
-      const renderer =
-        this.visualQaRequest.renderer === 'polygon'
-          ? this.visualQaPolygonRenderer
-          : this.gameRenderer;
+      const renderer = this.gameRenderer;
       this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
       if (this.qaInputEnabled) {
         globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
@@ -1203,7 +1173,7 @@ export class GameApp extends SceneNode {
       return;
     }
     if (uiState.screen === GAME_SCREEN.GAME) {
-      const renderer = this.qaInputPolygon ? this.visualQaPolygonRenderer : this.gameRenderer;
+      const renderer = this.gameRenderer;
       this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
       if (this.qaInputEnabled) {
         globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
@@ -1218,27 +1188,7 @@ export class GameApp extends SceneNode {
       showMesh: uiState.showMesh,
       showWorldGrid: true,
     });
-    const retroStats = this.retroRenderer.render(renderFrame, {
-      pixelSize: uiState.pixelSize,
-      pixelSnap: uiState.pixelSnap,
-      alphaThresholdEnabled: uiState.alphaThresholdEnabled,
-      alphaThreshold: uiState.alphaThreshold,
-      posterizationLevels: uiState.posterizationLevels,
-      outlineWidth: uiState.outlineWidth,
-      showMesh: uiState.showMesh,
-      showPixelGrid: uiState.showPixelGrid,
-      showWorldGrid: true,
-    });
-    this.latestRenderStats = Object.freeze({
-      ...retroStats,
-      degenerateItemIds: Object.freeze([
-        ...new Set([
-          ...(polygonStats.degenerateItemIds ?? []),
-          ...(retroStats.degenerateItemIds ?? []),
-        ]),
-      ]),
-      rasterCollapseItemIds: retroStats.rasterCollapseItemIds ?? Object.freeze([]),
-    });
+    this.latestRenderStats = polygonStats;
   }
 
   updateStats(currentTime) {

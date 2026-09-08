@@ -19,7 +19,7 @@ export const DEFAULT_GRAPHICS_REVIEW = Object.freeze({
   actionId: '',
   frameIndex: 0,
   view: 'isolated',
-  renderer: 'retro',
+  renderer: 'polygon',
   scale: 'fit',
   facing: 1,
   lighting: 'scene',
@@ -47,7 +47,7 @@ export function normalizeGraphicsReview(input = {}) {
     actionId: value.actionId,
     frameIndex,
     view: enumValue(value.view, ['isolated', 'scene'], '보기'),
-    renderer: enumValue(value.renderer, ['retro', 'polygon'], '렌더러'),
+    renderer: enumValue(value.renderer, ['polygon'], '렌더러'),
     scale: enumValue(String(value.scale), ['fit', '1', '2', '4'], '배율'),
     facing: enumValue(Number(value.facing), [-1, 1], '방향'),
     lighting: enumValue(value.lighting, ['scene', 'unlit'], '조명'),
@@ -65,7 +65,10 @@ export function readGraphicsReviewRequest(search = globalThis.location?.search ?
     actionId: query.get('action') ?? '',
     frameIndex: query.get('frame') ?? 0,
     view: query.get('reviewView') ?? 'isolated',
-    renderer: query.get('reviewRenderer') ?? 'retro',
+    renderer:
+      query.get('reviewRenderer') === 'retro'
+        ? 'polygon'
+        : (query.get('reviewRenderer') ?? 'polygon'),
     scale: query.get('reviewScale') ?? 'fit',
     facing: query.get('reviewFacing') ?? 1,
     lighting: query.get('reviewLighting') ?? 'scene',

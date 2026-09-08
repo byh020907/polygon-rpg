@@ -157,7 +157,8 @@ async function run() {
   }
   const start = values.get('start') ?? 'scrap-intro-walk';
   const frame = Number(values.get('frame') ?? 0);
-  const renderer = values.get('renderer') ?? 'retro';
+  const renderer = values.get('renderer') ?? 'polygon';
+  if (renderer !== 'polygon') throw new Error('Only --renderer polygon is supported.');
   const phase = values.get('phase') ?? 'active';
   const outputDirectory = resolve(values.get('output') ?? join(repo, 'artifacts', 'visual-qa'));
   const width = positiveInteger(values.get('width') ?? 1440, 'width');

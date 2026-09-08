@@ -1625,7 +1625,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   ),
 });
 
-export const VISUAL_QA_RENDERER_IDS = Object.freeze(['polygon', 'retro']);
+export const VISUAL_QA_RENDERER_IDS = Object.freeze(['polygon']);
 const VISUAL_QA_RENDERERS = new Set(VISUAL_QA_RENDERER_IDS);
 
 function parseFrame(value) {
@@ -1647,7 +1647,8 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
       `지원하지 않는 GAME_START입니다: ${start} (${Object.keys(VISUAL_QA_SCENARIOS).join(', ')})`,
     );
   }
-  const renderer = parameters.get('visualQaRenderer') ?? 'retro';
+  const requestedRenderer = parameters.get('visualQaRenderer');
+  const renderer = requestedRenderer === 'retro' ? 'polygon' : (requestedRenderer ?? 'polygon');
   if (!VISUAL_QA_RENDERERS.has(renderer)) {
     throw new Error(`지원하지 않는 Visual QA renderer입니다: ${renderer}`);
   }

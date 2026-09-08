@@ -69,7 +69,6 @@ export class GameApplication {
   constructor({
     gameCanvas,
     polygonCanvas,
-    retroCanvas,
     visualQaRequest = null,
     qaInputEnabled = false,
     createGameApp = (options) => new GameApp(options),
@@ -77,7 +76,7 @@ export class GameApplication {
     if (typeof createGameApp !== 'function') {
       throw new TypeError('GameApplication에는 GameApp factory가 필요합니다.');
     }
-    this.canvases = Object.freeze({ gameCanvas, polygonCanvas, retroCanvas, qaInputEnabled });
+    this.canvases = Object.freeze({ gameCanvas, polygonCanvas, qaInputEnabled });
     this.createGameApp = createGameApp;
     this.uiBridge = null;
     this.currentApp = this.create(visualQaRequest);

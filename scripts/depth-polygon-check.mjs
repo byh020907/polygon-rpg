@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { rasterizeDepthPolygons } from '../src/rendering/DepthPolygonRasterizer.js';
-import { RetroPostProcessor } from '../src/rendering/RetroPostProcessor.js';
 
 const points = [
   { x: 1, y: 1 },
@@ -127,7 +126,6 @@ assert.deepEqual(
   [255, 0, 0, 255],
   'hidden curved contour cannot scratch the foreground',
 );
-const processor = new RetroPostProcessor();
 const sceneOutline = rasterizeDepthPolygons(
   [
     {
@@ -150,41 +148,6 @@ assert.deepEqual(
   pixel(sceneOutline, 2, 5),
   [17, 20, 22, 255],
   'actor exterior preserves scene outline palette instead of a lighter material edge',
-);
-const material = { data: new Uint8ClampedArray([146, 92, 48, 255]) };
-processor.applyPosterization(material, 4);
-assert.ok(
-  Math.abs(material.data[0] / material.data[1] - 146 / 92) < 0.03,
-  'retro brightness bands retain material hue ratios',
-);
-assert.ok(Math.abs(material.data[1] / material.data[2] - 92 / 48) < 0.05);
-const alpha = { data: new Uint8ClampedArray([60, 160, 180, 70, 60, 160, 180, 70]) };
-const litMaterials = {
-  data: new Uint8ClampedArray([54, 55, 54, 255, 96, 95, 94, 255, 92, 93, 92, 255]),
-};
-processor.applyPosterization(litMaterials, 5);
-assert.ok(
-  litMaterials.data[4] - litMaterials.data[0] >= 20,
-  'cell-lit skin remains visibly lighter than cloth after retro quantization',
-);
-assert.ok(
-  litMaterials.data[8] - litMaterials.data[0] >= 15,
-  'cell-lit steel remains visibly lighter than cloth',
-);
-processor.applyAlphaThreshold(alpha, 128, new Set([0]));
-assert.equal(
-  alpha.data[3],
-  70,
-  'authored translucent trail survives threshold without becoming opaque',
-);
-assert.equal(alpha.data[7], 0, 'ordinary unprotected alpha threshold stays functional');
-const isolatedTrail = { data: new Uint8ClampedArray(3 * 3 * 4) };
-isolatedTrail.data.set([60, 160, 180, 70], 16);
-processor.applyOutline(isolatedTrail, 3, 3, 1, '#111111');
-assert.equal(
-  isolatedTrail.data.filter((value, i) => i % 4 === 3 && value > 0).length,
-  1,
-  'translucent trail cannot acquire an opaque post-outline',
 );
 const thinBox = {
   id: 'thin-box',
@@ -320,9 +283,7 @@ assert.deepEqual(pixel(noRing, 1, 5), [0, 0, 0, 0], 'lab can disable the generat
 const worldComposite = { data: silhouette.data.slice() };
 for (let i = 0; i < worldComposite.data.length; i += 4)
   if (worldComposite.data[i + 3] === 0) worldComposite.data.set([100, 80, 60, 255], i);
-processor.applyPosterization(worldComposite, 5);
 const actorOnly = { data: silhouette.data.slice() };
-processor.applyPosterization(actorOnly, 5);
 assert.deepEqual(
   pixel(worldComposite, 1, 5),
   pixel(actorOnly, 1, 5),

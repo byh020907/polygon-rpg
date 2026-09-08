@@ -813,7 +813,7 @@ dd {
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #071014;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 
 @media (min-width: 901px) {
@@ -2722,7 +2722,7 @@ kbd {
 
 .renderer-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -2733,10 +2733,6 @@ kbd {
   border-radius: 11px;
   background: linear-gradient(180deg, #101927, #0a1019);
   box-shadow: 0 22px 70px rgb(0 0 0 / 34%);
-}
-
-.render-panel--retro {
-  border-color: #3c3549;
 }
 
 .panel-heading {
@@ -2771,10 +2767,6 @@ kbd {
   border: 1px solid #202d40;
   border-radius: 5px;
   background: #080c13;
-}
-
-#retro-canvas {
-  image-rendering: pixelated;
 }
 
 .status-bar {
@@ -3432,7 +3424,7 @@ body.graphics-review-open {
   display: block;
   height: auto;
   flex-shrink: 0;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 .gr-stage iframe {
   display: block;
@@ -3447,7 +3439,7 @@ body.graphics-review-open {
   display: block;
   max-height: none;
   flex-shrink: 0;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 .gr-playback {
   display: flex;
@@ -3500,7 +3492,7 @@ body.graphics-review-open {
   width: 100%;
   height: 69px;
   display: block;
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 .gr-frame span {
   font:

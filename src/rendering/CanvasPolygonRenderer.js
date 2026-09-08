@@ -48,6 +48,8 @@ export class CanvasPolygonRenderer {
     return Object.freeze({
       logicalWidth: viewport.width,
       logicalHeight: viewport.height,
+      backingWidth: viewport.backingWidth,
+      backingHeight: viewport.backingHeight,
       degenerateItemIds: diagnostics.degenerateItemIds,
       rasterCollapseItemIds: diagnostics.rasterCollapseItemIds,
     });

@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -25,7 +25,7 @@
     "test:character": "node scripts/scrap-character-readability-check.mjs",
     "test:map": "node scripts/scrap-runtime-boundary-check.mjs && node scripts/one-way-platform-check.mjs",
     "test:growth": "node scripts/progression-growth-check.mjs",
-    "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs && node scripts/depth-polygon-check.mjs && node scripts/projected-body-check.mjs && node scripts/scrap-workshop-layout-check.mjs && node scripts/hard-edge-polygon-check.mjs && node scripts/integer-pixel-surface-check.mjs",
+    "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs && node scripts/depth-polygon-check.mjs && node scripts/projected-body-check.mjs && node scripts/scrap-workshop-layout-check.mjs && node scripts/polygon-only-check.mjs",
     "test:platform": "node scripts/platform-access-check.mjs",
     "release:metadata": "node scripts/generate-release-metadata.mjs && prettier --write public/release-metadata.js",
     "release:metadata:check": "node scripts/release-metadata-check.mjs",
@@ -38,7 +38,8 @@
     "test:enemy-references": "node scripts/enemy-reference-check.mjs",
     "test:enemy-references:browser": "node scripts/enemy-reference-qa.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:polygon:browser": "node scripts/polygon-only-qa.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

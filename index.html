@@ -176,7 +176,7 @@
               </div>
               <div>
                 <dt>표현</dt>
-                <dd>Polygon → Retro Pixel</dd>
+                <dd>Polygon</dd>
               </div>
               <div>
                 <dt>조작</dt>
@@ -878,11 +878,8 @@
         <header class="lab-hero">
           <div>
             <p class="eyebrow">CANVAS 2D RENDER LAB</p>
-            <h1 id="render-lab-title" tabindex="-1">Vector Mesh → Retro Pixel</h1>
-            <p class="hero-copy">
-              하나의 float 기반 RenderFrame을 두 렌더러가 공유합니다. 픽셀 처리는 오른쪽 최종
-              출력에만 적용됩니다.
-            </p>
+            <h1 id="render-lab-title" tabindex="-1">Polygon Render Lab</h1>
+            <p class="hero-copy">게임과 같은 폴리곤 geometry·조명·가림을 확인합니다.</p>
           </div>
           <div class="hero-actions">
             <button
@@ -900,60 +897,7 @@
           </div>
         </header>
 
-        <section class="control-panel" aria-label="Retro Renderer 설정">
-          <label class="range-control" for="pixel-size">
-            <span>Pixel Size</span>
-            <input
-              id="pixel-size"
-              type="range"
-              min="2"
-              max="10"
-              step="1"
-              x-model.number="pixelSize"
-            />
-            <output for="pixel-size" x-text="`${pixelSize}px`"></output>
-          </label>
-
-          <label class="range-control" for="posterization-levels">
-            <span>Posterization</span>
-            <input
-              id="posterization-levels"
-              type="range"
-              min="2"
-              max="8"
-              step="1"
-              x-model.number="posterizationLevels"
-            />
-            <output for="posterization-levels" x-text="posterizationLevels"></output>
-          </label>
-
-          <label class="range-control" for="outline-width">
-            <span>Outline</span>
-            <input
-              id="outline-width"
-              type="range"
-              min="0"
-              max="2"
-              step="1"
-              x-model.number="outlineWidth"
-            />
-            <output for="outline-width" x-text="`${outlineWidth}px`"></output>
-          </label>
-
-          <label class="range-control" for="alpha-threshold">
-            <span>Alpha Threshold</span>
-            <input
-              id="alpha-threshold"
-              type="range"
-              min="1"
-              max="254"
-              step="1"
-              x-model.number="alphaThreshold"
-              x-bind:disabled="!alphaThresholdEnabled"
-            />
-            <output for="alpha-threshold" x-text="alphaThreshold"></output>
-          </label>
-
+        <section class="control-panel" aria-label="폴리곤 표현 설정">
           <label class="range-control" for="animation-speed">
             <span>Animation Speed</span>
             <input
@@ -968,18 +912,11 @@
           </label>
 
           <div class="toggle-group">
-            <label class="toggle"><input type="checkbox" x-model="pixelSnap" /> Pixel Snap</label>
-            <label class="toggle"
-              ><input type="checkbox" x-model="alphaThresholdEnabled" /> Alpha Threshold</label
-            >
             <label class="toggle"><input type="checkbox" x-model="showMesh" /> Show Mesh</label>
-            <label class="toggle"
-              ><input type="checkbox" x-model="showPixelGrid" /> Pixel Grid</label
-            >
           </div>
         </section>
 
-        <section class="renderer-grid" aria-label="렌더러 비교">
+        <section class="renderer-grid" aria-label="폴리곤 출력">
           <article class="render-panel">
             <header class="panel-heading">
               <div>
@@ -989,17 +926,6 @@
               <span>FLOAT SCREEN SPACE</span>
             </header>
             <canvas id="polygon-canvas" aria-label="Float 좌표 Polygon Renderer 출력"></canvas>
-          </article>
-
-          <article class="render-panel render-panel--retro">
-            <header class="panel-heading">
-              <div>
-                <p>FINAL OUTPUT</p>
-                <h2>RETRO PIXEL</h2>
-              </div>
-              <span>LOGICAL PIXEL SPACE</span>
-            </header>
-            <canvas id="retro-canvas" aria-label="Retro Pixel Renderer 출력"></canvas>
           </article>
         </section>
 
@@ -1048,19 +974,6 @@
                     x-bind:value="scenario.id"
                     x-bind:selected="scenario.id === debugStart"
                     x-text="scenario.label"
-                  ></option>
-                </template>
-              </select>
-            </label>
-
-            <label class="debug-field" for="debug-renderer">
-              <span>Renderer</span>
-              <select id="debug-renderer" x-model="debugRenderer">
-                <template x-for="rendererId in debugRendererIds" x-bind:key="rendererId">
-                  <option
-                    x-bind:value="rendererId"
-                    x-bind:selected="rendererId === debugRenderer"
-                    x-text="rendererId"
                   ></option>
                 </template>
               </select>

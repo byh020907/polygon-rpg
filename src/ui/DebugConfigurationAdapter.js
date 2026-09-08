@@ -1,7 +1,6 @@
 import {
   readVisualQaRequest,
   VISUAL_QA_PHASE_IDS,
-  VISUAL_QA_RENDERER_IDS,
   visualQaDebugScenarioEntries,
 } from '../app/VisualQaConfig.js';
 import { GRAPHICS_REVIEW_QUERY_KEYS } from './GraphicsReviewConfig.js';
@@ -21,7 +20,7 @@ const DEBUG_QUERY_KEYS = Object.freeze([
 const DEFAULT_DEBUG_CONFIGURATION = Object.freeze({
   start: 'scrap-garage-0',
   frame: 0,
-  renderer: 'retro',
+  renderer: 'polygon',
   phase: 'active',
   reducedMotion: false,
 });
@@ -103,7 +102,6 @@ export function createDebugConfigurationAdapter(
 
   return Object.freeze({
     scenarioEntries: visualQaDebugScenarioEntries(),
-    rendererIds: VISUAL_QA_RENDERER_IDS,
     phaseIds: VISUAL_QA_PHASE_IDS,
     initialConfiguration: createDebugConfiguration(initialRequest),
     panelRequested:

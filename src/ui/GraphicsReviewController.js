@@ -1,5 +1,4 @@
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
-import { CanvasRetroRenderer } from '../rendering/CanvasRetroRenderer.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { buildUiReviewUrl } from './GameUiCatalog.js';
 import {
@@ -18,19 +17,10 @@ const el = (tag, className, text) => {
   if (text !== undefined) node.textContent = String(text);
   return node;
 };
-const settings = Object.freeze({
-  pixelSize: 3,
-  pixelSnap: true,
-  alphaThresholdEnabled: true,
-  alphaThreshold: 128,
-  posterizationLevels: 5,
-  outlineWidth: 1,
-  showWorldGrid: false,
-  showMesh: false,
-});
+const settings = Object.freeze({ showWorldGrid: false, showMesh: false });
 const renderTargets = new WeakMap();
 
-// Both views call the game renderers. Only the inspection camera and viewport differ.
+// All views call the game polygon renderer. Only the inspection camera and viewport differ.
 export function renderGraphicsSample(canvas, sample, selection, { thumbnail = false } = {}) {
   const context = canvas.getContext('2d');
   const bounds = sample.bounds;
@@ -46,24 +36,31 @@ export function renderGraphicsSample(canvas, sample, selection, { thumbnail = fa
     : zoom && isolated
       ? Math.max(300, bounds.height + 64)
       : Math.min(320, Math.max(170, innerHeight * 0.4));
-  if (canvas.width !== Math.ceil(width)) canvas.width = Math.ceil(width);
-  if (canvas.height !== Math.ceil(height)) canvas.height = Math.ceil(height);
+  const cssWidth = Math.ceil(width) * (isolated && zoom ? zoom : 1);
+  const cssHeight = Math.ceil(height) * (isolated && zoom ? zoom : 1);
+  const pixelRatio = thumbnail
+    ? 1
+    : Math.min(2, globalThis.devicePixelRatio || 1, Math.sqrt(3_000_000 / (cssWidth * cssHeight)));
+  const backingWidth = Math.max(1, Math.floor(cssWidth * pixelRatio));
+  const backingHeight = Math.max(1, Math.floor(cssHeight * pixelRatio));
+  if (canvas.width !== backingWidth) canvas.width = backingWidth;
+  if (canvas.height !== backingHeight) canvas.height = backingHeight;
   if (!thumbnail) {
-    canvas.style.width = `${Math.ceil(width) * (isolated && zoom ? zoom : 1)}px`;
-    canvas.style.height = `${Math.ceil(height) * (isolated && zoom ? zoom : 1)}px`;
+    canvas.style.width = `${cssWidth}px`;
+    canvas.style.height = `${cssHeight}px`;
     canvas.style.maxWidth = 'none';
   }
-  const logicalWidth = thumbnail || !zoom || !isolated ? 960 : canvas.width;
-  const logicalHeight = thumbnail ? 640 : !zoom || !isolated ? 540 : canvas.height;
+  const logicalWidth = thumbnail || !zoom || !isolated ? 960 : Math.ceil(width);
+  const logicalHeight = thumbnail ? 640 : !zoom || !isolated ? 540 : Math.ceil(height);
   const presentationScale = Math.min(canvas.width / logicalWidth, canvas.height / logicalHeight);
   const presentationWidth = Math.round(logicalWidth * presentationScale);
   const presentationHeight = Math.round(logicalHeight * presentationScale);
   const viewport = Object.freeze({
     width: logicalWidth,
     height: logicalHeight,
-    cssWidth: canvas.width,
-    cssHeight: canvas.height,
-    pixelRatio: 1,
+    cssWidth,
+    cssHeight,
+    pixelRatio,
     backingWidth: canvas.width,
     backingHeight: canvas.height,
     presentationX: Math.floor((canvas.width - presentationWidth) / 2),
@@ -103,12 +100,11 @@ export function renderGraphicsSample(canvas, sample, selection, { thumbnail = fa
     target = {
       host,
       polygon: new CanvasPolygonRenderer(host, camera),
-      retro: new CanvasRetroRenderer(host, camera),
     };
     renderTargets.set(canvas, target);
   }
   target.host.viewport = viewport;
-  const renderer = target[selection.renderer];
+  const renderer = target.polygon;
   renderer.camera = camera;
   return renderer.render(frame, { ...settings, transparent: isolated });
 }
@@ -165,7 +161,6 @@ export class GraphicsReviewController {
           <header class="gr-resource-heading"><h2 data-gr="name"></h2><code data-gr="id"></code><p data-gr="source" class="gr-muted"></p></header>
           <div class="gr-options">
             <label>보기<select data-gr="view"><option value="isolated">개별 보기</option><option value="scene">실제 장면 배치</option></select></label>
-            <label>Renderer<select data-gr="renderer"><option value="retro">Retro</option><option value="polygon">Polygon</option></select></label>
             <label>크기<select data-gr="scale"><option value="fit">화면에 맞춤</option><option value="1">실제 크기 · 1×</option><option value="2">확대 · 2×</option><option value="4">확대 · 4×</option></select></label>
             <label>방향<select data-gr="facing"><option value="1">오른쪽</option><option value="-1">왼쪽</option></select></label>
             <label>조명<select data-gr="lighting"><option value="scene">실제 장면 광원</option><option value="unlit">기본색</option></select></label>
@@ -227,7 +222,7 @@ export class GraphicsReviewController {
       this.setFilter({ category: this.nodes.category.value }),
     );
     listen(this.nodes.search, 'input', () => this.setFilter({ search: this.nodes.search.value }));
-    for (const key of ['view', 'renderer', 'scale', 'facing', 'lighting', 'viewport'])
+    for (const key of ['view', 'scale', 'facing', 'lighting', 'viewport'])
       listen(this.nodes[key], 'change', () =>
         this.select(
           { [key]: this.nodes[key].value },
@@ -355,16 +350,7 @@ export class GraphicsReviewController {
       actionId: action.id,
       frameIndex: Math.min(candidate.frameIndex, Math.max(0, action.frameCount - 1)),
     });
-    for (const key of [
-      'category',
-      'search',
-      'view',
-      'renderer',
-      'scale',
-      'facing',
-      'lighting',
-      'viewport',
-    ])
+    for (const key of ['category', 'search', 'view', 'scale', 'facing', 'lighting', 'viewport'])
       this.nodes[key].value = String(this.selection[key]);
     this.nodes.name.textContent = resource.label;
     this.nodes.id.textContent = resource.id;
@@ -383,7 +369,7 @@ export class GraphicsReviewController {
     for (const key of ['play', 'previous', 'next', 'frame', 'scrubber'])
       this.nodes[key].disabled = action.frameCount <= 1;
     const pixelOutput = !['ui', 'image'].includes(resource.kind);
-    for (const key of ['renderer', 'facing', 'lighting']) {
+    for (const key of ['facing', 'lighting']) {
       this.nodes[key].disabled = !pixelOutput;
       this.nodes[key].closest('label').hidden = !pixelOutput;
     }

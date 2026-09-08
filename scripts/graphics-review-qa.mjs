@@ -71,7 +71,7 @@ for (const [name, width, height] of [
       await choose('[data-gr=facing]', -1);
       await choose('[data-gr=lighting]', 'unlit');
       await choose('[data-gr=scale]', '2');
-      await choose('[data-gr=renderer]', 'polygon');
+
       await browser.send('Browser.grantPermissions', {
         permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'],
         origin: browser.origin,

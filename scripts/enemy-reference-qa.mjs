@@ -48,15 +48,15 @@ for (const [name, width, height] of [
         first,
       );
       await b.click('[data-gr=play]', name === 'mobile');
-      await b.choose('[data-gr=renderer]', 'retro');
+
       await b.choose('[data-gr=facing]', -1);
       await b.evaluate("document.querySelector('.gr-main').scrollTop=0");
       if (name === 'mobile')
         await b.evaluate(
           "document.querySelector('[data-gr=canvas]').scrollIntoView({block:'center'})",
         );
-      await b.screenshot(`${output}/${name}-${type}-retro-left.png`);
-      await b.choose('[data-gr=renderer]', 'polygon');
+      await b.screenshot(`${output}/${name}-${type}-polygon-left.png`);
+
       await b.choose('[data-gr=facing]', 1);
     }
     assert.equal(await b.evaluate('JSON.stringify({...localStorage})'), saved);

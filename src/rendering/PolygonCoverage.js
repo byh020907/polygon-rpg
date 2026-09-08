@@ -1,27 +1,3 @@
-// Integer pixel coverage, shared by flat fills and intentional translucent shapes.
-export function polygonSpans(points, width, height, visit) {
-  if (points.length < 3) return;
-  const first = Math.max(0, Math.ceil(Math.min(...points.map((p) => p.y)) - 0.5));
-  const last = Math.min(height - 1, Math.ceil(Math.max(...points.map((p) => p.y)) - 0.5) - 1);
-  for (let y = first; y <= last; y += 1) {
-    const crossings = [];
-    const sampleY = y + 0.5;
-    for (let i = 0; i < points.length; i += 1) {
-      const a = points[i];
-      const b = points[(i + 1) % points.length];
-      if ((a.y <= sampleY && b.y > sampleY) || (b.y <= sampleY && a.y > sampleY)) {
-        crossings.push(a.x + ((sampleY - a.y) * (b.x - a.x)) / (b.y - a.y));
-      }
-    }
-    crossings.sort((a, b) => a - b);
-    for (let i = 0; i + 1 < crossings.length; i += 2) {
-      const left = Math.max(0, Math.ceil(crossings[i] - 0.5));
-      const right = Math.min(width, Math.ceil(crossings[i + 1] - 0.5));
-      if (right > left) visit(left, y, right - left);
-    }
-  }
-}
-
 function clipLine(a, b, width, height, pad) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -84,19 +60,5 @@ export function polygonStrokePixels(points, width, height, lineWidth, visit) {
         y += sy;
       }
     }
-  }
-}
-
-export function paintHardEdgePolygon(context, points, { fill, stroke, lineWidth = 1 }) {
-  if (!points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y)))
-    throw new TypeError('Hard-edge polygon requires finite screen coordinates.');
-  const { width, height } = context.canvas;
-  if (fill) {
-    context.fillStyle = fill;
-    polygonSpans(points, width, height, (x, y, length) => context.fillRect(x, y, length, 1));
-  }
-  if (stroke) {
-    context.fillStyle = stroke;
-    polygonStrokePixels(points, width, height, lineWidth, (x, y) => context.fillRect(x, y, 1, 1));
   }
 }

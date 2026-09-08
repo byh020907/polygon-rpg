@@ -1,4 +1,4 @@
-import { polygonStrokePixels } from './HardEdgePolygonPainter.js';
+import { polygonStrokePixels } from './PolygonCoverage.js';
 
 // Camera depth stays separate from screen vertices. Larger depth faces the camera.
 function color(value) {

@@ -135,7 +135,6 @@ const PALETTE = Object.freeze({
   background: '#171a1c',
   arena: '#3b4748',
   grid: '#5b6865',
-  gridRetro: '#424d4c',
   ground: '#302d29',
   outline: '#111416',
 });

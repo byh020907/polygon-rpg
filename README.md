@@ -1,6 +1,6 @@
 # Polygon RPG
 
-동네 고물상 견습생이 라이벌을 구하려 제어핵을 떼어낸 뒤, D-30 안에 다섯 지역의 산업기계를 대항 병기로 조립해 고대 병기를 멈추는 browser 2D action RPG입니다. 하나의 gameplay state를 Canvas Polygon과 Retro renderer가 함께 표시합니다.
+동네 고물상 견습생이 라이벌을 구하려 제어핵을 떼어낸 뒤, D-30 안에 다섯 지역의 산업기계를 대항 병기로 조립해 고대 병기를 멈추는 browser 2D action RPG입니다. 게임과 모든 검토 화면이 같은 Canvas Polygon renderer를 사용합니다.
 
 ## Project Sources
 
@@ -80,17 +80,16 @@ Visual QA는 특정 Agent나 scheduler 없이 Node.js와 설치된 Chromium brow
 
 ```powershell
 $env:BROWSER_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
-npm run visual:qa -- --repo . --start combat-hit --phase active --renderer retro --frame 180 --output artifacts/visual-qa/combat-hit --width 1440 --height 810
+npm run visual:qa -- --repo . --start combat-hit --phase active --renderer polygon --frame 180 --output artifacts/visual-qa/combat-hit --width 1440 --height 810
 ```
 
 지원하는 stable start에는 `scrap-intro-before`, `scrap-intro-awakening`, `scrap-intro-d30`,
 `scrap-intro-after`와 region·robot·final scenario가 포함됩니다.
 `--phase start|active|end`는 combat scenario의 원인·결과·정리 frame을 고정하며 생략 시
-`active`입니다. `--renderer polygon|retro`로 같은 immutable RenderFrame의 투영을 선택하며 생략 시
-기존 Retro capture를 유지합니다. Combat scenario는 event·pose·effect assertion과
+`active`입니다. renderer는 `polygon` 하나이며 같은 immutable RenderFrame을 사용합니다. Combat scenario는 event·pose·effect assertion과
 player/enemy/contact metadata를 함께 남깁니다. 공간·도입 scenario는 stable patch, 제어핵·눈·결합
 부품·D-30와 이용 가능한 연결로 metadata를 함께 고정합니다. 결과를 직접 열어 화면 의도, clipping,
-Polygon/Retro parity와 console error를 확인합니다.
+게임/검토 화면의 폴리곤 일치와 console error를 확인합니다.
 
 ## GitHub Pages
 

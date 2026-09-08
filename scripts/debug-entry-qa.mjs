@@ -255,7 +255,7 @@ try {
 
       await hold(browser, TITLE, touch, 'menu');
       await browser.choose('#debug-start', 'scrap-garage-0');
-      await browser.choose('#debug-renderer', 'polygon');
+
       await browser.choose('#debug-frame', 0);
       await browser.click('.debug-primary-action', touch);
       await browser.until(`${shell}.screen==='game' && ${shell}.visualQa`);

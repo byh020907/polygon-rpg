@@ -446,7 +446,7 @@ function assertBossWeakPointExposureContract() {
 }
 
 function assertPostureVisualQaExpectationMatrix() {
-  for (const renderer of ['polygon', 'retro']) {
+  for (const renderer of ['polygon']) {
     for (const phase of ['start', 'end']) {
       for (const scenario of ['posture-full', 'posture-reduced', 'posture-groggy']) {
         const request = readVisualQaRequest(
@@ -466,11 +466,11 @@ function assertPostureVisualQaExpectationMatrix() {
     }
   }
   const normalEnd = readVisualQaRequest(
-    '?visualQa=1&gameStart=posture-normal-enemy&visualQaRenderer=retro&visualQaPhase=end',
+    '?visualQa=1&gameStart=posture-normal-enemy&visualQaRenderer=polygon&visualQaPhase=end',
   );
   assert.equal(normalEnd.scenario.expectation.expectedItem, 'combat-enemy-collector-eye');
 
-  for (const renderer of ['polygon', 'retro']) {
+  for (const renderer of ['polygon']) {
     const active = readVisualQaRequest(
       `?visualQa=1&gameStart=boss-weak-point-exposed&visualQaRenderer=${renderer}&visualQaPhase=active`,
     );
@@ -506,7 +506,7 @@ console.log(
       'boss-authored-trigger-front-exposure-multiplier-and-one-hit-close',
       'boss-non-trigger-front-guard-and-recovery-expiry-close',
       'posture-visual-qa-start-end-expectation-matrix',
-      'boss-weak-point-polygon-retro-visual-qa-matrix',
+      'boss-weak-point-polygon-visual-qa-matrix',
     ],
   }),
 );

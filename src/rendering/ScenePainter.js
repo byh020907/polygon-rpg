@@ -1,6 +1,5 @@
 import { createCellLightingSample } from './CellLighting.js';
 import { rasterizeDepthPolygons } from './DepthPolygonRasterizer.js';
-import { paintHardEdgePolygon } from './HardEdgePolygonPainter.js';
 
 const depthCanvases = new WeakMap();
 
@@ -12,11 +11,21 @@ function paintDepthGroup(
   worldScale,
   occluders,
   showMesh,
-  translucentPixels,
   silhouetteWidth,
 ) {
+  const transform = context.getTransform();
+  const pixelScale = Math.max(
+    Math.hypot(transform.a, transform.b ?? 0),
+    Math.hypot(transform.c ?? 0, transform.d),
+  );
   const projected = items.map((item) => {
-    const projectPoint = (point) => project(point, item.parallax ?? 1);
+    const projectPoint = (point) => {
+      const screen = project(point, item.parallax ?? 1);
+      return {
+        x: transform.a * screen.x + (transform.c ?? 0) * screen.y + transform.e,
+        y: (transform.b ?? 0) * screen.x + transform.d * screen.y + transform.f,
+      };
+    };
     return {
       ...item,
       points: item.points.map(projectPoint),
@@ -25,16 +34,16 @@ function paintDepthGroup(
         : {}),
       fill: resolveCellFill(item, frame, occluders),
       stroke: showMesh ? '#67e8f9' : item.stroke,
-      lineWidth: Math.max(0.5, (item.lineWidth ?? 1) * worldScale),
+      lineWidth: Math.max(0.5, (item.lineWidth ?? 1) * worldScale * pixelScale),
     };
   });
   const points = projected.flatMap((item) => item.surface?.points ?? item.points);
   if (!points.length) return;
   if (!points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y)))
     throw new TypeError('Projected actor has a non-finite screen vertex.');
-  const transform = context.getTransform();
-  const viewportWidth = (context.canvas.width - transform.e) / Math.max(1e-6, transform.a);
-  const viewportHeight = (context.canvas.height - transform.f) / Math.max(1e-6, transform.d);
+  const viewportWidth = context.canvas.width;
+  const viewportHeight = context.canvas.height;
+  silhouetteWidth *= pixelScale;
   const pad = Math.max(2, silhouetteWidth + 1, ...projected.map((item) => item.lineWidth));
   const left = Math.max(0, Math.floor(Math.min(...points.map((p) => p.x)) - pad));
   const top = Math.max(0, Math.floor(Math.min(...points.map((p) => p.y)) - pad));
@@ -54,18 +63,7 @@ function paintDepthGroup(
     silhouetteColor: showMesh ? '#67e8f9' : frame.palette.outline,
   });
   const pixels = { data: result.data };
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const alpha = pixels.data[(y * width + x) * 4 + 3];
-      if (alpha > 0 && alpha < 255)
-        translucentPixels.add((top + y) * context.canvas.width + left + x);
-    }
-  }
   context.globalAlpha = 1;
-  if (context.isIntegerPixelSurface) {
-    context.compositePixels(pixels.data, width, height, left, top);
-    return;
-  }
   let canvas = depthCanvases.get(context);
   if (!canvas) {
     canvas =
@@ -80,7 +78,10 @@ function paintDepthGroup(
   const image = target.createImageData(width, height);
   image.data.set(pixels.data);
   target.putImageData(image, 0, 0);
+  context.save();
+  context.setTransform(1, 0, 0, 1, 0, 0);
   context.drawImage(canvas, left, top);
+  context.restore();
 }
 
 function drawPolygonPath(context, points, project) {
@@ -136,7 +137,7 @@ function resolveCellFill(item, frame, occluders) {
     occluders: occluders.filter((occluder) => occluder.id !== item.id),
     quantizationLevels: artDirection.quantizationLevels,
     // Actor palettes are already authored muted; repeated desaturation erases
-    // the skin / cloth / steel distinction before the low-resolution pass.
+    // the skin / cloth / steel distinction before polygon surface rasterization.
     saturationRetention: item.depthGroup ? 1 : artDirection.saturationRetention,
   });
   return sample.shadedColor;
@@ -152,7 +153,7 @@ function ellipsePoints(center, radiusX, radiusY, pointCount = 12) {
   });
 }
 
-function paintSceneShadows(context, frame, project, hardEdges = false) {
+function paintSceneShadows(context, frame, project) {
   const shadowCasters = frame.artDirection?.shadowCasters ?? [];
   if (shadowCasters.length === 0) return;
   const directionalLight = frame.artDirection.lights.find((light) => light.kind === 'directional');
@@ -167,13 +168,7 @@ function paintSceneShadows(context, frame, project, hardEdges = false) {
     );
     context.globalAlpha = caster.opacity;
     context.fillStyle = '#080909';
-    if (hardEdges)
-      paintHardEdgePolygon(
-        context,
-        contactPoints.map((point) => project(point, 1)),
-        { fill: '#080909' },
-      );
-    else if (drawPolygonPath(context, contactPoints, (point) => project(point, 1))) context.fill();
+    if (drawPolygonPath(context, contactPoints, (point) => project(point, 1))) context.fill();
 
     const castLength = Math.min(96, caster.height * 0.72);
     const castX = shadowDirection.x * castLength;
@@ -190,14 +185,7 @@ function paintSceneShadows(context, frame, project, hardEdges = false) {
       },
     ];
     context.globalAlpha = caster.opacity * 0.52;
-    if (hardEdges)
-      paintHardEdgePolygon(
-        context,
-        projectedPoints.map((point) => project(point, 1)),
-        { fill: '#080909' },
-      );
-    else if (drawPolygonPath(context, projectedPoints, (point) => project(point, 1)))
-      context.fill();
+    if (drawPolygonPath(context, projectedPoints, (point) => project(point, 1))) context.fill();
   }
   context.restore();
 }
@@ -213,81 +201,33 @@ function polygonArea(points) {
   return Math.abs(doubledArea) / 2;
 }
 
-export function paintBackdrop(
-  context,
-  frame,
-  viewport,
-  project,
-  { retro = false, showWorldGrid = true, hardEdges = false } = {},
-) {
-  const fillRect = (x, y, width, height) => {
-    if (!hardEdges) {
-      context.fillRect(x, y, width, height);
-      return;
-    }
-    const left = Math.ceil(Math.min(x, x + width) - 0.5);
-    const top = Math.ceil(Math.min(y, y + height) - 0.5);
-    const right = Math.ceil(Math.max(x, x + width) - 0.5);
-    const bottom = Math.ceil(Math.max(y, y + height) - 0.5);
-    context.fillRect(left, top, right - left, bottom - top);
-  };
+export function paintBackdrop(context, frame, viewport, project, { showWorldGrid = true } = {}) {
   context.fillStyle = frame.palette.background;
-  fillRect(0, 0, viewport.width, viewport.height);
-
-  const worldTopLeft = project({ x: 0, y: 0 });
-  const worldBottomRight = project({ x: frame.worldSize.width, y: frame.worldSize.height });
+  context.fillRect(0, 0, viewport.width, viewport.height);
+  const top = project({ x: 0, y: 0 }),
+    bottom = project({ x: frame.worldSize.width, y: frame.worldSize.height });
   context.fillStyle = frame.palette.arena;
-  fillRect(
-    worldTopLeft.x,
-    worldTopLeft.y,
-    worldBottomRight.x - worldTopLeft.x,
-    worldBottomRight.y - worldTopLeft.y,
-  );
-
+  context.fillRect(top.x, top.y, bottom.x - top.x, bottom.y - top.y);
   if (showWorldGrid) {
-    context.strokeStyle = retro ? frame.palette.gridRetro : frame.palette.grid;
-    context.lineWidth = retro ? 1 : 0.75;
-    for (let worldX = 0; worldX <= frame.worldSize.width; worldX += frame.gridSize) {
-      const start = project({ x: worldX, y: 0 });
-      const end = project({ x: worldX, y: frame.worldSize.height });
-      if (hardEdges)
-        paintHardEdgePolygon(context, [start, end], {
-          stroke: context.strokeStyle,
-          lineWidth: context.lineWidth,
-        });
-      else {
-        context.beginPath();
-        context.moveTo(start.x, start.y);
-        context.lineTo(end.x, end.y);
-        context.stroke();
-      }
-    }
-    for (let worldY = 0; worldY <= frame.worldSize.height; worldY += frame.gridSize) {
-      const start = project({ x: 0, y: worldY });
-      const end = project({ x: frame.worldSize.width, y: worldY });
-      if (hardEdges)
-        paintHardEdgePolygon(context, [start, end], {
-          stroke: context.strokeStyle,
-          lineWidth: context.lineWidth,
-        });
-      else {
-        context.beginPath();
-        context.moveTo(start.x, start.y);
-        context.lineTo(end.x, end.y);
-        context.stroke();
-      }
-    }
+    context.strokeStyle = frame.palette.grid;
+    context.lineWidth = 0.75;
+    const line = (a, b) => {
+      const start = project(a),
+        end = project(b);
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.lineTo(end.x, end.y);
+      context.stroke();
+    };
+    for (let x = 0; x <= frame.worldSize.width; x += frame.gridSize)
+      line({ x, y: 0 }, { x, y: frame.worldSize.height });
+    for (let y = 0; y <= frame.worldSize.height; y += frame.gridSize)
+      line({ x: 0, y }, { x: frame.worldSize.width, y });
   }
-
   if (Number.isFinite(frame.groundY)) {
-    const groundTop = project({ x: 0, y: frame.groundY });
+    const ground = project({ x: 0, y: frame.groundY });
     context.fillStyle = frame.palette.ground;
-    fillRect(
-      worldTopLeft.x,
-      groundTop.y,
-      worldBottomRight.x - worldTopLeft.x,
-      worldBottomRight.y - groundTop.y,
-    );
+    context.fillRect(top.x, ground.y, bottom.x - top.x, bottom.y - ground.y);
   }
 }
 
@@ -296,13 +236,12 @@ export function paintSceneItems(
   frame,
   project,
   worldScale,
-  { showMesh = false, hardEdges = false, silhouetteWidth = 1 } = {},
+  { showMesh = false, silhouetteWidth = 1 } = {},
 ) {
   context.lineJoin = 'round';
   context.lineCap = 'round';
   const degenerateItemIds = [];
   const rasterCollapseItemIds = [];
-  const translucentPixels = new Set();
   const occluders =
     frame.lightingOccluders ??
     frame.items
@@ -313,7 +252,7 @@ export function paintSceneItems(
   for (let itemIndex = 0; itemIndex < frame.items.length; itemIndex += 1) {
     const item = frame.items[itemIndex];
     if (!shadowsPainted && (item.renderOrder ?? 0) >= 30.4) {
-      paintSceneShadows(context, frame, project, hardEdges);
+      paintSceneShadows(context, frame, project);
       shadowsPainted = true;
     }
     if (item.depthGroup && item.depths) {
@@ -342,7 +281,6 @@ export function paintSceneItems(
         worldScale,
         occluders,
         showMesh,
-        translucentPixels,
         silhouetteWidth,
       );
       continue;
@@ -354,15 +292,9 @@ export function paintSceneItems(
     if (item.points.length < 3) continue;
     context.globalAlpha = itemOpacity;
     context.fillStyle = resolveCellFill(item, frame, occluders);
-    if (hardEdges) {
-      paintHardEdgePolygon(context, item.points.map(itemProject), {
-        fill: context.fillStyle,
-        stroke: item.stroke,
-        lineWidth: Math.max(0.5, (item.lineWidth ?? 1) * worldScale),
-      });
-    } else if (drawPolygonPath(context, item.points, itemProject)) context.fill();
+    if (drawPolygonPath(context, item.points, itemProject)) context.fill();
 
-    if (item.stroke && !hardEdges) {
+    if (item.stroke) {
       context.strokeStyle = item.stroke;
       context.lineWidth = Math.max(0.5, (item.lineWidth ?? 1) * worldScale);
       context.stroke();
@@ -376,17 +308,11 @@ export function paintSceneItems(
       context.globalAlpha = 0.82 * itemOpacity;
       context.strokeStyle = '#67e8f9';
       context.lineWidth = Math.max(0.6, worldScale * 0.7);
-      if (hardEdges)
-        paintHardEdgePolygon(context, item.points.map(itemProject), {
-          stroke: '#67e8f9',
-          lineWidth: context.lineWidth,
-        });
-      else context.stroke();
+      context.stroke();
       for (const point of item.points) {
         const screenPoint = itemProject(point);
         context.fillStyle = '#f8fafc';
-        if (hardEdges) context.fillRect(Math.round(screenPoint.x), Math.round(screenPoint.y), 1, 1);
-        else {
+        {
           context.beginPath();
           context.arc(screenPoint.x, screenPoint.y, Math.max(1, worldScale * 1.6), 0, Math.PI * 2);
           context.fill();
@@ -395,11 +321,10 @@ export function paintSceneItems(
     }
   }
 
-  if (!shadowsPainted) paintSceneShadows(context, frame, project, hardEdges);
+  if (!shadowsPainted) paintSceneShadows(context, frame, project);
 
   context.globalAlpha = 1;
   return Object.freeze({
-    translucentPixels,
     degenerateItemIds: Object.freeze(degenerateItemIds),
     rasterCollapseItemIds: Object.freeze(rasterCollapseItemIds),
   });

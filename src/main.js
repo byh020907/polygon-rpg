@@ -28,7 +28,6 @@ const qaInputEnabled = new URLSearchParams(globalThis.location.search).get('inpu
 const gameApplication = new GameApplication({
   gameCanvas: requireCanvas('game-canvas'),
   polygonCanvas: requireCanvas('polygon-canvas'),
-  retroCanvas: requireCanvas('retro-canvas'),
   visualQaRequest,
   qaInputEnabled,
 });
