@@ -9,7 +9,6 @@ import {
   resolveInitialMapDefinition,
   resolveReducedMotionPreference,
 } from '../src/app/GameApp.js';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { GameInputController } from '../src/input/GameInputController.js';
@@ -390,6 +389,10 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-intro-d30',
       'scrap-intro-after',
       'scrap-garage-analysis',
+      'scrap-workshop',
+      'scrap-dialogue-review',
+      'scrap-garage-opened',
+      'scrap-recovery-review',
       'scrap-garage-0',
       'scrap-issue-window',
       'scrap-mine-roadhead',
@@ -416,7 +419,6 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-final-armor',
       'scrap-final-epilogue',
       'scrap-art-benchmark',
-      'scrap-character-board',
     ],
     '디버그 패널은 현재 고철 캠페인과 작전 지도 fixture만 선택지로 노출해야 한다.',
   );
@@ -538,23 +540,23 @@ function verifySamePageGameApplicationReplacement() {
   };
   application.connectUi(uiBridge);
 
-  const academyRequest = readVisualQaRequest(
-    '?visualQa=1&gameStart=academy-dialogue&gameFrame=72&visualQaRenderer=polygon',
+  const campaignReviewRequest = readVisualQaRequest(
+    '?visualQa=1&gameStart=scrap-garage-analysis&gameFrame=72&visualQaRenderer=polygon',
   );
-  const result = application.applyDebugConfiguration(academyRequest);
+  const result = application.applyDebugConfiguration(campaignReviewRequest);
   assert.equal(result.ready, true);
   assert.equal(apps[0].destroyed, true);
   assert.equal(application.currentApp, apps[1]);
   assert.deepEqual(uiWrites, [
     ['qa-input', Object.freeze({ playerPosition: { x: 730, y: 344 } })],
-    ['save', 'visual-qa:academy-dialogue'],
+    ['save', 'visual-qa:scrap-garage-analysis'],
   ]);
 
   failNextVisualQa = true;
   const previousApp = application.currentApp;
   const failedWriteCount = uiWrites.length;
   assert.throws(
-    () => application.applyDebugConfiguration(academyRequest),
+    () => application.applyDebugConfiguration(campaignReviewRequest),
     /fixture visual QA failure/,
   );
   assert.equal(application.currentApp, previousApp, '실패 시 기존 Game resource를 유지해야 한다.');
@@ -682,12 +684,12 @@ function verifyVisualQaReducedMotionOverride() {
 }
 
 function verifyQaInputScenarioMapSelection() {
-  const legacyCombatScenario = readQaInputScenario('?inputQa=1&inputQaStart=combat-hit');
-  assert.equal(legacyCombatScenario.roomId, 'training-room');
+  const combatScenario = readQaInputScenario('?inputQa=1&inputQaStart=combat-hit');
+  assert.equal(combatScenario.roomId, 'abandoned-weapon-yard');
   assert.equal(
-    resolveInitialMapDefinition({ qaInputScenario: legacyCombatScenario }),
-    ACADEMY_VILLAGE_MAP,
-    'legacy combat input QA는 현재 campaign map에 대입하지 않고 training map을 먼저 구성해야 한다.',
+    resolveInitialMapDefinition({ qaInputScenario: combatScenario }),
+    SCRAP_AWAKENING_MAP,
+    'combat input QA도 현재 campaign의 실제 수거장에 구성해야 한다.',
   );
 
   const campaignScenario = readQaInputScenario('?inputQa=1&inputQaStart=scrap-shipyard-roadhead');

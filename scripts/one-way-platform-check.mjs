@@ -1,13 +1,28 @@
 import assert from 'node:assert/strict';
 
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { defineMap } from '../src/game/map/MapDefinition.js';
 import { MapRuntime } from '../src/game/map/MapRuntime.js';
-import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../src/game/journey/FirstJourneyDungeonSignature.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP_SECONDS = 1 / 120;
 const FOOT_OFFSET = 82;
-const PLATFORM_Y = 342;
+const PLATFORM_Y = 344;
+// Collision-only one-way capability probe on the current map. No shipped one-way
+// surface is currently registered; this is not a visual/product completeness claim.
+const rawMap = SCRAP_AWAKENING_MAP.toObject();
+const probeRoom = rawMap.regions[0].rooms[0];
+const platformPoints = [
+  { x: 720, y: PLATFORM_Y },
+  { x: 900, y: PLATFORM_Y },
+];
+probeRoom.surfaces.push({ id: 'one-way-probe-surface', kind: 'one-way', points: platformPoints });
+probeRoom.renderItems.push({
+  id: 'one-way-probe',
+  points: [...platformPoints, { x: 900, y: PLATFORM_Y + 12 }, { x: 720, y: PLATFORM_Y + 12 }],
+  fill: '#7a553a',
+});
+const PROBE_MAP = defineMap(rawMap);
 const EMPTY_INPUT = Object.freeze({
   left: false,
   right: false,
@@ -21,17 +36,13 @@ const EMPTY_INPUT = Object.freeze({
 });
 
 function assertAuthoredPlatform() {
-  const room = ACADEMY_VILLAGE_MAP.getRoom('academy-region', 'sealed-resonance-vault');
-  const surface = room.surfaces.find(
-    (candidate) => candidate.id === 'sealed-resonance-vault-one-way-platform-surface',
-  );
-  const renderItem = room.renderItems.find(
-    (candidate) => candidate.id === 'sealed-resonance-vault-one-way-platform',
-  );
+  const room = PROBE_MAP.getRoom('scrap-waste-edge', 'abandoned-weapon-yard');
+  const surface = room.surfaces.find((candidate) => candidate.id === 'one-way-probe-surface');
+  const renderItem = room.renderItems.find((candidate) => candidate.id === 'one-way-probe');
   assert.equal(surface.kind, 'one-way');
   assert.deepEqual(surface.points, [
-    { x: 180, y: PLATFORM_Y },
-    { x: 360, y: PLATFORM_Y },
+    { x: 720, y: PLATFORM_Y },
+    { x: 900, y: PLATFORM_Y },
   ]);
   assert.deepEqual(
     renderItem.points.slice(0, 2),
@@ -41,10 +52,10 @@ function assertAuthoredPlatform() {
 }
 
 function assertNeutralCollisionContract() {
-  const runtime = new MapRuntime(ACADEMY_VILLAGE_MAP);
-  runtime.setActiveLocation('academy-region', 'sealed-resonance-vault');
+  const runtime = new MapRuntime(PROBE_MAP);
+  runtime.setActiveLocation('scrap-waste-edge', 'abandoned-weapon-yard');
   const room = runtime.getActiveRoom();
-  const worldX = room.bounds.x + 270;
+  const worldX = room.bounds.x + 810;
   const worldPlatformY = room.bounds.y + PLATFORM_Y;
 
   assert.equal(
@@ -64,7 +75,7 @@ function assertNeutralCollisionContract() {
     }),
     {
       surfaceId:
-        'academy-village:academy-region:sealed-resonance-vault:sealed-resonance-vault-one-way-platform-surface',
+        'scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:one-way-probe-surface',
       kind: 'one-way',
       y: worldPlatformY,
     },
@@ -78,27 +89,11 @@ function assertNeutralCollisionContract() {
 }
 
 function assertPlayerTraversal() {
-  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
-  const progression = scene.getProgressionSnapshot();
-  scene.restoreProgression(
-    Object.freeze({
-      ...progression,
-      firstJourney: Object.freeze({
-        ...progression.firstJourney,
-        phase: 'dungeon',
-        routeChoice: 'bypass',
-        dungeonGuardianDefeated: true,
-        dungeonSignatureStageIds: Object.freeze([
-          FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-          FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-        ]),
-      }),
-    }),
-  );
+  const scene = createTestGameScene({ mapDefinition: PROBE_MAP });
   scene.setVisualQaLocation({
-    regionId: 'academy-region',
-    roomId: 'sealed-resonance-vault',
-    x: 270,
+    regionId: 'scrap-waste-edge',
+    roomId: 'abandoned-weapon-yard',
+    x: 810,
   });
   const room = scene.mapRuntime.getActiveRoom();
   const worldPlatformY = room.bounds.y + PLATFORM_Y;
@@ -126,7 +121,7 @@ function assertPlayerTraversal() {
   for (let tick = 0; tick < 180; tick += 1) {
     scene.update(STEP_SECONDS, Object.freeze({ ...EMPTY_INPUT, right: true, jumpSequence: 1 }));
     const localX = scene.position.x - room.bounds.x;
-    if (localX > 360 && !scene.isGrounded) leftPlatformWhileAirborne = true;
+    if (localX > 900 && !scene.isGrounded) leftPlatformWhileAirborne = true;
   }
   assert.equal(
     leftPlatformWhileAirborne,
@@ -148,7 +143,7 @@ console.log(
   JSON.stringify(
     {
       status: 'PASS',
-      room: 'sealed-resonance-vault',
+      room: 'abandoned-weapon-yard',
       surfaceKind: 'one-way',
       fixedHz: 120,
       verified: ['below-to-above-pass', 'descending-land', 'edge-fall', 'render-contact-match'],

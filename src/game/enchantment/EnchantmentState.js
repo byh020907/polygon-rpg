@@ -3,7 +3,6 @@ export const ENCHANTMENT_MATERIAL_COSTS = Object.freeze([null, 2, 4, 8, 16, 32])
 
 export const ENCHANTMENT_TRANSACTION_REASON = Object.freeze({
   MATERIAL_AWARDED: 'material-awarded',
-  MATERIAL_ALREADY_CLAIMED: 'material-already-claimed',
   UPGRADED: 'upgraded',
   NOT_OWNED: 'not-owned',
   INVALID_ELEMENT: 'invalid-element',
@@ -80,7 +79,6 @@ export function createEnchantmentSnapshot(swordIds = [], catalog) {
   return Object.freeze({
     materialQuantities: createMaterialQuantities(catalog),
     swordEnchantments: createSwordEnchantments(swordIds, {}, catalog),
-    claimedMaterialSourceIds: Object.freeze([]),
   });
 }
 
@@ -88,18 +86,9 @@ export function canonicalizeEnchantmentSnapshot(snapshot, catalog, swordIds = []
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new TypeError('enchantment snapshot이 필요합니다.');
   }
-  const knownSourceIds = new Set(catalog.profiles.map((profile) => profile.sourceId));
-  if (
-    !Array.isArray(snapshot.claimedMaterialSourceIds) ||
-    new Set(snapshot.claimedMaterialSourceIds).size !== snapshot.claimedMaterialSourceIds.length ||
-    snapshot.claimedMaterialSourceIds.some((id) => !knownSourceIds.has(id))
-  ) {
-    throw new TypeError('지원하지 않는 claimed material source입니다.');
-  }
   return Object.freeze({
     materialQuantities: createMaterialQuantities(catalog, snapshot.materialQuantities),
     swordEnchantments: createSwordEnchantments(swordIds, snapshot.swordEnchantments, catalog),
-    claimedMaterialSourceIds: Object.freeze([...snapshot.claimedMaterialSourceIds]),
   });
 }
 
@@ -107,43 +96,7 @@ function transaction(changed, reason, enchantment, details = {}) {
   return Object.freeze({ changed, reason, enchantment, ...details });
 }
 
-export function awardEnchantMaterial(
-  enchantment,
-  { materialId, sourceId, quantity } = {},
-  catalog,
-  swordIds = Object.keys(enchantment?.swordEnchantments ?? {}),
-) {
-  const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, swordIds);
-  const sourceProfile = catalog.getBySourceId(sourceId);
-  if (!sourceProfile || sourceProfile.materialId !== materialId) {
-    throw new TypeError('catalog material source가 필요합니다.');
-  }
-  const awardQuantity = quantity ?? sourceProfile.sourceAwardQuantity;
-  if (!Number.isSafeInteger(awardQuantity) || awardQuantity <= 0) {
-    throw new TypeError('material award 수량은 양의 안전한 정수여야 합니다.');
-  }
-  if (current.claimedMaterialSourceIds.includes(sourceId)) {
-    return transaction(false, ENCHANTMENT_TRANSACTION_REASON.MATERIAL_ALREADY_CLAIMED, current);
-  }
-  const nextQuantity = current.materialQuantities[materialId] + awardQuantity;
-  if (!Number.isSafeInteger(nextQuantity))
-    throw new RangeError('material 수량이 안전한 범위를 넘습니다.');
-  return transaction(
-    true,
-    ENCHANTMENT_TRANSACTION_REASON.MATERIAL_AWARDED,
-    Object.freeze({
-      ...current,
-      materialQuantities: Object.freeze({
-        ...current.materialQuantities,
-        [materialId]: nextQuantity,
-      }),
-      claimedMaterialSourceIds: Object.freeze([...current.claimedMaterialSourceIds, sourceId]),
-    }),
-    { materialId, quantity: awardQuantity },
-  );
-}
-
-export function awardRepeatableEnchantMaterial(
+export function awardEnchantmentMaterial(
   enchantment,
   { elementId, quantity = 1 } = {},
   catalog,
@@ -152,7 +105,7 @@ export function awardRepeatableEnchantMaterial(
   const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, swordIds);
   const profile = catalog.getProfile(elementId);
   if (!Number.isSafeInteger(quantity) || quantity <= 0) {
-    throw new TypeError('반복 material award 수량은 양의 안전한 정수여야 합니다.');
+    throw new TypeError('material award 수량은 양의 안전한 정수여야 합니다.');
   }
   const nextQuantity = current.materialQuantities[profile.materialId] + quantity;
   if (!Number.isSafeInteger(nextQuantity)) {

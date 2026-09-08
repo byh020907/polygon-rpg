@@ -2,6 +2,7 @@ import { GAME_SCREEN } from '../app/GameApp.js';
 import { SCRAP_CAST } from '../game/campaign/ScrapCastProfile.js';
 import { createDebugConfigurationAdapter } from './DebugConfigurationAdapter.js';
 import { HoldActivationController } from './HoldActivationController.js';
+import { readUiReviewResource, isolateUiReview } from './GameUiCatalog.js';
 import { createPwaLifecycleAdapter, isStandalone } from '../pwa/PwaLifecycleAdapter.js';
 import { createStandaloneViewportAdapter } from '../pwa/StandaloneViewportAdapter.js';
 import {
@@ -127,8 +128,14 @@ function focusGameOverPresentation(browserDocument, recoveryAvailable) {
 export function registerGameShell(
   Alpine,
   gameApp,
-  { visualQaRequest = null, qaInputEnabled = false } = {},
+  {
+    visualQaRequest = null,
+    qaInputEnabled = false,
+    graphicsReviewRequest = null,
+    graphicsReviewFactory = null,
+  } = {},
 ) {
+  const uiReviewResource = readUiReviewResource(globalThis.location?.search ?? '');
   const mobileViewport = createMobileViewportController(globalThis.screen);
   const standaloneViewport = createStandaloneViewportAdapter({ browserWindow: globalThis });
   const pwaLifecycle = createPwaLifecycleAdapter({ browserWindow: globalThis });
@@ -159,6 +166,8 @@ export function registerGameShell(
 
   Alpine.data('gameShell', () => ({
     screen: initialScreen,
+    graphicsReviewOpen: false,
+    uiReviewResource,
     visualQa: Boolean(visualQaRequest),
     qaInputEnabled,
     qaInputPanelOpen: qaInputEnabled,
@@ -290,13 +299,6 @@ export function registerGameShell(
       routeEdges: Object.freeze([]),
       regions: Object.freeze([]),
     }),
-    characterBoard: Object.freeze({
-      active: false,
-      title: '',
-      scaleLabel: '',
-      views: Object.freeze([]),
-      entries: Object.freeze([]),
-    }),
     canManageProgression: true,
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
@@ -379,6 +381,7 @@ export function registerGameShell(
         snapshot: () =>
           Object.freeze({
             screen: this.screen,
+            graphicsReviewOpen: this.graphicsReviewOpen,
             operationMapOpen: this.operationMapOpen,
             campaignActionPreviewOpen: this.campaignActionPreviewOpen,
             gameOverOpen: this.gameOverOpen,
@@ -445,7 +448,6 @@ export function registerGameShell(
             );
           }
           this.operationMapAvailable = status.operationMapAvailable;
-          this.characterBoard = status.characterBoard;
           this.canManageProgression = status.canManageProgression;
           this.activeEnchantId = status.activeEnchantId;
           this.activeEnchantLabel = status.activeEnchantLabel;
@@ -498,7 +500,7 @@ export function registerGameShell(
         unsubscribePwa = pwaLifecycle.subscribe((state) => {
           this.pwa = state;
         });
-        void pwaLifecycle.start();
+        if (!graphicsReviewRequest && !uiReviewResource) void pwaLifecycle.start();
         if (visualQaRequest) {
           this.isPlaying = false;
           try {
@@ -526,6 +528,8 @@ export function registerGameShell(
           setDebugBackgroundInert(globalThis.document, true);
           globalThis.requestAnimationFrame(() => focusDebugPanel(globalThis.document));
         }
+        if (uiReviewResource) this.prepareUiReview();
+        if (graphicsReviewRequest) void this.openGraphicsReview(graphicsReviewRequest);
       });
       this.$cleanup = () => unsubscribePwa();
     },
@@ -787,6 +791,49 @@ export function registerGameShell(
       this.clearQaInput();
       gameApp.onScreenChanged();
       this.$nextTick(() => focusDebugPanel(globalThis.document));
+    },
+
+    async openGraphicsReview(request = undefined) {
+      if (!graphicsReviewFactory || this.graphicsReviewOpen) return;
+      this.debugPanelOpen = false;
+      this.operationMapOpen = false;
+      setDebugBackgroundInert(globalThis.document, false);
+      setOperationMapBackgroundInert(globalThis.document, false);
+      this.graphicsReviewOpen = true;
+      this.clearQaInput();
+      gameApp.onScreenChanged();
+      try {
+        await graphicsReviewFactory({
+          request,
+          onClose: () => {
+            this.graphicsReviewOpen = false;
+            if (graphicsReviewRequest) this.returnToPlayerGame();
+            else this.openDebugPanel();
+          },
+        });
+      } catch (error) {
+        this.graphicsReviewOpen = false;
+        this.openDebugPanel();
+        this.debugConfigurationStatus = `그래픽 검토 열기 실패 · ${error.message}`;
+      }
+    },
+
+    prepareUiReview() {
+      const resource = uiReviewResource;
+      if (!resource) return;
+      if (resource.presentation === 'menu') this.screen = GAME_SCREEN.MENU;
+      if (resource.presentation === 'map') this.openOperationMap();
+      if (resource.presentation === 'action') gameApp.prepareUiReview('action');
+      if (resource.presentation === 'touch') this.forceMobileControls = true;
+      if (resource.presentation === 'debug') this.openDebugPanel();
+      this.$nextTick(() =>
+        globalThis.requestAnimationFrame(async () => {
+          const result = await isolateUiReview(resource, {
+            view: new URLSearchParams(globalThis.location.search).get('uiReviewView') ?? 'isolated',
+          });
+          globalThis.__POLYGON_RPG_UI_REVIEW__ = result;
+        }),
+      );
     },
 
     trapDebugPanelFocus(event) {

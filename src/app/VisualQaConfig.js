@@ -1,5 +1,12 @@
-import { FIRST_JOURNEY_CHECKPOINT_ID } from '../game/encounter/FirstJourneyProgress.js';
-import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../game/journey/FirstJourneyDungeonSignature.js';
+import { SCRAP_CAST } from '../game/campaign/ScrapCastProfile.js';
+import {
+  createProgressionSnapshot,
+  awardCampaignEncounterReward,
+} from '../game/progression/ProgressionState.js';
+import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
+import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
+import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
+import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
 import { SCRAP_AWAKENING_STAGE } from '../game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../game/campaign/ScrapGarageRevealState.js';
 import { SCRAP_GAME_OVER_STAGE } from '../game/campaign/ScrapGameOverPresentation.js';
@@ -195,8 +202,10 @@ const POSE_VISUAL_QA_SCENARIOS = Object.freeze({
 
 function createBaselinePlaybackScenario(inputTimeline, expectation = {}) {
   return Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'training-room',
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     inputTimelineByPhase: Object.freeze({
       active: Object.freeze(
@@ -249,7 +258,86 @@ const PLAYER_BASELINE_PLAYBACK_SCENARIOS = Object.freeze({
   ),
 });
 
+function createCombatScenarioLocation(boss) {
+  return boss
+    ? {
+        mapId: SCRAP_AWAKENING_MAP_ID,
+        regionId: 'abandoned-mine',
+        roomId: 'abandoned-mine-machine-yard',
+        scrapRegionState: Object.freeze({
+          regionId: 'abandoned-mine',
+          stageKind: 'journey-combat',
+          status: 'in-progress',
+        }),
+      }
+    : {
+        mapId: SCRAP_AWAKENING_MAP_ID,
+        regionId: SCRAP_AWAKENING_REGION_ID,
+        roomId: SCRAP_AWAKENING_ROOM_ID,
+        scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
+      };
+}
+
+const WORKSHOP_QA_PROGRESSION = awardCampaignEncounterReward(
+  createProgressionSnapshot(
+    EQUIPMENT_CATALOG.defaultProfileId,
+    ENCHANTMENT_CATALOG,
+    SCRAP_CAMPAIGN_PROFILE,
+  ),
+  { entityId: 'scrap-yard-guard-collector', profileId: 'yard-guard-collector' },
+  COMBAT_PROGRESSION_PROFILE,
+  ENCHANTMENT_CATALOG,
+  SCRAP_CAMPAIGN_PROFILE,
+).snapshot;
+
 const VISUAL_QA_SCENARIOS = Object.freeze({
+  'scrap-dialogue-review': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 198,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY,
+    dialogueScenarioId: 'scrapyard-owner-analysis',
+    expectation: Object.freeze({
+      expectedDialogueTarget: 'scrapyard-owner-analysis',
+      expectedDialogueSpeaker: SCRAP_CAST.SCRAPYARD_OWNER.name,
+    }),
+  }),
+  'scrap-garage-opened': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 300,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+    expectation: Object.freeze({
+      expectedGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.GARAGE_OPENED,
+      expectedGarageRevealActive: true,
+    }),
+  }),
+  'scrap-recovery-review': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 480,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    scrapLastSegment: true,
+    scrapGameOverStageId: SCRAP_GAME_OVER_STAGE.RECOVERY_CHOICE,
+    expectation: Object.freeze({ expectedGameOverStageId: SCRAP_GAME_OVER_STAGE.RECOVERY_CHOICE }),
+  }),
+
+  'scrap-workshop': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 198,
+    scrapGarageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    progressionSnapshot: WORKSHOP_QA_PROGRESSION,
+    dialogueScenarioId: 'scrapyard-owner-workshop',
+    expectation: Object.freeze({
+      expectedDialogueTarget: 'scrapyard-owner-workshop',
+      expectedDialogueSpeaker: SCRAP_CAST.SCRAPYARD_OWNER.name,
+    }),
+  }),
   ...PLAYER_BASELINE_PLAYBACK_SCENARIOS,
   'scrap-intro-walk': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
@@ -1387,245 +1475,11 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
     }),
   }),
-  academy: Object.freeze({ regionId: 'academy-region', roomId: 'academy-plaza', x: 270 }),
-  'scrap-character-board': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'scrap-character-design-board',
-    x: 480,
-    expectation: Object.freeze({
-      expectedItems: Object.freeze([
-        'character-board-cell-scrapyard-apprentice',
-        'character-board-cell-scrapyard-owner',
-        'character-board-cell-mine-worker',
-        'character-board-cell-shipyard-worker',
-        'character-board-cell-greenhouse-technician',
-        'character-board-cell-snow-train-crew',
-        'character-board-cell-quarry-worker',
-        'character-board-cell-mine-claim-jacker',
-        'character-board-cell-dock-salvage-raider',
-        'character-board-cell-snow-route-raider',
-        'character-board-cell-collector-unit',
-        'character-board-cell-industrial-creature',
-        'character-board-cell-regional-boss',
-        'character-board-cell-mine-collapse-boss',
-        'character-board-cell-shipyard-twin-crane-boss',
-        'character-board-cell-greenhouse-geothermal-boss',
-        'character-board-cell-snowplow-train-boss',
-        'regional-boss-representative-pose-tool-conveyor-ram',
-        'shipyard-twin-crane-boss-representative-pose-tool-hydraulic-crane',
-        'greenhouse-geothermal-boss-representative-pose-tool-geothermal-manifold',
-        'snowplow-train-boss-representative-pose-tool-snowplow-train',
-      ]),
-      expectedAbsentItems: Object.freeze(['shield', 'sword-blade']),
-    }),
-  }),
-  'academy-space-day': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 820,
-    timePhase: 'day',
-    expectation: Object.freeze({
-      expectedTimePhase: 'day',
-      expectedItems: Object.freeze([
-        'academy-training-gate-landmark-opening',
-        'academy-glasswind-gate-landmark-opening',
-        'academy-field-gate-landmark-opening',
-        'plaza-foreground-planter-left',
-      ]),
-      expectedAbsentItems: Object.freeze(['moon', 'lamp-glow']),
-      expectedPortalIds: Object.freeze([
-        'academy-enchanter-shop-portal',
-        'academy-field-portal',
-        'academy-glasswind-portal',
-        'academy-training-portal',
-        'academy-weapon-shop-portal',
-      ]),
-    }),
-  }),
-  'academy-space-night': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 120,
-    timePhase: 'night',
-    expectation: Object.freeze({
-      expectedTimePhase: 'night',
-      expectedPatchIds: Object.freeze(['night-presentation', 'first-field-night-presentation']),
-      expectedItems: Object.freeze(['academy-training-gate-landmark-opening', 'moon', 'lamp-glow']),
-      expectedAbsentItems: Object.freeze(['sun']),
-      expectedPortalIds: Object.freeze([
-        'academy-enchanter-shop-portal',
-        'academy-field-portal',
-        'academy-glasswind-portal',
-        'academy-training-portal',
-        'academy-weapon-shop-portal',
-      ]),
-    }),
-  }),
-  'academy-space-story': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 820,
-    timePhase: 'day',
-    firstJourneySnapshot: Object.freeze({
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-    }),
-    expectation: Object.freeze({
-      expectedTimePhase: 'day',
-      expectedPatchIds: Object.freeze([
-        'field-guardian-cleared',
-        'sealed-dungeon-guardian-cleared',
-        'sealed-checkpoint-active',
-        'sealed-boss-defeated',
-        'boss-reward-claimed',
-        'first-journey-returned-with-reward',
-      ]),
-      expectedItems: Object.freeze([
-        'academy-glasswind-gate-landmark-opening',
-        'academy-field-gate-landmark-opening',
-        'academy-sealed-shortcut-gate-landmark-opening',
-      ]),
-      expectedPortalIds: Object.freeze([
-        'academy-enchanter-shop-portal',
-        'academy-field-portal',
-        'academy-glasswind-portal',
-        'academy-training-portal',
-        'academy-weapon-shop-portal',
-        'boss-shortcut-portal',
-      ]),
-    }),
-  }),
-  'academy-growth': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 270,
-    progressionSnapshot: Object.freeze({ trainingMarks: 0 }),
-    firstJourneySnapshot: Object.freeze({
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-    }),
-  }),
-  'academy-weapon-house': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 1440,
-    expectation: Object.freeze({
-      expectedItems: Object.freeze([
-        'weapon-shop-house-body',
-        'weapon-shop-sign-blade',
-        'academy-weapon-shop-door-landmark-opening',
-      ]),
-    }),
-  }),
-  'academy-enchanter-house': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 2400,
-    expectation: Object.freeze({
-      expectedItems: Object.freeze([
-        'enchanter-shop-house-body',
-        'enchanter-shop-sign-rune',
-        'academy-enchanter-shop-door-landmark-opening',
-      ]),
-    }),
-  }),
-  'academy-weapon-shop': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-weapon-shop',
-    x: 610,
-    dialogueScenarioId: 'weapon-merchant-karen-interaction',
-    firstJourneySnapshot: Object.freeze({ gold: 120 }),
-    expectation: Object.freeze({
-      expectedItem: 'weapon-merchant-karen-coat-interior',
-      expectedDialogueTarget: 'weapon-merchant-karen-interaction',
-      expectedDialogueSpeaker: '카린 무기상',
-    }),
-  }),
-  'academy-weapon-forge': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-weapon-shop',
-    x: 610,
-    dialogueScenarioId: 'weapon-merchant-karen-interaction',
-    firstJourneySnapshot: Object.freeze({
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-    }),
-    expectation: Object.freeze({
-      expectedItem: 'weapon-merchant-karen-coat-interior',
-      expectedDialogueTarget: 'weapon-merchant-karen-interaction',
-      expectedDialogueSpeaker: '카린 무기상',
-    }),
-  }),
-  'academy-forge': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-enchanter-shop',
-    x: 610,
-    dialogueScenarioId: 'enchanter-lio-interaction',
-    firstJourneySnapshot: Object.freeze({ gold: 120 }),
-    enchantmentSnapshot: Object.freeze({
-      materialQuantities: Object.freeze({ 'cinderbloom-seed': 2 }),
-      swordEnchantments: Object.freeze({
-        'balanced-sword': Object.freeze({ elementId: null, level: 0 }),
-      }),
-      claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
-    }),
-    expectation: Object.freeze({
-      expectedItem: 'enchanter-lio-coat-interior',
-      expectedDialogueTarget: 'enchanter-lio-interaction',
-      expectedDialogueSpeaker: '리오 인챈터',
-    }),
-  }),
-  'enchant-material-repeat': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'training-room',
-    x: 500,
-    materialEchoDefeats: 2,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-      dungeonSignatureStageIds: Object.freeze([
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
-      ]),
-    }),
-    expectation: Object.freeze({
-      expectedMaterialId: 'sealstone-heart',
-      expectedMaterialQuantity: 4,
-      expectedProgressionNotice: '봉인석 심장 확정 +1 · 보유 4',
-    }),
-  }),
   'enchant-fire-contact': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'training-room',
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-fire-contact',
     enchantmentSnapshot: Object.freeze({
@@ -1633,7 +1487,6 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       swordEnchantments: Object.freeze({
         'balanced-sword': Object.freeze({ elementId: 'fire', level: 1 }),
       }),
-      claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
     expectation: Object.freeze({
       expectedEvent: 'hit',
@@ -1647,8 +1500,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     }),
   }),
   'enchant-lightning-contact': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'training-room',
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-lightning-contact',
     enchantmentSnapshot: Object.freeze({
@@ -1656,7 +1511,6 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       swordEnchantments: Object.freeze({
         'balanced-sword': Object.freeze({ elementId: 'lightning', level: 5 }),
       }),
-      claimedMaterialSourceIds: Object.freeze(['glasswind-reward-claimed']),
     }),
     expectation: Object.freeze({
       expectedEvent: 'hit',
@@ -1670,8 +1524,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     }),
   }),
   'enchant-ice-status': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'training-room',
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-ice-status',
     enchantmentSnapshot: Object.freeze({
@@ -1679,7 +1535,6 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       swordEnchantments: Object.freeze({
         'balanced-sword': Object.freeze({ elementId: 'ice', level: 3 }),
       }),
-      claimedMaterialSourceIds: Object.freeze(['dungeon-guardian-defeated']),
     }),
     expectation: Object.freeze({
       expectedEvent: 'hit',
@@ -1693,8 +1548,14 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     }),
   }),
   'enchant-earth-posture': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-boss',
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: 'abandoned-mine',
+    roomId: 'abandoned-mine-machine-yard',
+    scrapRegionState: Object.freeze({
+      regionId: 'abandoned-mine',
+      stageKind: 'journey-combat',
+      status: 'in-progress',
+    }),
     x: 500,
     combatScenarioId: 'enchant-earth-posture',
     enchantmentSnapshot: Object.freeze({
@@ -1702,7 +1563,6 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       swordEnchantments: Object.freeze({
         'balanced-sword': Object.freeze({ elementId: 'earth', level: 5 }),
       }),
-      claimedMaterialSourceIds: Object.freeze(['boss-reward-claimed']),
     }),
     expectation: Object.freeze({
       expectedEvent: 'hit',
@@ -1717,8 +1577,10 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     }),
   }),
   'enchant-shield-excluded': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'training-room',
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-shield-excluded',
     enchantmentSnapshot: Object.freeze({
@@ -1726,7 +1588,6 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       swordEnchantments: Object.freeze({
         'balanced-sword': Object.freeze({ elementId: 'fire', level: 5 }),
       }),
-      claimedMaterialSourceIds: Object.freeze(['field-guardian-defeated']),
     }),
     expectation: Object.freeze({
       expectedEvent: 'counter',
@@ -1737,373 +1598,14 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       expectedAnchor: 'event-contact',
     }),
   }),
-  'academy-dialogue': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 420,
-    dialogueScenarioId: 'mentor-sera-interaction',
-    expectation: Object.freeze({
-      expectedDialogueTarget: 'mentor-sera-interaction',
-      expectedDialogueSpeaker: '세라 교관',
-    }),
-  }),
-  'academy-transcript': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'academy-plaza',
-    x: 420,
-    dialogueScenarioId: 'mentor-sera-interaction',
-    progressionSnapshot: Object.freeze({
-      viewedConversationIds: Object.freeze(['sera-first-journey-departure']),
-    }),
-    firstJourneySnapshot: Object.freeze({
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-    }),
-    expectation: Object.freeze({
-      expectedDialogueTarget: 'mentor-sera-interaction',
-      expectedDialogueSpeaker: '세라 교관',
-      expectedPatchIds: Object.freeze(['first-journey-returned-with-reward']),
-    }),
-  }),
-  training: Object.freeze({ regionId: 'academy-region', roomId: 'training-room', x: 360 }),
-  field: Object.freeze({ regionId: 'academy-region', roomId: 'field-crossing', x: 420 }),
-  'field-space-day': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'field-crossing',
-    x: 700,
-    timePhase: 'day',
-    firstJourneySnapshot: Object.freeze({ phase: 'field' }),
-    expectation: Object.freeze({
-      expectedTimePhase: 'day',
-      expectedItems: Object.freeze([
-        'field-village-gate-landmark-opening',
-        'field-canopy-gate-landmark-opening',
-        'field-dungeon-gate-landmark-opening',
-        'field-dungeon-locked-seal',
-        'field-crossing-day-canopy-light',
-      ]),
-      expectedAbsentItems: Object.freeze(['field-crossing-night-veil', 'field-dungeon-gate-inner']),
-      expectedPortalIds: Object.freeze(['academy-field-portal', 'field-bypass-portal']),
-    }),
-  }),
-  'field-space-night': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'field-crossing',
-    x: 420,
-    timePhase: 'night',
-    firstJourneySnapshot: Object.freeze({ phase: 'field' }),
-    expectation: Object.freeze({
-      expectedTimePhase: 'night',
-      expectedPatchIds: Object.freeze(['night-presentation', 'first-field-night-presentation']),
-      expectedItems: Object.freeze([
-        'field-canopy-gate-landmark-opening',
-        'field-crossing-night-veil',
-        'field-crossing-night-waylight',
-        'field-dungeon-locked-seal',
-      ]),
-      expectedAbsentItems: Object.freeze([
-        'field-crossing-day-canopy-light',
-        'field-dungeon-gate-inner',
-      ]),
-      expectedPortalIds: Object.freeze(['academy-field-portal', 'field-bypass-portal']),
-    }),
-  }),
-  'field-space-cleared': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'field-crossing',
-    x: 980,
-    timePhase: 'day',
-    firstJourneySnapshot: Object.freeze({
-      phase: 'field',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-    }),
-    expectation: Object.freeze({
-      expectedTimePhase: 'day',
-      expectedPatchIds: Object.freeze(['field-guardian-cleared']),
-      expectedItems: Object.freeze([
-        'field-guardian-bloom',
-        'field-dungeon-gate-landmark-opening',
-        'field-dungeon-gate-inner',
-      ]),
-      expectedAbsentItems: Object.freeze(['field-dungeon-locked-seal']),
-      expectedPortalIds: Object.freeze([
-        'academy-field-portal',
-        'field-bypass-portal',
-        'field-dungeon-portal',
-      ]),
-    }),
-  }),
-  'field-dialogue': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'field-crossing',
-    x: 540,
-    firstJourneySnapshot: Object.freeze({ phase: 'field' }),
-    dialogueScenarioId: 'field-departure-clue-interaction',
-    expectation: Object.freeze({
-      expectedDialogueTarget: 'field-departure-clue-interaction',
-      expectedDialogueSpeaker: '세라 교관의 정찰 표식',
-    }),
-  }),
-  dungeon: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-dungeon', x: 420 }),
-  'dungeon-signature-entrance': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-dungeon',
-    x: 276,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'dungeon',
-      routeChoice: 'bypass',
-      dungeonSignatureStageIds: Object.freeze([FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION]),
-    }),
-    expectation: Object.freeze({
-      expectedPatchIds: Object.freeze(['sealed-resonance-introduced']),
-      expectedItems: Object.freeze([
-        'sealed-dungeon-entrance-vestibule',
-        'sealed-resonance-introduction-active',
-        'sealed-dungeon-guardian-sigil',
-        'sealed-dungeon-guardian-seal',
-      ]),
-      expectedAbsentItems: Object.freeze([
-        'sealed-resonance-introduction-dormant',
-        'dungeon-resonance-branch-gate-inner',
-      ]),
-      expectedPortalIds: Object.freeze(['bypass-dungeon-portal']),
-    }),
-  }),
-  'dungeon-signature-combat': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-dungeon',
-    x: 640,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'dungeon',
-      routeChoice: 'bypass',
-      dungeonGuardianDefeated: true,
-      dungeonSignatureStageIds: Object.freeze([
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-      ]),
-    }),
-    expectation: Object.freeze({
-      expectedPatchIds: Object.freeze([
-        'sealed-resonance-introduced',
-        'sealed-dungeon-guardian-cleared',
-      ]),
-      expectedItems: Object.freeze([
-        'sealed-dungeon-guardian-open',
-        'sealed-dungeon-guardian-rubble',
-        'dungeon-resonance-branch-gate-landmark-opening',
-        'dungeon-resonance-branch-gate-inner',
-      ]),
-      expectedAbsentItems: Object.freeze(['sealed-dungeon-guardian-seal']),
-      expectedPortalIds: Object.freeze([
-        'bypass-dungeon-portal',
-        'dungeon-resonance-branch-portal',
-      ]),
-    }),
-  }),
-  'dungeon-signature-hidden-branch': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-resonance-vault',
-    x: 420,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'dungeon',
-      routeChoice: 'bypass',
-      dungeonGuardianDefeated: true,
-      dungeonSignatureStageIds: Object.freeze([
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
-      ]),
-    }),
-    expectation: Object.freeze({
-      expectedPatchIds: Object.freeze(['sealed-resonance-hidden-branch-applied']),
-      expectedItems: Object.freeze([
-        'sealed-resonance-vault-arch',
-        'sealed-resonance-hidden-active',
-        'sealed-resonance-hidden-wave',
-        'resonance-vault-return-gate-landmark-opening',
-      ]),
-      expectedAbsentItems: Object.freeze(['sealed-resonance-hidden-dormant']),
-      expectedPortalIds: Object.freeze(['dungeon-resonance-branch-portal']),
-    }),
-  }),
-  'dungeon-one-way-platform': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-resonance-vault',
-    x: 270,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'dungeon',
-      routeChoice: 'bypass',
-      dungeonGuardianDefeated: true,
-      dungeonSignatureStageIds: Object.freeze([
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-      ]),
-    }),
-    inputTimelineByPhase: Object.freeze({
-      active: Object.freeze([
-        Object.freeze({ frames: 1, input: Object.freeze({ jump: true, jumpSequence: 1 }) }),
-        Object.freeze({ frames: 47, input: Object.freeze({ jumpSequence: 1 }) }),
-      ]),
-      end: Object.freeze([
-        Object.freeze({ frames: 1, input: Object.freeze({ jump: true, jumpSequence: 1 }) }),
-        Object.freeze({ frames: 79, input: Object.freeze({ jumpSequence: 1 }) }),
-      ]),
-    }),
-    expectation: Object.freeze({
-      expectedItems: Object.freeze([
-        'sealed-resonance-vault-arch',
-        'sealed-resonance-vault-one-way-platform',
-      ]),
-    }),
-    phaseExpectations: Object.freeze({
-      start: Object.freeze({
-        expectedPlayerGrounded: true,
-        expectedPlayerYRange: Object.freeze([341, 343]),
-      }),
-      active: Object.freeze({
-        expectedPlayerGrounded: false,
-        expectedPlayerYRange: Object.freeze([247, 251]),
-      }),
-      end: Object.freeze({
-        expectedPlayerGrounded: true,
-        expectedPlayerYRange: Object.freeze([259, 261]),
-      }),
-    }),
-  }),
-  'dungeon-dialogue': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-dungeon',
-    x: 342,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'dungeon',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-    }),
-    dialogueScenarioId: 'dungeon-gate-record-interaction',
-    expectation: Object.freeze({
-      expectedDialogueTarget: 'dungeon-gate-record-interaction',
-      expectedDialogueSpeaker: '봉인 회랑 경계 기록',
-    }),
-  }),
-  'dungeon-threshold': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-dungeon',
-    x: 930,
-  }),
-  'dungeon-cleared-revisit': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-dungeon',
-    x: 680,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'returned',
-      routeChoice: 'bypass',
-      dungeonGuardianDefeated: true,
-      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-      dungeonSignatureStageIds: Object.freeze(Object.values(FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE)),
-    }),
-    expectation: Object.freeze({
-      expectedPatchIds: Object.freeze([
-        'sealed-resonance-introduced',
-        'sealed-dungeon-guardian-cleared',
-        'sealed-checkpoint-active',
-        'sealed-resonance-hidden-branch-applied',
-        'sealed-boss-defeated',
-        'boss-reward-claimed',
-      ]),
-      expectedItems: Object.freeze([
-        'sealed-dungeon-guardian-open',
-        'dungeon-resonance-branch-gate-inner',
-        'checkpoint-active',
-        'dungeon-boss-gate-inner',
-      ]),
-      expectedAbsentItems: Object.freeze(['sealed-dungeon-guardian-seal', 'checkpoint-dormant']),
-      expectedPortalIds: Object.freeze([
-        'bypass-dungeon-portal',
-        'dungeon-boss-portal',
-        'dungeon-resonance-branch-portal',
-      ]),
-    }),
-  }),
-  boss: Object.freeze({ regionId: 'academy-region', roomId: 'sealed-forest-boss', x: 360 }),
-  'boss-signature-test': Object.freeze({
-    regionId: 'academy-region',
-    roomId: 'sealed-forest-boss',
-    x: 500,
-    firstJourneySnapshot: Object.freeze({
-      phase: 'boss',
-      routeChoice: 'bypass',
-      dungeonGuardianDefeated: true,
-      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
-      dungeonSignatureStageIds: Object.freeze([
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
-      ]),
-    }),
-    expectation: Object.freeze({
-      expectedPatchIds: Object.freeze(['sealed-resonance-hidden-branch-applied']),
-      expectedItems: Object.freeze([
-        'boss-arena-seal',
-        'boss-arena-rune',
-        'boss-resonance-trial-active',
-        'boss-dungeon-gate-inner',
-      ]),
-      expectedAbsentItems: Object.freeze(['boss-resonance-trial-dormant']),
-      expectedPortalIds: Object.freeze(['dungeon-boss-portal']),
-    }),
-  }),
-  'glasswind-field': Object.freeze({
-    regionId: 'glasswind-region',
-    roomId: 'glasswind-approach',
-    x: 360,
-  }),
-  'glasswind-dungeon': Object.freeze({
-    regionId: 'glasswind-region',
-    roomId: 'glasswind-observatory',
-    x: 590,
-  }),
-  'glasswind-dungeon-entrance': Object.freeze({
-    regionId: 'glasswind-region',
-    roomId: 'glasswind-observatory',
-    x: 150,
-  }),
-  'glasswind-dungeon-checkpoint': Object.freeze({
-    regionId: 'glasswind-region',
-    roomId: 'glasswind-observatory',
-    x: 1000,
-  }),
-  'glasswind-dungeon-threshold': Object.freeze({
-    regionId: 'glasswind-region',
-    roomId: 'glasswind-observatory',
-    x: 1100,
-  }),
-  'glasswind-boss': Object.freeze({
-    regionId: 'glasswind-region',
-    roomId: 'glasswind-storm-eye',
-    x: 360,
-  }),
   ...Object.fromEntries(
     Object.entries(COMBAT_VISUAL_QA_SCENARIOS).map(([id, expectation]) => [
       id,
       Object.freeze({
-        regionId: 'academy-region',
-        roomId:
+        ...createCombatScenarioLocation(
           (id.startsWith('posture-') && id !== 'posture-normal-enemy') ||
-          id === 'boss-weak-point-exposed'
-            ? 'sealed-forest-boss'
-            : 'training-room',
+            id === 'boss-weak-point-exposed',
+        ),
         x: 500,
         combatScenarioId: id,
         expectation,
@@ -2114,8 +1616,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     Object.entries(POSE_VISUAL_QA_SCENARIOS).map(([id, expectation]) => [
       id,
       Object.freeze({
-        regionId: 'academy-region',
-        roomId: 'training-room',
+        ...createCombatScenarioLocation(false),
         x: 500,
         poseScenarioId: id,
         expectation,
@@ -2139,7 +1640,7 @@ export function readVisualQaRequest(search = globalThis.location?.search ?? '') 
   const parameters = new URLSearchParams(search);
   if (parameters.get('visualQa') !== '1') return null;
 
-  const start = parameters.get('gameStart') ?? 'academy';
+  const start = parameters.get('gameStart') ?? 'scrap-intro-walk';
   const scenario = VISUAL_QA_SCENARIOS[start];
   if (!scenario) {
     throw new Error(
@@ -2197,8 +1698,7 @@ export function visualQaScenarioIds() {
 }
 
 // The developer panel is a campaign inspection surface, not the complete fixture catalog.
-// Keep legacy/combat-only fixtures addressable by URL while presenting the current scrap
-// campaign in its playable order.
+// Combat fixtures and the developer panel both use the current scrap campaign.
 const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-walk': '도입 · 고물상 수거장 동행',
   'scrap-intro-yard-brace': '도입 · 첫 전투 뒤 지지대 동행 안내',
@@ -2214,6 +1714,10 @@ const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-d30': '도입 · D-30 경보',
   'scrap-intro-after': '도입 · 귀환 완료',
   'scrap-garage-analysis': '차고 · 주인 분석',
+  'scrap-workshop': '고물상 · 회수 재료 제작·인챈트·수련',
+  'scrap-dialogue-review': '대화 UI · 고물상 분석 보고',
+  'scrap-garage-opened': '차고 UI · 문 개방과 골격 공개',
+  'scrap-recovery-review': '복구 UI · 작전 기록 선택',
   'scrap-garage-0': '작전 지도 · 5지역 / 로봇 0%',
   'scrap-issue-window': '작전 지도 · 주목표와 연결 이슈',
   'scrap-mine-roadhead': '폐광 산촌 · 반복 인물 합류',
@@ -2240,7 +1744,6 @@ const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-final-armor': '최종전 · 장갑 파괴',
   'scrap-final-epilogue': '후일담 · 산업기계 귀환',
   'scrap-art-benchmark': '폐광 · 전투/조명 기준 장면',
-  'scrap-character-board': '캐릭터 · 실제 크기 실루엣 보드',
 });
 
 export function visualQaDebugScenarioEntries() {

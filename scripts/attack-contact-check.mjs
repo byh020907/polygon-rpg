@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
 import { ATTACK_SPATIAL_PROFILES } from '../src/combat/AttackSpatialProfiles.js';
 import { sampleCombatFrame } from '../src/combat/CombatFrame.js';
@@ -10,9 +10,14 @@ import {
   sampleTrainingEnemyCombatGeometry,
 } from '../src/combat/SharedCombatGeometry.js';
 
-const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 scene.enterTree();
-scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 560 });
+scene.setVisualQaScrapAwakeningStage('yard-clearance');
+scene.setVisualQaLocation({
+  regionId: 'scrap-waste-edge',
+  roomId: 'abandoned-weapon-yard',
+  x: 560,
+});
 const encounter = scene.roomSceneNode.encounter;
 let sequence = 100;
 const attacks = [

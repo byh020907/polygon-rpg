@@ -912,7 +912,6 @@ export function createTrainingEnemyItems(
   const flash = enemy.hitFlashSeconds > 0;
   const groggy = enemy.posture?.groggy === true;
   const groggyPulse = groggy ? 0.72 + 0.28 * Math.sin(enemy.posture.groggySeconds * 30) : 1;
-  const glasswind = enemy.species === 'glasswind';
   const surrendering = enemy.resolutionState === 'surrendered';
   const fleeing = enemy.resolutionState === 'fleeing';
   const bodyFill = groggy
@@ -1077,39 +1076,6 @@ export function createTrainingEnemyItems(
             { x, y: y - 44 },
             '#6ce3cd',
             { stroke: '#eafff9', lineWidth: 2, opacity: 0.24 },
-          ),
-        ]
-      : []),
-    ...(glasswind && enemy.aiState === 'windup' && enemy.attackKind === 'sweep'
-      ? [
-          polygon(
-            'combat-enemy-sweep-warning',
-            arcRibbonPoints({ x, y: enemy.groundY - 4 }, -0.15, 0.15, 72, 188, 10),
-            { x: 0, y: 0 },
-            '#72edf0',
-            {
-              stroke: '#efffff',
-              lineWidth: 2,
-              opacity: 0.16 + Math.max(0, 1 - enemy.aiSeconds / attackProfile.windupSeconds) * 0.4,
-            },
-          ),
-        ]
-      : []),
-    ...(glasswind && enemy.aiState === 'attack' && enemy.attackKind === 'sweep'
-      ? [
-          polygon(
-            'combat-enemy-sweep-trail',
-            arcRibbonPoints(
-              { x: weaponHand.x, y: enemy.groundY - 8 },
-              weaponAngle - 0.24,
-              weaponAngle + 0.08,
-              54,
-              weaponLength,
-              10,
-            ),
-            { x: 0, y: 0 },
-            '#8ff5ef',
-            { opacity: 0.38 },
           ),
         ]
       : []),

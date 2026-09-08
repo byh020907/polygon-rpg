@@ -16,6 +16,7 @@ export const SCRAP_AWAKENING_DEVICE_ENTITY_ID = 'scrap-control-device';
 export const SCRAP_AWAKENING_FOCUS_X = 980;
 export const SCRAP_GARAGE_REVEAL_FOCUS_X = 300;
 export const SCRAPYARD_OWNER_ENTITY_ID = 'scrapyard-owner-analysis';
+export const SCRAPYARD_WORKSHOP_ENTITY_ID = 'scrapyard-owner-workshop';
 export const SCRAPYARD_OWNER_COMMISSION_ENTITY_ID = 'scrapyard-owner-commission';
 export const SCRAP_DIALOGUE_ARCHIVE_ENTITY_ID = 'scrapyard-dialogue-archive';
 export const SCRAP_RIVAL_DEPARTURE_ENTITY_ID = 'scrap-rival-departure';
@@ -163,6 +164,13 @@ function scaleAround(points, originX, originY, scaleX, scaleY = scaleX) {
 }
 
 function item(id, points, fill, options = {}) {
+  const graphics =
+    options.graphics ??
+    (id.startsWith('scrapyard-workshop-')
+      ? { category: 'building', groupId: 'scrapyard-workshop', label: '고물상 건물 · 벽과 지붕' }
+      : id.startsWith('salvage-crane-')
+        ? { category: 'facility', groupId: 'salvage-crane', label: '고물상 수거 크레인' }
+        : null);
   // The workshop is one authored set: shell, crane, wall fixtures and every
   // robot assembly share its grounded scale. People and their workbench retain
   // their human proportions and interaction positions in the open foreground.
@@ -192,11 +200,13 @@ function item(id, points, fill, options = {}) {
     emissive: options.emissive ?? false,
     ...(options.label ? { label: options.label } : {}),
     ...(options.role ? { role: options.role } : {}),
+    ...(graphics ? { graphics } : {}),
   };
 }
 
 function createVentilatorLandmarkItems(id, centerX, centerY) {
   const shared = {
+    graphics: { category: 'facility', groupId: id, label: '붕괴 광산 대형 환기팬' },
     parallax: 0.34,
     materialId: 'metal',
     renderOrder: 30,
@@ -3717,6 +3727,44 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               enabled: false,
             },
             {
+              id: SCRAPYARD_WORKSHOP_ENTITY_ID,
+              kind: 'story-interaction',
+              position: { x: 198, y: 354 },
+              interactionRange: 82,
+              speaker: SCRAP_CAST.SCRAPYARD_OWNER.name,
+              lines: [
+                '회수한 구동핵으로 검 하나를 벼려 줄 수 있어. 빠른 연계, 방어 파쇄, 긴 추격 중에 골라.',
+                '지역에서 가져온 소재로 검에 속성도 새길 수 있지. 한 검에는 한 속성만 남으니 잘 골라.',
+              ],
+              presentationProfileId: 'scrapyard-owner',
+              commands: [
+                { id: 'train-combat-skill', type: 'train-combat-skill' },
+                { id: 'manage-balanced-sword', type: 'manage-sword', profileId: 'balanced-sword' },
+                { id: 'manage-heavy-sword', type: 'manage-sword', profileId: 'heavy-sword' },
+                {
+                  id: 'forge-swift-chain-sword',
+                  type: 'forge-weapon-archetype',
+                  profileId: 'swift-chain-sword',
+                },
+                {
+                  id: 'forge-posture-breaker-sword',
+                  type: 'forge-weapon-archetype',
+                  profileId: 'posture-breaker-sword',
+                },
+                {
+                  id: 'forge-rear-punish-sword',
+                  type: 'forge-weapon-archetype',
+                  profileId: 'rear-punish-sword',
+                },
+                ...['fire', 'ice', 'earth', 'lightning'].map((enchantId) => ({
+                  id: 'enchant-' + enchantId,
+                  type: 'upgrade-sword-enchantment',
+                  enchantId,
+                })),
+              ],
+              enabled: false,
+            },
+            {
               id: SCRAPYARD_WALL_MAP_ENTITY_ID,
               kind: 'operation-map-interaction',
               position: { x: 334, y: 354 },
@@ -5601,6 +5649,15 @@ export const SCRAP_AWAKENING_MAP = defineMap({
         { op: 'set-enabled', target: 'garage-robot-zero-label', value: true },
         { op: 'set-enabled', target: 'scrapyard-recovery-cot-frame', value: true },
         { op: 'set-enabled', target: 'scrapyard-recovery-cot-roll', value: true },
+      ],
+    },
+    {
+      id: 'scrapyard-workshop-ready',
+      priority: 91,
+      when: { fact: 'scrapGarageRevealStageId', eq: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE },
+      operations: [
+        { op: 'set-enabled', target: SCRAPYARD_OWNER_ENTITY_ID, value: false },
+        { op: 'set-enabled', target: SCRAPYARD_WORKSHOP_ENTITY_ID, value: true },
       ],
     },
     {

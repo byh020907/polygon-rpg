@@ -1,10 +1,8 @@
-export const TRAINING_CLEAR_REWARD = 3;
-
-export const FIRST_JOURNEY_WEAPON_FORGE_PROFILE = Object.freeze({
-  choiceGroupId: 'first-journey-weapon-archetype',
-  sourceId: 'first-journey-boss-reward',
-  materialId: 'sealed-guardian-core',
-  materialLabel: '봉인 수호핵',
+export const SCRAP_WEAPON_FORGE_PROFILE = Object.freeze({
+  choiceGroupId: 'scrap-weapon-archetype',
+  sourceId: 'scrap-yard-guard-collector',
+  materialId: 'salvaged-drive-core',
+  materialLabel: '회수한 구동핵',
   sourceQuantity: 1,
   materialCost: 1,
   optionProfileIds: Object.freeze([
@@ -13,6 +11,41 @@ export const FIRST_JOURNEY_WEAPON_FORGE_PROFILE = Object.freeze({
     'rear-punish-sword',
   ]),
 });
+
+// Rewards belong to concrete victories, never entering a room or replaying a conversation.
+// The final yard fight supplies the first equipment/skill choice at the existing 120 Gold cost.
+export const SCRAP_ENCOUNTER_REWARDS = Object.freeze(
+  Object.fromEntries(
+    [
+      ['scrap-yard-guard-collector', 'yard-guard-collector', 'lightning', 120, 3, true],
+      ['mine-tunnel-collector-unit', 'mine-claim-jacker', 'earth'],
+      ['mine-collapse-walker-boss', 'mine-collapse-boss', 'earth'],
+      ['shipyard-drydock-collector-unit', 'dock-salvage-raider', 'lightning'],
+      ['shipyard-linked-cable-collector', 'shipyard-drydock-collector', 'lightning'],
+      ['shipyard-linked-dock-raider', 'dock-salvage-raider', 'lightning'],
+      ['shipyard-twin-crane-boss', 'shipyard-twin-crane-boss', 'lightning'],
+      ['greenhouse-pipe-parasite', 'greenhouse-pipe-parasite', 'fire'],
+      ['greenhouse-linked-pressure-brace-parasite', 'greenhouse-pipe-parasite', 'fire'],
+      ['greenhouse-geothermal-boss', 'greenhouse-geothermal-boss', 'fire'],
+      ['snow-tunnel-collector', 'snow-route-raider', 'ice'],
+      ['snowplow-train-boss', 'snowplow-train-boss', 'ice'],
+      ['quarry-cut-collector', 'quarry-cut-collector', 'earth'],
+      ['quarry-rock-cutter-boss', 'quarry-rock-cutter-boss', 'earth'],
+    ].map(
+      ([entityId, profileId, elementId, gold = 40, trainingMarks = 0, forgeMaterial = false]) => [
+        entityId,
+        Object.freeze({
+          entityId,
+          profileId,
+          gold,
+          trainingMarks,
+          forgeMaterial,
+          materialReward: Object.freeze({ elementId, quantity: 2 }),
+        }),
+      ],
+    ),
+  ),
+);
 
 function freezeLevelProfile(profile) {
   return Object.freeze({ ...profile });
@@ -94,10 +127,10 @@ export function getCombatSkillTrainingMarkRequirement(level) {
 }
 
 export const COMBAT_PROGRESSION_PROFILE = Object.freeze({
-  trainingClearReward: TRAINING_CLEAR_REWARD,
   maxSkillLevel: COMBAT_SKILL_LEVEL_PROFILES.length - 1,
   merchantProfileIds: Object.freeze(['balanced-sword', 'heavy-sword']),
-  weaponForge: FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
+  weaponForge: SCRAP_WEAPON_FORGE_PROFILE,
+  encounterRewards: SCRAP_ENCOUNTER_REWARDS,
   getSkillLevelProfile: getCombatSkillLevelProfile,
   getSkillUpgradeCost: getCombatSkillUpgradeCost,
   getSkillTrainingMarkRequirement: getCombatSkillTrainingMarkRequirement,

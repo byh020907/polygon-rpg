@@ -30,7 +30,7 @@ import { CHARACTER_RENDER_SCALE } from '../src/game/PlayerCombatPresentation.js'
 import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { resolveEncounterBodyCollider } from '../src/game/encounter/EncounterBodyCollider.js';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP = 1 / 120;
@@ -70,7 +70,7 @@ for (const [scenarioId, expected] of Object.entries(BASELINE_PLAYBACK_EXPECTATIO
   assert.equal(request.scenario.expectation.expectedPlayerGrounded, expected.grounded);
 }
 
-const collectorCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES.training);
+const collectorCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES['yard-scout-collector']);
 const humanCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES['mine-claim-jacker']);
 const bossCollider = resolveEncounterBodyCollider(ENCOUNTER_PROFILES['mine-collapse-boss']);
 assert.equal(collectorCollider.rollThrough, 'normal');
@@ -531,7 +531,7 @@ for (const motionId of ['slash', 'heavy']) {
 
 // Sample the production range-sized rig and shared weapon, rather than accepting
 // an animation label or scalar sword angle as evidence of a cross-body cut.
-const sideCutScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const sideCutScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 try {
   for (const id of ['slash', 'heavy', 'airSlash', 'airHeavy', 'airReturn', 'airCross']) {
     const frame = sideCutScene.combatCommands.getMotionFrameData(id);
@@ -581,12 +581,17 @@ try {
 }
 
 function withScene(run) {
-  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
   scene.enterTree();
   try {
-    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 430 });
+    scene.setVisualQaScrapAwakeningStage('yard-clearance');
+    scene.setVisualQaLocation({
+      regionId: 'scrap-waste-edge',
+      roomId: 'abandoned-weapon-yard',
+      x: 430,
+    });
     const encounter = scene.roomSceneNode.getEncounterGameplaySnapshot();
-    assert.ok(encounter, 'training room needs an encounter for body-collision coverage');
+    assert.ok(encounter, 'current scrapyard needs an encounter for body-collision coverage');
     scene.roomSceneNode.encounter.enemy.position = {
       x: scene.position.x + 72,
       y: scene.mapRuntime.getActiveRoom().groundY,
@@ -603,7 +608,9 @@ withScene((scene) => {
   const enemy = scene.roomSceneNode.encounter.enemy;
   for (let tick = 0; tick < 120; tick += 1) scene.update(STEP, { ...EMPTY_INPUT, right: true });
   assert.ok(
-    Math.abs(scene.position.x - enemy.position.x) >= 48,
+    scene.position.x <=
+      enemy.position.x -
+        (20 + scene.roomSceneNode.getEncounterGameplaySnapshot().bodyCollider.halfWidth),
     'normal movement must stop at the enemy body instead of passing through it',
   );
 });
@@ -702,10 +709,11 @@ withScene((scene) => {
 });
 
 // A fresh plaza scene makes the held-input transition contract observable without UI adapters.
-const plazaScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const plazaScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 plazaScene.enterTree();
 try {
-  const portal = plazaScene.mapRuntime.getPortal('academy-field-portal');
+  plazaScene.setVisualQaScrapGarageRevealStage('complete');
+  const portal = plazaScene.mapRuntime.getPortal('scrapyard-abandoned-mine-road');
   const sourceRoom = plazaScene.mapRuntime.getActiveRoom();
   plazaScene.position = {
     x: sourceRoom.bounds.x + portal.from.anchor.x,
@@ -713,10 +721,11 @@ try {
   };
   plazaScene.previousPosition = { ...plazaScene.position };
   plazaScene.update(STEP, { ...EMPTY_INPUT, right: true, jump: true, jumpSequence: 1 });
+  assert.equal(plazaScene.confirmScrapCampaignTravel().started, true);
   for (let tick = 0; tick < 120 && plazaScene.mapRuntime.getTransition(); tick += 1) {
     plazaScene.update(STEP, { ...EMPTY_INPUT, right: true, jumpSequence: 1 });
   }
-  assert.equal(plazaScene.mapRuntime.getActiveLocation().roomId, 'field-crossing');
+  assert.equal(plazaScene.mapRuntime.getActiveLocation().roomId, 'abandoned-mine-roadhead');
   const destinationX = plazaScene.position.x;
   plazaScene.update(STEP, { ...EMPTY_INPUT, right: true, jumpSequence: 1 });
   assert.ok(
@@ -728,10 +737,11 @@ try {
   plazaScene.exitTree();
 }
 
-const mobilePortalScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const mobilePortalScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 mobilePortalScene.enterTree();
 try {
-  const portal = mobilePortalScene.mapRuntime.getPortal('academy-field-portal');
+  mobilePortalScene.setVisualQaScrapGarageRevealStage('complete');
+  const portal = mobilePortalScene.mapRuntime.getPortal('scrapyard-abandoned-mine-road');
   const sourceRoom = mobilePortalScene.mapRuntime.getActiveRoom();
   mobilePortalScene.position = {
     x: sourceRoom.bounds.x + portal.from.anchor.x,
@@ -742,11 +752,12 @@ try {
   touch.press('right', 11);
   touch.press('jump', 12);
   mobilePortalScene.update(STEP, touch.snapshot());
+  assert.equal(mobilePortalScene.confirmScrapCampaignTravel().started, true);
   touch.release(12);
   for (let tick = 0; tick < 120 && mobilePortalScene.mapRuntime.getTransition(); tick += 1) {
     mobilePortalScene.update(STEP, touch.snapshot());
   }
-  assert.equal(mobilePortalScene.mapRuntime.getActiveLocation().roomId, 'field-crossing');
+  assert.equal(mobilePortalScene.mapRuntime.getActiveLocation().roomId, 'abandoned-mine-roadhead');
   const destinationX = mobilePortalScene.position.x;
   mobilePortalScene.update(STEP, touch.snapshot());
   assert.ok(

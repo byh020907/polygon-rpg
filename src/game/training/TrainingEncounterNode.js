@@ -1,4 +1,5 @@
 import { SpinContactConstraint } from '../../combat/SpinContactConstraint.js';
+import { PLAYER_MOTION_PROFILE } from '../../animation/PlayerMotionProfile.js';
 import { isAttackContactFrame } from '../../combat/CombatMotionTimingProfiles.js';
 import { COMBAT_EVENT_TYPE } from '../../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
@@ -42,7 +43,10 @@ function assertAttackProfiles(profiles) {
   return profiles;
 }
 
-function resolveEncounterProfile(profiles, profileId = 'training') {
+function resolveEncounterProfile(profiles, profileId) {
+  if (typeof profileId !== 'string' || profileId.length === 0) {
+    throw new TypeError('Encounter entity에는 명시적인 encounterProfileId가 필요합니다.');
+  }
   const profile = profiles[profileId];
   if (!profile) throw new Error(`알 수 없는 encounter profile입니다: ${profileId}`);
   if (
@@ -186,7 +190,7 @@ export class TrainingEncounterNode extends SceneNode {
     this.attackProfiles = assertAttackProfiles(attackProfiles);
     const encounterProfile = resolveEncounterProfile(
       this.encounterProfiles,
-      entity.encounterProfileId ?? 'training',
+      entity.encounterProfileId,
     );
     this.entity = Object.freeze({
       id: entity.id,
@@ -239,7 +243,7 @@ export class TrainingEncounterNode extends SceneNode {
       profileId: encounterProfile.id,
       presentationProfileId: encounterProfile.presentationProfileId,
       role: encounterProfile.role,
-      species: encounterProfile.species ?? 'golem',
+      species: encounterProfile.species ?? 'industrial-machine',
       label: encounterProfile.label,
       presentationScale: encounterProfile.presentationScale,
       position: { ...this.entity.position },
@@ -988,7 +992,7 @@ export class TrainingEncounterNode extends SceneNode {
         damage: profile.damage,
         knockbackVelocityX: Math.sign(distance) * profile.knockbackVelocity,
         knockbackDecayRate: profile.knockbackDecayRate,
-        hitstunSeconds: 0.22,
+        hitstunSeconds: PLAYER_MOTION_PROFILE.hitReactionSeconds,
         invulnerableSeconds: 0.38,
         hitStopSeconds: enemy.attackKind === 'heavy' ? 0.05 : 0.035,
       }),

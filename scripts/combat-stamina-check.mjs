@@ -7,7 +7,7 @@ import {
 import { COMBAT_EVENT_TYPE } from '../src/combat/CombatEvent.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -50,7 +50,7 @@ function createEncounter() {
     entity: {
       id: 'stamina-check-enemy',
       kind: 'combat-test-mob',
-      encounterProfileId: 'training',
+      encounterProfileId: 'yard-scout-collector',
       position: { x: 650, y: 420 },
       maxHealth: 100,
     },
@@ -63,7 +63,7 @@ function createEncounter() {
 }
 
 function createGameScene() {
-  return createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  return createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 }
 
 function contactPlayerFrame(encounter, { combatState, attackProfile }) {

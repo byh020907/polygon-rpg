@@ -445,7 +445,7 @@ assert.equal(
   'yard-scout-collector',
   '도입 수거장에는 기존 기본기 grammar를 배우는 산업 수거 유닛이 필요합니다.',
 );
-scene.resolveJourneyEncounter(
+scene.resolveCampaignEncounter(
   Object.freeze({
     entityId: 'scrap-yard-scout-collector',
     scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
@@ -584,7 +584,7 @@ assert.equal(
   'yard-brace-collector',
   '안전 지지대를 점검한 뒤에는 guard/Strong을 연습할 두 번째 수거 유닛이 필요합니다.',
 );
-scene.resolveJourneyEncounter(
+scene.resolveCampaignEncounter(
   Object.freeze({
     entityId: 'scrap-yard-brace-collector',
     scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
@@ -754,7 +754,7 @@ assert.equal(
   false,
   'ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
 );
-scene.resolveJourneyEncounter(
+scene.resolveCampaignEncounter(
   Object.freeze({
     entityId: 'scrap-yard-approach-collector',
     scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_PLATE,
@@ -1065,7 +1065,7 @@ assert.equal(
   'yard-ridge-collector',
   '흉갑 조각 점검 뒤에는 방향 roll과 Strong을 연습할 네 번째 경계 유닛이 필요합니다.',
 );
-scene.resolveJourneyEncounter(
+scene.resolveCampaignEncounter(
   Object.freeze({
     entityId: 'scrap-yard-ridge-collector',
     scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD,
@@ -1208,7 +1208,7 @@ assert.equal(
   'yard-guard-collector',
   '능선 전투 뒤에는 공격 순간에 방패를 맞대는 다섯 번째 경계 유닛이 필요합니다.',
 );
-scene.resolveJourneyEncounter(
+scene.resolveCampaignEncounter(
   Object.freeze({
     entityId: 'scrap-yard-guard-collector',
     scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
@@ -2250,6 +2250,11 @@ mineGreenhouseLinkedObjectiveScene.setVisualQaScrapRegionState({
   regionId: SCRAP_GREENHOUSE_REGION_ID,
   stageKind: 'facility-observed',
   status: 'available',
+});
+mineGreenhouseLinkedObjectiveScene.setVisualQaLocation({
+  regionId: SCRAP_GREENHOUSE_REGION_ID,
+  roomId: SCRAP_GREENHOUSE_ROAD_ROOM_ID,
+  x: 730,
 });
 assert.match(
   mineGreenhouseLinkedObjectiveScene.getWorldStatus().objective,

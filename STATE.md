@@ -4,39 +4,44 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — Human이 Product Goal Loop를 pause하고 별도 Astra/xhigh 대화에서 전반 구조 정합·리팩터링과 그래픽 리소스 검토 환경을 진행하도록 지시했다. 이 loop는 자동 재개하지 않으며, PWA 설치형 A→B 확인과 폐광 연결 이슈 actual 검증은 보존한다.
+`WAITING_FOR_HUMAN` — 승인된 현재 캠페인 기반 교체와 전체 그래픽 검토 환경의 구현·검증을 마쳤다. Codex heartbeat와 OpenCode runner는 Human pause를 유지하며 명시적 재개 전까지 실행하지 않는다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
-`Paused — Human Feedback Priority / Verified Playable Frontier. 새 저장에서 폐광의 작업반장·구조 현황판을 실제 입력으로 마쳐 두 연결 이슈가 열리고, 폐광→고물상→항구 실제 연결로를 확정해 건선거까지 진행했다. 항구 케이블 수거 유닛은 Strong으로 HP 76→56까지 실제로 맞았으나, KO 뒤 held 이동·공격이 그대로 적용되어 재접근·재KO가 이어질 수 있음을 재현했다. KO 복귀 뒤 release 전까지 이전 held input을 중립화하는 수리는 fixture로 검증했으며, 수리된 새 저장의 항구 완료·귀환은 아직 실제 검증되지 않았다.`
+`Human Feedback Priority — 공통 기반·전체 그래픽 검토 환경 검증 완료 / Human 시각 피드백 대기.` 원본 리소스와 같은 출력, 전체 종류·동작·상태·실제 장면·UI를 stable ID와 URL로 검토할 수 있다. 다음 기존 전선은 폐광→항구 연결 이슈 실제 완료·귀환이며, Human pause 중에는 자동으로 진행하지 않는다.
 
 ## Active Execution Goal
 
-`PG-CAST-CONTINUITY` / Architecture Authored Campaign Content·Campaign Domain·Story Interaction·Rendering/Input — dependency chain은 KO stale-held-input 복귀 수리 → 항구 건선거 cable 확보 → 온실 압력 버팀쇠 확보 → 폐광 core event/갱도/마지막 작업/after-state다. 새 저장의 production input으로 이 흐름을 끝까지 완료하고, 작업반장·대기 광부·라이벌과 설비가 before/in-progress/resolved 상태로 변하는지 desktop/mobile에서 판독한다. 범위에는 linked encounter의 실제 combat/recovery 결과와 portal 귀환이 포함되며, fixture의 KO fence PASS로 성공하지 못한 actual 전투를 대체하지 않는다.`
+없음. 이번 범위의 구조·검토 환경은 검증을 마쳤다. 자동 개발은 중지 상태이며 다음 Goal은 새 Human feedback과 현재 미완료 전선을 다시 비교해 선택한다.
 
 ## Desired-State Comparison
 
-| Area | Status | Current evidence |
-| --- | --- | --- |
-| Pixel depth / protagonist design / sword and roll | satisfied | IntegerPixelSurface와 실제 게임 정지 프레임에서 외곽선·저해상도 nearest-neighbor 확대·작은 머리/긴 팔다리·낮은 횡/사선 베기와 전방 구르기를 확인했다. |
-| Shared geometry / contact | satisfied | 항구 건선거의 production Strong 1회가 보이는 수거 유닛 HP 76→56으로 반영됐다. combat fixture는 renderer/authoritative sweep/hurt/damage contract를 통과한다. |
-| PWA release update | unverified · Human 확인 대기 | release metadata, cache/save-before-apply fixture는 PASS. persistent installed PWA의 A→B waiting/apply/offline 재실행은 Human 확인이 필요하다. |
-| Story terminology | satisfied | 도입과 다섯 지역 cast는 같은 authored catalog의 현장 bubble/transcript로 행동·결과를 먼저 전달한다. |
-| Mine linked-region frontier | partial | 실제 폐광 briefing·facility·disabled core preview와 항구 briefing·facility·건선거 portal까지 확인했다. 첫 linked enemy damage와 KO reset은 actual로 확인했고, KO 때 남은 held input이 즉시 재진입시키지 않도록 수리했다. 양 linked encounter 완료, portal return, greenhouse branch, mine core/after-state, mobile 연속 입력은 unverified다. |
-| Remaining product | gap | 전체 캠페인/최종전과 Human PWA 확인을 포함한 Product/Architecture의 미검증 조건을 완료로 추정하지 않는다. |
+| Area                                             | Status           | Current evidence                                                                                                                                                                                              |
+| ------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 현재 campaign 상태·저장                          | satisfied        | schema10 gold·campaign 단일 소유. 옛 journey/expansion/worldTime와 migration 제거. 실제 contact victory의 진행·보상 원자성·재지급 방지, 고물상 command 및 incompatible/corrupt/recovery 경계 fixture PASS.    |
+| 전체 graphic inventory                           | satisfied        | 588개(원본 producer566 + DOM UI19 + icons3), 13종류. 16rooms·434원본 map items·181 initially disabled·101patches, NPC26조립, current enemy21(16배치/5미배치), 장비5와 효과·최종전·UI를 공통 catalog에서 추적. |
+| 검토 동일 출력·정상속도                          | satisfied        | production composition/pose/공격 사이징/geometry/renderer/UI component 공용. 435 RenderFrame 비교(검 궤적·장비별 방어 반동 포함)·107 실제 fixed-step 관측과 effects 9그룹 coverage PASS.                      |
+| 검토 desktop/mobile UX                           | satisfied        | 1280×720·844×390 actual 검토 66기록 PASS. 독립36기록 및 큰정적4× 전체범위·UI 2×/원본viewport·모바일10번째고물상행wheel접근·PNG/roll연속프레임 직접판독 PASS.                                                  |
+| 승인된 주인공 스타일                             | preserved        | main21f4b56/cfbb23b의 작은머리·긴사지·낮은횡사선베기·전방roll 기준 유지. 기존모션폐기 INBOX로 현재 스타일을 재폐기하지 않음.                                                                                  |
+| 기존 Human Feedback Priority / playable frontier | partial          | 이전 actual 폐광 briefing·항구 건선거 진입·Strong HP76→56·KO증거와 held-input fence는 보존. 양 연결 전투 완료·귀환·온실·폐광core/after-state 연속 실제검증은 남아 있다.                                       |
+| Remaining product                                | gap / unverified | 약10시간 캠페인·후반영역·최종전·모션의 모든 체형별 자연스러움·시각취향을 검토환경 완료만으로 충족 처리하지 않는다.                                                                                            |
+| PWA 설치 A→B                                     | Human 확인 대기  | canonical release asset inventory·cache/save-before-apply fixture. persistent installed PWA의 발견/적용/저장유지/offline재실행은 Human이 확인한다.                                                            |
 
 ## Verification
 
-- Highest permission preflight와 loop guard verified. 사용자 첨부 원본은 수정·stage·commit하지 않았다.
-- Codex in-app Browser (`?inputQa=1&inputQaRenderer=polygon&inputQaStart=scrap-mine-roadhead`)에서 새 저장의 폐광 작업반장 3문장·구조 현황판 2문장·연결 이슈 2개 표시를 실제 `↑`/이동 입력으로 확인했다.
-- 같은 session에서 폐광→고물상→항구의 1구간 연결로를 확정하고 조선소 용접공·도크 현황판을 완료한 뒤 건선거 portal에 들어갔다. 케이블 수거 유닛은 Strong 1회에 `76/76 → 56/76`; 이후 KO는 encounter를 `76/76`으로 reset하고 campaign clock을 한 segment 전진시켰다. 완료·귀환 evidence가 아니므로 남은 링크를 PASS로 처리하지 않는다.
-- KO 당시 held input을 neutralize하지 않아 다음 frame에 stale 이동·공격이 재적용될 수 있던 원인을 `GameScene`에서 확인했다. `node scripts/scrap-recovery-check.mjs`, `node scripts/scrap-campaign-check.mjs`, `npm run lint`, targeted Prettier 및 `git diff --check`는 PASS이며, KO 직후 held 이동·Strong이 release 전에는 실행되지 않고 release 뒤 새 이동만 허용되는 recovery fixture를 추가했다.
-- `node scripts/scrap-awakening-check.mjs`, `npm run test:campaign`, `npm run lint`, `npm run release:metadata:check`, `git diff --check` PASS.
-- Independent verifier는 linked-flow fixture가 `encounter.completeForVisualQa()`로 shipyard/greenhouse 완료를 seed한다는 점을 확인했다. domain wiring은 통과하지만 fresh-save production combat·귀환 증거가 아니므로 Active Execution Goal을 완료 처리하지 않았다.
+- 실제 permission danger-full-access / approval never, 이전 worker 종료와 guard free 확인 뒤 별도 codex/graphics-review-foundation에서 단일 guard 획득. 자동 trigger 둘 다 PAUSED.
+- 전체 npm run check(lint/format/combat/enchantment/story/campaign/recovery/intro/character/map/growth/visual/platform/graphics), test:pwa, test:final, diff check PASS. QA 초기화가 입력 뒤 대화를 덮어쓰던 결함을 공통 준비순서로 수리했고 새 UI4종+기존 motion/combat/stage actual26case가 desktop/mobile에서 통과했다.
+- Product Goal desktop/390px mobile/print PNG와 CSS 없는 semantic text 확인, overflow0.
+- 최신 origin/main 재조회·비재작성 통합 확인. INBOX 원문 변경 없음. 이전 user 변경과 candidate를 덮어쓰지 않음.
+- Actual source UI 검증: artifacts/graphics-review/ui-evidence.json과 component-*.png. 통합 검토 evidence: artifacts/graphics-review/evidence.json, desktop/mobile category·motion·복원 PNG. 독립 보고서: artifacts/independent-verifier/REPORT.md 및 final-evidence.json/extras-evidence.json/workshop-scroll.json.
+- 검토 회수 슬롯은 hardcoded QA rows가 아니라 실제 CampaignRecoveryPolicy read model과 같은 snapshot을 표시·복원한다. UI 검토용 seeded scenario와 실제 victory/playable completion 증거는 구분한다.
 
-## Blockers
+## Blockers / Human 확인
 
-없음. PWA persistent A→B는 Human 확인 대기이며 다른 개발을 멈추지 않는다.
+- 자동 루프는 Human의 명시적 재개 전까지 중지한다.
+- 착지 pose는 현재 authored 리소스로 등록되어 있지만 기존 gameplay가 landing recovery를 시작하지 않아 자동 재생되지 않는다. 검토실에서 이를 미사용으로 명시했으며 이번 모션 스타일 변경으로 확대하지 않는다.
+- 검토실에서 시각적 만족과 구체적인 남은 결함을 stable ID·frame·재현 URL로 전달할 수 있다. 기존 INBOX 원문은 보존하며 일부 fixture PASS로 대기 피드백 전체를 제거하지 않는다.
+- PWA 설치형 A→B는 Human 확인 대기다.
 
 ## Preserved Work Reference
 

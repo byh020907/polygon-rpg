@@ -4,8 +4,11 @@ import {
   VISUAL_QA_RENDERER_IDS,
   visualQaDebugScenarioEntries,
 } from '../app/VisualQaConfig.js';
+import { GRAPHICS_REVIEW_QUERY_KEYS } from './GraphicsReviewConfig.js';
 
 const DEBUG_QUERY_KEYS = Object.freeze([
+  ...GRAPHICS_REVIEW_QUERY_KEYS,
+  'uiReviewView',
   'visualQa',
   'gameStart',
   'gameFrame',

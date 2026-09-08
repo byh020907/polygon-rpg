@@ -1,13 +1,18 @@
-importScripts('./public/release-metadata.js', './src/pwa/offlineAssetManifest.js');
+importScripts('./public/release-metadata.js');
 
 const RELEASE = self.POLYGON_RPG_RELEASE;
 const CACHE_NAME = `polygon-rpg-release-${RELEASE.buildId}`;
 const SHELL_URL = new URL('./index.html', self.location).href;
 const OFFLINE_URL = new URL('./offline.html', self.location).href;
+const OFFLINE_ASSETS = Object.freeze([
+  './',
+  './public/release-metadata.js',
+  ...RELEASE.assets.map((asset) => `./${asset}`),
+]);
 
 async function cacheCompleteRelease(cache) {
   const entries = await Promise.all(
-    self.POLYGON_RPG_OFFLINE_ASSETS.map(async (asset) => {
+    OFFLINE_ASSETS.map(async (asset) => {
       const request = new Request(asset, { cache: 'reload' });
       const response = await fetch(request);
       if (!response.ok) throw new Error(`필수 offline asset 준비 실패: ${asset}`);

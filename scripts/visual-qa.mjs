@@ -155,7 +155,7 @@ async function run() {
   if (!existsSync(browserPath)) {
     throw new Error(`Visual QA browser를 찾을 수 없습니다: ${browserPath}`);
   }
-  const start = values.get('start') ?? 'academy';
+  const start = values.get('start') ?? 'scrap-intro-walk';
   const frame = Number(values.get('frame') ?? 0);
   const renderer = values.get('renderer') ?? 'retro';
   const phase = values.get('phase') ?? 'active';

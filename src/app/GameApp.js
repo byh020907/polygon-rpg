@@ -1,28 +1,19 @@
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
-import { GameScene } from '../game/GameScene.js';
+import { createGameScene } from './createGameScene.js';
 import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
-import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
 import {
-  RECOVERY_SLOT_ID,
   createInitialMorningRecoveryRequest,
   createPostProgressionRecoveryRequests,
   createPreActionRecoveryRequest,
   createRecoverySlotReadModel,
 } from '../game/progression/CampaignRecoveryPolicy.js';
-import { ACADEMY_VILLAGE_MAP } from '../game/maps/academyVillage.js';
-import { SCRAP_AWAKENING_MAP, SCRAP_AWAKENING_MAP_ID } from '../game/maps/scrapAwakening.js';
-import { TRAINING_ENCOUNTER_SCENE } from '../game/training/TrainingEncounterNode.js';
-import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
-import { WORLD_TIME_PROFILE } from '../game/world/WorldTimeProfiles.js';
+import { SCRAP_AWAKENING_MAP } from '../game/maps/scrapAwakening.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
-import { SCRAP_AWAKENING_PROFILE } from '../game/campaign/ScrapAwakeningProfile.js';
-import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPresentationProfiles.js';
-import { SCRAP_ART_DIRECTION_PROFILE } from '../game/ScrapArtDirectionProfiles.js';
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { readVisualQaRequest } from './VisualQaConfig.js';
@@ -62,14 +53,8 @@ export function readQaInputScenario(search = globalThis.location?.search ?? '') 
   return readVisualQaRequest(`?visualQa=1&gameStart=${encodeURIComponent(start)}`).scenario;
 }
 
-export function resolveInitialMapDefinition({
-  visualQaRequest = null,
-  qaInputScenario = null,
-} = {}) {
-  const scenario = visualQaRequest?.scenario ?? qaInputScenario;
-  return !scenario || scenario.mapId === SCRAP_AWAKENING_MAP_ID
-    ? SCRAP_AWAKENING_MAP
-    : ACADEMY_VILLAGE_MAP;
+export function resolveInitialMapDefinition() {
+  return SCRAP_AWAKENING_MAP;
 }
 
 function assertCanvas(canvas, label) {
@@ -103,33 +88,6 @@ function assertUiBridge(uiBridge) {
 
 const PROGRESSION_STORAGE_KEY = 'polygon-rpg.progression.v1';
 
-const VISUAL_QA_RECOVERY_SLOTS = Object.freeze([
-  Object.freeze({
-    id: 'pre-action',
-    title: '행동 확정 직전',
-    detailLabel: '수도 도착을 확정하기 직전의 작전 기록',
-    timeLabel: 'Day 30 · 밤 · D-1',
-    assemblyLabel: '4/5 부품 · 로봇 80%',
-    elapsedSegments: 119,
-  }),
-  Object.freeze({
-    id: 'latest-core-event',
-    title: '이전 핵심 사건 완료',
-    detailLabel: '장갑 제설 열차 차체 회수 직후',
-    timeLabel: 'Day 25 · 낮 · D-6',
-    assemblyLabel: '4/5 부품 · 로봇 80%',
-    elapsedSegments: 97,
-  }),
-  Object.freeze({
-    id: 'latest-morning',
-    title: '최근 날짜의 아침',
-    detailLabel: '하루를 시작한 시점의 안전한 작전 기록',
-    timeLabel: 'Day 30 · 아침 · D-1',
-    assemblyLabel: '4/5 부품 · 로봇 80%',
-    elapsedSegments: 116,
-  }),
-]);
-
 function createProgressionStorage() {
   try {
     return Object.freeze({
@@ -149,14 +107,6 @@ function createProgressionStorage() {
       message: '저장소를 사용할 수 없습니다. 새 진행은 이 세션에서만 유지됩니다.',
     });
   }
-}
-
-function createTrainingEncounter(options) {
-  return TRAINING_ENCOUNTER_SCENE.instantiate({
-    ...options,
-    encounterProfiles: ENCOUNTER_PROFILES,
-    attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
-  });
 }
 
 export class GameApp extends SceneNode {
@@ -182,7 +132,7 @@ export class GameApp extends SceneNode {
     );
     this.visualQaRequest = visualQaRequest;
     this.isVisualQa = Boolean(this.visualQaRequest);
-    this.visualQaRecoverySnapshots = new Map();
+    this.visualQaRecoveryRecords = new Map();
     this.progressionStorage = null;
     if (this.isVisualQa) {
       this.progressionLoadResult = Object.freeze({
@@ -214,23 +164,7 @@ export class GameApp extends SceneNode {
       visualQaRequest: this.visualQaRequest,
       qaInputScenario: this.qaInputScenario,
     });
-    this.scene = this.addChild(
-      new GameScene({
-        mapDefinition,
-        equipmentCatalog: EQUIPMENT_CATALOG,
-        combatProgressionProfile: COMBAT_PROGRESSION_PROFILE,
-        encounterFactory: createTrainingEncounter,
-        encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
-        worldTimeProfile: WORLD_TIME_PROFILE,
-        scrapCampaignProfile: SCRAP_CAMPAIGN_PROFILE,
-        scrapAwakeningProfile: SCRAP_AWAKENING_PROFILE,
-        characterPresentationCatalog: CHARACTER_PRESENTATION_PROFILE,
-        playerPresentationProfileId: 'scrapyard-apprentice',
-        artDirectionProfile: SCRAP_ART_DIRECTION_PROFILE,
-        enchantmentCatalog: ENCHANTMENT_CATALOG,
-        progressionSnapshot,
-      }),
-    );
+    this.scene = this.addChild(createGameScene({ mapDefinition, progressionSnapshot }));
     if (qaInputEnabled) {
       this.scene.setVisualQaCombatOverlay(
         new URLSearchParams(globalThis.location?.search ?? '').get('inputQaOverlay') === '1',
@@ -256,6 +190,7 @@ export class GameApp extends SceneNode {
         return (
           uiState?.screen === GAME_SCREEN.GAME &&
           uiState?.debugPanelOpen !== true &&
+          uiState?.graphicsReviewOpen !== true &&
           uiState?.operationMapOpen !== true &&
           uiState?.campaignActionPreviewOpen !== true &&
           uiState?.gameOverOpen !== true
@@ -317,12 +252,6 @@ export class GameApp extends SceneNode {
       SCRAP_CAMPAIGN_PROFILE,
     );
     if (initialMorningRequest) this.saveRecoveryRequest(initialMorningRequest, { quiet: true });
-    if (this.progressionLoadResult.ok && this.progressionLoadResult.kind === 'migrated') {
-      const migrationSave = this.saveProgression(this.scene.getProgressionSnapshot());
-      if (migrationSave.ok) {
-        this.uiBridge.setSaveStatus('이전 저장 진행 변환·저장 완료');
-      }
-    }
     this.resizeObserver.observe(this.gameHost.canvas);
     this.resizeObserver.observe(this.polygonHost.canvas);
     this.resizeObserver.observe(this.retroHost.canvas);
@@ -385,9 +314,6 @@ export class GameApp extends SceneNode {
     if (!this.progressionLoadResult.ok) return this.progressionLoadResult.message;
     if (this.progressionLoadResult.kind === 'loaded') {
       return '저장 진행 불러옴 · 자동 저장 준비';
-    }
-    if (this.progressionLoadResult.kind === 'migrated') {
-      return '이전 저장 진행 변환됨 · 자동 저장 준비';
     }
     return '새 진행 · 자동 저장 준비';
   }
@@ -468,14 +394,16 @@ export class GameApp extends SceneNode {
 
   refreshRecoverySlots() {
     if (this.isVisualQa) {
-      const restorable = this.visualQaRecoverySnapshots.size > 0;
+      const restorable = this.visualQaRecoveryRecords.size > 0;
       const result = Object.freeze({
         ok: true,
         restorable,
         message: restorable
           ? '시각 검증용 복구 지점 · 선택 동작 확인 가능'
           : '시각 검증용 복구 지점',
-        slots: VISUAL_QA_RECOVERY_SLOTS,
+        slots: Object.freeze(
+          [...this.visualQaRecoveryRecords.values()].map(createRecoverySlotReadModel),
+        ),
       });
       this.uiBridge?.setRecoverySlots(result);
       return result;
@@ -517,7 +445,7 @@ export class GameApp extends SceneNode {
 
   restoreRecoverySlot(slotId) {
     if (this.isVisualQa) {
-      const snapshot = this.visualQaRecoverySnapshots.get(slotId);
+      const snapshot = this.visualQaRecoveryRecords.get(slotId)?.snapshot;
       if (!snapshot) {
         const result = Object.freeze({
           ok: false,
@@ -634,35 +562,20 @@ export class GameApp extends SceneNode {
     return Object.freeze({ ok: true, kind: 'reset', snapshot: freshProgression });
   }
 
-  runVisualQa({ start, frame, renderer, phase, scenario }) {
-    if (!scenario || typeof scenario !== 'object') {
-      throw new TypeError('Visual QA scenario가 필요합니다.');
-    }
-    this.start({ manual: true });
-    this.scene.reset();
-    if (
-      scenario.progressionSnapshot ||
-      scenario.firstJourneySnapshot ||
-      scenario.enchantmentSnapshot
-    ) {
-      const progression = this.scene.getProgressionSnapshot();
-      this.scene.restoreProgression(
-        Object.freeze({
-          ...progression,
-          ...scenario.progressionSnapshot,
-          firstJourney: scenario.firstJourneySnapshot
-            ? Object.freeze({
-                ...progression.firstJourney,
-                ...scenario.firstJourneySnapshot,
-              })
-            : progression.firstJourney,
-          enchantment: scenario.enchantmentSnapshot
-            ? Object.freeze({ ...progression.enchantment, ...scenario.enchantmentSnapshot })
-            : progression.enchantment,
-        }),
-      );
-    }
-    if (scenario.timePhase) this.scene.setVisualQaTimePhase(scenario.timePhase);
+  prepareUiReview(presentation) {
+    if (!this.isVisualQa)
+      throw new Error('UI 리소스 검토에는 저장 없는 Visual QA context가 필요합니다.');
+    if (presentation !== 'action') return;
+    const request = readVisualQaRequest('?visualQa=1&gameStart=scrap-garage-0');
+    this.runVisualQa(request);
+    const portal = this.scene.mapRuntime
+      .getResolvedMap()
+      .portals.find((entry) => entry.campaignTravel);
+    if (!portal) throw new Error('현재 고물상에 캠페인 연결로가 없습니다.');
+    this.scene.requestScrapCampaignTravel(portal);
+  }
+
+  applyVisualQaCampaignPresentation(scenario) {
     if (scenario.scrapAwakeningStageId) {
       this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
     }
@@ -676,24 +589,53 @@ export class GameApp extends SceneNode {
     if (scenario.scrapIssueState) {
       this.scene.setVisualQaScrapIssueState(scenario.scrapIssueState);
     }
-    if (scenario.scrapLastSegment) this.scene.setVisualQaScrapLastSegment();
     if (scenario.scrapFinalBattleStageId) {
       this.scene.setVisualQaScrapFinalBattleStage(scenario.scrapFinalBattleStageId);
     }
+  }
+
+  runVisualQa({ start, frame, renderer, phase, scenario }) {
+    if (!scenario || typeof scenario !== 'object') {
+      throw new TypeError('Visual QA scenario가 필요합니다.');
+    }
+    this.start({ manual: true });
+    this.scene.reset();
+    if (scenario.progressionSnapshot || scenario.enchantmentSnapshot) {
+      const progression = this.scene.getProgressionSnapshot();
+      this.scene.restoreProgression(
+        Object.freeze({
+          ...progression,
+          ...scenario.progressionSnapshot,
+          enchantment: scenario.enchantmentSnapshot
+            ? Object.freeze({ ...progression.enchantment, ...scenario.enchantmentSnapshot })
+            : progression.enchantment,
+        }),
+      );
+    }
+    if (scenario.timePhase) this.scene.setVisualQaTimePhase(scenario.timePhase);
+    this.applyVisualQaCampaignPresentation(scenario);
+    if (scenario.scrapLastSegment) this.scene.setVisualQaScrapLastSegment();
     if (scenario.scrapGameOverStageId) {
       const recoverySnapshot = this.scene.getProgressionSnapshot();
-      this.visualQaRecoverySnapshots = new Map([
-        [RECOVERY_SLOT_ID.PRE_ACTION, recoverySnapshot],
-        [RECOVERY_SLOT_ID.LATEST_CORE_EVENT, recoverySnapshot],
-        [RECOVERY_SLOT_ID.LATEST_MORNING, recoverySnapshot],
-      ]);
+      const fresh = createProgressionSnapshot(
+        EQUIPMENT_CATALOG.defaultProfileId,
+        ENCHANTMENT_CATALOG,
+        SCRAP_CAMPAIGN_PROFILE,
+      );
+      const requests = [
+        createInitialMorningRecoveryRequest(fresh, SCRAP_CAMPAIGN_PROFILE),
+        ...createPostProgressionRecoveryRequests(fresh, recoverySnapshot, SCRAP_CAMPAIGN_PROFILE),
+        createPreActionRecoveryRequest(
+          recoverySnapshot,
+          this.scene.createScrapCampaignRestAction(),
+          SCRAP_CAMPAIGN_PROFILE,
+        ),
+      ].filter(Boolean);
+      this.visualQaRecoveryRecords = new Map(requests.map((request) => [request.slotId, request]));
       this.scene.setVisualQaScrapGameOverStage(scenario.scrapGameOverStageId);
       this.refreshRecoverySlots();
     }
     this.scene.setVisualQaLocation(scenario);
-    if (scenario.materialEchoDefeats) {
-      this.scene.setVisualQaMaterialEchoDefeats(scenario.materialEchoDefeats);
-    }
     this.resize();
 
     const inputSnapshot = this.createInputSnapshot();
@@ -707,6 +649,9 @@ export class GameApp extends SceneNode {
         active: true,
       });
     }
+    // gameFrame is neutral presentation pre-roll. Restore the authored checkpoint
+    // before user input begins; a later reset would discard dialogue and timeline results.
+    if (frame > 0) this.applyVisualQaCampaignPresentation(scenario);
     for (const segment of scenario.inputTimelineByPhase?.[phase] ?? []) {
       if (!Number.isInteger(segment.frames) || segment.frames < 1) {
         throw new RangeError('Visual QA input timeline frame은 양의 정수여야 합니다.');
@@ -738,22 +683,6 @@ export class GameApp extends SceneNode {
     if (scenario.combatScenarioId)
       this.scene.setVisualQaCombatScenario(scenario.combatScenarioId, phase);
     if (scenario.poseScenarioId) this.scene.setVisualQaPoseScenario(scenario.poseScenarioId);
-    if (scenario.scrapAwakeningStageId) {
-      this.scene.setVisualQaScrapAwakeningStage(scenario.scrapAwakeningStageId);
-    }
-    if (scenario.scrapGarageRevealStageId) {
-      this.scene.setVisualQaScrapGarageRevealStage(scenario.scrapGarageRevealStageId);
-    }
-    for (const scrapRegionState of scenario.scrapRegionStates ??
-      (scenario.scrapRegionState ? [scenario.scrapRegionState] : [])) {
-      this.scene.setVisualQaScrapRegionState(scrapRegionState);
-    }
-    if (scenario.scrapIssueState) {
-      this.scene.setVisualQaScrapIssueState(scenario.scrapIssueState);
-    }
-    if (scenario.scrapFinalBattleStageId) {
-      this.scene.setVisualQaScrapFinalBattleStage(scenario.scrapFinalBattleStageId);
-    }
     const renderFrame = this.scene.createRenderFrame(0);
     const itemIds = renderFrame.items.map((item) => item.id);
     const expectation = Object.freeze({
@@ -1151,6 +1080,7 @@ export class GameApp extends SceneNode {
 
   update(deltaSeconds, inputSnapshot) {
     const uiState = this.uiBridge.snapshot();
+    if (uiState.graphicsReviewOpen) return;
     const active =
       (uiState.screen === GAME_SCREEN.GAME &&
         uiState.debugPanelOpen !== true &&
@@ -1166,6 +1096,7 @@ export class GameApp extends SceneNode {
 
   render(interpolationAlpha) {
     const uiState = this.uiBridge.snapshot();
+    if (uiState.graphicsReviewOpen) return;
     if (uiState.screen === GAME_SCREEN.MENU) return;
     this.scene.createRenderFrame(interpolationAlpha);
   }

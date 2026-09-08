@@ -332,18 +332,12 @@ assert.equal(
   false,
 );
 
-const legacyCampaign = { ...fresh, version: 1 };
-delete legacyCampaign.awakeningStageId;
-delete legacyCampaign.garageRevealStageId;
-const migratedCampaign = toScrapCampaignSnapshot(legacyCampaign, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedCampaign.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
-assert.equal(migratedCampaign.awakeningStageId, SCRAP_AWAKENING_STAGE.COMMISSION);
-assert.equal(migratedCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.LOCKED);
-
-const previousCampaign = { ...awakening.snapshot, version: 2 };
-delete previousCampaign.garageRevealStageId;
-const migratedPreviousCampaign = toScrapCampaignSnapshot(previousCampaign, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedPreviousCampaign.garageRevealStageId, SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY);
+for (let version = 1; version < SCRAP_CAMPAIGN_SCHEMA_VERSION; version += 1) {
+  assert.throws(
+    () => toScrapCampaignSnapshot({ ...fresh, version }, SCRAP_CAMPAIGN_PROFILE),
+    /schema version/,
+  );
+}
 assert.throws(
   () =>
     toScrapCampaignSnapshot(
@@ -898,7 +892,7 @@ assert.equal(harborBothLinksResolvedPreview.successExtensionDays, 3);
 const activeIssueStorage = new MemoryStorage();
 const activeIssuePersistence = new ProgressionStorage(
   activeIssueStorage,
-  'scrap-campaign-active-issue-v9',
+  'scrap-campaign-active-issue',
   ENCHANTMENT_CATALOG,
   null,
   SCRAP_CAMPAIGN_PROFILE,
@@ -1350,74 +1344,6 @@ assert.deepEqual(
   firstFiveReadModel.regions.filter((region) => region.collected).map((region) => region.id),
   ['abandoned-mine', 'harbor-shipyard', 'greenhouse-plains', 'snow-trade-road', 'red-quarry'],
 );
-const versionThreeMine = { ...mineSuccess, version: 3 };
-delete versionThreeMine.regionEventStageIds;
-const migratedVersionThreeMine = toScrapCampaignSnapshot(versionThreeMine, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedVersionThreeMine.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
-assert.equal(
-  migratedVersionThreeMine.regionEventStageIds['abandoned-mine'],
-  'abandoned-mine:campaign-updated',
-  'v3에서 이미 해결된 region은 v5의 최종 campaign-updated stage로 이관되어야 합니다.',
-);
-const versionFourMine = { ...mineSuccess, version: 4 };
-delete versionFourMine.activePrimaryIssueId;
-delete versionFourMine.completedIssueIds;
-const migratedVersionFourMine = toScrapCampaignSnapshot(versionFourMine, SCRAP_CAMPAIGN_PROFILE);
-assert.equal(migratedVersionFourMine.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
-assert.equal(migratedVersionFourMine.activePrimaryIssueId, null);
-assert.deepEqual(migratedVersionFourMine.completedIssueIds, []);
-const versionSixLegacyRegionStatus = {
-  ...fresh,
-  version: 6,
-  regionStates: { ...fresh.regionStates, 'abandoned-mine': ['con', 'voy'].join('') },
-};
-const migratedVersionSixLegacyRegionStatus = toScrapCampaignSnapshot(
-  versionSixLegacyRegionStatus,
-  SCRAP_CAMPAIGN_PROFILE,
-);
-assert.equal(migratedVersionSixLegacyRegionStatus.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
-assert.equal(migratedVersionSixLegacyRegionStatus.regionStates['abandoned-mine'], 'available');
-const versionSixLegacyCompletedRegion = {
-  ...mineSuccess,
-  version: 6,
-  regionStates: { ...mineSuccess.regionStates, 'abandoned-mine': 'recovered' },
-};
-const migratedVersionSixLegacyCompletedRegion = toScrapCampaignSnapshot(
-  versionSixLegacyCompletedRegion,
-  SCRAP_CAMPAIGN_PROFILE,
-);
-assert.equal(migratedVersionSixLegacyCompletedRegion.regionStates['abandoned-mine'], 'resolved');
-assert.equal(
-  migratedVersionSixLegacyCompletedRegion.collectedPartIds.includes(mineProfile.part.id),
-  true,
-);
-const versionSevenFresh = { ...fresh, version: 7 };
-delete versionSevenFresh.clearedEncounterIds;
-const migratedVersionSevenFresh = toScrapCampaignSnapshot(
-  versionSevenFresh,
-  SCRAP_CAMPAIGN_PROFILE,
-);
-assert.equal(migratedVersionSevenFresh.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
-assert.deepEqual(migratedVersionSevenFresh.clearedEncounterIds, []);
-assert.deepEqual(migratedVersionSevenFresh.completedIssueIds, []);
-const versionSevenLegacyCable = {
-  ...fresh,
-  version: 7,
-  activePrimaryIssueId: 'mine-rescue-operation',
-  completedIssueIds: ['mine-harbor-lift-cable'],
-};
-const migratedVersionSevenLegacyCable = toScrapCampaignSnapshot(
-  versionSevenLegacyCable,
-  SCRAP_CAMPAIGN_PROFILE,
-);
-assert.equal(migratedVersionSevenLegacyCable.version, SCRAP_CAMPAIGN_SCHEMA_VERSION);
-assert.deepEqual(migratedVersionSevenLegacyCable.clearedEncounterIds, []);
-assert.equal(
-  migratedVersionSevenLegacyCable.completedIssueIds.includes('mine-harbor-lift-cable'),
-  true,
-  'v7에서 확정된 연결 이슈 완료 이력은 마이그레이션 뒤에도 보존해야 합니다.',
-);
-
 let rivalFirst = fresh;
 for (let index = 0; index < mineProfile.route.rivalArrivalSegment; index += 1) {
   rivalFirst = commit(rivalFirst, {
@@ -1469,7 +1395,7 @@ assert.throws(
 const storageAdapter = new MemoryStorage();
 const persistence = new ProgressionStorage(
   storageAdapter,
-  'scrap-campaign-v9',
+  'scrap-campaign-current',
   ENCHANTMENT_CATALOG,
   null,
   SCRAP_CAMPAIGN_PROFILE,
@@ -1501,20 +1427,20 @@ const loaded = persistence.load(
 assert.equal(loaded.ok, true);
 assert.deepEqual(loaded.snapshot.scrapCampaign, completeCampaign);
 
-const previousRecord = JSON.parse(storageAdapter.value);
-delete previousRecord.scrapCampaign;
-previousRecord.version = 8;
+const previousRecord = { ...JSON.parse(storageAdapter.value), version: 9 };
 storageAdapter.value = JSON.stringify(previousRecord);
-const migrated = persistence.load(
+const incompatible = persistence.load(
   DEFAULT_EQUIPMENT_PROFILE_ID,
   [DEFAULT_EQUIPMENT_PROFILE_ID],
   ENCHANTMENT_CATALOG,
 );
-assert.equal(migrated.ok, true);
-assert.equal(migrated.kind, 'migrated');
+assert.equal(incompatible.ok, false);
+assert.equal(incompatible.reason, 'incompatible-schema');
+assert.match(incompatible.message, /초기화/);
 assert.deepEqual(
-  migrated.snapshot.scrapCampaign,
-  createScrapCampaignSnapshot(SCRAP_CAMPAIGN_PROFILE),
+  JSON.parse(storageAdapter.value),
+  previousRecord,
+  '거부한 개발 저장을 자동으로 덮어쓰지 않는다.',
 );
 
 console.log(
@@ -1524,8 +1450,8 @@ console.log(
     checks: [
       'day1-morning-d30-and-five-region-operation-map',
       'playable-awakening-stage-order-and-d30-reveal',
-      'awakening-repeat-trigger-idempotence-and-v1-migration',
-      'owner-analysis-map-garage-stage-order-and-v2-migration',
+      'awakening-repeat-trigger-idempotence-and-previous-schema-rejection',
+      'owner-analysis-map-garage-stage-order',
       'explicit-route-edges-rival-arrival-and-region-stage-patches',
       'free-actions-zero-cost-and-one-segment-travel',
       'bidirectional-authored-route-and-rival-preview',
@@ -1535,20 +1461,17 @@ console.log(
       'authored-primary-one-linked-two-cross-region-issue-window',
       'linked-issue-completion-from-target-region-interaction-stage-and-order-independent-reconciliation',
       'mine-harbor-greenhouse-and-shipyard-coolant-snow-and-greenhouse-thermal-and-greenhouse-seal-linked-encounter-requirement-and-order-independent-clearance',
-      'active-issue-window-schema-v5-storage-round-trip',
+      'active-issue-window-storage-round-trip',
       'ten-hour-two-hour-region-and-seventy-five-percent-focused-pacing-contract',
       'harbor-thirteen-segment-three-day-detour-and-crane-part',
       'mine-harbor-order-independent-two-part-forty-percent',
       'greenhouse-seventeen-segment-four-day-detour-reactor-and-first-three-sixty-percent',
       'snow-thirteen-segment-three-day-detour-armor-and-first-four-eighty-percent',
       'quarry-twenty-one-segment-five-day-detour-cutter-and-five-part-hundred-percent',
-      'v3-region-stage-and-v4-issue-window-migration-to-v5',
-      'v6-legacy-region-status-migration-to-v7',
-      'v7-linked-encounter-migration-to-v8',
       'rival-progress-does-not-rewrite-region-progress',
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',
-      'schema-v9-round-trip-and-v8-migration',
+      'schema-v10-round-trip-and-explicit-incompatible-reset-notice',
       'awakening-stage-storage-round-trip',
       'garage-reveal-stage-storage-round-trip',
     ],

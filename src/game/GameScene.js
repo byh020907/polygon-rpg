@@ -16,6 +16,12 @@ import {
   samplePlayerCombatGeometry as sampleSharedPlayerCombatGeometry,
 } from '../combat/SharedCombatGeometry.js';
 import { samplePlayerMotionPose } from '../animation/PlayerMotionPose.js';
+import {
+  PLAYER_MOTION_PROFILE,
+  advancePlayerAnimationTime,
+  integratePlayerVerticalVelocity,
+  playerBlockReactionTiming,
+} from '../animation/PlayerMotionProfile.js';
 import { ATTACK_SPATIAL_PROFILES, sizeAttackMotionPose } from '../combat/AttackSpatialProfiles.js';
 import { rollTimelineMarkerAt } from '../animation/RollTimeline.js';
 import { SceneNode } from '../core/SceneNode.js';
@@ -24,16 +30,11 @@ import { INPUT_ACTIONS } from '../input/InputAction.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
 import { createSceneArtDirectionReadModel } from './ScrapArtDirectionProfiles.js';
-import { FirstJourneyProgress } from './encounter/FirstJourneyProgress.js';
-import { RegionExpansionProgress } from './encounter/RegionExpansionProgress.js';
-import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from './journey/FirstJourneyDungeonSignature.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import {
   PROGRESSION_TRANSACTION_REASON,
   assertProgressionSnapshot,
-  awardEnemyEnchantMaterial,
-  awardWeaponForgeMaterial,
-  awardTrainingMarks,
+  awardCampaignEncounterReward,
   createProgressionSnapshot,
   getAvailableGold,
   forgeWeaponArchetype as forgeProgressionWeaponArchetype,
@@ -46,14 +47,9 @@ import {
 } from './progression/ProgressionState.js';
 import {
   ENCHANTMENT_MATERIAL_COSTS,
-  awardEnchantMaterial,
   canonicalizeEnchantmentSnapshot,
 } from './enchantment/EnchantmentState.js';
 import { ROOM_SCENE } from './room/RoomNode.js';
-import {
-  resolveFirstJourneyConversationTranscripts,
-  resolveFirstJourneyStory,
-} from './story/FirstJourneyStory.js';
 import { resolveScrapPrologueConversationTranscripts } from './story/ScrapPrologueStory.js';
 import { resolveScrapRegionConversationTranscripts } from './story/ScrapRegionStory.js';
 import { StoryInteractionOwner } from './story/StoryInteractionOwner.js';
@@ -61,11 +57,6 @@ import {
   createTrainingEnemyItems,
   sampleTrainingEnemyCombatFrame,
 } from './training/TrainingEncounterPresentation.js';
-import {
-  commitWorldAction as commitWorldTimeAction,
-  getWorldClockReadModel,
-  toWorldTimeSnapshot,
-} from './world/WorldTimeState.js';
 import {
   advanceScrapGarageReveal,
   advanceScrapAwakening,
@@ -106,27 +97,14 @@ import {
   getScrapFinalBattleCombatProfile,
   resolveScrapFinalBattleCombatContact,
 } from './campaign/ScrapFinalBattleCombat.js';
-import { SCRAPYARD_REST_ENTITY_ID } from './maps/scrapAwakening.js';
 
-const CHARACTER_SPEED = 230;
-const JUMP_SPEED = 470;
-const GRAVITY = 1180;
-const ROLL_DURATION_SECONDS = combatFramesToSeconds(25);
-const ROLL_SPEED = 320;
-const LANDING_RECOVERY_SECONDS = combatFramesToSeconds(8);
-const ACADEMY_ROOM_IDS = Object.freeze([
-  'academy-plaza',
-  'academy-weapon-shop',
-  'academy-enchanter-shop',
-]);
-
-function isAcademyRoom(roomId) {
-  return ACADEMY_ROOM_IDS.includes(roomId);
-}
-
+const CHARACTER_SPEED = PLAYER_MOTION_PROFILE.movementSpeed;
+const JUMP_SPEED = PLAYER_MOTION_PROFILE.jumpSpeed;
+const ROLL_DURATION_SECONDS = combatFramesToSeconds(PLAYER_MOTION_PROFILE.rollFrames);
+const ROLL_SPEED = PLAYER_MOTION_PROFILE.rollSpeed;
+const LANDING_RECOVERY_SECONDS = combatFramesToSeconds(PLAYER_MOTION_PROFILE.landingFrames);
 function resolveConversationTranscripts(viewedConversationIds) {
   return Object.freeze([
-    ...resolveFirstJourneyConversationTranscripts(viewedConversationIds),
     ...resolveScrapPrologueConversationTranscripts(viewedConversationIds),
     ...resolveScrapRegionConversationTranscripts(viewedConversationIds),
   ]);
@@ -298,7 +276,6 @@ function assertCombatProgressionProfile(profile) {
   const weaponForge = profile?.weaponForge;
   if (
     !profile ||
-    !Number.isInteger(profile.trainingClearReward) ||
     !Number.isInteger(profile.maxSkillLevel) ||
     typeof profile.getSkillLevelProfile !== 'function' ||
     typeof profile.getSkillUpgradeCost !== 'function' ||
@@ -331,17 +308,6 @@ function assertEncounterAttackProfiles(profiles) {
   return profiles;
 }
 
-function assertWorldTimeProfile(profile) {
-  if (
-    !profile ||
-    typeof profile.getTravelAction !== 'function' ||
-    typeof profile.getCoreEventAction !== 'function'
-  ) {
-    throw new TypeError('GameScene에는 authored world time profile 주입이 필요합니다.');
-  }
-  return profile;
-}
-
 function assertScrapCampaignProfile(profile) {
   if (
     !profile ||
@@ -363,6 +329,7 @@ function assertScrapAwakeningProfile(profile) {
     typeof profile.roomId !== 'string' ||
     typeof profile.deviceEntityId !== 'string' ||
     typeof profile.ownerEntityId !== 'string' ||
+    typeof profile.restEntityId !== 'string' ||
     typeof profile.ownerConversationId !== 'string' ||
     typeof profile.wallMapEntityId !== 'string' ||
     !Number.isFinite(profile.focusX) ||
@@ -442,7 +409,6 @@ export class GameScene extends SceneNode {
     combatProgressionProfile,
     encounterFactory,
     encounterAttackProfiles,
-    worldTimeProfile,
     scrapCampaignProfile,
     scrapAwakeningProfile,
     characterPresentationCatalog,
@@ -458,7 +424,6 @@ export class GameScene extends SceneNode {
     this.combatProgressionProfile = assertCombatProgressionProfile(combatProgressionProfile);
     this.encounterFactory = assertEncounterFactory(encounterFactory);
     this.encounterAttackProfiles = assertEncounterAttackProfiles(encounterAttackProfiles);
-    this.worldTimeProfile = assertWorldTimeProfile(worldTimeProfile);
     this.scrapCampaignProfile = assertScrapCampaignProfile(scrapCampaignProfile);
     this.scrapAwakeningProfile = assertScrapAwakeningProfile(scrapAwakeningProfile);
     this.characterPresentationCatalog = assertCharacterPresentationCatalog(
@@ -495,11 +460,6 @@ export class GameScene extends SceneNode {
     });
     this.combatCameraFeedback = new CombatCameraFeedback();
     this.combatEvents = new CombatEventBuffer();
-    this.journeyProgress = new FirstJourneyProgress(this.progressionSnapshot.firstJourney);
-    this.regionExpansionProgress = new RegionExpansionProgress(
-      this.progressionSnapshot.regionExpansion,
-    );
-    this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
     this.storyInteractionOwner = new StoryInteractionOwner();
     this.scrapFinalBattleCombat = createScrapFinalBattleCombatState(
       this.progressionSnapshot.scrapCampaign.finalBattleStageId,
@@ -511,14 +471,8 @@ export class GameScene extends SceneNode {
     );
     this.mapRuntime = new MapRuntime(mapDefinition, {
       worldContext: {
-        timePhase: 'day',
-        deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
-        crisis: this.worldTimeSnapshot.crisis,
+        timePhase: initialScrapCampaign.phaseId === 'night' ? 'night' : 'day',
         weather: 'clear',
-        storyFlags: {
-          ...this.journeyProgress.snapshot().storyFlags,
-          ...this.regionExpansionProgress.snapshot().storyFlags,
-        },
         ...scrapCampaignWorldFacts(initialScrapCampaign),
       },
     });
@@ -578,14 +532,8 @@ export class GameScene extends SceneNode {
       ),
     });
     const nextEquipment = this.equipmentCatalog.getProfile(nextSnapshot.equippedEquipmentId);
-    const nextJourney = new FirstJourneyProgress(nextSnapshot.firstJourney);
-    const nextRegionExpansion = new RegionExpansionProgress(nextSnapshot.regionExpansion);
-
     this.progressionSnapshot = nextSnapshot;
     this.equipmentProfile = nextEquipment;
-    this.journeyProgress = nextJourney;
-    this.regionExpansionProgress = nextRegionExpansion;
-    this.worldTimeSnapshot = toWorldTimeSnapshot(nextSnapshot.worldTime);
     this.reset();
     return this.progressionSnapshot;
   }
@@ -600,25 +548,16 @@ export class GameScene extends SceneNode {
   }
 
   reset() {
-    const journey = this.journeyProgress.restore(this.progressionSnapshot.firstJourney);
-    const regionExpansion = this.regionExpansionProgress.restore(
-      this.progressionSnapshot.regionExpansion,
-    );
-    this.worldTimeSnapshot = toWorldTimeSnapshot(this.progressionSnapshot.worldTime);
-    this.reconcileEnchantMaterials();
-    this.reconcileWeaponForgeMaterial();
-    this.timePhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
     const scrapCampaign = getScrapCampaignReadModel(
       this.progressionSnapshot.scrapCampaign,
       this.scrapCampaignProfile,
     );
+    this.visualQaTimePhase = null;
+    this.timePhase = scrapCampaign.phaseId === 'night' ? 'night' : 'day';
     this.scrapGameOverPresentationState = createScrapGameOverPresentation(scrapCampaign.gameOver);
     this.mapRuntime.setWorldContext({
       timePhase: this.timePhase,
-      deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
-      crisis: this.worldTimeSnapshot.crisis,
       weather: 'clear',
-      storyFlags: { ...journey.storyFlags, ...regionExpansion.storyFlags },
       ...scrapCampaignWorldFacts(scrapCampaign),
     });
     let mapSnapshot = this.mapRuntime.reset();
@@ -649,7 +588,7 @@ export class GameScene extends SceneNode {
     this.movementIntent = 0;
     this.rollState = null;
     this.hitStopSeconds = 0;
-    this.playerMaxHealth = journey.fieldWardActive ? 120 : 100;
+    this.playerMaxHealth = 100;
     this.playerHealth = this.playerMaxHealth;
     this.playerHitstunSeconds = 0;
     this.playerInvulnerableSeconds = 0;
@@ -667,7 +606,7 @@ export class GameScene extends SceneNode {
     this.airHeavyConnectedSequence = 0;
     this.playerWeaponContactHistory = [];
     this.playerCombatGeometry = null;
-    this.progressionNotice = `훈련 인장은 학습 조건, 원정 Gold는 장비·command 성장 비용입니다.`;
+    this.progressionNotice = '고철 장비와 회수 재료로 전투 선택을 넓히세요.';
     this.recoveryNotice = '';
     this.postKoHeldInputFence = new Set();
     this.scrapAwakeningElapsedSeconds = 0;
@@ -1390,22 +1329,6 @@ export class GameScene extends SceneNode {
     this.statusNode.publish({ force: true });
   }
 
-  setVisualQaMaterialEchoDefeats(defeats) {
-    if (!Number.isInteger(defeats) || defeats < 1 || defeats > 62) {
-      throw new RangeError('Material echo Visual QA 격파 횟수는 1~62 정수여야 합니다.');
-    }
-    const encounter = this.roomSceneNode?.encounter;
-    if (!encounter?.getGameplaySnapshot()?.materialReward) {
-      throw new Error('Material echo Visual QA에는 material reward encounter가 필요합니다.');
-    }
-    for (let count = 0; count < defeats; count += 1) {
-      encounter.completeForVisualQa();
-      if (count + 1 < defeats) encounter.reset();
-    }
-    this.statusNode.publish({ force: true });
-    return this.progressionSnapshot;
-  }
-
   setVisualQaPoseScenario(scenarioId) {
     const groundY = this.mapRuntime.getActiveRoom().groundY;
     this.position = { x: this.position.x, y: groundY - CHARACTER_FOOT_OFFSET };
@@ -1456,57 +1379,25 @@ export class GameScene extends SceneNode {
   }
 
   toggleTimePhase() {
-    const current = getWorldClockReadModel(this.worldTimeSnapshot);
-    this.worldTimeSnapshot = toWorldTimeSnapshot({
-      ...this.worldTimeSnapshot,
-      clockMinutes:
-        this.worldTimeSnapshot.clockMinutes -
-        current.hour * 60 -
-        current.minute +
-        (this.timePhase === 'night' ? 10 * 60 : 21 * 60),
-    });
-    this.updateTimePhase();
-    const status = this.getWorldStatus();
-    this.statusNode.publish({ force: true });
-    return status;
+    return this.setVisualQaTimePhase(this.timePhase === 'night' ? 'day' : 'night');
   }
 
   setVisualQaTimePhase(timePhase) {
     if (timePhase !== 'day' && timePhase !== 'night') {
       throw new Error(`지원하지 않는 Visual QA time phase입니다: ${timePhase}`);
     }
-    const current = getWorldClockReadModel(this.worldTimeSnapshot);
-    this.worldTimeSnapshot = toWorldTimeSnapshot({
-      ...this.worldTimeSnapshot,
-      clockMinutes:
-        this.worldTimeSnapshot.clockMinutes -
-        current.hour * 60 -
-        current.minute +
-        (timePhase === 'night' ? 21 * 60 : 10 * 60),
-    });
+    this.visualQaTimePhase = timePhase;
     this.updateTimePhase();
     this.statusNode.publish({ force: true });
     return this.getWorldStatus();
   }
 
   updateTimePhase() {
-    const nextPhase = getWorldClockReadModel(this.worldTimeSnapshot).timePhase;
+    const campaign = this.getScrapAwakeningReadModel();
+    const nextPhase = this.visualQaTimePhase ?? (campaign.phaseId === 'night' ? 'night' : 'day');
     if (nextPhase === this.timePhase) return;
     this.timePhase = nextPhase;
-    this.mapRuntime.setWorldContext({
-      ...this.mapRuntime.getWorldContext(),
-      timePhase: nextPhase,
-    });
-  }
-
-  syncJourneyWorldContext() {
-    this.mapRuntime.setWorldContext({
-      ...this.mapRuntime.getWorldContext(),
-      storyFlags: {
-        ...this.journeyProgress.snapshot().storyFlags,
-        ...this.regionExpansionProgress.snapshot().storyFlags,
-      },
-    });
+    this.mapRuntime.setWorldContext({ ...this.mapRuntime.getWorldContext(), timePhase: nextPhase });
   }
 
   getScrapAwakeningReadModel() {
@@ -1526,6 +1417,7 @@ export class GameScene extends SceneNode {
   }
 
   syncScrapAwakeningWorldContext() {
+    this.updateTimePhase();
     const campaign = this.getScrapAwakeningReadModel();
     const before = this.mapRuntime.getResolvedSnapshot();
     const combatEntityIds = (snapshot) =>
@@ -1548,14 +1440,14 @@ export class GameScene extends SceneNode {
     }
   }
 
-  commitScrapAwakening(transaction) {
+  commitScrapAwakening(transaction, encounterResult = null) {
     if (!transaction.changed) return transaction;
-    const progressionTransaction = Object.freeze({
-      ...transaction,
-      snapshot: mergeProgressionSnapshot(this.progressionSnapshot, {
-        scrapCampaign: transaction.snapshot,
-      }),
+    const next = mergeProgressionSnapshot(this.progressionSnapshot, {
+      scrapCampaign: transaction.snapshot,
     });
+    const reward = this.resolveEncounterReward(next, encounterResult);
+    const progressionTransaction = Object.freeze({ ...transaction, snapshot: reward.snapshot });
+    if (reward.changed) this.progressionNotice = reward.rewardLabel;
     this.scrapAwakeningElapsedSeconds = 0;
     this.commitProgression(progressionTransaction);
     this.syncScrapAwakeningWorldContext();
@@ -1725,7 +1617,7 @@ export class GameScene extends SceneNode {
     if (!this.isScrapAwakeningLocation() || !campaign.garageRevealComplete) return false;
     const restSpot = this.mapRuntime
       .getResolvedSnapshot()
-      .entities.find((entity) => entity.id === SCRAPYARD_REST_ENTITY_ID);
+      .entities.find((entity) => entity.id === this.scrapAwakeningProfile.restEntityId);
     if (!restSpot?.position) return false;
     const interactionRange = restSpot.interactionRange ?? 64;
     if (
@@ -1873,18 +1765,21 @@ export class GameScene extends SceneNode {
     });
   }
 
-  commitScrapCampaignDomainAction(action) {
+  commitScrapCampaignDomainAction(action, encounterResult = null) {
     const transaction = commitScrapCampaignAction(
       this.progressionSnapshot.scrapCampaign,
       action,
       this.scrapCampaignProfile,
     );
     if (!transaction.changed) return transaction;
-    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
+    const next = mergeProgressionSnapshot(this.progressionSnapshot, {
       scrapCampaign: transaction.snapshot,
     });
+    const reward = this.resolveEncounterReward(next, encounterResult);
+    this.progressionSnapshot = reward.snapshot;
     if (transaction.snapshot.gameOver) this.beginScrapGameOverPresentation();
     this.progressionNotice = `${transaction.preview.label} · ${transaction.preview.after.phaseLabel} · ${transaction.preview.after.deadlineLabel}`;
+    if (reward.changed) this.progressionNotice = reward.rewardLabel;
     this.syncScrapAwakeningWorldContext();
     this.emitDurableProgressionChanged();
     this.statusNode.publish({ force: true });
@@ -2028,32 +1923,8 @@ export class GameScene extends SceneNode {
   }
 
   emitDurableProgressionChanged() {
-    this.progressionSnapshot = mergeProgressionSnapshot(this.progressionSnapshot, {
-      firstJourney: this.journeyProgress.persistenceSnapshot(),
-      regionExpansion: this.regionExpansionProgress.persistenceSnapshot(),
-      worldTime: this.worldTimeSnapshot,
-    });
     this.progressionChanged.emit(this.progressionSnapshot);
     return this.progressionSnapshot;
-  }
-
-  applyWorldAction(actionId, action, { repeatable = action?.repeatable === true } = {}) {
-    if (!action) return Object.freeze({ changed: false, snapshot: this.worldTimeSnapshot });
-    const transaction = commitWorldTimeAction(this.worldTimeSnapshot, {
-      actionId,
-      ...action,
-      repeatable,
-    });
-    if (!transaction.changed) return transaction;
-    this.worldTimeSnapshot = transaction.snapshot;
-    this.updateTimePhase();
-    this.mapRuntime.setWorldContext({
-      ...this.mapRuntime.getWorldContext(),
-      deadlineMinutes: this.worldTimeSnapshot.deadlineMinutes,
-      crisis: this.worldTimeSnapshot.crisis,
-    });
-    this.progressionNotice = `${action.label} · World Clock ${action.clockCostMinutes}분 · Deadline ${this.worldTimeSnapshot.deadlineMinutes}분`;
-    return transaction;
   }
 
   canStartPortalTransition() {
@@ -2177,23 +2048,12 @@ export class GameScene extends SceneNode {
     };
 
     if (!completion) return true;
-    let journeyTransition;
-    let regionExpansionTransition;
-    let travelTransaction;
     let campaignTransaction = Object.freeze({ changed: false });
     try {
       this.replaceRoomScene(this.mapRuntime.getResolvedSnapshot());
       this.position = { ...completion.position };
       this.cameraPosition = { ...presentation.destinationCameraPosition };
       this.storyInteractionOwner.reset();
-      journeyTransition = this.journeyProgress.recordPortal(completion.portalId);
-      regionExpansionTransition = this.regionExpansionProgress.recordPortal(completion.portalId);
-      const travelAction = this.worldTimeProfile.getTravelAction(completion.travelSegmentId);
-      travelTransaction = this.applyWorldAction(
-        `travel:${completion.travelSegmentId ?? completion.portalId}`,
-        travelAction,
-        { repeatable: true },
-      );
       if (presentation.campaignAction) {
         campaignTransaction = commitScrapCampaignAction(
           this.progressionSnapshot.scrapCampaign,
@@ -2213,14 +2073,8 @@ export class GameScene extends SceneNode {
       return true;
     }
     this.portalTransitionPresentation = null;
-    if (
-      journeyTransition.changed ||
-      regionExpansionTransition.changed ||
-      travelTransaction.changed ||
-      campaignTransaction.changed
-    ) {
-      this.syncJourneyWorldContext();
-      if (campaignTransaction.changed) this.syncScrapAwakeningWorldContext();
+    if (campaignTransaction.changed) {
+      this.syncScrapAwakeningWorldContext();
       this.emitDurableProgressionChanged();
       this.statusNode.publish({ force: true });
     }
@@ -2280,50 +2134,12 @@ export class GameScene extends SceneNode {
   canManageProgression() {
     const location = this.mapRuntime.getActiveLocation();
     return (
-      isAcademyRoom(location.roomId) &&
+      location.roomId === this.scrapAwakeningProfile.roomId &&
+      this.getScrapAwakeningReadModel().garageRevealComplete &&
+      !this.getScrapAwakeningReadModel().gameOver &&
       !this.mapRuntime.getTransition() &&
       this.combatCommands.snapshot().id === 'idle'
     );
-  }
-
-  reconcileEnchantMaterials() {
-    const journey = this.journeyProgress.snapshot();
-    const region = this.regionExpansionProgress.snapshot();
-    let snapshot = this.progressionSnapshot;
-    for (const profile of this.enchantmentCatalog.profiles) {
-      const sourceReady =
-        (profile.sourceId === 'field-guardian-defeated' && journey.fieldGuardianDefeated) ||
-        (profile.sourceId === 'dungeon-guardian-defeated' && journey.dungeonGuardianDefeated) ||
-        (profile.sourceId === 'boss-reward-claimed' && journey.bossRewardClaimed) ||
-        (profile.sourceId === 'glasswind-reward-claimed' && region.bossRewardClaimed);
-      if (sourceReady) {
-        const material = awardEnchantMaterial(
-          snapshot.enchantment,
-          profile,
-          this.enchantmentCatalog,
-          snapshot.ownedEquipmentIds,
-        );
-        if (material.changed)
-          snapshot = mergeProgressionSnapshot(snapshot, { enchantment: material.enchantment });
-      }
-    }
-    if (snapshot !== this.progressionSnapshot) this.progressionSnapshot = snapshot;
-    return snapshot;
-  }
-
-  reconcileWeaponForgeMaterial() {
-    const forgeProfile = this.combatProgressionProfile.weaponForge;
-    const journey = this.journeyProgress.snapshot();
-    const sourceReady =
-      forgeProfile.sourceId === 'first-journey-boss-reward' && journey.bossRewardClaimed;
-    if (!sourceReady) return this.progressionSnapshot;
-    const transaction = awardWeaponForgeMaterial(this.progressionSnapshot, {
-      sourceId: forgeProfile.sourceId,
-      materialId: forgeProfile.materialId,
-      quantity: forgeProfile.sourceQuantity,
-    });
-    if (transaction.changed) this.progressionSnapshot = transaction.snapshot;
-    return this.progressionSnapshot;
   }
 
   resolveDialogueStatus() {
@@ -2337,22 +2153,12 @@ export class GameScene extends SceneNode {
       progression.weaponForge.selectedProfileIdsByGroup[forgeProfile.choiceGroupId] ?? null;
     const forgeMaterialQuantity =
       progression.weaponForge.materialQuantities[forgeProfile.materialId] ?? 0;
-    const hasForgeCommands = dialogue.commands.some(
-      (command) => command.type === 'forge-weapon-archetype',
+    const visibleCommands = dialogue.commands.filter(
+      (command) =>
+        command.type !== 'forge-weapon-archetype' ||
+        selectedArchetypeId === null ||
+        command.profileId === selectedArchetypeId,
     );
-    const forgeDecisionReady =
-      hasForgeCommands &&
-      selectedArchetypeId === null &&
-      forgeMaterialQuantity >= forgeProfile.materialCost;
-    const visibleCommands = !hasForgeCommands
-      ? dialogue.commands
-      : forgeDecisionReady
-        ? dialogue.commands.filter((command) => command.type === 'forge-weapon-archetype')
-        : dialogue.commands.filter(
-            (command) =>
-              command.type !== 'forge-weapon-archetype' ||
-              command.profileId === selectedArchetypeId,
-          );
     const commands = visibleCommands.map((command) => {
       if (command.type === 'upgrade-sword-enchantment') {
         const profile = this.enchantmentCatalog.getProfile(command.enchantId);
@@ -2444,6 +2250,17 @@ export class GameScene extends SceneNode {
                 : `${forgeProfile.materialLabel} 필요`,
         });
       }
+      if (command.type === 'train-combat-skill') {
+        const skill = this.getCombatSkillReadModel();
+        return Object.freeze({
+          ...command,
+          label: '전투 수련',
+          description: skill.description,
+          active: false,
+          canChoose: skill.canTrain,
+          actionLabel: skill.actionLabel,
+        });
+      }
       if (command.type === 'replay-transcript') {
         return Object.freeze({
           ...command,
@@ -2479,6 +2296,7 @@ export class GameScene extends SceneNode {
     if (!this.canManageProgression()) {
       return this.unavailableProgressionTransaction();
     }
+    if (command.type === 'train-combat-skill') return this.trainCombatSkill();
     if (command.type === 'manage-sword') {
       return this.manageMerchantSword(command.profileId);
     }
@@ -2622,8 +2440,6 @@ export class GameScene extends SceneNode {
     this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
     this.equipmentProfile = nextEquipment;
     if (equipmentChanged || skillChanged) this.prepareAttackSpatialProfiles();
-    this.journeyProgress.restore(nextSnapshot.firstJourney);
-    this.regionExpansionProgress.restore(nextSnapshot.regionExpansion);
     this.progressionChanged.emit(this.progressionSnapshot);
     this.statusNode.publish({ force: true });
     return transaction;
@@ -2852,12 +2668,23 @@ export class GameScene extends SceneNode {
         this.combatCameraFeedback.trigger(feedback),
       ),
       this.connectTo(roomScene.encounterCompleted, (result) =>
-        this.resolveJourneyEncounter(result),
+        this.resolveCampaignEncounter(result),
       ),
     ];
   }
 
-  resolveJourneyEncounter(result) {
+  resolveEncounterReward(snapshot, result) {
+    if (!result) return Object.freeze({ changed: false, snapshot });
+    return awardCampaignEncounterReward(
+      snapshot,
+      result,
+      this.combatProgressionProfile,
+      this.enchantmentCatalog,
+      this.scrapCampaignProfile,
+    );
+  }
+
+  resolveCampaignEncounter(result) {
     if (result.scrapAwakeningNextStageId) {
       assertScrapAwakeningStageId(result.scrapAwakeningNextStageId);
       const transaction = advanceScrapAwakening(
@@ -2870,6 +2697,8 @@ export class GameScene extends SceneNode {
       ) {
         return Object.freeze({
           ...transaction,
+          changed: false,
+          snapshot: this.progressionSnapshot.scrapCampaign,
           kind: 'scrap-awakening-combat-stage-rejected',
           entityId: result.entityId,
         });
@@ -2877,7 +2706,7 @@ export class GameScene extends SceneNode {
       this.progressionNotice = getScrapAwakeningPresentation(
         transaction.snapshot.awakeningStageId,
       ).cue;
-      this.commitScrapAwakening(transaction);
+      this.commitScrapAwakening(transaction, result);
       return Object.freeze({
         ...transaction,
         kind: 'scrap-awakening-combat-stage',
@@ -2892,7 +2721,7 @@ export class GameScene extends SceneNode {
         result.linkedEncounterId,
         result.entityId,
       );
-      const transaction = this.commitScrapCampaignDomainAction(action);
+      const transaction = this.commitScrapCampaignDomainAction(action, result);
       return Object.freeze({
         ...transaction,
         kind: 'scrap-campaign-linked-encounter',
@@ -2905,7 +2734,7 @@ export class GameScene extends SceneNode {
         result.campaignProgress.regionId,
         result.campaignProgress.stageKind,
       );
-      const transaction = this.commitScrapCampaignDomainAction(action);
+      const transaction = this.commitScrapCampaignDomainAction(action, result);
       return Object.freeze({
         ...transaction,
         kind: 'scrap-campaign-region-stage',
@@ -2913,131 +2742,12 @@ export class GameScene extends SceneNode {
         stageKind: result.campaignProgress.stageKind,
       });
     }
-    if (result.profileId === 'training') {
-      const reward = this.combatProgressionProfile.trainingClearReward;
-      const transaction = awardTrainingMarks(this.progressionSnapshot, reward);
-      this.progressionNotice = `훈련 골렘 격파 · 인장 +${reward}`;
-      this.commitProgression(transaction);
-      const timeTransaction = this.applyWorldAction(
-        'event:training-cleared',
-        this.worldTimeProfile.getCoreEventAction('training-cleared'),
-        { repeatable: true },
-      );
-      if (timeTransaction.changed) {
-        this.emitDurableProgressionChanged();
-        this.statusNode.publish({ force: true });
-      }
-      return Object.freeze({
-        changed: true,
-        kind: 'training-cleared',
-        reward,
-        snapshot: transaction.snapshot,
-      });
+    const reward = this.resolveEncounterReward(this.progressionSnapshot, result);
+    if (reward.changed) {
+      this.progressionNotice = reward.rewardLabel;
+      this.commitProgression(reward);
     }
-    if (result.materialReward) {
-      const transaction = awardEnemyEnchantMaterial(
-        this.progressionSnapshot,
-        result.materialReward,
-        this.enchantmentCatalog,
-      );
-      this.progressionSnapshot = transaction.snapshot;
-      this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
-      this.applyWorldAction(
-        'event:material-echo-defeated',
-        this.worldTimeProfile.getCoreEventAction('material-echo-defeated'),
-        { repeatable: true },
-      );
-      this.progressionNotice = `${transaction.materialLabel} 확정 +${transaction.quantity} · 보유 ${transaction.totalQuantity}`;
-      this.emitDurableProgressionChanged();
-      this.statusNode.publish({ force: true });
-      return Object.freeze({
-        ...transaction,
-        kind: 'material-echo-defeated',
-        profileId: result.profileId,
-        entityId: result.entityId,
-        snapshot: this.progressionSnapshot,
-      });
-    }
-    const regionExpansionEncounter = result.profileId.startsWith('glasswind-');
-    const resolution = regionExpansionEncounter
-      ? this.regionExpansionProgress.resolveEncounter(result.profileId)
-      : this.journeyProgress.resolveEncounter(result.profileId, result.entityId);
-    if (!resolution.changed) return resolution;
-    if (resolution.kind === 'field-guardian-defeated') {
-      this.playerMaxHealth += resolution.maxHealthBonus;
-      this.playerHealth = Math.min(
-        this.playerMaxHealth,
-        this.playerHealth + resolution.maxHealthBonus,
-      );
-    }
-    this.applyWorldAction(
-      `event:${resolution.kind}`,
-      this.worldTimeProfile.getCoreEventAction(resolution.kind),
-    );
-    this.syncJourneyWorldContext();
-    this.reconcileEnchantMaterials();
-    this.reconcileWeaponForgeMaterial();
-    this.emitDurableProgressionChanged();
-    this.statusNode.publish({ force: true });
-    return resolution;
-  }
-
-  updateJourneyTriggers() {
-    const snapshot = this.mapRuntime.getResolvedSnapshot();
-    for (const trigger of snapshot.triggers ?? []) {
-      const radius = Number.isFinite(trigger.radius) ? trigger.radius : 48;
-      const distance = Math.hypot(
-        this.position.x - trigger.position.x,
-        this.position.y + CHARACTER_FOOT_OFFSET - trigger.position.y,
-      );
-      if (distance > radius) continue;
-
-      if (trigger.kind === 'checkpoint') {
-        const result = this.journeyProgress.activateCheckpoint(trigger.qualifiedId);
-        if (!result.changed) continue;
-        this.playerHealth = this.playerMaxHealth;
-        this.syncJourneyWorldContext();
-        this.emitDurableProgressionChanged();
-        this.statusNode.publish({ force: true });
-      }
-
-      if (trigger.kind === 'boss-reward') {
-        const result = this.journeyProgress.claimBossReward(trigger.gold);
-        if (!result.changed) continue;
-        this.syncJourneyWorldContext();
-        this.reconcileEnchantMaterials();
-        this.reconcileWeaponForgeMaterial();
-        this.emitDurableProgressionChanged();
-        this.statusNode.publish({ force: true });
-      }
-
-      if (trigger.kind === 'dungeon-signature-stage') {
-        const result = this.journeyProgress.recordDungeonSignatureStage(trigger.stageId);
-        if (!result.changed) continue;
-        this.syncJourneyWorldContext();
-        this.emitDurableProgressionChanged();
-        this.statusNode.publish({ force: true });
-      }
-
-      if (trigger.kind === 'glasswind-checkpoint') {
-        const result = this.regionExpansionProgress.activateCheckpoint(trigger.qualifiedId);
-        if (!result.changed) continue;
-        this.playerHealth = this.playerMaxHealth;
-        this.syncJourneyWorldContext();
-        this.emitDurableProgressionChanged();
-        this.statusNode.publish({ force: true });
-      }
-
-      if (trigger.kind === 'glasswind-boss-reward') {
-        const result = this.regionExpansionProgress.claimBossReward(trigger.gold);
-        if (!result.changed) continue;
-        this.syncJourneyWorldContext();
-        this.reconcileEnchantMaterials();
-        this.reconcileWeaponForgeMaterial();
-        this.emitDurableProgressionChanged();
-        this.statusNode.publish({ force: true });
-      }
-    }
+    return reward;
   }
 
   respawnPlayerAfterKo(inputSnapshot = {}) {
@@ -3045,35 +2755,13 @@ export class GameScene extends SceneNode {
       this.createScrapCampaignKoReturnAction(),
     );
     if (!campaignTransaction.changed || campaignTransaction.snapshot.gameOver) return;
-    const journey = this.journeyProgress.snapshot();
-    const regionExpansion = this.regionExpansionProgress.snapshot();
-    const activeRegionId = this.mapRuntime.getActiveLocation().regionId;
-    const checkpointId =
-      activeRegionId === 'glasswind-region'
-        ? regionExpansion.checkpointActivated
-          ? regionExpansion.checkpointId
-          : null
-        : journey.checkpointActivated
-          ? journey.checkpointId
-          : null;
-    const checkpoint = this.mapRuntime.getTriggerLocation(checkpointId);
-    if (checkpoint) {
-      const mapSnapshot = this.mapRuntime.setActiveLocation(checkpoint.regionId, checkpoint.roomId);
-      this.replaceRoomScene(mapSnapshot, { forceReplace: true });
-      this.position = {
-        x: checkpoint.position.x,
-        y: checkpoint.position.y - CHARACTER_FOOT_OFFSET,
-      };
-      this.cameraPosition = { ...mapSnapshot.cameraPosition };
-    } else {
-      const activeRoom = this.mapRuntime.getActiveRoom();
-      const respawnX = (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140;
-      this.position = {
-        x: respawnX,
-        y: this.mapRuntime.getGroundYAt(respawnX) - CHARACTER_FOOT_OFFSET,
-      };
-      this.roomSceneNode?.resetEncounter();
-    }
+    const activeRoom = this.mapRuntime.getActiveRoom();
+    const respawnX = (activeRoom.movementBounds?.minX ?? activeRoom.bounds.x) + 140;
+    this.position = {
+      x: respawnX,
+      y: this.mapRuntime.getGroundYAt(respawnX) - CHARACTER_FOOT_OFFSET,
+    };
+    this.roomSceneNode?.resetEncounter();
     this.previousPosition = { ...this.position };
     this.previousCameraPosition = { ...this.cameraPosition };
     this.playerHealth = this.playerMaxHealth;
@@ -3122,12 +2810,13 @@ export class GameScene extends SceneNode {
         staminaDamage: result.guardStaminaDamage,
         justGuardEligible: result.justGuardEligible,
       });
+      const reactionTiming = playerBlockReactionTiming(
+        { blockStrength: result.blockImpactStrength, blockstunSeconds: result.blockstunSeconds },
+        this.equipmentProfile.guard,
+      );
       this.playerBlockImpactSeconds = staminaResult.justGuard ? 0.18 : result.blockImpactSeconds;
-      this.playerBlockImpactStrength = staminaResult.justGuard
-        ? 1.8
-        : result.blockImpactStrength * this.equipmentProfile.guard.impactScale;
-      const authoredBlockstunSeconds =
-        result.blockstunSeconds * this.equipmentProfile.guard.blockstunScale;
+      this.playerBlockImpactStrength = staminaResult.justGuard ? 1.8 : reactionTiming.blockStrength;
+      const authoredBlockstunSeconds = reactionTiming.durationSeconds;
       const blockstunSeconds = staminaResult.justGuard
         ? 0
         : staminaResult.broken
@@ -3148,7 +2837,7 @@ export class GameScene extends SceneNode {
           direction: result.contactDirection ?? this.facing,
           strength: 2,
           staminaDelta: staminaResult.recovery,
-          durationSeconds: 0.2,
+          durationSeconds: PLAYER_MOTION_PROFILE.justGuardEventSeconds,
         });
       }
       if (staminaResult.broken) this.rollState = null;
@@ -3252,7 +2941,7 @@ export class GameScene extends SceneNode {
           isGrounded: this.isGrounded,
           verticalVelocity: this.verticalVelocity,
           landingRecovery: this.landingRecoverySeconds / LANDING_RECOVERY_SECONDS,
-          hitstunProgress: this.playerHitstunSeconds / 0.22,
+          hitstunProgress: this.playerHitstunSeconds / PLAYER_MOTION_PROFILE.hitReactionSeconds,
           blockstunProgress:
             this.playerBlockstunDurationSeconds > 0
               ? this.playerBlockstunSeconds / this.playerBlockstunDurationSeconds
@@ -3479,7 +3168,13 @@ export class GameScene extends SceneNode {
       !wallMapConsumed &&
       !restConsumed &&
       this.tryPortalTransition();
-    if (this.mapRuntime.getTransition() === null && guardEdge) this.tryStartRoll(horizontal);
+    if (
+      !portalStarted &&
+      !this.pendingScrapCampaignAction &&
+      this.mapRuntime.getTransition() === null &&
+      guardEdge
+    )
+      this.tryStartRoll(horizontal);
     const isTransitioning = this.mapRuntime.getTransition() !== null;
     const isRolling = this.rollState !== null;
     const currentCombatState = this.combatCommands.snapshot();
@@ -3507,6 +3202,8 @@ export class GameScene extends SceneNode {
       {
         acceptCommands:
           !isTransitioning &&
+          !portalStarted &&
+          !this.pendingScrapCampaignAction &&
           !isRolling &&
           !controlsLocked &&
           !storyBlocksGameplay &&
@@ -3544,9 +3241,15 @@ export class GameScene extends SceneNode {
     if (Number.isSafeInteger(jumpSequence)) this.lastJumpSequence = jumpSequence;
     if (isTransitioning) {
       this.updatePortalTransition(deltaSeconds);
-      this.animationTime += deltaSeconds * animationSpeed * 0.35;
+      this.animationTime = advancePlayerAnimationTime(
+        this.animationTime,
+        deltaSeconds,
+        { transitioning: true },
+        animationSpeed,
+      );
       return;
     }
+    if (this.pendingScrapCampaignAction) return;
     if (!isTransitioning && !isRolling) {
       const movementStartX = this.position.x;
       if (!activeAttackProfile && horizontal !== 0) {
@@ -3591,7 +3294,6 @@ export class GameScene extends SceneNode {
       deltaSeconds,
       this.createTrainingEncounterFrame(combatState, activeAttackProfile),
     );
-    this.updateJourneyTriggers();
 
     if (isRolling) {
       const rollStartX = this.position.x;
@@ -3635,7 +3337,11 @@ export class GameScene extends SceneNode {
       this.verticalVelocity = 0;
     }
     const previousFootY = this.position.y + CHARACTER_FOOT_OFFSET;
-    this.verticalVelocity += GRAVITY * playerGravityMultiplier * deltaSeconds;
+    this.verticalVelocity = integratePlayerVerticalVelocity(
+      this.verticalVelocity,
+      deltaSeconds,
+      playerGravityMultiplier,
+    );
     this.position.y += this.verticalVelocity * deltaSeconds;
     const nextFootY = this.position.y + CHARACTER_FOOT_OFFSET;
     const landing = this.mapRuntime.resolveLandingAt(this.position.x, {
@@ -3675,8 +3381,62 @@ export class GameScene extends SceneNode {
     const movementBounds = this.getPlayerMovementBounds();
     this.position.x = Math.max(movementBounds.minX, Math.min(movementBounds.maxX, this.position.x));
     this.updateCameraFollow(deltaSeconds);
-    this.animationTime +=
-      deltaSeconds * animationSpeed * (isRolling ? 1.8 : 1 + Math.abs(horizontal) * 0.65);
+    this.animationTime = advancePlayerAnimationTime(
+      this.animationTime,
+      deltaSeconds,
+      { rolling: isRolling, movementIntent: horizontal },
+      animationSpeed,
+    );
+  }
+
+  getCombatSkillReadModel() {
+    const progression = this.progressionSnapshot;
+    const skill = this.getCombatSkillProfile();
+    const maxLevel = this.combatProgressionProfile.maxSkillLevel;
+    const nextSkillLevel = Math.min(
+      this.combatProgressionProfile.maxSkillLevel,
+      progression.combatSkillLevel + 1,
+    );
+    const nextSkillCost =
+      progression.combatSkillLevel >= this.combatProgressionProfile.maxSkillLevel
+        ? null
+        : this.combatProgressionProfile.getSkillUpgradeCost(nextSkillLevel);
+    const nextSkillTrainingMarkRequirement =
+      progression.combatSkillLevel >= this.combatProgressionProfile.maxSkillLevel
+        ? null
+        : this.combatProgressionProfile.getSkillTrainingMarkRequirement(nextSkillLevel);
+    const availableGold = getAvailableGold(progression);
+    const commandGuide = skill.loopCancel
+      ? '지상 AA/AS/SA · 공중 AA/AS/SA · finisher→starter loop cancel'
+      : skill.airCombos
+        ? `지상·공중 AA/AS/SA · 공중 ${skill.maxAirActions}회`
+        : skill.groundCombos
+          ? '지상 AA/AS/SA 해금 · 공중 starter 1회'
+          : 'A/S starter · 공중 starter 1회';
+
+    return Object.freeze({
+      level: progression.combatSkillLevel,
+      maxLevel,
+      label: skill.label,
+      description: skill.description,
+      damagePercent: Math.round((skill.damageScale - 1) * 100),
+      hitCount: skill.spinHitCount,
+      maxAirActions: skill.maxAirActions,
+      commandGuide,
+      nextLevel: progression.combatSkillLevel >= maxLevel ? null : nextSkillLevel,
+      nextGoldCost: nextSkillCost,
+      nextTrainingMarkRequirement: nextSkillTrainingMarkRequirement,
+      canTrain:
+        progression.combatSkillLevel < maxLevel &&
+        availableGold >= nextSkillCost &&
+        progression.trainingMarks >= nextSkillTrainingMarkRequirement,
+      actionLabel:
+        progression.combatSkillLevel >= maxLevel
+          ? 'MAX'
+          : nextSkillTrainingMarkRequirement > 0
+            ? `Lv.${nextSkillLevel} · ${nextSkillCost} Gold · 인장 ${nextSkillTrainingMarkRequirement}`
+            : `Lv.${nextSkillLevel} · ${nextSkillCost} Gold`,
+    });
   }
 
   getWorldStatus() {
@@ -3684,68 +3444,20 @@ export class GameScene extends SceneNode {
     const room = this.mapRuntime.getActiveRoom();
     const location = this.mapRuntime.getActiveLocation();
     const roomId = location.roomId;
-    const journey = this.journeyProgress.snapshot();
-    const regionExpansion = this.regionExpansionProgress.snapshot();
     const progression = this.progressionSnapshot;
-    const skill = this.getCombatSkillProfile();
     const encounter = this.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
-    const worldTime = getWorldClockReadModel(this.worldTimeSnapshot);
     const scrapCampaign = getScrapCampaignReadModel(
       progression.scrapCampaign,
       this.scrapCampaignProfile,
     );
     const gameOverPresentation = getScrapGameOverPresentation(this.scrapGameOverPresentationState);
-    const phaseLabels = {
-      prepare: '학원촌 준비',
-      field: 'Field 탐험',
-      dungeon: 'Dungeon 진입',
-      checkpoint: 'Checkpoint 확보',
-      boss: 'Boss 공략',
-      reward: '보상 회수',
-      returned: '첫 원정 완료',
-    };
-    const regionExpansionPhaseLabels = {
-      prepare: '새 Region 준비',
-      field: '유리바람 Field',
-      dungeon: '관측소 Dungeon',
-      checkpoint: '바람닻 확보',
-      boss: '폭풍눈 Boss',
-      reward: '프리즘 회수',
-      returned: '유리바람 원정 완료',
-    };
-    const progressionComplete =
-      progression.combatSkillLevel === this.combatProgressionProfile.maxSkillLevel &&
-      this.combatProgressionProfile.merchantProfileIds.every((profileId) =>
-        progression.ownedEquipmentIds.includes(profileId),
-      ) &&
-      Boolean(
-        progression.weaponForge.selectedProfileIdsByGroup[
-          this.combatProgressionProfile.weaponForge.choiceGroupId
-        ],
-      );
-    const characterBoardActive = Boolean(room.characterBoardManifest);
     const scrapAwakeningLocation =
       map.id === this.scrapAwakeningProfile.mapId && roomId === this.scrapAwakeningProfile.roomId;
-    const scrapCampaignRegion = this.scrapCampaignProfile.getRegion(
-      scrapCampaign.currentLocationId,
-    );
+    const scrapCampaignRegion = this.scrapCampaignProfile.getRegion(location.regionId);
     const scrapCampaignRegionReadModel = scrapCampaign.regions.find(
       (region) => region.id === scrapCampaignRegion?.id,
     );
-    const pendingLinkedIssueAtCampaignRegion = scrapCampaign.issueWindow.linked.find(
-      (linkedIssue) =>
-        linkedIssue.targetRegionId === scrapCampaignRegion?.id && !linkedIssue.completed,
-    );
-    // A focused primary issue can send the player to another region before its
-    // own core event can begin. In that linked-region's observed state, its
-    // combat instruction remains the truthful next action even while a QA
-    // snapshot keeps the map room on the originating region.
-    const scrapCampaignRegionLocation = Boolean(
-      scrapCampaignRegion &&
-      (location.regionId === scrapCampaignRegion.id ||
-        (scrapCampaignRegionReadModel?.eventStageKind === 'facility-observed' &&
-          pendingLinkedIssueAtCampaignRegion)),
-    );
+    const scrapCampaignRegionLocation = Boolean(scrapCampaignRegion);
     const scrapIntroPresentation =
       scrapCampaign.garageRevealComplete && scrapCampaign.collectedPartCount > 0
         ? Object.freeze({
@@ -3833,169 +3545,16 @@ export class GameScene extends SceneNode {
               briefing: scrapIntroPresentation.briefing,
               nextObjective: scrapIntroPresentation.objective,
             })
-          : characterBoardActive
-            ? Object.freeze({
-                beatId: 'scrap-character-readability',
-                title: '고철 생활권 캐릭터 설계 비교',
-                briefing:
-                  '정면·측면·대표 pose에서 직업 도구, 작업복과 공격 가동부를 실제 gameplay 크기로 비교합니다.',
-              })
-            : resolveFirstJourneyStory({
-                equipment: {
-                  id: this.equipmentProfile.id,
-                  label: this.equipmentProfile.label,
-                  progressionComplete,
-                },
-                journey,
-                regionExpansion,
-                activeRoomId: roomId,
-              });
+          : Object.freeze({
+              beatId: 'scrap-campaign-travel',
+              title: room.label,
+              briefing: '',
+              nextObjective: '연결로를 따라 다음 현장으로 이동하세요.',
+            });
     const dialogue = this.resolveDialogueStatus();
-    const encounterMaterial = encounter?.materialReward
-      ? this.enchantmentCatalog.getProfile(encounter.materialReward.elementId)
-      : null;
     let objective = story.nextObjective;
     let encounterHint = '';
 
-    if (roomId === 'training-room') {
-      objective = encounterMaterial
-        ? `${encounter.label}을 처치해 ${encounterMaterial.materialLabel}을 확정 획득하세요. 1초 뒤 다시 나타납니다.`
-        : `훈련 골렘을 처치해 인장 +${this.combatProgressionProfile.trainingClearReward}. 귀환 후 같은 A/S command route를 성장시키세요.`;
-      encounterHint = `${this.progressionNotice} · 현재 인장 ${progression.trainingMarks}`;
-    }
-    if (roomId === 'field-crossing') {
-      if (!journey.fieldGuardianDefeated) {
-        encounterHint = '일반 조우 보상: 수호 수액 · 최대 HP +20';
-      }
-    }
-    if (roomId === 'field-canopy' && encounterMaterial) {
-      encounterHint = `선택 우회 조우 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`;
-    }
-    if (roomId === 'sealed-forest-dungeon') {
-      if (!journey.dungeonGuardianDefeated) {
-        objective = '붉은 봉인을 붙든 회랑 수호자를 쓰러뜨려 청록 기록석의 공명을 깨우세요.';
-        encounterHint = '봉인 공명 1/4 · 입구 소개 → guardian 전투';
-      } else if (
-        !journey.dungeonSignatureStageIds.includes(
-          FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
-        )
-      ) {
-        encounterHint = '봉인 공명 2/4 · x680 숨은 분기는 선택 사항 · Boss 길은 유지';
-      } else if (!journey.checkpointActivated) {
-        encounterHint = '봉인 공명 3/4 · 숨은 잔향 활성 · Checkpoint를 확보하세요.';
-      } else if (journey.returnedWithReward) {
-        objective =
-          '정리된 봉인 회랑의 열린 필수 경로로 이동하거나 숨은 잔향실의 선택적 적을 상대하세요.';
-        encounterHint = encounterMaterial
-          ? `CLEARED REVISIT · 핵심 guardian 없음 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`
-          : 'CLEARED REVISIT · 핵심 guardian 없음 · 숨은 분기와 Boss 문 유지';
-      } else {
-        encounterHint = '봉인 공명 3/4 · 오른쪽 Boss Portal에서 마지막 시험';
-      }
-    }
-    if (roomId === 'sealed-resonance-vault') {
-      encounterHint = encounterMaterial
-        ? `선택 숨은 조우 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`
-        : journey.dungeonSignatureStageIds.includes(
-              FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
-            )
-          ? '봉인 공명 3/4 · 숨은 분기 적용 완료'
-          : '봉인 공명 2/4 · 붉은 기록석에 접근';
-    }
-    if (roomId === 'sealed-forest-boss') {
-      if (journey.bossRewardClaimed) {
-        objective = '보상 획득 완료. 오른쪽 황금 shortcut Portal에서 ↑로 귀환하세요.';
-        encounterHint = '+120 Gold · 학원촌 shortcut 해금';
-      } else if (journey.bossDefeated) {
-        objective = 'Boss가 남긴 황금 결정에 접근해 보상을 회수하세요.';
-        encounterHint = '보상 결정이 shortcut Portal을 활성화합니다.';
-      } else if (encounter?.weakPoint?.exposed) {
-        objective = `${encounter.weakPoint.label}이 노출되었습니다. 정면에서도 지금 공격하세요.`;
-        encounterHint = `WEAK POINT · ${encounter.weakPoint.damageMultiplier.toFixed(1)}× DAMAGE`;
-      } else if (encounter?.punishWindowOpen) {
-        objective = '청록 틈이 열렸습니다. 지금 공격해 Punish를 이어가세요.';
-        encounterHint = 'PUNISH WINDOW · 공격 가능';
-      } else if (encounter?.attackKind === 'heavy' && encounter?.aiState === 'windup') {
-        objective = '붉은 강공격은 막을 수 없습니다. 이동+↓ 구르기로 통과하세요.';
-        encounterHint = 'HEAVY · ROLL REQUIRED';
-      } else if (encounter?.attackKind === 'light' && encounter?.aiState === 'windup') {
-        objective = '기본공격은 ↓로 Guard한 뒤 청록 회복 틈을 노리세요.';
-        encounterHint = 'BASIC · GUARDABLE';
-      } else {
-        objective = '기본공격 Guard → 강공격 Roll → 청록 회복 틈 Punish로 공략하세요.';
-        encounterHint = journey.dungeonSignatureStageIds.includes(
-          FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.HIDDEN_BRANCH,
-        )
-          ? '봉인 공명 4/4 · 청록 잔향과 GUARD · ROLL · PUNISH'
-          : '봉인 공명 Boss 시험 · GUARD · ROLL · PUNISH';
-      }
-    }
-    if (roomId === 'glasswind-approach') {
-      if (regionExpansion.glasswindBridgeStable) {
-        objective = '풍식 사냥꾼을 쓰러뜨려 바람다리가 고정됐습니다. 오른쪽 Portal로 진입하세요.';
-        encounterHint = 'SURFACE + COLLISION + PORTAL 안정화';
-      } else if (encounter?.attackKind === 'sweep' && encounter?.aiState === 'windup') {
-        objective = '지면을 훑는 청록 Sweep가 옵니다. ↑로 뛰어넘고 공중 공격으로 반격하세요.';
-        encounterHint = 'LOW SWEEP · JUMP REQUIRED';
-      } else if (encounter?.attackKind === 'antiAir' && encounter?.aiState === 'windup') {
-        objective = '공중에 오래 머물면 긴 대공창이 따라옵니다. 착지해 다시 Sweep 타이밍을 보세요.';
-        encounterHint = 'ANTI-AIR · LAND AND RESET';
-      } else {
-        objective =
-          '풍식 사냥꾼의 지면 Sweep를 점프로 넘고 회복 틈에 반격해 바람다리를 고정하세요.';
-        encounterHint = 'JUMP OVER SWEEP · AIR PUNISH';
-      }
-    }
-    if (roomId === 'glasswind-observatory') {
-      encounterHint = regionExpansion.checkpointActivated
-        ? '사망 시 관측소 Checkpoint에서 회복합니다.'
-        : '바람닻이 Boss Portal과 부활 위치를 함께 고정합니다.';
-    }
-    if (roomId === 'glasswind-storm-eye') {
-      if (regionExpansion.bossRewardClaimed) {
-        objective = encounterMaterial
-          ? '프리즘 회수 완료. 잔향 사냥꾼과 싸우거나 오른쪽 shortcut으로 귀환하세요.'
-          : '프리즘 회수 완료. 오른쪽 황금 shortcut Portal에서 ↑로 학원촌에 귀환하세요.';
-        encounterHint = encounterMaterial
-          ? `선택 Boss arena 조우 · ${encounterMaterial.materialLabel} 확정 +${encounter.materialReward.quantity}`
-          : '+180 Gold · 학원촌 영구 shortcut 해금';
-      } else if (regionExpansion.bossDefeated) {
-        objective = '폭풍 유리핵이 남긴 황금 프리즘에 접근해 보상과 shortcut을 여세요.';
-        encounterHint = '보상 프리즘이 귀환 Portal을 영구 활성화합니다.';
-      } else if (encounter?.weakPoint?.exposed) {
-        objective = `${encounter.weakPoint.label}이 노출되었습니다. 정면에서도 회복 전에 공격하세요.`;
-        encounterHint = `WEAK POINT · ${encounter.weakPoint.damageMultiplier.toFixed(1)}× DAMAGE`;
-      } else if (encounter?.punishWindowOpen) {
-        objective = '청록 균열이 열렸습니다. 회복이 끝나기 전에 command 연계를 적중시키세요.';
-        encounterHint = 'PUNISH WINDOW · ATTACK NOW';
-      } else if (encounter?.attackKind === 'sweep' && encounter?.aiState === 'windup') {
-        objective = '바닥을 덮는 Sweep는 Guard할 수 없습니다. ↑ 점프 후 공중 route로 Punish하세요.';
-        encounterHint = 'LOW SWEEP · JUMP → AIR PUNISH';
-      } else if (encounter?.attackKind === 'heavy' && encounter?.aiState === 'windup') {
-        objective = '보라 강공격은 이동+↓ 구르기로 통과하고 반대편 회복 틈을 노리세요.';
-        encounterHint = 'HEAVY · ROLL THROUGH';
-      } else if (encounter?.attackKind === 'light' && encounter?.aiState === 'windup') {
-        objective = '기본공격은 ↓ Guard. 막은 뒤 다음 Sweep를 위해 점프 거리를 확보하세요.';
-        encounterHint = 'BASIC · GUARDABLE';
-      } else {
-        objective = 'Guard 기본기 · Jump Sweep · Roll 강공격을 구분하고 각 회복 틈을 공략하세요.';
-        encounterHint = 'GUARD · JUMP · ROLL · PUNISH';
-      }
-    }
-    if (isAcademyRoom(roomId) && journey.returnedWithReward) {
-      encounterHint = regionExpansion.returnedWithReward
-        ? encounterHint
-        : progressionComplete
-          ? 'M4 COMPLETE · 새 Sweep Jump 전투 준비'
-          : '';
-    }
-    if (isAcademyRoom(roomId) && regionExpansion.returnedWithReward) {
-      encounterHint = 'M5 REGION COMPLETE · Sweep Jump 해법과 shortcut 유지';
-    }
-    if (characterBoardActive) {
-      objective = '각 열의 정면·측면·대표 pose에서 복장과 공구 silhouette를 비교하세요.';
-      encounterHint = 'DESIGN COMPARISON · FRONT / SIDE / ACTION';
-    }
     if (scrapAwakeningLocation) {
       objective = scrapIntroPresentation.objective;
       encounterHint = scrapIntroPresentation.cue;
@@ -4021,32 +3580,8 @@ export class GameScene extends SceneNode {
     }
     if (this.recoveryNotice) encounterHint = this.recoveryNotice;
 
-    const nextSkillLevel = Math.min(
-      this.combatProgressionProfile.maxSkillLevel,
-      progression.combatSkillLevel + 1,
-    );
-    const nextSkillCost =
-      progression.combatSkillLevel >= this.combatProgressionProfile.maxSkillLevel
-        ? null
-        : this.combatProgressionProfile.getSkillUpgradeCost(nextSkillLevel);
-    const nextSkillTrainingMarkRequirement =
-      progression.combatSkillLevel >= this.combatProgressionProfile.maxSkillLevel
-        ? null
-        : this.combatProgressionProfile.getSkillTrainingMarkRequirement(nextSkillLevel);
-    const availableGold = getAvailableGold(progression);
-    const commandGuide = skill.loopCancel
-      ? '지상 AA/AS/SA · 공중 AA/AS/SA · finisher→starter loop cancel'
-      : skill.airCombos
-        ? `지상·공중 AA/AS/SA · 공중 ${skill.maxAirActions}회`
-        : skill.groundCombos
-          ? '지상 AA/AS/SA 해금 · 공중 starter 1회'
-          : 'A/S starter · 공중 starter 1회';
-
     return Object.freeze({
-      areaName:
-        characterBoardActive || scrapCampaignRegionLocation
-          ? room.label
-          : `${map.name} · ${room.label}`,
+      areaName: scrapCampaignRegionLocation ? room.label : `${map.name} · ${room.label}`,
       story,
       dialogue,
       objective,
@@ -4063,28 +3598,23 @@ export class GameScene extends SceneNode {
                 : ''
             }`
           : '',
-      journeyLabel: characterBoardActive
-        ? '고철 캐릭터 설계 비교'
-        : scrapFinalBattleActive
-          ? scrapCampaign.finalBattle.title
-          : scrapAwakeningLocation
-            ? scrapCampaign.awakeningActive
-              ? '고대 병기 각성 연출'
-              : scrapCampaign.garageRevealActive
-                ? '고물상 분석 · 차고 개방'
-                : scrapCampaign.garageRevealComplete
-                  ? scrapCampaign.collectedPartCount > 0
-                    ? `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`
-                    : '작전 준비 완료 · 로봇 0%'
-                  : scrapCampaign.deadlineRevealed
-                    ? '각성 완료 · D-30 · 고물상 복귀'
-                    : scrapIntroPresentation.title
-            : scrapCampaignRegionLocation
-              ? `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.statusLabel}`
-              : location.regionId === 'glasswind-region' ||
-                  (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
-                ? (regionExpansionPhaseLabels[regionExpansion.phase] ?? regionExpansion.phase)
-                : (phaseLabels[journey.phase] ?? journey.phase),
+      journeyLabel: scrapFinalBattleActive
+        ? scrapCampaign.finalBattle.title
+        : scrapAwakeningLocation
+          ? scrapCampaign.awakeningActive
+            ? '고대 병기 각성 연출'
+            : scrapCampaign.garageRevealActive
+              ? '고물상 분석 · 차고 개방'
+              : scrapCampaign.garageRevealComplete
+                ? scrapCampaign.collectedPartCount > 0
+                  ? `차고 조립 갱신 · 로봇 ${scrapCampaign.completionPercent}%`
+                  : '작전 준비 완료 · 로봇 0%'
+                : scrapCampaign.deadlineRevealed
+                  ? '각성 완료 · D-30 · 고물상 복귀'
+                  : scrapIntroPresentation.title
+          : scrapCampaignRegionLocation
+            ? `${scrapCampaignRegion.label} · ${scrapCampaignRegionReadModel.statusLabel}`
+            : room.label,
       wardLabel: scrapFinalBattleActive
         ? `제어핵 · ${scrapCampaign.finalBattle.stageId}`
         : scrapAwakeningLocation
@@ -4101,35 +3631,16 @@ export class GameScene extends SceneNode {
             ? scrapCampaignRegionReadModel.collected
               ? `${scrapCampaignRegionReadModel.partLabel} · 차고 로봇 ${scrapCampaign.completionPercent}%`
               : `${scrapCampaignRegion.machineLabel} · ${scrapCampaignRegionReadModel.eventStageLabel}`
-            : location.regionId === 'glasswind-region' ||
-                (isAcademyRoom(roomId) && regionExpansion.phase !== 'prepare')
-              ? regionExpansion.glasswindBridgeStable
-                ? '유리바람 다리 · 안정'
-                : '횡풍 장벽 · 활성'
-              : journey.fieldWardActive
-                ? '수호 수액 · HP +20'
-                : journey.routeChoice === 'bypass'
-                  ? '우회 · 수액 없음'
-                  : '수호 수액 미획득',
-      timePhase: worldTime.timePhase,
+            : '현장 이동',
+      timePhase: this.timePhase,
       timeLabel: `Day ${scrapCampaign.day} · ${scrapCampaign.phaseLabel}`,
       deadlineLabel: scrapCampaign.deadlineLabel,
       campaign: scrapCampaign,
       gameOverPresentation,
       operationMapAvailable:
         !scrapCampaign.gameOver && (!scrapAwakeningLocation || scrapCampaign.garageRevealComplete),
-      characterBoard: room.characterBoardManifest
-        ? Object.freeze({ active: true, ...room.characterBoardManifest })
-        : Object.freeze({
-            active: false,
-            title: '',
-            scaleLabel: '',
-            views: Object.freeze([]),
-            entries: Object.freeze([]),
-          }),
       roomId,
-      canManageProgression:
-        !characterBoardActive && !scrapAwakeningLocation && this.canManageProgression(),
+      canManageProgression: this.canManageProgression(),
       activeEnchantId:
         progression.enchantment.swordEnchantments[progression.equippedEquipmentId].elementId,
       activeEnchantLevel:
@@ -4153,29 +3664,7 @@ export class GameScene extends SceneNode {
             this.combatProgressionProfile.weaponForge.choiceGroupId
           ] ?? null,
       }),
-      combatSkill: Object.freeze({
-        level: progression.combatSkillLevel,
-        maxLevel: 3,
-        label: skill.label,
-        description: skill.description,
-        damagePercent: Math.round((skill.damageScale - 1) * 100),
-        hitCount: skill.spinHitCount,
-        maxAirActions: skill.maxAirActions,
-        commandGuide,
-        nextLevel: progression.combatSkillLevel >= 3 ? null : nextSkillLevel,
-        nextGoldCost: nextSkillCost,
-        nextTrainingMarkRequirement: nextSkillTrainingMarkRequirement,
-        canTrain:
-          progression.combatSkillLevel < 3 &&
-          availableGold >= nextSkillCost &&
-          progression.trainingMarks >= nextSkillTrainingMarkRequirement,
-        actionLabel:
-          progression.combatSkillLevel >= 3
-            ? 'MAX'
-            : nextSkillTrainingMarkRequirement > 0
-              ? `Lv.${nextSkillLevel} · ${nextSkillCost} Gold · 인장 ${nextSkillTrainingMarkRequirement}`
-              : `Lv.${nextSkillLevel} · ${nextSkillCost} Gold`,
-      }),
+      combatSkill: this.getCombatSkillReadModel(),
       progressionNotice: this.progressionNotice,
     });
   }
@@ -4246,7 +3735,7 @@ export class GameScene extends SceneNode {
           isGrounded: this.isGrounded,
           verticalVelocity: this.verticalVelocity,
           landingRecovery: this.landingRecoverySeconds / LANDING_RECOVERY_SECONDS,
-          hitstunProgress: this.playerHitstunSeconds / 0.22,
+          hitstunProgress: this.playerHitstunSeconds / PLAYER_MOTION_PROFILE.hitReactionSeconds,
           blockstunProgress:
             this.playerBlockstunDurationSeconds > 0
               ? this.playerBlockstunSeconds / this.playerBlockstunDurationSeconds
@@ -4321,13 +3810,11 @@ export class GameScene extends SceneNode {
     const artDirection = createSceneArtDirectionReadModel(this.artDirectionProfile, {
       roomId: activeRoom.id,
       combatEvents,
-      player: activeRoom.presentationOnly
-        ? null
-        : {
-            position: renderPosition,
-            groundY: activeRoom.groundY,
-            scale: characterRenderScale,
-          },
+      player: {
+        position: renderPosition,
+        groundY: activeRoom.groundY,
+        scale: characterRenderScale,
+      },
       enemy: encounterRender.enemy
         ? {
             position: encounterRender.enemy.position,
@@ -4337,7 +3824,6 @@ export class GameScene extends SceneNode {
           }
         : null,
     });
-    const playerItems = activeRoom.presentationOnly ? [] : characterItems;
     const scrapFinalBattleItems = createScrapFinalBattlePresentation(
       this.progressionSnapshot.scrapCampaign.finalBattleStageId,
     );
@@ -4346,7 +3832,7 @@ export class GameScene extends SceneNode {
         ...mapSnapshot.renderItems,
         ...scrapFinalBattleItems,
         ...encounterItems,
-        ...playerItems,
+        ...characterItems,
         ...combatEffectItems,
         ...(this.visualQaCombatOverlay
           ? [

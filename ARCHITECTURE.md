@@ -16,6 +16,7 @@
 - 하나의 animation-frame owner가 120Hz fixed simulation을 구동하고 60Hz integer combat frame을 결정적으로 sample한다.
 - Production은 `index.html`과 static source를 직접 제공한다. Node.js는 local server, lint, fixtures와 visual verification에만 사용한다.
 - PWA는 manifest와 root-scoped Service Worker를 사용한다. 현재 release의 필수 static asset은 atomic versioned cache로 준비하고 Service Worker lifecycle은 shell에 explicit status만 전달한다.
+- 생성된 release metadata의 asset inventory를 Service Worker도 그대로 사용한다. 별도로 수동 관리하는 offline 파일 목록을 두지 않는다.
 - Runtime source는 CDN, external account, wall clock과 development-only server behavior에 의존하지 않는다.
 - GitHub Pages production source는 `main /`이며 별도 build artifact를 요구하지 않는다.
 
@@ -60,6 +61,8 @@ Keyboard / Touch / DOM intent
 ```
 
 ## State Ownership and Data Flow
+
+- 현재 고철 campaign만 production progression의 세계 진행을 소유한다. 폐기된 학원·first journey·glasswind 진행과 그 금고를 현재 저장에 병렬 보유하거나 현재 통화·체력·story를 계산하는 우회 경로로 사용하지 않는다. 현재 통화는 progression의 단일 필드이며 도메인 transaction으로만 변경한다. 현행 schema만 복원하고 호환되지 않는 개발 save는 명시적인 초기화 안내로 처리한다.
 
 - Application composition이 listener, ResizeObserver, animation frame, screen/modal adapter와 renderer lifecycle을 소유한다.
 - Game orchestrator가 Player, combat result 적용과 domain coordination의 최종 writer다.
@@ -185,6 +188,14 @@ Keyboard / Touch / DOM intent
 - Reward, part, boss와 route transition은 reload/repeated trigger에서 중복 지급하지 않는다.
 - Room transition, input sequence와 encounter reset은 interruption 뒤 stale command/entity를 다음 Room으로 넘기지 않는다.
 
+## Graphics Resource Review Boundary
+
+- Immutable graphics catalog는 production content와 producer를 연결하는 유일한 등록 경로다. 주인공, NPC, 모든 현재 적, 장비, 배경·전경·지형·건물·설비·소품, 시간에 따른 효과와 UI를 stable resource/action/frame ID로 식별한다. 원본 map의 비활성 item과 patch variant도 inventory에 포함한다. 아직 구현되지 않은 motion이나 리소스를 가짜 preview로 만들지 않는다.
+- 검토 sampler는 게임이 사용하는 pose·공격 크기·shared geometry·presentation producer와 Polygon/Retro renderer를 호출한다. 별도 캐릭터 보드 그림, QA 전용 무기 크기 계산과 복제 UI markup을 유지하지 않는다. 등록된 production data가 바뀌면 같은 ID의 검토 출력도 함께 바뀐다.
+- UI adapter가 선택, 필터, frame index, 60Hz 정상 재생·정지, viewport와 확대 배율을 소유한다. URL codec이 모든 재현 조건을 검증하고 같은 page의 debug 진입/복귀와 정합시킨다. Copy는 사용자 입력에서만 clipboard에 리소스·동작·프레임·renderer·조명·배치·URL을 쓴다. 외부 피드백 전송이나 player save mutation은 하지 않는다.
+- 정적 리소스는 thumbnail·실제 크기·확대로, animated producer는 action별 frame strip과 동일 sample의 연속 재생으로 검토한다. 장면 배치는 실제 map resolution과 광원·차폐를 그대로 사용하고 개별 보기에서도 scene provenance를 표시한다. UI는 production component 자체와 동일 read model을 별도 저장 없는 검토 context에서 표시한다.
+- Catalog coverage fixture는 원본 content/producer inventory와 등록 ID를 비교하고 누락·중복을 실패시킨다. Actual desktop/mobile PNG·연속 frame, 접근 가능한 control, 복사와 URL 왕복, player game debug 비노출은 독립 verifier가 판독한다.
+
 ## Performance, Security and Compatibility
 
 - Human의 릴리즈 선언 전 제품 버전은 0.x.y이며 개발용 save·내부 API·옛 형식의 하위 호환 유지 의무는 없다. 현재 기획을 막는 호환 계층은 제거할 수 있으며 호환되지 않는 저장은 정상 복구로 위장하지 않고 초기화 사실을 알린다.
@@ -198,7 +209,7 @@ Keyboard / Touch / DOM intent
 - Syntax, lint와 formatting은 `npm run check`, patch whitespace는 `git diff --check`로 검사한다.
 - Combat/input/map/progression rule은 DOM 없는 deterministic fixtures로 검증한다.
 - Campaign fixture는 Day 1 morning/D-30, 네 segment rollover, zero-cost action, one-segment travel, preview warning, idempotent commit, 마지막 작업의 route patch·거리 기반 D-DAY 변화, five-part final unlock과 D-DAY 0 terminal boundary를 고정한다.
-- Persistence fixture는 campaign round-trip, legacy migration, corrupt/write failure와 recovery slot selection을 검증한다.
+- Persistence fixture는 campaign round-trip, incompatible schema의 명시적 거부/초기화 안내, corrupt/write failure와 recovery slot selection을 검증한다.
 - Browser flow는 MENU short operation map, MENU hold debug separation, HUD/map same-state projection, desktop/mobile focus·overflow와 console error를 확인한다.
 - PWA fixture는 manifest field/icon purpose, root scope·navigation fallback, complete cache inventory, offline first-visit fallback, waiting update의 user-applied single reload 및 storage/cache 분리를 고정한다.
 - Prologue fixture는 의뢰→라이벌 동행→탐색·전투→회수팔 붕괴/구조 요청→독백→제어핵 회수·구조→접속부 봉쇄·각성→귀환의 stage order, input-lock 경계, transcript, save/reload와 중복 보상 방지를 고정한다.

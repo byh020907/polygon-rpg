@@ -32,14 +32,6 @@ import {
 } from './ScrapFinalBattleState.js';
 
 export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 8;
-const LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 7;
-const REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 6;
-const FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 5;
-const ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 4;
-const REGION_STAGE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION = 3;
-const GARAGE_REVEAL_SCRAP_CAMPAIGN_SCHEMA_VERSION = 2;
-const LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION = 1;
-const REMOVED_LEGACY_REGION_STATUS = ['con', 'voy'].join('');
 
 export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
   FREE: 'free',
@@ -196,16 +188,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new TypeError('scrap campaign snapshot은 객체여야 합니다.');
   }
-  if (
-    value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== REGION_STAGE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== GARAGE_REVEAL_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-    value.version !== LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
-  ) {
+  if (value.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION) {
     throw new Error(`지원하지 않는 scrap campaign schema version입니다: ${value.version}`);
   }
   for (const [field, label] of [
@@ -232,18 +215,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   ) {
     throw new TypeError('campaign region state가 필요합니다.');
   }
-  const regionStates = Object.fromEntries(
-    Object.entries(value.regionStates).map(([regionId, status]) => [
-      regionId,
-      value.version === REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-      status === REMOVED_LEGACY_REGION_STATUS
-        ? SCRAP_CAMPAIGN_REGION_STATUS.AVAILABLE
-        : value.version === REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION &&
-            status === 'recovered'
-          ? SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED
-          : status,
-    ]),
-  );
+  const regionStates = { ...value.regionStates };
   const stateEntries = Object.entries(regionStates);
   if (
     stateEntries.length !== SCRAP_CAMPAIGN_REGION_IDS.length ||
@@ -255,22 +227,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   ) {
     throw new TypeError('campaign region state가 stable region contract와 일치하지 않습니다.');
   }
-  const regionEventStageIds = [
-    SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-  ].includes(value.version)
-    ? value.regionEventStageIds
-    : Object.fromEntries(
-        SCRAP_CAMPAIGN_REGION_IDS.map((regionId) => [
-          regionId,
-          regionStates[regionId] === SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED
-            ? (authored?.getRegion(regionId)?.eventStages.at(-1)?.id ?? null)
-            : null,
-        ]),
-      );
+  const regionEventStageIds = value.regionEventStageIds;
   if (
     !regionEventStageIds ||
     typeof regionEventStageIds !== 'object' ||
@@ -294,14 +251,7 @@ export function toScrapCampaignSnapshot(value, profile) {
       'campaign region event stage가 authored stage contract와 일치하지 않습니다.',
     );
   }
-  const activePrimaryIssueId = [
-    SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-  ].includes(value.version)
-    ? value.activePrimaryIssueId
-    : null;
+  const activePrimaryIssueId = value.activePrimaryIssueId;
   if (
     activePrimaryIssueId !== null &&
     (typeof activePrimaryIssueId !== 'string' ||
@@ -312,14 +262,7 @@ export function toScrapCampaignSnapshot(value, profile) {
       'active campaign primary issue가 authored issue contract와 일치하지 않습니다.',
     );
   }
-  const completedIssueIds = [
-    SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-  ].includes(value.version)
-    ? value.completedIssueIds
-    : [];
+  const completedIssueIds = value.completedIssueIds;
   if (!Array.isArray(completedIssueIds)) {
     throw new TypeError('완료 campaign issue ID 목록은 배열이어야 합니다.');
   }
@@ -337,8 +280,7 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (activePrimaryIssueId && completedIssueIdSet.has(activePrimaryIssueId)) {
     throw new TypeError('완료된 primary issue를 active 상태로 유지할 수 없습니다.');
   }
-  const clearedEncounterIds =
-    value.version === SCRAP_CAMPAIGN_SCHEMA_VERSION ? value.clearedEncounterIds : [];
+  const clearedEncounterIds = value.clearedEncounterIds;
   if (!Array.isArray(clearedEncounterIds)) {
     throw new TypeError('제압한 연결 전투 ID 목록은 배열이어야 합니다.');
   }
@@ -374,22 +316,8 @@ export function toScrapCampaignSnapshot(value, profile) {
   if (typeof value.lastChangeLabel !== 'string') {
     throw new TypeError('campaign 최근 변화 label은 문자열이어야 합니다.');
   }
-  const awakeningStageId =
-    value.version === LEGACY_SCRAP_CAMPAIGN_SCHEMA_VERSION
-      ? SCRAP_AWAKENING_STAGE.COMMISSION
-      : value.awakeningStageId;
-  const garageRevealStageId = [
-    SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    FINAL_BATTLE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    ISSUE_WINDOW_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    REGION_STAGE_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-  ].includes(value.version)
-    ? assertScrapGarageRevealStageId(value.garageRevealStageId)
-    : awakeningStageId === SCRAP_AWAKENING_STAGE.COMPLETE
-      ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
-      : SCRAP_GARAGE_REVEAL_STAGE.LOCKED;
+  const awakeningStageId = assertScrapAwakeningStageId(value.awakeningStageId);
+  const garageRevealStageId = assertScrapGarageRevealStageId(value.garageRevealStageId);
   if (
     awakeningStageId !== SCRAP_AWAKENING_STAGE.COMPLETE &&
     garageRevealStageId !== SCRAP_GARAGE_REVEAL_STAGE.LOCKED
@@ -404,13 +332,7 @@ export function toScrapCampaignSnapshot(value, profile) {
       '각성 완료 snapshot에는 고물상 보고 가능한 차고 reveal stage가 필요합니다.',
     );
   }
-  const finalBattleStageId = [
-    SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    LINKED_ENCOUNTER_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-    REGION_STATUS_MIGRATION_PREVIOUS_SCRAP_CAMPAIGN_SCHEMA_VERSION,
-  ].includes(value.version)
-    ? assertScrapFinalBattleStageId(value.finalBattleStageId)
-    : SCRAP_FINAL_BATTLE_STAGE.INACTIVE;
+  const finalBattleStageId = assertScrapFinalBattleStageId(value.finalBattleStageId);
   if (
     finalBattleStageId !== SCRAP_FINAL_BATTLE_STAGE.INACTIVE &&
     value.collectedPartIds.length !== knownPartIds.size

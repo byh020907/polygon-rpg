@@ -16,7 +16,7 @@ import {
   CHARACTER_RENDER_SCALE,
   createPlayerCombatPresentation,
 } from '../src/game/PlayerCombatPresentation.js';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 function deepFreezeFixture(value) {
@@ -38,70 +38,70 @@ const SCRAPYARD_APPRENTICE_FIXTURE = deepFreezeFixture({
 const POSE_PARITY = Object.freeze({
   'pose-idle': Object.freeze({
     count: 26,
-    digest: '464e92d224aa1fe25c0655c265418ec19207ecb5a99ccbaa2147c26af8be32e0',
+    digest: '131d4454a536116eb1497c530aa347872a718de1d418e20e17320d63cfd3ffe5',
   }),
   'pose-move': Object.freeze({
     count: 26,
-    digest: '205fa758e1ebee325ee92088c50f80ca3b4c0eb23bca5a5a1843e713c4ab71a9',
+    digest: '8508c15143879e3589849477a8dc58dd696de5cbf607846cd8d4662098178081',
   }),
   'pose-guard': Object.freeze({
     count: 26,
-    digest: '51dd69d877319cf1351482747ef605eec3aa77eaba42fb7568382ab98ba8c5c1',
+    digest: 'bdb03fa99e8b7fb5ec89d744d369e3e6b162a4cd40bddda8de707db452a9ead1',
   }),
   'pose-roll': Object.freeze({
     count: 26,
-    digest: '020c383c9802b2cec97d162fc7a0ad73cb0ff696fdf75c20bf61908bb5e6d8bf',
+    digest: '524fbebb2b8c7a864df4a13bd07a1622626f9453ea447669fff1cbc188aa03d9',
   }),
   'pose-ground-attack': Object.freeze({
     count: 26,
-    digest: 'ab6a3324c0f09c72de828d847ae3a55d6de9b704c6fa3a044fa5859010c055f8',
+    digest: '1fbf27c03bd7c1e4f225664671f9ddb4a138ee1ee55a347c6f2c0cbe9108d86c',
   }),
   'pose-air-attack': Object.freeze({
     count: 26,
-    digest: 'c14e6b722ac662be998ed97e662748a2eedef736ce11324323af8108866ff798',
+    digest: 'd7e822b3a98e83cf196ee112ab1e9a31c46235e0be78c4296465d829887e2437',
   }),
   'pose-hit': Object.freeze({
     count: 26,
-    digest: '8366ba2d5943f39822dd2e0cf3585e1664ec4c19ef02a482881a8cec5ac9a504',
+    digest: '01a0eb0c248d684e6ee1b3615c599b9a39a7730403e06dacf4e9eee734a02948',
   }),
 });
 
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
     count: 33,
-    digest: '1e542a50ec706d377be1b8746eb4445cf9f28c0094472e019b089a0962a4b26e',
+    digest: '0a7ce95a3d437254343ba8e670e9fa68f6b3da69b473bf068cf73907e5fbe304',
   }),
   'combat-player-hit': Object.freeze({
     count: 33,
-    digest: '68388ab6295f5f5d22fd968324246a2056b00ed4fc3c039b685b8f6b89082ac1',
+    digest: '9bfbdc168b3d7cf990627e9411eee73cc32a1778cddc501d2175829e61b7dc11',
   }),
   'combat-block': Object.freeze({
     count: 32,
-    digest: '8c446378c5176ee298ca486ef20306e5025ee884272411e7add00f5c40813067',
+    digest: 'eb56c05c925812d69eb173072317ad6b33f60d4eaa87621bb6a1b9074608f2f4',
   }),
   'combat-evade': Object.freeze({
     count: 29,
-    digest: 'e6d1df078803977876930a764d1d60f6ee02dd878c5c8cd5682b342fa9997076',
+    digest: '3014ff993543adf8dc68156708d62b193192ddb1d8d68067a239bffa5930b1a9',
   }),
   'combat-punish': Object.freeze({
     count: 32,
-    digest: '021a98a8948bbd4c3771939040b5bf6deeca11b069636b17689a3c9af8d4f3c0',
+    digest: '96417114dadfc23ecb63e8fc9da3e63577a4e9aecefc7a00adb9a6564b8841d9',
   }),
   'combat-launch': Object.freeze({
     count: 33,
-    digest: '26fc97ca56a9f123a83b83cf38d749dcd2f6c09117d28148a63492371bce82de',
+    digest: 'a1dab4101109812536697163f06276e5124c7f2700678fd2a613f389c4f90e41',
   }),
   'combat-guard-break': Object.freeze({
     count: 32,
-    digest: '5268cf113fd39a1f0610b2d692e54ebb9c49a3e949d37cb29b45f2f60f9ebf90',
+    digest: '26fef069b154b5e64e97c795eda823786801ad490607f5bdd9747c29bee80dd3',
   }),
   'combat-just-guard': Object.freeze({
     count: 37,
-    digest: '648dcffbc4b368562c33ad331139497826d077b8d4ff38c195cade253943bbc1',
+    digest: '48db669f735009d2ca4f27dcebfd5b49e132ee4c520de98937635f9afe3bc7fe',
   }),
   'combat-guard-counter': Object.freeze({
     count: 33,
-    digest: 'b05d0214d53c2f77d16fd845be8dfc7a1bc7e84214c3fca5cfb804e2e0fe639b',
+    digest: 'be15009264a70042f03127b1eeb8f73cf8fb9c952cd2f3782490f9070ccf31b4',
   }),
 });
 
@@ -137,12 +137,13 @@ function digestItems(items) {
 }
 
 function assertPublicParity(scenarioId, expected, setScenario) {
-  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
   scene.enterTree();
   try {
+    scene.setVisualQaScrapAwakeningStage('yard-clearance');
     scene.setVisualQaLocation({
-      regionId: 'academy-region',
-      roomId: 'training-room',
+      regionId: 'scrap-waste-edge',
+      roomId: 'abandoned-weapon-yard',
       x: 560,
     });
     setScenario(scene, scenarioId);
@@ -164,12 +165,13 @@ for (const [scenarioId, expected] of Object.entries(EFFECT_PARITY)) {
   );
 }
 
-const playerHitScene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const playerHitScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 playerHitScene.enterTree();
 try {
+  playerHitScene.setVisualQaScrapAwakeningStage('yard-clearance');
   playerHitScene.setVisualQaLocation({
-    regionId: 'academy-region',
-    roomId: 'training-room',
+    regionId: 'scrap-waste-edge',
+    roomId: 'abandoned-weapon-yard',
     x: 560,
   });
   playerHitScene.setVisualQaCombatScenario('combat-player-hit', 'active');

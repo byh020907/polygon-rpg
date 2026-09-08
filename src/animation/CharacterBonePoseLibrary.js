@@ -5,10 +5,11 @@ import {
 import { authorPlayerRigFrame } from './PlayerRig.js';
 import { createForwardRollFrames } from './ForwardRollClip.js';
 import { rollTimelineMarkerAt } from './RollTimeline.js';
+import { PLAYER_MOTION_PROFILE } from './PlayerMotionProfile.js';
 import { quaternionFromEuler, multiplyQuaternions, conjugateQuaternion } from './Quaternion.js';
 
 const CHARACTER_FOOT_Y = 82;
-const REFERENCE_JUMP_SPEED = 470;
+const REFERENCE_JUMP_SPEED = PLAYER_MOTION_PROFILE.jumpSpeed;
 function clamp(value, minimum = 0, maximum = 1) {
   return Math.max(minimum, Math.min(maximum, value));
 }
@@ -19,11 +20,19 @@ function smoothStep(value) {
 }
 
 function sampleIdle(animationTime) {
-  return sampleAuthoredCycle(AUTHORED_PLAYER_UTILITY_FRAMES.idle, animationTime, 2.4);
+  return sampleAuthoredCycle(
+    AUTHORED_PLAYER_UTILITY_FRAMES.idle,
+    animationTime,
+    PLAYER_MOTION_PROFILE.poseCyclesPerSecond.idle,
+  );
 }
 
 function sampleMovement(animationTime) {
-  return sampleAuthoredCycle(AUTHORED_PLAYER_UTILITY_FRAMES.run, animationTime, 7.5);
+  return sampleAuthoredCycle(
+    AUTHORED_PLAYER_UTILITY_FRAMES.run,
+    animationTime,
+    PLAYER_MOTION_PROFILE.poseCyclesPerSecond.run,
+  );
 }
 
 function sampleAirborne(verticalVelocity) {
@@ -36,7 +45,11 @@ function sampleAirborne(verticalVelocity) {
 }
 
 function sampleGuard(animationTime) {
-  return sampleAuthoredCycle(AUTHORED_PLAYER_UTILITY_FRAMES.guard, animationTime, 2.1);
+  return sampleAuthoredCycle(
+    AUTHORED_PLAYER_UTILITY_FRAMES.guard,
+    animationTime,
+    PLAYER_MOTION_PROFILE.poseCyclesPerSecond.guard,
+  );
 }
 
 function sampleBlockReaction(progress, strength) {

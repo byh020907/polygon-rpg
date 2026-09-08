@@ -1,6 +1,8 @@
 dist
 node_modules
 coverage
+artifacts
+logs
 package-lock.json
 src/vendor
 .ai/methods/**

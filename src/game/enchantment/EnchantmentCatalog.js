@@ -3,10 +3,8 @@ export const ENCHANTMENT_CATALOG = Object.freeze({
     Object.freeze({
       id: 'fire',
       label: '화염',
-      materialId: 'cinderbloom-seed',
-      materialLabel: '잿불꽃 씨앗',
-      sourceId: 'field-guardian-defeated',
-      sourceAwardQuantity: 2,
+      materialId: 'heat-cell',
+      materialLabel: '축열 전지',
       goldCosts: Object.freeze([60, 120, 240, 480, 960]),
       color: '#ff784f',
       highlightColor: '#ffd2b8',
@@ -15,10 +13,8 @@ export const ENCHANTMENT_CATALOG = Object.freeze({
     Object.freeze({
       id: 'ice',
       label: '냉기',
-      materialId: 'frostroot-crystal',
-      materialLabel: '서리뿌리 결정',
-      sourceId: 'dungeon-guardian-defeated',
-      sourceAwardQuantity: 2,
+      materialId: 'coolant-crystal',
+      materialLabel: '냉각 결정',
       goldCosts: Object.freeze([60, 120, 240, 480, 960]),
       color: '#77ddff',
       highlightColor: '#e7fbff',
@@ -27,10 +23,8 @@ export const ENCHANTMENT_CATALOG = Object.freeze({
     Object.freeze({
       id: 'earth',
       label: '대지',
-      materialId: 'sealstone-heart',
-      materialLabel: '봉인석 심장',
-      sourceId: 'boss-reward-claimed',
-      sourceAwardQuantity: 2,
+      materialId: 'mineral-alloy',
+      materialLabel: '광물 합금',
       goldCosts: Object.freeze([60, 120, 240, 480, 960]),
       color: '#b7e37f',
       highlightColor: '#ecffd0',
@@ -39,10 +33,8 @@ export const ENCHANTMENT_CATALOG = Object.freeze({
     Object.freeze({
       id: 'lightning',
       label: '전기',
-      materialId: 'stormglass-prism',
-      materialLabel: '폭풍유리 프리즘',
-      sourceId: 'glasswind-reward-claimed',
-      sourceAwardQuantity: 2,
+      materialId: 'conductive-coil',
+      materialLabel: '전도 코일',
       goldCosts: Object.freeze([60, 120, 240, 480, 960]),
       color: '#ffe36e',
       highlightColor: '#fff7aa',
@@ -53,8 +45,5 @@ export const ENCHANTMENT_CATALOG = Object.freeze({
     const profile = this.profiles.find((candidate) => candidate.id === id);
     if (!profile) throw new Error(`알 수 없는 enchant ID입니다: ${id}`);
     return profile;
-  },
-  getBySourceId(sourceId) {
-    return this.profiles.find((candidate) => candidate.sourceId === sourceId) ?? null;
   },
 });

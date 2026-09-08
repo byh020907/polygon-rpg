@@ -23,6 +23,7 @@ npm run dev
 
 - 게임: `http://127.0.0.1:5173/`
 - Product Goal 설계서: `http://127.0.0.1:5173/PRODUCT_GOAL.html`
+- 전체 그래픽 검토: `http://127.0.0.1:5173/?graphicsReview=1` — 게임의 MAP 버튼 1초 hold → 디버그 패널에서도 연다. [등록·검토 안내](./docs/graphics-review.md)
 
 메인 메뉴에서 `게임 시작 / 계속하기`를 선택하면 고물상인의 정식 수거 의뢰와 라이벌의 현장 동행으로 시작합니다. 폐병기의 자동 회수팔에 붙잡힌 라이벌을 구하기 위해 제어핵을 직접 회수하면 고대 병기 각성, D-30 고지, 고물상인 분석과 차고의 대항 병기 0%가 실제 gameplay 안에서 이어지며, stage는 browser-local 진행에 저장됩니다.
 
@@ -54,6 +55,9 @@ Quick Tunnel은 인증 없는 공개 개발 주소입니다. secret, personal da
 - `npm run dev:mobile`: local server와 mobile verification tunnel
 - `npm run visual:qa -- <options>`: 실제 browser 창의 stable frame PNG와 metadata 생성
 - `npm run lint`: ESLint
+- `npm run test:graphics`: 원본 inventory·실제 게임 sampler 동일 출력·재현 URL 계약 검사
+- `npm run graphics:qa`: headless Chrome에서 desktop/mobile 실제 검토 UI 입력·재생·복사·재현과 PNG 검사
+- `npm run graphics:ui-qa`: 실제 게임 UI component별 화면 확인
 - `npm run test:campaign`, `npm run test:intro`, `npm run test:platform`: 해당 흐름의 focused fixture
 - `npm run check`: 모든 lint, format, domain fixture를 실행하는 완료 후보의 전체 검사
 - `npm run format`: Prettier 적용
@@ -78,6 +82,8 @@ player/enemy/contact metadata를 함께 남깁니다. 공간·도입 scenario는
 Polygon/Retro parity와 console error를 확인합니다.
 
 ## GitHub Pages
+
+개발 저장은 현재 schema만 사용한다. 호환되지 않는 이전 개발 저장은 초기화 안내를 표시하며 자동으로 덮어쓰지 않는다. 사용자가 메뉴에서 초기화를 선택하면 현행 캠페인을 새로 시작한다.
 
 Production은 별도 bundle 없이 `main /`의 static files를 제공합니다.
 

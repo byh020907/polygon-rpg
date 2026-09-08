@@ -184,6 +184,10 @@ export class GameApplication {
     return this.currentApp.toggleWorldTime();
   }
 
+  prepareUiReview(presentation) {
+    return this.currentApp.prepareUiReview(presentation);
+  }
+
   trainCombatSkill() {
     return this.currentApp.trainCombatSkill();
   }

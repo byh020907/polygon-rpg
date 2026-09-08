@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import { resolveSwordEnchantment } from '../src/game/enchantment/EnchantmentPolicy.js';
@@ -9,21 +8,19 @@ import {
   ENCHANTMENT_MATERIAL_COSTS,
   ENCHANTMENT_MAX_LEVEL,
   ENCHANTMENT_TRANSACTION_REASON,
-  awardEnchantMaterial,
-  awardRepeatableEnchantMaterial,
+  awardEnchantmentMaterial,
   createEnchantmentSnapshot,
 } from '../src/game/enchantment/EnchantmentState.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
-import {
-  FIRST_JOURNEY_CHECKPOINT_ID,
-  JOURNEY_PHASE,
-  JOURNEY_ROUTE,
-} from '../src/game/encounter/FirstJourneyProgress.js';
-import { FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE } from '../src/game/journey/FirstJourneyDungeonSignature.js';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
+import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
+import { COMBAT_PROGRESSION_PROFILE } from '../src/game/progression/ProgressionProfiles.js';
 import {
   PROGRESSION_SCHEMA_VERSION,
   awardEnemyEnchantMaterial,
+  awardCampaignEncounterReward,
   createProgressionSnapshot,
   getAvailableGold,
   mergeProgressionSnapshot,
@@ -42,7 +39,7 @@ const OTHER_SWORD_ID = 'heavy-sword';
 let contactSequence = 0;
 
 function createEncounter({
-  profileId = 'training',
+  profileId = 'yard-scout-collector',
   enchantId = null,
   enchantLevel = enchantId ? ENCHANTMENT_MAX_LEVEL : 0,
   swordId = DEFAULT_SWORD_ID,
@@ -284,16 +281,19 @@ function verifyActualEffectsAndShieldExclusion() {
   assert.ok(Math.abs(iceEncounter.enemy.aiSeconds - (10 - STEP * 0.7)) < 1e-9);
 
   const guardedStrong = createEncounter({
-    profileId: 'boss',
+    profileId: 'mine-collapse-boss',
     enchantId: 'earth',
     enchantLevel: 5,
   });
   guardedStrong.enemy.aiState = 'guard';
-  assert.equal(resolveContact(guardedStrong, 'strong').postureDamage, 48 + 34);
+  assert.equal(
+    resolveContact(guardedStrong, 'strong').postureDamage,
+    ENCOUNTER_PROFILES['mine-collapse-boss'].posture.strongDamage + 34,
+  );
   guardedStrong.exitTree();
 
   const guardedLevelOne = createEncounter({
-    profileId: 'boss',
+    profileId: 'mine-collapse-boss',
     enchantId: 'earth',
     enchantLevel: 1,
   });
@@ -317,7 +317,7 @@ function progressionWithResources({ materialId, quantity, gold }) {
   const fresh = createProgressionSnapshot(DEFAULT_SWORD_ID, ENCHANTMENT_CATALOG);
   return mergeProgressionSnapshot({
     ...fresh,
-    firstJourney: { ...fresh.firstJourney, gold },
+    gold,
     enchantment: {
       ...fresh.enchantment,
       materialQuantities: {
@@ -337,16 +337,6 @@ function assertUnchangedFailure(transaction, before, reason) {
 function verifyTransactionsAndSwordIsolation() {
   assert.deepEqual(ENCHANTMENT_MATERIAL_COSTS, [null, 2, 4, 8, 16, 32]);
   const fire = ENCHANTMENT_CATALOG.getProfile('fire');
-  let sourceSnapshot = createEnchantmentSnapshot([DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
-  const awarded = awardEnchantMaterial(sourceSnapshot, fire, ENCHANTMENT_CATALOG);
-  assert.equal(awarded.quantity, 2);
-  assert.equal(awarded.enchantment.materialQuantities[fire.materialId], 2);
-  sourceSnapshot = awarded.enchantment;
-  const repeatedAward = awardEnchantMaterial(sourceSnapshot, fire, ENCHANTMENT_CATALOG);
-  assert.equal(repeatedAward.changed, false);
-  assert.equal(repeatedAward.reason, ENCHANTMENT_TRANSACTION_REASON.MATERIAL_ALREADY_CLAIMED);
-  assert.deepEqual(repeatedAward.enchantment, sourceSnapshot);
-
   const totalMaterial = ENCHANTMENT_MATERIAL_COSTS.slice(1).reduce((sum, value) => sum + value, 0);
   const totalGold = fire.goldCosts.reduce((sum, value) => sum + value, 0);
   let progression = progressionWithResources({
@@ -461,7 +451,7 @@ function verifyTransactionsAndSwordIsolation() {
   });
   const equippedHeavy = selectEquipment(isolated, OTHER_SWORD_ID).snapshot;
   const scene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
+    mapDefinition: SCRAP_AWAKENING_MAP,
     progressionSnapshot: equippedHeavy,
   });
   assert.equal(scene.getEnchantContext().swordId, OTHER_SWORD_ID);
@@ -480,153 +470,125 @@ function verifyTransactionsAndSwordIsolation() {
   scene.dispose();
 }
 
-function completedFirstJourneyProgression() {
-  const fresh = createProgressionSnapshot(DEFAULT_SWORD_ID, ENCHANTMENT_CATALOG);
-  return mergeProgressionSnapshot({
-    ...fresh,
-    firstJourney: {
-      ...fresh.firstJourney,
-      phase: JOURNEY_PHASE.RETURNED,
-      routeChoice: JOURNEY_ROUTE.GUARDIAN,
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: FIRST_JOURNEY_CHECKPOINT_ID,
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold: 120,
-      dungeonSignatureStageIds: Object.freeze([
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.INTRODUCTION,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.GUARDIAN_COMBAT,
-        FIRST_JOURNEY_DUNGEON_SIGNATURE_STAGE.BOSS_TEST,
-      ]),
-    },
-  });
-}
-
-function verifyRepeatableEnemyMaterialRewards() {
-  const expectedRewards = new Map([
-    ['earth-material-echo', 'earth'],
-    ['fire-material-echo', 'fire'],
-    ['ice-material-echo', 'ice'],
-    ['glasswind-material-echo', 'lightning'],
-  ]);
-  for (const [profileId, elementId] of expectedRewards) {
-    const profile = ENCOUNTER_PROFILES[profileId];
-    assert.equal(profile.respawns, true);
-    assert.deepEqual(profile.materialReward, { elementId, quantity: 1 });
-  }
-
-  const authoredEntityIds = new Set(
-    ACADEMY_VILLAGE_MAP.regions.flatMap((region) =>
-      region.rooms.flatMap((room) => room.entities.map((entity) => entity.id)),
-    ),
+function verifyCampaignEnemyMaterialRewards() {
+  const authoredEntities = new Map(
+    SCRAP_AWAKENING_MAP.regions
+      .flatMap((region) => region.rooms.flatMap((room) => room.entities))
+      .map((entity) => [entity.id, entity]),
   );
-  for (const entityId of [
-    'earth-material-training-echo',
-    'fire-material-field-echo',
-    'ice-material-dungeon-echo',
-    'lightning-material-glasswind-echo',
-  ]) {
+  const fresh = createProgressionSnapshot(
+    DEFAULT_SWORD_ID,
+    ENCHANTMENT_CATALOG,
+    SCRAP_CAMPAIGN_PROFILE,
+  );
+  const elements = new Set();
+  for (const reward of Object.values(COMBAT_PROGRESSION_PROFILE.encounterRewards)) {
+    assert.equal(authoredEntities.get(reward.entityId)?.encounterProfileId, reward.profileId);
+    elements.add(reward.materialReward.elementId);
+    const awarded = awardCampaignEncounterReward(
+      fresh,
+      reward,
+      COMBAT_PROGRESSION_PROFILE,
+      ENCHANTMENT_CATALOG,
+      SCRAP_CAMPAIGN_PROFILE,
+    );
+    assert.equal(awarded.changed, true);
+    assert.equal(awarded.snapshot.gold, reward.gold);
+    const materialId = ENCHANTMENT_CATALOG.getProfile(reward.materialReward.elementId).materialId;
     assert.equal(
-      authoredEntityIds.has(entityId),
-      true,
-      `${entityId} authored source가 필요합니다.`,
+      awarded.snapshot.enchantment.materialQuantities[materialId],
+      reward.materialReward.quantity,
     );
     assert.equal(
-      ACADEMY_VILLAGE_MAP.patches.some((patch) =>
-        patch.operations.some(
-          (operation) =>
-            operation.op === 'set-enabled' && operation.target === entityId && operation.value,
-        ),
-      ),
-      true,
-      `${entityId}는 대응 첫 클리어 뒤 열려야 합니다.`,
+      awarded.snapshot.scrapCampaign.elapsedSegments,
+      fresh.scrapCampaign.elapsedSegments,
+    );
+    assert.deepEqual(
+      awardCampaignEncounterReward(
+        awarded.snapshot,
+        reward,
+        COMBAT_PROGRESSION_PROFILE,
+        ENCHANTMENT_CATALOG,
+        SCRAP_CAMPAIGN_PROFILE,
+      ).snapshot,
+      awarded.snapshot,
     );
   }
-
-  const fire = ENCHANTMENT_CATALOG.getProfile('fire');
+  assert.deepEqual([...elements].sort(), ['earth', 'fire', 'ice', 'lightning']);
+  assert.equal(
+    awardCampaignEncounterReward(
+      fresh,
+      { entityId: 'unknown', profileId: 'unknown' },
+      COMBAT_PROGRESSION_PROFILE,
+      ENCHANTMENT_CATALOG,
+      SCRAP_CAMPAIGN_PROFILE,
+    ).changed,
+    false,
+  );
   let repeatable = createEnchantmentSnapshot([DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
-  for (let count = 1; count <= 62; count += 1) {
-    const awarded = awardRepeatableEnchantMaterial(
+  for (let quantity = 1; quantity <= 62; quantity += 1) {
+    const awarded = awardEnchantmentMaterial(
       repeatable,
-      { elementId: 'fire', quantity: 1 },
+      { elementId: 'fire' },
       ENCHANTMENT_CATALOG,
     );
-    assert.equal(awarded.totalQuantity, count);
+    assert.equal(awarded.totalQuantity, quantity);
     repeatable = awarded.enchantment;
   }
-  assert.equal(repeatable.materialQuantities[fire.materialId], 62);
-  assert.deepEqual(repeatable.claimedMaterialSourceIds, []);
-
-  const progressionAward = awardEnemyEnchantMaterial(
-    createProgressionSnapshot(DEFAULT_SWORD_ID, ENCHANTMENT_CATALOG),
-    { elementId: 'ice', quantity: 1 },
-    ENCHANTMENT_CATALOG,
+  assert.equal(
+    awardEnemyEnchantMaterial(fresh, { elementId: 'ice', quantity: 1 }, ENCHANTMENT_CATALOG)
+      .totalQuantity,
+    1,
   );
-  assert.equal(progressionAward.totalQuantity, 1);
-  assert.equal(progressionAward.snapshot.enchantment.materialQuantities['frostroot-crystal'], 1);
 
   const scene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: completedFirstJourneyProgression(),
+    progressionSnapshot: mergeProgressionSnapshot(fresh, {
+      scrapCampaign: { ...fresh.scrapCampaign, awakeningStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD },
+    }),
   });
-  const progressionEvents = [];
-  scene.progressionChanged.connect((snapshot) => progressionEvents.push(snapshot));
   scene.enterTree();
   try {
-    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 500 });
     const encounter = scene.roomSceneNode.encounter;
-    assert.equal(encounter.getGameplaySnapshot().profileId, 'earth-material-echo');
-    assert.deepEqual(encounter.getGameplaySnapshot().materialReward, {
-      elementId: 'earth',
-      quantity: 1,
-    });
-    const initialClock = scene.getProgressionSnapshot().worldTime.clockMinutes;
-    const initialMaterial =
-      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'];
+    assert.equal(encounter.getGameplaySnapshot().profileId, 'yard-guard-collector');
+    const snapshots = [];
+    scene.progressionChanged.connect((snapshot) => snapshots.push(snapshot));
     encounter.enemy.position.x = 650;
     encounter.enemy.health = 1;
     assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), true);
     assert.equal(
-      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'],
-      initialMaterial + 1,
+      scene.getProgressionSnapshot().scrapCampaign.awakeningStageId,
+      SCRAP_AWAKENING_STAGE.YARD_SEARCH,
     );
-    assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), false);
+    assert.equal(scene.getProgressionSnapshot().gold, 120);
     assert.equal(
-      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'],
-      initialMaterial + 1,
-      '같은 enemy life는 completion을 중복 지급하면 안 됩니다.',
-    );
-    for (let tick = 0; tick < 125; tick += 1) encounter.step(STEP, idleFrame(650));
-    assert.equal(encounter.getGameplaySnapshot().health, 80);
-    encounter.enemy.position.x = 650;
-    encounter.enemy.health = 1;
-    assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), true);
-    assert.equal(
-      scene.getProgressionSnapshot().enchantment.materialQuantities['sealstone-heart'],
-      initialMaterial + 2,
-    );
-    assert.equal(scene.getProgressionSnapshot().worldTime.clockMinutes, initialClock + 40);
-    assert.equal(
-      progressionEvents.length,
+      scene.getProgressionSnapshot().enchantment.materialQuantities['conductive-coil'],
       2,
-      '한 life completion마다 durable snapshot 한 번만 내보낸다.',
     );
-    assert.match(
-      scene.getWorldStatus().progressionNotice,
-      new RegExp(`봉인석 심장 확정 \\+1 · 보유 ${initialMaterial + 2}`),
-    );
-
-    const adapter = new MemoryStorage();
-    const storage = new ProgressionStorage(adapter, 'repeatable-material-v8', ENCHANTMENT_CATALOG);
-    assert.equal(storage.save(scene.getProgressionSnapshot()).ok, true);
-    const loaded = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
-    assert.equal(loaded.ok, true);
+    assert.equal(scene.getProgressionSnapshot().scrapCampaign.elapsedSegments, 0);
     assert.equal(
-      loaded.snapshot.enchantment.materialQuantities['sealstone-heart'],
-      initialMaterial + 2,
+      snapshots.length,
+      1,
+      'victory 진행·재료·통화를 하나의 durable snapshot으로 공개한다.',
     );
+    const afterVictory = scene.getProgressionSnapshot();
+    assert.equal(
+      scene.resolveCampaignEncounter({
+        entityId: 'scrap-yard-guard-collector',
+        profileId: 'yard-guard-collector',
+        scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+      }).changed,
+      false,
+    );
+    assert.deepEqual(scene.getProgressionSnapshot(), afterVictory);
+    const storage = new ProgressionStorage(
+      new MemoryStorage(),
+      'campaign-victory',
+      ENCHANTMENT_CATALOG,
+      COMBAT_PROGRESSION_PROFILE.weaponForge,
+      SCRAP_CAMPAIGN_PROFILE,
+    );
+    assert.equal(storage.save(afterVictory).ok, true);
+    assert.deepEqual(storage.load(DEFAULT_SWORD_ID).snapshot, afterVictory);
   } finally {
     scene.exitTree();
   }
@@ -648,7 +610,7 @@ class MemoryStorage {
   }
 }
 
-function verifyPersistenceMigrationAndRecovery() {
+function verifyPersistenceAndRecovery() {
   const fire = ENCHANTMENT_CATALOG.getProfile('fire');
   const durable = progressionWithResources({
     materialId: fire.materialId,
@@ -661,42 +623,27 @@ function verifyPersistenceMigrationAndRecovery() {
     ENCHANTMENT_CATALOG,
   ).snapshot;
   const adapter = new MemoryStorage();
-  const storage = new ProgressionStorage(adapter, 'enchantment-v8', ENCHANTMENT_CATALOG);
-  assert.equal(PROGRESSION_SCHEMA_VERSION, 9);
+  const storage = new ProgressionStorage(adapter, 'enchantment-current', ENCHANTMENT_CATALOG);
+  assert.equal(PROGRESSION_SCHEMA_VERSION, 10);
   assert.equal(storage.save(upgraded).ok, true);
   const roundTrip = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(roundTrip.ok, true);
   assert.equal(roundTrip.kind, 'loaded');
   assert.deepEqual(roundTrip.snapshot, upgraded);
 
-  const legacyV5 = {
-    ...upgraded,
-    version: 5,
-    enchantment: {
-      materialIds: ['frostroot-crystal'],
-      unlockedIds: ['fire'],
-      activeId: 'fire',
-      claimedMaterialSourceIds: ['field-guardian-defeated'],
-    },
-  };
-  adapter.value = JSON.stringify(legacyV5);
-  const migrated = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
-  assert.equal(migrated.ok, true);
-  assert.equal(migrated.kind, 'migrated');
-  assert.equal(migrated.snapshot.version, PROGRESSION_SCHEMA_VERSION);
-  assert.deepEqual(migrated.snapshot.enchantment.swordEnchantments[DEFAULT_SWORD_ID], {
-    elementId: 'fire',
-    level: 1,
-  });
-  assert.equal(migrated.snapshot.enchantment.materialQuantities['frostroot-crystal'], 2);
+  const missingQuantity = JSON.parse(adapter.value);
+  delete missingQuantity.enchantment.materialQuantities[fire.materialId];
+  adapter.value = JSON.stringify(missingQuantity);
+  assert.equal(
+    storage.load(DEFAULT_SWORD_ID).reason,
+    'invalid-data',
+    '누락된 소재 수량을 0으로 복구했다고 위장하지 않는다.',
+  );
 
-  adapter.value = JSON.stringify({
-    ...legacyV5,
-    enchantment: { ...legacyV5.enchantment, unlockedIds: ['unknown-enchant'] },
-  });
+  adapter.value = JSON.stringify({ ...upgraded, version: 9 });
   assert.equal(
     storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG).reason,
-    'invalid-data',
+    'incompatible-schema',
   );
 
   adapter.value = JSON.stringify({
@@ -726,41 +673,36 @@ function verifyPersistenceMigrationAndRecovery() {
   );
 }
 
-function verifyVisualQaLevelsAndRuntimeContext() {
-  const levelOne = readVisualQaRequest(
-    '?visualQa=1&gameStart=enchant-fire-contact&visualQaRenderer=polygon&visualQaPhase=active',
-  );
-  const levelFive = readVisualQaRequest(
-    '?visualQa=1&gameStart=enchant-lightning-contact&visualQaRenderer=retro&visualQaPhase=active',
-  );
-  assert.equal(levelOne.scenario.expectation.expectedEnchantLevel, 1);
-  assert.equal(levelOne.scenario.enchantmentSnapshot.swordEnchantments[DEFAULT_SWORD_ID].level, 1);
-  assert.equal(levelFive.scenario.expectation.expectedEnchantLevel, 5);
-  assert.equal(levelFive.scenario.enchantmentSnapshot.swordEnchantments[DEFAULT_SWORD_ID].level, 5);
-  const repeatableMaterial = readVisualQaRequest(
-    '?visualQa=1&gameStart=enchant-material-repeat&visualQaRenderer=polygon&visualQaPhase=active',
-  );
-  assert.equal(repeatableMaterial.scenario.materialEchoDefeats, 2);
-  assert.equal(repeatableMaterial.scenario.expectation.expectedMaterialId, 'sealstone-heart');
-  assert.equal(repeatableMaterial.scenario.expectation.expectedMaterialQuantity, 4);
+function workshopReady(snapshot) {
+  return mergeProgressionSnapshot(snapshot, {
+    scrapCampaign: {
+      ...snapshot.scrapCampaign,
+      awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+      garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
+    },
+  });
+}
 
+function verifyWorkshopRuntimeContext() {
   const fire = ENCHANTMENT_CATALOG.getProfile('fire');
-  const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+  const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
   scene.enterTree();
   try {
     scene.restoreProgression(
-      progressionWithResources({
-        materialId: fire.materialId,
-        quantity: 2,
-        gold: fire.goldCosts[0],
-      }),
+      workshopReady(
+        progressionWithResources({
+          materialId: fire.materialId,
+          quantity: 2,
+          gold: fire.goldCosts[0],
+        }),
+      ),
     );
     scene.setVisualQaLocation({
-      regionId: 'academy-region',
-      roomId: 'academy-enchanter-shop',
-      x: 610,
+      regionId: 'scrap-waste-edge',
+      roomId: 'abandoned-weapon-yard',
+      x: 198,
     });
-    const inactive = scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-fire');
+    const inactive = scene.executeDialogueCommand('scrapyard-owner-workshop', 'enchant-fire');
     assert.equal(inactive.changed, false);
     assert.equal(inactive.reason, 'unavailable');
     scene.update(
@@ -779,30 +721,27 @@ function verifyVisualQaLevelsAndRuntimeContext() {
     );
     const dialogue = scene.getWorldStatus().dialogue;
     assert.equal(dialogue.active, true);
-    assert.equal(dialogue.interactionId, 'enchanter-lio-interaction');
+    assert.equal(dialogue.interactionId, 'scrapyard-owner-workshop');
     assert.equal(
       dialogue.commands.find((command) => command.id === 'enchant-fire').canChoose,
       true,
     );
     assert.equal(
-      scene.executeDialogueCommand('mentor-sera-interaction', 'enchant-fire').reason,
+      scene.executeDialogueCommand('other-workshop-interaction', 'enchant-fire').reason,
       'unavailable',
     );
     assert.equal(
-      scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-unknown').reason,
+      scene.executeDialogueCommand('scrapyard-owner-workshop', 'enchant-unknown').reason,
       'unavailable',
     );
-    const forged = scene.executeDialogueCommand('enchanter-lio-interaction', 'enchant-fire');
+    const forged = scene.executeDialogueCommand('scrapyard-owner-workshop', 'enchant-fire');
     assert.equal(forged.changed, true);
     assert.equal(scene.getEnchantContext().active.level, 1);
     assert.equal(scene.getEnchantContext().swordId, DEFAULT_SWORD_ID);
-    scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 500 });
-    scene.setVisualQaCombatScenario('enchant-fire-contact');
-    assert.ok(scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-fire-ember-0'));
-    scene.setVisualQaCombatScenario('enchant-shield-excluded');
     assert.equal(
-      scene.createRenderFrame(0).items.some((item) => item.id === 'enchant-contact-ring'),
-      false,
+      scene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
+      0,
+      '작업장에서의 즉시 인챈트는 시간을 소비하지 않는다.',
     );
   } finally {
     scene.exitTree();
@@ -818,9 +757,9 @@ function verifyVisualQaLevelsAndRuntimeContext() {
 verifyPolicyAndActualMatrix();
 verifyActualEffectsAndShieldExclusion();
 verifyTransactionsAndSwordIsolation();
-verifyRepeatableEnemyMaterialRewards();
-verifyPersistenceMigrationAndRecovery();
-verifyVisualQaLevelsAndRuntimeContext();
+verifyCampaignEnemyMaterialRewards();
+verifyPersistenceAndRecovery();
+verifyWorkshopRuntimeContext();
 
 console.log(
   JSON.stringify(
@@ -834,11 +773,9 @@ console.log(
         'level-1-to-5-linear-damage-and-level-5-1.5x-additional',
         'affinity-non-zero-basic-strong-status-and-four-elements',
         'shield-contact-exclusion',
-        'idempotent-source-material-quantity-award',
-        'four-authored-repeatable-enemies-and-one-award-per-life',
-        'repeatable-material-quantity-v9-round-trip',
-        'v5-migration-v9-round-trip-corrupt-and-write-failure',
-        'polygon-retro-level-1-level-5-visual-qa-fixtures',
+        'current-authored-victory-resources-and-one-ledger-award',
+        'production-victory-single-snapshot-and-v10-round-trip',
+        'incompatible-reset-notice-corrupt-and-write-failure',
         'active-npc-conversation-command-only-and-static-hud-removal',
       ],
     },

@@ -186,7 +186,11 @@ function assertHitConfirmAndGuardCancel() {
 }
 
 function assertPostureContract() {
-  for (const profileId of ['training', 'field', 'glasswind-field']) {
+  for (const profileId of [
+    'yard-scout-collector',
+    'yard-brace-collector',
+    'mine-tunnel-collector',
+  ]) {
     const normal = createEncounter(profileId);
     assert.equal(
       'posture' in normal.getGameplaySnapshot(),
@@ -194,7 +198,7 @@ function assertPostureContract() {
       `${profileId} 일반 적 snapshot에는 posture가 없어야 한다.`,
     );
   }
-  for (const profileId of ['boss', 'glasswind-boss']) {
+  for (const profileId of ['mine-collapse-boss', 'shipyard-twin-crane-boss']) {
     const postureBoss = createEncounter(profileId);
     assert.ok(
       postureBoss.getGameplaySnapshot().posture,
@@ -202,7 +206,7 @@ function assertPostureContract() {
     );
   }
 
-  const boss = createEncounter('boss');
+  const boss = createEncounter('mine-collapse-boss');
   const enemy = boss.enemy;
   const postureMaximum = enemy.posture.maximum;
   const hpBefore = enemy.health;
@@ -253,7 +257,7 @@ function assertPostureContract() {
   );
   assert.equal(
     enemy.posture.current,
-    postureMaximum - ENCOUNTER_PROFILES.boss.posture.strongDamage,
+    postureMaximum - ENCOUNTER_PROFILES['mine-collapse-boss'].posture.strongDamage,
   );
   enemy.aiState = 'guard';
   resolve('shieldBash', 2, 16, false, 'shield');
@@ -262,6 +266,12 @@ function assertPostureContract() {
     hpBefore - 22,
     'guarded shield counter posture contact는 HP damage를 추가하면 안 된다.',
   );
+  let counterSequence = 3;
+  while (enemy.posture.current > 0) {
+    enemy.aiState = 'guard';
+    resolve('shieldBash', counterSequence++, 16, false, 'shield');
+  }
+  assert.equal(enemy.health, hpBefore - 22, 'repeated guarded counters cannot add HP damage');
   assert.equal(enemy.posture.current, 0);
   assert.ok(enemy.posture.groggySeconds > 0, 'posture 0은 bounded groggy를 열어야 한다.');
   assert.equal(
@@ -270,7 +280,9 @@ function assertPostureContract() {
     'groggy는 실제 damaging contact를 여는 punish window여야 한다.',
   );
   assert.equal(enemy.punishWindowOrigin, 'posture');
-  boss.updateEnemyPhysics(ENCOUNTER_PROFILES.boss.posture.groggySeconds, { facing: 1 });
+  boss.updateEnemyPhysics(ENCOUNTER_PROFILES['mine-collapse-boss'].posture.groggySeconds, {
+    facing: 1,
+  });
   assert.equal(
     enemy.posture.current,
     postureMaximum,
@@ -330,7 +342,11 @@ function createFrontContactFrame(encounter, { sequence = 1, damage = 20 } = {}) 
 }
 
 function assertBossWeakPointExposureContract() {
-  for (const profileId of ['training', 'field', 'glasswind-field']) {
+  for (const profileId of [
+    'yard-scout-collector',
+    'yard-brace-collector',
+    'mine-tunnel-collector',
+  ]) {
     assert.equal(
       'weakPoint' in createEncounter(profileId).getGameplaySnapshot(),
       false,
@@ -338,7 +354,7 @@ function assertBossWeakPointExposureContract() {
     );
   }
 
-  for (const profileId of ['boss', 'glasswind-boss']) {
+  for (const profileId of ['mine-collapse-boss', 'shipyard-twin-crane-boss']) {
     const profile = ENCOUNTER_PROFILES[profileId];
     const triggerAttackKind = profile.weakPoint.triggerAttackKinds[0];
     const boss = createEncounter(profileId);
@@ -458,7 +474,7 @@ function assertPostureVisualQaExpectationMatrix() {
     const active = readVisualQaRequest(
       `?visualQa=1&gameStart=boss-weak-point-exposed&visualQaRenderer=${renderer}&visualQaPhase=active`,
     );
-    assert.equal(active.scenario.roomId, 'sealed-forest-boss');
+    assert.equal(active.scenario.roomId, 'abandoned-mine-machine-yard');
     assert.equal(active.scenario.expectation.expectedItem, 'combat-enemy-weak-point-aura');
     assert.deepEqual(active.scenario.expectation.expectedItems, ['combat-enemy-weak-point-core']);
     for (const phase of ['start', 'end']) {

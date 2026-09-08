@@ -168,6 +168,33 @@ const corruptLoad = createStorage(corruptMemory).loadRecoverySlots(
 assert.equal(corruptLoad.ok, false);
 assert.equal(corruptLoad.reason, 'recovery-invalid-data');
 
+for (const changeVersion of [
+  (snapshot) => {
+    snapshot.version = 9;
+  },
+  (snapshot) => {
+    snapshot.scrapCampaign.version = 7;
+  },
+]) {
+  const incompatibleMemory = new MemoryStorage();
+  const envelope = JSON.parse(memory.getItem(RECOVERY_KEY));
+  changeVersion(envelope.slots[RECOVERY_SLOT_ID.PRE_ACTION].snapshot);
+  const serialized = JSON.stringify(envelope);
+  incompatibleMemory.setItem(RECOVERY_KEY, serialized);
+  const incompatible = createStorage(incompatibleMemory).loadRecoverySlots(
+    EQUIPMENT_CATALOG.defaultProfileId,
+    EQUIPMENT_IDS,
+  );
+  assert.equal(incompatible.ok, false);
+  assert.equal(incompatible.reason, 'recovery-incompatible-schema');
+  assert.match(incompatible.message, /초기화/);
+  assert.equal(
+    incompatibleMemory.getItem(RECOVERY_KEY),
+    serialized,
+    '호환되지 않는 복구 지점을 자동으로 덮어쓰지 않는다.',
+  );
+}
+
 const failingStorage = createStorage(new MemoryStorage({ throwOnKey: RECOVERY_KEY }));
 const failedWrite = failingStorage.saveRecoverySlot(
   preActionRequest.slotId,
@@ -276,18 +303,15 @@ const scene = createTestGameScene({
   progressionSnapshot: fresh,
 });
 const campaignBeforeKoReturn = scene.getProgressionSnapshot().scrapCampaign;
-const legacyWorldTimeBeforeKoReturn = scene.getProgressionSnapshot().worldTime;
 scene.respawnPlayerAfterKo();
 const campaignAfterKoReturn = scene.getProgressionSnapshot().scrapCampaign;
 assert.equal(campaignAfterKoReturn.elapsedSegments, campaignBeforeKoReturn.elapsedSegments + 1);
 assert.equal(campaignAfterKoReturn.deadlineSegments, campaignBeforeKoReturn.deadlineSegments - 1);
 assert.equal(campaignAfterKoReturn.committedActionIds.length, 1);
 assert.match(campaignAfterKoReturn.committedActionIds[0], /^ko-return:/);
-assert.deepEqual(
-  scene.getProgressionSnapshot().worldTime,
-  legacyWorldTimeBeforeKoReturn,
-  'KO 복귀는 legacy World Time이 아닌 고철 Campaign owner만 갱신해야 합니다.',
-);
+assert.equal(Object.hasOwn(scene.getProgressionSnapshot(), 'worldTime'), false);
+assert.equal(Object.hasOwn(scene.getProgressionSnapshot(), 'firstJourney'), false);
+assert.equal(Object.hasOwn(scene.getProgressionSnapshot(), 'regionExpansion'), false);
 
 const koInputScene = createTestGameScene({
   mapDefinition: SCRAP_AWAKENING_MAP,
@@ -371,7 +395,7 @@ console.log(
       'recovery-write-failure-explicit-result',
       'pre-action-save-failure-blocks-action-commit',
       'selected-recovery-main-save-before-scene-restore',
-      'ko-return-single-segment-campaign-commit-without-legacy-world-time-write',
+      'ko-return-single-segment-only-current-campaign-state',
       'ko-return-neutralizes-held-direction-and-attack-until-release',
       'game-over-input-lock-capital-destruction-recovery-sequence',
       'terminal-gameplay-command-rejection',

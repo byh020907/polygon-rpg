@@ -60,7 +60,7 @@
                 @touchend.prevent="startMobileGame"
               >
                 <span>모바일 조작으로 시작</span>
-                <small>ORCA REMOTE CONTROLS</small>
+                <small>터치 버튼 · 가로 화면</small>
               </button>
               <button
                 class="menu-button"
@@ -217,29 +217,6 @@
             <small>GARAGE ASSEMBLY · 제어핵 두뇌 장착</small>
             <strong>대항 병기 완성도 0%</strong>
             <span>0/5 필수 부품 · 벽 지도에서 첫 지역을 선택하세요</span>
-          </section>
-          <section
-            class="character-design-board-legend"
-            x-show="characterBoard.active"
-            aria-labelledby="character-design-board-title"
-          >
-            <header>
-              <span>
-                <small>CHARACTER READABILITY · FRONT / SIDE / ACTION</small>
-                <strong id="character-design-board-title" x-text="characterBoard.title"></strong>
-              </span>
-              <em x-text="characterBoard.scaleLabel"></em>
-            </header>
-            <ol>
-              <template x-for="entry in characterBoard.entries" x-bind:key="entry.id">
-                <li x-bind:style="`--character-role-accent: ${entry.accent}`">
-                  <strong x-text="entry.label"></strong>
-                  <small x-text="entry.roleLabel"></small>
-                  <span x-text="entry.landmarks.join(' · ')"></span>
-                  <em x-text="entry.representativePose"></em>
-                </li>
-              </template>
-            </ol>
           </section>
           <button
             id="game-menu-control"
@@ -666,6 +643,13 @@
                 </label>
 
                 <div class="debug-panel-actions debug-field--wide">
+                  <button
+                    id="graphics-review-open-control"
+                    type="button"
+                    @click="openGraphicsReview()"
+                  >
+                    전체 그래픽 리소스 검토
+                  </button>
                   <button class="debug-primary-action" type="submit">현재 화면에 적용</button>
                   <button type="button" @click="returnToPlayerGame">일반 게임으로 돌아가기</button>
                   <button
@@ -757,7 +741,7 @@
 
           <section
             class="story-briefing"
-            x-show="!visualQa"
+            x-show="!visualQa || uiReviewResource?.id === 'ui/objective'"
             x-bind:data-story-beat="storyBeatId"
             aria-labelledby="story-briefing-title"
             aria-live="polite"
@@ -771,6 +755,7 @@
           <template x-if="dialogue.active">
             <section
               class="dialogue-bubble"
+              x-bind:class="{ 'dialogue-bubble--commands': dialogue.commands?.length > 0 }"
               x-bind:data-dialogue-active="String(dialogue.active)"
               x-bind:data-dialogue-target="dialogue.interactionId"
               x-bind:data-dialogue-presentation="dialogue.presentationMode"
@@ -831,11 +816,7 @@
             x-text="dialogue.active ? dialogue.line : ''"
           ></p>
 
-          <section
-            class="mobile-controls"
-            x-show="!characterBoard.active"
-            aria-label="모바일 게임 조작"
-          >
+          <section class="mobile-controls" aria-label="모바일 게임 조작">
             <div class="mobile-direction-pad" aria-label="이동과 자세">
               <template x-for="control in mobileDirections" x-bind:key="control.id">
                 <button
@@ -874,7 +855,7 @@
 
           <section
             class="qa-input-relay"
-            x-show="qaInputEnabled && !visualQa && !characterBoard.active"
+            x-show="qaInputEnabled && !visualQa"
             x-bind:class="{ 'qa-input-relay--open': qaInputPanelOpen }"
             aria-label="연속 입력 확인"
           >
@@ -940,7 +921,11 @@
             </div>
           </section>
 
-          <div class="mobile-landscape-hint" role="status" x-show="!visualQa">
+          <div
+            class="mobile-landscape-hint"
+            role="status"
+            x-show="!visualQa || uiReviewResource?.presentation === 'orientation'"
+          >
             <strong>↻ 가로 화면 권장</strong>
             <span>기기를 옆으로 돌리면 전투 조작이 표시됩니다.</span>
           </div>
@@ -1100,6 +1085,14 @@
         </footer>
       </section>
     </main>
+    <section
+      id="graphics-review"
+      class="graphics-review"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="graphics-review-title"
+      hidden
+    ></section>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

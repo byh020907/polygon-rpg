@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
+import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import {
   DEFAULT_EQUIPMENT_PROFILE_ID,
@@ -9,12 +12,17 @@ import {
   getEquipmentProfile,
 } from '../src/game/equipment/EquipmentProfiles.js';
 import {
-  FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
+  SCRAP_WEAPON_FORGE_PROFILE,
+  COMBAT_PROGRESSION_PROFILE,
   getCombatSkillTrainingMarkRequirement,
   getCombatSkillUpgradeCost,
 } from '../src/game/progression/ProgressionProfiles.js';
 import {
   PROGRESSION_TRANSACTION_REASON,
+  PROGRESSION_SCHEMA_VERSION,
+  awardCampaignEncounterReward,
+  awardGold,
+  assertProgressionSnapshot,
   awardWeaponForgeMaterial,
   createProgressionSnapshot,
   forgeWeaponArchetype,
@@ -44,9 +52,9 @@ const STEP = 1 / 120;
 
 function openWeaponMerchantDialogue(scene) {
   scene.setVisualQaLocation({
-    regionId: 'academy-region',
-    roomId: 'academy-weapon-shop',
-    x: 610,
+    regionId: 'scrap-waste-edge',
+    roomId: 'abandoned-weapon-yard',
+    x: 198,
   });
   scene.update(
     STEP,
@@ -65,36 +73,31 @@ function openWeaponMerchantDialogue(scene) {
   return scene.getWorldStatus().dialogue;
 }
 
-function returnedFirstJourneyProgression({ trainingMarks = 0, gold = 120 } = {}) {
-  const fresh = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
-  return mergeProgressionSnapshot({
-    ...fresh,
-    trainingMarks,
-    firstJourney: {
-      phase: 'returned',
-      routeChoice: 'guardian-route',
-      fieldGuardianDefeated: true,
-      dungeonGuardianDefeated: true,
-      checkpointId: 'academy-village:academy-region:sealed-forest-dungeon:sealed-forest-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold,
-    },
-  });
+function claimIntroReward(snapshot) {
+  return awardCampaignEncounterReward(
+    snapshot,
+    { entityId: 'scrap-yard-guard-collector', profileId: 'yard-guard-collector' },
+    COMBAT_PROGRESSION_PROFILE,
+    ENCHANTMENT_CATALOG,
+    SCRAP_CAMPAIGN_PROFILE,
+  );
 }
 
-function returnedRegionExpansion(snapshot, gold = 180) {
+function currentCampaignProgression({ trainingMarks = 3, gold = 120 } = {}) {
+  const fresh = createProgressionSnapshot(
+    DEFAULT_EQUIPMENT_PROFILE_ID,
+    ENCHANTMENT_CATALOG,
+    SCRAP_CAMPAIGN_PROFILE,
+  );
+  const awarded = claimIntroReward(fresh).snapshot;
   return mergeProgressionSnapshot({
-    ...snapshot,
-    regionExpansion: {
-      phase: 'returned',
-      glasswindHunterDefeated: true,
-      checkpointId: 'academy-village:glasswind-region:glasswind-observatory:glasswind-checkpoint',
-      bossDefeated: true,
-      bossRewardClaimed: true,
-      returnedWithReward: true,
-      gold,
+    ...awarded,
+    gold,
+    trainingMarks,
+    scrapCampaign: {
+      ...fresh.scrapCampaign,
+      awakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
+      garageRevealStageId: SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
     },
   });
 }
@@ -109,7 +112,7 @@ function assertFrozenTransaction(transaction) {
 }
 
 function forgeArchetype(snapshot, profileId) {
-  const forge = FIRST_JOURNEY_WEAPON_FORGE_PROFILE;
+  const forge = SCRAP_WEAPON_FORGE_PROFILE;
   return forgeWeaponArchetype(snapshot, {
     choiceGroupId: forge.choiceGroupId,
     profileId,
@@ -119,8 +122,8 @@ function forgeArchetype(snapshot, profileId) {
   });
 }
 
-function awardFirstJourneyForgeMaterial(snapshot) {
-  const forge = FIRST_JOURNEY_WEAPON_FORGE_PROFILE;
+function awardCampaignForgeMaterial(snapshot) {
+  const forge = SCRAP_WEAPON_FORGE_PROFILE;
   return awardWeaponForgeMaterial(snapshot, {
     sourceId: forge.sourceId,
     materialId: forge.materialId,
@@ -129,18 +132,18 @@ function awardFirstJourneyForgeMaterial(snapshot) {
 }
 
 function verifyWeaponArchetypeForgeTransactions() {
-  const forge = FIRST_JOURNEY_WEAPON_FORGE_PROFILE;
+  const forge = SCRAP_WEAPON_FORGE_PROFILE;
   const fresh = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
   const unavailable = forgeArchetype(fresh, SWIFT_ARCHETYPE_ID);
   assert.equal(unavailable.changed, false);
   assert.equal(unavailable.reason, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_MATERIAL);
 
-  const awarded = awardFirstJourneyForgeMaterial(fresh);
+  const awarded = awardCampaignForgeMaterial(fresh);
   assert.equal(awarded.changed, true);
   assert.equal(awarded.reason, PROGRESSION_TRANSACTION_REASON.AWARDED);
   assert.equal(awarded.snapshot.weaponForge.materialQuantities[forge.materialId], 1);
   assert.deepEqual(awarded.snapshot.weaponForge.claimedSourceIds, [forge.sourceId]);
-  const repeatedAward = awardFirstJourneyForgeMaterial(awarded.snapshot);
+  const repeatedAward = awardCampaignForgeMaterial(awarded.snapshot);
   assert.equal(repeatedAward.changed, false);
   assert.equal(repeatedAward.reason, PROGRESSION_TRANSACTION_REASON.ALREADY_CLAIMED);
   assert.deepEqual(
@@ -200,7 +203,7 @@ function verifyChoiceTransactions() {
   );
   assertFrozenTransaction(insufficientTraining);
 
-  const noGold = returnedFirstJourneyProgression({ gold: 0 });
+  const noGold = currentCampaignProgression({ gold: 0 });
   const insufficientGold = purchaseEquipment(noGold, {
     profileId: profile.id,
     goldCost: profile.goldCost,
@@ -214,7 +217,7 @@ function verifyChoiceTransactions() {
     '실패 transaction은 state를 바꾸지 않아야 한다.',
   );
 
-  const reward = returnedFirstJourneyProgression();
+  const reward = currentCampaignProgression();
   const purchase = purchaseEquipment(reward, {
     profileId: profile.id,
     goldCost: profile.goldCost,
@@ -247,7 +250,7 @@ function verifyChoiceTransactions() {
     '중복 구매는 Gold를 재차감하지 않아야 한다.',
   );
 
-  const skillReward = returnedFirstJourneyProgression();
+  const skillReward = currentCampaignProgression();
   const train = trainCombatSkill(skillReward, {
     goldCost: getCombatSkillUpgradeCost(1),
     trainingMarkRequirement: getCombatSkillTrainingMarkRequirement(1),
@@ -262,34 +265,68 @@ function verifyChoiceTransactions() {
   });
   assert.equal(blockedAlternative.reason, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD);
 
-  const trainedReward = returnedFirstJourneyProgression({ trainingMarks: 3 });
-  const mixedWallet = returnedRegionExpansion(
-    mergeProgressionSnapshot({
-      ...trainedReward,
-      combatSkillLevel: 1,
-      firstJourney: { ...trainedReward.firstJourney, gold: 20 },
-    }),
-  );
-  const levelTwo = trainCombatSkill(mixedWallet, {
+  const trainedReward = currentCampaignProgression({ trainingMarks: 3 });
+  const wallet = mergeProgressionSnapshot({ ...trainedReward, combatSkillLevel: 1, gold: 200 });
+  const levelTwo = trainCombatSkill(wallet, {
     goldCost: getCombatSkillUpgradeCost(2),
     trainingMarkRequirement: getCombatSkillTrainingMarkRequirement(2),
   });
   assert.equal(levelTwo.changed, true);
-  assert.equal(levelTwo.snapshot.firstJourney.gold, 0);
-  assert.equal(levelTwo.snapshot.regionExpansion.gold, 20);
+  assert.equal(levelTwo.snapshot.gold, 20);
+}
+
+function verifyCurrentStateAndSingleReward() {
+  const fresh = createProgressionSnapshot(
+    DEFAULT_EQUIPMENT_PROFILE_ID,
+    ENCHANTMENT_CATALOG,
+    SCRAP_CAMPAIGN_PROFILE,
+  );
+  assert.equal(fresh.version, PROGRESSION_SCHEMA_VERSION);
+  assert.equal(fresh.gold, 0);
+  for (const field of ['worldTime', 'firstJourney', 'regionExpansion']) {
+    assert.equal(Object.hasOwn(fresh, field), false);
+    assert.throws(() => assertProgressionSnapshot({ ...fresh, [field]: {} }));
+  }
+  const awarded = claimIntroReward(fresh);
+  assert.equal(awarded.snapshot.gold, 120);
+  assert.equal(awarded.snapshot.trainingMarks, 3);
+  assert.equal(
+    awarded.snapshot.weaponForge.materialQuantities[SCRAP_WEAPON_FORGE_PROFILE.materialId],
+    1,
+  );
+  const repeated = claimIntroReward(awarded.snapshot);
+  assert.equal(repeated.changed, false);
+  assert.deepEqual(repeated.snapshot, awarded.snapshot);
+  assert.equal(awardGold(awarded.snapshot, 80).snapshot.gold, 200);
+  assert.throws(() => awardGold(fresh, -1));
+  assert.throws(() => awardGold({ ...fresh, gold: Number.MAX_SAFE_INTEGER }, 1));
+  assert.throws(() => mergeProgressionSnapshot(fresh, { gold: -1 }));
+  assert.throws(() =>
+    mergeProgressionSnapshot(fresh, {
+      scrapCampaign: { ...fresh.scrapCampaign, deadlineSegments: -1 },
+    }),
+  );
+  assert.deepEqual(
+    fresh.scrapCampaign,
+    createProgressionSnapshot(
+      DEFAULT_EQUIPMENT_PROFILE_ID,
+      ENCHANTMENT_CATALOG,
+      SCRAP_CAMPAIGN_PROFILE,
+    ).scrapCampaign,
+  );
 }
 
 function createArchetypeScene(profileId) {
-  const forged = returnedFirstJourneyWithArchetype(profileId);
+  const forged = currentCampaignWithArchetype(profileId);
   return createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
+    mapDefinition: SCRAP_AWAKENING_MAP,
     progressionSnapshot: forged,
   });
 }
 
-function returnedFirstJourneyWithArchetype(profileId, { equippedProfileId = profileId } = {}) {
-  const base = returnedFirstJourneyProgression();
-  const awarded = awardFirstJourneyForgeMaterial(base);
+function currentCampaignWithArchetype(profileId, { equippedProfileId = profileId } = {}) {
+  const base = currentCampaignProgression();
+  const awarded = awardCampaignForgeMaterial(base);
   const forged = forgeArchetype(awarded.snapshot, profileId);
   assert.equal(forged.changed, true);
   if (equippedProfileId === profileId) return forged.snapshot;
@@ -303,7 +340,7 @@ function createBossEncounter(id) {
     entity: {
       id,
       kind: 'combat-test-mob',
-      encounterProfileId: 'boss',
+      encounterProfileId: 'mine-collapse-boss',
       position: { x: 650, y: 420 },
       maxHealth: 400,
     },
@@ -360,8 +397,8 @@ function resolveDirectPlayerAttack(
 
 function verifyArchetypeCombatTradeoffs() {
   const baseline = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: returnedFirstJourneyProgression(),
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    progressionSnapshot: currentCampaignProgression(),
   });
   const swift = createArchetypeScene(SWIFT_ARCHETYPE_ID);
   const breaker = createArchetypeScene(BREAKER_ARCHETYPE_ID);
@@ -384,7 +421,8 @@ function verifyArchetypeCombatTradeoffs() {
   const postureBefore = postureBoss.enemy.posture.current;
   assert.equal(resolveDirectPlayerAttack(postureBoss, breakerStrong, { motionId: 'heavy' }), true);
   const expectedPostureDamage = Math.round(
-    ENCOUNTER_PROFILES.boss.posture.strongDamage * breakerStrong.postureDamageScale,
+    ENCOUNTER_PROFILES['mine-collapse-boss'].posture.strongDamage *
+      breakerStrong.postureDamageScale,
   );
   assert.equal(postureBoss.enemy.posture.current, postureBefore - expectedPostureDamage);
 
@@ -413,8 +451,8 @@ function verifyArchetypeCombatTradeoffs() {
 
 function verifyRuntimeTradeoffsAndStatus() {
   const scene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: returnedFirstJourneyWithArchetype(SWIFT_ARCHETYPE_ID, {
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    progressionSnapshot: currentCampaignWithArchetype(SWIFT_ARCHETYPE_ID, {
       equippedProfileId: DEFAULT_EQUIPMENT_PROFILE_ID,
     }),
   });
@@ -422,8 +460,8 @@ function verifyRuntimeTradeoffsAndStatus() {
   const balancedAttack = scene.getAttackHitProfile('slash');
   const balancedFrames = scene.combatCommands.getMotionFrameData('slash').durationFrames;
   const balancedGuardScene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: returnedFirstJourneyWithArchetype(SWIFT_ARCHETYPE_ID, {
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    progressionSnapshot: currentCampaignWithArchetype(SWIFT_ARCHETYPE_ID, {
       equippedProfileId: DEFAULT_EQUIPMENT_PROFILE_ID,
     }),
   });
@@ -435,13 +473,13 @@ function verifyRuntimeTradeoffsAndStatus() {
     hitStopSeconds: 0.04,
   });
   assert.equal(
-    scene.executeDialogueCommand('weapon-merchant-karen-interaction', 'manage-heavy-sword').reason,
+    scene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-heavy-sword').reason,
     PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
     '활성 무기상 대화 밖에서는 구매 command를 실행할 수 없어야 한다.',
   );
   const merchantDialogue = openWeaponMerchantDialogue(scene);
   assert.equal(merchantDialogue.active, true);
-  assert.equal(merchantDialogue.speaker, '카린 무기상');
+  assert.equal(merchantDialogue.speaker, '고물상인');
   const optionBefore = merchantDialogue.commands.find(
     (command) => command.profileId === HEAVY_PROFILE_ID,
   );
@@ -449,19 +487,18 @@ function verifyRuntimeTradeoffsAndStatus() {
   assert.equal(optionBefore.actionLabel, '120 Gold');
   assert.equal(scene.getWorldStatus().combatSkill.canTrain, true);
   assert.equal(
-    scene.executeDialogueCommand('enchanter-lio-interaction', 'manage-heavy-sword').reason,
+    scene.executeDialogueCommand('wrong-workshop-interaction', 'manage-heavy-sword').reason,
     PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
     '다른 NPC interaction ID로는 무기 구매를 위조할 수 없어야 한다.',
   );
   assert.equal(
-    scene.executeDialogueCommand('weapon-merchant-karen-interaction', 'manage-unknown-sword')
-      .reason,
+    scene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-unknown-sword').reason,
     PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
     'authored 무기상 command 목록 밖의 ID는 실행할 수 없어야 한다.',
   );
 
   const purchaseResult = scene.executeDialogueCommand(
-    'weapon-merchant-karen-interaction',
+    'scrapyard-owner-workshop',
     'manage-heavy-sword',
   );
   assert.equal(purchaseResult.changed, true);
@@ -500,23 +537,30 @@ function verifyRuntimeTradeoffsAndStatus() {
   scene.exitTree();
 
   const forgeScene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: returnedFirstJourneyProgression(),
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    progressionSnapshot: currentCampaignProgression(),
   });
   forgeScene.enterTree();
   const forgeDialogue = openWeaponMerchantDialogue(forgeScene);
   assert.deepEqual(
-    forgeDialogue.commands.map((command) => command.profileId),
+    forgeDialogue.commands
+      .filter((command) => command.type === 'forge-weapon-archetype')
+      .map((command) => command.profileId),
     ARCHETYPE_PROFILE_IDS,
-    '첫 클리어 재료가 있으면 구매 검 대신 세 archetype 선택만 보여야 한다.',
+    '첫 전투 회수 재료로 세 제작 선택지를 제공해야 한다.',
   );
-  assert.ok(forgeDialogue.commands.every((command) => command.canChoose));
+  assert.ok(
+    forgeDialogue.commands
+      .filter((command) => command.type === 'forge-weapon-archetype')
+      .every((command) => command.canChoose),
+  );
   assert.equal(
-    forgeDialogue.commands[0].materialQuantity,
-    FIRST_JOURNEY_WEAPON_FORGE_PROFILE.sourceQuantity,
+    forgeDialogue.commands.find((command) => command.type === 'forge-weapon-archetype')
+      .materialQuantity,
+    SCRAP_WEAPON_FORGE_PROFILE.sourceQuantity,
   );
   const forgeResult = forgeScene.executeDialogueCommand(
-    'weapon-merchant-karen-interaction',
+    'scrapyard-owner-workshop',
     'forge-posture-breaker-sword',
   );
   assert.equal(forgeResult.changed, true);
@@ -524,20 +568,18 @@ function verifyRuntimeTradeoffsAndStatus() {
   assert.equal(forgeScene.getWorldStatus().equipmentId, BREAKER_ARCHETYPE_ID);
   const forgedDialogue = forgeScene.getWorldStatus().dialogue;
   assert.deepEqual(
-    forgedDialogue.commands.map((command) => command.profileId),
+    forgedDialogue.commands
+      .filter((command) => command.profileId)
+      .map((command) => command.profileId),
     [DEFAULT_EQUIPMENT_PROFILE_ID, HEAVY_PROFILE_ID, BREAKER_ARCHETYPE_ID],
     '선택 뒤에는 일반 구매 검과 선택한 archetype만 관리해야 한다.',
   );
   assert.equal(
-    forgeScene.executeDialogueCommand(
-      'weapon-merchant-karen-interaction',
-      'forge-rear-punish-sword',
-    ).reason,
+    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-rear-punish-sword').reason,
     PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN,
   );
   assert.equal(
-    forgeScene.executeDialogueCommand('weapon-merchant-karen-interaction', 'manage-balanced-sword')
-      .changed,
+    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-balanced-sword').changed,
     true,
   );
   const selectedForgeOption = forgeScene
@@ -546,20 +588,31 @@ function verifyRuntimeTradeoffsAndStatus() {
   assert.equal(selectedForgeOption.canChoose, true);
   assert.equal(selectedForgeOption.actionLabel, '제작 선택 · 장착');
   assert.equal(
-    forgeScene.executeDialogueCommand(
-      'weapon-merchant-karen-interaction',
-      'forge-posture-breaker-sword',
-    ).changed,
+    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-posture-breaker-sword')
+      .changed,
     true,
   );
   assert.equal(forgeScene.getWorldStatus().equipmentId, BREAKER_ARCHETYPE_ID);
   forgeScene.exitTree();
 
   const skillScene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: returnedFirstJourneyProgression(),
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    progressionSnapshot: currentCampaignProgression(),
   });
-  const trainingResult = skillScene.trainCombatSkill();
+  skillScene.enterTree();
+  assert.equal(
+    skillScene.executeDialogueCommand('scrapyard-owner-workshop', 'train-combat-skill').reason,
+    'unavailable',
+  );
+  const skillDialogue = openWeaponMerchantDialogue(skillScene);
+  assert.equal(
+    skillDialogue.commands.find((command) => command.id === 'train-combat-skill').canChoose,
+    true,
+  );
+  const trainingResult = skillScene.executeDialogueCommand(
+    'scrapyard-owner-workshop',
+    'train-combat-skill',
+  );
   assert.equal(trainingResult.changed, true);
   assert.equal(trainingResult.reason, PROGRESSION_TRANSACTION_REASON.TRAINED);
   assert.ok(Object.isFrozen(trainingResult));
@@ -567,6 +620,7 @@ function verifyRuntimeTradeoffsAndStatus() {
   assert.equal(skillScene.combatCommands.commandProfile.groundCombos, true);
   assert.equal(skillScene.combatCommands.commandProfile.loopCancel, false);
   assert.equal(skillScene.getPlayerStatus().gold, 0);
+  skillScene.exitTree();
 }
 
 class MemoryStorage {
@@ -587,14 +641,13 @@ class MemoryStorage {
 
 function verifyPersistenceAndFailure() {
   const scene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
-    progressionSnapshot: returnedFirstJourneyProgression(),
+    mapDefinition: SCRAP_AWAKENING_MAP,
+    progressionSnapshot: currentCampaignProgression(),
   });
   scene.enterTree();
   openWeaponMerchantDialogue(scene);
   assert.equal(
-    scene.executeDialogueCommand('weapon-merchant-karen-interaction', 'forge-rear-punish-sword')
-      .changed,
+    scene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-rear-punish-sword').changed,
     true,
   );
   const storageAdapter = new MemoryStorage();
@@ -602,7 +655,7 @@ function verifyPersistenceAndFailure() {
     storageAdapter,
     'growth-check',
     ENCHANTMENT_CATALOG,
-    FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
+    SCRAP_WEAPON_FORGE_PROFILE,
   );
   const saved = storage.save(scene.getProgressionSnapshot());
   assert.equal(saved.ok, true);
@@ -614,62 +667,45 @@ function verifyPersistenceAndFailure() {
   assert.equal(loaded.ok, true);
   assert.equal(loaded.snapshot.equippedEquipmentId, REAR_ARCHETYPE_ID);
   assert.equal(
-    loaded.snapshot.weaponForge.selectedProfileIdsByGroup[
-      FIRST_JOURNEY_WEAPON_FORGE_PROFILE.choiceGroupId
-    ],
+    loaded.snapshot.weaponForge.selectedProfileIdsByGroup[SCRAP_WEAPON_FORGE_PROFILE.choiceGroupId],
     REAR_ARCHETYPE_ID,
   );
   assert.equal(
-    loaded.snapshot.weaponForge.materialQuantities[FIRST_JOURNEY_WEAPON_FORGE_PROFILE.materialId],
+    loaded.snapshot.weaponForge.materialQuantities[SCRAP_WEAPON_FORGE_PROFILE.materialId],
     0,
   );
   assert.equal(getAvailableGold(loaded.snapshot), 120, 'forge 선택은 Gold를 소비하지 않는다.');
 
   const restoredScene = createTestGameScene({
-    mapDefinition: ACADEMY_VILLAGE_MAP,
+    mapDefinition: SCRAP_AWAKENING_MAP,
     progressionSnapshot: loaded.snapshot,
   });
   assert.equal(restoredScene.getWorldStatus().equipmentId, REAR_ARCHETYPE_ID);
   assert.equal(restoredScene.getPlayerStatus().gold, 120);
 
-  const legacySeedAdapter = new MemoryStorage();
-  assert.equal(
-    new ProgressionStorage(
-      legacySeedAdapter,
-      'growth-v7-seed',
+  for (let version = 1; version < PROGRESSION_SCHEMA_VERSION; version += 1) {
+    const rejectedAdapter = new MemoryStorage(JSON.stringify({ ...loaded.snapshot, version }));
+    const incompatible = new ProgressionStorage(
+      rejectedAdapter,
+      'incompatible-development-save',
       ENCHANTMENT_CATALOG,
-      FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
-    ).save(returnedFirstJourneyProgression()).ok,
-    true,
-  );
-  const legacyV7Record = JSON.parse(legacySeedAdapter.value);
-  legacyV7Record.version = 7;
-  legacyV7Record.viewedConversationIds = ['first-journey-briefing'];
-  delete legacyV7Record.weaponForge;
-  const migratedV7 = new ProgressionStorage(
-    new MemoryStorage(JSON.stringify(legacyV7Record)),
-    'growth-v7-migration',
-    ENCHANTMENT_CATALOG,
-    FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
-  ).load(
-    DEFAULT_EQUIPMENT_PROFILE_ID,
-    EQUIPMENT_PROFILES.map((profile) => profile.id),
-    ENCHANTMENT_CATALOG,
-  );
-  assert.equal(migratedV7.ok, true);
-  assert.equal(migratedV7.kind, 'migrated');
-  assert.deepEqual(migratedV7.snapshot.viewedConversationIds, ['first-journey-briefing']);
-  assert.deepEqual(migratedV7.snapshot.weaponForge, {
-    materialQuantities: {},
-    claimedSourceIds: [],
-    selectedProfileIdsByGroup: {},
-  });
+      SCRAP_WEAPON_FORGE_PROFILE,
+      SCRAP_CAMPAIGN_PROFILE,
+    ).load(
+      DEFAULT_EQUIPMENT_PROFILE_ID,
+      EQUIPMENT_PROFILES.map((profile) => profile.id),
+    );
+    assert.equal(incompatible.ok, false);
+    assert.equal(incompatible.reason, 'incompatible-schema');
+    assert.match(incompatible.message, /초기화/);
+    assert.equal(JSON.parse(rejectedAdapter.value).version, version);
+  }
 
   const failingStorage = new ProgressionStorage(
     new MemoryStorage(null, { throwOnWrite: true }),
     'growth-check-failure',
     ENCHANTMENT_CATALOG,
-    FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
+    SCRAP_WEAPON_FORGE_PROFILE,
   );
   const failedSave = failingStorage.save(loaded.snapshot);
   assert.deepEqual(
@@ -696,7 +732,7 @@ function verifyPersistenceAndFailure() {
       new MemoryStorage(JSON.stringify(invalidRecord)),
       'growth-invalid-forge',
       ENCHANTMENT_CATALOG,
-      FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
+      SCRAP_WEAPON_FORGE_PROFILE,
     ).load(
       DEFAULT_EQUIPMENT_PROFILE_ID,
       EQUIPMENT_PROFILES.map((profile) => profile.id),
@@ -710,7 +746,7 @@ function verifyPersistenceAndFailure() {
     new MemoryStorage('{broken'),
     'growth-corrupt',
     ENCHANTMENT_CATALOG,
-    FIRST_JOURNEY_WEAPON_FORGE_PROFILE,
+    SCRAP_WEAPON_FORGE_PROFILE,
   ).load(
     DEFAULT_EQUIPMENT_PROFILE_ID,
     EQUIPMENT_PROFILES.map((profile) => profile.id),
@@ -798,16 +834,20 @@ function verifyAuthoredContentInjectionBoundary() {
   );
   assert.match(roomSource, /encounterFactory\(\{/);
 
-  const gameAppSource = readFileSync(new URL('../src/app/GameApp.js', import.meta.url), 'utf8');
+  const gameAppSource = readFileSync(
+    new URL('../src/app/createGameScene.js', import.meta.url),
+    'utf8',
+  );
   assert.match(gameAppSource, /equipmentCatalog: EQUIPMENT_CATALOG/);
   assert.match(gameAppSource, /combatProgressionProfile: COMBAT_PROGRESSION_PROFILE/);
   assert.match(gameAppSource, /encounterProfiles: ENCOUNTER_PROFILES/);
   assert.match(gameAppSource, /attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES/);
-  assert.match(gameAppSource, /encounterFactory: createTrainingEncounter/);
+  assert.match(gameAppSource, /encounterFactory: createEncounter/);
   assert.match(gameAppSource, /encounterAttackProfiles: TRAINING_ENEMY_ATTACK_PROFILES/);
 }
 
 verifyChoiceTransactions();
+verifyCurrentStateAndSingleReward();
 verifyWeaponArchetypeForgeTransactions();
 verifyArchetypeCombatTradeoffs();
 verifyRuntimeTradeoffsAndStatus();
@@ -819,7 +859,7 @@ console.log(
   JSON.stringify(
     {
       status: 'PASS',
-      probe: 'first-journey-reward-growth-choice',
+      probe: 'current-campaign-reward-growth-choice',
       checks: [
         'reward-choice-and-failure-reasons',
         'first-clear-material-idempotence-and-exclusive-archetype-forge',
@@ -827,7 +867,7 @@ console.log(
         'equipment-range-speed-hitstun-guard-tradeoff',
         'command-route-unlock',
         'idempotence-and-wallet-order',
-        'schema-v9-archetype-round-trip-v7-migration-and-write-failure',
+        'schema-v10-archetype-round-trip-incompatible-reset-and-write-failure',
         'active-weapon-merchant-dialogue-only-and-static-equipment-ui-removal',
         'authored-content-composition-injection-boundary',
       ],

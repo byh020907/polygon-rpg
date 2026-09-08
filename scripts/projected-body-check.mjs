@@ -9,7 +9,7 @@ import { projectSideViewSkeletonFrame } from '../src/animation/SkeletonPoseProje
 import { axisAngleQuaternion } from '../src/animation/Quaternion.js';
 import { rasterizeDepthPolygons } from '../src/rendering/DepthPolygonRasterizer.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 
 const input = { start: { x: 20, y: 10, depth: 2 }, end: { x: 20, y: 70, depth: 8 }, width: 20 };
 const round = createProjectedBoneSurface(input);
@@ -111,7 +111,7 @@ const render = () => rasterizeDepthPolygons([item], { width: 64, height: 80 });
 assert.deepEqual(render().data, render().data);
 assert.ok(render().data.some(Boolean));
 
-const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 const liveFrame = scene.createRenderFrame(0);
 const groups = new Map();
 liveFrame.items.forEach((entry, index) => {

@@ -88,10 +88,14 @@ assert.throws(
 
 const previousSchema = { ...allPartsSnapshot, version: 5 };
 delete previousSchema.finalBattleStageId;
-assert.equal(
-  toScrapCampaignSnapshot(previousSchema, SCRAP_CAMPAIGN_PROFILE).finalBattleStageId,
-  SCRAP_FINAL_BATTLE_STAGE.INACTIVE,
+assert.throws(
+  () => toScrapCampaignSnapshot(previousSchema, SCRAP_CAMPAIGN_PROFILE),
+  /지원하지 않는 scrap campaign schema version/,
 );
+const missingFinalStage = { ...allPartsSnapshot };
+delete missingFinalStage.finalBattleStageId;
+assert.throws(() => toScrapCampaignSnapshot(missingFinalStage, SCRAP_CAMPAIGN_PROFILE));
+assert.deepEqual(toScrapCampaignSnapshot(current, SCRAP_CAMPAIGN_PROFILE), current);
 
 assert.throws(
   () =>

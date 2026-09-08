@@ -5,11 +5,12 @@ import {
   mergeProgressionSnapshot,
 } from './ProgressionState.js';
 import { canonicalizeEnchantmentSnapshot } from '../enchantment/EnchantmentState.js';
-import { toScrapCampaignSnapshot } from '../campaign/ScrapCampaignState.js';
+import {
+  SCRAP_CAMPAIGN_SCHEMA_VERSION,
+  toScrapCampaignSnapshot,
+} from '../campaign/ScrapCampaignState.js';
 import { RECOVERY_SLOT_IDS } from './CampaignRecoveryPolicy.js';
 
-const LEGACY_PROGRESSION_SCHEMA_VERSIONS = new Set([1, 2, 3, 4, 5, 6, 7]);
-const PREVIOUS_PROGRESSION_SCHEMA_VERSION = 8;
 const RECOVERY_STORAGE_SCHEMA_VERSION = 1;
 
 function isRecord(value) {
@@ -92,106 +93,6 @@ function validateWeaponForgeSnapshot(value, profile, ownedEquipmentIds) {
   return value;
 }
 
-function migrateLegacyEnchantment(value, ownedEquipmentIds, equippedEquipmentId, catalog) {
-  if (!isRecord(value)) throw new TypeError('legacy enchantment 진행이 필요합니다.');
-  if (isRecord(value.materialQuantities) || isRecord(value.swordEnchantments)) {
-    return canonicalizeEnchantmentSnapshot(value, catalog, ownedEquipmentIds);
-  }
-  const knownEnchantIds = new Set(catalog.profiles.map((profile) => profile.id));
-  const knownMaterialIds = new Set(catalog.profiles.map((profile) => profile.materialId));
-  const knownSourceIds = new Set(catalog.profiles.map((profile) => profile.sourceId));
-  for (const [field, knownIds] of [
-    ['materialIds', knownMaterialIds],
-    ['unlockedIds', knownEnchantIds],
-    ['claimedMaterialSourceIds', knownSourceIds],
-  ]) {
-    if (
-      !Array.isArray(value[field]) ||
-      new Set(value[field]).size !== value[field].length ||
-      value[field].some((id) => !knownIds.has(id))
-    ) {
-      throw new TypeError(`legacy enchantment ${field}가 올바르지 않습니다.`);
-    }
-  }
-  if (value.activeId !== null && !value.unlockedIds.includes(value.activeId)) {
-    throw new TypeError('legacy active enchant가 해금 목록과 일치하지 않습니다.');
-  }
-  return canonicalizeEnchantmentSnapshot(
-    {
-      materialQuantities: Object.fromEntries(
-        catalog.profiles.map((profile) => {
-          const preservesLegacyReward =
-            value.materialIds.includes(profile.materialId) ||
-            (value.unlockedIds.includes(profile.id) && value.activeId !== profile.id);
-          return [profile.materialId, preservesLegacyReward ? profile.sourceAwardQuantity : 0];
-        }),
-      ),
-      swordEnchantments: Object.fromEntries(
-        ownedEquipmentIds.map((swordId) => [
-          swordId,
-          swordId === equippedEquipmentId && value.activeId
-            ? { elementId: value.activeId, level: 1 }
-            : { elementId: null, level: 0 },
-        ]),
-      ),
-      claimedMaterialSourceIds: value.claimedMaterialSourceIds,
-    },
-    catalog,
-    ownedEquipmentIds,
-  );
-}
-
-function migrateLegacySnapshot(
-  value,
-  defaultEquipmentId,
-  allowedEquipmentIds,
-  enchantmentCatalog,
-  scrapCampaignProfile,
-) {
-  assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
-  const fresh = createProgressionSnapshot(
-    defaultEquipmentId,
-    enchantmentCatalog,
-    scrapCampaignProfile,
-  );
-  const emptyEnchantment = canonicalizeEnchantmentSnapshot(
-    {
-      ...fresh.enchantment,
-      swordEnchantments: Object.fromEntries(
-        value.ownedEquipmentIds.map((swordId) => [swordId, { elementId: null, level: 0 }]),
-      ),
-    },
-    enchantmentCatalog,
-    value.ownedEquipmentIds,
-  );
-  const legacyEnchantment =
-    value.version >= 4 && value.enchantment
-      ? migrateLegacyEnchantment(
-          value.enchantment,
-          value.ownedEquipmentIds,
-          value.equippedEquipmentId,
-          enchantmentCatalog,
-        )
-      : emptyEnchantment;
-  return mergeProgressionSnapshot({
-    ...fresh,
-    trainingMarks: value.trainingMarks,
-    ownedEquipmentIds: value.ownedEquipmentIds,
-    equippedEquipmentId: value.equippedEquipmentId,
-    combatSkillLevel: value.combatSkillLevel,
-    ...(value.version >= 2
-      ? {
-          firstJourney: value.firstJourney,
-          regionExpansion: value.regionExpansion,
-        }
-      : {}),
-    ...(value.version === 3 && value.worldTime ? { worldTime: value.worldTime } : {}),
-    ...(value.version >= 4 ? { worldTime: value.worldTime } : {}),
-    ...(value.version >= 7 ? { viewedConversationIds: value.viewedConversationIds } : {}),
-    enchantment: legacyEnchantment,
-  });
-}
-
 function validateCurrentSnapshot(
   value,
   defaultEquipmentId,
@@ -200,14 +101,15 @@ function validateCurrentSnapshot(
   weaponForgeProfile,
   scrapCampaignProfile,
 ) {
-  if (
-    !isRecord(value.firstJourney) ||
-    !Object.hasOwn(value.firstJourney, 'dungeonSignatureStageIds')
-  ) {
-    throw new TypeError('현재 저장 진행에는 Dungeon signature stage ID가 필요합니다.');
-  }
   assertProgressionSnapshot(value, scrapCampaignProfile);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
+  if (
+    enchantmentCatalog.profiles.some(
+      (profile) => !Object.hasOwn(value.enchantment.materialQuantities, profile.materialId),
+    )
+  ) {
+    throw new TypeError('현재 저장에는 모든 인챈트 소재의 명시적인 수량이 필요합니다.');
+  }
   validateWeaponForgeSnapshot(value.weaponForge, weaponForgeProfile, value.ownedEquipmentIds);
   return mergeProgressionSnapshot(value, {
     scrapCampaign: toScrapCampaignSnapshot(value.scrapCampaign, scrapCampaignProfile),
@@ -219,45 +121,16 @@ function validateCurrentSnapshot(
   });
 }
 
-function migrateVersionEightSnapshot(
-  value,
-  defaultEquipmentId,
-  allowedEquipmentIds,
-  enchantmentCatalog,
-  weaponForgeProfile,
-  scrapCampaignProfile,
-) {
-  const fresh = createProgressionSnapshot(
-    defaultEquipmentId,
-    enchantmentCatalog,
-    scrapCampaignProfile,
-  );
-  return validateCurrentSnapshot(
-    {
-      ...value,
-      version: PROGRESSION_SCHEMA_VERSION,
-      scrapCampaign: fresh.scrapCampaign,
-    },
-    defaultEquipmentId,
-    allowedEquipmentIds,
-    enchantmentCatalog,
-    weaponForgeProfile,
-    scrapCampaignProfile,
-  );
-}
-
 function createStoredRecord(snapshot) {
   return {
     version: PROGRESSION_SCHEMA_VERSION,
+    gold: snapshot.gold,
     trainingMarks: snapshot.trainingMarks,
     ownedEquipmentIds: [...snapshot.ownedEquipmentIds],
     equippedEquipmentId: snapshot.equippedEquipmentId,
     combatSkillLevel: snapshot.combatSkillLevel,
     viewedConversationIds: snapshot.viewedConversationIds,
     weaponForge: snapshot.weaponForge,
-    firstJourney: snapshot.firstJourney,
-    regionExpansion: snapshot.regionExpansion,
-    worldTime: snapshot.worldTime,
     scrapCampaign: snapshot.scrapCampaign,
     enchantment: snapshot.enchantment,
   };
@@ -275,45 +148,27 @@ function decodeStoredSnapshot(
     throw new TypeError('저장 진행 형식이 올바르지 않습니다.');
   }
   if (
-    !LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) &&
-    parsed.version !== PREVIOUS_PROGRESSION_SCHEMA_VERSION &&
-    parsed.version !== PROGRESSION_SCHEMA_VERSION
+    parsed.version !== PROGRESSION_SCHEMA_VERSION ||
+    (Number.isSafeInteger(parsed.scrapCampaign?.version) &&
+      parsed.scrapCampaign.version !== SCRAP_CAMPAIGN_SCHEMA_VERSION)
   ) {
-    throw new Error('지원하지 않는 저장 진행 version입니다.');
+    const error = new Error(
+      '현재 캠페인과 호환되지 않는 개발 저장입니다. 새 게임으로 초기화하세요.',
+    );
+    error.code = 'incompatible-schema';
+    throw error;
   }
   if (!enchantmentCatalog || !Array.isArray(enchantmentCatalog.profiles)) {
     throw new TypeError('저장 enchantment catalog이 필요합니다.');
   }
-
-  const isLegacy =
-    LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version) ||
-    parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION;
-  const snapshot = LEGACY_PROGRESSION_SCHEMA_VERSIONS.has(parsed.version)
-    ? migrateLegacySnapshot(
-        parsed,
-        defaultEquipmentId,
-        allowedEquipmentIds,
-        enchantmentCatalog,
-        scrapCampaignProfile,
-      )
-    : parsed.version === PREVIOUS_PROGRESSION_SCHEMA_VERSION
-      ? migrateVersionEightSnapshot(
-          parsed,
-          defaultEquipmentId,
-          allowedEquipmentIds,
-          enchantmentCatalog,
-          weaponForgeProfile,
-          scrapCampaignProfile,
-        )
-      : validateCurrentSnapshot(
-          parsed,
-          defaultEquipmentId,
-          allowedEquipmentIds,
-          enchantmentCatalog,
-          weaponForgeProfile,
-          scrapCampaignProfile,
-        );
-  return Object.freeze({ isLegacy, snapshot });
+  return validateCurrentSnapshot(
+    parsed,
+    defaultEquipmentId,
+    allowedEquipmentIds,
+    enchantmentCatalog,
+    weaponForgeProfile,
+    scrapCampaignProfile,
+  );
 }
 
 function validateSnapshotForStorage(
@@ -434,7 +289,7 @@ export class ProgressionStorage {
       );
     }
     try {
-      const { isLegacy, snapshot } = decodeStoredSnapshot(
+      const snapshot = decodeStoredSnapshot(
         parsed,
         defaultEquipmentId,
         allowedIds,
@@ -444,10 +299,11 @@ export class ProgressionStorage {
       );
       return Object.freeze({
         ok: true,
-        kind: isLegacy ? 'migrated' : 'loaded',
+        kind: 'loaded',
         snapshot,
       });
-    } catch {
+    } catch (error) {
+      if (error.code === 'incompatible-schema') return failure(error.code, error.message);
       return failure(
         'invalid-data',
         '저장 진행 값이 올바르지 않습니다. 초기화 전까지 저장하지 않습니다.',
@@ -515,7 +371,7 @@ export class ProgressionStorage {
           throw new TypeError('지원하지 않는 복구 지점이 있습니다.');
         }
         const metadata = validateRecoveryMetadata(record.metadata, slotId);
-        const { snapshot } = decodeStoredSnapshot(
+        const snapshot = decodeStoredSnapshot(
           record.snapshot,
           defaultEquipmentId,
           allowedIds,
@@ -531,7 +387,13 @@ export class ProgressionStorage {
           RECOVERY_SLOT_IDS.indexOf(left.slotId) - RECOVERY_SLOT_IDS.indexOf(right.slotId),
       );
       return Object.freeze({ ok: true, kind: 'loaded', records: Object.freeze(records) });
-    } catch {
+    } catch (error) {
+      if (error.code === 'incompatible-schema') {
+        return failure(
+          'recovery-incompatible-schema',
+          '이전 개발 버전의 복구 지점은 사용할 수 없습니다. 새 게임으로 초기화하세요.',
+        );
+      }
       return failure(
         'recovery-invalid-data',
         '복구 지점이 손상되었습니다. 현재 진행은 바꾸지 않았습니다.',

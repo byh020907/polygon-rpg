@@ -2,6 +2,8 @@ import Alpine from './vendor/alpine.esm.js';
 import { GameApplication } from './app/GameApplication.js';
 import { readDebugQaRequest } from './ui/DebugConfigurationAdapter.js';
 import { registerGameShell } from './ui/gameShell.js';
+import { readGraphicsReviewRequest, DEFAULT_GRAPHICS_REVIEW } from './ui/GraphicsReviewConfig.js';
+import { GAME_UI_RESOURCES, APP_IMAGE_RESOURCES } from './ui/GameUiCatalog.js';
 
 function requireCanvas(id) {
   const canvas = document.getElementById(id);
@@ -11,7 +13,17 @@ function requireCanvas(id) {
   return canvas;
 }
 
-const visualQaRequest = readDebugQaRequest();
+let graphicsReviewRequest;
+let graphicsReviewError = '';
+try {
+  graphicsReviewRequest = readGraphicsReviewRequest();
+} catch (error) {
+  graphicsReviewRequest = DEFAULT_GRAPHICS_REVIEW;
+  graphicsReviewError = error.message;
+}
+const visualQaRequest =
+  readDebugQaRequest() ??
+  (graphicsReviewRequest ? readDebugQaRequest('?visualQa=1&gameStart=scrap-intro-walk') : null);
 const qaInputEnabled = new URLSearchParams(globalThis.location.search).get('inputQa') === '1';
 const gameApplication = new GameApplication({
   gameCanvas: requireCanvas('game-canvas'),
@@ -21,7 +33,46 @@ const gameApplication = new GameApplication({
   qaInputEnabled,
 });
 
-registerGameShell(Alpine, gameApplication, { visualQaRequest, qaInputEnabled });
+let graphicsReviewController = null;
+async function openGraphicsReview({ onClose, request = DEFAULT_GRAPHICS_REVIEW } = {}) {
+  const [
+    { GraphicsReviewController },
+    { createGraphicsResourceCatalog, GRAPHICS_CATEGORIES },
+    { createGraphicsResourceSampler },
+  ] = await Promise.all([
+    import('./ui/GraphicsReviewController.js'),
+    import('./graphics/GraphicsResourceCatalog.js'),
+    import('./graphics/GraphicsResourceSampler.js'),
+  ]);
+  graphicsReviewController?.destroy();
+  const catalog = createGraphicsResourceCatalog({
+    additionalResources: [...GAME_UI_RESOURCES, ...APP_IMAGE_RESOURCES],
+  });
+  graphicsReviewController = new GraphicsReviewController({
+    root: document.getElementById('graphics-review'),
+    catalog,
+    categories: GRAPHICS_CATEGORIES,
+    sampler: createGraphicsResourceSampler(catalog),
+    onClose,
+  });
+  graphicsReviewController.open(request);
+  if (graphicsReviewError)
+    graphicsReviewController.nodes.status.textContent = `재현 조건 오류 · ${graphicsReviewError}`;
+}
+
+registerGameShell(Alpine, gameApplication, {
+  visualQaRequest,
+  qaInputEnabled,
+  graphicsReviewRequest,
+  graphicsReviewFactory: openGraphicsReview,
+});
 globalThis.Alpine = Alpine;
 Alpine.start();
-globalThis.addEventListener('pagehide', () => gameApplication.destroy(), { once: true });
+globalThis.addEventListener(
+  'pagehide',
+  () => {
+    graphicsReviewController?.destroy();
+    gameApplication.destroy();
+  },
+  { once: true },
+);

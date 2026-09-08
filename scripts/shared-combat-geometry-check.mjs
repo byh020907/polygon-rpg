@@ -18,7 +18,7 @@ import {
   CHARACTER_RENDER_SCALE,
 } from '../src/game/PlayerCombatPresentation.js';
 import { PLAYER_CHARACTER_FOOT_OFFSET } from '../src/combat/SharedCombatGeometry.js';
-import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
@@ -393,14 +393,19 @@ assert.equal(edgeCrossing.gap, 0);
 assert.ok(Math.abs(edgeCrossing.position.x) <= 1 && Math.abs(edgeCrossing.position.y) <= 1);
 assert.ok(Object.isFrozen(edgeCrossing.position));
 
-const scene = createTestGameScene({ mapDefinition: ACADEMY_VILLAGE_MAP });
+const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 const renderFrame = scene.createRenderFrame(0);
 const renderedBlade = renderFrame.items.find(({ id }) => id === 'sword-blade');
 const sceneGeometry = scene.samplePlayerCombatGeometry(scene.combatCommands.snapshot());
 assert.deepEqual(renderedBlade.points, sceneGeometry.weapon.points);
 
 scene.enterTree();
-scene.setVisualQaLocation({ regionId: 'academy-region', roomId: 'training-room', x: 560 });
+scene.setVisualQaScrapAwakeningStage('yard-clearance');
+scene.setVisualQaLocation({
+  regionId: 'scrap-waste-edge',
+  roomId: 'abandoned-weapon-yard',
+  x: 560,
+});
 const liveEnemy = scene.roomSceneNode.encounter.enemy;
 // Begin outside the movement bodies: an overlapping fixture is separated on the
 // first tick and tests depenetration, not a normal attack contact.

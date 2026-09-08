@@ -34,6 +34,8 @@ Before product work, read the selected Method and all four Project Sources compl
 
 ## Development Order
 
+- **Human 승인 기반 정리 우선:** 현재 기획과 어긋난 구형 상태·계산·호환·테스트·디버그 경로가 반복 수정을 만드는 병목이면 현재 캠페인을 단일 기준으로 교체한다. 전체 그래픽 리소스를 실제 게임과 같은 데이터·pose sampler·renderer·UI로 검토하고 stable ID·재현 조건을 복사해 Human이 피드백할 수 있는 환경을 현재 영역 안정화의 선행 기반으로 완성한다. 이 기반과 현재 영역의 실제 검증을 마치기 전에는 시나리오·후반 지역 확장을 재개하지 않는다. Human이 중지한 자동 루프는 명시적 재개 지시 전까지 유지한다.
+
 - Human이 main `21f4b56`의 주인공 동작 스타일을 원하는 느낌에 가깝다고 확인했다. 작은 머리·길고 가는 팔다리, 낮은 준비에서 몸 앞을 가로지르는 빠른 횡·사선 베기와 후반 감속, 실제 전방 회전 구르기를 앞으로의 스타일 기준으로 유지·발전시킨다. 이는 모든 모션·게임의 최종 완료 승인이 아니다. 이전 INBOX의 모션 폐기·재작업 문구는 이 확인보다 앞선 결과를 지적한 것이므로 현재 스타일 전체를 다시 폐기하는 근거로 사용하지 않는다. 남은 구체적 결함과 요구는 현재 기준을 보존하며 검증·수리한다.
 
 - **Human Feedback Priority:** `INBOX.md`의 pending feedback과 그것이 만든 아직 검증되지 않은 제품 결과가 다른 자율 Gap보다 항상 우선한다. fresh worker는 이를 Desired State에 반영하는 데서 끝내지 않고, 해당 feedback이 요구한 관찰 가능한 제품 결과를 구현·검증할 Execution Goal을 먼저 선택한다.

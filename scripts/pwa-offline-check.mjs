@@ -9,7 +9,7 @@ const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 const manifest = JSON.parse(read('manifest.webmanifest'));
 const serviceWorker = read('sw.js');
-const inventory = read('src/pwa/offlineAssetManifest.js');
+const inventory = new Set(globalThis.POLYGON_RPG_RELEASE.assets);
 const releaseMetadata = read('public/release-metadata.js');
 
 assert.equal(manifest.display, 'standalone');
@@ -30,16 +30,12 @@ for (const asset of [
   'src/main.js',
   'src/style.css',
 ]) {
-  assert.match(inventory, new RegExp(`['"]\\./${asset.replaceAll('.', '\\.')}['"]`));
+  assert.ok(inventory.has(asset), `${asset} must be present in canonical release inventory`);
 }
 for (const source of fs.readdirSync(path.join(root, 'src'), { recursive: true })) {
-  if (!source.endsWith('.js') || source.endsWith('offlineAssetManifest.js')) continue;
+  if (!source.endsWith('.js')) continue;
   const relative = path.join('src', source).replaceAll('\\', '/');
-  assert.match(
-    inventory,
-    new RegExp(`['"]\\./${relative.replaceAll('.', '\\.')}['"]`),
-    `${relative}가 offline inventory에서 빠졌습니다.`,
-  );
+  assert.ok(inventory.has(relative), `${relative}가 offline inventory에서 빠졌습니다.`);
 }
 assert.match(serviceWorker, /cacheCompleteRelease\(cache\)/);
 assert.match(serviceWorker, /POLYGON_RPG_RELEASE/);
