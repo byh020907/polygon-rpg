@@ -905,6 +905,24 @@
               >
                 ↑ 한 번 입력
               </button>
+              <div class="qa-input-relay-pulses" aria-label="전투 한 번 입력">
+                <button
+                  type="button"
+                  class="qa-input-relay-pulse"
+                  data-qa-input-pulse="basicAttack"
+                  @click="pulseQaInput('basicAttack')"
+                >
+                  A 기본 한 번
+                </button>
+                <button
+                  type="button"
+                  class="qa-input-relay-pulse"
+                  data-qa-input-pulse="strongAttack"
+                  @click="pulseQaInput('strongAttack')"
+                >
+                  S 강한 한 번
+                </button>
+              </div>
               <div class="qa-input-relay-actions">
                 <template x-for="action in qaInputActions" x-bind:key="action.id">
                   <button

@@ -179,6 +179,11 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(shell, /visibilitychange[\s\S]*document\.hidden\) debugMenuHold\?\.interrupt\(\)/);
   assert.match(html, /현재 화면에 적용/);
   assert.match(shell, /gameApp\.applyDebugConfiguration\(request\)/);
+  assert.match(html, /data-qa-input-pulse="basicAttack"/);
+  assert.match(html, /@click="pulseQaInput\('basicAttack'\)"/);
+  assert.match(html, /data-qa-input-pulse="strongAttack"/);
+  assert.match(html, /@click="pulseQaInput\('strongAttack'\)"/);
+  assert.match(shell, /pulseQaInput\(actionId\)/);
   assert.doesNotMatch(shell, /location\.assign/);
 
   const gameApp = readFileSync(new URL('../src/app/GameApp.js', import.meta.url), 'utf8');
@@ -836,6 +841,35 @@ function verifyLatchedQaInputUsesTheSharedActionGrammar() {
     1,
     'latched guard의 첫 press는 기존 sequence 계약을 따라야 한다.',
   );
+
+  assert.equal(
+    adapter.pulseQa('basicAttack'),
+    true,
+    'QA 전투 pulse는 production input controller를 통해 기본 공격을 전달해야 한다.',
+  );
+  snapshot = adapter.snapshot();
+  assert.equal(snapshot.basicAttack, false, '기본 공격 pulse는 held action을 남기면 안 된다.');
+  assert.equal(
+    snapshot.basicAttackSequence,
+    1,
+    '기본 공격 pulse는 sequence를 한 번만 증가시켜야 한다.',
+  );
+  assert.equal(snapshot.strongAttackSequence, 0);
+  assert.equal(snapshot.right, true, '전투 pulse 중 기존 latched 이동은 유지되어야 한다.');
+
+  assert.equal(
+    adapter.pulseQa('strongAttack'),
+    true,
+    'QA 전투 pulse는 production input controller를 통해 강공격을 전달해야 한다.',
+  );
+  snapshot = adapter.snapshot();
+  assert.equal(snapshot.strongAttack, false, '강공격 pulse는 held action을 남기면 안 된다.');
+  assert.equal(
+    snapshot.strongAttackSequence,
+    1,
+    '강공격 pulse는 sequence를 한 번만 증가시켜야 한다.',
+  );
+  assert.equal(snapshot.basicAttackSequence, 1);
 
   adapter.setQaHeld('guard', false);
   snapshot = adapter.snapshot();
