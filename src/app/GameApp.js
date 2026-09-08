@@ -54,6 +54,24 @@ export function resolveReducedMotionPreference({ visualQaRequest, systemMatches 
   return Boolean(systemMatches);
 }
 
+export function readQaInputScenario(search = globalThis.location?.search ?? '') {
+  const parameters = new URLSearchParams(search);
+  if (parameters.get('inputQa') !== '1') return null;
+  const start = parameters.get('inputQaStart');
+  if (!start) return null;
+  return readVisualQaRequest(`?visualQa=1&gameStart=${encodeURIComponent(start)}`).scenario;
+}
+
+export function resolveInitialMapDefinition({
+  visualQaRequest = null,
+  qaInputScenario = null,
+} = {}) {
+  const scenario = visualQaRequest?.scenario ?? qaInputScenario;
+  return !scenario || scenario.mapId === SCRAP_AWAKENING_MAP_ID
+    ? SCRAP_AWAKENING_MAP
+    : ACADEMY_VILLAGE_MAP;
+}
+
 function assertCanvas(canvas, label) {
   if (!(canvas instanceof HTMLCanvasElement)) {
     throw new TypeError(`${label}에는 HTMLCanvasElement가 필요합니다.`);
@@ -151,6 +169,7 @@ export class GameApp extends SceneNode {
   }) {
     super('GameApp');
     this.qaInputEnabled = qaInputEnabled;
+    this.qaInputScenario = qaInputEnabled ? readQaInputScenario() : null;
     this.qaInputPolygon =
       qaInputEnabled &&
       new URLSearchParams(globalThis.location?.search ?? '').get('inputQaRenderer') === 'polygon';
@@ -191,10 +210,10 @@ export class GameApp extends SceneNode {
       ? this.progressionLoadResult.snapshot
       : freshProgression;
     this.lastObservedProgressionSnapshot = progressionSnapshot;
-    const mapDefinition =
-      !this.isVisualQa || this.visualQaRequest?.scenario?.mapId === SCRAP_AWAKENING_MAP_ID
-        ? SCRAP_AWAKENING_MAP
-        : ACADEMY_VILLAGE_MAP;
+    const mapDefinition = resolveInitialMapDefinition({
+      visualQaRequest: this.visualQaRequest,
+      qaInputScenario: this.qaInputScenario,
+    });
     this.scene = this.addChild(
       new GameScene({
         mapDefinition,
@@ -1012,11 +1031,8 @@ export class GameApp extends SceneNode {
       this.uiBridge.snapshot().screen === GAME_SCREEN.GAME
     ) {
       this.qaInputScenarioInitialized = true;
-      const start = new URLSearchParams(globalThis.location?.search ?? '').get('inputQaStart');
-      if (start) {
-        const { scenario } = readVisualQaRequest(
-          `?visualQa=1&gameStart=${encodeURIComponent(start)}`,
-        );
+      const scenario = this.qaInputScenario;
+      if (scenario) {
         // Only establish an existing scene. Do not run its scripted combat,
         // input timeline, forced contact, or expectation-resolution helpers.
         if (scenario.scrapAwakeningStageId)

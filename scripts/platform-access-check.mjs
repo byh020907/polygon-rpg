@@ -2,7 +2,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { GameApplication } from '../src/app/GameApplication.js';
-import { GAME_SCREEN, GameApp, resolveReducedMotionPreference } from '../src/app/GameApp.js';
+import {
+  GAME_SCREEN,
+  GameApp,
+  readQaInputScenario,
+  resolveInitialMapDefinition,
+  resolveReducedMotionPreference,
+} from '../src/app/GameApp.js';
+import { ACADEMY_VILLAGE_MAP } from '../src/game/maps/academyVillage.js';
+import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { GameInputController } from '../src/input/GameInputController.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -673,6 +681,24 @@ function verifyVisualQaReducedMotionOverride() {
   );
 }
 
+function verifyQaInputScenarioMapSelection() {
+  const legacyCombatScenario = readQaInputScenario('?inputQa=1&inputQaStart=combat-hit');
+  assert.equal(legacyCombatScenario.roomId, 'training-room');
+  assert.equal(
+    resolveInitialMapDefinition({ qaInputScenario: legacyCombatScenario }),
+    ACADEMY_VILLAGE_MAP,
+    'legacy combat input QA는 현재 campaign map에 대입하지 않고 training map을 먼저 구성해야 한다.',
+  );
+
+  const campaignScenario = readQaInputScenario('?inputQa=1&inputQaStart=scrap-shipyard-roadhead');
+  assert.equal(
+    resolveInitialMapDefinition({ qaInputScenario: campaignScenario }),
+    SCRAP_AWAKENING_MAP,
+    'campaign input QA는 고철 campaign map에서 실제 입력을 이어야 한다.',
+  );
+  assert.equal(readQaInputScenario('?inputQa=0&inputQaStart=combat-hit'), null);
+}
+
 function verifyVisualQaResizeReplaysLatestFrame() {
   const resizedHosts = [];
   const renderedFrames = [];
@@ -923,6 +949,7 @@ verifyDebugConfigurationRoundTrip();
 verifySamePageGameApplicationReplacement();
 verifyDebugMenuHoldBoundary();
 verifyVisualQaReducedMotionOverride();
+verifyQaInputScenarioMapSelection();
 verifyVisualQaResizeReplaysLatestFrame();
 verifyInteractiveControlKeyboardBoundary();
 verifyReducedMotionVisualQaRequest();
