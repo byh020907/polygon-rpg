@@ -5,7 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const metadataPath = path.join(root, 'public', 'release-metadata.js');
-const ignoredPaths = new Set(['public/release-metadata.js']);
+const probePath = path.join(root, 'public', 'release.json');
+const ignoredPaths = new Set(['public/release-metadata.js', 'public/release.json']);
 
 function listFiles(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -36,14 +37,24 @@ function releaseFiles() {
 export function createReleaseMetadata() {
   const appVersion = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
   const assets = releaseFiles();
+  const assetDigests = {};
   const hash = crypto.createHash('sha256');
+  hash.update(appVersion);
+  hash.update('\0');
   for (const asset of assets) {
+    const contents = fs.readFileSync(path.join(root, asset));
+    assetDigests[asset] = crypto.createHash('sha256').update(contents).digest('hex');
     hash.update(asset);
     hash.update('\0');
-    hash.update(fs.readFileSync(path.join(root, asset)));
+    hash.update(contents);
     hash.update('\0');
   }
-  return Object.freeze({ appVersion, buildId: hash.digest('hex').slice(0, 12), assets });
+  return Object.freeze({
+    appVersion,
+    buildId: hash.digest('hex').slice(0, 12),
+    assets,
+    assetDigests: Object.freeze(assetDigests),
+  });
 }
 
 export function renderReleaseMetadata(metadata = createReleaseMetadata()) {
@@ -54,9 +65,15 @@ export function renderReleaseMetadata(metadata = createReleaseMetadata()) {
 }
 
 export function writeReleaseMetadata() {
-  const rendered = renderReleaseMetadata();
+  const metadata = createReleaseMetadata();
+  const rendered = renderReleaseMetadata(metadata);
   fs.writeFileSync(metadataPath, rendered);
+  fs.writeFileSync(probePath, `${JSON.stringify(releaseProbe(metadata), null, 2)}\n`);
   return rendered;
+}
+
+export function releaseProbe({ appVersion, buildId }) {
+  return { appVersion, buildId };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) writeReleaseMetadata();

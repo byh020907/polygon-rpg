@@ -17,6 +17,7 @@
 - Production은 `index.html`과 static source를 직접 제공한다. Node.js는 local server, lint, fixtures와 visual verification에만 사용한다.
 - PWA는 manifest와 root-scoped Service Worker를 사용한다. 현재 release의 필수 static asset은 atomic versioned cache로 준비하고 Service Worker lifecycle은 shell에 explicit status만 전달한다.
 - 생성된 release metadata의 asset inventory를 Service Worker도 그대로 사용한다. 별도로 수동 관리하는 offline 파일 목록을 두지 않는다.
+- 같은 release generation이 asset별 digest와 경량 network-only version probe를 만든다. 업데이트 owner는 복귀·pageshow·명시 확인과 제한된 주기에서 probe를 조회하고 변경된 build ID의 Service Worker 및 imported metadata를 같은 build URL로 준비한다. 파일별 digest 검증이 끝난 완전한 cache만 활성화할 수 있다.
 - Runtime source는 CDN, external account, wall clock과 development-only server behavior에 의존하지 않는다.
 - GitHub Pages production source는 `main /`이며 별도 build artifact를 요구하지 않는다.
 
@@ -184,6 +185,9 @@ Keyboard / Touch / DOM intent
 - Storage는 `latest morning`, `latest core event`, `pre-action` recovery slot을 구분한다. Morning boundary, core completion 직후와 time action confirm 직전에 orchestrator가 explicit save request를 보낸다.
 - Load/save failure는 explicit result로 UI에 전달하고 domain state를 부분 적용하지 않는다.
 - cache version 전환은 ProgressionStorage와 독립이다. update 적용 전 UI adapter가 explicit save를 요청하고, cache 실패는 active cache와 typed progress snapshot을 유지한다.
+- Service Worker cache는 scope와 release별로 분리한다. root navigation의 query가 달라도 해당 release의 shell을 사용하며, 열려 있는 client는 자신이 시작한 build의 cache에 고정한다. client/build 기록은 worker 재시작을 견디고, 새 navigation은 새 release를 선택한다. 정리는 현재 release와 살아 있는 client가 사용하는 release를 보존하며 다른 scope·앱 cache를 삭제하지 않는다.
+- PWA lifecycle owner는 최초 동일 build 활성화와 다른 build 활성화를 구분하고 installing worker와 waiting worker를 모두 관찰한다. 업데이트 확인·설치·저장/적용을 별도 상태로 표시하며 duplicate apply, 무한 확인 대기와 사라진 waiting worker를 명시적으로 처리한다. 다른 창의 활성화 후 다시 열기도 저장 성공 뒤 한 번만 수행한다.
+- 현재 page의 build와 별개로 실제 active/waiting/installing worker의 build를 비교한다. 과거 bare-URL worker의 무한 설치가 native 등록 작업을 막았고 정상 active/controller/waiting이 없는 경우에는 bounded timeout 뒤 브라우저 완전 종료·재실행 복구를 명시한다. 캐시·저장 삭제나 상시 unregister, 다른 scope 우회로 이를 성공처럼 위장하지 않는다.
 - Game-over restart는 사용자가 선택한 recovery snapshot을 원자 복원하며 story 안의 rewind flag를 만들지 않는다.
 - Reward, part, boss와 route transition은 reload/repeated trigger에서 중복 지급하지 않는다.
 - Room transition, input sequence와 encounter reset은 interruption 뒤 stale command/entity를 다음 Room으로 넘기지 않는다.

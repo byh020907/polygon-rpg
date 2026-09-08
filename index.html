@@ -35,87 +35,106 @@
 
         <div class="menu-content">
           <section class="title-card">
-            <p class="menu-kicker">A SCRAPYARD APPRENTICE · THIRTY DAYS TO THE CAPITAL</p>
-            <h1 id="game-title"><span>POLYGON</span><strong>RPG</strong></h1>
-            <p class="menu-subtitle">
-              다섯 산업기계를 먼저 구해<br />우리 식의 대항 병기를 완성한다.
-            </p>
+            <header class="menu-brand">
+              <p class="menu-kicker">고물상 견습생 · 왕도까지 D-30</p>
+              <h1 id="game-title"><span>POLYGON</span><strong>RPG</strong></h1>
+              <p class="menu-subtitle">
+                다섯 산업기계를 먼저 구해<br />우리 식의 대항 병기를 완성한다.
+              </p>
+            </header>
 
-            <div class="menu-actions">
-              <button
-                id="menu-start-control"
-                class="menu-button menu-button--primary"
-                type="button"
-                @click="startGame"
-                @touchend.prevent="startGame"
-              >
-                <span>게임 시작 / 계속하기</span>
-                <small>첫 수거 의뢰 · 왕국 외곽</small>
-              </button>
-              <button
-                id="menu-mobile-start-control"
-                class="menu-button"
-                type="button"
-                @click="startMobileGame"
-                @touchend.prevent="startMobileGame"
-              >
-                <span>모바일 조작으로 시작</span>
-                <small>터치 버튼 · 가로 화면</small>
-              </button>
-              <button
-                class="menu-button"
-                type="button"
-                @click="resetSavedProgress"
-                @touchend.prevent="resetSavedProgress"
-              >
-                <span>저장 진행 초기화</span>
-                <small>현재 저장을 새 진행으로 교체</small>
-              </button>
-              <button
-                class="menu-button menu-button--install"
-                type="button"
-                x-show="pwa.installAvailable || pwa.showIosInstallGuide"
-                @click="requestPwaInstall"
-              >
-                <span>앱으로 설치</span>
-                <small
-                  x-text="pwa.showIosInstallGuide ? '공유 → 홈 화면에 추가' : '오프라인으로 계속 플레이'"
+            <div class="menu-controls">
+              <div class="menu-actions">
+                <button
+                  id="menu-start-control"
+                  class="menu-button menu-button--primary"
+                  type="button"
+                  @click="startGame"
+                  @touchend.prevent="startGame"
                 >
-                </small>
-              </button>
-              <button
-                class="menu-button menu-button--update"
-                type="button"
-                x-show="pwa.updateReady && !pwa.restartRequired"
-                @click="applyPwaUpdate"
-              >
-                <span
-                  x-text="pwa.availableVersion ? `v${pwa.availableVersion} 적용` : '새 버전 적용'"
-                ></span>
-                <small>진행을 먼저 저장하고 한 번만 전환</small>
-              </button>
-              <button
-                class="menu-button menu-button--update"
-                type="button"
-                x-show="pwa.restartRequired"
-                @click="restartForPwaRelease"
-              >
-                <span>새 버전으로 다시 열기</span>
-                <small>다른 창에서 적용된 릴리스를 안전하게 불러옵니다.</small>
-              </button>
+                  <span>게임 시작 / 계속하기</span>
+                  <small>첫 수거 의뢰 · 왕국 외곽</small>
+                </button>
+                <button
+                  id="menu-mobile-start-control"
+                  class="menu-button"
+                  type="button"
+                  @click="startMobileGame"
+                  @touchend.prevent="startMobileGame"
+                >
+                  <span>모바일 조작으로 시작</span>
+                  <small>터치 버튼 · 가로 화면</small>
+                </button>
+                <button
+                  class="menu-button menu-button--install"
+                  type="button"
+                  x-show="pwa.installAvailable || pwa.showIosInstallGuide"
+                  @click="requestPwaInstall"
+                >
+                  <span>앱으로 설치</span>
+                  <small
+                    x-text="pwa.showIosInstallGuide ? '공유 → 홈 화면에 추가' : '오프라인으로 계속 플레이'"
+                  >
+                  </small>
+                </button>
+                <button
+                  class="menu-button menu-button--update"
+                  type="button"
+                  x-show="pwa.updateReady && !pwa.restartRequired"
+                  @click="applyPwaUpdate"
+                  :disabled="pwa.applying"
+                >
+                  <span
+                    x-text="pwa.availableVersion ? `v${pwa.availableVersion} 적용` : '새 버전 적용'"
+                  ></span>
+                  <small>진행을 먼저 저장하고 한 번만 전환</small>
+                </button>
+                <button
+                  class="menu-button menu-button--update menu-button--restart"
+                  type="button"
+                  x-show="pwa.restartRequired"
+                  @click="restartForPwaRelease"
+                  :disabled="pwa.applying"
+                >
+                  <span>새 버전으로 다시 열기</span>
+                  <small>진행을 저장한 뒤 새 버전으로 전환</small>
+                </button>
+              </div>
+              <p class="menu-save-status" x-text="saveStatus" aria-live="polite"></p>
+              <details class="menu-data-notice">
+                <summary>저장 관리 · 데이터 안내</summary>
+                <p>
+                  진행은 이 기기에 저장됩니다. 앱이나 브라우저 데이터를 삭제하면 복구 지점도 지워질
+                  수 있습니다.
+                </p>
+                <button
+                  class="menu-button"
+                  type="button"
+                  @click="resetSavedProgress"
+                  @touchend.prevent="resetSavedProgress"
+                >
+                  <span>저장 진행 초기화</span>
+                  <small>현재 저장을 새 진행으로 교체</small>
+                </button>
+              </details>
             </div>
 
-            <p class="menu-version" x-text="saveStatus" aria-live="polite"></p>
-            <p class="menu-version" x-text="pwa.status" aria-live="polite"></p>
-            <p class="menu-version" x-text="`PRE-ALPHA · v${pwa.currentVersion}`"></p>
-            <p class="menu-version" x-text="`BUILD · ${pwa.currentBuildId}`"></p>
-            <details class="menu-data-notice">
-              <summary>저장 데이터 안내</summary>
-              <p>
-                진행은 이 기기의 browser data에 저장됩니다. 앱이나 browser data를 삭제하면 복구
-                지점도 지워질 수 있습니다.
-              </p>
-            </details>
+            <section class="menu-release" aria-label="앱 버전과 업데이트">
+              <div class="menu-release-identity">
+                <p class="menu-version" x-text="`PRE-ALPHA · v${pwa.currentVersion}`"></p>
+                <p class="menu-version menu-build" x-text="`BUILD · ${pwa.currentBuildId}`"></p>
+              </div>
+              <p class="menu-update-status" x-text="pwa.status" aria-live="polite"></p>
+              <button
+                id="pwa-check-update-control"
+                class="menu-check-update"
+                type="button"
+                @click="checkPwaUpdate"
+                :disabled="pwa.updateChecking || pwa.applying || pwa.installationBlocked"
+              >
+                <span x-text="pwa.updateChecking ? '업데이트 확인 중…' : '업데이트 확인'"></span>
+              </button>
+            </section>
           </section>
 
           <aside class="journey-card">

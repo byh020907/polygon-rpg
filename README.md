@@ -40,6 +40,12 @@ npm run dev
 
 한 번 정상 로딩한 배포본은 manifest, Service Worker와 versioned cache를 통해 오프라인에서도 메뉴·게임 module·저장·복구를 이어갑니다. Android Chromium은 메뉴의 `앱으로 설치`에서 시스템 설치를 요청하고, iPhone/iPad Safari는 공유 메뉴의 `홈 화면에 추가` 안내를 사용합니다. 설치 앱은 가로 방향을 우선하며 기본 강제 전체화면은 쓰지 않습니다.
 
+메뉴의 **업데이트 확인**으로 새 배포를 조회할 수 있으며 앱 시작·화면 복귀·메뉴 복귀와 보이는 동안의 제한된 주기에도 확인합니다. 파일 검증이 끝나면 **버전 적용**을 눌러 진행을 저장한 뒤 전환합니다. 다른 창이 먼저 적용했어도 현재 플레이와 그 버전의 파일은 유지하며, 메뉴에서 저장 후 다시 열 수 있습니다. 오프라인·다운로드 실패·저장 실패는 현재 버전을 유지하고 재시도할 수 있습니다.
+
+이전 버전의 설치 작업이 이미 멈춰 있는 기기에서는 한 번 앱과 브라우저를 완전히 종료한 뒤 다시 열어야 할 수 있습니다. 이 경우 메뉴에 복구 안내가 표시됩니다. 새로고침만으로는 멈춘 native 작업이 끝나지 않을 수 있으며, 캐시·저장 삭제나 재설치는 필요하지 않습니다. 검증에서는 같은 profile과 origin을 유지한 브라우저 재시작 뒤 저장·복구 데이터를 그대로 복원했습니다.
+
+`npm run release:metadata`는 버전, build ID, 파일별 SHA-256과 경량 `public/release.json`을 함께 생성합니다. 배포 파일이 바뀌면 다시 생성해야 하며 `npm run test:pwa`가 누락을 검사합니다. Service Worker의 준비/대기/적용은 [공식 lifecycle 설명](https://web.dev/articles/service-worker-lifecycle)과 [`updateViaCache` 계약](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/updateViaCache)을 따릅니다.
+
 Windows에서 실제 모바일 browser를 확인할 때만 `cloudflared`를 설치하고 임시 tunnel을 사용합니다.
 
 ```powershell
@@ -58,6 +64,10 @@ Quick Tunnel은 인증 없는 공개 개발 주소입니다. secret, personal da
 - `npm run test:graphics`: 원본 inventory·실제 게임 sampler 동일 출력·재현 URL 계약 검사
 - `npm run graphics:qa`: headless Chrome에서 desktop/mobile 실제 검토 UI 입력·재생·복사·재현과 PNG 검사
 - `npm run graphics:ui-qa`: 실제 게임 UI component별 화면 확인
+- `npm run test:pwa`: release integrity·PWA lifecycle·scope/client cache 및 실패 경계 검사
+- `npm run test:pwa:browser`: 같은 native Chrome profile에서 A→B→C·실패 설치·저장·다른 탭·오프라인 실증
+- `npm run test:pwa:recovery`: 과거 설치 정체 → 데이터 유지한 브라우저 완전 재시작 → 정상 설치·오프라인 복구 실증
+- `npm run test:mobile-menu`: 가로/세로 메뉴, 화면 회전·높이, 주요 버튼과 버전 표시의 실제 viewport 검사
 - `npm run test:campaign`, `npm run test:intro`, `npm run test:platform`: 해당 흐름의 focused fixture
 - `npm run check`: 모든 lint, format, domain fixture를 실행하는 완료 후보의 전체 검사
 - `npm run format`: Prettier 적용

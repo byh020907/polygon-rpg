@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createPwaLifecycleAdapter } from '../src/pwa/PwaLifecycleAdapter.js';
 import '../public/release-metadata.js';
 
 const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -37,18 +36,9 @@ for (const source of fs.readdirSync(path.join(root, 'src'), { recursive: true })
   const relative = path.join('src', source).replaceAll('\\', '/');
   assert.ok(inventory.has(relative), `${relative}가 offline inventory에서 빠졌습니다.`);
 }
-assert.match(serviceWorker, /cacheCompleteRelease\(cache\)/);
-assert.match(serviceWorker, /POLYGON_RPG_RELEASE/);
-assert.match(serviceWorker, /polygon-rpg-release-\$\{RELEASE\.buildId\}/);
-assert.match(serviceWorker, /PWA_RELEASE_ACTIVATED/);
-assert.match(serviceWorker, /new Request\(asset, \{ cache: 'reload' \}\)/);
-assert.doesNotMatch(serviceWorker, /event\.request\.cache === 'reload'/);
-assert.match(serviceWorker, /if \(!hasActiveRelease\) await self\.skipWaiting\(\)/);
-assert.match(serviceWorker, /SKIP_WAITING/);
-assert.match(serviceWorker, /event\.request\.mode === 'navigate'/);
 assert.match(read('index.html'), /apple-touch-startup-image/);
 assert.match(read('index.html'), /<details class="menu-data-notice">/);
-assert.match(read('index.html'), /browser data를 삭제하면 복구\s+지점도/);
+assert.match(read('index.html'), /브라우저 데이터를 삭제하면 복구\s+지점도/);
 assert.match(read('index.html'), /PWA 진단/);
 assert.match(read('index.html'), /pwa\.currentVersion/);
 assert.match(read('index.html'), /pwa\.currentBuildId/);
@@ -59,85 +49,8 @@ assert.match(
   /saveCurrentProgress\(\) \{\s*return this\.currentApp\.saveCurrentProgress\(\);/,
 );
 
-const release = globalThis.POLYGON_RPG_RELEASE;
-const registrationListeners = new Map();
-const serviceWorkerListeners = new Map();
-let skipWaitingMessage = null;
-const waiting = {
-  postMessage: (message, ports = []) => {
-    if (message.type === 'GET_RELEASE_METADATA') {
-      ports[0]?.postMessage({
-        type: 'RELEASE_METADATA',
-        release: { ...release, buildId: 'next-build-01' },
-      });
-      return;
-    }
-    skipWaitingMessage = message;
-  },
-};
-const registration = {
-  waiting,
-  update: async () => {},
-  addEventListener: (type, listener) => registrationListeners.set(type, listener),
-};
-const fakeWindowListeners = new Map();
-const fakeWindow = {
-  isSecureContext: true,
-  matchMedia: () => ({ matches: false }),
-  location: {
-    reload: () => {
-      throw new Error('user-applied update 전에는 reload하면 안 됩니다.');
-    },
-  },
-  navigator: {
-    userAgent: 'Mozilla/5.0 (Linux; Android 15)',
-    serviceWorker: {
-      register: async () => registration,
-      addEventListener: (type, listener) => serviceWorkerListeners.set(type, listener),
-    },
-  },
-  addEventListener: (type, listener) => fakeWindowListeners.set(type, listener),
-};
-const lifecycle = createPwaLifecycleAdapter({ browserWindow: fakeWindow });
-await lifecycle.start();
-await new Promise((resolve) => setTimeout(resolve, 10));
-assert.equal(lifecycle.getState().updateReady, true);
-assert.equal(lifecycle.getState().currentVersion, release.appVersion);
-assert.equal(lifecycle.getState().availableBuildId, 'next-build-01');
-assert.equal(await lifecycle.applyUpdate(async () => ({ ok: false, message: '저장 실패' })), false);
-assert.equal(skipWaitingMessage, null);
-serviceWorkerListeners.get('message')({
-  data: {
-    type: 'PWA_RELEASE_ACTIVATED',
-    release: { appVersion: '0.1.2', buildId: 'next-build-02' },
-  },
-});
-assert.equal(lifecycle.getState().restartRequired, true);
-assert.match(lifecycle.getState().status, /다른 창/);
-assert.equal(await lifecycle.applyUpdate(async () => ({ ok: true })), true);
-assert.deepEqual(skipWaitingMessage, { type: 'SKIP_WAITING' });
-serviceWorkerListeners.get('message')({
-  data: { type: 'PWA_DIAGNOSTIC', message: 'cache 확인 실패' },
-});
-assert.match(lifecycle.getState().status, /cache 확인 실패/);
-
-const iosLifecycle = createPwaLifecycleAdapter({
-  browserWindow: {
-    isSecureContext: true,
-    matchMedia: () => ({ matches: false }),
-    addEventListener: () => {},
-    navigator: {
-      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
-      serviceWorker: {
-        register: async () => ({ waiting: null, addEventListener: () => {} }),
-        addEventListener: () => {},
-      },
-    },
-  },
-});
-await iosLifecycle.start();
-assert.equal(iosLifecycle.getState().installAvailable, true);
-await iosLifecycle.requestInstall();
-assert.equal(iosLifecycle.getState().showIosInstallGuide, true);
-
-console.log('PWA manifest, atomic cache inventory, update-save boundary: PASS');
+assert.match(serviceWorker, /assetDigests/);
+assert.match(serviceWorker, /PROBE_URL/);
+assert.match(serviceWorker, /PWA_RELEASE_ACTIVATED/);
+assert.match(serviceWorker, /PWA_CLIENT_RELEASE/);
+console.log('PWA manifest, canonical release inventory and semantic menu contracts: PASS');

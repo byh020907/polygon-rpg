@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import { createStaticServer } from '../serve.mjs';
 
 export const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -11,14 +11,24 @@ export async function openQaBrowser({
   height = 720,
   search = '',
   root = process.cwd(),
+  serverFactory = () => createStaticServer({ rootPath: root }),
+  profileRoot = tmpdir(),
+  profileDirectory = null,
+  port = 0,
 } = {}) {
-  const server = createStaticServer({ rootPath: root });
+  // A supplied directory belongs to the caller and must be a dedicated test profile.
+  if (
+    profileDirectory !== null &&
+    (typeof profileDirectory !== 'string' || !isAbsolute(profileDirectory))
+  )
+    throw new TypeError('A caller-owned browser profile must use an absolute directory path');
+  const server = serverFactory();
   await new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
+    server.listen(port, '127.0.0.1', resolve);
   });
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const profile = mkdtempSync(join(tmpdir(), 'polygon-graphics-'));
+  const profile = profileDirectory ?? mkdtempSync(join(profileRoot, 'polygon-graphics-'));
   const process = spawn(
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
     [
@@ -36,12 +46,19 @@ export async function openQaBrowser({
   let sequence = 0;
   const pending = new Map();
   const events = [];
-  const cleanup = async () => {
+  const cleanup = async ({ graceful = false } = {}) => {
+    let gracefulTimedOut = false;
+    if (graceful && process.exitCode === null) {
+      socket?.send(JSON.stringify({ id: ++sequence, method: 'Browser.close' }));
+      for (let attempt = 0; attempt < 50 && process.exitCode === null; attempt += 1)
+        await wait(100);
+      gracefulTimedOut = process.exitCode === null;
+    }
     socket?.close();
     if (process.exitCode === null) process.kill();
     for (let attempt = 0; attempt < 40 && process.exitCode === null; attempt += 1) await wait(100);
     await new Promise((resolve) => server.close(resolve));
-    for (let attempt = 0; attempt < 20; attempt += 1) {
+    for (let attempt = 0; profileDirectory === null && attempt < 20; attempt += 1) {
       try {
         rmSync(profile, { recursive: true, force: true });
         break;
@@ -50,6 +67,7 @@ export async function openQaBrowser({
         await wait(150);
       }
     }
+    if (gracefulTimedOut) throw new Error('Chrome did not complete a graceful browser shutdown');
   };
   try {
     const endpoint = await new Promise((resolve, reject) => {

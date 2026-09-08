@@ -118,10 +118,17 @@ dd {
 /* Main menu */
 
 .menu-screen {
+  --menu-safe-top: env(safe-area-inset-top, 0px);
+  --menu-safe-right: env(safe-area-inset-right, 0px);
+  --menu-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --menu-safe-left: env(safe-area-inset-left, 0px);
   position: relative;
   display: grid;
   min-height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  padding: max(20px, var(--menu-safe-top)) max(20px, var(--menu-safe-right))
+    max(20px, var(--menu-safe-bottom)) max(20px, var(--menu-safe-left));
+  overflow: clip;
   isolation: isolate;
   place-items: center;
   background: #071014;
@@ -251,12 +258,29 @@ dd {
   grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
   gap: clamp(32px, 8vw, 120px);
   align-items: end;
-  width: min(1180px, calc(100% - 40px));
-  padding: 72px 0;
+  width: min(1180px, 100%);
+  min-width: 0;
+  padding: 0;
 }
 
 .title-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
   max-width: 670px;
+}
+
+.menu-brand,
+.menu-controls {
+  min-width: 0;
+}
+
+.menu-controls {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  width: min(100%, 430px);
 }
 
 .menu-kicker,
@@ -276,7 +300,7 @@ dd {
   margin-bottom: 18px;
   color: #f2ead1;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(4.3rem, 11vw, 9rem);
+  font-size: clamp(3.4rem, min(9vw, 16vh), 7rem);
   font-weight: 900;
   line-height: 0.72;
   letter-spacing: -0.075em;
@@ -291,7 +315,7 @@ dd {
 }
 
 .menu-subtitle {
-  margin-bottom: 30px;
+  margin-bottom: 0;
   color: #9cb0ac;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: clamp(0.78rem, 1.4vw, 0.96rem);
@@ -311,7 +335,7 @@ dd {
   justify-content: space-between;
   gap: 16px;
   min-height: 58px;
-  padding: 0 18px;
+  padding: 9px 16px;
   color: #c9d5d2;
   border: 1px solid #2e4c50;
   border-radius: 4px;
@@ -330,10 +354,10 @@ dd {
 }
 
 .menu-button small {
-  color: #66817e;
+  color: #9bb3ae;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.59rem;
-  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 .menu-button:hover {
@@ -357,12 +381,91 @@ dd {
   background: #f0cf7d;
 }
 
-.menu-version {
-  margin: 19px 0 0;
-  color: #4c6563;
+.menu-release {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  align-items: start;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid #29403f;
+}
+
+.menu-release-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.menu-version,
+.menu-save-status,
+.menu-update-status {
+  margin: 0;
+  color: #a2b5af;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.menu-version {
+  color: #cfccaf;
+}
+
+.menu-build {
+  color: #9aada7;
+}
+
+.menu-update-status {
+  grid-column: 1 / -1;
+}
+
+.menu-check-update {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: #c0d7cd;
+  border: 1px solid #3e6058;
+  border-radius: 4px;
+  background: rgb(10 27 30 / 88%);
+  font-size: 0.75rem;
+}
+
+.menu-check-update:hover {
+  background: #14383a;
+}
+
+.menu-button:disabled,
+.menu-check-update:disabled {
+  cursor: progress;
+  opacity: 0.65;
+  transform: none;
+}
+
+.menu-data-notice {
+  color: #9bafa8;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.menu-data-notice summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.menu-data-notice summary:focus-visible {
+  outline: 2px solid #f3c96a;
+  outline-offset: 2px;
+}
+
+.menu-data-notice p {
+  margin: 0 0 10px;
+}
+
+.menu-data-notice .menu-button {
+  width: 100%;
 }
 
 .journey-card {
@@ -386,6 +489,8 @@ dd {
   color: #ede3cb;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.65rem;
+  word-break: keep-all;
+  text-wrap: balance;
 }
 
 .journey-card > p:not(.journey-index) {
@@ -416,6 +521,96 @@ dd {
 .journey-card dd {
   color: #adbfba;
   text-align: right;
+}
+
+/* Short landscape menus use the available width instead of pushing actions below the fold. */
+@media (min-width: 560px) and (max-height: 600px) {
+  .menu-screen {
+    padding: max(12px, var(--menu-safe-top)) max(24px, var(--menu-safe-right))
+      max(12px, var(--menu-safe-bottom)) max(24px, var(--menu-safe-left));
+  }
+
+  .menu-screen .menu-content {
+    grid-template-columns: 1fr;
+    max-width: 1020px;
+    padding: 0;
+  }
+
+  .menu-screen .title-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    grid-template-rows: auto 1fr;
+    gap: 14px 32px;
+    align-items: start;
+    width: 100%;
+    max-width: none;
+  }
+
+  .menu-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .menu-controls {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 100%;
+  }
+
+  .menu-screen .title-card h1 {
+    margin-bottom: 12px;
+    font-size: clamp(2.6rem, min(7.4vw, 17vh), 5.2rem);
+  }
+
+  .menu-screen .title-card h1 strong {
+    margin-left: 32px;
+  }
+
+  .menu-screen .menu-kicker {
+    font-size: 0.75rem;
+    letter-spacing: 0.09em;
+  }
+
+  .menu-subtitle {
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  .menu-screen .menu-button {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 50px;
+    padding: 7px 14px;
+  }
+
+  .menu-actions {
+    gap: 6px;
+  }
+
+  .menu-release {
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    width: 100%;
+    padding-top: 10px;
+  }
+
+  .menu-release-identity {
+    gap: 2px 10px;
+  }
+
+  .menu-check-update {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .menu-screen .journey-card {
+    display: none;
+  }
 }
 
 /* Game view */
@@ -2743,8 +2938,8 @@ kbd {
   .menu-content {
     grid-template-columns: 1fr;
     align-items: center;
-    min-width: 0;
-    padding: 44px 0;
+    justify-items: center;
+    padding: 0;
   }
 
   .title-card,
@@ -2759,21 +2954,20 @@ kbd {
 
   .title-card h1 {
     max-width: 100%;
-    font-size: clamp(3.4rem, 18vw, 7rem);
+    font-size: clamp(3.1rem, 16vw, 5rem);
   }
 
   .menu-button {
     align-items: flex-start;
     flex-direction: column;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
+    min-height: 52px;
+    padding: 8px 14px;
   }
 
   .menu-button small {
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .menu-mine {
@@ -2879,11 +3073,30 @@ kbd {
   }
 
   .menu-screen {
-    place-items: start center;
+    padding: max(16px, var(--menu-safe-top)) max(16px, var(--menu-safe-right))
+      max(16px, var(--menu-safe-bottom)) max(16px, var(--menu-safe-left));
   }
 
   .menu-content {
-    width: calc(100% - 24px);
+    width: 100%;
+  }
+
+  .title-card {
+    gap: 12px;
+  }
+
+  .menu-kicker {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  .menu-release {
+    gap: 6px 8px;
+  }
+
+  .menu-release-identity {
+    display: grid;
+    gap: 2px;
   }
 
   .title-card h1 strong {

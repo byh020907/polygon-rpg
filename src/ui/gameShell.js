@@ -531,7 +531,12 @@ export function registerGameShell(
         if (uiReviewResource) this.prepareUiReview();
         if (graphicsReviewRequest) void this.openGraphicsReview(graphicsReviewRequest);
       });
-      this.$cleanup = () => unsubscribePwa();
+      this.$watch('screen', (screen) => pwaLifecycle.setScreen(screen));
+      this.$cleanup = () => {
+        unsubscribePwa?.();
+        pwaLifecycle.stop();
+        standaloneViewport.stop();
+      };
     },
 
     get playButtonLabel() {
@@ -612,8 +617,12 @@ export function registerGameShell(
       void pwaLifecycle.applyUpdate(() => gameApp.saveCurrentProgress());
     },
 
+    checkPwaUpdate() {
+      void pwaLifecycle.checkForUpdate({ force: true });
+    },
+
     restartForPwaRelease() {
-      pwaLifecycle.restartForActivatedRelease();
+      void pwaLifecycle.restartForActivatedRelease(() => gameApp.saveCurrentProgress());
     },
 
     startDebugMenuHold(event) {
@@ -896,6 +905,7 @@ export function registerGameShell(
         if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
         debugConfigurationAdapter.returnToPlayerGame();
         this.visualQa = false;
+        void pwaLifecycle.start();
         this.operationMapOpen = false;
         this.campaignActionPreviewOpen = false;
         this.debugPanelOpen = false;
