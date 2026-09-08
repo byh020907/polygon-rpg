@@ -459,13 +459,37 @@ dd {
 }
 
 .menu-button:disabled,
-.menu-check-update:disabled {
+.menu-check-update:disabled,
+.menu-reset-progress:disabled {
   cursor: progress;
   opacity: 0.65;
   transform: none;
 }
 
+.menu-data-tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.menu-reset-progress {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #896447;
+  border-radius: 4px;
+  color: #e5bc96;
+  background: rgb(36 24 17 / 88%);
+  font-size: 0.75rem;
+}
+
+.menu-reset-progress:hover {
+  background: #3a2b20;
+}
+
 .menu-data-notice {
+  flex: 1;
+  min-width: 0;
   color: #9bafa8;
   font-size: 0.75rem;
   line-height: 1.5;
@@ -484,10 +508,6 @@ dd {
 
 .menu-data-notice p {
   margin: 0 0 10px;
-}
-
-.menu-data-notice .menu-button {
-  width: 100%;
 }
 
 .journey-card {

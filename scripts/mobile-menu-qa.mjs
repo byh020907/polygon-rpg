@@ -15,7 +15,7 @@ const viewports = [
   ['mobile-small-portrait', 360, 640],
 ];
 const snapshot = `(() => {
-  const selectors = ['#game-title', '.menu-actions button', '#pwa-check-update-control', '.menu-release', '.menu-version', '.menu-update-status', '.menu-data-notice summary'];
+  const selectors = ['#game-title', '.menu-actions button', '#pwa-check-update-control', '.menu-release', '.menu-version', '.menu-update-status', '.menu-data-notice summary', '#menu-reset-progress-control'];
   const elements = selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(element => {
     const bounds = element.getBoundingClientRect();
     return { selector, text: element.innerText, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
@@ -34,7 +34,11 @@ function verifyBounds(name, record) {
     `${name}: ${JSON.stringify(record.elements.filter((element) => element.visible && !element.inViewport))}`,
   );
   for (const element of record.elements.filter((element) => element.visible)) {
-    if (element.selector.includes('button') || element.selector.includes('summary'))
+    if (
+      element.selector.includes('button') ||
+      element.selector.includes('summary') ||
+      element.selector === '#menu-reset-progress-control'
+    )
       assert.ok(element.height >= 44, `${name}: small touch target ${element.text}`);
     if (element.selector !== '#game-title')
       assert.ok(element.fontSize >= 12, `${name}: small text ${element.text}`);
@@ -155,6 +159,12 @@ for (const [name, width, height] of viewports.filter(
         verifyBounds(`${name}/${state}`, layout);
         if (state === 'applying-layout') {
           assert.equal(
+            await browser.evaluate(
+              `document.querySelector('#menu-reset-progress-control').disabled`,
+            ),
+            true,
+          );
+          assert.equal(
             await browser.evaluate(`document.querySelector('#pwa-check-update-control').disabled`),
             true,
           );
@@ -191,10 +201,10 @@ for (const [name, width, height] of viewports.filter(
         true,
       );
       await browser.evaluate(
-        `document.querySelector('.menu-data-notice button').scrollIntoView({block:'center'})`,
+        `document.querySelector('#menu-reset-progress-control').scrollIntoView({block:'center'})`,
       );
       const resetAccessible = await browser.evaluate(
-        `(()=>{const r=document.querySelector('.menu-data-notice button').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()`,
+        `(()=>{const r=document.querySelector('#menu-reset-progress-control').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()`,
       );
       assert.equal(resetAccessible, true, `${name}: reset cannot be reached`);
       await browser.screenshot(join(output, `${name}-save-management.png`));

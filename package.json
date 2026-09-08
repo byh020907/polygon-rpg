@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "type": "module",
   "engines": {
@@ -32,6 +32,7 @@
     "test:pwa": "node scripts/release-metadata-check.mjs && node scripts/pwa-offline-check.mjs && node scripts/pwa-lifecycle-check.mjs && node scripts/pwa-release-cache-check.mjs",
     "test:pwa:browser": "node scripts/pwa-update-browser-check.mjs --fixed-only",
     "test:pwa:recovery": "node scripts/pwa-update-browser-check.mjs --restart-recovery",
+    "test:pwa:save-reset": "node scripts/pwa-update-browser-check.mjs --save-reset-only",
     "test:mobile-menu": "node scripts/mobile-menu-qa.mjs",
     "test:debug-entry": "node scripts/debug-entry-qa.mjs",
     "format": "prettier --write .",

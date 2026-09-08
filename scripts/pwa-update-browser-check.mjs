@@ -17,7 +17,9 @@ const baselineOnly = process.argv.includes('--baseline-only');
 const migrationOnly = process.argv.includes('--migration-only');
 const diagnoseUnregister = process.argv.includes('--diagnose-unregister');
 const restartRecovery = process.argv.includes('--restart-recovery');
+const saveResetOnly = process.argv.includes('--save-reset-only');
 const fixedOnly =
+  saveResetOnly ||
   process.argv.includes('--fixed-only') ||
   !(baselineOnly || migrationOnly || diagnoseUnregister || restartRecovery);
 const evidence = { startedAt: new Date().toISOString(), baseline: null, checks: [] };
@@ -853,20 +855,161 @@ async function fixedFlow() {
   }
 }
 
+async function saveResetFlow() {
+  const a = copyCurrentRelease('reset-a', '0.2.901');
+  const b = copyCurrentRelease('reset-b', '0.2.902');
+  const server = switchingServer(a.directory);
+  const browser = await openQaBrowser({
+    width: 1280,
+    height: 720,
+    serverFactory: () => server.factory(),
+    profileRoot: workspace,
+  });
+  async function confirmReset(accept, touch = false) {
+    const start = browser.events.length;
+    const click = browser.click('#menu-reset-progress-control', touch);
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      if (
+        browser.events.slice(start).some((event) => event.method === 'Page.javascriptDialogOpening')
+      )
+        break;
+      await wait(20);
+    }
+    const dialog = browser.events
+      .slice(start)
+      .find((event) => event.method === 'Page.javascriptDialogOpening');
+    assert.equal(dialog?.params.type, 'confirm');
+    assert.match(dialog.params.message, /저장 진행과 복구 지점/);
+    await browser.send('Page.handleJavaScriptDialog', { accept });
+    await click;
+    await wait(150);
+  }
+  async function incompatibleSave() {
+    await seedProgress(browser);
+    await browser.evaluate(`{
+      const key='polygon-rpg.progression.v1';
+      const data=JSON.parse(localStorage.getItem(key));data.version=9;
+      localStorage.setItem(key,JSON.stringify(data));
+      localStorage.setItem('unrelated-app-sentinel','keep');
+    }`);
+    await browser.navigate('');
+    await installReady(browser);
+    await browser.until(`${shell}.saveStatus.includes('호환되지 않는')`);
+    assert.equal(await browser.evaluate("document.querySelector('.menu-data-notice').open"), false);
+    assert.equal(
+      await browser.evaluate(
+        `(()=>{const n=document.querySelector('#menu-reset-progress-control'),r=n.getBoundingClientRect();return n.checkVisibility() && r.top>=0 && r.bottom<=innerHeight && r.height>=44 && !n.closest('details')})()`,
+      ),
+      true,
+    );
+    return browser.evaluate(storageState);
+  }
+  try {
+    await installReady(browser);
+    const preserved = await incompatibleSave();
+    server.switchTo(b.directory);
+    await browser.until(`!${shell}.pwa.updateChecking`);
+    await browser.click('#pwa-check-update-control');
+    await browser.until(`${shell}.pwa.updateReady`);
+    await browser.evaluate("caches.open('reset-qa-unrelated').then(() => true)");
+    const blockedWorker = await workerState(browser);
+    await browser.click('.menu-button--update');
+    await browser.until(`${shell}.pwa.updateError?.includes('호환되지 않는')`);
+    await record(browser, 'save-reset-blocked-desktop');
+    assert.deepEqual(await browser.evaluate(storageState), preserved);
+    assert.equal((await workerState(browser)).controller.release.buildId, a.buildId);
+    await confirmReset(false);
+    assert.deepEqual(await browser.evaluate(storageState), preserved);
+    await record(browser, 'save-reset-cancel-preserves');
+    await browser.evaluate(`globalThis.RESET_QA_SET_ITEM=Storage.prototype.setItem;
+      Storage.prototype.setItem=function(key,value){
+        if(key==='polygon-rpg.progression.v1')throw new DOMException('QA write failure','QuotaExceededError');
+        return RESET_QA_SET_ITEM.call(this,key,value);
+      }`);
+    try {
+      await confirmReset(true);
+      assert.match(await browser.evaluate(`${shell}.saveStatus`), /초기화 실패/);
+      assert.deepEqual(await browser.evaluate(storageState), preserved);
+      assert.equal((await workerState(browser)).controller.release.buildId, a.buildId);
+      await record(browser, 'save-reset-write-failure-preserves');
+    } finally {
+      await browser.evaluate(
+        'Storage.prototype.setItem=RESET_QA_SET_ITEM;delete globalThis.RESET_QA_SET_ITEM',
+      );
+    }
+    await confirmReset(true);
+    await browser.until(`!${shell}.pwa.updateChecking && !${shell}.pwa.updateError`);
+    assert.match(await browser.evaluate(`${shell}.saveStatus`), /초기화 완료/);
+    const resetStorage = await browser.evaluate(storageState);
+    const fresh = JSON.parse(resetStorage['polygon-rpg.progression.v1']);
+    assert.equal(fresh.version, 10);
+    assert.equal(fresh.gold, 0);
+    assert.deepEqual(fresh.viewedConversationIds, []);
+    assert.notEqual(
+      resetStorage['polygon-rpg.progression.v1.recovery.v1'],
+      preserved['polygon-rpg.progression.v1.recovery.v1'],
+    );
+    assert.equal(await browser.evaluate("localStorage.getItem('unrelated-app-sentinel')"), 'keep');
+    assert.deepEqual((await workerState(browser)).caches.sort(), blockedWorker.caches.sort());
+    await record(browser, 'save-reset-success-desktop');
+    const frameEvents = browser.events.filter(
+      (event) => event.method === 'Page.frameNavigated' && !event.params.frame.parentId,
+    ).length;
+    await browser.click('.menu-button--update');
+    await browser.until(`globalThis.PWA_QA_RELEASE_MARKER === 'reset-b'`);
+    await installReady(browser);
+    assert.equal(
+      browser.events.filter(
+        (event) => event.method === 'Page.frameNavigated' && !event.params.frame.parentId,
+      ).length - frameEvents,
+      1,
+    );
+    assert.equal((await workerState(browser)).controller.release.buildId, b.buildId);
+    assert.deepEqual(await browser.evaluate(storageState), resetStorage);
+    await record(browser, 'save-reset-update-complete');
+    await browser.send('Emulation.setDeviceMetricsOverride', {
+      width: 844,
+      height: 390,
+      deviceScaleFactor: 1,
+      mobile: true,
+    });
+    await browser.send('Emulation.setTouchEmulationEnabled', { enabled: true });
+    const mobilePreserved = await incompatibleSave();
+    await record(browser, 'save-reset-visible-mobile');
+    await confirmReset(false, true);
+    assert.deepEqual(await browser.evaluate(storageState), mobilePreserved);
+    await confirmReset(true, true);
+    assert.equal(
+      JSON.parse((await browser.evaluate(storageState))['polygon-rpg.progression.v1']).version,
+      10,
+    );
+    await record(browser, 'save-reset-success-mobile');
+    const errors = browser.events.filter((event) => event.method === 'Runtime.exceptionThrown');
+    assert.deepEqual(errors, []);
+    evidence.verified = true;
+  } finally {
+    await browser.close();
+  }
+}
+
 try {
   if (!fixedOnly) await baseline();
-  if (!baselineOnly && !migrationOnly && !diagnoseUnregister && !restartRecovery) await fixedFlow();
+  if (saveResetOnly) await saveResetFlow();
+  else if (!baselineOnly && !migrationOnly && !diagnoseUnregister && !restartRecovery)
+    await fixedFlow();
   evidence.finishedAt = new Date().toISOString();
   console.log(
-    restartRecovery
-      ? `Browser process restart recovery verified=${evidence.restartRecoveryVerified}; no-restart migration verified=${evidence.noRestartMigrationVerified}`
-      : diagnoseUnregister
-        ? `DIAGNOSTIC ONLY: unregister recovery=${evidence.unregisterRecovery?.recovered}; empty-client recovery=${evidence.emptyClientsRecovery?.recovered ?? 'not attempted'}`
-        : migrationOnly
-          ? 'Published stalled installer → current release in the same profile after page reload: PASS'
-          : baselineOnly
-            ? 'Published PWA update defect reproduced with native Service Worker: PASS'
-            : 'Native persistent PWA installation, failure, foreground/manual update, two tabs, storage and offline: PASS',
+    saveResetOnly
+      ? 'Native incompatible save → visible reset/cancel/failure → update, desktop and touch: PASS'
+      : restartRecovery
+        ? `Browser process restart recovery verified=${evidence.restartRecoveryVerified}; no-restart migration verified=${evidence.noRestartMigrationVerified}`
+        : diagnoseUnregister
+          ? `DIAGNOSTIC ONLY: unregister recovery=${evidence.unregisterRecovery?.recovered}; empty-client recovery=${evidence.emptyClientsRecovery?.recovered ?? 'not attempted'}`
+          : migrationOnly
+            ? 'Published stalled installer → current release in the same profile after page reload: PASS'
+            : baselineOnly
+              ? 'Published PWA update defect reproduced with native Service Worker: PASS'
+              : 'Native persistent PWA installation, failure, foreground/manual update, two tabs, storage and offline: PASS',
   );
 } catch (error) {
   evidence.failure = error.stack;
@@ -875,15 +1018,17 @@ try {
   fs.writeFileSync(
     path.join(
       output,
-      restartRecovery
-        ? 'restart-recovery-evidence.json'
-        : diagnoseUnregister
-          ? 'recovery-diagnostic-evidence.json'
-          : migrationOnly
-            ? 'migration-evidence.json'
-            : baselineOnly
-              ? 'baseline-evidence.json'
-              : 'browser-evidence.json',
+      saveResetOnly
+        ? 'save-reset-evidence.json'
+        : restartRecovery
+          ? 'restart-recovery-evidence.json'
+          : diagnoseUnregister
+            ? 'recovery-diagnostic-evidence.json'
+            : migrationOnly
+              ? 'migration-evidence.json'
+              : baselineOnly
+                ? 'baseline-evidence.json'
+                : 'browser-evidence.json',
     ),
     `${JSON.stringify(evidence, null, 2)}\n`,
   );

@@ -185,6 +185,7 @@ Keyboard / Touch / DOM intent
 - Snapshot에는 campaign clock, D-DAY, rival route, region states, part/robot completion, action ledger, equipment, enchant와 progression이 함께 들어간다.
 - Storage는 `latest morning`, `latest core event`, `pre-action` recovery slot을 구분한다. Morning boundary, core completion 직후와 time action confirm 직전에 orchestrator가 explicit save request를 보낸다.
 - Load/save failure는 explicit result로 UI에 전달하고 domain state를 부분 적용하지 않는다.
+- 저장 초기화는 메인 UI adapter의 명시적 확인 뒤 기존 application reset capability로 실행한다. UI는 storage key나 schema를 직접 삭제·변환하지 않는다. 초기화 성공 뒤 PWA 상태를 다시 확인하고, 다음 버전 전환도 정상 저장 성공을 요구한다. 취소·초기화 실패에는 전환을 요청하지 않는다.
 - cache version 전환은 ProgressionStorage와 독립이다. update 적용 전 UI adapter가 explicit save를 요청하고, cache 실패는 active cache와 typed progress snapshot을 유지한다.
 - Service Worker cache는 scope와 release별로 분리한다. root navigation의 query가 달라도 해당 release의 shell을 사용하며, 열려 있는 client는 자신이 시작한 build의 cache에 고정한다. client/build 기록은 worker 재시작을 견디고, 새 navigation은 새 release를 선택한다. 정리는 현재 release와 살아 있는 client가 사용하는 release를 보존하며 다른 scope·앱 cache를 삭제하지 않는다.
 - PWA lifecycle owner는 최초 동일 build 활성화와 다른 build 활성화를 구분하고 installing worker와 waiting worker를 모두 관찰한다. 업데이트 확인·설치·저장/적용을 별도 상태로 표시하며 duplicate apply, 무한 확인 대기와 사라진 waiting worker를 명시적으로 처리한다. 다른 창의 활성화 후 다시 열기도 저장 성공 뒤 한 번만 수행한다.

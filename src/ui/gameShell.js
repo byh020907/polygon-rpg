@@ -663,7 +663,16 @@ export function registerGameShell(
     },
 
     resetSavedProgress() {
-      return gameApp.resetSavedProgress();
+      if (this.pwa.applying) return;
+      if (
+        !globalThis.confirm(
+          '현재 저장 진행과 복구 지점을 지우고 새 게임으로 초기화할까요? 이 작업은 되돌릴 수 없습니다.',
+        )
+      )
+        return;
+      const result = gameApp.resetSavedProgress();
+      if (result.ok) void pwaLifecycle.checkForUpdate({ force: true });
+      return result;
     },
 
     requestPwaInstall() {

@@ -4,11 +4,11 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — Human이 요청한 시작 구간 디버그 진입 수리의 구현·독립 검증을 마쳤다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — Human의 PC 저장 초기화 접근성 수리와 실제 저장 오류→초기화→업데이트 검증을 마쳤다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
-`Human Feedback Priority — 시작 구간 디버그 진입 검증 완료.` 지도 해금 전에도 메인 제목 또는 게임 MENU를 1초 눌러 같은 디버그 패널을 연다. 실제 desktop mouse/keyboard와 mobile touch의 열기·해제·취소·focus·배경 inert·장면 적용·복귀를 확인했다. 이전 모바일 메인 메뉴 비율과 PWA 수리는 유지한다. 다음 미완료 전선은 폐광→항구 연결 전투와 귀환의 연속 플레이 검증이며, 자동 실행은 Human pause 상태다.
+`Human Feedback Priority — PC 저장 초기화 접근성 검증 완료.` 메인 메뉴에 초기화 버튼을 바로 표시하고 삭제 확인 뒤 기존 reset capability를 호출한다. 호환되지 않는 저장의 실제 업데이트 차단, 취소·write 실패 시 저장 보존, 초기화 뒤 새 버전 1회 전환을 확인했다. 이전 디버그 진입·모바일 비율·PWA 수리는 유지한다. 다음 미완료 전선은 폐광→항구 연결 전투와 귀환의 연속 플레이 검증이며, 자동 실행은 Human pause 상태다.
 
 ## Active Execution Goal
 
@@ -30,6 +30,9 @@
 
 ## Verification
 
+- PC 초기화 ingress e35fa92의 정확한 항목만 PG-RECOVERY / Persistence가 소유함을 확인하고 queue에서 제거했다. actual danger-full-access / approval never, clean codex/pc-save-reset에서 free guard 획득. Human의 에이전트 사용 축소 요청 뒤 구현·검증·실제 PNG 판독은 부모가 직접 수행했다.
+- npm run test:pwa:save-reset: artifacts/pwa-update/save-reset-evidence.json 7기록 PASS. 실제 native A→B 설치와 schema9 저장 거부, 초기화 버튼 즉시 노출, native 확인 취소, primary write 실패 시 bytes 보존, schema10 초기화 및 복구 지점 교체, 무관한 저장·cache 보존, 재적용 1회 reload와 새 worker/저장 유지, mobile touch 취소·초기화 확인. Test data는 독립 임시 Chrome profile에만 주입했다.
+- 기존 모바일 메뉴 34 viewport/input 기록, platform/PWA fixture·lint·format·diff 확인. PG-RECOVERY의 desktop/mobile/print 출력과 의미 구조, 오류가 있는 실제 PC 및 mobile 메뉴에서 초기화 버튼을 직접 판독했다. 별도 subagent 독립검증을 수행했다고 표시하지 않는다.
 - actual permission danger-full-access / approval never, clean isolated branch codex/debug-entry-start 및 free guard 확인 뒤 획득. feedback-only a8ddd7e는 별도 임시 worktree에서 INBOX 원문만 즉시 등록했다. 해당 원문의 의도는 PG-PLATFORM-ACCESS와 Architecture Rendering/Input이 소유하며 검증 후 그 항목만 queue에서 제거했다. 자동 trigger 둘 다 PAUSED 유지.
 - artifacts/debug-entry/evidence.json 및 REPORT.md: 실제 desktop 1280×720 / mobile 844×390에서 34기록 PASS. 메인/초기 MENU/해금 MAP, 실제 Enter hold·touchCancel·다른 탭 blur, modal focus trap·opener 복귀·배경 inert, 공개 form으로 QA 장면 적용과 일반 게임 복귀를 확인했다. 메인 패널 focus와 touchEnd 뒤 focus 실패를 각각 재현·수리·재검증했다. 실제 PNG에서 초반 MENU, 패널, 적용 후 game canvas를 직접 판독했다.
 - npm run test:platform, test:mobile-menu(34기록), test:pwa, graphics-review-config-check 및 lint/format/diff 검사 PASS. 기존 모바일 메인 화면 비율·PWA cache/lifecycle 계약을 보존한다. 이번 테스트는 실제 설치형 Android/iOS 전체 인증으로 확대하지 않는다.
