@@ -1,0 +1,21 @@
+{
+  "source": "https://chatgpt.com/s/m_6aa0283dda808191b4f2bd3de61ba562",
+  "retrievedOn": "2026-09-09",
+  "unaltered": true,
+  "files": [
+    {
+      "name": "hero-style-reference.png",
+      "bytes": 1327043,
+      "width": 1619,
+      "height": 971,
+      "sha256": "672c2ad7a965299417d12c8f2e88af29937a3f339943a4f0263670a3401a2112"
+    },
+    {
+      "name": "enemy-archetypes-reference.png",
+      "bytes": 1467420,
+      "width": 1619,
+      "height": 971,
+      "sha256": "b30de8a6109db2a0a0635fe97a24375b893400f69e57f818e5f5f9a59a2bd75e"
+    }
+  ]
+}
