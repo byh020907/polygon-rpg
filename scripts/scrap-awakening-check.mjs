@@ -2767,6 +2767,11 @@ assert.equal(
   '폐광 연결 이슈는 온실의 pressure-brace 기생 기계 전투를 열어야 합니다.',
 );
 greenhouseLinkedIssueScene.roomSceneNode.encounter.completeForVisualQa();
+assert.deepEqual(
+  greenhouseLinkedIssueScene.getProgressionSnapshot().scrapCampaign.clearedEncounterIds,
+  ['greenhouse-pipe-parasite'],
+  '온실 연결 전투 완료는 production completion 경로에서 campaign ledger에 한 번 기록되어야 합니다.',
+);
 assert.ok(
   greenhouseLinkedIssueScene.mapRuntime
     .getResolvedSnapshot()
