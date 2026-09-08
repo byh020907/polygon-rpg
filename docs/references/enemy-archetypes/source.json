@@ -1,17 +1,20 @@
 {
-  "source": "https://chatgpt.com/s/m_6aa0283dda808191b4f2bd3de61ba562",
   "retrievedOn": "2026-09-09",
   "unaltered": true,
   "files": [
     {
       "name": "hero-style-reference.png",
-      "bytes": 1327043,
+      "source": "https://chatgpt.com/s/m_6aa02b7785c08191a476aeaffb40d953",
+      "format": "PNG",
+      "bytes": 1428526,
       "width": 1619,
       "height": 971,
-      "sha256": "672c2ad7a965299417d12c8f2e88af29937a3f339943a4f0263670a3401a2112"
+      "sha256": "8fa8a1f01c1fa2accefdbd6b5c204873e761337dc7d9581f9d9ea6aa4cd72310"
     },
     {
       "name": "enemy-archetypes-reference.png",
+      "source": "https://chatgpt.com/s/m_6aa0283dda808191b4f2bd3de61ba562",
+      "format": "PNG",
       "bytes": 1467420,
       "width": 1619,
       "height": 971,
