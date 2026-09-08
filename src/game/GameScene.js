@@ -20,6 +20,7 @@ import { ATTACK_SPATIAL_PROFILES, sizeAttackMotionPose } from '../combat/AttackS
 import { rollTimelineMarkerAt } from '../animation/RollTimeline.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { Signal } from '../core/Signal.js';
+import { INPUT_ACTIONS } from '../input/InputAction.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
 import { createSceneArtDirectionReadModel } from './ScrapArtDirectionProfiles.js';
@@ -668,6 +669,7 @@ export class GameScene extends SceneNode {
     this.playerCombatGeometry = null;
     this.progressionNotice = `훈련 인장은 학습 조건, 원정 Gold는 장비·command 성장 비용입니다.`;
     this.recoveryNotice = '';
+    this.postKoHeldInputFence = new Set();
     this.scrapAwakeningElapsedSeconds = 0;
     this.scrapGarageRevealElapsedSeconds = 0;
     this.storyInteractionOwner.reset();
@@ -3092,6 +3094,14 @@ export class GameScene extends SceneNode {
     this.airComboGravityScale = 1;
     this.airComboFacing = 0;
     this.storyInteractionOwner.reset();
+    // A KO restores the encounter at a safe spawn, not the physical key state
+    // from the losing frame.  Keeping a held direction/attack here immediately
+    // walks the restored player back into the same enemy before they can react.
+    // Sequence baselines still come from this snapshot, so a fresh press after a
+    // release remains a normal command rather than a lost input.
+    this.postKoHeldInputFence = new Set(
+      INPUT_ACTIONS.filter((actionId) => inputSnapshot[actionId] === true),
+    );
     this.combatCommands.reset({ inputSnapshot });
     this.combatCameraFeedback.reset();
     this.combatEvents.reset();
@@ -3325,11 +3335,25 @@ export class GameScene extends SceneNode {
     });
   }
 
+  consumePostKoHeldInputFence(inputSnapshot = {}) {
+    if (this.postKoHeldInputFence.size === 0) return inputSnapshot;
+    const sanitized = { ...inputSnapshot };
+    for (const actionId of this.postKoHeldInputFence) {
+      if (inputSnapshot[actionId]) {
+        sanitized[actionId] = false;
+      } else {
+        this.postKoHeldInputFence.delete(actionId);
+      }
+    }
+    return Object.freeze(sanitized);
+  }
+
   update(deltaSeconds, inputSnapshot, simulationSettings = {}) {
     const animationSpeed = Number.isFinite(simulationSettings.animationSpeed)
       ? Math.max(0, simulationSettings.animationSpeed)
       : 1;
     this.combatCameraFeedback.setEnabled(simulationSettings.cameraFeedbackEnabled !== false);
+    const gameplayInputSnapshot = this.consumePostKoHeldInputFence(inputSnapshot);
     this.previousPosition = { ...this.position };
     this.previousAnimationTime = this.animationTime;
     this.previousCameraPosition = { ...this.cameraPosition };
@@ -3381,6 +3405,7 @@ export class GameScene extends SceneNode {
     this.playerBlockstunSeconds = Math.max(0, this.playerBlockstunSeconds - deltaSeconds);
     if (this.playerHealth === 0 && this.playerKoSeconds === 0) {
       this.respawnPlayerAfterKo(inputSnapshot);
+      return;
     }
     const nextLandingRecoverySeconds = this.landingRecoverySeconds - deltaSeconds;
     this.landingRecoverySeconds =
@@ -3401,15 +3426,15 @@ export class GameScene extends SceneNode {
     );
     const interactionInputLocked = controlsLocked || counterInputLocked;
     const navigationLocked = interactionInputLocked || storyBlocksGameplay;
-    const rawJumpPressed = Boolean(inputSnapshot.jump);
-    const rawGuardPressed = Boolean(inputSnapshot.guard);
+    const rawJumpPressed = Boolean(gameplayInputSnapshot.jump);
+    const rawGuardPressed = Boolean(gameplayInputSnapshot.guard);
     let horizontal = navigationLocked
       ? 0
-      : Number(inputSnapshot.right) - Number(inputSnapshot.left);
+      : Number(gameplayInputSnapshot.right) - Number(gameplayInputSnapshot.left);
     const jumpPressed = interactionInputLocked ? false : rawJumpPressed;
     const guardPressed = navigationLocked ? false : rawGuardPressed;
     const guardEdge = guardPressed && !this.guardWasPressed;
-    const jumpSequence = inputSnapshot.jumpSequence;
+    const jumpSequence = gameplayInputSnapshot.jumpSequence;
     const jumpIssued = interactionInputLocked
       ? false
       : Number.isSafeInteger(jumpSequence)
@@ -3476,19 +3501,23 @@ export class GameScene extends SceneNode {
       this.airComboGravityScale = 1;
       this.isGrounded = false;
     }
-    const combatState = this.combatCommands.update(deltaSeconds * animationSpeed, inputSnapshot, {
-      acceptCommands:
-        !isTransitioning &&
-        !isRolling &&
-        !controlsLocked &&
-        !storyBlocksGameplay &&
-        !awakeningConsumed &&
-        !wallMapConsumed &&
-        !restConsumed,
-      isAirborne: !this.isGrounded,
-      allowGuard: this.isGrounded,
-      staminaDeltaSeconds: deltaSeconds,
-    });
+    const combatState = this.combatCommands.update(
+      deltaSeconds * animationSpeed,
+      gameplayInputSnapshot,
+      {
+        acceptCommands:
+          !isTransitioning &&
+          !isRolling &&
+          !controlsLocked &&
+          !storyBlocksGameplay &&
+          !awakeningConsumed &&
+          !wallMapConsumed &&
+          !restConsumed,
+        isAirborne: !this.isGrounded,
+        allowGuard: this.isGrounded,
+        staminaDeltaSeconds: deltaSeconds,
+      },
+    );
     const activeAttackProfile = this.getAttackHitProfile(combatState.id);
     if (activeAttackProfile) {
       if (this.combatFacingCycle !== combatState.comboCycle) {

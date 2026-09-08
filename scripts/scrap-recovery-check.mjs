@@ -288,6 +288,59 @@ assert.deepEqual(
   legacyWorldTimeBeforeKoReturn,
   'KO 복귀는 legacy World Time이 아닌 고철 Campaign owner만 갱신해야 합니다.',
 );
+
+const koInputScene = createTestGameScene({
+  mapDefinition: SCRAP_AWAKENING_MAP,
+  progressionSnapshot: fresh,
+});
+const heldKoInput = Object.freeze({
+  left: false,
+  right: true,
+  jump: false,
+  basicAttack: false,
+  strongAttack: true,
+  guard: false,
+  strongAttackSequence: 1,
+});
+koInputScene.respawnPlayerAfterKo(heldKoInput);
+const koSpawnPosition = { ...koInputScene.position };
+koInputScene.update(0.25, heldKoInput);
+assert.deepEqual(
+  koInputScene.position,
+  koSpawnPosition,
+  'KO 직전 held 이동은 복귀 직후 다시 적에게 돌진시키면 안 됩니다.',
+);
+assert.equal(
+  koInputScene.combatCommands.snapshot().id,
+  'idle',
+  'KO 직전 held 공격은 복귀 직후 다시 실행되면 안 됩니다.',
+);
+koInputScene.update(
+  1 / 120,
+  Object.freeze({
+    left: false,
+    right: false,
+    jump: false,
+    basicAttack: false,
+    strongAttack: false,
+    guard: false,
+  }),
+);
+koInputScene.update(
+  0.25,
+  Object.freeze({
+    left: false,
+    right: true,
+    jump: false,
+    basicAttack: false,
+    strongAttack: false,
+    guard: false,
+  }),
+);
+assert.ok(
+  koInputScene.position.x > koSpawnPosition.x,
+  '입력을 한 번 놓은 뒤의 새 이동은 정상적으로 다시 허용되어야 합니다.',
+);
 const beforePosition = { ...scene.position };
 scene.setVisualQaScrapGameOverStage(SCRAP_GAME_OVER_STAGE.INPUT_LOCKED);
 scene.update(0.4, Object.freeze({ right: true, jump: true, jumpSequence: 1 }));
@@ -319,6 +372,7 @@ console.log(
       'pre-action-save-failure-blocks-action-commit',
       'selected-recovery-main-save-before-scene-restore',
       'ko-return-single-segment-campaign-commit-without-legacy-world-time-write',
+      'ko-return-neutralizes-held-direction-and-attack-until-release',
       'game-over-input-lock-capital-destruction-recovery-sequence',
       'terminal-gameplay-command-rejection',
     ],
