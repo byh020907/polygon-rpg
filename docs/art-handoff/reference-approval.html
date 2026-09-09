@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reference 제작·승인 순서 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="asset-contract.html">제작 계약</a
+        ><a href="characters.html">인물</a><a href="enemies.html">몹</a
+        ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a
+        ><a href="request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 c48dee26b454</p>
+        <h1>Reference 제작·승인 순서</h1>
+        <p>계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된 제작
+        계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재
+        코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <section>
+        <h2>현재 우선순위</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">순서</th>
+                <th scope="col">제작 묶음</th>
+                <th scope="col">필수 reference/상태</th>
+                <th scope="col">이야기/역할</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>REF-01</td>
+                <td>Hero / Rival / Scrapyard Owner</td>
+                <td>
+                  design·개별 body profile·SVG parts·front/side/3/4·representative pose. 같은 family
+                  안에서 다른 몸과 도구로 읽히는지 확인.
+                </td>
+                <td><a href="characters.html">관련 자료</a></td>
+              </tr>
+              <tr>
+                <td>REF-02</td>
+                <td>Control Core / Retrieval Arm</td>
+                <td>
+                  connected / captured rival / tension / detached / released. 동일
+                  핵·손/갈고리·회수팔·소켓의 연결 anchor와 상태 관계.
+                </td>
+                <td><a href="scenarios/prologue.html">관련 자료</a></td>
+              </tr>
+              <tr>
+                <td>REF-03</td>
+                <td>Ancient Machine Awakening</td>
+                <td>
+                  dormant / socket seal / mono-eye on / scrap assembly / incomplete march. 비공포
+                  생활 산업 톤과 거대한 scale.
+                </td>
+                <td><a href="scenarios/prologue.html">관련 자료</a></td>
+              </tr>
+              <tr>
+                <td>REF-04</td>
+                <td>Garage 0%</td>
+                <td>
+                  empty frame / core socket / independent module mounts. 이후 다섯 모듈을 자유
+                  순서로 붙일 수 있는 하나의 기본 구조.
+                </td>
+                <td><a href="scenarios/garage.html">관련 자료</a></td>
+              </tr>
+              <tr>
+                <td>REF-05</td>
+                <td>Prologue gameplay-scale composite</td>
+                <td>
+                  실제 1280×720과 mobile 화면에서 인물·핵/팔·각성 병기·차고·배치·조명·주요 동작을
+                  함께 검수하고 승인.
+                </td>
+                <td><a href="scenarios/prologue.html">관련 자료</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>제출할 reference sheet</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">대상</th>
+                <th scope="col">포함할 내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>캐릭터</td>
+                <td>
+                  front / side / 3/4 / representative pose / action key pose / SVG part breakdown /
+                  joint·pivot / material / occlusion / gameplay scale
+                </td>
+              </tr>
+              <tr>
+                <td>애니메이션</td>
+                <td>
+                  key pose sheet / silhouette / line of action / center of mass / torso twist /
+                  weapon path / contact pose / follow-through. 승인 pose와 재사용 clip을 구분.
+                </td>
+              </tr>
+              <tr>
+                <td>환경</td>
+                <td>
+                  Composition reference / Unique Landmark / Prefab breakdown / Kit / XYZ·depth
+                  relationship / far·mid·near / color·material profile / gameplay-scale composite
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>승인 후 확장</h2>
+        <p>
+          REF-05의 prologue gameplay-scale composite를 승인한 뒤 enemy archetype → 폐광↔항구 →
+          나머지 지역으로 진행합니다. reference는 구현 authority이며 Codex가 중요한 액션 pose나 주요
+          Composition을 처음부터 임의로 만들고 완성 처리하지 않습니다. 기존 주인공 동작 스타일의
+          확인을 모든 새 sheet의 승인으로 확대하지 않습니다.
+        </p>
+      </section>
+      <section>
+        <h2>미정 처리</h2>
+        <p>
+          인물의 이름/성별/과거사, 미정 적 종류, 지역 사건 세부와 세계관을 임의로 채우지 않습니다.
+          구현 선택은 well-known 방식/업계 사례를 먼저 조사하고 명백한 hybrid+override는 반복 인터뷰
+          없이 제안합니다. 게임 느낌·아트 결과·콘텐츠 양·되돌리기 어려운 구조가 크게 갈릴 때만 조사
+          후 실질적으로 다른 3안을 제시합니다.
+        </p>
+        <a href="decisions.html">기존 이야기의 미정·충돌</a>
+      </section>
+      <section>
+        <h2>요청/승인 기록</h2>
+        <p>
+          요청서에 master/pose/Composition ID와 버전, 승인한 reference/composite, gameplay scale
+          capture, 미정과 runtime 검증 결과를 구분해 적습니다. 등록/생성/단위 테스트 통과는 승인
+          표시가 아닙니다.
+        </p>
+        <a href="request.html">갱신된 요청서</a>
+      </section>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+      <code>npm run docs:art</code> ·
+      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

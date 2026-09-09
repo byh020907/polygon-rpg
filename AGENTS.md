@@ -32,6 +32,14 @@ Before product work, read the selected Method and all four Project Sources compl
 
 작은 규모라도 시작부터 엔딩까지 전투, 탐험, 시간 압박, 스토리와 시각 표현이 하나의 경험으로 맞물리고, 플레이어가 AI 프로토타입이 아니라 돈을 내고 추천할 만한 완성된 인디 게임으로 느끼는 수준을 목표로 한다.
 
+### Reference-led Production
+
+- 기존 이야기·게임 구조를 보존하고 최신 Human Feedback으로 Product What, 기술/저작 계약, 제작 지침, 현재 구현 증거를 구분한다. 현재 code/catalog/test 통과를 기획 또는 디자인 승인의 authority로 삼지 않는다. 세부 계약은 ARCHITECTURE.md와 docs/art-handoff의 생성 원본이 소유한다.
+- 정돈된 생활형 산업 세계와 실제 gameplay scale을 기준으로 판단한다. 주요 장면은 승인 Composition/Prefab, 중요한 액션은 승인 reference/key pose에서 출발한다. Kit만으로 주요 화면을 만들거나 임의 pose를 완성 처리하지 않는다.
+- Hero/Rival/Owner → Core/Retrieval Arm → Ancient Machine Awakening → Garage 0% → prologue gameplay-scale composite를 먼저 검토·승인한 뒤 enemy archetype, 폐광↔항구, 나머지 지역으로 확장한다. 기존 주인공 모션 스타일 확인은 새 reference 전체의 승인이 아니다.
+- Human이 문서 우선 범위를 지정하면 authoritative/derived 계약 정합과 후속 구현 Gap 등록까지 수행하고 대규모 runtime 변경·reference 생성·자동 루프 재개로 확대하지 않는다. 생성 문서는 생성 원본을 수정하고 기존 검증 흐름으로 다시 만든다.
+- 미정 인물 설정·적 종류·지역 사건·세계관을 임의 확정하지 않는다. 구현 선택이 필요하면 well-known 방식/업계 사례를 먼저 조사한다. 명백한 hybrid + 필요한 override는 반복 인터뷰 없이 적용 제안할 수 있다. 느낌·아트 결과·콘텐츠 양·되돌리기 어려운 구조가 크게 갈리는 때만 조사 근거와 실질적으로 다른 3안을 제시한다. 형식적인 A/B/C 질문은 하지 않는다.
+
 ## Development Order
 
 - **Human 승인 기반 정리 우선:** 현재 기획과 어긋난 구형 상태·계산·호환·테스트·디버그 경로가 반복 수정을 만드는 병목이면 현재 캠페인을 단일 기준으로 교체한다. 전체 그래픽 리소스를 실제 게임과 같은 데이터·pose sampler·renderer·UI로 검토하고 stable ID·재현 조건을 복사해 Human이 피드백할 수 있는 환경을 현재 영역 안정화의 선행 기반으로 완성한다. 이 기반과 현재 영역의 실제 검증을 마치기 전에는 시나리오·후반 지역 확장을 재개하지 않는다. Human이 중지한 자동 루프는 명시적 재개 지시 전까지 유지한다.

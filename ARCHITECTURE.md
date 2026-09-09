@@ -1,6 +1,6 @@
 # Polygon RPG Engineering Desired State
 
-이 문서는 캐주얼 고철 아포칼립스 캠페인이 따라야 할 현재 Engineering Desired State다. 현재 file tree의 inventory나 개발 이력이 아니며 Product What은 [`PRODUCT_GOAL.html`](./PRODUCT_GOAL.html)이 단독 소유한다.
+이 문서는 생활형 산업 왕국의 재난 모험 캠페인이 따라야 할 현재 Engineering Desired State다. 현재 file tree의 inventory나 개발 이력이 아니며 Product What은 [`PRODUCT_GOAL.html`](./PRODUCT_GOAL.html)이 단독 소유한다.
 
 ## System Context
 
@@ -104,33 +104,57 @@ Keyboard / Touch / DOM intent
 - UI adapter는 responsive layout과 focus trap을 소유하지만 route 판단·예상값을 계산하지 않는다.
 - HUD는 Campaign Read Model에서 날짜·구간·D-DAY만 compact하게 표시한다.
 
+## Graphics Authoring and Presentation Authority
+
+- 이 절은 최신 Human Feedback이 확정한 목표 계약이다. 현재 JS polygon/4개 견본/3D clip의 존재는 SVG·Composition·Rig Family production 구현 또는 reference 승인의 증거가 아니다. 구현 차이는 STATE.md에서 추적하며 문서 정립을 대규모 구현 승인으로 해석하지 않는다.
+- **Product / Art / Engine / Gameplay:** Product Goal은 최종 경험, 승인 reference는 형태·구도·주요 pose, 엔진은 투영·retarget·조명·warp, gameplay는 이동거리·attack envelope·active window·피해 반응·무적을 소유한다. 현재 코드가 승인 reference를 대체하지 않는다.
+
+### SVG Master and Derived Presentation
+
+- 새 reference와 그래픽 원본은 실제 vector shape의 `*.master.svg`를 우선한다. 단순 polygon/path, 의미 있는 `<g>`/부위 이름, joint/pivot/anchor와 필요한 local depth를 유지한다. PNG embed, 무의미한 자동 trace 수천 path, 모든 부위를 하나로 merge한 파일은 수정 가능한 원본으로 인정하지 않는다. 기존 PNG는 출처 보존 자료·검토 출력이며 기본 신규 원본 계약이 아니다.
+- Master 하나가 common structure, far shape, mid shape, near detail, joint/pivot, state anchor와 pose별 부위를 소유한다. `*.far.svg`, `*.mid.svg`, `*.near.svg`는 export 결과이며 독립 편집 authority가 아니다. far의 굵은 붐/큰 집게/케이블 생략처럼 실루엣 보정을 허용하고 near에서 실제 비율·유압부·접속부를 보존한다.
+- SVG 그룹의 joint/pivot/state anchor와 local z는 semantic ID로 importer/rig/interaction에 연결한다. SVG viewBox의 저작 좌표는 import 경계에서 부모 축 기준 [-1,1] 정규 부착/vertex와 별도 extent·size ratio로 변환한다. world XYZ, SVG 좌표, bone-local 좌표와 Canvas 화면 좌표를 혼용하지 않으며 부모 transform은 한 번만 합성한다.
+- 형태적으로 중요한 면의 경계·재질·structural occlusion은 작가가 정의한다. 필요한 면의 `data-normal`, `data-material`, `data-occlusion`은 local 면 정보이며 완성된 고정 명암 그림을 bake하는 계약이 아니다. 엔진은 현재 광원과 합성된 면 방향/재질/구조적 가림으로 밝기를 계산한다.
+- Export/compile은 안정된 group/part/anchor ID와 원본 provenance를 보존한다. 정적 topology를 frame마다 새로 만들지 않고, 제작 reference 승인과 export 검증을 구분한다. 구체적인 importer/exporter 스키마와 budget 값은 기준 장면 구현에서 검증할 항목이며 이미 존재한다고 가정하지 않는다.
+
+### Environment Composition and Scene XYZ
+
+- 환경 저작은 **Unique Landmark + Prefab + Kit + Composition**이다. landmark는 지역 고유 대형 형태, prefab은 작가가 조합한 중간 자산, kit은 반복할 작은 요소, composition은 승인된 장면 전체 배치 데이터다. 주요 화면은 승인된 Composition/Prefab에서 시작하고 에이전트가 Kit만으로 새 구도를 임의 완성하지 않는다.
+- Composition은 화면 수나 고정 길이가 아니라 시각적 목적·랜드마크·사건 단위다. additive/overlap으로 연속 연결하며 필요한 단위를 preload/unload한다. 로딩 단위와 저장/게임 규칙의 위치 authority를 분리하고 overlap에서 trigger 중복·landmark 복제·상태 초기화가 발생하지 않는다.
+- 모든 scene object는 일반적인 `transform: {x, y, z}`를 가진다. x는 월드 좌우, y는 월드 높이, z는 시각적 앞뒤 깊이이며 gameplay는 기본 side-view X/Y다. 좌표의 단위/방향과 Canvas/SVG 변환을 schema에 명시하며 기존 screen 좌표를 조용히 world 높이로 재해석하지 않는다.
+- `scale`, `parallaxScale`, `renderBias`, `role`, `tags`, `state`는 위치와 별도 속성이다. z는 실제 시각 깊이, role/tags는 landmark/prop/interactive 등의 의미, renderBias는 같은 깊이에서의 미세 정렬 보정이다. 4.0001/4.0002 같은 가짜 z로 draw order를 만들지 않는다. Far/Mid/Foreground는 편집용 분류로 쓸 수 있지만 고정 엔진 레이어를 정의하지 않는다.
+- 기본 카메라는 2D 구도를 유지하는 정투영 계열이다. 더 깊은 z에는 더 작은 기본 parallax를 주되 z가 물체 크기를 자동 강제 변경하지 않는다. scale override·parallaxScale override로 아트 구도를 조정하며 기본 수학보다 승인된 최종 화면을 우선한다. 일반 전투 시작의 자동 zoom-in은 없고 Boss 등 명시된 연출에만 framing override를 둔다.
+- 같은 landmark는 Composition 간 공유되는 world identity 하나와 상태를 가진다. far/mid/near는 별도 물체가 아닌 LOD presentation이다. stable 기준 bounds의 실제 screen occupancy로 기본 LOD를 선택하고 `presentationOverride`/`presentationBias`를 허용한다. hysteresis/margin으로 경계 왕복 깜빡임을 막으며 export별 실루엣 변화가 selection feedback loop를 만들지 않게 한다. preload/unload는 world identity/state를 삭제하지 않는다.
+- 자산 재사용은 GLOBAL KIT의 평범한 구조 + REGIONAL MATERIAL PROFILE의 색/재질/마모 + REGIONAL SHAPE의 고유 형태로 나눈다. 크레인·동력로·제설 열차 등 고유 landmark를 공용 자산의 색상 교체로 대체하지 않는다. detail cluster/negative space와 clean traversal/interaction 영역은 승인 Composition의 제작 조건이다.
+
 ## Combat and Character Contracts
 
-- Combat authored timing은 60Hz integer frame이며 120Hz simulation이 각 frame을 두 tick 동안 sample한다.
-- Command owner는 stamina, startup/active/recovery, damaging-hit-confirm cancel, just guard, Basic-only shield counter, Strong guard break/interrupt와 shield/Boss posture를 단일 transition으로 기록한다.
-- 구르기 pose strip은 머리·어깨 선행 진입→골반과 두 발의 공중 뒤집힘→전방 한 바퀴→발 접지→달리기의 authored local-3D frame이다. 골반 계층의 명시적 누적 회전은 clip 내부 보간에서 winding을 보존하고 다른 clip의 shortest-arc 보간과 구분한다. RollTimeline의 회피 시간·이동 거리·stamina·충돌 계약은 그대로 유지한다.
-- 머리·의상·가방·검·방패는 투영된 해당 관절의 위치와 방향에 부착한다. roll 전용 검 축소, 고정 화면 각도, 이미 합성된 머리 방향에 몸통 회전을 재합산하는 보정과 완성 그림 전체 회전을 금지한다. Render/contact는 동일한 attachment transform을 사용한다.
-- 공격 접촉은 같은 공격 인스턴스·facing·active sample의 swept geometry와 현재 적의 신체 geometry가 결정한다. 오래된 중심 거리·높이 상수로 실제 polygon 접촉을 사전 거부하지 않으며 공격 변경·취소·복구·방향 변경은 sweep history를 초기화한다.
-- 공격별 world-space 도달 범위는 하나의 authored spatial profile이 먼저 정의하고 장비는 그 범위의 명시적 modifier만 제공한다. 애니메이션은 해당 범위에 맞게 무기와 관절 사슬을 사이징하며 공격 도중 길이를 매 frame 늘렸다 줄이지 않는다. 같은 크기로 구성된 pose·무기·방패·sweep가 renderer와 피해 승인의 공통 geometry다. 별도 hitbox 거리나 독립 무기 길이 배율로 같은 공격 범위를 이중 관리하지 않는다.
-- 지상·점프 중 공격을 포함한 Player 전 모션과 몹 계열 8-action은 같은 authored local-3D strip과 side-view projection contract를 사용하며 낡은 2D 전용 클립을 남기지 않는다.
-- Weapon hit는 shared swept blade↔hurt geometry 접촉으로 승인하고 renderer/effect는 hit authority가 아니다.
-- Giant final-battle profile은 scale·pose·arena presentation을 바꾸되 같은 command owner, contact/result와 stamina rules를 사용한다.
-- Character Presentation Profile은 role silhouette, front/side proportions, equipment/tool landmarks, representative pose와 minimum viewport readability를 immutable data로 정의한다. Encounter profile은 인간 수거반과 기계 적을 같은 combat DTO로 투영하되 renderer가 family별 presentation만 읽는다.
-- 주요 humanoid clip은 root·pelvis·chest·neck/head·near/far limb의 local 3D skeleton frame을 immutable data로 소유하고, fixed side-view orthographic projection이 Canvas cutout의 2D joint/depth order를 만든다. z는 presentation depth만이며 2D map/collider/hit authority를 바꾸지 않는다. raw 외부 motion은 runtime에 넣지 않고 license·URL·mapping을 기록한 development-time retarget/import로 local key frame만 남긴다.
-- 3D 단계는 본 계층·local translation·정규화 Quaternion만 소유한다. SLERP와 계층형 FK가 부모 방향을 상속하고 본 길이를 유지한다. 정투영은 위치와 local axis를 screen XY 및 camera depth로 나누며, 3D mesh·skinning·texture renderer를 만들지 않는다.
-- 캐릭터 surface는 투영 이후 본 선분의 가변 폭 profile을 길이·폭 방향으로 나누어 생성한다. 원형 limb·타원 torso·얇은 cloth/blade의 단면 profile이 방향에 따른 폭·두께를 정의한다. 2D vertex와 surface depth channel은 분리하며 같은 triangle 안에서 보간한 깊이로 pixel Z를 판정한다. 기본색·cell shading·외곽선은 가림을 공유하고 반투명 검 궤적은 불투명 depth를 검사하되 depth를 쓰지 않는다.
-- 깊이 raster는 불투명 pixel의 surface 소유와 동률 순서를 결정적으로 기록한다. 외곽선은 실제로 보이는 surface 경계만 그리며 자기 곡면 깊이 때문에 점선처럼 잘리거나 뒤쪽 부위의 선이 앞쪽 면을 긁지 않는다. 피부·천·금속의 색은 후처리 양자화 없이 material과 cell lighting에서 결정한다.
-- 주인공 rig와 appearance는 작은 단순한 머리, 약 7등신의 가늘고 긴 팔다리, 짧은 작업상의·바지·크로스스트랩과 넓은 검의 일관된 profile을 사용한다. 머리·의상·장비의 표면 정의와 shared hurt/weapon outline은 같은 silhouette에서 파생한다. 겹친 장식 면을 무작정 늘리거나 별도 머리 크기·무기 형상을 renderer마다 유지하지 않는다.
-- 게임·미리보기·timeline·투명 PNG·frame sheet는 같은 pose sampler와 renderer를 호출한다. 검 공격은 준비→빠른 연속 베기→감속→복귀, 골반·가슴·팔·손목 시차, 팔꿈치 굽힘 제약과 고정된 파지 방향을 유지하며 별도의 QA용 그림을 만들지 않는다.
-- 기본·강공격은 머리 위로 검을 올리는 windup을 사용하지 않는다. 몸 옆의 낮은 준비 위치에서 골반·흉곽의 XYZ 회전과 팔 사슬이 앞을 가로지르는 횡·사선 arc를 만들며, 새로운 pose에도 기존 spatial reach와 integer contact timeline을 적용한다.
-- Character/Enemy 구현 전에는 protagonist, core NPC job family, collector unit, industrial creature와 regional boss의 front/side/pose board를 실제 gameplay scale로 비교한다.
-- Render items는 rivet, plate, cable, work cloth와 repair-mark 공통 language 및 region-specific color/material tag를 읽는다. 기존 academy/fantasy presentation을 fallback으로 사용하지 않는다.
+### Rig Family, Body Profile and Authored Pose
+
+- Rig Family는 bone naming·hierarchy·animation grammar를 공유한다. Character Body Profile은 head/shoulder/hip 크기, 팔·다리 길이, torso/limb SVG와 stance를 소유한다. 같은 관절 언어가 같은 몸을 뜻하지 않는다. Humanoid Family는 protagonist/rival/owner/worker/human raider에 재사용하되 각자의 체형을 보존한다.
+- 기계는 Biped Machine, Quadruped Machine, Multi-leg, Flying, Tracked Heavy처럼 실제 구조에 맞는 별도 family를 사용한다. humanoid의 팔다리 길이 변경만으로 기계 family를 만들지 않는다. 현재 네 검토용 견본은 family 계약 검증의 일부일 뿐 전체 구현 완료가 아니다.
+- 일반 idle/walk/run/jump·단순 NPC 동작은 Rig/FK + reusable clip을 기본으로 한다. Basic/Strong/Air Attack, Roll, Guard Counter, Boss Telegraph/Heavy Attack은 승인된 authored key pose가 형태 authority다. READY → WINDUP → CONTACT → FOLLOW → RECOVER의 silhouette·line of action·무게중심·몸통 twist·weapon path를 reference에서 검증한다.
+- 기존 rig를 유지하며 torso/arm/forearm/weapon 등 필요한 부위만 pose별 SVG replacement하는 것이 기본이다. forward roll·extreme smear·전신 squash/compression처럼 전체 실루엣이 크게 바뀌는 경우 whole-body authored SVG를 허용한다. replacement에도 joint/prop/contact anchor를 유지하고 같은 transform을 중복 합성하지 않는다. 이는 모든 frame을 별도 sprite로 재제작하거나 정지 그림 하나를 통째로 돌려 구르기를 대신하는 계약이 아니다.
+- Retarget 순서는 **Shared Clip → Character Body Profile retarget → character modifier → 필요한 순간 Contact IK → 중요 액션 authored override**다. Contact IK는 발 접지·작업대 손·양손 장비·방패·prop interaction에 제한하며 일반 run/walk를 상시 고정하지 않는다. authored override가 필요한 접촉 anchor를 깨뜨리지 않는지 실제 scale에서 검증한다.
+- 본 보간/FK의 local transform·정규화 Quaternion과 회전 winding을 보존한다. 제작 도구의 bone/part naming과 projection을 통해 같은 pose를 게임·검토실·frame sheet에서 읽으며, 기존 코드 생성 key frame을 승인 reference로 승격하지 않는다.
+
+### Gameplay Movement and Contact
+
+- Combat timing은 60Hz integer frame, simulation은 120Hz를 유지한다. command owner가 stamina, startup/active/recovery, hit-confirm cancel, just guard, Basic-only shield counter, Strong guard break/interrupt, posture와 invulnerability를 소유한다.
+- **Gameplay distance → authored root curve warp:** rollDistance/attackAdvance/bossChargeDistance 등 실제 이동거리는 gameplay가 정한다. Art는 자연스러운 root movement curve와 pose, Engine은 그 곡선을 허용된 거리로 warp하는 책임을 가진다. 구르기·강공 전진·반격·Boss 돌진의 이동을 animation이 임의 확장하지 않는다.
+- Gameplay가 attack max reach·active window·movement envelope를 먼저 정하고 animation/weapon은 그 범위에 맞춰 제작한다. 유효 시간에 previous visible weapon shape→current visible weapon shape의 sweep가 semantic hurt region에 닿고 **동일 접촉이 gameplay attack envelope 내부**일 때만 hit를 승인한다. sweep ∩ hurt region ∩ envelope를 검사하므로 범위 안 비접촉과 그림만 긴 범위 밖 접촉은 모두 MISS다.
+- 별도의 보이지 않는 큰 사각 hitbox를 최종 authority로 쓰지 않는다. 정해진 envelope는 시각 접촉을 대신하지 않으며 visible sword도 range authority를 늘리지 않는다. 부적합한 pose/원본/retarget는 수정하고 판정 문제를 감추려고 reach·무기 크기·active window를 확대하지 않는다.
+- Sweep는 동일 공격 인스턴스·facing·시간축의 무기 shape를 사용한다. 새 공격·취소·방향 불연속·scene 전환·복구에서 history를 초기화한다. trail은 가능한 한 같은 weapon trajectory에서 파생하고 시각 궤적과 damage trace를 독립 계산하지 않는다. 빠른 이동/회전과 양방향을 실제 hit/miss로 검증한다.
+- **Semantic Hurt Region + Visual-following Primitive:** head/torso/arm/leg/weakPoint/armor/shield는 대응 bone/part를 따라가는 circle/ellipse/capsule/simple polygon이다. region의 response는 body/weak/armor/guard/immune 등 gameplay 의미를 가진다. 전체 rectangle 하나나 visual SVG polygon 전체 복사는 기본 계약이 아니다.
+- Body profile/pose에서 보이는 신체와 primitive의 허용 오차를 명시하고 검사한다. 머리카락·얇은 케이블·옷 장식·smear 끝은 자동 hurtbox가 아니며 약점/장갑/방패는 그림에서 식별 가능해야 한다. 구르기 무적은 hurtbox 삭제가 아니라 gameplay invulnerability state로 판정한다. 구체 오차 수치는 body/pose 검수로 확정한다.
+- 주인공은 작은 타원형 머리·약 7등신·긴 가는 팔다리·짧은 작업복·cross strap·넓은 검/방패·낮은 준비를 보존한다. generic overhead windup 대신 몸 옆 낮은 당김 → 골반/흉곽 선행 → 팔 추종 → 빠른 횡/사선 CONTACT → follow-through/감속이다. Roll은 머리/어깨 하강 → 골반이 어깨 위 → 발이 몸 위 통과 → 장비 동반 회전 → 착지/이동 연결의 forward somersault다.
+- Giant final battle도 같은 command/contact/response 계약을 확대 적용한다. 머리·손·장비·root의 shared sample과 anchor를 renderer/판정이 공유하되 visual surface와 semantic hurt primitive의 topology까지 같다고 강제하지 않는다.
 
 ## World, Map and Story Contracts
 
-- World → Region → Room/Chunk → surface/entity/render item/entrance 계층을 사용한다.
+- World/Region의 논리 진행과 Composition의 시각/로딩 단위를 구분한다. Composition은 stable world object를 참조하고 Room/Chunk는 필요시 gameplay 위치/충돌 경계를 표현한다. 기존 room 경계를 화면 전환 또는 고정 Composition 길이로 강제하지 않는다.
 - Gameplay surface와 render geometry를 분리하고 polygon top edge를 render/collision이 함께 읽는다. One-way platform은 이전 발 위치와 하강 상태로만 collision을 승인한다.
-- Room transition은 source authority 아래 수행하고 완료 fixed-step에 Room, spawn, collision/entity snapshot을 원자 교체한다.
+- Gameplay 위치 전환은 source authority 아래 fixed-step에서 원자 반영한다. 그 표현은 Composition의 additive/overlap/preload 계약과 연동하며 전환 화면으로 장소의 연속성을 끊지 않는다.
 - Conditional 변화는 stable object ID patch로 적용한다. 같은 priority/target/property 중복 writer와 필수 경로 차단은 invalid다.
 - Long-distance connection은 실제 road end에서 destination/cost preview를 열고 confirm 뒤 travel presentation과 spatially connected destination Chunk로 전환한다. Magic portal/world-map teleport 표현을 사용하지 않는다.
 - 각 region profile은 NPC briefing, observed facility state, journey/combat, boss, replacement/final work, machine separation, part claim과 after-state stage를 제공한다.
@@ -145,17 +169,9 @@ Keyboard / Touch / DOM intent
 
 - Game state는 fixed-step에서 한 번 갱신되고 모든 출력 경로의 Polygon renderer는 같은 immutable RenderFrame을 받는다.
 - Camera feedback, interpolation과 giant scale은 gameplay position/collider를 암묵적으로 변경하지 않는다.
-- Polygon cutout과 smooth vector cartoon은 같은 source geometry를 공유한다. Scene art profile은 실제
-  camera에서 character scale, 5개 안팎 parallax layer, low-saturation palette, landmark density와
-  material vocabulary를 정의하며 region code가 renderer drawing procedure를 복제하지 않는다. 인간형은
-  desktop viewport 높이의 약 18~22%로 작게 읽히는 framing을 유지해 캐릭터·NPC·집·설비가 한 화면에
-  생활 공간과 함께 들어오며 oversized fallback zoom을 사용하지 않는다.
-- Directional/point light는 position, direction, intensity, range와 functional accent를 frozen data로
-  제공한다. Renderer의 lighting pass는 surface normal, material response와 explicit occluder를 계산한
-  뒤 luminance를 3~4단계로 quantize하고 contact/projected shadow를 합성한다. 단순 원형 overlay나
-  pre-painted shading을 light authority로 사용하지 않는다.
-- Metal highlight, cloth falloff, soil/stone irregular face response는 material profile로 분리한다.
-  Short-lived attack light도 동일한 lighting pass를 사용한다.
+- Scene art profile은 세계 우선 framing, 지역 Color Identity·재질·shape, detail cluster/negative space와 승인 Composition의 구도를 보존한다. 인간형은 PC 실제 높이 약 18~22%이며 전투 가독성은 실루엣/외곽선/배경 대비/telegraph/trail/VFX로 해결한다. 고정 5-layer 또는 전투 zoom을 기본 해법으로 두지 않는다.
+- 작가가 정의한 면 경계와 local surface normal + 현재 light + material + structural occlusion으로 3~4단계 cell shading을 계산한다. painted steel/raw steel/brass/cloth/skin/stone/dirt/glass 등의 diffuse/specular 반응을 구분한다. SVG에 완성된 고정 그림자를 bake하거나 이름으로 추정한 재질을 작가의 면/재질 authority 대신 사용하지 않는다.
+- **Hybrid Shadow Authority:** player/NPC/enemy/crate/barrel 같은 작은 객체는 contact shadow, building/giant crane/machine/bridge/large pipe/ancient machine은 actual cast shadow, cable/rivet/small scrap/얇은 간판 detail/먼 장식은 none을 기본으로 한다. visual polygon과 별개로 단순화한 큰 실루엣 occluder를 허용한다. 그림자 종류와 occluder를 명시하고 모든 객체에 같은 그림자 처리를 강제하지 않는다.
 - Combat presentation cue는 windup/contact/hit-stop/recoil/decay phase, strength와 direction을
   immutable timing으로 제공한다. Camera adapter는 direction-first offset과 빠른 감쇠만 담당하고,
   reduced-motion은 offset amplitude를 줄여도 contact flash, pose recoil과 hit stop을 제거하지 않는다.
@@ -163,7 +179,7 @@ Keyboard / Touch / DOM intent
   정의한다. DOM adapter는 semantic status와 MENU short/hold 경계를 유지하며 Canvas의 attack tell과
   interaction target을 가리지 않는다.
 - Bottom objective ribbon은 현재 action과 command만 compact하게 표시한다. Story title·briefing·감정 설명은 이 HUD surface에 렌더하지 않는다.
-- 게임·검토실·연구실은 CanvasPolygonRenderer 하나만 사용한다. 저해상도 surface, 좌표 snap, pixel-size/alpha-threshold/posterization 설정, 정수 nearest-neighbor 확대와 비교용 Retro canvas를 두지 않는다. UI/CLI/URL 기본값·검증·문서도 같은 계약을 따른다. 오래된 renderer query는 URL 읽기 경계에서만 polygon으로 정규화하고 폐기된 renderer를 다시 만들지 않는다.
+- 게임·검토실·테스트 플레이는 같은 폴리곤 출력 경로를 사용한다. SVG는 저작 원본이며 별도 게임 규칙/검토 전용 그림을 만들지 않는다. 저해상도 surface, 좌표 snap, pixel-size/alpha-threshold/posterization 설정, 정수 nearest-neighbor 확대와 비교용 Retro canvas를 두지 않는다. UI/CLI/URL 기본값·검증·문서도 같은 계약을 따른다. 오래된 renderer query는 URL 읽기 경계에서만 polygon으로 정규화하고 폐기된 renderer를 다시 만들지 않는다.
 - 깊이 가림의 raster buffer는 폴리곤 표면의 z/소유권을 판정하는 내부 구현이며 픽셀화 효과가 아니다. 프레임의 geometry와 material을 Canvas backing 좌표에서 rasterize한 뒤 identity transform으로 1:1 합성한다. 검토실 확대는 CSS 크기와 DPR에 맞춰 backing을 다시 만들고 geometry를 재렌더하며 전체 canvas는 3M pixel budget을 넘지 않는다. CSS 확대나 새 evidence sheet에도 pixelated/nearest-neighbor 처리를 적용하지 않는다.
 - 캐릭터 외곽 윤곽은 depth 합성 후 실제로 보이는 불투명 pixel 소유 mask에서 완성하고 배경 합성 전에 확정한다. 완성된 월드 화면의 투명도 경계에서 캐릭터를 뒤늦게 찾지 않는다. 내부 부위선은 depth를 따르고, 반투명 효과는 확정된 외곽선을 지우지 않는다. 배경이 있는 정지 gameplay와 투명 preview의 동일 캐릭터 픽셀을 함께 검증한다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
@@ -196,11 +212,11 @@ Keyboard / Touch / DOM intent
 - Catalog 기반 탐색 tree와 선택 대상의 문맥 command를 UI가 분리하여 소유한다. 원형 찾기 tree는 catalog의 모든 resource leaf를 포함하고 category→region→room 그룹과 제한된 페이지로 최종 선택까지 책임진다. 트리 내부 검색은 현재 node의 descendant resource를 ID/label로 찾고 원본 leaf callback을 재사용한다. breadcrumb는 history를 자르고 page/search를 복원한다. 페이지 controls와 leaf 슬롯을 분리하며 마지막 페이지도 같은 6방향을 쓴다. 유형 색상은 category/reference ID에 대응하는 UI palette에서 결정하고 배경·테두리·focus에 공유한다. 색상만으로 의미를 전달하지 않는다. thumbnail 목록은 보조 경로다. 원형 반경은 버튼 충돌을 피하는 최소 간격으로 줄이고 하위 이동은 동일 중심에서 펼친다. 모든 선택은 기존 stable ID/URL codec을 통과한다. pointer/touch/keyboard, edge-clamp, focus 복귀와 취소의 단일 owner를 두며 바깥 클릭이 게임 입력으로 새지 않는다.
 - Test play target은 catalog의 실제 placement/장비 정보에서 composition adapter가 만든 검증된 요청이다. 지원되지 않는 producer는 이유와 함께 실행 불가로 표시하며 다른 장면으로 조용히 대체하지 않는다. 검토 선택과 test source는 URL로 복원하고 test에서 검토실로 돌아갈 때 같은 선택을 유지한다.
 
-- 몹 유형 reference는 인간형·사족 짐승형·날개 비행형·궤도 기계형의 별도 의미 본 계층과 공용 clip을 가진다. 외형·본 배치/비율과 유형별 motion source를 분리하여 컨셉 아트로부터 새 profile을 만들 때 clip을 복제하지 않는다. 먼저 검토실의 대표 네 개와 본 비율 변형으로 retargeting을 검증하고 실전 몹 전파는 Human의 유형별 시안 검토와 명시적 적용 요청 이후로 둔다.
-- Reference 원본의 부착 위치와 모든 vertex는 부모 축 기준 [-1,1] 로컬 정규좌표다. 부모 extent와 child size ratio가 크기를 소유하고 quaternion rotation을 포함한 부모 transform을 한 번 합성한 뒤 2D로 투영한다. 자식은 부모 위치·크기·회전에 따라간다. CPU에서 매 frame 이미지나 source topology를 다시 만들지 않고 정적 triangulation을 한 번 compile한다. 수동 sprite 재생성은 디자인 원본 계약이 아니다.
+- 몹 유형 reference는 인간형·사족 짐승형·날개 비행형·궤도 기계형의 별도 의미 본 계층과 공용 clip을 가진다. 외형·본 배치/비율과 유형별 motion source를 분리하여 컨셉 아트로부터 새 profile을 만들 때 clip을 복제하지 않는다. 도입 기준 reference/composite 승인 이후 검토실의 대표 네 개와 본 비율 변형으로 retargeting을 검증하고 실전 몹 전파는 Human의 유형별 시안 검토와 명시적 적용 요청 이후로 둔다.
+- SVG를 정규화한 runtime reference의 부착 위치와 vertex는 부모 축 기준 [-1,1] 로컬 정규좌표다. 부모 extent와 child size ratio가 크기를 소유하고 quaternion rotation을 포함한 부모 transform을 한 번 합성한 뒤 2D로 투영한다. 자식은 부모 위치·크기·회전에 따라간다. CPU에서 매 frame 이미지나 source topology를 다시 만들지 않고 정적 triangulation을 한 번 compile한다. 모든 frame의 수동 sprite 재생성은 기본 계약이 아니며 승인된 부분/whole-body pose SVG 교체는 허용한다.
 
 - Immutable graphics catalog는 production content와 producer를 연결하는 유일한 등록 경로다. 주인공, NPC, 모든 현재 적, 장비, 배경·전경·지형·건물·설비·소품, 시간에 따른 효과와 UI를 stable resource/action/frame ID로 식별한다. 원본 map의 비활성 item과 patch variant도 inventory에 포함한다. 아직 구현되지 않은 motion이나 리소스를 가짜 preview로 만들지 않는다.
-- 검토 sampler는 게임이 사용하는 pose·공격 크기·shared geometry·presentation producer와 Polygon renderer를 호출한다. 별도 캐릭터 보드 그림, QA 전용 무기 크기 계산과 복제 UI markup을 유지하지 않는다. 등록된 production data가 바뀌면 같은 ID의 검토 출력도 함께 바뀐다.
+- 검토 sampler는 게임의 pose·공격 크기·geometry·presentation 경로를 호출한다. 승인용 reference/key pose sheet와 runtime preview는 구분해 나란히 비교하며 reference를 현재 runtime 결과로 대체하지 않는다. QA 전용 무기 크기 계산과 복제 UI markup은 유지하지 않는다. 등록된 production data가 바뀌면 같은 ID의 검토 출력도 함께 바뀐다.
 - UI adapter가 선택, 필터, frame index, 60Hz 정상 재생·정지, viewport와 확대 배율을 소유한다. URL codec이 모든 재현 조건을 검증하고 같은 page의 debug 진입/복귀와 정합시킨다. Copy는 사용자 입력에서만 clipboard에 리소스·동작·프레임·renderer·조명·배치·URL을 쓴다. 외부 피드백 전송이나 player save mutation은 하지 않는다.
 - 정적 리소스는 thumbnail·실제 크기·확대로, animated producer는 action별 frame strip과 동일 sample의 연속 재생으로 검토한다. 장면 배치는 실제 map resolution과 광원·차폐를 그대로 사용하고 개별 보기에서도 scene provenance를 표시한다. UI는 production component 자체와 동일 read model을 별도 저장 없는 검토 context에서 표시한다.
 - Catalog coverage fixture는 원본 content/producer inventory와 등록 ID를 비교하고 누락·중복을 실패시킨다. Actual desktop/mobile PNG·연속 frame, 접근 가능한 control, 복사와 URL 왕복, player game debug 비노출은 독립 verifier가 판독한다.
@@ -262,3 +278,5 @@ Keyboard / Touch / DOM intent
 - Product What의 authority는 PRODUCT_GOAL.html 하나다. docs/art-handoff는 기준 링크, 제작 요청 해설과 현재 authored data의 파생 목록이며 새로운 기획 authority가 아니다. 요구와 구현의 불일치·미정은 명시하여 외주 확정으로 복사하지 않는다.
 - 담당자용 인물/몹/지역별 문서와 최대 30행의 resource 목록 페이지를 분리한다. 각 resource는 기존 stable ID, producer, action/variant와 검토 URL을 보존하며 조립 묶음·부위 중복을 제작 건수로 합산하지 않는다.
 - scripts/generate-art-handoff.mjs가 production catalog/campaign/story를 읽어 정적 HTML과 기계용 index를 생성한다. 사람이 관리하는 요청 해설은 scripts/art-handoff-content.mjs에 한 번만 두고, 생성물의 누락/중복/링크 및 최신성을 검사한다. 문서와 원본 reference는 게임 PWA runtime asset에 포함하지 않는다. 공개 docs namespace는 HTML·CSS·reference를 네트워크로 읽고 게임 release cache와 분리한다. 게임 import의 cache-only 계약은 유지한다. local server도 docs와 요청서 generator/content의 명시적 공개 경로만 허용한다.
+
+- 새 제작 계약의 검증은 approved Composition/reference ID, 단일 landmark·screen occupancy LOD/hysteresis, SVG 의미 그룹·export provenance, body retarget·선택 Contact IK·pose replacement·root warp, active sweep AND envelope·semantic response·시각 오차의 evidence를 요구한다. 현재 목록/기존 fixture 통과와 새 계약 준수를 구분하고 미구현은 STATE의 Human Feedback Priority Gap으로 남긴다.

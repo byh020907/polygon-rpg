@@ -11,6 +11,13 @@ const catalog = createGraphicsResourceCatalog({
 });
 const index = JSON.parse(fs.readFileSync(path.join(base, 'inventory.json'), 'utf8'));
 assert.deepEqual(index.records.map((r) => r.id).sort(), catalog.resources.map((r) => r.id).sort());
+for (const contractPage of [
+  'asset-contract.html',
+  'environment-authoring.html',
+  'character-animation.html',
+  'reference-approval.html',
+])
+  assert.ok(index.pages.includes(contractPage), 'Missing production contract ' + contractPage);
 const decode = (s) =>
   s
     .replaceAll('&amp;', '&')

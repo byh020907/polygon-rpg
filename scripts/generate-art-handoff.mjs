@@ -1,3 +1,4 @@
+import * as ProductionContract from './art-production-contract.mjs';
 import prettier from 'prettier';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -85,6 +86,7 @@ const fingerprint = crypto
   .update(
     JSON.stringify({
       records,
+      productionContract: ProductionContract,
       productGoal: fs.readFileSync(path.join(root, 'PRODUCT_GOAL.html'), 'utf8'),
       architecture: fs.readFileSync(path.join(root, 'ARCHITECTURE.md'), 'utf8'),
       campaign,
@@ -108,7 +110,7 @@ function document(file, title, subtitle, body) {
     repo = '../'.repeat(depth + 2);
   files.set(
     file,
-    `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Polygon RPG 제작 요청</title><link rel="stylesheet" href="${base}handbook.css"></head><body><header class="masthead"><a href="${base}index.html">POLYGON RPG / GRAPHICS HANDOFF</a><nav>${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}${link(base + 'characters.html', '인물')}${link(base + 'enemies.html', '몹')}${link(base + 'scenarios/index.html', '시나리오')}${link(base + 'resources/index.html', '전체 목록')}${link(base + 'request.html', '요청서')}</nav></header><main><header class="page-title"><p class="eyebrow">그래픽 담당자 전달 자료 · 기준 ${fingerprint}</p><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></header><aside class="notice">제품 기준은 ${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}입니다. 이 문서는 기획 해설과 현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>. ${link(base + 'decisions.html', '미정·충돌 확인')}을 함께 읽으세요.</aside>${body}</main><footer>필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> · ${link(repo + 'scripts/art-handoff-content.mjs', '요청 해설 원본')} · ${link(repo + 'scripts/generate-art-handoff.mjs', '생성기')}</footer></body></html>\n`,
+    `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Polygon RPG 제작 요청</title><link rel="stylesheet" href="${base}handbook.css"></head><body><header class="masthead"><a href="${base}index.html">POLYGON RPG / GRAPHICS HANDOFF</a><nav>${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}${link(base + 'asset-contract.html', '제작 계약')}${link(base + 'characters.html', '인물')}${link(base + 'enemies.html', '몹')}${link(base + 'scenarios/index.html', '시나리오')}${link(base + 'resources/index.html', '전체 목록')}${link(base + 'request.html', '요청서')}</nav></header><main><header class="page-title"><p class="eyebrow">그래픽 담당자 전달 자료 · 기준 ${fingerprint}</p><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></header><aside class="notice">제품 기준은 ${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}입니다. 이 문서는 확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>. ${link(base + 'decisions.html', '미정·충돌 확인')}을 함께 읽으세요.</aside>${body}</main><footer>필요한 인물·지역 문서만 전달하세요. 계약 해설 원본: <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신: <code>npm run docs:art</code> · ${link(repo + 'scripts/art-handoff-content.mjs', '요청 해설 원본')} · ${link(repo + 'scripts/generate-art-handoff.mjs', '생성기')}</footer></body></html>\n`,
   );
 }
 const preview = (r, depth = 0) =>
@@ -158,7 +160,7 @@ document(
   '인물의 역할과 이야기의 인과를 먼저 읽고, 제작할 묶음의 원본 ID를 골라 요청합니다.',
   section(
     '담당자에게 전달할 순서',
-    `<ol><li>${link('art-direction.html', '공통 아트 기준')} — 그림체·크기·본/재사용·납품 형태</li><li>${link('characters.html', '인물·NPC 역할표')} 또는 ${link('enemies.html', '몹·Boss 역할표')} — 같은 사람의 상태 변형과 별도 디자인 구분</li><li>${link('scenarios/index.html', '전체 이야기 개요')} → 담당 ${link('scenarios/prologue.html', '도입')} / 지역 한 편 — 장소·등장인물·필요 그래픽</li><li>${link('request.html', '요청서 양식')}에 대상과 상태를 복사하고 ${link('decisions.html', '미정 사항')}을 남깁니다.</li></ol>`,
+    `<ol><li>${link('art-direction.html', '공통 아트 기준')}와 ${link('asset-contract.html', 'Master SVG 제작 계약')} — 실제 제작 reference와 원본</li><li>${link('characters.html', '인물·NPC 역할표')} 또는 ${link('enemies.html', '몹·Boss 역할표')} — 같은 사람의 상태 변형과 별도 디자인 구분</li><li>${link('scenarios/index.html', '전체 이야기 개요')} → 담당 ${link('scenarios/prologue.html', '도입')} / 지역 한 편 — 장소·등장인물·필요 그래픽</li><li>${link('request.html', '요청서 양식')}에 대상과 상태를 복사하고 ${link('decisions.html', '미정 사항')}을 남깁니다.</li></ol>`,
   ) +
     section(
       '목록의 수를 제작 건수로 해석하지 않기',
@@ -198,63 +200,255 @@ document(
     ) +
     section(
       '요청 우선순위',
-      p(
-        '먼저 주인공·라이벌·고물상인, 제어핵/회수팔/각성 병기, 차고 0%로 도입의 기준 장면을 맞춥니다. 그 다음 몹 유형 견본과 폐광↔항구 연결 사건을 같은 표현으로 검토합니다. 기준 장면을 검토한 뒤 다음 지역 요청을 확장합니다.',
-      ),
+      link('reference-approval.html', '5단계 reference 제작·승인 순서') +
+        p(
+          'Hero/Rival/Owner → Control Core/Retrieval Arm → Ancient Machine Awakening → Garage 0% → 실제 gameplay-scale prologue composite를 먼저 제작·승인합니다. 이 기준 장면을 승인한 뒤 enemy archetype → 폐광↔항구 → 나머지 지역으로 확장합니다. 계약 확정은 reference나 runtime 구현 완료의 승인이 아닙니다.',
+        ),
     ),
 );
 
 document(
   'art-direction.html',
   '공통 아트 기준',
-  '컨셉 아트 → 부위와 본 비율 조정 → 유형 공용 애니메이션 재사용.',
+  '작은 캐릭터와 넓은 세계 · 안정된 reference sheet · 생활형 산업 왕국.',
   section(
     '모든 요청에 붙일 기준',
     table(
-      ['항목', '그래픽 담당자에게 전달할 내용'],
-      [
-        [
-          '그림체',
-          '얇고 각진 폴리곤/컷아웃·벡터 셀 아트. 화면의 85~90%는 저채도 명암. 에디터 유형색을 게임 몸체의 원색으로 복사하지 않습니다.',
-        ],
-        [
-          '실루엣',
-          '작은 머리·가늘고 긴 팔다리·직업 도구. 주인공의 기존 동작 스타일 보존; 몹 유형별 체형은 구별. 같은 뚱뚱한 몸체를 색만 바꿔 배포하지 않습니다.',
-        ],
-        [
-          '재질',
-          '판금·리벳·케이블·작업용 천·수리 흔적. 지역 재질은 5개 로봇 모듈에 다시 보입니다.',
-        ],
-        [
-          '화면 크기',
-          '1280×720 PC, 844×390 모바일 실제 장면에서 판단. 인간형 높이는 PC 약 18~22% 기준, 모바일은 동작 판독을 위해 보정. 확대 그림만으로 승인하지 않습니다.',
-        ],
-        [
-          '출력',
-          '픽셀화 후처리·좌표 snap·강제 정수 확대 없음. 원본 면/윤곽/명암이 직접 읽혀야 합니다.',
-        ],
-        [
-          '동작',
-          '검은 낮게 당겼다가 몸 앞을 가로지르는 빠른 횡/사선 베기. 전방 구르기는 실제 한 바퀴. 공격 크기·유효 범위를 임의로 바꾸지 않습니다.',
-        ],
-        [
-          '고대 병기의 톤',
-          '옛 군수 명령을 문자 그대로 실행하는 융통성 없는 병기. 짧고 사무적인 낡은 방송, 과장된 불완전 조립·수거 행동으로 위협과 웃음을 함께 만듭니다. 무거운 신체 공포로 만들지 않습니다.',
-        ],
-        [
-          '기본 납품',
-          '컨셉 정면/측면 + 대표 자세 + 부위 분해/재질/가려짐 설명. PNG 가능, 수정 가능한 SVG/레이어 원본은 있으면 함께 전달합니다. 그림 담당자가 엔진 코드를 작성해야 하는 계약은 아닙니다.',
-        ],
-        [
-          'AI 구현 경계',
-          'AI가 부위/본 profile을 반영하고 기존 clip에 연결합니다. 수동 sprite sheet 재생성은 기본 원본 방식이 아닙니다. 본 부착/vertex는 부모축 기준 [-1,1], 크기는 별도 ratio. 상세는 기존 저작 안내를 봅니다.',
-        ],
-      ],
+      ['항목', '작업 지침'],
+      ProductionContract.ART_DIRECTION_ROWS.map((row) => row.map(esc)),
     ),
   ) +
     section(
-      '참고 원본',
-      `<div class="reference-grid"><figure><img src="../references/enemy-archetypes/hero-style-reference.png" alt="주인공 스타일 참고 원본"><figcaption>주인공 참고 · 현재 모션 스타일의 최종 폐기 지시가 아닙니다.</figcaption></figure><figure><img src="../references/enemy-archetypes/enemy-archetypes-reference.png" alt="몹 전체 그림체와 실루엣 참고 원본"><figcaption>몹 전체 그림체·실루엣 참고 · 개별 최종 디자인 승인이 아닙니다.</figcaption></figure></div>${list([link('../references/enemy-archetypes/README.md', '원본 출처'), link('../enemy-reference-authoring.md', 'AI 구현용 본/부위 저작 안내'), pg('PG-SCRAP-READABILITY'), pg('PG-VISUAL-FIDELITY')])}`,
+      '지역 Color Identity',
+      table(
+        ['지역', '색상 방향', '재질/표면', '생활·형태'],
+        campaign.regions.map((r) => [
+          scenario(r.id),
+          ...ProductionContract.REGIONAL_IDENTITY[r.id].map(esc),
+        ]),
+      ) +
+        p(
+          '전체 저채도는 유지하지만 미세한 색온도 차이만으로 구분하지 않습니다. 스크린샷만 보고 지역을 알아야 합니다. 이 색상 방향을 기준으로 reference에서 최종 swatch를 검토하며 색만 바꾼 공용 맵으로 대체하지 않습니다.',
+        ),
+    ) +
+    section(
+      '작업별 세부 계약',
+      list([
+        link('asset-contract.html', 'Master SVG·면·재질·그림자'),
+        link('environment-authoring.html', '환경 Hybrid·Composition·XYZ·LOD'),
+        link('character-animation.html', 'Rig Family·key pose·retarget·접촉'),
+        link('reference-approval.html', '도입 reference 승인 순서'),
+      ]),
+    ) +
+    section(
+      '보존된 이전 참고 PNG',
+      p(
+        '아래는 과거 공유 원본을 변경 없이 보관한 PNG입니다. 신규 기본 납품인 master SVG나 이번 reference sheet 승인본으로 오인하지 않습니다.',
+      ) +
+        '<div class="reference-grid"><figure><img src="../references/enemy-archetypes/hero-style-reference.png" alt="보존된 주인공 참고 PNG"><figcaption>기존 주인공 동작 방향 보존용 참고. 신규 SVG 원본/승인 상태와 구별.</figcaption></figure><figure><img src="../references/enemy-archetypes/enemy-archetypes-reference.png" alt="보존된 몹 참고 PNG"><figcaption>기존 유형 실루엣 참고. 신규 몹 디자인 승인이 아님.</figcaption></figure></div>' +
+        link('../references/enemy-archetypes/README.md', '원본 출처'),
+    ),
+);
+
+document(
+  'asset-contract.html',
+  'Master SVG · 면 · 재질 · 그림자',
+  '형태/구조/재질은 그래픽 담당자, 현재 광원에서의 밝기는 엔진이 담당합니다.',
+  section(
+    '원본과 export',
+    table(
+      ['계약', '제작 기준'],
+      ProductionContract.SVG_ROWS.map((row) => row.map(esc)),
+    ),
+  ) +
+    section(
+      '작가와 엔진의 경계',
+      table(
+        ['그래픽 담당자', '엔진/게임'],
+        [
+          [
+            '어디서 면이 꺾이는지, 면의 재질, 구조적으로 가려지는 부분. 파츠·joint/pivot·state anchor·local depth.',
+            '합성된 surface normal + 현재 light + material + structural occlusion → 3~4단계 cell shading. gameplay 위치·attack envelope·invulnerability는 별도 게임 authority.',
+          ],
+        ],
+      ),
+    ) +
+    section(
+      'Hybrid Shadow Authority',
+      table(
+        ['shadow 종류', '대상 예', '요청 자료'],
+        ProductionContract.SHADOW_ROWS.map((row) => row.map(esc)),
+      ),
+    ) +
+    section(
+      '자료 묶음',
+      p(
+        'asset.master.svg와 의미 그룹/피벗/상태 설명을 주 원본으로 전달합니다. far/mid/near SVG와 PNG 미리보기는 export/검토 출력입니다. pose replacement도 원본·부위·anchor의 연결을 명시합니다. 등록됨, reference 승인됨, export 검증됨, runtime 검증됨을 따로 기록합니다.',
+      ) +
+        link('request.html', '요청 양식') +
+        ' · ' +
+        link(
+          'https://github.com/byh020907/polygon-rpg/blob/main/ARCHITECTURE.md',
+          'ARCHITECTURE.md · 기술 계약',
+        ),
+    ),
+);
+
+document(
+  'environment-authoring.html',
+  '환경 제작 · Composition · XYZ · LOD',
+  '주요 화면은 승인된 Composition 또는 Prefab을 기준으로 조립합니다.',
+  section(
+    '환경 Hybrid 제작 단위',
+    table(
+      ['단위', '역할', '예/제약'],
+      ProductionContract.ENVIRONMENT_ROWS.map((row) => row.map(esc)),
+    ),
+  ) +
+    section(
+      'Composition 경계와 연결',
+      p(
+        'Composition은 작가가 승인한 장면 전체 배치 데이터입니다. 예를 들면 항구 입구+먼 크레인, 컨테이너 작업구역, 쌍둥이 크레인 접근, 크레인 Boss, 해결 후 부두처럼 시각적 목적/사건으로 나눕니다. 화면 2개라는 길이 제한을 두지 않습니다. additive/overlap으로 연속 이동하며 필요한 단위를 preload/unload합니다. 예시는 새 사건 확정이나 구현 완료 목록이 아닙니다.',
+      ),
+    ) +
+    section(
+      'Scene object의 속성',
+      table(
+        ['속성', '의미와 제작 지침'],
+        [
+          [
+            'transform x/y/z',
+            '월드 좌우 / 월드 높이 / 시각 앞뒤 깊이. 기본 gameplay는 side-view X/Y. SVG·bone local과 world 좌표를 혼용하지 않습니다.',
+          ],
+          [
+            'role / tags / state',
+            'landmark·prop·interactive 등 의미와 상태. Far/Mid/Foreground를 고정 엔진 렌더 레이어로 만들지 않습니다.',
+          ],
+          [
+            'scale / parallaxScale',
+            '기본 2D 구도에서 깊은 z는 더 작은 기본 parallax. z로 크기를 강제 변경하지 않고 필요한 scale/parallax override로 승인 구도를 맞춥니다.',
+          ],
+          [
+            'renderBias',
+            '같은 깊이에서 미세 draw order 보정. 가짜 4.0001/4.0002 z로 정렬하지 않습니다.',
+          ],
+        ],
+      ),
+    ) +
+    section(
+      '같은 랜드마크, 여러 presentation',
+      p(
+        'TwinCrane의 world identity는 하나입니다. Composition마다 새 크레인을 만들지 않고 far/mid/near presentation을 선택합니다. far 실루엣 보정·mid 주요 기구·near 세부/interaction은 하나의 master에서 export합니다. 기본 선택은 world distance 하나보다 실제 screen occupancy이며 presentationOverride/presentationBias로 연출을 보정합니다. hysteresis/margin으로 경계 깜빡임을 막고 overlap/preload/unload에서도 동일성과 상태를 보존합니다.',
+      ),
+    ) +
+    section(
+      '공유와 지역화',
+      table(
+        ['GLOBAL KIT', 'REGIONAL MATERIAL PROFILE', 'REGIONAL SHAPE'],
+        [
+          [
+            'pipe/crate/railing처럼 평범한 구조 공유',
+            '지역 색·재질·마모: 항구 painted steel/salt wear/blue gray/thick cable, 온실 brass/condensation/green patina/pressure hardware',
+            '쌍둥이 크레인·지열 동력로·제설 열차 등의 기억할 형태는 고유 제작',
+          ],
+        ],
+      ),
+    ) +
+    section(
+      '검수할 composite',
+      p(
+        '길·중요 상호작용 주변 clean read, detail cluster, negative space, 일반 전투 줌인 없음, 지역별 색/형태 구분과 같은 landmark의 원경→근경 연속성을 실제 1280×720 및 mobile에서 검수합니다.',
+      ) + link('world.html', '기존 지역/기계 역할 목록'),
+    ),
+);
+
+document(
+  'character-animation.html',
+  '인물 체형 · Rig Family · 중요 액션',
+  '같은 관절 언어를 쓰되 같은 몸을 쓰지 않습니다. 중요한 pose는 승인 reference가 기준입니다.',
+  section(
+    '캐릭터/애니메이션 계약',
+    table(
+      ['영역', '제작 기준'],
+      ProductionContract.CHARACTER_ROWS.map((row) => row.map(esc)),
+    ),
+  ) +
+    section(
+      'Humanoid SVG 그룹 예',
+      p(
+        '아래 이름은 부위 의미의 예입니다. joint/pivot/anchor와 연결하고, machine은 실제 기계 구조에 맞는 이름을 사용합니다.',
+      ) +
+        '<pre>' +
+        esc(ProductionContract.SVG_CHARACTER_GROUPS.join(' / ')) +
+        '</pre>',
+    ) +
+    section(
+      '주인공 key pose 검수',
+      table(
+        ['동작', '연결해서 볼 모습'],
+        [
+          [
+            'Basic / Strong',
+            '작은 타원 머리·약 7등신·긴 가는 팔다리·짧은 작업복·cross strap·넓은 검/방패. 몸 옆 낮은 당김 → 골반/흉곽 선행 → 팔 추종 → 빠른 횡/사선 CONTACT → FOLLOW의 follow-through와 감속. generic overhead windup 금지.',
+          ],
+          [
+            'Forward Roll',
+            '숙였다 일어나는 dodge가 아니라 머리/어깨 하강 → 골반이 어깨 위로 → 발이 몸 위 통과 → 장비 동반 회전 → 착지 후 이동. 극단적 전신 SVG pose 교체를 허용하되 gameplay 거리/무적은 게임이 소유.',
+          ],
+        ],
+      ),
+    ) +
+    section(
+      'Reference와 구현 상태',
+      p(
+        'front/side/3/4, representative/action pose, line of action·center of mass·torso twist·weapon path·contact/follow-through를 먼저 제출합니다. 현재 코드 clip이나 네 유형 견본의 재생 가능 여부는 새로운 pose reference/Body Profile/Contact IK/override 계약의 완료 증거가 아닙니다.',
+      ) +
+        link('reference-approval.html', 'Reference 승인 순서') +
+        ' · ' +
+        link('characters.html', '인물별 역할'),
+    ),
+);
+
+document(
+  'reference-approval.html',
+  'Reference 제작·승인 순서',
+  '계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.',
+  section(
+    '현재 우선순위',
+    table(
+      ['순서', '제작 묶음', '필수 reference/상태', '이야기/역할'],
+      ProductionContract.REFERENCE_ORDER.map(([id, title, detail, href]) => [
+        esc(id),
+        esc(title),
+        esc(detail),
+        link(href, '관련 자료'),
+      ]),
+    ),
+  ) +
+    section(
+      '제출할 reference sheet',
+      table(
+        ['대상', '포함할 내용'],
+        ProductionContract.REFERENCE_CHECKS.map((row) => row.map(esc)),
+      ),
+    ) +
+    section(
+      '승인 후 확장',
+      p(
+        'REF-05의 prologue gameplay-scale composite를 승인한 뒤 enemy archetype → 폐광↔항구 → 나머지 지역으로 진행합니다. reference는 구현 authority이며 Codex가 중요한 액션 pose나 주요 Composition을 처음부터 임의로 만들고 완성 처리하지 않습니다. 기존 주인공 동작 스타일의 확인을 모든 새 sheet의 승인으로 확대하지 않습니다.',
+      ),
+    ) +
+    section(
+      '미정 처리',
+      p(
+        '인물의 이름/성별/과거사, 미정 적 종류, 지역 사건 세부와 세계관을 임의로 채우지 않습니다. 구현 선택은 well-known 방식/업계 사례를 먼저 조사하고 명백한 hybrid+override는 반복 인터뷰 없이 제안합니다. 게임 느낌·아트 결과·콘텐츠 양·되돌리기 어려운 구조가 크게 갈릴 때만 조사 후 실질적으로 다른 3안을 제시합니다.',
+      ) + link('decisions.html', '기존 이야기의 미정·충돌'),
+    ) +
+    section(
+      '요청/승인 기록',
+      p(
+        '요청서에 master/pose/Composition ID와 버전, 승인한 reference/composite, gameplay scale capture, 미정과 runtime 검증 결과를 구분해 적습니다. 등록/생성/단위 테스트 통과는 승인 표시가 아닙니다.',
+      ) + link('request.html', '갱신된 요청서'),
     ),
 );
 
@@ -273,9 +467,10 @@ document(
   'characters.html',
   '전체 인물·NPC 역할표',
   '사람 단위의 제작 묶음. 동작 칸은 기획 기반 요청 제안이며 현재 구현된 애니메이션 목록이 아닙니다.',
-  p(
-    '주인공 1 + NPC 역할 묶음 13. 라이벌의 여러 배치, 대기 주민과 작업장 앞 주민은 같은 인물로 묶습니다. 갇힌 작업자는 대사상 셋이며 현재 한 조립 묶음이 이를 대표하므로 개별 디자인 수는 확인 필요입니다.',
-  ) +
+  link('character-animation.html', '공통 Rig Family·Body Profile·key pose 제작 계약') +
+    p(
+      '주인공 1 + NPC 역할 묶음 13. 라이벌의 여러 배치, 대기 주민과 작업장 앞 주민은 같은 인물로 묶습니다. 갇힌 작업자는 대사상 셋이며 현재 한 조립 묶음이 이를 대표하므로 개별 디자인 수는 확인 필요입니다.',
+    ) +
     table(
       [
         '인물/장소',
@@ -300,14 +495,14 @@ document(
   '몹·Boss와 유형 견본',
   '실전 배치, 미배치 작성된 profile, 검토용 유형 템플릿을 분리합니다.',
   section(
-    '먼저 만들 유형 기준',
+    '도입 composite 승인 뒤 검토할 유형 기준',
     table(
       ['유형', '수정 단위', '검토'],
       resources
         .filter((r) => r.producer === 'enemy-reference')
         .map((r) => [
           esc(r.label),
-          '고유 본 계층·실루엣·부위. 기존 유형 공용 clip 재사용; 실전 몹 교체 전 검토용',
+          '현재 검토용 견본. 새 제작은 구조별 Rig Family/Body Profile과 중요 key pose 계약을 따르며 도입 기준 장면 승인 뒤 확장합니다.',
           `${ref(r)} · ${preview(r)}`,
         ]),
     ),
@@ -353,10 +548,11 @@ document(
   'world.html',
   '환경·산업기계·효과·UI 요청 묶음',
   '작은 부위 목록보다 장소 전체와 상태 변화부터 묶어 요청합니다.',
-  section(
-    '지역별 환경과 로봇 모듈',
-    table(['지역', '재질/공간', '현지 기계', '회수 모듈', '복구·분리 후'], worldRows),
-  ) +
+  link('environment-authoring.html', '환경 Hybrid·Composition·XYZ·LOD 제작 계약') +
+    section(
+      '지역별 환경과 로봇 모듈',
+      table(['지역', '재질/공간', '현지 기계', '회수 모듈', '복구·분리 후'], worldRows),
+    ) +
     section(
       '공통 대형 묶음',
       table(
@@ -579,6 +775,13 @@ for (const region of campaign.regions) {
     region.label + ' · 사건과 제작 요청',
     '기획의 공통 흐름에 현재 작성된 지역 상세를 연결한 요청 자료입니다.',
     section('이 지역의 이야기', p(brief.story) + pg('PG-OPEN-CAMPAIGN', 1)) +
+      section(
+        '이 지역의 Color Identity와 제작',
+        table(
+          ['색상 방향', '재질·표면', '생활·형태'],
+          [ProductionContract.REGIONAL_IDENTITY[region.id].map(esc)],
+        ) + link('../environment-authoring.html', 'Composition/Prefab/Kit/landmark 제작 계약'),
+      ) +
       section(
         '인물과 장소',
         characterLinks(region.id) +
@@ -810,25 +1013,34 @@ document(
   '이 페이지와 담당 인물/지역 링크만 복사해 전달할 수 있습니다. 다른 사람에게 자동 전송하지 않습니다.',
   section(
     '복사할 요청 양식',
-    `<pre>요청 묶음 / 담당자:
-대상 인물·기계·장소:
-연결 시나리오 링크:
-원본 resource ID / 검토 링크:
-서사·게임 역할:
-필요한 상태: 사건 전 / 진행 중 / 해결 후 / 파손·분리 등
-대표 자세·동작: 컨셉상 필요한 포즈와 기존 재사용 clip 구분
-식별 요소: 체형 / 직업 도구 / 재질 / 소속
-다른 자산과 연결: 손-도구 / 핵-소켓 / 지역 기계-로봇 모듈
-납품 범위: 컨셉 정면·측면·대표 포즈 / 부위 분해표 / 원본 파일
-기존 기준 보존: 주인공 모션 / 부모 로컬 정규좌표 / 유형 clip 재사용
-미정·확인 필요:
-검수: 실제 PC·모바일 크기에서 읽힘 / 배경 위 구분 / 필요한 상태 누락 없음
-요청·검토 상태: 제안 / 제작 중 / 검토 / 승인 (담당자가 기록)</pre>`,
+    `<pre>요청 묶음 / 담당자 / REF 단계:
+관련 인물·지역·시나리오 링크 / 기존 resource ID:
+계약 상태: 확정 / reference 승인 대기 / runtime 미구현·미검증
+승인 reference·Composition·Prefab ID / 버전 / 승인 기록:
+원본: asset.master.svg / 파생 far.mid.near export / PNG 보조 preview
+자산 종류: Unique Landmark / Prefab / Kit / Composition / Character / Pose
+식별·지역성: silhouette / Body Profile / Color Identity / material / 고유 shape
+SVG: 의미 그룹 / joint·pivot·anchor / local depth / 면 경계
+면·조명: data-normal / data-material / data-occlusion
+그림자: contact / actual cast / none / 단순 occluder
+환경: world identity / XYZ / scale·parallax override / renderBias / role·tags·state
+Composition: 목적·사건 / overlap 연결 / preload-unload / 같은 landmark 참조
+LOD: screen occupancy / far-mid-near 실루엣 / override·bias / hysteresis
+동작: 일반 reusable clip / 중요 authored READY-WINDUP-CONTACT-FOLLOW-RECOVER
+Pose: 부분 SVG replacement / 필요한 whole-body pose / Body Profile·modifier
+Contact IK가 필요한 구간 / prop anchor / 자연스러운 root curve:
+게임 제공 값: 실제 이동거리 / attack max reach / active window / envelope
+접촉 검수: visible weapon sweep AND envelope / 같은 trail trajectory
+Hurt: semantic region / primitive / body·weak·armor·guard·immune / 허용 오차
+필요 상태: 사건 전·중·후 / connected-captured-tension-detached-released 등
+미정·확인 필요 (새 인물 설정·적 종류·사건을 임의 확정하지 않음):
+검수: 실제 1280×720·mobile composite / 작은 인물+넓은 세계 / reference 일치
+요청·검토·reference 승인·export 검사·runtime 검증을 별도로 기록</pre>`,
   ) +
     section(
       '요청 예시 · 라이벌',
       p(
-        '공통 라이벌 1명을 도입 출발·현장 조사·회수팔에 붙잡힘·구조 후·지역 정찰 상태로 요청합니다. 갈고리와 수거 표식은 유지하고, 별도 라이벌 9명을 새로 만드는 요청으로 해석하지 않습니다. 먼저 컨셉/상태 보드를 받고 AI가 본/부위 profile과 기존 clip에 반영합니다.',
+        '공통 라이벌 1명을 도입 출발·현장 조사·회수팔에 붙잡힘·구조 후·지역 정찰 상태로 요청합니다. 갈고리와 수거 표식은 유지하고, 별도 라이벌 9명을 새로 만드는 요청으로 해석하지 않습니다. 먼저 front/side/3/4·개별 Body Profile·master SVG parts·상태와 주요 key pose를 만들고 승인합니다. AI는 승인 reference에 맞춰 retarget/선택 Contact IK/pose override를 반영하며 일반 clip과 중요한 authored 동작을 구분합니다.',
       ) +
         link('characters.html#rival', '라이벌 역할/현재 묶음') +
         ' · ' +
@@ -837,7 +1049,7 @@ document(
     section(
       '납품 뒤 검토',
       p(
-        '신규 기준을 만들기 전에 기존 참고와 나란히 비교합니다. 투명 확대 그림과 실제 배경 위 PC/모바일 화면을 모두 확인하고, 새 실루엣에 기존 유형 clip을 재사용할 때 관절·장비 파지·겹침이 유지되는지 봅니다. 디자인 승인은 사람이 기록하며 catalog 존재 여부나 자동 검사로 대체하지 않습니다.',
+        '확정된 제작 계약과 승인 reference를 현재 runtime preview와 나란히 비교합니다. 투명 확대 그림과 실제 배경 위 PC/모바일 화면을 모두 확인하고, 새 실루엣에 기존 유형 clip을 재사용할 때 관절·장비 파지·겹침이 유지되는지 봅니다. 디자인 승인은 사람이 기록하며 catalog 존재 여부나 자동 검사로 대체하지 않습니다.',
       ),
     ),
 );

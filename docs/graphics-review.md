@@ -1,5 +1,7 @@
 # 그래픽 리소스 검토
 
+신규 제작 기준은 [공통 아트](./art-handoff/art-direction.html), [Master SVG](./art-handoff/asset-contract.html), [인물/애니메이션](./art-handoff/character-animation.html), [환경 Composition](./art-handoff/environment-authoring.html) 계약을 따른다. 아래는 현재 검토 도구의 사용법이며 등록/재생 가능 여부가 reference 승인 또는 새 계약 준수를 뜻하지 않는다.
+
 **몹 유형 시안**은 인간형·짐승형·비행형·기계형 대표 각각 한 개다. 기존 실전 몹과 분리하여 컨셉 아트별 외형·본 비율 변경과 유형 공용 애니메이션 재사용을 확인한다. [원본 구조와 수정 방법](./enemy-reference-authoring.md)을 참고한다.
 
 시작 화면의 **디버그 모드** 버튼을 누른 뒤 **전체 그래픽 리소스 검토**를 선택한다. 지도 해금 전 시작 구간에서도 사용할 수 있다. 기존 POLYGON RPG 제목 또는 MENU/MAP 1초 길게 누르기도 유지한다. 개발 서버의 `/?graphicsReview=1`로 바로 열 수도 있다. 일반 게임 메뉴와 플레이에는 검토용 ID나 프레임 제어를 표시하지 않는다.

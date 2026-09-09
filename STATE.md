@@ -4,37 +4,48 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 그래픽 담당자용 역할/시나리오/원본 목록 문서의 구현과 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 최신 Human Feedback의 기획/그래픽/애니메이션 제작 계약을 문서에 정립했다. 이번 범위는 문서이며 runtime·그래픽 원본·게임 규칙은 변경하지 않는다. Codex heartbeat와 OpenCode runner의 Human pause를 유지한다. 전체 제품이나 아래 새 production 계약의 IMPLEMENTATION_COMPLETE 판정이 아니다.
 
 ## Current Phase
 
-Human Feedback Priority — 그래픽 제작 요청 자료. Product Goal의 단일 제품 기준을 유지하고 링크로 요청 자료를 분리했다. 인물 단위 역할/상태/포즈, 실전 적과 유형 견본, 전체 이야기와 지역별 필요 그래픽, 원본 ID/검토 링크, 미정·충돌, 요청서 양식을 연결한다. 문서의 시나리오 서술은 새로운 gameplay 구현 완료를 의미하지 않는다.
+Human Feedback Priority — Reference-led production 계약. 생활형 산업 세계·세계/스케일 우선·지역 Color Identity는 Product Goal, Master SVG/Composition/XYZ/LOD/Rig/pose/root/contact의 소유권은 Architecture, 제작 자료와 REF-01~05 승인 순서는 handoff, 에이전트 작업 태도는 AGENTS에 배치한다. 도입·자유 순서 다섯 지역·최종전·저장/시간 구조를 보존한다.
 
 ## Active Execution Goal
 
-활성 자동 실행 없음. 완료한 문서 작업의 dependency chain: 기획/작성된 자료 대조 → 인물 묶음/리소스 ID 매핑 → 작은 링크 문서 생성 → 누락/링크/독립 내용 검토 → PC/mobile/print 및 설치 앱 문서 열기 검증. 자동 게임 개발은 재개하지 않는다.
+문서 계약 정합·생성·독립 내용/viewport 검증을 마쳤으며 활성 자동 실행은 없다. 새로운 runtime 구현과 reference sheet 제작은 아직 시작하지 않는다. 다음 제작 순서는 Hero/Rival/Owner → Core/Retrieval Arm → Ancient Awakening → Garage 0% → prologue gameplay-scale composite 승인이다. 승인 후 enemy archetype → 폐광↔항구 → 나머지 지역으로 확장한다. 자동 재개는 명시적 지시 전까지 금지한다.
 
-## Desired-State Comparison
+## Human Feedback Priority — Implementation Gaps
 
-| Area                                             | Status           | Evidence                                                                                                                                                                                  |
-| ------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 그래픽 제작 요청 자료                            | locally verified | 주인공 1 + NPC 역할 묶음 13, 현재 적 21 + 유형 견본 4, 전체 시나리오 10쪽, 592개 원본 행. 목록 한 쪽 최대 30행. 기획/현재 등록/요청 제안/미정 구분.                                       |
-| 문서 접근·최신성                                 | locally verified | 정적 HTML, 2,832개 로컬 링크와 673개 검토 URL 검사. docs:art / docs:art:check. docs namespace의 CSS·reference를 게임 캐시 밖에서 읽으며 게임 import의 cache-only 계약 유지.               |
-| 기존 그래픽 검토/폴리곤/원형 탐색                | retained         | 단일 polygon, 부모 로컬 정규좌표/유형 clip 재사용, 저장 없는 테스트 세션과 원형 검색/색상, 시작 디버그·업데이트 진행 안내 유지. 그래픽 원본/게임 장면은 이번 문서 작업에서 변경하지 않음. |
-| 기존 Human Feedback Priority / playable frontier | partial          | 폐광→항구 연결 전투/귀환과 전투 접촉·최종 시각 만족 등 INBOX 미완료 사항은 유지. 후반/최종전은 문서만으로 완료 판정하지 않음.                                                             |
-| 설치형 실기기                                    | Human 확인 대기  | native Chromium 지속 profile 증거와 Android/iOS 설치형 실기기 판정을 구분.                                                                                                                |
+아래는 현재 source의 정적 조사 결과이며 새 계약의 구현 승인/시각 검증 결과가 아니다. 문서 완료로 제거하지 않는다.
+
+| 새 계약                                   | 현재 evidence / 후속 Gap                                                                                                                                                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 생활형 산업·Color Identity·세계 우선 화면 | 지역 색/재질 data는 있지만 승인 reference/composite의 형태·18~22%·clean read·일반 전투 zoom 없음·다섯 지역 식별은 새 기준으로 검증 필요. src/game/ScrapArtDirectionProfiles.js                                                         |
+| Scene XYZ·z parallax·override/renderBias  | MapRuntime/ScenePainter는 주로 XY·renderOrder·항목 parallax. actor depth raster가 공통 scene XYZ 완료를 뜻하지 않음. src/game/map/MapRuntime.js, src/rendering/ScenePainter.js                                                         |
+| Composition/Prefab/Kit·연속 로딩          | 기존 Room renderItems와 전환 중 overlap은 승인 Composition·preload/unload 체계가 아님. 같은 world object의 상태 보존과 additive 연결 검증 필요. src/game/map/MapDefinition.js, MapRuntime.js                                           |
+| 단일 landmark·occupancy LOD               | room/local ID 중심. world identity 하나의 far/mid/near, override/bias, hysteresis 경로 미구현. src/graphics/MapGraphicResources.js                                                                                                     |
+| Master SVG·LOD export·면 정보             | 현재 JS nodes/polygon 원본과 보관 PNG. semantic group/joint/pivot/state anchor/local depth를 읽는 master importer/exporter 미구현. src/graphics/EnemyReferenceProfiles.js, EnemyReferenceModel.js                                      |
+| 지역 재질/고유 shape·Hybrid Shadow        | 일부 material/light/caster 기반은 있으나 authored SVG normal/material/occlusion과 contact/caster/none 분리·단순 occluder 연결은 새 계약으로 검증/구현 필요. src/rendering/CellLighting.js, ScenePainter.js                             |
+| Rig Family + Body Profile                 | 일부 인물 비율 data·고정 PLAYER_RIG·4개 검토 견본은 전체 family 통합 증거가 아님. src/game/character/CharacterPresentationProfiles.js, src/animation/PlayerRig.js                                                                      |
+| 체형 retarget·선택 Contact IK             | 현재 MotionClipRetargeter의 mapping/균일 scale, PlayerRig의 저작 시 IK와 차이. body retarget→modifier→필요 Contact IK→authored override 경로 필요. src/animation/MotionClipRetargeter.js, PlayerRig.js                                 |
+| 중요 key pose·부분/whole-body SVG         | 현재 코드 생성 key frame과 ForwardRollClip은 승인 SVG pose replacement가 아님. READY/WINDUP/CONTACT/FOLLOW/RECOVER와 anchor 보존 검증 필요. src/animation/CharacterBonePoseLibrary.js, ForwardRollClip.js                              |
+| Gameplay 거리 + root curve warp           | 이동 authority 일부는 gameplay에 있으나 authored root curve를 roll/attack/counter/charge 거리로 warp하는 공통 계약 미확인. src/game/GameScene.js, src/animation/ForwardRollClip.js                                                     |
+| Visible weapon sweep AND envelope         | 현재 shared sweep·spatial reach는 있으나 동일 contact의 독립 max-reach envelope AND gate 미확인. 빠른 회전/방향/이력과 동일 trail trajectory 검증 필요. src/combat/SharedCombatGeometry.js, src/game/training/TrainingEncounterNode.js |
+| Semantic Hurt Region                      | 부위 polygon 추적은 있으나 visual surface 공유에서 안정 primitive·body/weak/armor/guard/immune response·시각 오차 계약으로 정렬 필요. 무적은 gameplay state. src/combat/SharedCombatGeometry.js                                        |
+
+기존 INBOX의 전투 접촉 불만은 계속 유효하되 최신 sweep AND envelope / semantic primitive 계약으로 해결해야 한다. 이전 visual/hurt 동일 topology나 모든 동작 3D strip 규칙으로 되돌리지 않는다. 폐광→항구 연결 전투/귀환 등 기존 playable frontier Gap도 남는다.
 
 ## Verification
 
-- npm run docs:art:check: 592개 resource ID가 누락/중복 없이 한 번씩 등장, 전체 NPC actor mapping, 10개 시나리오 페이지, source/anchor와 검토 URL 검증 PASS.
-- 독립 source audit 한 명을 재사용했다. 폐광 구조 대상 링크 누락과 고대 병기의 사무적/비공포 연출 톤 누락을 수정하고 재확인 PASS. 모듈 소유권·자유 순서·우회 원인·온실 지형·선박 구분·후반 분량 미정을 확인 자료에 유지한다.
-- art-handoff-qa: desktop 1280×900, mobile 390×844의 주요 문서/표, 실제 reference 이미지, body overflow, 인쇄 view, Product Goal→자료와 원본→실제 검토실 링크 확인. 현재 Service Worker가 제어하는 문서의 CSS/이미지도 네트워크로 로드. artifacts/art-handoff/evidence.json 및 PNG.
-- PWA fixture는 문서 CSS의 network-only 응답과 game cache 미포함, 기존 game missing-import 차단/버전 고정/저장/오프라인 계약을 확인한다. 기존 native A→B→C 회귀 근거는 artifacts/art-handoff/pwa-browser.log.
-- 코드·문서 lint/format과 release metadata 최신성 확인. 문서/참고 원본을 runtime precache에 추가하지 않는다.
+- 독립 source 조사와 문서 검증에 기존 explorer 한 명을 재사용했다. 23항의 owner 배치, Master 단일 원본·부분/whole-body pose·AND envelope·semantic hurt·REF 순서, obsolete 문구와 기존 이야기 보존을 대조했다.
+- artifacts/art-contract/scope-check.json: 이전 Product Goal의 도입/자유 캠페인/대화/인물/시간/지도/성장/최종전/복구/PWA 10개 계약 본문 보존, runtime src·sw·index·public assets·package 변경 없음 확인.
+- npm run docs:art 및 docs:art:check: 새 4개 계약 페이지와 기존 역할/시나리오/592개 ID·검토 링크를 재생성/검사한다. 생성 원본은 scripts/art-production-contract.mjs와 scripts/art-handoff-content.mjs, renderer는 generate-art-handoff.mjs다. 기존 목록/보관 PNG는 승인본으로 승격하지 않는다.
+- art-handoff-qa의 PC/mobile·print·reference/링크 검증은 문서의 판독성과 연결을 검증하며 새 production renderer/animation 구현 검증이 아니다. 근거는 artifacts/art-contract/qa.log와 artifacts/art-handoff PNG.
+- lint/format 및 release-metadata-check로 문서/생성 흐름과 runtime 원본 보존을 확인한다. 별도 구현 테스트 통과로 새 계약 준수를 주장하지 않는다.
 
 ## Human 확인 / Pause
 
-문서 요청은 디자인 최종 승인이 아니다. 담당자는 docs/art-handoff/index.html과 작업할 인물/지역 링크를 받고 request.html 양식으로 요청을 구체화한다. decisions.html의 미정은 자료 완성으로 소거하지 않는다. 자동 루프는 명시적 재개 전까지 중지한다.
+제작 계약은 확정되었고 개별 reference/composite 승인은 별도다. 미정 인물 설정·적 종류·지역 사건을 추가하지 않는다. 기존 이야기의 무기 소유권·자유 순서·온실 지형 등 decisions.html 확인 항목을 유지한다. 설치형 Android/iOS와 전체 게임 최종 만족은 이번 문서 범위 밖이다.
 
 ## Preserved Work Reference
 

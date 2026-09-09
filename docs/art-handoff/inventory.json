@@ -1,5 +1,5 @@
 {
-  "fingerprint": "64fa2e7780cc",
+  "fingerprint": "c48dee26b454",
   "resourceCount": 592,
   "records": [
     {
@@ -19980,10 +19980,14 @@
   ],
   "pages": [
     "art-direction.html",
+    "asset-contract.html",
+    "character-animation.html",
     "characters.html",
     "decisions.html",
     "enemies.html",
+    "environment-authoring.html",
     "index.html",
+    "reference-approval.html",
     "request.html",
     "resources/background-1.html",
     "resources/building-1.html",

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>환경 제작 · Composition · XYZ · LOD · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="asset-contract.html">제작 계약</a
+        ><a href="characters.html">인물</a><a href="enemies.html">몹</a
+        ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a
+        ><a href="request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 c48dee26b454</p>
+        <h1>환경 제작 · Composition · XYZ · LOD</h1>
+        <p>주요 화면은 승인된 Composition 또는 Prefab을 기준으로 조립합니다.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된 제작
+        계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재
+        코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <section>
+        <h2>환경 Hybrid 제작 단위</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">단위</th>
+                <th scope="col">역할</th>
+                <th scope="col">예/제약</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Unique Landmark</td>
+                <td>지역을 기억하게 하는 고유 대형 자산</td>
+                <td>
+                  굴착기·쌍둥이 크레인·지열 동력로·제설 열차·암반 절단기. 다른 Composition에서도
+                  world identity는 하나입니다.
+                </td>
+              </tr>
+              <tr>
+                <td>Prefab</td>
+                <td>작가가 보기 좋게 조합한 중간 크기 자산</td>
+                <td>
+                  workshop·cargo stack·pipe wall·scrap corner·dock stairs·small house·catwalk. 주요
+                  화면의 승인된 조합 출발점입니다.
+                </td>
+              </tr>
+              <tr>
+                <td>Kit</td>
+                <td>정말 반복할 작은 요소</td>
+                <td>
+                  crate·barrel·lamp·ladder·railing·sign·pipe straight/elbow·chain·small scrap.
+                  Kit만으로 Codex가 주요 화면을 임의 설계하지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>Composition</td>
+                <td>승인된 장면 전체 배치 데이터</td>
+                <td>
+                  시각적 목적·랜드마크·사건 단위이며 화면 2개 같은 길이로 고정하지 않습니다.
+                  additive/overlap 연결과 preload/unload를 고려합니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>Composition 경계와 연결</h2>
+        <p>
+          Composition은 작가가 승인한 장면 전체 배치 데이터입니다. 예를 들면 항구 입구+먼 크레인,
+          컨테이너 작업구역, 쌍둥이 크레인 접근, 크레인 Boss, 해결 후 부두처럼 시각적 목적/사건으로
+          나눕니다. 화면 2개라는 길이 제한을 두지 않습니다. additive/overlap으로 연속 이동하며
+          필요한 단위를 preload/unload합니다. 예시는 새 사건 확정이나 구현 완료 목록이 아닙니다.
+        </p>
+      </section>
+      <section>
+        <h2>Scene object의 속성</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">속성</th>
+                <th scope="col">의미와 제작 지침</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>transform x/y/z</td>
+                <td>
+                  월드 좌우 / 월드 높이 / 시각 앞뒤 깊이. 기본 gameplay는 side-view X/Y. SVG·bone
+                  local과 world 좌표를 혼용하지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>role / tags / state</td>
+                <td>
+                  landmark·prop·interactive 등 의미와 상태. Far/Mid/Foreground를 고정 엔진 렌더
+                  레이어로 만들지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>scale / parallaxScale</td>
+                <td>
+                  기본 2D 구도에서 깊은 z는 더 작은 기본 parallax. z로 크기를 강제 변경하지 않고
+                  필요한 scale/parallax override로 승인 구도를 맞춥니다.
+                </td>
+              </tr>
+              <tr>
+                <td>renderBias</td>
+                <td>
+                  같은 깊이에서 미세 draw order 보정. 가짜 4.0001/4.0002 z로 정렬하지 않습니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>같은 랜드마크, 여러 presentation</h2>
+        <p>
+          TwinCrane의 world identity는 하나입니다. Composition마다 새 크레인을 만들지 않고
+          far/mid/near presentation을 선택합니다. far 실루엣 보정·mid 주요 기구·near
+          세부/interaction은 하나의 master에서 export합니다. 기본 선택은 world distance 하나보다
+          실제 screen occupancy이며 presentationOverride/presentationBias로 연출을 보정합니다.
+          hysteresis/margin으로 경계 깜빡임을 막고 overlap/preload/unload에서도 동일성과 상태를
+          보존합니다.
+        </p>
+      </section>
+      <section>
+        <h2>공유와 지역화</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">GLOBAL KIT</th>
+                <th scope="col">REGIONAL MATERIAL PROFILE</th>
+                <th scope="col">REGIONAL SHAPE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>pipe/crate/railing처럼 평범한 구조 공유</td>
+                <td>
+                  지역 색·재질·마모: 항구 painted steel/salt wear/blue gray/thick cable, 온실
+                  brass/condensation/green patina/pressure hardware
+                </td>
+                <td>쌍둥이 크레인·지열 동력로·제설 열차 등의 기억할 형태는 고유 제작</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>검수할 composite</h2>
+        <p>
+          길·중요 상호작용 주변 clean read, detail cluster, negative space, 일반 전투 줌인 없음,
+          지역별 색/형태 구분과 같은 landmark의 원경→근경 연속성을 실제 1280×720 및 mobile에서
+          검수합니다.
+        </p>
+        <a href="world.html">기존 지역/기계 역할 목록</a>
+      </section>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+      <code>npm run docs:art</code> ·
+      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

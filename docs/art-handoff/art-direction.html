@@ -10,20 +10,22 @@
     <header class="masthead">
       <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
       <nav>
-        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="characters.html">인물</a
-        ><a href="enemies.html">몹</a><a href="scenarios/index.html">시나리오</a
-        ><a href="resources/index.html">전체 목록</a><a href="request.html">요청서</a>
+        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="asset-contract.html">제작 계약</a
+        ><a href="characters.html">인물</a><a href="enemies.html">몹</a
+        ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a
+        ><a href="request.html">요청서</a>
       </nav>
     </header>
     <main>
       <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 c48dee26b454</p>
         <h1>공통 아트 기준</h1>
-        <p>컨셉 아트 → 부위와 본 비율 조정 → 유형 공용 애니메이션 재사용.</p>
+        <p>작은 캐릭터와 넓은 세계 · 안정된 reference sheet · 생활형 산업 왕국.</p>
       </header>
       <aside class="notice">
-        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획 해설과
-        현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된 제작
+        계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재
+        코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
         <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
       </aside>
       <section>
@@ -33,73 +35,74 @@
             <thead>
               <tr>
                 <th scope="col">항목</th>
-                <th scope="col">그래픽 담당자에게 전달할 내용</th>
+                <th scope="col">작업 지침</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>그림체</td>
+                <td>기준 스타일</td>
                 <td>
-                  얇고 각진 폴리곤/컷아웃·벡터 셀 아트. 화면의 85~90%는 저채도 명암. 에디터 유형색을
-                  게임 몸체의 원색으로 복사하지 않습니다.
+                  정돈된 레오곡 계열의 2D 액션 RPG 시각 언어. 작은 캐릭터와 넓은 세계, 안정된
+                  실루엣, 단순하고 명확한 vector/polygon, 작은 머리와 긴 가는 팔다리, 큰 면의
+                  3~4단계 셀 명암. 특정 작품의 캐릭터 복제나 러프하고 삐뚤빼뚤한 손그림은
+                  지양합니다.
                 </td>
               </tr>
               <tr>
-                <td>실루엣</td>
+                <td>생활형 산업 세계</td>
                 <td>
-                  작은 머리·가늘고 긴 팔다리·직업 도구. 주인공의 기존 동작 스타일 보존; 몹 유형별
-                  체형은 구별. 같은 뚱뚱한 몸체를 색만 바꿔 배포하지 않습니다.
+                  사람들이 오래된 설비를 고쳐 쓰며 생업을 이어가는 왕국입니다. 낡음=멸망,
+                  고철=쓰레기, 기계=디스토피아가 아닙니다. 옛 군수 규격은 생활 기계에 남은
+                  잠금·인장·접속 방식입니다.
                 </td>
               </tr>
               <tr>
-                <td>재질</td>
+                <td>화면과 전투</td>
                 <td>
-                  판금·리벳·케이블·작업용 천·수리 흔적. 지역 재질은 5개 로봇 모듈에 다시 보입니다.
+                  PC gameplay의 인간형 약 18~22%를 유지하고 모바일에서도 세계/스케일을 우선합니다.
+                  일반 전투 자동 줌인 대신 silhouette·외곽선·배경 대비·telegraph·weapon trail·VFX로
+                  읽힙니다. Boss 등 특별 연출만 framing 예외입니다.
                 </td>
               </tr>
               <tr>
-                <td>화면 크기</td>
+                <td>배치</td>
                 <td>
-                  1280×720 PC, 844×390 모바일 실제 장면에서 판단. 인간형 높이는 PC 약 18~22% 기준,
-                  모바일은 동작 판독을 위해 보정. 확대 그림만으로 승인하지 않습니다.
+                  주요 길·상호작용은 clean read, detail은 cluster, negative space는 의도적으로
+                  남깁니다. 장식이 인물·공격 실루엣을 덮지 않게 합니다. 지역은 색뿐 아니라 구조·생활
+                  설비·형태도 구별됩니다.
                 </td>
               </tr>
               <tr>
-                <td>출력</td>
+                <td>원본과 승인</td>
                 <td>
-                  픽셀화 후처리·좌표 snap·강제 정수 확대 없음. 원본 면/윤곽/명암이 직접 읽혀야
-                  합니다.
+                  새 기본 원본은 의미 있는 부위/면/anchor를 가진 *.master.svg입니다. reference
+                  sheet는 예쁜 컨셉 한 장보다 실제 제작과 key pose의 기준입니다. 계약 확정,
+                  reference 승인, 현재 등록, runtime 검증을 구분합니다. 기존 PNG는 보관·보조
+                  출력이며 SVG 승인의 증거가 아닙니다.
                 </td>
               </tr>
               <tr>
-                <td>동작</td>
+                <td>조명·그림자</td>
                 <td>
-                  검은 낮게 당겼다가 몸 앞을 가로지르는 빠른 횡/사선 베기. 전방 구르기는 실제 한
-                  바퀴. 공격 크기·유효 범위를 임의로 바꾸지 않습니다.
+                  작가는 면 경계·재질·구조적 가림을 정의하고 엔진은 현재 광원에서 밝기를 계산합니다.
+                  완성된 고정 그림자를 bake하지 않습니다. 작은 객체 contact / 큰 구조물 actual cast
+                  / 작은 장식 none을 구분합니다.
                 </td>
               </tr>
               <tr>
-                <td>고대 병기의 톤</td>
+                <td>주인공</td>
                 <td>
-                  옛 군수 명령을 문자 그대로 실행하는 융통성 없는 병기. 짧고 사무적인 낡은 방송,
-                  과장된 불완전 조립·수거 행동으로 위협과 웃음을 함께 만듭니다. 무거운 신체 공포로
-                  만들지 않습니다.
+                  약 7등신·짧은 작업복·cross strap·넓은 검/방패·낮은 준비를 유지합니다. 골반/흉곽
+                  선행 후 팔이 따르는 횡/사선 베기와 CONTACT 뒤 감속, 실제 forward somersault를
+                  기준으로 합니다.
                 </td>
               </tr>
               <tr>
-                <td>기본 납품</td>
+                <td>기존 이야기 보존</td>
                 <td>
-                  컨셉 정면/측면 + 대표 자세 + 부위 분해/재질/가려짐 설명. PNG 가능, 수정 가능한
-                  SVG/레이어 원본은 있으면 함께 전달합니다. 그림 담당자가 엔진 코드를 작성해야 하는
-                  계약은 아닙니다.
-                </td>
-              </tr>
-              <tr>
-                <td>AI 구현 경계</td>
-                <td>
-                  AI가 부위/본 profile을 반영하고 기존 clip에 연결합니다. 수동 sprite sheet 재생성은
-                  기본 원본 방식이 아닙니다. 본 부착/vertex는 부모축 기준 [-1,1], 크기는 별도 ratio.
-                  상세는 기존 저작 안내를 봅니다.
+                  구조를 위해 제어핵을 떼고 재난을 수습하는 이야기, 자유 순서의 다섯 지역과 두
+                  로봇의 역할은 유지합니다. 고대 병기는 사무적인 낡은 방송·과장된 조립/수거 행동으로
+                  위협과 웃음을 함께 보이며 신체 공포물이 아닙니다.
                 </td>
               </tr>
             </tbody>
@@ -107,33 +110,97 @@
         </div>
       </section>
       <section>
-        <h2>참고 원본</h2>
+        <h2>지역 Color Identity</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">지역</th>
+                <th scope="col">색상 방향</th>
+                <th scope="col">재질/표면</th>
+                <th scope="col">생활·형태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="scenarios/abandoned-mine.html">폐광 산촌</a></td>
+                <td>갈색 / 황토 / 경고 황색</td>
+                <td>암갈색 철판·분진·암반·레일</td>
+                <td>레일·지지대·보행식 굴착기를 생활 기반시설로 읽힙니다.</td>
+              </tr>
+              <tr>
+                <td><a href="scenarios/harbor-shipyard.html">항구 조선소</a></td>
+                <td>청회색 / 청록 / 녹슨 적색</td>
+                <td>도장강·선체·굵은 케이블·물·안개</td>
+                <td>크레인·도크·케이블은 생업 설비이며 염분 마모와 인양 구조가 특징입니다.</td>
+              </tr>
+              <tr>
+                <td><a href="scenarios/greenhouse-plains.html">온실 평원</a></td>
+                <td>황동 / 탁한 녹색 / 수증기 백색</td>
+                <td>유리·배관·밸브·재배 구조물</td>
+                <td>배관·동력로는 농업 설비입니다. 응축수·녹청·압력 하드웨어로 지역화합니다.</td>
+              </tr>
+              <tr>
+                <td><a href="scenarios/snow-trade-road.html">설산 교역로</a></td>
+                <td>백청 / 남청 / 열선 주황</td>
+                <td>눈·철도·장갑판·열선 리벳</td>
+                <td>제설 열차와 신호/열선은 교역로를 유지하는 설비입니다.</td>
+              </tr>
+              <tr>
+                <td><a href="scenarios/red-quarry.html">붉은 채석장</a></td>
+                <td>적철 / 짙은 갈색 / 먼지 베이지</td>
+                <td>붉은 암반·절단날·중량 철판</td>
+                <td>암반 절단기는 거대한 작업 도구이며 절개면과 중량 구조가 특징입니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          전체 저채도는 유지하지만 미세한 색온도 차이만으로 구분하지 않습니다. 스크린샷만 보고
+          지역을 알아야 합니다. 이 색상 방향을 기준으로 reference에서 최종 swatch를 검토하며 색만
+          바꾼 공용 맵으로 대체하지 않습니다.
+        </p>
+      </section>
+      <section>
+        <h2>작업별 세부 계약</h2>
+        <ul>
+          <li><a href="asset-contract.html">Master SVG·면·재질·그림자</a></li>
+          <li><a href="environment-authoring.html">환경 Hybrid·Composition·XYZ·LOD</a></li>
+          <li><a href="character-animation.html">Rig Family·key pose·retarget·접촉</a></li>
+          <li><a href="reference-approval.html">도입 reference 승인 순서</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>보존된 이전 참고 PNG</h2>
+        <p>
+          아래는 과거 공유 원본을 변경 없이 보관한 PNG입니다. 신규 기본 납품인 master SVG나 이번
+          reference sheet 승인본으로 오인하지 않습니다.
+        </p>
         <div class="reference-grid">
           <figure>
             <img
               src="../references/enemy-archetypes/hero-style-reference.png"
-              alt="주인공 스타일 참고 원본"
+              alt="보존된 주인공 참고 PNG"
             />
-            <figcaption>주인공 참고 · 현재 모션 스타일의 최종 폐기 지시가 아닙니다.</figcaption>
+            <figcaption>
+              기존 주인공 동작 방향 보존용 참고. 신규 SVG 원본/승인 상태와 구별.
+            </figcaption>
           </figure>
           <figure>
             <img
               src="../references/enemy-archetypes/enemy-archetypes-reference.png"
-              alt="몹 전체 그림체와 실루엣 참고 원본"
+              alt="보존된 몹 참고 PNG"
             />
-            <figcaption>몹 전체 그림체·실루엣 참고 · 개별 최종 디자인 승인이 아닙니다.</figcaption>
+            <figcaption>기존 유형 실루엣 참고. 신규 몹 디자인 승인이 아님.</figcaption>
           </figure>
         </div>
-        <ul>
-          <li><a href="../references/enemy-archetypes/README.md">원본 출처</a></li>
-          <li><a href="../enemy-reference-authoring.md">AI 구현용 본/부위 저작 안내</a></li>
-          <li><a href="../../PRODUCT_GOAL.html#PG-SCRAP-READABILITY">PG-SCRAP-READABILITY</a></li>
-          <li><a href="../../PRODUCT_GOAL.html#PG-VISUAL-FIDELITY">PG-VISUAL-FIDELITY</a></li>
-        </ul>
+        <a href="../references/enemy-archetypes/README.md">원본 출처</a>
       </section>
     </main>
     <footer>
-      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+      <code>npm run docs:art</code> ·
       <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
       <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
     </footer>

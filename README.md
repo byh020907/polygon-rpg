@@ -103,6 +103,6 @@ Production은 별도 bundle 없이 `main /`의 static files를 제공합니다.
 
 ## 그래픽 제작 요청 문서
 
-그래픽 담당자에게는 [제작 요청 안내](./docs/art-handoff/index.html)와 담당 인물·지역 링크를 전달한다. [인물/NPC 역할표](./docs/art-handoff/characters.html), [몹/Boss](./docs/art-handoff/enemies.html), [전체 시나리오](./docs/art-handoff/scenarios/index.html), [전체 원본 목록](./docs/art-handoff/resources/index.html), [요청서 양식](./docs/art-handoff/request.html)을 분리해 필요한 자료만 읽을 수 있다.
+그래픽 담당자에게는 [제작 요청 안내](./docs/art-handoff/index.html)와 담당 인물·지역 링크를 전달한다. [Master SVG 제작 계약](./docs/art-handoff/asset-contract.html), [환경 Composition/XYZ/LOD](./docs/art-handoff/environment-authoring.html), [캐릭터·애니메이션](./docs/art-handoff/character-animation.html), [Reference 승인 순서](./docs/art-handoff/reference-approval.html), [인물/NPC 역할표](./docs/art-handoff/characters.html), [몹/Boss](./docs/art-handoff/enemies.html), [전체 시나리오](./docs/art-handoff/scenarios/index.html), [전체 원본 목록](./docs/art-handoff/resources/index.html), [요청서 양식](./docs/art-handoff/request.html)을 분리해 필요한 자료만 읽을 수 있다.
 
-Product Goal이 제품 기준을 소유하며 요청 자료는 기획 해설과 현재 authored snapshot이다. 기획이 바뀌면 요청 해설을 먼저 재검토하고, 원본 code/content 변경 후 `npm run docs:art`, 최신성·ID·링크 검사는 `npm run docs:art:check`로 수행한다. NPC 부위/상태와 조립 묶음은 별도 인물 수로 합산하지 않는다.
+Product Goal이 제품 기준을 소유하며 요청 자료는 확정 제작 계약과 현재 작성된 snapshot을 구분한다. 계약 해설은 `scripts/art-production-contract.mjs`, 역할·시나리오 해설은 `scripts/art-handoff-content.mjs`에서 수정한다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재 코드/등록은 승인을 대신하지 않는다. 기획이 바뀌면 요청 해설을 먼저 재검토하고, 원본 code/content 변경 후 `npm run docs:art`, 최신성·ID·링크 검사는 `npm run docs:art:check`로 수행한다. NPC 부위/상태와 조립 묶음은 별도 인물 수로 합산하지 않는다.

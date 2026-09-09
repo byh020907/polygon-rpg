@@ -1,4 +1,6 @@
-# 컨셉 아트에서 유형별 몹 만들기
+# 기존 몹 유형 견본의 현재 구현
+
+> 이 문서는 현재 JS 견본의 관찰/유지보수 안내다. 신규 제작 authority는 [Master SVG 계약](./art-handoff/asset-contract.html), [Rig Family·중요 pose 계약](./art-handoff/character-animation.html), [Reference 승인 순서](./art-handoff/reference-approval.html)다. 현재 견본 등록/검사 통과는 새 계약 구현이나 디자인 승인이 아니다.
 
 검토실의 **몹 유형 시안**에는 인간 수거반·드릴 하운드·정찰 말벌·산업 중장비 각각 한 개가 있다. 대기·이동·공격을 재생하고 프레임·좌우·폴리곤 형태를 비교한다. 실전 몹이나 주인공을 이 견본으로 일괄 대체하지 않는다.
 
@@ -21,7 +23,7 @@ const variant = createEnemyReferenceModel(
 sampleEnemyReferenceModel(variant, { action: 'move', frameIndex: 24 });
 ```
 
-이 변경에는 동작 프레임이나 별도 이미지를 만들 필요가 없다. 모든 부착물과 세 공용 clip이 변경된 본을 사용한다. 다만 컨셉 아트를 자동으로 정확히 리깅하는 기능은 아니다. AI가 부위 구분·본 배치·비율을 해석하고 실제 재생 결과를 확인한다.
+이 현재 견본의 일반 공용 동작에는 별도 frame 이미지를 만들 필요가 없다. 중요한 액션의 승인된 부분/whole-body pose SVG 교체는 새 제작 계약에서 별도로 허용한다. 모든 부착물과 세 공용 clip이 변경된 본을 사용한다. 다만 컨셉 아트를 자동으로 정확히 리깅하는 기능은 아니다. AI가 부위 구분·본 배치·비율을 해석하고 실제 재생 결과를 확인한다.
 
 ## 부모 기준 좌표
 
@@ -38,8 +40,8 @@ sampleEnemyReferenceModel(variant, { action: 'move', frameIndex: 24 });
 
 | 대안                           | 편집성 / 판단                                                             |
 | ------------------------------ | ------------------------------------------------------------------------- |
-| 유형별 본 + 선언형 폴리곤 부위 | 현재 선택. 본·윤곽 수정만으로 공용 동작과 단일 폴리곤 renderer에 전파     |
-| 부위별 SVG cutout              | 원본 입력으로 유리. 그룹·관절이 있으면 정규 부위로 옮기기 쉬움            |
+| 유형별 본 + 선언형 폴리곤 부위 | 현재 JS 견본의 구현. 신규 master SVG 제작 계약의 완료 증거는 아님         |
+| 부위별 SVG cutout              | 신규 원본의 기본. 의미 그룹·joint/pivot·면/재질·pose replacement를 보존   |
 | 모델 전체의 수동 sprite sheet  | 프레임 재생성·장비 조합 관리 때문에 이번 방향에서 제외                    |
 | 전체 3D mesh/skin              | 표현 폭은 넓지만 현재 목표에 필요한 원본·도구 복잡도가 커서 채택하지 않음 |
 
