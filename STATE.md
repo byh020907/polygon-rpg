@@ -4,7 +4,7 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX v0.4.1의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX 및 업데이트 진행 안내 v0.4.2의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
@@ -25,6 +25,8 @@ Human Feedback Priority — 그래픽 검토/저장 없는 테스트 플레이 �
 | Human Feedback Priority / playable frontier | partial                        | INBOX에 남은 Human 원문과 이전 KO fence·폐광/항구 관찰 증거 보존. 전투 접촉, 외형 최종 만족과 연결 전투·귀환·후반/최종전은 이번 UX 완료로 닫지 않는다.                                               |
 
 ## Verification
+
+- v0.4.2: 최초 등록/확인·다운로드에 spinner와 불확정 progress를 표시하며 적용은 saving→activating→reloading lifecycle 단계로 안내한다. 적용 중 메뉴 inert와 상태 focus, 실패 시 해제. pwa-lifecycle-check의 실제 단계/중복/실패와 native 지속 profile A→B→C·저장 보존·두 탭·offline 회귀 PASS. pwa-loading-qa는 지연된 실제 버전 확인과 desktop/landscape/portrait 단계 시각 fixture·경계·실패 종료·reduced motion을 확인했다. artifacts/update-loading 및 artifacts/pwa-update/loading-native.log. mobile-menu 34개 viewport 회귀 PASS.
 
 - v0.4.1: 찾기 tree의 592개 최종 리소스가 정확히 한 번씩 도달/선택 가능함을 검사했다. category→region→room→resource와 페이지 이동은 목록 전환 없이 이어진다. 반경 116→84px, 하위 중심 고정. graphics-navigation-qa의 desktop/mobile/portrait에서 최종 leaf 선택·페이지·중심·경계를 확인했다. artifacts/radial-leaves의 PNG와 기존 workflow 회귀 검증을 남겼다.
 

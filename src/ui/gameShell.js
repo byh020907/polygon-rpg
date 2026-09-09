@@ -525,7 +525,16 @@ export function registerGameShell(
       this.$nextTick(() => {
         standaloneViewport.start();
         unsubscribePwa = pwaLifecycle.subscribe((state) => {
+          const wasApplying = this.pwa.applying;
           this.pwa = state;
+          if (wasApplying !== state.applying)
+            this.$nextTick(() => {
+              document
+                .getElementById(
+                  state.applying ? 'pwa-transition-title' : 'pwa-check-update-control',
+                )
+                ?.focus({ preventScroll: true });
+            });
         });
         if (!graphicsReviewRequest && !uiReviewResource) void pwaLifecycle.start();
         if (visualQaRequest) {
@@ -577,6 +586,21 @@ export function registerGameShell(
       };
     },
 
+    get pwaBusy() {
+      return (
+        this.pwa.applying ||
+        (!this.pwa.updateError &&
+          !this.pwa.installationBlocked &&
+          (this.pwa.updateChecking || this.pwa.updateInstalling))
+      );
+    },
+    get pwaTransitionTitle() {
+      return this.pwa.applyPhase === 'saving'
+        ? '진행을 저장하고 있어요'
+        : this.pwa.applyPhase === 'reloading'
+          ? '새 화면을 불러오고 있어요'
+          : '새 버전을 적용하고 있어요';
+    },
     get playButtonLabel() {
       return this.isPlaying ? 'Pause' : 'Play';
     },

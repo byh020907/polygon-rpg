@@ -94,6 +94,7 @@ export function createPwaLifecycleAdapter({
     updateInstalling: false,
     restartRequired: false,
     applying: false,
+    applyPhase: null,
     installationBlocked: false,
     currentVersion: currentRelease.appVersion,
     currentBuildId: currentRelease.buildId,
@@ -104,7 +105,12 @@ export function createPwaLifecycleAdapter({
     status: `PRE-ALPHA · v${currentRelease.appVersion} · BUILD ${currentRelease.buildId}`,
   });
   function statusLabel(next) {
-    if (next.applying) return '진행을 저장하고 새 버전으로 전환하는 중입니다.';
+    if (next.applying)
+      return next.applyPhase === 'saving'
+        ? '현재 진행을 저장하는 중입니다.'
+        : next.applyPhase === 'reloading'
+          ? '새 버전 화면을 불러오는 중입니다.'
+          : '저장 완료 · 새 버전을 적용하는 중입니다.';
     if (next.installationBlocked)
       return '이전 설치 작업이 멈췄습니다. 앱과 브라우저를 완전히 종료한 뒤 다시 열어 주세요. 저장은 유지됩니다.';
     if (next.updateError) return `현재 버전 유지 · ${next.updateError}`;
@@ -143,6 +149,7 @@ export function createPwaLifecycleAdapter({
     if (stopped || reloadHandled) return;
     reloadHandled = true;
     clearTimeout(applyTimer);
+    publish({ applyPhase: 'reloading' });
     browserWindow.location.reload();
   }
   async function receiveWaitingWorker(worker) {
@@ -364,7 +371,7 @@ export function createPwaLifecycleAdapter({
   async function saveBeforeTransition(saveProgress) {
     if (state.applying || reloadHandled || stopped) return false;
     const epoch = ++applyEpoch;
-    publish({ applying: true, updateError: null });
+    publish({ applying: true, applyPhase: 'saving', updateError: null });
     try {
       const result = await deadline(
         Promise.resolve().then(() => saveProgress()),
@@ -410,6 +417,7 @@ export function createPwaLifecycleAdapter({
     }
     updateRequested = true;
     try {
+      publish({ applyPhase: 'activating' });
       waiting.postMessage({ type: 'SKIP_WAITING' });
       applyTimer = setTimeout(() => {
         if (stopped || reloadHandled) return;
@@ -504,13 +512,14 @@ export function createPwaLifecycleAdapter({
         listen(browserWindow, 'pagehide', () => {
           fetchController?.abort();
         });
+        publish({ updateChecking: true, updateError: null });
         try {
           await ensureRegistration();
           if (stopped) return;
           pinClient();
-          void checkForUpdate({ force: true });
+          await checkForUpdate({ force: true });
         } catch (error) {
-          publish({ updateError: `오프라인 준비 실패 · ${error.message}` });
+          publish({ updateChecking: false, updateError: `오프라인 준비 실패 · ${error.message}` });
         }
         if (!stopped)
           interval = browserWindow.setInterval?.(() => {

@@ -3706,3 +3706,106 @@ html[data-ui-review] {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Real lifecycle activity, without invented percentages. */
+.pwa-spinner {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #405052;
+  border-top-color: #efd08b;
+  border-radius: 50%;
+  animation: pwa-spin 0.9s linear infinite;
+}
+@keyframes pwa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.menu-update-feedback {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.menu-update-feedback .menu-update-status {
+  flex: 1;
+  margin: 0;
+}
+.menu-update-feedback progress {
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  accent-color: #efd08b;
+}
+.menu-update-feedback.is-busy {
+  color: #efd08b;
+}
+.pwa-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(5 10 14 / 95%);
+}
+.pwa-transition-card {
+  width: min(100%, 420px);
+  text-align: center;
+  padding: 28px 20px;
+  border: 1px solid #786a43;
+  border-radius: 14px;
+  background: #101b21;
+}
+.pwa-transition-card .pwa-spinner,
+.app-loading .pwa-spinner {
+  width: 36px;
+  height: 36px;
+  border-width: 3px;
+  margin-bottom: 18px;
+}
+.pwa-transition-card h2 {
+  font-size: clamp(18px, 4vw, 24px);
+  margin: 0 0 12px;
+  color: #f0d593;
+}
+.pwa-transition-card p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.pwa-transition-card progress {
+  width: 100%;
+  height: 6px;
+  accent-color: #efd08b;
+}
+.pwa-transition-card small {
+  color: #a5b6ba;
+  font-size: 12px;
+}
+.pwa-transition-steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  color: #9aaaae;
+  font-size: 13px;
+}
+.pwa-transition-steps [aria-current='step'] {
+  color: #f0d593;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pwa-spinner {
+    animation: none;
+  }
+}
+.menu-update-feedback {
+  grid-column: 1 / -1;
+}

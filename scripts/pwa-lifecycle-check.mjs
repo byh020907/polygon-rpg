@@ -97,7 +97,13 @@ function environment() {
 {
   const env = environment();
   const app = createPwaLifecycleAdapter({ browserWindow: env.window, releaseMetadata: A });
-  await app.start();
+  const startup = app.start();
+  assert.equal(
+    app.getState().updateChecking,
+    true,
+    'initial registration must visibly report work',
+  );
+  await startup;
   await app.checkForUpdate({ force: true });
   env.serviceWorker.emit('message', { data: { type: 'PWA_RELEASE_ACTIVATED', release: A } });
   assert.equal(
@@ -179,8 +185,10 @@ function environment() {
   );
   await wait();
   assert.equal(saves, 1);
+  assert.equal(app.getState().applyPhase, 'saving');
   resolveSave({ ok: true });
   assert.equal(await first, true);
+  assert.equal(app.getState().applyPhase, 'activating');
   assert.equal(waiting.skips, 1);
   assert.equal(env.reloads, 0);
   env.serviceWorker.controller = waiting;
@@ -189,6 +197,7 @@ function environment() {
   env.serviceWorker.emit('controllerchange');
   env.serviceWorker.emit('controllerchange');
   assert.equal(env.reloads, 1);
+  assert.equal(app.getState().applyPhase, 'reloading');
   app.stop();
 }
 {

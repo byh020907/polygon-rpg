@@ -124,7 +124,7 @@ function verifySemanticStatusAndFocusTargets() {
   assert.doesNotMatch(css, /vital-track--mental/);
 
   const menuMarkup = html.slice(
-    html.indexOf('<section class="menu-screen"'),
+    html.search(/<section\s+class="menu-screen"/),
     html.indexOf('<section\n        class="game-screen"'),
   );
   assert.doesNotMatch(menuMarkup, /렌더 연구실|DEVELOPER E2E|visualQa/);

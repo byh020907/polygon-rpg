@@ -15,7 +15,7 @@
   </head>
   <body>
     <div class="app-loading" x-data x-init="$el.remove()" role="status" aria-live="polite">
-      <div class="app-loading-mark" aria-hidden="true">◆</div>
+      <div class="app-loading-mark pwa-spinner" aria-hidden="true"></div>
       <strong>POLYGON RPG</strong>
       <span>게임을 불러오는 중입니다</span>
       <small>화면이 오래 유지되면 페이지를 새로고침하세요.</small>
@@ -24,7 +24,31 @@
       >이 게임을 실행하려면 JavaScript를 활성화해야 합니다.</noscript
     >
     <main id="app" x-data="gameShell" x-cloak>
-      <section class="menu-screen" x-show="screen === 'menu'" aria-labelledby="game-title">
+      <section
+        class="pwa-transition"
+        x-show="pwa.applying"
+        aria-labelledby="pwa-transition-title"
+        aria-busy="true"
+      >
+        <div class="pwa-transition-card">
+          <div class="pwa-spinner" aria-hidden="true"></div>
+          <h2 id="pwa-transition-title" tabindex="-1" x-text="pwaTransitionTitle"></h2>
+          <p x-text="pwa.status" role="status" aria-live="polite"></p>
+          <progress aria-label="새 버전 적용 진행 중"></progress>
+          <ol class="pwa-transition-steps" aria-label="업데이트 적용 단계">
+            <li :aria-current="pwa.applyPhase === 'saving' ? 'step' : null">진행 저장</li>
+            <li :aria-current="pwa.applyPhase === 'activating' ? 'step' : null">버전 적용</li>
+            <li :aria-current="pwa.applyPhase === 'reloading' ? 'step' : null">화면 로딩</li>
+          </ol>
+          <small>완료되면 자동으로 새 화면이 열립니다.</small>
+        </div>
+      </section>
+      <section
+        class="menu-screen"
+        x-show="screen === 'menu'"
+        :inert="pwa.applying"
+        aria-labelledby="game-title"
+      >
         <div class="menu-world" aria-hidden="true">
           <div class="menu-moon"></div>
           <div class="menu-mountain menu-mountain--back"></div>
@@ -148,7 +172,20 @@
                 <p class="menu-version" x-text="`PRE-ALPHA · v${pwa.currentVersion}`"></p>
                 <p class="menu-version menu-build" x-text="`BUILD · ${pwa.currentBuildId}`"></p>
               </div>
-              <p class="menu-update-status" x-text="pwa.status" aria-live="polite"></p>
+              <div
+                class="menu-update-feedback"
+                :class="{'is-busy': pwaBusy}"
+                :aria-busy="String(pwaBusy)"
+              >
+                <span class="pwa-spinner" x-show="pwaBusy" aria-hidden="true"></span>
+                <p
+                  class="menu-update-status"
+                  x-text="pwa.status"
+                  role="status"
+                  aria-live="polite"
+                ></p>
+                <progress x-show="pwaBusy" aria-label="업데이트 작업 진행 중"></progress>
+              </div>
               <button
                 id="pwa-check-update-control"
                 class="menu-check-update"
