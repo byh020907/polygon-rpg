@@ -4,6 +4,938 @@
 
 ## Pending
 
+- SVG·Composition·Rig Family 기반 그래픽 제작 계약 정립
+
+  사용자 원문:
+
+```text
+Polygon RPG의 현재 기획/그래픽/애니메이션 방향을 아래 Human Feedback 기준으로 정리하고 repository 문서에 반영해줘.
+
+이번 작업의 우선순위는 구현이 아니라 "기획과 제작 계약을 먼저 명확하게 문서화하는 것"이다.
+현재 코드가 이미 이렇게 되어 있다는 이유로 기존 구현을 정답으로 삼지 말고, 아래 확정된 Human Feedback을 authority로 현재 PRODUCT_GOAL / ARCHITECTURE / graphics handoff 문서와 비교해 정리한다.
+
+먼저 반드시 읽는다.
+
+- PRODUCT_GOAL.html
+- AGENTS.md
+- ARCHITECTURE.md
+- docs/art-handoff/**
+- 현재 animation / character / graphics / scene 관련 구조
+- STATE.md
+- 현재 Git 상태
+
+기존 Product Goal의 이야기/게임 구조를 전면 재기획하는 요청은 아니다.
+기존 기획은 여러 차례 인터뷰를 통해 만들어졌으므로 유지하는 것을 기본으로 하되, 아래 내용은 실제 제작 방향을 구체화한 최신 Human Feedback으로 반영한다.
+
+==================================================
+1. 전체 아트 방향
+==================================================
+
+기준 스타일은 "정돈된 레오곡 계열의 2D 액션 RPG 느낌"이다.
+
+핵심은 특정 작품의 개별 캐릭터를 복제하는 것이 아니라 다음 시각 언어다.
+
+- 작은 캐릭터와 넓게 보이는 세계
+- 정돈되고 안정적인 실루엣
+- 삐뚤빼뚤하거나 러프한 손그림 느낌 지양
+- 단순하지만 형태가 명확한 벡터/폴리곤
+- 작은 머리, 길고 가는 팔다리
+- 큰 면 위주의 3~4단계 셀 명암
+- 낮은 채도의 생활형 산업 세계
+- 컨셉 아트보다 실제 게임 제작에 바로 사용할 수 있는 reference sheet 성격
+- 화면 확대본보다 실제 gameplay scale에서 읽히는지가 중요
+
+세계의 기본 정서는 "생활형 산업 세계"다.
+
+낡았다 = 망했다가 아니다.
+고철 = 쓰레기가 아니다.
+산업기계 = 디스토피아가 아니다.
+
+사람들이 오래된 설비를 실제 생활과 생업에 계속 고쳐 쓰며 살아가는 왕국이어야 한다.
+
+예:
+- 폐광: 레일/굴착기/지지대가 생활 기반시설
+- 항구: 크레인/도크/케이블이 실제 생업 설비
+- 온실: 배관/동력로가 농업 설비
+- 설산: 제설 열차가 교역로 유지 설비
+- 채석장: 절단기가 거대한 작업 도구
+
+옛 군수 규격은 세계 전체를 호러/미스터리로 만드는 별도 미술 언어가 아니다.
+평범한 생활 기계에 옛 군수 잠금/인장/접속 규격이 남아 있는 정도로 사용한다.
+
+==================================================
+2. 화면 구성
+==================================================
+
+기본 화면은 "세계/스케일 우선"이다.
+
+- 캐릭터를 액션게임처럼 크게 확대해서 보여주는 것이 기본이 아니다.
+- 인간형은 기존 Product Goal의 실제 gameplay 비율 약 18~22%를 유지한다.
+- 한 화면에서 생활 공간과 대형 기계/랜드마크가 같이 읽혀야 한다.
+- 전투가 시작되었다고 기본 카메라가 갑자기 줌인하지 않는다.
+- 전투 가독성은 다음으로 해결한다.
+  - 실루엣
+  - 외곽선
+  - 배경 대비
+  - attack telegraph
+  - weapon trail
+  - VFX
+- Boss 등 특별한 연출에서만 camera framing 예외를 허용한다.
+
+배경 디테일은 화면 전체에 균일하게 뿌리지 않는다.
+
+- 플레이 가능한 길과 중요한 상호작용 주변은 clean read 유지
+- detail은 cluster로 묶는다.
+- negative space를 의도적으로 둔다.
+- 장식이 gameplay silhouette를 덮지 않게 한다.
+
+==================================================
+3. 지역 Color Identity
+==================================================
+
+전체 저채도 미술 언어는 공유하지만 각 지역은 스크린샷만 보고도 구분될 정도의 명확한 Color Identity를 가진다.
+
+예시 방향:
+
+폐광
+- 갈색 / 황토 / 경고 황색
+- 암갈색 철판 / 분진 / 암반 / 레일
+
+항구
+- 청회색 / 청록 / 녹슨 적색
+- 도장강 / 선체 / 굵은 케이블 / 물 / 안개
+
+온실
+- 황동 / 탁한 녹색 / 수증기 백색
+- 유리 / 배관 / 밸브 / 재배 구조물
+
+설산
+- 백청 / 남청 / 열선 주황
+- 눈 / 철도 / 장갑판 / 열선 리벳
+
+채석장
+- 적철 / 짙은 갈색 / 먼지 베이지
+- 붉은 암반 / 절단날 / 중량 철판
+
+색만 바꾼 같은 맵처럼 보이면 안 된다.
+
+==================================================
+4. 환경 자산 제작 방식
+==================================================
+
+환경은 다음 Hybrid 방식으로 간다.
+
+1) Unique Landmark
+2) Prefab
+3) Kit
+4) Composition
+
+Unique Landmark
+- 지역을 기억하게 만드는 고유 대형 자산
+- 예: 쌍둥이 크레인, 굴착기, 지열 동력로, 제설 열차, 암반 절단기
+
+Prefab
+- 그래픽 담당자가 이미 보기 좋게 조합한 중간 크기 자산
+- 예:
+  - workshop
+  - cargo stack
+  - pipe wall
+  - scrap corner
+  - dock stairs
+  - small house
+  - catwalk
+
+Kit
+- 정말 반복해서 쓸 작은 요소만
+- crate
+- barrel
+- lamp
+- ladder
+- railing
+- sign
+- pipe straight/elbow
+- chain
+- small scrap 등
+
+중요:
+Codex가 Kit만 가지고 주요 화면을 처음부터 디자인하지 않는다.
+주요 장면은 반드시 승인된 Composition 또는 Prefab을 기준으로 만든다.
+
+Composition
+= 그래픽 담당자가 승인한 장면 전체 배치 데이터.
+
+Composition의 길이를 "화면 2개"처럼 고정하지 않는다.
+시각적 목적/랜드마크/사건 단위로 나눈다.
+
+예:
+- 항구 입구 + 멀리 보이는 크레인
+- 컨테이너 작업구역
+- 쌍둥이 크레인 접근
+- 크레인 Boss
+- 해결 후 부두
+
+Composition끼리는 화면 전환으로 끊지 않고 additive/overlap 방식으로 연속되게 연결한다.
+
+플레이어는 하나의 연속된 장소처럼 이동하지만 내부적으로 필요한 Composition을 preload/unload할 수 있다.
+
+==================================================
+5. Scene / Depth 구조
+==================================================
+
+Far / Mid / Foreground 같은 고정 렌더 레이어를 엔진의 근본 구조로 만들지 않는다.
+
+모든 scene object는 일반적인 XYZ 위치를 가진다.
+
+transform:
+- x = 월드 좌우
+- y = 월드 높이
+- z = 시각적 앞뒤 깊이
+
+현재 gameplay 자체는 기본적으로 side-view X/Y를 유지한다.
+z는 우선 presentation/depth/parallax authority다.
+
+각 객체는 추가로 필요시 가진다.
+
+- scale
+- parallaxScale
+- renderBias
+- role
+- tags
+- state
+
+역할 분리:
+
+XYZ
+= 실제 시각 위치/깊이
+
+role / tags
+= landmark / prop / interactive 등의 의미 분류
+
+renderBias
+= 같은 깊이에서 아주 미세한 draw order 보정
+
+z 숫자를 4.0001, 4.0002처럼 draw order용 가짜 값으로 남용하지 않는다.
+
+카메라는 진짜 perspective projection을 기본으로 하지 않는다.
+
+기본:
+- 2D 구도 유지
+- z가 깊을수록 기본 parallax가 작아짐
+- z 때문에 자동으로 물체 크기가 강제 변경되지는 않음
+
+아트 디렉션을 위해 필요하면:
+- scale override
+- parallaxScale override
+를 허용한다.
+
+즉 수학이 좋은 기본값을 만들지만 최종 화면 authority는 art direction이 가진다.
+
+==================================================
+6. Landmark의 동일성과 LOD Presentation
+==================================================
+
+같은 랜드마크를 Composition마다 별개의 물체로 만들지 않는다.
+
+예:
+쌍둥이 크레인은 world object로 하나만 존재한다.
+
+하지만 보이는 presentation은 거리/상황에 따라 달라질 수 있다.
+
+- far
+- mid
+- near
+
+예:
+TwinCrane
+- world identity = 하나
+- far = 강한 실루엣 위주
+- mid = 주요 케이블/유압 구조
+- near = 세부 부품 및 interaction 가능
+
+LOD 전환 기본값은 world distance 하나보다는 실제 screen occupancy를 기준으로 자동 결정한다.
+
+다만 특정 Composition/연출은:
+- presentationOverride
+- presentationBias
+등으로 조정 가능해야 한다.
+
+전환 경계에는 hysteresis/margin을 두어 far/mid가 계속 깜빡이지 않게 한다.
+
+==================================================
+7. SVG를 기본 그래픽 포맷으로 사용
+==================================================
+
+앞으로 그래픽 reference/원본의 기본 포맷은 PNG보다 SVG를 우선한다.
+
+좋은 SVG:
+- 실제 vector shape
+- 단순 polygon/path
+- 의미 있는 <g> 그룹
+- 부위별 그룹 이름
+- joint / pivot / anchor 정보
+- 수정 가능한 구조
+
+나쁜 SVG:
+- PNG를 SVG에 embed
+- 자동 tracing으로 수천 path 생성
+- 의미 없는 flat path 집합
+- 모든 것이 하나로 merge됨
+
+Character SVG 예시 그룹:
+
+head
+torso
+
+upperArm_L
+forearm_L
+hand_L
+
+upperArm_R
+forearm_R
+hand_R
+
+upperLeg_L
+lowerLeg_L
+boot_L
+
+upperLeg_R
+lowerLeg_R
+boot_R
+
+weapon
+shield
+strap
+pouch
+
+Machine은 실제 기계 구조에 맞는 의미 있는 그룹 이름을 사용한다.
+
+SVG 내부 파츠도 필요하면 local z/depth 정보를 가질 수 있다.
+
+예:
+crane
+- rearSupport z:+3
+- body z:0
+- hook z:-1
+- frontCable z:-2
+
+==================================================
+8. Master SVG + LOD Export
+==================================================
+
+LOD별 SVG 3개를 서로 독립된 원본으로 관리하지 않는다.
+
+authority는 하나의:
+
+*.master.svg
+
+다.
+
+Master 내부에는:
+- common structure
+- far shape
+- mid shape
+- near detail
+- joint/pivot
+- state anchor
+등을 의미 있는 그룹으로 관리한다.
+
+게임용으로는 export하여:
+
+*.far.svg
+*.mid.svg
+*.near.svg
+
+를 사용할 수 있다.
+
+즉:
+원본 하나 + runtime presentation 여러 개.
+
+멀리서 단순히 detail을 숨기는 수준을 넘어 실루엣 자체를 약간 보정하는 것을 허용한다.
+
+예:
+far:
+- 붐 더 굵게
+- 집게 더 크게
+- 케이블 거의 제거
+
+near:
+- 실제 비율
+- 유압부
+- 접속부
+- 세부 케이블
+
+==================================================
+9. 공용 Kit + 지역 Material + 지역 Shape
+==================================================
+
+지역 자산은 전부 새로 만들지도 않고, 색만 바꾼 공용 자산으로 만들지도 않는다.
+
+3단계로 간다.
+
+GLOBAL KIT
+= 평범한 구조는 공유
+
+REGIONAL MATERIAL PROFILE
+= 지역의 색/재질/마모 방식 변경
+
+REGIONAL SHAPE
+= 해당 지역만의 형태는 새로 제작
+
+예:
+
+공용:
+- pipe
+- crate
+- railing
+
+항구 material:
+- painted steel
+- salt wear
+- blue gray
+- thick cable
+
+온실 material:
+- brass
+- condensation
+- green patina
+- pressure hardware
+
+하지만:
+- 쌍둥이 크레인
+- 지열 동력로
+- 제설 열차
+같은 것은 완전 고유 asset.
+
+원칙:
+"구조적으로 평범한 것은 공유하고,
+표면은 지역화하고,
+지역을 기억하게 만드는 형태는 새로 만든다."
+
+==================================================
+10. 조명 / 면 / 재질
+==================================================
+
+SVG에 완성된 고정 그림자를 bake하는 방식이 기본이 아니다.
+
+그래픽 담당자는 "형태적으로 중요한 면"을 직접 authored한다.
+
+예:
+- torso front
+- torso side
+- torso underside
+- crane boom front
+- crane boom side
+
+각 면에는 필요시:
+
+data-normal
+data-material
+data-occlusion
+
+등의 정보를 둘 수 있다.
+
+그래픽 담당자 authority:
+- 어디에서 면이 꺾이는지
+- 어느 면이 어떤 재질인지
+- 구조적으로 늘 조금 가려지는 부분인지
+
+엔진 authority:
+- 현재 광원에서 그 면이 얼마나 밝은지
+
+런타임:
+surface normal
++ light
++ material
++ structural occlusion
+→ 3~4단계 cell shading
+
+재질 예:
+- painted steel
+- raw steel
+- brass
+- cloth
+- skin
+- stone
+- dirt
+- glass
+
+재질마다 diffuse/specular 반응은 다르다.
+
+==================================================
+11. 그림자
+==================================================
+
+Hybrid Shadow Authority를 사용한다.
+
+작은 객체/캐릭터
+→ contact shadow
+
+큰 구조물
+→ actual cast shadow
+
+작은 장식
+→ no shadow
+
+예:
+
+contact:
+- player
+- NPC
+- enemy
+- crate
+- barrel
+
+caster:
+- building
+- giant crane
+- giant machine
+- large bridge
+- large pipe
+- ancient machine
+
+none:
+- cable
+- rivet
+- small scrap
+- thin sign detail
+- distant decorative element
+
+shadow occluder는 visual polygon과 1:1일 필요가 없다.
+큰 실루엣만 단순화하여 별도 occluder로 정의 가능하다.
+
+==================================================
+12. Character Rig Family
+==================================================
+
+모든 인간 캐릭터가 동일한 몸을 쓰는 방식은 사용하지 않는다.
+
+또한 사람마다 완전히 독립된 rig를 만드는 것도 기본이 아니다.
+
+Rig Family + Character Body Profile 방식으로 간다.
+
+공유:
+- bone naming
+- hierarchy
+- animation grammar
+
+개별 캐릭터:
+- head size
+- shoulder width
+- hip width
+- arm length
+- leg length
+- torso SVG
+- limb SVG
+- stance
+
+즉:
+"같은 관절 언어를 쓰지만 같은 몸을 쓰지는 않는다."
+
+예:
+
+Humanoid Family
+- protagonist
+- rival
+- owner
+- worker
+- human raider
+
+Machine은 별도 family.
+
+예:
+- Biped Machine
+- Quadruped Machine
+- Multi-leg
+- Flying
+- Tracked Heavy
+
+기계형을 humanoid rig에서 팔다리 길이만 변경해서 만들지 않는다.
+
+==================================================
+13. Animation 제작 방식
+==================================================
+
+Rig 중심 또는 frame animation 하나로 통일하지 않는다.
+
+Hybrid 방식.
+
+일반 동작:
+- idle
+- walk
+- run
+- jump
+- 단순 NPC 동작
+
+→ Rig/FK + reusable clip
+
+중요한 액션:
+- Basic Attack
+- Strong Attack
+- Air Attack
+- Roll
+- Guard Counter
+- Boss Telegraph
+- Boss Heavy Attack
+
+→ authored key pose 중심
+
+Codex가 중요한 액션 pose를 처음부터 임의로 발명해서 완성 처리하지 않는다.
+그래픽 reference/key pose가 authority다.
+
+대표 pose:
+- READY
+- WINDUP
+- CONTACT
+- FOLLOW
+- RECOVER
+
+==================================================
+14. Authored Pose의 범위
+==================================================
+
+기본은 기존 rig를 유지하면서 필요한 부위만 pose별 SVG로 교체한다.
+
+예:
+횡베기:
+- torso
+- arm
+- forearm
+- sword
+등만 authored replacement 가능.
+
+하지만 전체 실루엣이 완전히 무너지는 동작은 whole-body authored SVG 허용.
+
+예:
+- forward roll
+- extreme smear
+- 몸 전체 squash/compression
+
+즉:
+부분 교체가 기본,
+극단적 pose는 전체 pose.
+
+==================================================
+15. Animation Retarget
+==================================================
+
+공용 humanoid clip은 단순 동일 좌표 재생이 아니다.
+
+파이프라인:
+
+Shared Clip
+→ Character Body Profile retarget
+→ character modifier
+→ 필요한 순간 Contact IK
+→ 중요 액션 authored override
+
+Contact IK는 모든 동작에 상시 적용하지 않는다.
+
+필요한 경우:
+- 발이 지면을 정확히 짚어야 할 때
+- 손이 작업대를 잡을 때
+- 두 손이 같은 장비를 잡을 때
+- 방패 위치를 맞출 때
+- prop interaction
+
+일반 run/walk까지 IK로 과도하게 고정해 뻣뻣하게 만들지 않는다.
+
+==================================================
+16. Root Motion / Gameplay 이동
+==================================================
+
+애니메이션이 gameplay 이동거리 authority를 가지지 않는다.
+
+Gameplay가 먼저 결정한다.
+
+예:
+rollDistance
+attackAdvance
+bossChargeDistance
+
+Authored animation은 자연스러운 root movement curve를 가진다.
+
+엔진이 gameplay가 정한 실제 이동거리 안에 root curve를 warp한다.
+
+즉:
+
+Gameplay
+= 실제 이동거리 authority
+
+Art
+= 자연스러운 움직임/pose authority
+
+Engine
+= 둘을 맞춘다.
+
+구르기, 강공 전진, 반격, Boss 돌진 등에 적용한다.
+
+==================================================
+17. Weapon Hit 판정
+==================================================
+
+별도 보이지 않는 큰 사각 hitbox가 공격의 최종 authority가 되지 않는다.
+
+반대로 visual sword 자체가 gameplay range를 무한히 늘릴 수도 없다.
+
+Hybrid 방식.
+
+Gameplay가 먼저:
+- attack max reach
+- active window
+- movement
+을 정한다.
+
+Animation/weapon은 그 범위에 맞춰 제작한다.
+
+Active window 동안:
+previous visible weapon shape
+→ current visible weapon shape
+
+사이를 sweep하여 적 hurt region과 실제 충돌하는지 검사한다.
+
+Hit 조건:
+
+1. visible weapon sweep이 실제로 닿음
+AND
+2. gameplay attack envelope 내부
+
+둘 다 만족해야 hit.
+
+즉:
+- 게임 범위 안이지만 검이 안 닿음 → MISS
+- 검 그림이 너무 길어서 닿았지만 gameplay max reach 밖 → MISS
+
+weapon trail도 가능하면 같은 weapon trajectory에서 파생한다.
+
+visual trail과 gameplay trace가 서로 다른 경로를 사용하지 않는다.
+
+==================================================
+18. Hurt Region
+==================================================
+
+캐릭터 전체 rectangle 1개를 기본으로 하지 않는다.
+반대로 visual SVG polygon을 그대로 collision으로 사용하지도 않는다.
+
+Semantic Hurt Region + Visual-following Primitive를 사용한다.
+
+예:
+
+head
+torso
+arm
+leg
+weakPoint
+armor
+shield
+
+각 region은 해당 bone/part를 따라가지만 collision 자체는:
+- circle
+- ellipse
+- capsule
+- simple polygon
+
+같은 안정적인 형상을 사용한다.
+
+region에는 gameplay 의미가 있다.
+
+response:
+- body
+- weak
+- armor
+- guard
+- immune
+
+그래픽 담당자는 약점/장갑/방패가 그림에서도 보이게 디자인해야 한다.
+
+Visual과 Hurt Region이 너무 멀어지지 않도록 허용 오차를 둔다.
+
+하지만:
+- 머리카락
+- 얇은 케이블
+- 옷 장식
+- smear 끝
+등까지 자동으로 Hurtbox가 되지 않는다.
+
+구르기 무적은 Hurtbox를 없애서 만들지 않는다.
+invulnerability는 gameplay state authority다.
+
+==================================================
+19. 주인공 동작 기준
+==================================================
+
+현재 주인공의 기본 디자인 방향 유지:
+
+- 작은 단순한 타원형 머리
+- 약 7등신
+- 길고 가는 팔다리
+- 짧은 작업복
+- 대각선/cross strap
+- 넓은 검
+- 방패
+- 낮은 준비 자세
+
+기본/강공격:
+- 머리 위로 검을 올리는 generic overhead windup 금지
+- 몸 옆의 낮은 위치로 검을 당김
+- 골반과 흉곽 rotation이 먼저
+- 팔이 뒤따름
+- 몸 앞을 가로지르는 빠른 횡/사선 베기
+- CONTACT 이후 follow-through와 감속
+
+구르기:
+- 숙였다 일어나는 dodge가 아님
+- 실제 forward somersault
+- 머리/어깨가 먼저 내려감
+- 골반이 어깨 위로 넘어감
+- 발이 몸 위를 통과
+- 장비가 몸과 함께 회전
+- 착지 후 이동으로 자연스럽게 연결
+
+==================================================
+20. 그래픽 Reference 제작 원칙
+==================================================
+
+애니메이션/캐릭터를 Codex에게 바로 만들라고 하지 않는다.
+
+먼저 reference를 만든다.
+
+캐릭터:
+- front
+- side
+- 3/4
+- representative pose
+- action key pose
+- SVG part breakdown
+- joint/pivot
+- material
+- occlusion
+- gameplay scale
+
+Animation:
+- key pose sheet
+- silhouette
+- line of action
+- center of mass
+- torso twist
+- weapon path
+- contact pose
+- follow-through
+
+Environment:
+- Composition reference
+- Unique Landmark
+- Prefab breakdown
+- Kit
+- XYZ/depth relationship
+- far/mid/near
+- color/material profile
+- gameplay-scale composite
+
+Reference는 "예쁜 그림"이 아니라 구현 authority다.
+
+==================================================
+21. 현재 우선 제작 순서
+==================================================
+
+docs/art-handoff의 기존 우선순위를 유지하며 아래처럼 정리한다.
+
+1. Hero / Rival / Scrapyard Owner
+   - design
+   - body profile
+   - SVG parts
+   - representative pose
+
+2. Control Core / Retrieval Arm
+   - connected
+   - captured rival
+   - tension
+   - detached
+   - released
+
+3. Ancient Machine Awakening
+   - dormant
+   - socket seal
+   - mono-eye on
+   - scrap assembly
+   - incomplete march
+
+4. Garage 0%
+   - empty frame
+   - core socket
+   - independent module mounts
+   - later five-module combination support
+
+5. Prologue gameplay-scale composite
+   - 실제 1280x720 및 mobile 화면에서 검수
+
+이 기준 장면을 먼저 승인한 뒤:
+- enemy archetype
+- 폐광 ↔ 항구
+- 나머지 지역
+으로 확장한다.
+
+==================================================
+22. 미정 사항 처리 원칙
+==================================================
+
+현재 Product Goal / handoff에 없는 설정을 그럴듯하다는 이유로 새로 확정하지 않는다.
+
+특히:
+- 인물의 이름/성별/과거사
+- 아직 정의되지 않은 적 종류
+- 지역 사건 세부
+- 세계관 설정
+을 임의로 추가하지 않는다.
+
+구현 중 선택이 필요할 때:
+
+1. 먼저 well-known 방식 / 기존 업계 패턴을 조사한다.
+2. 명백히 우세한 표준 해법 + 필요한 override 정도면 별도 Human 인터뷰 없이 적용 제안 가능.
+3. 게임의 느낌, 아트 결과, 콘텐츠 양, 되돌리기 어려운 구조가 실제로 크게 달라지는 경우만 Human에게 인터뷰한다.
+4. 인터뷰가 필요하면 well-known 사례를 먼저 조사한 뒤 실질적으로 다른 3안을 제시한다.
+5. "기본 + override", "공용 + 고유", "자동 + authored 보정"처럼 사실상 명백한 hybrid가 최선인 사소한 문제를 계속 A/B/C 질문으로 만들지 않는다.
+
+Human에게 질문을 남발하지 않는다.
+
+==================================================
+23. 이번 작업에서 해줄 것
+==================================================
+
+지금은 구현을 대규모로 변경하기 전에 위 결정을 repository의 authoritative/derived 문서 구조에 맞게 정리한다.
+
+우선:
+
+1. PRODUCT_GOAL과 충돌하는지 확인
+2. Product What이 아닌 구현/제작 규칙은 ARCHITECTURE 또는 graphics handoff에 배치
+3. docs/art-handoff의 공통 아트 기준 / 요청서 / 관련 인물·환경 설명을 최신 방향에 맞게 정리
+4. 기존 문서와 중복/충돌하는 오래된 문구 정리
+5. 현재 Human Feedback과 맞지 않는 "등록됨 = 승인됨" 식 표현이 생기지 않게 유지
+6. 문서 생성 스크립트가 authority인 파생 문서는 생성 원본도 함께 수정
+7. npm run docs:art 등 기존 생성/검증 흐름 확인
+8. 관련 테스트/문서 검증 실행
+9. 변경 결과를 요약
+
+중요:
+문서에 위 내용을 전부 장황하게 그대로 복사하지 말고,
+각 문서의 역할에 맞게 계약을 정리한다.
+
+PRODUCT_GOAL
+= 사용자가 최종적으로 경험해야 하는 것
+
+ARCHITECTURE
+= 그것을 구현하기 위한 기술/저작 계약
+
+docs/art-handoff
+= 그래픽 담당자가 실제 제작할 때 읽는 작업 지침
+
+AGENTS.md
+= 에이전트가 반복해서 지켜야 하는 작업 태도/품질 기준
+
+로 역할을 분리한다.
+
+문서를 먼저 정립한 뒤 다음 구현 작업의 기준으로 사용할 수 있는 상태로 만들어줘.
+```
+
 - 모바일 PWA 업데이트 지연과 메인 메뉴 화면 비율 수정
 
   사용자 원문(발언 순서):
