@@ -3809,3 +3809,8 @@ html[data-ui-review] {
 .menu-update-feedback {
   grid-column: 1 / -1;
 }
+.menu-debug-entry {
+  color: #f0d593;
+  border-color: #8d794a;
+  background: #252b22;
+}

@@ -982,7 +982,7 @@ console.log(
         'missing-focus-target-safe-result',
         'same-screen-no-focus-steal',
         'accessible-screen-entry-controls',
-        'default-menu-debug-free',
+        'start-menu-explicit-debug-entry',
         'one-second-menu-hold-and-short-activation-split',
         'completed-hold-click-suppression',
         'release-at-threshold-rAF-race',

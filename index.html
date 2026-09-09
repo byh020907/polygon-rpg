@@ -46,7 +46,7 @@
       <section
         class="menu-screen"
         x-show="screen === 'menu'"
-        :inert="pwa.applying"
+        :inert="pwa.applying || debugPanelOpen"
         aria-labelledby="game-title"
       >
         <div class="menu-world" aria-hidden="true">
@@ -147,6 +147,14 @@
               </div>
               <p class="menu-save-status" x-text="saveStatus" aria-live="polite"></p>
               <div class="menu-data-tools">
+                <button
+                  id="menu-open-debug-control"
+                  class="menu-reset-progress menu-debug-entry"
+                  type="button"
+                  @click="openDebugPanel($event)"
+                >
+                  디버그 모드
+                </button>
                 <details class="menu-data-notice">
                   <summary>저장·데이터 안내</summary>
                   <p>

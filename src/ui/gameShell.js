@@ -868,7 +868,8 @@ export function registerGameShell(
       );
     },
 
-    openDebugPanel() {
+    openDebugPanel(event) {
+      if (event?.currentTarget?.id) debugPanelOpenerId = event.currentTarget.id;
       if (this.campaignActionPreviewOpen) return;
       if (this.operationMapOpen) {
         this.operationMapOpen = false;

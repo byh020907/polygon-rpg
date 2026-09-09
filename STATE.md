@@ -4,7 +4,7 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX 및 업데이트 진행 안내 v0.4.2의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX 및 업데이트 진행 안내 및 시작 디버그 진입 v0.4.3의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
@@ -25,6 +25,8 @@ Human Feedback Priority — 그래픽 검토/저장 없는 테스트 플레이 �
 | Human Feedback Priority / playable frontier | partial                        | INBOX에 남은 Human 원문과 이전 KO fence·폐광/항구 관찰 증거 보존. 전투 접촉, 외형 최종 만족과 연결 전투·귀환·후반/최종전은 이번 UX 완료로 닫지 않는다.                                               |
 
 ## Verification
+
+- v0.4.3: 시작 화면에 디버그 모드 버튼을 노출하여 기존 panel을 한 번에 연다. 기존 hold 진입 유지, 실제 opener focus 복귀. desktop 1280×720·landscape 740×360·portrait 360×640의 클릭/터치/키보드 진입과 버튼 경계 확인. mobile-menu 34개 viewport, platform 및 PWA fixture PASS. artifacts/start-debug와 artifacts/update-loading/start-debug-menu.log.
 
 - v0.4.2: 최초 등록/확인·다운로드에 spinner와 불확정 progress를 표시하며 적용은 saving→activating→reloading lifecycle 단계로 안내한다. 적용 중 메뉴 inert와 상태 focus, 실패 시 해제. pwa-lifecycle-check의 실제 단계/중복/실패와 native 지속 profile A→B→C·저장 보존·두 탭·offline 회귀 PASS. pwa-loading-qa는 지연된 실제 버전 확인과 desktop/landscape/portrait 단계 시각 fixture·경계·실패 종료·reduced motion을 확인했다. artifacts/update-loading 및 artifacts/pwa-update/loading-native.log. mobile-menu 34개 viewport 회귀 PASS.
 

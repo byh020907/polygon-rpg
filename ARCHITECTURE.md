@@ -219,6 +219,7 @@ Keyboard / Touch / DOM intent
 - Combat/input/map/progression rule은 DOM 없는 deterministic fixtures로 검증한다.
 - Campaign fixture는 Day 1 morning/D-30, 네 segment rollover, zero-cost action, one-segment travel, preview warning, idempotent commit, 마지막 작업의 route patch·거리 기반 D-DAY 변화, five-part final unlock과 D-DAY 0 terminal boundary를 고정한다.
 - Persistence fixture는 campaign round-trip, incompatible schema의 명시적 거부/초기화 안내, corrupt/write failure와 recovery slot selection을 검증한다.
+- 시작 화면의 명시적 디버그 버튼과 기존 hold 진입은 같은 panel owner를 사용하고 닫을 때 실제 opener로 focus를 돌려준다.
 - Browser flow는 MENU short operation map, MENU hold debug separation, HUD/map same-state projection, desktop/mobile focus·overflow와 console error를 확인한다.
 - PWA fixture는 manifest field/icon purpose, root scope·navigation fallback, complete cache inventory, offline first-visit fallback, waiting update의 user-applied single reload 및 storage/cache 분리를 고정한다.
 - Prologue fixture는 의뢰→라이벌 동행→탐색·전투→회수팔 붕괴/구조 요청→독백→제어핵 회수·구조→접속부 봉쇄·각성→귀환의 stage order, input-lock 경계, transcript, save/reload와 중복 보상 방지를 고정한다.
