@@ -23,6 +23,7 @@ function releaseFiles() {
     'sw.js',
     'src',
     'public/icons',
+    'public/graphics',
   ];
   return roots
     .flatMap((relative) => {
@@ -31,6 +32,9 @@ function releaseFiles() {
     })
     .map((absolute) => path.relative(root, absolute).replaceAll('\\', '/'))
     .filter((relative) => !ignoredPaths.has(relative))
+    .filter(
+      (relative) => !relative.startsWith('public/graphics/') || relative.endsWith('.compiled.json'),
+    )
     .sort();
 }
 

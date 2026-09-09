@@ -37,6 +37,7 @@ Before product work, read the selected Method and all four Project Sources compl
 - 기존 이야기·게임 구조를 보존하고 최신 Human Feedback으로 Product What, 기술/저작 계약, 제작 지침, 현재 구현 증거를 구분한다. 현재 code/catalog/test 통과를 기획 또는 디자인 승인의 authority로 삼지 않는다. 세부 계약은 ARCHITECTURE.md와 docs/art-handoff의 생성 원본이 소유한다.
 - 정돈된 생활형 산업 세계와 실제 gameplay scale을 기준으로 판단한다. 주요 장면은 승인 Composition/Prefab, 중요한 액션은 승인 reference/key pose에서 출발한다. Kit만으로 주요 화면을 만들거나 임의 pose를 완성 처리하지 않는다.
 - Hero/Rival/Owner → Core/Retrieval Arm → Ancient Machine Awakening → Garage 0% → prologue gameplay-scale composite를 먼저 검토·승인한 뒤 enemy archetype, 폐광↔항구, 나머지 지역으로 확장한다. 기존 주인공 모션 스타일 확인은 새 reference 전체의 승인이 아니다.
+- Human이 시스템 우선 구현을 명시하면 실제 아트 공급 전에도 기존 그림/명시적 기술 검증용 도형으로 importer·scene·rig·contact와 실제 runtime 연결을 구현·검증한다. 이를 최종 디자인/reference 승인으로 간주하지 않는다.
 - Human이 문서 우선 범위를 지정하면 authoritative/derived 계약 정합과 후속 구현 Gap 등록까지 수행하고 대규모 runtime 변경·reference 생성·자동 루프 재개로 확대하지 않는다. 생성 문서는 생성 원본을 수정하고 기존 검증 흐름으로 다시 만든다.
 - 미정 인물 설정·적 종류·지역 사건·세계관을 임의 확정하지 않는다. 구현 선택이 필요하면 well-known 방식/업계 사례를 먼저 조사한다. 명백한 hybrid + 필요한 override는 반복 인터뷰 없이 적용 제안할 수 있다. 느낌·아트 결과·콘텐츠 양·되돌리기 어려운 구조가 크게 갈리는 때만 조사 근거와 실질적으로 다른 3안을 제시한다. 형식적인 A/B/C 질문은 하지 않는다.
 

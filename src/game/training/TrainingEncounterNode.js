@@ -1,3 +1,4 @@
+import { createAttackEnvelope } from '../../combat/AttackEnvelope.js';
 import { SpinContactConstraint } from '../../combat/SpinContactConstraint.js';
 import { PLAYER_MOTION_PROFILE } from '../../animation/PlayerMotionProfile.js';
 import { isAttackContactFrame } from '../../combat/CombatMotionTimingProfiles.js';
@@ -6,6 +7,7 @@ import { combatFramesToSeconds } from '../../combat/CombatFrame.js';
 import { resolveRecoveryPunish } from '../../combat/RecoveryPunish.js';
 import {
   closestCombatContact,
+  createSweptWeaponGeometry,
   sampleTrainingEnemyCombatGeometry,
   sampleTrainingEnemyWeaponLength,
 } from '../../combat/SharedCombatGeometry.js';
@@ -21,7 +23,6 @@ const HIT_REACTION_RECOVERY_SECONDS = combatFramesToSeconds(11);
 const MAX_JUGGLE_HITS = 6;
 const MAX_JUGGLE_SECONDS = 3.2;
 const JUGGLE_GRAVITY_STEP = 0.3;
-const PLAYER_HURT_MARGIN = 28;
 
 function freezePosition(position) {
   return Object.freeze({ x: position.x, y: position.y });
@@ -234,11 +235,13 @@ export class TrainingEncounterNode extends SceneNode {
 
   reset() {
     this.assertNotDisposed();
+    this.enemyWeaponSweep = null;
     const maxHealth = this.entity.maxHealth;
     const encounterProfile = this.entity.encounterProfile;
     const posture = createPostureState(encounterProfile);
     const weakPoint = createWeakPointState(encounterProfile);
     this.enemy = {
+      hurtProfile: encounterProfile.hurtRegions ?? null,
       id: this.entity.id,
       profileId: encounterProfile.id,
       presentationProfileId: encounterProfile.presentationProfileId,
@@ -594,6 +597,7 @@ export class TrainingEncounterNode extends SceneNode {
 
   updateEnemyPhysics(deltaSeconds, player) {
     const enemy = this.enemy;
+    if (enemy.aiState !== 'attack') this.enemyWeaponSweep = null;
     enemy.hitFlashSeconds = Math.max(0, enemy.hitFlashSeconds - deltaSeconds);
     if (enemy.posture?.groggySeconds > 0) {
       enemy.posture.groggySeconds = Math.max(0, enemy.posture.groggySeconds - deltaSeconds);
@@ -844,37 +848,52 @@ export class TrainingEncounterNode extends SceneNode {
     const profile = this.attackProfiles[enemy.attackKind];
     const attackProgress = 1 - enemy.aiSeconds / profile.attackSeconds;
     const verticalDistance = Math.abs(enemy.position.y - (player.position.y + 82));
-    const visualBroadRange = Math.max(
-      profile.attackRange + 4,
-      profile.weaponLength * enemy.presentationScale + PLAYER_HURT_MARGIN,
-    );
-    const forwardDistance = distance * enemy.attackFacing;
     if (
       enemy.attackConnected ||
       attackProgress < profile.contactStart ||
       attackProgress > profile.contactEnd ||
-      forwardDistance < 0 ||
-      forwardDistance > visualBroadRange ||
-      verticalDistance > profile.verticalRange + 4 ||
       (enemy.attackKind === 'antiAir' && verticalDistance < 25)
-    )
+    ) {
+      this.enemyWeaponSweep = null;
       return false;
+    }
     const enemyInFront = -distance * player.facing > 0;
     const guardHeld = player.isGrounded && enemyInFront && frame.combatState.id === 'guard';
     const guarding = profile.guardable && guardHeld;
     const guardBreak = profile.guardBreak === true && guardHeld;
     const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, this.attackProfiles);
+    const sweepKey = [enemy.attackKind, enemy.attackFacing, enemy.patternIndex].join(':');
+    const prior = this.enemyWeaponSweep;
+    const enemySweep = createSweptWeaponGeometry({
+      current: enemyGeometry.weapon,
+      history: prior?.key === sweepKey && attackProgress >= prior.progress ? prior.history : [],
+    });
+    this.enemyWeaponSweep = {
+      key: sweepKey,
+      progress: attackProgress,
+      history: enemySweep.history,
+    };
+    const enemyWeapons = [enemyGeometry.weapon, enemySweep.swept];
+    const envelope = createAttackEnvelope({
+      origin: enemy.position,
+      facing: enemy.attackFacing,
+      reach: profile.attackRange,
+      minY: enemy.position.y - Math.max(profile.attackRange, profile.verticalRange),
+      maxY: enemy.position.y + Math.max(profile.attackRange, profile.verticalRange),
+    });
     let visualContact = Object.freeze({ contact: false, gap: Infinity });
     if (guarding || guardBreak) {
       visualContact = closestCombatContact(
-        [enemyGeometry.weapon],
+        enemyWeapons,
         frame.playerGeometry?.shield ? [frame.playerGeometry.shield] : [],
+        envelope,
       );
     }
     if (!visualContact.contact) {
       visualContact = closestCombatContact(
-        [enemyGeometry.weapon],
-        frame.playerGeometry?.hurt ?? [],
+        enemyWeapons,
+        frame.playerGeometry?.semanticHurt ?? [],
+        envelope,
       );
     }
     if (!visualContact.contact) return true;
@@ -892,7 +911,7 @@ export class TrainingEncounterNode extends SceneNode {
       rollProgress !== null &&
       rollProgress >= 0.12 &&
       rollProgress <= 0.62;
-    if (rollInvulnerable) {
+    if (rollInvulnerable || visualContact.response === 'immune') {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.EVADE, {
         actor: 'player',
         target: 'enemy',
@@ -945,7 +964,7 @@ export class TrainingEncounterNode extends SceneNode {
       );
       return false;
     }
-    if (guarding) {
+    if (guarding || ['guard', 'armor'].includes(visualContact.response)) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'player',
         target: 'enemy',
@@ -1069,8 +1088,7 @@ export class TrainingEncounterNode extends SceneNode {
       !isAttackContactFrame(combatState, profile)
     )
       return false;
-    // Current articulated geometry owns reach and height. Center-distance gates can
-    // discard a visible blade/limb overlap, particularly in aerial or mirrored poses.
+    // A single contact must belong to the visible sweep, semantic body and gameplay reach.
     const enemyGeometry = sampleTrainingEnemyCombatGeometry(enemy, this.attackProfiles);
     const playerWeapons = frame.playerGeometry
       ? [
@@ -1080,7 +1098,12 @@ export class TrainingEncounterNode extends SceneNode {
           frame.playerGeometry.sweep,
         ].filter(Boolean)
       : [];
-    const visualContact = closestCombatContact(playerWeapons, enemyGeometry.hurt);
+    const envelope = createAttackEnvelope({
+      origin: player.position,
+      facing: player.facing,
+      reach: profile.range,
+    });
+    const visualContact = closestCombatContact(playerWeapons, enemyGeometry.semanticHurt, envelope);
     if (!visualContact.contact) return false;
     const pulseIndex = profile.hitPulses
       ? profile.hitPulses.reduce(
@@ -1092,7 +1115,7 @@ export class TrainingEncounterNode extends SceneNode {
     const hitKey = `${combatState.sequence}:${pulseIndex}`;
     if (hitKey === this.lastHitMotionSequence) return false;
     const protectedOutcome =
-      enemy.aiState === 'evade'
+      visualContact.response === 'immune' || enemy.aiState === 'evade'
         ? 'evade'
         : enemy.retaliationInvulnerableSeconds > 0 ||
             enemy.retaliationProtectedComboCycle === combatState.comboCycle
@@ -1142,7 +1165,12 @@ export class TrainingEncounterNode extends SceneNode {
     });
     const posturePunishAccepted =
       enemy.punishWindowOrigin === 'posture' && enemy.posture?.groggySeconds > 0;
-    const weakPointPunishAccepted = enemy.weakPoint?.exposed === true;
+    const weakPointPunishAccepted =
+      enemy.weakPoint?.exposed === true || visualContact.response === 'weak';
+    const weakPointMultiplier =
+      visualContact.response === 'weak'
+        ? visualContact.damageMultiplier
+        : enemy.weakPoint?.damageMultiplier;
     const punishAccepted =
       posturePunishAccepted || weakPointPunishAccepted || recoveryPunish.accepted;
     const interruptsStrongStartup = enemy.aiState === 'windup' && enemy.attackKind === 'heavy';
@@ -1216,7 +1244,11 @@ export class TrainingEncounterNode extends SceneNode {
       );
       return true;
     }
-    if (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY && !profile.guardBreak) {
+    if (
+      (['guard', 'armor'].includes(visualContact.response) ||
+        (enemy.aiState === 'guard' && enemy.position.y >= enemy.groundY)) &&
+      !profile.guardBreak
+    ) {
       this.emitCombatEvent(COMBAT_EVENT_TYPE.GUARD, {
         actor: 'enemy',
         target: 'player',
@@ -1274,7 +1306,7 @@ export class TrainingEncounterNode extends SceneNode {
           });
     const damageBeforeWeakPoint = enchantment?.damage ?? baseDamage;
     const damage = weakPointPunishAccepted
-      ? Math.max(1, Math.round(damageBeforeWeakPoint * enemy.weakPoint.damageMultiplier))
+      ? Math.max(1, Math.round(damageBeforeWeakPoint * weakPointMultiplier))
       : damageBeforeWeakPoint;
     if (enchantment?.status) {
       enemy.enchantStatus = {
@@ -1461,9 +1493,9 @@ export class TrainingEncounterNode extends SceneNode {
           damage,
           weakPoint: weakPointPunishAccepted
             ? Object.freeze({
-                id: enemy.weakPoint.id,
-                label: enemy.weakPoint.label,
-                damageMultiplier: enemy.weakPoint.damageMultiplier,
+                id: enemy.weakPoint?.id ?? visualContact.regionId,
+                label: enemy.weakPoint?.label ?? visualContact.hurtPart,
+                damageMultiplier: weakPointMultiplier,
               })
             : null,
           enchantment: enchantment

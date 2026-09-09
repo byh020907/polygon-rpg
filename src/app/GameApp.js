@@ -1,3 +1,4 @@
+import { createSvgTestPresentation } from '../graphics/scene/SvgTestPresentation.js';
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { createGameScene } from './createGameScene.js';
@@ -943,7 +944,16 @@ export class GameApp extends SceneNode {
       typeof options !== 'object' ||
       Array.isArray(options) ||
       Object.keys(options).some(
-        (key) => !['location', 'equipmentId', 'expectedEntityId'].includes(key),
+        (key) =>
+          ![
+            'location',
+            'equipmentId',
+            'expectedEntityId',
+            'svgAsset',
+            'svgResourceId',
+            'svgPose',
+            'svgLod',
+          ].includes(key),
       )
     ) {
       throw new TypeError('지원하지 않는 테스트 플레이 옵션입니다.');
@@ -992,11 +1002,29 @@ export class GameApp extends SceneNode {
     );
     const result = this.runVisualQa(preparedRequest);
     if (location) this.scene.setVisualQaLocation(location);
+    if (options.svgAsset) {
+      const presentation = createSvgTestPresentation(options.svgAsset, {
+        position: this.scene.position,
+        groundY: this.scene.mapRuntime.getActiveRoom().groundY,
+        lod: options.svgLod,
+        pose: options.svgPose,
+      });
+      this.scene.scenePresentation?.dispose();
+      this.scene.scenePresentation = presentation;
+    }
     if (expectedEntityId && this.scene.createRenderFrame(0).combatEnemy?.id !== expectedEntityId)
       throw new Error(
         '선택한 몹이 이 테스트 장면에서 활성화되지 않았습니다. 장면 보기에서 확인하세요.',
       );
     this.testPlayOptions = Object.freeze({
+      ...(options.svgAsset
+        ? {
+            svgAsset: options.svgAsset,
+            svgResourceId: options.svgResourceId,
+            svgPose: options.svgPose,
+            svgLod: options.svgLod,
+          }
+        : {}),
       ...(expectedEntityId ? { expectedEntityId } : {}),
       ...(location ? { location: Object.freeze({ ...location }) } : {}),
       ...(equipmentId !== undefined ? { equipmentId } : {}),

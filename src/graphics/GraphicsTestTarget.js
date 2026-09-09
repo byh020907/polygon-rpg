@@ -5,6 +5,19 @@ const scenarios = visualQaDebugScenarioEntries().map((entry) =>
 );
 export function graphicsTestTarget(resource, action, sample) {
   const unavailable = (reason) => ({ available: false, reason });
+  if (resource.producer === 'svg')
+    return {
+      available: true,
+      label: resource.label + ' · 시각 배치',
+      resourceId: resource.id,
+      request: readVisualQaRequest('?visualQa=1&gameStart=pose-idle'),
+      options: {
+        svgAsset: resource.svgAsset,
+        svgResourceId: resource.id,
+        svgPose: action.pose,
+        svgLod: action.lod,
+      },
+    };
   if (resource.producer === 'enemy-reference')
     return unavailable('유형 견본은 검토실에서 동작을 확인합니다.');
   if (['ui', 'image'].includes(resource.kind))

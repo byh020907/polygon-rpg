@@ -1,3 +1,4 @@
+import { SceneCompositionPresenter } from '../graphics/scene/SceneCompositionPresenter.js';
 import { paintBackdrop, paintSceneItems } from './ScenePainter.js';
 
 export class CanvasPolygonRenderer {
@@ -5,6 +6,7 @@ export class CanvasPolygonRenderer {
     this.profile = 'polygon';
     this.canvasHost = canvasHost;
     this.camera = camera;
+    this.scenePresenter = new SceneCompositionPresenter();
   }
 
   render(frame, { showMesh = false, showWorldGrid = true, transparent = false } = {}) {
@@ -41,11 +43,15 @@ export class CanvasPolygonRenderer {
         y: focusY + (screen.y - focusY) * presentationZoom,
       };
     };
+    const presented = this.scenePresenter.resolve(frame, { project, viewport });
+    frame = presented.frame;
+    this.lastSceneDiagnostics = presented.diagnostics;
     const worldScale = this.camera.getScale(viewport) * presentationZoom;
     if (!transparent) paintBackdrop(context, frame, viewport, project, { showWorldGrid });
     const diagnostics = paintSceneItems(context, frame, project, worldScale, { showMesh });
     context.restore();
     return Object.freeze({
+      scenePresentation: presented.diagnostics,
       logicalWidth: viewport.width,
       logicalHeight: viewport.height,
       backingWidth: viewport.backingWidth,

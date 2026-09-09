@@ -113,7 +113,7 @@ export const SVG_ROWS = [
   ],
   [
     '현재 상태',
-    '기존 JS polygon 원본과 보관 PNG는 현재 구현/참고 자료입니다. 새 master SVG·export/importer가 이미 완성됐다는 뜻이 아닙니다. 이 지침을 기준으로 다음 reference를 제작합니다.',
+    'master SVG compiler·LOD export·검토실 업로드·실제 게임 연결을 기술 자산으로 검증합니다. 최종 그림 승인은 별도입니다. 공급 가능한 subset과 연결 API는 docs/system-runtime.md에 명시합니다. 기존 JS polygon과 보관 PNG는 교체 전 구현/참고 자료입니다.',
   ],
 ];
 export const SHADOW_ROWS = [

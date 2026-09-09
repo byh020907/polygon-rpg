@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="system-reference" data-rig-family="articulated-machine" viewBox="0 0 200 200">
+  <title>Technical articulated fixture — not final concept art</title>
+  <g id="chassis" data-part="chassis" data-frame="20 100 160 80" data-pivot="100 150" data-material="painted-steel" data-normal="0 0 -1">
+    <rect id="chassis-common" data-shadow="contact" x="30" y="130" width="140" height="40" fill="#567080"/>
+    <polygon id="chassis-side" data-shadow="cast" points="150,130 170,130 170,170 150,170" fill="#567080" data-normal="1 0 -0.3" data-occlusion="0.25" data-z="1"/>
+    <rect id="chassis-occluder" data-role="occluder" data-shadow="cast" x="30" y="130" width="140" height="40" fill="#567080"/>
+    <circle id="ground-marker" data-anchor="ground-contact" cx="100" cy="170" r="1"/>
+    <g id="boom" data-part="boom" data-joint="boom-hinge" data-frame="50 20 100 120" data-pivot="100 130" data-z="-0.2">
+      <polygon id="boom-far" data-lod="far" points="80,130 120,130 135,25 65,25" fill="#C39758" data-material="brass"/>
+      <polygon id="boom-mid" data-lod="mid" points="85,130 115,130 125,30 75,30" fill="#C39758" data-material="brass"/>
+      <path id="boom-near" data-lod="near" d="M 85 130 L 115 130 L 125 35 Q 100 20 75 35 Z" fill="#C39758" data-material="brass"/>
+      <rect id="boom-joint" x="90" y="115" width="20" height="15" fill="#8A949C" data-material="raw-steel"/>
+      <circle id="tool-marker" data-anchor="tool-tip" cx="100" cy="30" r="1"/>
+      <path id="boom-folded" data-pose="folded" data-replace="part" d="M 65 115 H 135 V 130 H 65 Z" fill="#C39758"/>
+      <g id="connector" data-part="connector" data-frame="80 20 40 30" data-pivot="100 35">
+        <ellipse id="connector-near" data-lod="near" cx="100" cy="35" rx="12" ry="6" fill="#9DAAB2" data-material="raw-steel"/>
+      </g>
+    </g>
+  </g>
+  <g id="whole-pose" data-part="whole-pose" data-frame="20 100 160 80">
+    <rect id="packed-whole" data-pose="packed" data-replace="whole" x="30" y="110" width="140" height="60" fill="#567080"/>
+  </g>
+</svg>
+

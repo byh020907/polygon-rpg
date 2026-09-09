@@ -20,12 +20,20 @@ export function buildTestPlayUrl(href, target, selection = DEFAULT_GRAPHICS_REVI
     url.searchParams.set('testEquipment', target.options.equipmentId);
   if (target.options?.expectedEntityId)
     url.searchParams.set('testEntity', target.options.expectedEntityId);
+  if (target.options?.svgAsset) {
+    url.searchParams.set('testSvgResource', target.options.svgResourceId);
+    url.searchParams.set('testSvgPose', target.options.svgPose ?? 'base');
+    url.searchParams.set('testSvgLod', target.options.svgLod ?? 'near');
+  }
   if (target.options?.location)
     url.searchParams.set('testLocation', JSON.stringify(target.options.location));
   url.searchParams.set('testReturn', returnHref);
   return url.href;
 }
-export function readTestPlayRequest(href = globalThis.location?.href) {
+export function readTestPlayRequest(
+  href = globalThis.location?.href,
+  { resolveSvgAsset = () => null } = {},
+) {
   const url = new URL(href);
   if (url.searchParams.get('testPlay') !== '1') return null;
   const request = readVisualQaRequest(url.search);
@@ -47,9 +55,21 @@ export function readTestPlayRequest(href = globalThis.location?.href) {
       location.roomId.length > 120)
   )
     throw new Error('잘못된 테스트 위치입니다.');
+  const svgResourceId = url.searchParams.get('testSvgResource');
+  const svgAsset = svgResourceId ? resolveSvgAsset(svgResourceId) : null;
+  if (svgResourceId && !svgAsset)
+    throw Error('세션 SVG 테스트입니다. 원본 파일을 다시 불러온 뒤 테스트 플레이를 실행하세요.');
   return Object.freeze({
     request,
     options: {
+      ...(svgAsset
+        ? {
+            svgAsset,
+            svgResourceId,
+            svgPose: url.searchParams.get('testSvgPose') ?? 'base',
+            svgLod: url.searchParams.get('testSvgLod') ?? 'near',
+          }
+        : {}),
       ...(equipmentId ? { equipmentId } : {}),
       ...(url.searchParams.get('testEntity')
         ? { expectedEntityId: url.searchParams.get('testEntity') }

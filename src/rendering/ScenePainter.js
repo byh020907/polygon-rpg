@@ -1,3 +1,4 @@
+import { createHybridShadowGeometry } from './HybridShadows.js';
 import { createCellLightingSample } from './CellLighting.js';
 import { rasterizeDepthPolygons } from './DepthPolygonRasterizer.js';
 
@@ -129,63 +130,52 @@ function resolveCellFill(item, frame, occluders) {
 
   const sample = createCellLightingSample({
     baseColor: item.fill,
-    position: polygonCenter(item.points),
+    position: { ...polygonCenter(item.points), z: (item.sceneZ ?? 0) + (item.z ?? 0) },
     normal: item.surfaceNormal ?? { x: 0, y: -1 },
     material: item.materialId ?? inferMaterialId(item),
     ambientIntensity: artDirection.ambientIntensity,
     lights: artDirection.lights,
-    occluders: occluders.filter((occluder) => occluder.id !== item.id),
+    occluders: occluders.filter(
+      (occluder) =>
+        occluder.id !== item.id && (!item.worldObjectId || occluder.ownerId !== item.worldObjectId),
+    ),
     quantizationLevels: artDirection.quantizationLevels,
     // Actor palettes are already authored muted; repeated desaturation erases
     // the skin / cloth / steel distinction before polygon surface rasterization.
-    saturationRetention: item.depthGroup ? 1 : artDirection.saturationRetention,
+    structuralOcclusion: item.structuralOcclusion ?? 0,
+    saturationRetention:
+      item.saturationRetention ?? (item.depthGroup ? 1 : artDirection.saturationRetention),
   });
   return sample.shadedColor;
 }
 
-function ellipsePoints(center, radiusX, radiusY, pointCount = 12) {
-  return Array.from({ length: pointCount }, (_, index) => {
-    const angle = (index / pointCount) * Math.PI * 2;
-    return {
-      x: center.x + Math.cos(angle) * radiusX,
-      y: center.y + Math.sin(angle) * radiusY,
-    };
-  });
-}
-
-function paintSceneShadows(context, frame, project) {
-  const shadowCasters = frame.artDirection?.shadowCasters ?? [];
-  if (shadowCasters.length === 0) return;
-  const directionalLight = frame.artDirection.lights.find((light) => light.kind === 'directional');
-  const shadowDirection = directionalLight?.direction ?? { x: -0.4, y: 0.9 };
-
-  context.save();
-  for (const caster of shadowCasters) {
-    const contactPoints = ellipsePoints(
-      { x: caster.position.x, y: caster.position.y + 2 },
-      caster.width * 0.56,
-      Math.max(3, caster.width * 0.11),
+function shadowBatches(frame) {
+  const batches = new Map();
+  for (const caster of frame.artDirection?.shadowCasters ?? []) {
+    const owner = caster.ownerId ?? caster.id?.replace(/-(?:ground-)?shadow$/, '');
+    const index = frame.items.findIndex(
+      (item) =>
+        item.id === owner ||
+        item.depthGroup === owner ||
+        item.worldObjectId === owner ||
+        item.id.startsWith(owner + '-'),
     );
-    context.globalAlpha = caster.opacity;
+    if (index < 0) continue;
+    const shapes = createHybridShadowGeometry({
+      casters: [caster],
+      lights: frame.artDirection?.lights ?? [],
+      groundDepthScale: frame.artDirection?.groundDepthScale ?? 0.16,
+    });
+    batches.set(index, [...(batches.get(index) ?? []), ...shapes]);
+  }
+  return batches;
+}
+function paintSceneShadows(context, shapes, project) {
+  context.save();
+  for (const shape of shapes) {
+    context.globalAlpha = shape.opacity;
     context.fillStyle = '#080909';
-    if (drawPolygonPath(context, contactPoints, (point) => project(point, 1))) context.fill();
-
-    const castLength = Math.min(96, caster.height * 0.72);
-    const castX = shadowDirection.x * castLength;
-    const projectedPoints = [
-      { x: caster.position.x - caster.width * 0.42, y: caster.position.y },
-      { x: caster.position.x + caster.width * 0.42, y: caster.position.y },
-      {
-        x: caster.position.x + castX + caster.width * 0.16,
-        y: caster.position.y + Math.max(7, castLength * 0.12),
-      },
-      {
-        x: caster.position.x + castX - caster.width * 0.16,
-        y: caster.position.y + Math.max(7, castLength * 0.12),
-      },
-    ];
-    context.globalAlpha = caster.opacity * 0.52;
-    if (drawPolygonPath(context, projectedPoints, (point) => project(point, 1))) context.fill();
+    if (drawPolygonPath(context, shape.points, (p) => project(p, shape.parallax))) context.fill();
   }
   context.restore();
 }
@@ -247,14 +237,11 @@ export function paintSceneItems(
     frame.items
       .filter((item) => item.lightOccluder === true)
       .map((item) => ({ id: item.id, points: item.points }));
-  let shadowsPainted = false;
+  const shadows = shadowBatches(frame);
 
   for (let itemIndex = 0; itemIndex < frame.items.length; itemIndex += 1) {
     const item = frame.items[itemIndex];
-    if (!shadowsPainted && (item.renderOrder ?? 0) >= 30.4) {
-      paintSceneShadows(context, frame, project);
-      shadowsPainted = true;
-    }
+    if (shadows.has(itemIndex)) paintSceneShadows(context, shadows.get(itemIndex), project);
     if (item.depthGroup && item.depths) {
       const group = [item];
       while (
@@ -320,8 +307,6 @@ export function paintSceneItems(
       }
     }
   }
-
-  if (!shadowsPainted) paintSceneShadows(context, frame, project);
 
   context.globalAlpha = 1;
   return Object.freeze({

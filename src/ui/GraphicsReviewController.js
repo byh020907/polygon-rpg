@@ -157,7 +157,7 @@ export class GraphicsReviewController {
     this.root.innerHTML = `
       <header class="gr-header">
         <div><small>DEVELOPER · GRAPHICS LIBRARY</small><h1 id="graphics-review-title" tabindex="-1">그래픽 리소스 검토</h1></div>
-        <nav class="gr-header-actions"><button type="button" data-gr="find">찾기</button><button type="button" data-gr="catalog-toggle" aria-expanded="false">목록</button><button type="button" data-gr="test">테스트 플레이</button><button type="button" data-gr="diagnostics-toggle">진단</button><button type="button" data-gr="copy">복사</button><button type="button" data-gr="close">게임으로 돌아가기</button></nav>
+        <nav class="gr-header-actions"><button type="button" data-gr="import-svg">SVG 불러오기</button><button type="button" data-gr="clear-svg">업로드 비우기</button><input data-gr="svg-file" type="file" accept=".svg,image/svg+xml" hidden/><button type="button" data-gr="find">찾기</button><button type="button" data-gr="catalog-toggle" aria-expanded="false">목록</button><button type="button" data-gr="test">테스트 플레이</button><button type="button" data-gr="diagnostics-toggle">진단</button><button type="button" data-gr="copy">복사</button><button type="button" data-gr="close">게임으로 돌아가기</button></nav>
       </header>
       <div class="gr-layout">
         <aside class="gr-catalog" aria-label="리소스 목록">
@@ -202,6 +202,63 @@ export class GraphicsReviewController {
       node.addEventListener(event, handler, { signal: this.abort.signal });
     this.radial = new ReviewRadialMenu(root);
     listen(this.nodes.close, 'click', () => this.close());
+    listen(this.nodes['import-svg'], 'click', () => this.nodes['svg-file'].click());
+    listen(this.nodes['clear-svg'], 'click', () => {
+      this.pause();
+      this.catalog.clearSvg?.();
+      for (const option of this.nodes.category.options) {
+        const count = this.catalog.resources.filter(
+          (r) => option.value === 'all' || r.category === option.value,
+        ).length;
+        option.textContent = option.textContent.replace(/\(\d+\)/, '(' + count + ')');
+      }
+      const resource = this.catalog.resources[0];
+      this.select(
+        {
+          resourceId: resource.id,
+          category: resource.category,
+          search: '',
+          actionId: '',
+          frameIndex: 0,
+        },
+        { list: true, strips: true },
+      );
+      this.nodes.status.textContent = '업로드한 SVG를 세션에서 비웠습니다. 원본 파일은 유지됩니다.';
+    });
+    listen(this.nodes['svg-file'], 'change', async () => {
+      const file = this.nodes['svg-file'].files?.[0];
+      if (!file) return;
+      this.pause();
+      this.nodes.status.textContent = 'SVG 원본을 검사하고 있습니다…';
+      try {
+        if (file.size > 524288) throw Error('SVG는 512 KiB 이하여야 합니다.');
+        const text = await file.text();
+        if (this.destroyed || this.closed) return;
+        const resource = this.catalog.registerSvg(text, file.name);
+        for (const option of this.nodes.category.options) {
+          const count = this.catalog.resources.filter(
+            (r) => option.value === 'all' || r.category === option.value,
+          ).length;
+          option.textContent = option.textContent.replace(/\(\d+\)/, '(' + count + ')');
+        }
+        this.select(
+          {
+            resourceId: resource.id,
+            category: resource.category,
+            search: '',
+            actionId: '',
+            frameIndex: 0,
+          },
+          { list: true, strips: true },
+        );
+        this.nodes.status.textContent =
+          'SVG 검사 완료 · LOD/pose와 본·anchor를 확인하세요. 파일은 세션에만 유지됩니다.';
+      } catch (error) {
+        this.nodes.status.textContent = 'SVG 불러오기 실패 · ' + error.message;
+      } finally {
+        this.nodes['svg-file'].value = '';
+      }
+    });
     listen(this.nodes['catalog-toggle'], 'click', () =>
       this.showCatalog(!this.root.classList.contains('gr-show-catalog')),
     );
@@ -382,6 +439,8 @@ export class GraphicsReviewController {
       resource = null;
     }
     if (!resource) {
+      if (candidate.resourceId.startsWith('uploaded-svg:'))
+        this.nodes.status.textContent = '세션 SVG입니다. 원본 파일을 다시 불러오세요.';
       resource = this.catalog.resources[0];
       if (candidate.resourceId)
         this.nodes.status.textContent = `찾을 수 없는 ID: ${candidate.resourceId}. 첫 리소스를 표시합니다.`;
@@ -607,7 +666,12 @@ export class GraphicsReviewController {
       const dimensions = this.sample.bounds
         ? `${Math.round(this.sample.bounds.width)} × ${Math.round(this.sample.bounds.height)} world px`
         : '';
-      this.nodes['sample-notes'].textContent = [dimensions, notes].filter(Boolean).join(' · ');
+      const svgInfo = this.sample.svgDiagnostics
+        ? `SVG ${this.sample.svgDiagnostics.parts}부위 / ${this.sample.svgDiagnostics.anchors.length} anchors / ${this.sample.svgDiagnostics.lod} / ${this.sample.svgDiagnostics.pose}`
+        : '';
+      this.nodes['sample-notes'].textContent = [dimensions, svgInfo, notes]
+        .filter(Boolean)
+        .join(' · ');
       this.nodes['frame-id'].textContent =
         `${this.sample.frameId}${this.sample.sourceFrameId ? ` · pose ${this.sample.sourceFrameId}` : ''}`;
       this.testTarget = graphicsTestTarget(resource, this.action, this.sample);

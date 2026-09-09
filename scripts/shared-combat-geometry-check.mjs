@@ -1,3 +1,4 @@
+import { measureHurtVisualDeviation } from '../src/combat/SemanticHurtRegions.js';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
@@ -179,13 +180,21 @@ for (const facing of [-1, 1]) {
     ]) {
       const hurt = geometry.hurt.find((entry) => entry.part === part);
       const rendered = output.characterItems.find(({ id }) => id === part);
+      const semantic = geometry.semanticHurt.find((entry) => entry.part === part);
+      assert.equal(semantic.shape, 'capsule');
+      assert.notEqual(semantic.points, hurt.points, 'semantic primitive is independently authored');
+      assert.equal(
+        measureHurtVisualDeviation(semantic, rendered.points).withinTolerance,
+        true,
+        part + ': actual posed limb respects semantic tolerance',
+      );
       assert.equal(rendered.points.length, hurt.points.length);
       assert.ok(
         rendered.points.every(
           (point, index) =>
             Math.hypot(point.x - hurt.points[index].x, point.y - hurt.points[index].y) < 1e-7,
         ),
-        part + ': rendered leg must equal actual hurt outline',
+        part + ': rendered leg must equal shared draw outline',
       );
       const transform = (joint) => ({
         x: position.x + joint.x * facing * CHARACTER_RENDER_SCALE,
@@ -312,7 +321,7 @@ for (const { species, profileId } of [
     assert.deepEqual(
       items.find(({ id }) => id === 'combat-enemy-body').points,
       geometry.presentation.body.points,
-      `${species} ${aiState} body는 sampled skeleton hurt geometry를 그대로 그려야 한다.`,
+      `${species} ${aiState} body는 sampled skeleton draw geometry를 그대로 그려야 한다.`,
     );
     assert.deepEqual(
       items.find(({ id }) => id === 'combat-enemy-head').points,
@@ -331,7 +340,10 @@ for (const { species, profileId } of [
       assert.deepEqual(
         limb.points,
         geometry.hurt.find(({ part }) => 'combat-enemy-' + part === itemId).points,
-        species + ' ' + aiState + ' rendered limb must equal its authoritative hurt polygon',
+        species +
+          ' ' +
+          aiState +
+          ' rendered limb must equal its shared draw polygon (semantic authority is separate)',
       );
       assertBoneSurface(
         limb,
@@ -358,8 +370,8 @@ let sweep = createSweptWeaponGeometry({ current: square('weapon', 0) });
 sweep = createSweptWeaponGeometry({ current: square('weapon', 10), history: sweep.history });
 sweep = createSweptWeaponGeometry({ current: square('weapon', 20), history: sweep.history });
 sweep = createSweptWeaponGeometry({ current: square('weapon', 30), history: sweep.history });
-assert.equal(sweep.history.length, 3, 'sweep history는 최근 세 sample로 제한된다.');
-assert.equal(Math.min(...sweep.swept.points.map(({ x }) => x)), 10);
+assert.equal(sweep.history.length, 2, 'damage sweep uses only previous and current sample.');
+assert.equal(Math.min(...sweep.swept.points.map(({ x }) => x)), 20);
 assert.equal(Math.max(...sweep.swept.points.map(({ x }) => x)), 40);
 
 const separated = closestCombatContact([square('weapon', 0)], [square('torso', 14)]);
@@ -458,7 +470,7 @@ console.log(
       'complete-enemy-six-limb-rendered-hurt-outline-parity',
       'renderer-gameplay-weapon-polygon-parity',
       'null-enemy-presentation-boundary',
-      'bounded-three-sample-sweep',
+      'previous-current-sample-sweep',
       'exact-contact-position-and-semantic-parts',
       'edge-only-polygon-intersection',
       'live-120hz-game-scene-contact-event',

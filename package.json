@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,8 +14,8 @@
     "graphics:ui-qa": "node scripts/ui-review-qa.mjs",
     "test:graphics": "node scripts/graphics-resource-check.mjs && node scripts/graphics-review-config-check.mjs && node scripts/graphics-navigation-check.mjs",
     "lint": "eslint .",
-    "check": "npm run lint && npm run format:check && npm run test:combat && npm run test:enchantment && npm run test:story && npm run test:campaign && npm run test:recovery && npm run test:intro && npm run test:character && npm run test:map && npm run test:growth && npm run test:visual && npm run test:platform && npm run test:graphics && npm run docs:art:check",
-    "test:combat": "node scripts/shared-combat-geometry-check.mjs && node scripts/player-combat-presentation-check.mjs && node scripts/combat-motion-continuity-check.mjs && node scripts/enemy-bone-pose-check.mjs && node scripts/combat-stamina-check.mjs && node scripts/combat-posture-cancel-check.mjs && node scripts/attack-contact-check.mjs",
+    "check": "npm run lint && npm run format:check && npm run test:systems && npm run assets:check && npm run test:combat && npm run test:enchantment && npm run test:story && npm run test:campaign && npm run test:recovery && npm run test:intro && npm run test:character && npm run test:map && npm run test:growth && npm run test:visual && npm run test:platform && npm run test:graphics && npm run docs:art:check",
+    "test:combat": "node scripts/shared-combat-geometry-check.mjs && node scripts/player-combat-presentation-check.mjs && node scripts/combat-motion-continuity-check.mjs && node scripts/enemy-bone-pose-check.mjs && node scripts/combat-stamina-check.mjs && node scripts/combat-posture-cancel-check.mjs && node scripts/attack-contact-check.mjs && node scripts/semantic-contact-check.mjs",
     "test:enchantment": "node scripts/enchantment-check.mjs",
     "test:story": "node scripts/story-interaction-check.mjs",
     "test:campaign": "node scripts/scrap-campaign-check.mjs",
@@ -43,10 +43,14 @@
     "test:review-workflow": "node scripts/review-workflow-qa.mjs",
     "test:radial:browser": "node scripts/radial-refinement-qa.mjs",
     "docs:art": "node scripts/generate-art-handoff.mjs",
-    "docs:art:check": "node scripts/generate-art-handoff.mjs --check && node scripts/art-handoff-check.mjs"
+    "docs:art:check": "node scripts/generate-art-handoff.mjs --check && node scripts/art-handoff-check.mjs",
+    "test:systems": "node scripts/svg-asset-check.mjs && node scripts/character-pipeline-check.mjs && node scripts/svg-character-check.mjs && node scripts/scene-composition-check.mjs && node scripts/hybrid-lighting-check.mjs && node scripts/system-integration-check.mjs",
+    "assets:compile": "node scripts/compile-svg-assets.mjs && node scripts/compile-svg-assets.mjs public/graphics/prologue-control-core.master.svg && node scripts/compile-prologue-asset.mjs",
+    "assets:check": "node scripts/compile-svg-assets.mjs --check && node scripts/compile-svg-assets.mjs public/graphics/prologue-control-core.master.svg --check && node scripts/compile-prologue-asset.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@xmldom/xmldom": "0.9.12",
     "alpinejs": "3.14.9",
     "eslint": "10.9.1",
     "globals": "17.11.0",

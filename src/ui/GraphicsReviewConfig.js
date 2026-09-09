@@ -5,6 +5,9 @@ export const TEST_PLAY_QUERY_KEYS = Object.freeze([
   'testLocation',
   'testEquipment',
   'testEntity',
+  'testSvgResource',
+  'testSvgPose',
+  'testSvgLod',
   'testReturn',
 ]);
 export const GRAPHICS_REVIEW_QUERY_KEYS = Object.freeze([

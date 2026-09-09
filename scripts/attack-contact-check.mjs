@@ -1,3 +1,4 @@
+import { createAttackEnvelope } from '../src/combat/AttackEnvelope.js';
 import assert from 'node:assert/strict';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
@@ -53,7 +54,8 @@ function prepare(id, facing, progress, dx, dy = 0) {
       : frame.playerGeometry.weapon;
   const contact = closestCombatContact(
     [weapon],
-    sampleTrainingEnemyCombatGeometry(enemy, encounter.attackProfiles).hurt,
+    sampleTrainingEnemyCombatGeometry(enemy, encounter.attackProfiles).semanticHurt,
+    createAttackEnvelope({ origin: scene.position, facing, reach: attackProfile.range }),
   );
   return { frame, contact, enemy };
 }
@@ -219,7 +221,8 @@ try {
         if (
           closestCombatContact(
             [candidate.frame.playerGeometry.weapon],
-            sampleTrainingEnemyCombatGeometry(candidate.enemy, encounter.attackProfiles).hurt,
+            sampleTrainingEnemyCombatGeometry(candidate.enemy, encounter.attackProfiles)
+              .semanticHurt,
           ).contact
         ) {
           test = candidate;
@@ -260,7 +263,7 @@ try {
         if (
           closestCombatContact(
             [frame.playerGeometry.weapon],
-            sampleTrainingEnemyCombatGeometry(enemy, encounter.attackProfiles).hurt,
+            sampleTrainingEnemyCombatGeometry(enemy, encounter.attackProfiles).semanticHurt,
           ).contact
         ) {
           found = true;
@@ -327,6 +330,21 @@ try {
         scene.facing = 1;
         const geometry = scene.samplePlayerCombatGeometry(state);
         const shape = id === 'shieldBash' ? geometry.shield : geometry.weapon;
+        const envelope = createAttackEnvelope({
+          origin: scene.position,
+          facing: 1,
+          reach: profile.range,
+        });
+        assert.ok(
+          shape.points.every(
+            (point) =>
+              point.x >= scene.position.x - envelope.rearReach - 1e-7 &&
+              point.x <= scene.position.x + envelope.reach + 1e-7 &&
+              point.y >= envelope.minY &&
+              point.y <= envelope.maxY,
+          ),
+          id + ': finite gameplay envelope preserves every existing active weapon vertex',
+        );
         maximumReach = Math.max(maximumReach, ...shape.points.map(({ x }) => x - scene.position.x));
         const pose = scene.sampleSizedPlayerMotionPose({ motionState: state, boneInput: {} });
         const scale =

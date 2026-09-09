@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="humanoid-system-fixture" data-rig-family="Humanoid" viewBox="-100 -100 300 220">
+  <title>Technical humanoid binding fixture, not character art</title>
+  <g id="torso" data-joint="chest" data-pivot="0 -23">
+    <rect id="body-base" x="-10" y="-23" width="20" height="40" fill="#567080"/>
+    <polygon id="body-packed" data-pose="packed" data-replace="whole" points="-20,-20 20,-20 12,17 -12,17" fill="#8A949C"/>
+    <g id="weapon" data-joint="nearHand" data-pivot="27 20" transform="rotate(20.0535228296 27 20)" data-material="raw-steel" data-z="-1">
+      <rect id="weapon-base" x="27" y="18" width="30" height="4" fill="#BFC9CF"/>
+      <polygon id="weapon-key" data-pose="key" data-replace="part" points="27,17 65,18 70,20 65,22 27,23" fill="#D9B876"/>
+      <rect id="weapon-packed" data-pose="packed" data-replace="whole" x="27" y="17" width="24" height="6" fill="#BFC9CF"/>
+      <circle id="weapon-grip-marker" data-anchor="weapon-grip" cx="27" cy="20" r="1"/>
+    </g>
+    <g id="shield" data-joint="farHand" data-pivot="-19 15" transform="rotate(-3.4377467708 -19 15)" data-z="1">
+      <rect id="shield-base" x="-25" y="3" width="12" height="24" fill="#A57A4A"/>
+      <polygon id="shield-packed" data-pose="packed" data-replace="whole" points="-25,3 -13,3 -10,15 -13,27 -25,27 -28,15" fill="#A57A4A"/>
+      <circle id="shield-grip-marker" data-anchor="shield-grip" cx="-19" cy="15" r="1"/>
+    </g>
+  </g>
+</svg>

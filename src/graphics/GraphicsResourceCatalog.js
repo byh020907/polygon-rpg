@@ -1,3 +1,4 @@
+import { BUILTIN_SVG_RESOURCES } from './SvgAssetSession.js';
 import { COMBAT_MOTION_TIMING_PROFILES } from '../combat/CombatMotionTimingProfiles.js';
 import { combatMotionFrameData } from '../combat/CombatCommandController.js';
 import {
@@ -295,6 +296,7 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       notes: `${placements.has(profile.id) ? '현재 맵 배치' : '현재 authored profile · 맵 미배치'} · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을 꾸미지 않습니다.`,
     })),
     ...map.resources,
+    ...BUILTIN_SVG_RESOURCES,
     ...GRAPHICS_EFFECT_DEFINITIONS.map((effect) => ({
       id: `effect:${effect.id}`,
       label: effect.label,

@@ -1,3 +1,4 @@
+import { createSvgAssetSession, BUILTIN_SVG_RESOURCES } from './graphics/SvgAssetSession.js';
 import { readTestPlayRequest } from './ui/TestPlayConfig.js';
 import Alpine from './vendor/alpine.esm.js';
 import { GameApplication } from './app/GameApplication.js';
@@ -14,6 +15,7 @@ function requireCanvas(id) {
   return canvas;
 }
 
+const svgAssetSession = createSvgAssetSession();
 let graphicsReviewRequest;
 let graphicsReviewError = '';
 try {
@@ -24,7 +26,10 @@ try {
 }
 let testPlayRequest = null;
 try {
-  testPlayRequest = readTestPlayRequest();
+  testPlayRequest = readTestPlayRequest(location.href, {
+    resolveSvgAsset: (id) =>
+      (svgAssetSession.get(id) ?? BUILTIN_SVG_RESOURCES.find((r) => r.id === id))?.svgAsset,
+  });
 } catch (error) {
   graphicsReviewRequest = DEFAULT_GRAPHICS_REVIEW;
   graphicsReviewError = error.message;
@@ -56,9 +61,11 @@ async function openGraphicsReview({
     import('./graphics/GraphicsResourceSampler.js'),
   ]);
   graphicsReviewController?.destroy();
-  const catalog = createGraphicsResourceCatalog({
-    additionalResources: [...GAME_UI_RESOURCES, ...APP_IMAGE_RESOURCES],
-  });
+  const catalog = svgAssetSession.wrap(
+    createGraphicsResourceCatalog({
+      additionalResources: [...GAME_UI_RESOURCES, ...APP_IMAGE_RESOURCES],
+    }),
+  );
   graphicsReviewController = new GraphicsReviewController({
     root: document.getElementById('graphics-review'),
     catalog,

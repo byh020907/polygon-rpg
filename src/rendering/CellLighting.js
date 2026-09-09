@@ -3,6 +3,54 @@ const DEFAULT_POINT_FALLOFF = 2;
 const GEOMETRY_EPSILON = 1e-9;
 
 export const MATERIAL_LIGHTING_PROFILES = Object.freeze({
+  'painted-steel': Object.freeze({
+    diffuse: 0.68,
+    normalPower: 0.95,
+    specular: 0.26,
+    highlightPower: 7,
+    roughness: 0.035,
+    variationSeed: 61,
+  }),
+  'raw-steel': Object.freeze({
+    diffuse: 0.52,
+    normalPower: 1.05,
+    specular: 0.74,
+    highlightPower: 12,
+    roughness: 0.025,
+    variationSeed: 67,
+  }),
+  brass: Object.freeze({
+    diffuse: 0.6,
+    normalPower: 0.9,
+    specular: 0.58,
+    highlightPower: 9,
+    roughness: 0.04,
+    variationSeed: 71,
+  }),
+  skin: Object.freeze({
+    diffuse: 0.82,
+    normalPower: 0.68,
+    specular: 0.09,
+    highlightPower: 4,
+    roughness: 0.015,
+    variationSeed: 79,
+  }),
+  dirt: Object.freeze({
+    diffuse: 0.64,
+    normalPower: 1.1,
+    specular: 0.015,
+    highlightPower: 2,
+    roughness: 0.24,
+    variationSeed: 83,
+  }),
+  glass: Object.freeze({
+    diffuse: 0.24,
+    normalPower: 1.1,
+    specular: 0.9,
+    highlightPower: 18,
+    roughness: 0.005,
+    variationSeed: 89,
+  }),
   metal: Object.freeze({
     diffuse: 0.58,
     normalPower: 1,
@@ -54,14 +102,15 @@ function assertPoint(value, label) {
   }
   assertFiniteNumber(value.x, `${label}.x`);
   assertFiniteNumber(value.y, `${label}.y`);
+  if (value.z !== undefined) assertFiniteNumber(value.z, `${label}.z`);
   return value;
 }
 
 function normalizeVector(value, label) {
   assertPoint(value, label);
-  const length = Math.hypot(value.x, value.y);
+  const length = Math.hypot(value.x, value.y, value.z ?? 0);
   if (length <= GEOMETRY_EPSILON) throw new RangeError(`${label} must not be a zero vector.`);
-  return Object.freeze({ x: value.x / length, y: value.y / length });
+  return Object.freeze({ x: value.x / length, y: value.y / length, z: (value.z ?? 0) / length });
 }
 
 function clampUnit(value) {
@@ -330,7 +379,10 @@ export function computeLightContribution({
 
   if (light.kind === 'directional') {
     const travelDirection = normalizeVector(light.direction, 'light.direction');
-    const normalDot = Math.max(0, normal.x * -travelDirection.x + normal.y * -travelDirection.y);
+    const normalDot = Math.max(
+      0,
+      normal.x * -travelDirection.x + normal.y * -travelDirection.y + normal.z * -travelDirection.z,
+    );
     return Object.freeze({
       lightId: light.id ?? null,
       kind: light.kind,
@@ -346,12 +398,13 @@ export function computeLightContribution({
   const delta = {
     x: light.position.x - surfacePosition.x,
     y: light.position.y - surfacePosition.y,
+    z: (light.position.z ?? 0) - (surfacePosition.z ?? 0),
   };
-  const distance = Math.hypot(delta.x, delta.y);
+  const distance = Math.hypot(delta.x, delta.y, delta.z);
   const normalDot =
     distance <= GEOMETRY_EPSILON
       ? 1
-      : Math.max(0, (normal.x * delta.x + normal.y * delta.y) / distance);
+      : Math.max(0, (normal.x * delta.x + normal.y * delta.y + normal.z * delta.z) / distance);
   const falloff = light.falloff ?? DEFAULT_POINT_FALLOFF;
   const attenuation = distance >= light.range ? 0 : (1 - distance / light.range) ** falloff;
   const occluded =
@@ -388,6 +441,7 @@ export function createCellLightingSample({
   occluders = [],
   quantizationLevels = 4,
   saturationRetention = DEFAULT_SATURATION_RETENTION,
+  structuralOcclusion = 0,
 }) {
   parseHexColor(baseColor);
   assertPoint(position, 'position');
@@ -400,6 +454,7 @@ export function createCellLightingSample({
   assertOccluders(occluders);
   quantizeLuminance(0, quantizationLevels);
   assertUnitInterval(saturationRetention, 'saturationRetention');
+  assertUnitInterval(structuralOcclusion, 'structuralOcclusion');
 
   const contributions = lights.map((light) => {
     const contribution = computeLightContribution({
@@ -423,8 +478,9 @@ export function createCellLightingSample({
     });
   });
   const rawLuminance = clampUnit(
-    ambientIntensity +
-      contributions.reduce((total, contribution) => total + contribution.materialValue, 0),
+    (ambientIntensity +
+      contributions.reduce((total, contribution) => total + contribution.materialValue, 0)) *
+      (1 - structuralOcclusion),
   );
   const quantizedLuminance = quantizeLuminance(rawLuminance, quantizationLevels);
   const mutedColor = toMutedHexColor(baseColor, saturationRetention);

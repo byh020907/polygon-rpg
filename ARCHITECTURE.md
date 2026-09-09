@@ -106,7 +106,7 @@ Keyboard / Touch / DOM intent
 
 ## Graphics Authoring and Presentation Authority
 
-- 이 절은 최신 Human Feedback이 확정한 목표 계약이다. 현재 JS polygon/4개 견본/3D clip의 존재는 SVG·Composition·Rig Family production 구현 또는 reference 승인의 증거가 아니다. 구현 차이는 STATE.md에서 추적하며 문서 정립을 대규모 구현 승인으로 해석하지 않는다.
+- 이 절은 최신 Human Feedback이 확정한 목표 계약이다. 현재 JS polygon/4개 견본/3D clip의 존재는 SVG·Composition·Rig Family production 구현 또는 reference 승인의 증거가 아니다. 구현 차이는 STATE.md에서 추적한다. Human이 시스템 우선 구현을 명시한 경우 기존 그림과 기술 검증용 자산으로 production 연결을 구현하며 최종 디자인 승인은 실제 공급된 reference에 대해 별도로 받는다.
 - **Product / Art / Engine / Gameplay:** Product Goal은 최종 경험, 승인 reference는 형태·구도·주요 pose, 엔진은 투영·retarget·조명·warp, gameplay는 이동거리·attack envelope·active window·피해 반응·무적을 소유한다. 현재 코드가 승인 reference를 대체하지 않는다.
 
 ### SVG Master and Derived Presentation
@@ -280,3 +280,14 @@ Keyboard / Touch / DOM intent
 - scripts/generate-art-handoff.mjs가 production catalog/campaign/story를 읽어 정적 HTML과 기계용 index를 생성한다. 사람이 관리하는 요청 해설은 scripts/art-handoff-content.mjs에 한 번만 두고, 생성물의 누락/중복/링크 및 최신성을 검사한다. 문서와 원본 reference는 게임 PWA runtime asset에 포함하지 않는다. 공개 docs namespace는 HTML·CSS·reference를 네트워크로 읽고 게임 release cache와 분리한다. 게임 import의 cache-only 계약은 유지한다. local server도 docs와 요청서 generator/content의 명시적 공개 경로만 허용한다.
 
 - 새 제작 계약의 검증은 approved Composition/reference ID, 단일 landmark·screen occupancy LOD/hysteresis, SVG 의미 그룹·export provenance, body retarget·선택 Contact IK·pose replacement·root warp, active sweep AND envelope·semantic response·시각 오차의 evidence를 요구한다. 현재 목록/기존 fixture 통과와 새 계약 준수를 구분하고 미구현은 STATE의 Human Feedback Priority Gap으로 남긴다.
+
+## System-first Integration Boundary
+
+- SVG compiler는 DOM/XML 입력을 명시된 지원 subset으로 검증하고 정규 group/shape/anchor/LOD/pose data로 compile한다. Browser DOMParser와 Node XML parser를 주입할 수 있으며 runtime은 compiled data를 읽는다. master와 export는 하나의 provenance를 유지한다.
+- 기존 prologue/map 그림은 명시적 adapter로 보존하며 새로운 scene object/Composition 경로와 한 RenderFrame에 합성한다. 신규 graphic을 전달받으면 같은 stable identity의 asset reference만 교체한다. 현재 layout adapter나 기술 fixture를 승인 Composition으로 표시하지 않는다.
+- Scene object의 world y는 위쪽 높이, SVG/기존 Canvas y는 아래쪽이며 presentation boundary에서 한 번 변환한다. scene z 양수는 뒤쪽, actor depth raster의 앞쪽 depth는 부호를 명시적으로 변환한다.
+- Shared game pose sampler는 기본 체형과 modifier/Contact IK/pose replacement/root curve 옵션을 같은 경로로 처리한다. 기본 profile의 결과를 보존하고 변경 profile은 render/semantic-contact에 동일 pose로 전달한다.
+
+## 시스템 공급 경계
+
+구체적인 SVG subset·metadata·예산·원본/export 흐름과 runtime 연결 API는 [그래픽 시스템 공급 계약](docs/system-runtime.md)을 따른다. GameScene은 실제 renderer projection을 받은 Composition snapshot을 제공하며 고정 가상 viewport로 residency를 먼저 제외하지 않는다. actor의 정상 edge-on 투영은 source singular transform 오류와 구분하고 visible/contact contour를 동일하게 유지한다. 최종 아트 승인은 기술 fixture 통과와 별도다.

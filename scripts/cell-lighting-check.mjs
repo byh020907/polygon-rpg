@@ -230,7 +230,10 @@ assert.throws(
     }),
   /greater than 0/,
 );
-assert.throws(() => sampleMaterialLightResponse('glass', 0.5), /Unsupported lighting material/);
+assert.throws(
+  () => sampleMaterialLightResponse('unknown-material', 0.5),
+  /Unsupported lighting material/,
+);
 assert.throws(
   () => isPointLightOccluded({ x: 0, y: 0 }, { x: 1, y: 0 }, [{ points: [] }]),
   /at least 3 points/,

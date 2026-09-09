@@ -1,5 +1,7 @@
 import { sampleCombatTargetPose } from './CombatPoseLibrary.js';
 import { sampleCharacterBonePose } from './CharacterBonePoseLibrary.js';
+import { sampleCharacterAnimation } from './CharacterAnimationPipeline.js';
+import { projectSideViewSkeletonFrame } from './SkeletonPoseProjection.js';
 
 function authoredAttachmentTarget(targetPose, bonePose) {
   const joints = bonePose.projectedJoints;
@@ -29,8 +31,38 @@ function authoredAttachmentTarget(targetPose, bonePose) {
   });
 }
 
-export function samplePlayerMotionPose({ motionState, boneInput }) {
-  const bonePose = sampleCharacterBonePose({ ...boneInput, motionState });
+export function samplePlayerMotionPose({
+  motionState,
+  boneInput,
+  bodyProfile,
+  characterModifier,
+  contacts,
+  authoredOverride,
+}) {
+  if (bodyProfile && bodyProfile.rigFamilyId !== 'Humanoid')
+    throw new Error('Player motion requires a Humanoid body profile');
+  if (contacts !== undefined && !Array.isArray(contacts))
+    throw new Error('Contacts must be an explicit array');
+  let bonePose = sampleCharacterBonePose({ ...boneInput, motionState });
+  const retarget =
+    bodyProfile &&
+    (Object.keys(bodyProfile.joints).length ||
+      Object.keys(bodyProfile.stance?.joints ?? {}).length);
+  if (retarget || characterModifier || contacts?.length || authoredOverride) {
+    const result = sampleCharacterAnimation({
+      skeletonFrame: bonePose.skeletonFrame,
+      bodyProfile,
+      characterModifier,
+      contacts,
+      authoredOverride,
+    });
+    bonePose = Object.freeze({
+      ...bonePose,
+      ...projectSideViewSkeletonFrame(result.skeletonFrame),
+      contactReports: result.contactReports,
+      authoredOverride: result.authoredOverride,
+    });
+  }
   const targetPose = authoredAttachmentTarget(sampleCombatTargetPose(motionState), bonePose);
   return Object.freeze({ targetPose, bonePose });
 }

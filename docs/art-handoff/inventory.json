@@ -1,6 +1,6 @@
 {
-  "fingerprint": "c48dee26b454",
-  "resourceCount": 592,
+  "fingerprint": "548c3e5a84a4",
+  "resourceCount": 593,
   "records": [
     {
       "id": "player:protagonist",
@@ -17978,6 +17978,43 @@
       "page": "resources/scene-1.html#scene%3Ared-quarry%3Ared-quarry-cutter-yard"
     },
     {
+      "id": "svg:prologue-control-core",
+      "label": "SVG · prologue-control-core",
+      "category": "prop",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "public/graphics/prologue-control-core.master.svg",
+      "notes": "SVG 시스템 자산 · LOD/pose/관절 metadata 검토. 승인 아트와 별도입니다. 기존 제어핵을 연결한 시스템 검증용 master입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/prop-4.html#svg%3Aprologue-control-core"
+    },
+    {
       "id": "effect:player-hit",
       "label": "주인공 피격",
       "category": "effect",
@@ -19472,7 +19509,7 @@
         }
       ],
       "itemIds": ["scrap-final-stop-signal"],
-      "page": "resources/prop-4.html#final%3Ascrap-final-stop-signal"
+      "page": "resources/prop-5.html#final%3Ascrap-final-stop-signal"
     },
     {
       "id": "final:scrap-final-epilogue-crane",

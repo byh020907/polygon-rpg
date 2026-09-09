@@ -1,3 +1,4 @@
+import { sampleSvgResource } from './SvgResourceSample.js';
 import { createGameScene } from '../app/createGameScene.js';
 import { CombatEventBuffer } from '../combat/CombatEvent.js';
 import { sampleCombatFrame } from '../combat/CombatFrame.js';
@@ -426,6 +427,8 @@ export function createGraphicsResourceSampler(catalog) {
     const view = resource.kind === 'scene' ? 'scene' : (options.view ?? 'isolated');
     const lighting = options.lighting ?? 'scene';
     const base = mapSample(resource, action, lighting);
+    if (resource.producer === 'svg')
+      return sampleSvgResource(resource, action, { ...options, facing, lighting }, base.frame);
     let boneDiagnostics = [];
     const actorPosition = {
       x: base.frame.player.position.x,

@@ -1,4 +1,15 @@
 import {
+  defineAuthoredPoseTrack,
+  sampleAuthoredPoseTrack,
+} from '../animation/AuthoredPoseTrack.js';
+import {
+  createSvgCharacterBinding,
+  sampleSvgCharacterPresentation,
+} from '../graphics/SvgCharacterPresentation.js';
+import { sampleRootMotionDelta, defineRootMotionCurve } from '../animation/RootMotionCurve.js';
+import { DEFAULT_ROLL_ROOT_CURVE } from '../animation/DefaultRootCurves.js';
+import { defineCharacterBodyProfile } from '../animation/RigFamily.js';
+import {
   combatMotionFrameData,
   CombatCommandController,
 } from '../combat/CombatCommandController.js';
@@ -404,6 +415,7 @@ function scrapCampaignWorldFacts(campaign) {
 
 export class GameScene extends SceneNode {
   constructor({
+    scenePresentationFactory = null,
     mapDefinition,
     equipmentCatalog,
     combatProgressionProfile,
@@ -435,6 +447,11 @@ export class GameScene extends SceneNode {
       'Player',
     );
     this.artDirectionProfile = artDirectionProfile;
+    this.scenePresentation = scenePresentationFactory?.() ?? null;
+    this.characterAnimationSettings = Object.freeze({});
+    this.svgCharacterBinding = null;
+    this.rootMotionCurves = Object.freeze({ roll: DEFAULT_ROLL_ROOT_CURVE });
+    this.rootMotionDistances = Object.freeze({ roll: ROLL_SPEED * ROLL_DURATION_SECONDS });
     this.enchantmentCatalog = assertEnchantmentCatalog(enchantmentCatalog);
     const initialProgression =
       progressionSnapshot ??
@@ -489,6 +506,90 @@ export class GameScene extends SceneNode {
     this.playerStatusChanged = this.statusNode.playerStatusChanged;
     this.worldStatusChanged = this.statusNode.worldStatusChanged;
     this.reset();
+  }
+
+  dispose() {
+    try {
+      return super.dispose();
+    } finally {
+      if (this.isDisposed) this.scenePresentation?.dispose();
+    }
+  }
+
+  setCharacterAnimationSettings(settings = {}) {
+    const bodyProfile = settings.bodyProfile
+      ? defineCharacterBodyProfile(settings.bodyProfile)
+      : undefined;
+    const tracks = Object.freeze(
+      Object.fromEntries(
+        Object.entries(settings.tracks ?? {}).map(([id, track]) => [
+          id,
+          defineAuthoredPoseTrack(track),
+        ]),
+      ),
+    );
+    if (settings.svgAsset)
+      for (const track of Object.values(tracks))
+        for (const key of track.keys)
+          if (key.poseId && !settings.svgAsset.poses.includes(key.poseId))
+            throw Error('Unknown SVG pose in authored track');
+    const candidate = Object.freeze({ ...settings, bodyProfile, tracks });
+    samplePlayerMotionPose({
+      motionState: { id: 'idle', progress: 0 },
+      boneInput: { animationTime: 0, isGrounded: true },
+      ...candidate,
+    });
+    const rest = samplePlayerMotionPose({
+      motionState: { id: 'idle', progress: 0 },
+      boneInput: { animationTime: 0, isGrounded: true },
+      bodyProfile,
+    });
+    const binding = settings.svgAsset
+      ? createSvgCharacterBinding(settings.svgAsset, {
+          restPose: rest.bonePose,
+          rootFrame: settings.svgRootFrame,
+          jointMap: settings.svgJointMap,
+        })
+      : null;
+    if (binding)
+      sampleSvgCharacterPresentation(binding, {
+        bonePose: rest.bonePose,
+        position: this.position ?? { x: 0, y: 0 },
+        geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+      });
+    this.svgCharacterBinding = binding;
+    this.characterAnimationSettings = candidate;
+    this.playerWeaponContactHistory = [];
+    return candidate;
+  }
+
+  applySvgPlayerGeometry(geometry, pose, position, renderOrder = 30.5) {
+    if (!this.svgCharacterBinding) return geometry;
+    const presentation = sampleSvgCharacterPresentation(this.svgCharacterBinding, {
+      bonePose: pose.bonePose,
+      position,
+      facing: this.facing,
+      geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+      renderOrder,
+    });
+    return Object.freeze({
+      ...geometry,
+      weapon: presentation.weapon,
+      shield: presentation.shield,
+      svgPresentation: presentation,
+    });
+  }
+
+  setRootMotionCurve(actionId, curve, { distance = this.rootMotionDistances[actionId] ?? 0 } = {}) {
+    if (!Number.isFinite(distance) || distance < 0 || distance > 2000)
+      throw Error('Invalid gameplay root distance');
+    if (actionId !== 'roll' && !ATTACK_SPATIAL_PROFILES[actionId])
+      throw Error('Unknown root motion action');
+    this.rootMotionCurves = Object.freeze({
+      ...this.rootMotionCurves,
+      [actionId]: defineRootMotionCurve(curve),
+    });
+    this.rootMotionDistances = Object.freeze({ ...this.rootMotionDistances, [actionId]: distance });
   }
 
   getCombatSkillProfile() {
@@ -548,6 +649,7 @@ export class GameScene extends SceneNode {
   }
 
   reset() {
+    this.scenePresentation?.reset();
     const scrapCampaign = getScrapCampaignReadModel(
       this.progressionSnapshot.scrapCampaign,
       this.scrapCampaignProfile,
@@ -2527,7 +2629,7 @@ export class GameScene extends SceneNode {
 
     const distanceAhead = (enemy.position.x - this.position.x) * direction;
     const separation = PLAYER_BODY_HALF_WIDTH + collider.halfWidth;
-    if (distanceAhead <= 0 || distanceAhead >= ROLL_SPEED * ROLL_DURATION_SECONDS + separation) {
+    if (distanceAhead <= 0 || distanceAhead >= this.rootMotionDistances.roll + separation) {
       return true;
     }
     const movementBounds = this.getPlayerMovementBounds();
@@ -2538,10 +2640,22 @@ export class GameScene extends SceneNode {
   updateRoll(deltaSeconds) {
     if (!this.rollState) return false;
     const activeRoll = this.rollState;
-    const progress = Math.min(1, activeRoll.elapsedSeconds / activeRoll.durationSeconds);
-    const speedScale = Math.sin(progress * Math.PI) * (Math.PI / 2);
-    activeRoll.elapsedSeconds += deltaSeconds;
-    this.position.x += activeRoll.direction * ROLL_SPEED * speedScale * deltaSeconds;
+    const from = activeRoll.elapsedSeconds / activeRoll.durationSeconds;
+    activeRoll.elapsedSeconds = Math.min(
+      activeRoll.durationSeconds,
+      activeRoll.elapsedSeconds + deltaSeconds,
+    );
+    const delta = sampleRootMotionDelta(
+      this.rootMotionCurves.roll,
+      from,
+      activeRoll.elapsedSeconds / activeRoll.durationSeconds,
+      {
+        distance: this.rootMotionDistances.roll,
+        facing: activeRoll.direction,
+        verticalDistance: 0,
+      },
+    );
+    this.position.x += delta.x;
     if (activeRoll.elapsedSeconds >= activeRoll.durationSeconds) this.rollState = null;
     return true;
   }
@@ -2891,7 +3005,13 @@ export class GameScene extends SceneNode {
 
   sampleSizedPlayerMotionPose(input) {
     const timingFrame = this.combatCommands.getMotionFrameData(input.motionState.id);
+    const track = this.characterAnimationSettings.tracks?.[input.motionState.id];
+    const override = track
+      ? sampleAuthoredPoseTrack(track, input.motionState.progress ?? 0)
+      : this.characterAnimationSettings.authoredOverride;
     const pose = samplePlayerMotionPose({
+      ...this.characterAnimationSettings,
+      authoredOverride: override,
       ...input,
       motionState: {
         ...input.motionState,
@@ -2907,6 +3027,7 @@ export class GameScene extends SceneNode {
           end: profile.end,
           geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
           timingFrame,
+          bodyProfile: this.characterAnimationSettings.bodyProfile,
         })
       : pose;
   }
@@ -2954,14 +3075,16 @@ export class GameScene extends SceneNode {
         }),
       }),
     );
-    return sampleSharedPlayerCombatGeometry({
+    const geometry = sampleSharedPlayerCombatGeometry({
       position: Object.freeze({ x: position.x, y: position.y }),
       facing: this.facing,
       targetPose: pose.targetPose,
       bonePose: pose.bonePose,
       geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
       weaponLengthScale: this.getPresentationWeaponLengthScale(poseCombatState.id),
+      hurtProfile: this.characterAnimationSettings.hurtProfile,
     });
+    return this.applySvgPlayerGeometry(geometry, pose, position);
   }
 
   updatePlayerCombatGeometry(combatState) {
@@ -3256,6 +3379,36 @@ export class GameScene extends SceneNode {
         this.facing = Math.sign(horizontal);
       }
       this.position.x += horizontal * CHARACTER_SPEED * combatState.movementScale * deltaSeconds;
+      if (!controlsLocked && !storyBlocksGameplay) {
+        const rootDelta = (state, from, to) =>
+          this.rootMotionCurves[state.id]
+            ? sampleRootMotionDelta(this.rootMotionCurves[state.id], from, to, {
+                distance: this.rootMotionDistances[state.id] ?? 0,
+                facing: this.facing,
+                verticalDistance: 0,
+              }).x
+            : 0;
+        if (
+          currentCombatState.sequence === combatState.sequence &&
+          currentCombatState.id === combatState.id
+        ) {
+          if (combatState.frame)
+            this.position.x += rootDelta(
+              combatState,
+              currentCombatState.progress,
+              combatState.progress,
+            );
+        } else {
+          if (
+            currentCombatState.frame &&
+            currentCombatState.phase === 'recovery' &&
+            ((1 - currentCombatState.progress) * currentCombatState.frame.duration) / 60 <=
+              deltaSeconds * animationSpeed + 1e-7
+          )
+            this.position.x += rootDelta(currentCombatState, currentCombatState.progress, 1);
+          if (combatState.frame) this.position.x += rootDelta(combatState, 0, combatState.progress);
+        }
+      }
       this.position.x += this.playerKnockbackVelocityX * deltaSeconds;
       this.playerKnockbackVelocityX *= Math.pow(this.playerKnockbackDecayRate, deltaSeconds);
       if (Math.abs(this.playerKnockbackVelocityX) < PLAYER_KNOCKBACK_STOP_SPEED) {
@@ -3748,14 +3901,21 @@ export class GameScene extends SceneNode {
         }),
       }),
     );
-    const renderCombatGeometry = sampleSharedPlayerCombatGeometry({
+    let renderCombatGeometry = sampleSharedPlayerCombatGeometry({
       position: renderPosition,
       facing: this.facing,
       targetPose: pose.targetPose,
       bonePose: pose.bonePose,
       geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
       weaponLengthScale: this.getPresentationWeaponLengthScale(poseCombatState.id),
+      hurtProfile: this.characterAnimationSettings.hurtProfile,
     });
+    renderCombatGeometry = this.applySvgPlayerGeometry(
+      renderCombatGeometry,
+      pose,
+      renderPosition,
+      characterRenderOrder,
+    );
     const playerPresentation = createPlayerCombatPresentation(
       Object.freeze({
         position: renderPosition,
@@ -3778,7 +3938,9 @@ export class GameScene extends SceneNode {
         appearanceProfile: this.playerPresentationProfile,
       }),
     );
-    const { characterItems, combatEffectItems } = playerPresentation;
+    const characterItems =
+      renderCombatGeometry.svgPresentation?.items ?? playerPresentation.characterItems;
+    const { combatEffectItems } = playerPresentation;
     const encounterRender = this.roomSceneNode?.createEncounterRenderSnapshot(
       activeRoom.renderOrder + 0.45,
     ) ?? { enemy: null, presentationState: null, geometry: null, contact: null };
@@ -3861,7 +4023,16 @@ export class GameScene extends SceneNode {
                   : null,
                 '#66ff44',
               ],
-              ...(encounterRender.geometry?.hurt ?? []).map((shape) => [shape, '#ff4488']),
+              ...(encounterRender.geometry?.semanticHurt ?? []).map((shape) => [
+                shape,
+                {
+                  body: '#ff4488',
+                  weak: '#ffcc00',
+                  armor: '#aaaaaa',
+                  guard: '#66ccff',
+                  immune: '#bb88ff',
+                }[shape.response] ?? '#ff4488',
+              ]),
             ]
               .filter(([shape]) => shape)
               .map(([shape, color], index) =>
@@ -3940,6 +4111,7 @@ export class GameScene extends SceneNode {
       combatEvents,
       combatContact: encounterRender.contact,
       combatGeometry: Object.freeze({
+        svgPresentation: renderCombatGeometry.svgPresentation?.diagnostics ?? null,
         visibleWeapon: renderCombatGeometry.weapon,
         visibleShield: renderCombatGeometry.shield,
         authoritativeWeapon: contactGeometry?.weapon ?? null,
@@ -3987,6 +4159,9 @@ export class GameScene extends SceneNode {
       }),
       combatEnemy,
       artDirection,
+      scenePresentationForView: this.scenePresentation
+        ? (viewAt) => this.scenePresentation.snapshotProjected(viewAt)
+        : null,
       items,
     });
     this.renderFrameCreated.emit(renderFrame);

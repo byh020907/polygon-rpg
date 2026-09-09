@@ -7,3 +7,7 @@ package-lock.json
 src/vendor
 .ai/methods/**
 INBOX.md
+
+# SVG originals/exports are owned by the asset compiler, not code formatting.
+public/graphics/*.svg
+scripts/fixtures/*.master.svg

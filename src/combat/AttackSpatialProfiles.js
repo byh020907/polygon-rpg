@@ -59,8 +59,8 @@ function sizedPose(pose, id, scale) {
   });
 }
 
-function calibrate({ id, reach, start, end, geometryScale, timingFrame }) {
-  const key = `${id}:${reach}:${start}:${end}:${geometryScale}:${timingFrame.durationFrames}:${timingFrame.startupFrames}:${timingFrame.activeFrames}`;
+function calibrate({ id, reach, start, end, geometryScale, timingFrame, bodyProfile }) {
+  const key = `${id}:${reach}:${start}:${end}:${geometryScale}:${timingFrame.durationFrames}:${timingFrame.startupFrames}:${timingFrame.activeFrames}:${JSON.stringify(bodyProfile ?? null)}`;
   if (calibrationCache.has(key)) return calibrationCache.get(key);
   const coefficients = [];
   const firstTick = Math.round(start * timingFrame.durationFrames * 2);
@@ -75,6 +75,7 @@ function calibrate({ id, reach, start, end, geometryScale, timingFrame }) {
     const pose = samplePlayerMotionPose({
       motionState,
       boneInput: { isGrounded: !id.startsWith('air') },
+      bodyProfile,
     });
     const shapes = [1, 2].map((scale) => {
       const sized = sizedPose(pose, id, scale);
@@ -116,7 +117,14 @@ function calibrate({ id, reach, start, end, geometryScale, timingFrame }) {
   return result;
 }
 
-export function sizeAttackMotionPose(pose, { id, reach, start, end, geometryScale, timingFrame }) {
+export function sizeAttackMotionPose(
+  pose,
+  { id, reach, start, end, geometryScale, timingFrame, bodyProfile },
+) {
   if (!ATTACK_SPATIAL_PROFILES[id] || pose.bonePose.rollMarker) return pose;
-  return sizedPose(pose, id, calibrate({ id, reach, start, end, geometryScale, timingFrame }));
+  return sizedPose(
+    pose,
+    id,
+    calibrate({ id, reach, start, end, geometryScale, timingFrame, bodyProfile }),
+  );
 }

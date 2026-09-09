@@ -1,3 +1,4 @@
+import { createProloguePresentation } from '../graphics/scene/ProloguePresentation.js';
 import { GameScene } from '../game/GameScene.js';
 import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
 import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
@@ -24,6 +25,10 @@ function createEncounter(options) {
 export function createGameScene(options = {}) {
   return new GameScene({
     mapDefinition: SCRAP_AWAKENING_MAP,
+    scenePresentationFactory:
+      !options.mapDefinition || options.mapDefinition.id === SCRAP_AWAKENING_MAP.id
+        ? createProloguePresentation
+        : null,
     equipmentCatalog: EQUIPMENT_CATALOG,
     combatProgressionProfile: COMBAT_PROGRESSION_PROFILE,
     encounterFactory: createEncounter,

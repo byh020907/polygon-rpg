@@ -1,3 +1,5 @@
+import { clipWeaponToEnvelope } from './AttackEnvelope.js';
+import { humanoidHurtDescriptors, sampleSemanticHurtRegions } from './SemanticHurtRegions.js';
 import { sampleEnemyBonePoseFor } from '../animation/EnemyBonePoseLibrary.js';
 import {
   createProjectedBoneSurface,
@@ -108,6 +110,8 @@ export function samplePlayerCombatGeometry({
   bonePose,
   geometryScale,
   weaponLengthScale = 1,
+  hurtProfile = null,
+  bodyProfile = null,
 }) {
   if (
     !bonePose?.projectedJoints ||
@@ -196,10 +200,24 @@ export function samplePlayerCombatGeometry({
   ];
   const pose = (points) => posePlayerPoints(points, { position, facing, geometryScale });
   return Object.freeze({
+    semanticHurt: sampleSemanticHurtRegions({
+      skeleton: Object.fromEntries(
+        Object.entries(projectedJoints).map(([id, joint]) => [
+          id,
+          {
+            ...pose([{ x: position.x + joint.x, y: position.y + joint.y }])[0],
+            axisX: joint.axisX ? { x: joint.axisX.x * facing, y: joint.axisX.y } : null,
+          },
+        ]),
+      ),
+      descriptors: hurtProfile ?? bodyProfile?.hurtRegions ?? humanoidHurtDescriptors(),
+      scale: geometryScale,
+    }),
     actor: 'player',
     origin: freezePoint(position),
     weapon: freezePolygon('weapon', pose(weaponPoints)),
     shield: freezePolygon('shield', pose(shieldPoints)),
+    // Legacy name used by PlayerCombatPresentation/TrainingEncounterPresentation: draw only.
     hurt: Object.freeze(
       rawHurtPolygons.map(({ part, points }) => freezePolygon(part, pose(points))),
     ),
@@ -316,10 +334,28 @@ export function sampleTrainingEnemyCombatGeometry(enemy, attackProfiles) {
     freezePolygon(part, limbPolygon(skeleton[from], skeleton[to], width)),
   );
   return Object.freeze({
+    semanticHurt: sampleSemanticHurtRegions({
+      skeleton: {
+        ...skeleton,
+        head: { ...skeleton.head, axisX: { x: Math.cos(poseRotation), y: Math.sin(poseRotation) } },
+      },
+      descriptors:
+        enemy.hurtProfile ??
+        enemy.bodyProfile?.hurtRegions ??
+        humanoidHurtDescriptors({
+          headRadiusX: 15,
+          headRadiusY: 18,
+          armRadius: 5.5,
+          forearmRadius: 5,
+          thighRadius: 4,
+          shinRadius: 3.5,
+        }).filter(({ id }) => !id.startsWith('shield-')),
+    }),
     actor: 'enemy',
     origin: freezePoint(enemy.position),
     weapon: freezePolygon('weapon', weaponPoints),
     shield: null,
+    // Draw-only legacy surface shared with TrainingEncounterPresentation.
     hurt: Object.freeze([body, head, ...limbs]),
     presentation: Object.freeze({
       skeleton,
@@ -355,7 +391,7 @@ function convexHull(points) {
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
-export function createSweptWeaponGeometry({ current, history = [], historyLimit = 3 }) {
+export function createSweptWeaponGeometry({ current, history = [], historyLimit = 2 }) {
   const nextHistory = [...history, current.points].slice(-historyLimit);
   return Object.freeze({
     current,
@@ -494,16 +530,31 @@ function closestPolygonPair(left, right) {
   return closest;
 }
 
-export function closestCombatContact(weapons, hurts) {
+export function closestCombatContact(weapons, hurts, envelope = null) {
+  if (envelope)
+    weapons = weapons
+      .map((weapon) => clipWeaponToEnvelope(weapon, envelope))
+      .filter((weapon) => weapon.points.length >= 3);
+  const priority = { immune: 5, guard: 4, armor: 3, weak: 2, body: 1 };
+  hurts = [...hurts].sort((a, b) => (priority[b.response] ?? 1) - (priority[a.response] ?? 1));
   let closest = null;
   for (const weapon of weapons) {
     for (const hurt of hurts) {
       const candidate = closestPolygonPair(weapon.points, hurt.points);
-      if (!closest || candidate.gap < closest.gap) {
+      if (
+        !closest ||
+        candidate.gap < closest.gap ||
+        (candidate.gap === 0 &&
+          closest.gap === 0 &&
+          (priority[hurt.response] ?? 1) > (priority[closest.response] ?? 1))
+      ) {
         closest = {
           ...candidate,
           weaponPart: weapon.part,
           hurtPart: hurt.part,
+          response: hurt.response ?? 'body',
+          regionId: hurt.id ?? hurt.part,
+          damageMultiplier: hurt.damageMultiplier ?? 1,
         };
       }
     }
@@ -520,6 +571,9 @@ export function closestCombatContact(weapons, hurts) {
   const contact = closest.gap === 0;
   return Object.freeze({
     contact,
+    response: contact ? closest.response : null,
+    damageMultiplier: contact ? closest.damageMultiplier : 1,
+    regionId: contact ? closest.regionId : null,
     gap: closest.gap,
     weaponPart: contact ? closest.weaponPart : null,
     hurtPart: contact ? closest.hurtPart : null,
