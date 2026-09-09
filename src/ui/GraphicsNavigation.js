@@ -1,18 +1,38 @@
-export function graphicsNavigation(catalog, filter, select) {
-  const category = (label, id) => ({ label, run: (point) => filter(id, point) });
-  const references = catalog.resources
-    .filter((resource) => resource.category === 'enemy-reference')
-    .map((resource) => ({
-      label: resource.label.split(' · ')[0],
-      run: (point) => select(resource.id, point),
+export function graphicsNavigation(catalog, select) {
+  const leaf = (resource, label = resource.label) => ({
+    label,
+    resourceId: resource.id,
+    run: (point) => select(resource.id, point),
+  });
+  const group = (resources, depth = 0) => {
+    if (resources.length <= 6 || depth >= 2) return resources.map((r) => leaf(r));
+    const field = depth === 0 ? 'regionId' : 'roomId';
+    const labelField = depth === 0 ? 'regionLabel' : 'roomLabel';
+    const groups = new Map();
+    for (const resource of resources) {
+      const key = resource[field] ?? 'shared';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(resource);
+    }
+    if (groups.size === 1) return group(resources, depth + 1);
+    return [...groups.values()].map((items) => ({
+      label: items[0][labelField] ?? items[0][field] ?? '공용·미배치',
+      children: group(items, depth + 1),
     }));
+  };
+  const category = (label, id) => {
+    const resources = catalog.resources.filter((r) => r.category === id);
+    return resources.length === 1
+      ? leaf(resources[0], label)
+      : { label, children: group(resources) };
+  };
   return {
     label: '찾기',
     children: [
       category('주인공', 'player'),
       {
         label: '몹',
-        children: [{ label: '유형 견본', children: references }, category('실전 몹', 'enemy')],
+        children: [category('유형 견본', 'enemy-reference'), category('실전 몹', 'enemy')],
       },
       category('NPC', 'npc'),
       category('장비', 'equipment'),

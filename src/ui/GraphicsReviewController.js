@@ -207,33 +207,19 @@ export class GraphicsReviewController {
     );
     listen(this.nodes.find, 'click', (event) =>
       this.radial.open(
-        graphicsNavigation(
-          this.catalog,
-          (id, point) => {
-            this.setFilter({ category: id, search: '' });
-            const found = this.catalog.resources.filter((resource) => resource.category === id);
-            if (found.length === 1) {
-              this.select(
-                { resourceId: found[0].id, actionId: '', frameIndex: 0 },
-                { strips: true },
-              );
-              this.openContext(point);
-            } else this.nodes.search.focus();
-          },
-          (id, point) => {
-            this.select(
-              {
-                resourceId: id,
-                category: this.catalog.get(id).category,
-                search: '',
-                actionId: '',
-                frameIndex: 0,
-              },
-              { list: true, strips: true },
-            );
-            this.openContext(point);
-          },
-        ),
+        graphicsNavigation(this.catalog, (id, point) => {
+          this.select(
+            {
+              resourceId: id,
+              category: this.catalog.get(id).category,
+              search: '',
+              actionId: '',
+              frameIndex: 0,
+            },
+            { list: true, strips: true },
+          );
+          this.openContext(point);
+        }),
         { x: event.clientX, y: event.clientY },
         this.nodes.find,
       ),

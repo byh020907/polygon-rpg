@@ -4,7 +4,7 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX v0.4.0의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX v0.4.1의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
@@ -25,6 +25,8 @@ Human Feedback Priority — 그래픽 검토/저장 없는 테스트 플레이 �
 | Human Feedback Priority / playable frontier | partial                        | INBOX에 남은 Human 원문과 이전 KO fence·폐광/항구 관찰 증거 보존. 전투 접촉, 외형 최종 만족과 연결 전투·귀환·후반/최종전은 이번 UX 완료로 닫지 않는다.                                               |
 
 ## Verification
+
+- v0.4.1: 찾기 tree의 592개 최종 리소스가 정확히 한 번씩 도달/선택 가능함을 검사했다. category→region→room→resource와 페이지 이동은 목록 전환 없이 이어진다. 반경 116→84px, 하위 중심 고정. graphics-navigation-qa의 desktop/mobile/portrait에서 최종 leaf 선택·페이지·중심·경계를 확인했다. artifacts/radial-leaves의 PNG와 기존 workflow 회귀 검증을 남겼다.
 
 - npm run check 전체 PASS: lint/format, combat/enchantment/story/campaign/recovery/intro/character/map/growth/visual/platform/graphics. artifacts/review-ux/full-check.log. 570 base 리소스, 2287 samples, 435 production RenderFrame 비교, 107 fixed-step 관찰.
 - scripts/review-workflow-qa.mjs: desktop 1280×720, mobile 844×390, portrait 390×844. 원형 유형/문맥·화면 경계·Escape·진단, 실제 키보드 이동·restart, 같은 URL 선택 복귀·test URL reload, localStorage 바이트 보존. artifacts/review-ux/evidence.json 및 PNG.

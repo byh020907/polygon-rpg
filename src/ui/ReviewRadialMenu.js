@@ -35,14 +35,15 @@ export class ReviewRadialMenu {
     menu.setAttribute('role', 'dialog');
     menu.setAttribute('aria-modal', 'true');
     menu.setAttribute('aria-label', node.label);
-    const radius = Math.min(116, (innerWidth - 112) / 2, (innerHeight - 112) / 2);
+    const radius = Math.min(84, (innerWidth - 112) / 2, (innerHeight - 112) / 2);
     const compact = radius < 84;
     menu.classList.toggle('gr-radial--compact', compact);
     const x = Math.max(radius + 48, Math.min(innerWidth - radius - 48, point?.x ?? innerWidth / 2));
     const y = Math.max(
       radius + 72,
-      Math.min(innerHeight - radius - 48, point?.y ?? innerHeight / 2),
+      Math.min(innerHeight - radius - 90, point?.y ?? innerHeight / 2),
     );
+    this.current.point = { x, y };
     menu.style.setProperty('--radial-radius', `${radius}px`);
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
@@ -54,11 +55,11 @@ export class ReviewRadialMenu {
     menu.append(heading);
     const choices = node.children ?? [];
     const page = node.page ?? 0,
-      pageSize = 6;
+      pageSize = choices.length > 6 ? 5 : 6;
     const entries = choices.slice(page * pageSize, (page + 1) * pageSize);
     if (choices.length > pageSize)
       entries.push({
-        label: '다음',
+        label: `다음 ${page + 1}/${Math.ceil(choices.length / pageSize)}`,
         run: () =>
           this.show({ ...node, page: (page + 1) % Math.ceil(choices.length / pageSize) }, point),
         keepOpen: true,
@@ -70,15 +71,15 @@ export class ReviewRadialMenu {
       button.className = 'gr-radial-item';
       button.textContent = entry.label + (entry.children ? ' ›' : '');
       button.disabled = Boolean(entry.disabled);
-      if (entry.reason) button.title = entry.reason;
+      button.title = entry.reason ?? entry.label;
+      if (entry.resourceId) button.dataset.resourceId = entry.resourceId;
       button.style.setProperty('--radial-x', `${Math.cos(angle) * radius}px`);
       button.style.setProperty('--radial-y', `${Math.sin(angle) * radius}px`);
       button.addEventListener('click', (event) => {
         event.stopPropagation();
         if (entry.children) {
           this.history.push(this.current);
-          const r = button.getBoundingClientRect();
-          this.show(entry, { x: r.x + r.width / 2, y: r.y + r.height / 2 });
+          this.show(entry, this.current.point);
         } else {
           if (!entry.keepOpen) this.close();
           entry.run?.({ x: event.clientX, y: event.clientY });

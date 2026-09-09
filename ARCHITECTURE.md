@@ -193,7 +193,7 @@ Keyboard / Touch / DOM intent
 ## Graphics Resource Review Boundary
 
 - 독립 Render Lab screen/canvas/입력 경로는 제거한다. 그래픽 검토 adapter는 sample 재생과 diagnostics만 소유하고, interactive test play는 기존 GameApplication이 저장 없는 별도 GameApp context로 실행한다. test context도 기존 simulation·input·renderer를 사용하며 종료 시 listener/RAF를 반환한다. 정상 save/recovery port를 만들거나 호출하지 않는다.
-- Catalog 기반 탐색 tree와 선택 대상의 문맥 command를 UI가 분리하여 소유한다. 원형 메뉴는 분류와 짧은 command 집합에 사용하고 큰 leaf 목록은 thumbnail/search에 위임한다. 모든 선택은 기존 stable ID/URL codec을 통과한다. pointer/touch/keyboard, edge-clamp, focus 복귀와 취소의 단일 owner를 두며 바깥 클릭이 게임 입력으로 새지 않는다.
+- Catalog 기반 탐색 tree와 선택 대상의 문맥 command를 UI가 분리하여 소유한다. 원형 찾기 tree는 catalog의 모든 resource leaf를 포함하고 category→region→room 그룹과 제한된 페이지로 최종 선택까지 책임진다. thumbnail/search는 보조 경로다. 원형 반경은 버튼 충돌을 피하는 최소 간격으로 줄이고 하위 이동은 동일 중심에서 펼친다. 모든 선택은 기존 stable ID/URL codec을 통과한다. pointer/touch/keyboard, edge-clamp, focus 복귀와 취소의 단일 owner를 두며 바깥 클릭이 게임 입력으로 새지 않는다.
 - Test play target은 catalog의 실제 placement/장비 정보에서 composition adapter가 만든 검증된 요청이다. 지원되지 않는 producer는 이유와 함께 실행 불가로 표시하며 다른 장면으로 조용히 대체하지 않는다. 검토 선택과 test source는 URL로 복원하고 test에서 검토실로 돌아갈 때 같은 선택을 유지한다.
 
 - 몹 유형 reference는 인간형·사족 짐승형·날개 비행형·궤도 기계형의 별도 의미 본 계층과 공용 clip을 가진다. 외형·본 배치/비율과 유형별 motion source를 분리하여 컨셉 아트로부터 새 profile을 만들 때 clip을 복제하지 않는다. 먼저 검토실의 대표 네 개와 본 비율 변형으로 retargeting을 검증하고 실전 몹 전파는 Human의 유형별 시안 검토와 명시적 적용 요청 이후로 둔다.

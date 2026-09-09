@@ -3685,3 +3685,24 @@ html[data-ui-review] {
     display: none;
   }
 }
+#graphics-review .gr-radial-item {
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  padding: 5px;
+}
+#graphics-review .gr-radial-note {
+  top: calc(var(--radial-radius) + 42px);
+  width: 230px;
+  padding: 4px;
+  background: #10241d;
+}
+#graphics-review .gr-radial--compact .gr-radial-note {
+  width: auto;
+}
+#graphics-review .gr-radial-path {
+  width: min(260px, calc(100vw - 24px));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
