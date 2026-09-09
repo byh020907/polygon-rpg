@@ -1,3 +1,6 @@
+import { EQUIPMENT_CATALOG } from '../equipment/EquipmentCatalog.js';
+import { DEFAULT_OWNED_EQUIPMENT_ITEM_IDS } from '../equipment/EquipmentLoadout.js';
+import { migrateEquipmentSaveV10 } from './EquipmentSaveMigration.js';
 import {
   PROGRESSION_SCHEMA_VERSION,
   assertProgressionSnapshot,
@@ -27,11 +30,11 @@ function assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds) {
   if (!Number.isSafeInteger(value.trainingMarks) || value.trainingMarks < 0) {
     throw new TypeError('저장된 훈련 인장이 올바르지 않습니다.');
   }
-  if (!Array.isArray(value.ownedEquipmentIds) || value.ownedEquipmentIds.length === 0) {
+  if (!Array.isArray(value.ownedEquipmentItemIds) || value.ownedEquipmentItemIds.length === 0) {
     throw new TypeError('저장된 소유 장비 목록이 올바르지 않습니다.');
   }
   const ownedIds = new Set();
-  for (const equipmentId of value.ownedEquipmentIds) {
+  for (const equipmentId of value.ownedEquipmentItemIds) {
     assertEquipmentId(equipmentId, '저장된 장비 ID');
     if (!allowedEquipmentIds.has(equipmentId) || ownedIds.has(equipmentId)) {
       throw new Error('저장된 장비 목록에 지원하지 않거나 중복된 항목이 있습니다.');
@@ -41,8 +44,8 @@ function assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds) {
   if (!ownedIds.has(defaultEquipmentId)) {
     throw new Error('저장된 장비 목록에 기본 장비가 없습니다.');
   }
-  assertEquipmentId(value.equippedEquipmentId, '저장된 착용 장비 ID');
-  if (!ownedIds.has(value.equippedEquipmentId)) {
+  assertEquipmentId(value.loadout.weaponItemId, '저장된 착용 장비 ID');
+  if (!ownedIds.has(value.loadout.weaponItemId)) {
     throw new Error('저장된 착용 장비를 소유하고 있지 않습니다.');
   }
   if (
@@ -55,7 +58,7 @@ function assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds) {
 }
 
 function createAllowedEquipmentIds(value, defaultEquipmentId) {
-  const ids = new Set([defaultEquipmentId]);
+  const ids = new Set([defaultEquipmentId, ...DEFAULT_OWNED_EQUIPMENT_ITEM_IDS]);
   if (!value || typeof value[Symbol.iterator] !== 'function') return ids;
   for (const equipmentId of value) {
     if (typeof equipmentId === 'string' && equipmentId.trim().length > 0) ids.add(equipmentId);
@@ -63,7 +66,7 @@ function createAllowedEquipmentIds(value, defaultEquipmentId) {
   return ids;
 }
 
-function validateWeaponForgeSnapshot(value, profile, ownedEquipmentIds) {
+function validateEquipmentForgeSnapshot(value, profile, ownedEquipmentItemIds) {
   if (!profile) return value;
   if (!isRecord(value)) throw new TypeError('저장된 무기 forge 진행이 필요합니다.');
   const materialEntries = Object.entries(value.materialQuantities ?? {});
@@ -76,16 +79,16 @@ function validateWeaponForgeSnapshot(value, profile, ownedEquipmentIds) {
   ) {
     throw new TypeError('저장된 무기 forge source ID가 올바르지 않습니다.');
   }
-  if (!isRecord(value.selectedProfileIdsByGroup)) {
+  if (!isRecord(value.selectedItemIdsByGroup)) {
     throw new TypeError('저장된 무기 forge 선택 기록이 올바르지 않습니다.');
   }
-  const choiceEntries = Object.entries(value.selectedProfileIdsByGroup);
+  const choiceEntries = Object.entries(value.selectedItemIdsByGroup);
   if (
     choiceEntries.some(
       ([groupId, profileId]) =>
         groupId !== profile.choiceGroupId ||
-        !profile.optionProfileIds.includes(profileId) ||
-        !ownedEquipmentIds.includes(profileId),
+        !profile.optionItemIds.includes(profileId) ||
+        !ownedEquipmentItemIds.includes(profileId),
     )
   ) {
     throw new TypeError('저장된 무기 forge archetype 선택이 올바르지 않습니다.');
@@ -98,10 +101,11 @@ function validateCurrentSnapshot(
   defaultEquipmentId,
   allowedEquipmentIds,
   enchantmentCatalog,
-  weaponForgeProfile,
+  equipmentForgeProfile,
   scrapCampaignProfile,
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
-  assertProgressionSnapshot(value, scrapCampaignProfile);
+  assertProgressionSnapshot(value, scrapCampaignProfile, equipmentCatalog);
   assertEconomicFields(value, defaultEquipmentId, allowedEquipmentIds);
   if (
     enchantmentCatalog.profiles.some(
@@ -110,15 +114,24 @@ function validateCurrentSnapshot(
   ) {
     throw new TypeError('현재 저장에는 모든 인챈트 소재의 명시적인 수량이 필요합니다.');
   }
-  validateWeaponForgeSnapshot(value.weaponForge, weaponForgeProfile, value.ownedEquipmentIds);
-  return mergeProgressionSnapshot(value, {
-    scrapCampaign: toScrapCampaignSnapshot(value.scrapCampaign, scrapCampaignProfile),
-    enchantment: canonicalizeEnchantmentSnapshot(
-      value.enchantment,
-      enchantmentCatalog,
-      value.ownedEquipmentIds,
-    ),
-  });
+  validateEquipmentForgeSnapshot(
+    value.equipmentForge,
+    equipmentForgeProfile,
+    value.ownedEquipmentItemIds,
+  );
+  return mergeProgressionSnapshot(
+    value,
+    {
+      scrapCampaign: toScrapCampaignSnapshot(value.scrapCampaign, scrapCampaignProfile),
+      enchantment: canonicalizeEnchantmentSnapshot(
+        value.enchantment,
+        enchantmentCatalog,
+        value.ownedEquipmentItemIds,
+        equipmentCatalog,
+      ),
+    },
+    equipmentCatalog,
+  );
 }
 
 function createStoredRecord(snapshot) {
@@ -126,11 +139,13 @@ function createStoredRecord(snapshot) {
     version: PROGRESSION_SCHEMA_VERSION,
     gold: snapshot.gold,
     trainingMarks: snapshot.trainingMarks,
-    ownedEquipmentIds: [...snapshot.ownedEquipmentIds],
-    equippedEquipmentId: snapshot.equippedEquipmentId,
+    ownedEquipmentItemIds: [...snapshot.ownedEquipmentItemIds],
+    loadout: snapshot.loadout,
+    everOwnedEquipmentItemIds: snapshot.everOwnedEquipmentItemIds,
+    discoveredSpecialSynergyIds: snapshot.discoveredSpecialSynergyIds,
     combatSkillLevel: snapshot.combatSkillLevel,
     viewedConversationIds: snapshot.viewedConversationIds,
-    weaponForge: snapshot.weaponForge,
+    equipmentForge: snapshot.equipmentForge,
     scrapCampaign: snapshot.scrapCampaign,
     enchantment: snapshot.enchantment,
   };
@@ -141,12 +156,19 @@ function decodeStoredSnapshot(
   defaultEquipmentId,
   allowedEquipmentIds,
   enchantmentCatalog,
-  weaponForgeProfile,
+  equipmentForgeProfile,
   scrapCampaignProfile,
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
   if (!isRecord(parsed) || !Number.isSafeInteger(parsed.version)) {
     throw new TypeError('저장 진행 형식이 올바르지 않습니다.');
   }
+  if (parsed.version === 10)
+    parsed = migrateEquipmentSaveV10(parsed, {
+      enchantmentCatalog,
+      equipmentForgeProfile,
+      scrapCampaignProfile,
+    });
   if (
     parsed.version !== PROGRESSION_SCHEMA_VERSION ||
     (Number.isSafeInteger(parsed.scrapCampaign?.version) &&
@@ -166,28 +188,39 @@ function decodeStoredSnapshot(
     defaultEquipmentId,
     allowedEquipmentIds,
     enchantmentCatalog,
-    weaponForgeProfile,
+    equipmentForgeProfile,
     scrapCampaignProfile,
+    equipmentCatalog,
   );
 }
 
 function validateSnapshotForStorage(
   snapshot,
   enchantmentCatalog,
-  weaponForgeProfile,
+  equipmentForgeProfile,
   scrapCampaignProfile,
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
-  assertProgressionSnapshot(snapshot, scrapCampaignProfile);
+  assertProgressionSnapshot(snapshot, scrapCampaignProfile, equipmentCatalog);
   if (!enchantmentCatalog) throw new TypeError('저장 enchantment catalog이 필요합니다.');
-  validateWeaponForgeSnapshot(snapshot.weaponForge, weaponForgeProfile, snapshot.ownedEquipmentIds);
-  return mergeProgressionSnapshot(snapshot, {
-    scrapCampaign: toScrapCampaignSnapshot(snapshot.scrapCampaign, scrapCampaignProfile),
-    enchantment: canonicalizeEnchantmentSnapshot(
-      snapshot.enchantment,
-      enchantmentCatalog,
-      snapshot.ownedEquipmentIds,
-    ),
-  });
+  validateEquipmentForgeSnapshot(
+    snapshot.equipmentForge,
+    equipmentForgeProfile,
+    snapshot.ownedEquipmentItemIds,
+  );
+  return mergeProgressionSnapshot(
+    snapshot,
+    {
+      scrapCampaign: toScrapCampaignSnapshot(snapshot.scrapCampaign, scrapCampaignProfile),
+      enchantment: canonicalizeEnchantmentSnapshot(
+        snapshot.enchantment,
+        enchantmentCatalog,
+        snapshot.ownedEquipmentItemIds,
+        equipmentCatalog,
+      ),
+    },
+    equipmentCatalog,
+  );
 }
 
 function validateRecoveryMetadata(value, slotId) {
@@ -222,8 +255,9 @@ export class ProgressionStorage {
     storage,
     key,
     enchantmentCatalog = null,
-    weaponForgeProfile = null,
+    equipmentForgeProfile = null,
     scrapCampaignProfile = null,
+    equipmentCatalog = EQUIPMENT_CATALOG,
   ) {
     if (
       !storage ||
@@ -241,8 +275,9 @@ export class ProgressionStorage {
     this.key = key;
     this.recoveryKey = `${key}.recovery.v1`;
     this.enchantmentCatalog = enchantmentCatalog;
-    this.weaponForgeProfile = weaponForgeProfile;
+    this.equipmentForgeProfile = equipmentForgeProfile;
     this.scrapCampaignProfile = scrapCampaignProfile;
+    this.equipmentCatalog = equipmentCatalog;
   }
 
   load(
@@ -269,6 +304,7 @@ export class ProgressionStorage {
           defaultEquipmentId,
           enchantmentCatalog,
           this.scrapCampaignProfile,
+          this.equipmentCatalog,
         ),
       });
     }
@@ -294,8 +330,9 @@ export class ProgressionStorage {
         defaultEquipmentId,
         allowedIds,
         enchantmentCatalog,
-        this.weaponForgeProfile,
+        this.equipmentForgeProfile,
         this.scrapCampaignProfile,
+        this.equipmentCatalog,
       );
       return Object.freeze({
         ok: true,
@@ -317,8 +354,9 @@ export class ProgressionStorage {
       validated = validateSnapshotForStorage(
         snapshot,
         this.enchantmentCatalog,
-        this.weaponForgeProfile,
+        this.equipmentForgeProfile,
         this.scrapCampaignProfile,
+        this.equipmentCatalog,
       );
     } catch {
       return failure('invalid-data', '현재 진행 값이 올바르지 않아 저장하지 못했습니다.');
@@ -376,8 +414,9 @@ export class ProgressionStorage {
           defaultEquipmentId,
           allowedIds,
           enchantmentCatalog,
-          this.weaponForgeProfile,
+          this.equipmentForgeProfile,
           this.scrapCampaignProfile,
+          this.equipmentCatalog,
         );
         records.push(Object.freeze({ slotId, metadata, snapshot }));
       }
@@ -411,8 +450,9 @@ export class ProgressionStorage {
       validatedSnapshot = validateSnapshotForStorage(
         snapshot,
         this.enchantmentCatalog,
-        this.weaponForgeProfile,
+        this.equipmentForgeProfile,
         this.scrapCampaignProfile,
+        this.equipmentCatalog,
       );
       validatedMetadata = validateRecoveryMetadata(metadata, slotId);
     } catch {
@@ -430,6 +470,20 @@ export class ProgressionStorage {
           !isRecord(parsed.slots)
         ) {
           throw new TypeError('기존 복구 저장 형식이 올바르지 않습니다.');
+        }
+        for (const [existingSlotId, existingRecord] of Object.entries(parsed.slots)) {
+          if (!RECOVERY_SLOT_IDS.includes(existingSlotId) || !isRecord(existingRecord))
+            throw new Error('Invalid existing recovery slot');
+          validateRecoveryMetadata(existingRecord.metadata, existingSlotId);
+          decodeStoredSnapshot(
+            existingRecord.snapshot,
+            this.equipmentCatalog.defaultItemId,
+            new Set(this.equipmentCatalog.items.map((item) => item.id)),
+            this.enchantmentCatalog,
+            this.equipmentForgeProfile,
+            this.scrapCampaignProfile,
+            this.equipmentCatalog,
+          );
         }
         envelope = parsed;
       }

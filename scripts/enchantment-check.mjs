@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 
 import { sampleTrainingEnemyCombatGeometry } from '../src/combat/SharedCombatGeometry.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
-import { resolveSwordEnchantment } from '../src/game/enchantment/EnchantmentPolicy.js';
+import { resolveEquipmentEnchantment } from '../src/game/enchantment/EnchantmentPolicy.js';
 import {
   ENCHANTMENT_MATERIAL_COSTS,
   ENCHANTMENT_MAX_LEVEL,
@@ -26,7 +26,7 @@ import {
   mergeProgressionSnapshot,
   purchaseEquipment,
   selectEquipment,
-  upgradeSwordEnchantment,
+  upgradeEquipmentEnchantment,
 } from '../src/game/progression/ProgressionState.js';
 import { ProgressionStorage } from '../src/game/progression/ProgressionStorage.js';
 import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNode.js';
@@ -34,15 +34,15 @@ import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEne
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP = 1 / 120;
-const DEFAULT_SWORD_ID = 'balanced-sword';
-const OTHER_SWORD_ID = 'heavy-sword';
+const DEFAULT_SWORD_ID = 'field-cutter-balanced';
+const OTHER_SWORD_ID = 'field-cutter-heavy';
 let contactSequence = 0;
 
 function createEncounter({
   profileId = 'yard-scout-collector',
   enchantId = null,
   enchantLevel = enchantId ? ENCHANTMENT_MAX_LEVEL : 0,
-  swordId = DEFAULT_SWORD_ID,
+  itemId = DEFAULT_SWORD_ID,
   affinity = 'neutral',
   maxHealth = 500,
   guardOutsidePunish,
@@ -60,7 +60,7 @@ function createEncounter({
     }),
   });
   const active = enchantId
-    ? Object.freeze({ ...ENCHANTMENT_CATALOG.getProfile(enchantId), swordId, level: enchantLevel })
+    ? Object.freeze({ ...ENCHANTMENT_CATALOG.getProfile(enchantId), itemId, level: enchantLevel })
     : null;
   return new TrainingEncounterNode({
     entity: {
@@ -75,7 +75,7 @@ function createEncounter({
     spinContact: { hitPulses: [0.3, 0.5, 0.7], contactSpacings: [23, 17, 5] },
     encounterProfiles,
     attackProfiles: TRAINING_ENEMY_ATTACK_PROFILES,
-    enchantmentContext: { swordId, level: enchantLevel, active },
+    enchantmentContext: { itemId, level: enchantLevel, active },
   });
 }
 
@@ -177,7 +177,7 @@ function verifyPolicyAndActualMatrix() {
     const pureByAffinity = {};
     const actualByAffinity = {};
     for (const affinity of ['weak', 'neutral', 'resistant']) {
-      const basic = resolveSwordEnchantment({
+      const basic = resolveEquipmentEnchantment({
         enchantId: profile.id,
         enchantLevel: 5,
         affinity,
@@ -185,7 +185,7 @@ function verifyPolicyAndActualMatrix() {
         baseDamage: 100,
         weaponBaseAttack: 100,
       });
-      const strong = resolveSwordEnchantment({
+      const strong = resolveEquipmentEnchantment({
         enchantId: profile.id,
         enchantLevel: 5,
         affinity,
@@ -201,7 +201,7 @@ function verifyPolicyAndActualMatrix() {
       const basicActual = resolveContact(basicEncounter, 'basic');
       assert.equal(basicActual.playerResult.damagingHit.enchantment.id, profile.id);
       assert.equal(basicActual.playerResult.damagingHit.enchantment.level, 5);
-      assert.equal(basicActual.playerResult.damagingHit.enchantment.swordId, DEFAULT_SWORD_ID);
+      assert.equal(basicActual.playerResult.damagingHit.enchantment.itemId, DEFAULT_SWORD_ID);
       assert.equal(basicActual.combatEvent.payload.enchantment.color, profile.color);
       assert.equal(basicActual.status.buildup, basic.buildup);
       basicEncounter.exitTree();
@@ -217,7 +217,7 @@ function verifyPolicyAndActualMatrix() {
     assert.ok(actualByAffinity.weak > actualByAffinity.neutral);
     assert.ok(actualByAffinity.neutral > actualByAffinity.resistant);
 
-    const levelOne = resolveSwordEnchantment({
+    const levelOne = resolveEquipmentEnchantment({
       enchantId: profile.id,
       enchantLevel: 1,
       affinity: 'neutral',
@@ -225,7 +225,7 @@ function verifyPolicyAndActualMatrix() {
       baseDamage: 100,
       weaponBaseAttack: 100,
     });
-    const levelFive = resolveSwordEnchantment({
+    const levelFive = resolveEquipmentEnchantment({
       enchantId: profile.id,
       enchantLevel: 5,
       affinity: 'neutral',
@@ -240,7 +240,7 @@ function verifyPolicyAndActualMatrix() {
   }
 
   assert.equal(
-    resolveSwordEnchantment({
+    resolveEquipmentEnchantment({
       enchantId: null,
       enchantLevel: 0,
       affinity: 'neutral',
@@ -347,9 +347,9 @@ function verifyTransactionsAndSwordIsolation() {
   for (let targetLevel = 1; targetLevel <= 5; targetLevel += 1) {
     const beforeGold = getAvailableGold(progression);
     const beforeMaterial = progression.enchantment.materialQuantities[fire.materialId];
-    const transaction = upgradeSwordEnchantment(
+    const transaction = upgradeEquipmentEnchantment(
       progression,
-      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      { itemId: DEFAULT_SWORD_ID, elementId: 'fire' },
       ENCHANTMENT_CATALOG,
     );
     assert.equal(transaction.changed, true);
@@ -363,14 +363,14 @@ function verifyTransactionsAndSwordIsolation() {
     );
     progression = transaction.snapshot;
   }
-  assert.deepEqual(progression.enchantment.swordEnchantments[DEFAULT_SWORD_ID], {
+  assert.deepEqual(progression.enchantment.equipmentEnchantments[DEFAULT_SWORD_ID], {
     elementId: 'fire',
     level: 5,
   });
   assertUnchangedFailure(
-    upgradeSwordEnchantment(
+    upgradeEquipmentEnchantment(
       progression,
-      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      { itemId: DEFAULT_SWORD_ID, elementId: 'fire' },
       ENCHANTMENT_CATALOG,
     ),
     progression,
@@ -383,9 +383,9 @@ function verifyTransactionsAndSwordIsolation() {
     gold: fire.goldCosts[0],
   });
   assertUnchangedFailure(
-    upgradeSwordEnchantment(
+    upgradeEquipmentEnchantment(
       materialFailure,
-      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      { itemId: DEFAULT_SWORD_ID, elementId: 'fire' },
       ENCHANTMENT_CATALOG,
     ),
     materialFailure,
@@ -397,27 +397,27 @@ function verifyTransactionsAndSwordIsolation() {
     gold: 0,
   });
   assertUnchangedFailure(
-    upgradeSwordEnchantment(
+    upgradeEquipmentEnchantment(
       goldFailure,
-      { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+      { itemId: DEFAULT_SWORD_ID, elementId: 'fire' },
       ENCHANTMENT_CATALOG,
     ),
     goldFailure,
     ENCHANTMENT_TRANSACTION_REASON.INSUFFICIENT_GOLD,
   );
   assertUnchangedFailure(
-    upgradeSwordEnchantment(
+    upgradeEquipmentEnchantment(
       goldFailure,
-      { swordId: 'not-owned', elementId: 'fire' },
+      { itemId: 'not-owned', elementId: 'fire' },
       ENCHANTMENT_CATALOG,
     ),
     goldFailure,
     ENCHANTMENT_TRANSACTION_REASON.NOT_OWNED,
   );
   assertUnchangedFailure(
-    upgradeSwordEnchantment(
+    upgradeEquipmentEnchantment(
       goldFailure,
-      { swordId: DEFAULT_SWORD_ID, elementId: 'void' },
+      { itemId: DEFAULT_SWORD_ID, elementId: 'void' },
       ENCHANTMENT_CATALOG,
     ),
     goldFailure,
@@ -430,11 +430,11 @@ function verifyTransactionsAndSwordIsolation() {
     gold: 120,
   });
   const purchased = purchaseEquipment(purchaseBase, {
-    profileId: OTHER_SWORD_ID,
+    itemId: OTHER_SWORD_ID,
     goldCost: 120,
   });
   assert.equal(purchased.changed, true);
-  assert.deepEqual(purchased.snapshot.enchantment.swordEnchantments[OTHER_SWORD_ID], {
+  assert.deepEqual(purchased.snapshot.enchantment.equipmentEnchantments[OTHER_SWORD_ID], {
     elementId: null,
     level: 0,
   });
@@ -443,7 +443,7 @@ function verifyTransactionsAndSwordIsolation() {
     ...purchased.snapshot,
     enchantment: {
       ...purchased.snapshot.enchantment,
-      swordEnchantments: {
+      equipmentEnchantments: {
         [DEFAULT_SWORD_ID]: { elementId: 'fire', level: 1 },
         [OTHER_SWORD_ID]: { elementId: 'ice', level: 5 },
       },
@@ -454,19 +454,22 @@ function verifyTransactionsAndSwordIsolation() {
     mapDefinition: SCRAP_AWAKENING_MAP,
     progressionSnapshot: equippedHeavy,
   });
-  assert.equal(scene.getEnchantContext().swordId, OTHER_SWORD_ID);
+  assert.equal(scene.getEnchantContext().itemId, OTHER_SWORD_ID);
   assert.equal(scene.getEnchantContext().level, 5);
   assert.equal(scene.getEnchantContext().active.id, 'ice');
-  assert.equal(scene.getEnchantContext().active.swordId, OTHER_SWORD_ID);
+  assert.equal(scene.getEnchantContext().active.itemId, OTHER_SWORD_ID);
   const equippedBalanced = selectEquipment(scene.getProgressionSnapshot(), DEFAULT_SWORD_ID);
   assert.equal(equippedBalanced.changed, true);
   scene.restoreProgression(equippedBalanced.snapshot);
   assert.equal(scene.getEnchantContext().active.id, 'fire');
   assert.equal(scene.getEnchantContext().active.level, 1);
-  assert.deepEqual(scene.getProgressionSnapshot().enchantment.swordEnchantments[OTHER_SWORD_ID], {
-    elementId: 'ice',
-    level: 5,
-  });
+  assert.deepEqual(
+    scene.getProgressionSnapshot().enchantment.equipmentEnchantments[OTHER_SWORD_ID],
+    {
+      elementId: 'ice',
+      level: 5,
+    },
+  );
   scene.dispose();
 }
 
@@ -584,7 +587,7 @@ function verifyCampaignEnemyMaterialRewards() {
       new MemoryStorage(),
       'campaign-victory',
       ENCHANTMENT_CATALOG,
-      COMBAT_PROGRESSION_PROFILE.weaponForge,
+      COMBAT_PROGRESSION_PROFILE.equipmentForge,
       SCRAP_CAMPAIGN_PROFILE,
     );
     assert.equal(storage.save(afterVictory).ok, true);
@@ -617,14 +620,14 @@ function verifyPersistenceAndRecovery() {
     quantity: 2,
     gold: 60,
   });
-  const upgraded = upgradeSwordEnchantment(
+  const upgraded = upgradeEquipmentEnchantment(
     durable,
-    { swordId: DEFAULT_SWORD_ID, elementId: 'fire' },
+    { itemId: DEFAULT_SWORD_ID, elementId: 'fire' },
     ENCHANTMENT_CATALOG,
   ).snapshot;
   const adapter = new MemoryStorage();
   const storage = new ProgressionStorage(adapter, 'enchantment-current', ENCHANTMENT_CATALOG);
-  assert.equal(PROGRESSION_SCHEMA_VERSION, 10);
+  assert.equal(PROGRESSION_SCHEMA_VERSION, 11);
   assert.equal(storage.save(upgraded).ok, true);
   const roundTrip = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(roundTrip.ok, true);
@@ -737,7 +740,7 @@ function verifyWorkshopRuntimeContext() {
     const forged = scene.executeDialogueCommand('scrapyard-owner-workshop', 'enchant-fire');
     assert.equal(forged.changed, true);
     assert.equal(scene.getEnchantContext().active.level, 1);
-    assert.equal(scene.getEnchantContext().swordId, DEFAULT_SWORD_ID);
+    assert.equal(scene.getEnchantContext().itemId, DEFAULT_SWORD_ID);
     assert.equal(
       scene.getProgressionSnapshot().scrapCampaign.elapsedSegments,
       0,
@@ -765,16 +768,16 @@ console.log(
   JSON.stringify(
     {
       status: 'PASS',
-      probe: 'per-sword-enchantment-domain',
+      probe: 'per-item-enchantment-domain',
       checks: [
         'level-costs-2-4-8-16-32-and-authored-gold-atomicity',
         'explicit-unchanged-failure-reasons',
-        'per-sword-isolation-and-equipped-context',
+        'per-item-isolation-and-equipped-context',
         'level-1-to-5-linear-damage-and-level-5-1.5x-additional',
         'affinity-non-zero-basic-strong-status-and-four-elements',
         'shield-contact-exclusion',
         'current-authored-victory-resources-and-one-ledger-award',
-        'production-victory-single-snapshot-and-v10-round-trip',
+        'production-victory-single-snapshot-and-v11-round-trip',
         'incompatible-reset-notice-corrupt-and-write-failure',
         'active-npc-conversation-command-only-and-static-hud-removal',
       ],

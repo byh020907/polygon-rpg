@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
-import { EQUIPMENT_CATALOG } from '../src/game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG } from '../src/game/equipment/EquipmentCatalog.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../src/game/progression/ProgressionProfiles.js';
 import {
   createProgressionSnapshot,
@@ -29,7 +29,7 @@ import { GameApp } from '../src/app/GameApp.js';
 
 const STORAGE_KEY = 'polygon-rpg.test.progression';
 const RECOVERY_KEY = `${STORAGE_KEY}.recovery.v1`;
-const EQUIPMENT_IDS = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
+const EQUIPMENT_IDS = EQUIPMENT_CATALOG.items.map((profile) => profile.id);
 
 class MemoryStorage {
   constructor({ throwOnKey = null } = {}) {
@@ -56,7 +56,7 @@ function createStorage(storage = new MemoryStorage()) {
     storage,
     STORAGE_KEY,
     ENCHANTMENT_CATALOG,
-    COMBAT_PROGRESSION_PROFILE.weaponForge,
+    COMBAT_PROGRESSION_PROFILE.equipmentForge,
     SCRAP_CAMPAIGN_PROFILE,
   );
 }
@@ -71,7 +71,7 @@ function withCampaign(progression, campaignPatch) {
 }
 
 const fresh = createProgressionSnapshot(
-  EQUIPMENT_CATALOG.defaultProfileId,
+  EQUIPMENT_CATALOG.defaultItemId,
   ENCHANTMENT_CATALOG,
   SCRAP_CAMPAIGN_PROFILE,
 );
@@ -138,7 +138,7 @@ for (const request of [nextMorningRequests[0], coreRequests[0], preActionRequest
   );
 }
 const loadedSlots = storage.loadRecoverySlots(
-  EQUIPMENT_CATALOG.defaultProfileId,
+  EQUIPMENT_CATALOG.defaultItemId,
   EQUIPMENT_IDS,
   ENCHANTMENT_CATALOG,
 );
@@ -161,7 +161,7 @@ assert.match(createRecoverySlotReadModel(loadedSlots.records[0]).timeLabel, /^Da
 const corruptMemory = new MemoryStorage();
 corruptMemory.setItem(RECOVERY_KEY, '{broken-json');
 const corruptLoad = createStorage(corruptMemory).loadRecoverySlots(
-  EQUIPMENT_CATALOG.defaultProfileId,
+  EQUIPMENT_CATALOG.defaultItemId,
   EQUIPMENT_IDS,
   ENCHANTMENT_CATALOG,
 );
@@ -182,7 +182,7 @@ for (const changeVersion of [
   const serialized = JSON.stringify(envelope);
   incompatibleMemory.setItem(RECOVERY_KEY, serialized);
   const incompatible = createStorage(incompatibleMemory).loadRecoverySlots(
-    EQUIPMENT_CATALOG.defaultProfileId,
+    EQUIPMENT_CATALOG.defaultItemId,
     EQUIPMENT_IDS,
   );
   assert.equal(incompatible.ok, false);

@@ -27,7 +27,7 @@ import {
 } from '../src/combat/SharedCombatGeometry.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
 import { CHARACTER_RENDER_SCALE } from '../src/game/PlayerCombatPresentation.js';
-import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
+import { CUTTER_LOADOUTS } from './fixtures/equipment-loadouts.mjs';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { resolveEncounterBodyCollider } from '../src/game/encounter/EncounterBodyCollider.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
@@ -408,7 +408,7 @@ for (const [motionId, contactFrameId] of Object.entries({
   airSpin: 'air-spin-contact',
   airCross: 'air-cross-contact',
 })) {
-  for (const timingProfile of [{}, ...EQUIPMENT_PROFILES.map(({ combatTiming }) => combatTiming)]) {
+  for (const timingProfile of [{}, ...CUTTER_LOADOUTS.map(({ combatTiming }) => combatTiming)]) {
     const frame = combatMotionFrameData(motionId, timingProfile);
     for (let index = 0; index <= 20; index += 1) {
       assertFixedLengths(
@@ -455,7 +455,7 @@ for (const [motionId, contactFrameId] of Object.entries({
   }
 }
 
-for (const { id: equipmentId, combatTiming } of EQUIPMENT_PROFILES) {
+for (const { id: equipmentId, combatTiming } of CUTTER_LOADOUTS) {
   for (const [motionId, contactFrameId] of Object.entries({
     slash: 'slash-contact',
     heavy: 'heavy-contact',

@@ -1,3 +1,4 @@
+import { equipmentTestSnapshot } from './fixtures/equipment-loadouts.mjs';
 import assert from 'node:assert/strict';
 import {
   createGraphicsResourceCatalog,
@@ -10,10 +11,7 @@ import {
 } from '../src/graphics/GraphicsResourceSampler.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
-import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
-import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
-import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
-import { createProgressionSnapshot } from '../src/game/progression/ProgressionState.js';
+import { EQUIPMENT_ITEMS } from '../src/game/equipment/EquipmentCatalog.js';
 import { createGameScene } from '../src/app/createGameScene.js';
 import { COMBAT_MOTION_TIMING_PROFILES } from '../src/combat/CombatMotionTimingProfiles.js';
 import { createMapGraphicResources } from '../src/graphics/MapGraphicResources.js';
@@ -97,7 +95,7 @@ try {
   assert.equal(catalog.inventory.enemyProfileCount, Object.keys(ENCOUNTER_PROFILES).length);
   assert.equal(catalog.inventory.placedEnemyProfileCount, 16);
   assert.equal(catalog.inventory.unplacedEnemyProfileIds.length, 5);
-  for (const equipment of EQUIPMENT_PROFILES) assert.ok(catalog.get(`equipment:${equipment.id}`));
+  for (const equipment of EQUIPMENT_ITEMS) assert.ok(catalog.get(`equipment:${equipment.id}`));
   for (const effect of GRAPHICS_EFFECT_DEFINITIONS) assert.ok(catalog.get(`effect:${effect.id}`));
   for (const category of GRAPHICS_CATEGORIES)
     assert.ok(
@@ -145,13 +143,9 @@ try {
 
   // Compare the actual GameScene RenderFrame with the review at the same pose,
   // equipment, time, and facing. This catches a review-only weapon scaling path.
-  for (const equipment of EQUIPMENT_PROFILES) {
+  for (const equipment of EQUIPMENT_ITEMS) {
     const game = createGameScene({
-      progressionSnapshot: createProgressionSnapshot(
-        equipment.id,
-        ENCHANTMENT_CATALOG,
-        SCRAP_CAMPAIGN_PROFILE,
-      ),
+      progressionSnapshot: equipmentTestSnapshot(equipment.id),
     });
     const resource = catalog.get(`equipment:${equipment.id}`);
     try {

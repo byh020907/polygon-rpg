@@ -6,7 +6,12 @@ import {
   playerUtilityFrameCount,
   playerBlockReactionTiming,
 } from '../animation/PlayerMotionProfile.js';
-import { EQUIPMENT_PROFILES } from '../game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG, EQUIPMENT_ITEMS } from '../game/equipment/EquipmentCatalog.js';
+import {
+  DEFAULT_LOADOUT,
+  EQUIPMENT_SLOT_KEYS,
+  resolveEquipmentLoadout,
+} from '../game/equipment/EquipmentLoadout.js';
 import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
@@ -50,10 +55,12 @@ const MOTION_LABELS = Object.freeze({
   airCross: '공중 교차 베기',
 });
 
-export function graphicsPlayerActions(equipment = EQUIPMENT_PROFILES[0]) {
+export function graphicsPlayerActions(
+  equipment = resolveEquipmentLoadout(DEFAULT_LOADOUT, EQUIPMENT_CATALOG),
+) {
   const blockTiming = playerBlockReactionTiming(
     TRAINING_ENEMY_ATTACK_PROFILES.light,
-    equipment.guard,
+    equipment.guardModifiers,
   );
   return deepFreeze([
     ...[
@@ -256,21 +263,34 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       source: 'src/game/PlayerCombatPresentation.js',
       actions: graphicsPlayerActions(),
     },
-    ...EQUIPMENT_PROFILES.map((equipment) => ({
-      id: `equipment:${equipment.id}`,
-      label: equipment.label,
-      category: 'equipment',
-      kind: 'animated',
-      producer: 'equipment',
-      source: 'src/game/equipment/EquipmentProfiles.js',
-      equipmentId: equipment.id,
-      actions: [
-        { id: 'static', label: '검·방패 실제 크기', frameCount: 1 },
-        ...graphicsPlayerActions(equipment),
-      ],
-      notes:
-        '게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.',
-    })),
+    ...EQUIPMENT_ITEMS.map((equipment) => {
+      const family = EQUIPMENT_CATALOG.getFamily(equipment.familyId);
+      const resolved = resolveEquipmentLoadout(
+        { ...DEFAULT_LOADOUT, [EQUIPMENT_SLOT_KEYS[family.slot]]: equipment.id },
+        EQUIPMENT_CATALOG,
+      );
+      return {
+        id: `equipment:${equipment.id}`,
+        label: equipment.label,
+        category: 'equipment',
+        kind: 'animated',
+        producer: 'equipment',
+        source: 'src/game/equipment/EquipmentItemProfiles.js',
+        familyId: family.id,
+        slot: family.slot,
+        handUsage: family.handUsage,
+        movesetId: resolved.moveset.id,
+        visualProfileId: equipment.visualProfileId,
+        geometryProfile: resolved.geometryProfile,
+        fieldCapabilities: resolved.fieldCapabilities,
+        equipmentId: equipment.id,
+        actions: [
+          { id: 'static', label: '장비 실제 크기', frameCount: 1 },
+          ...graphicsPlayerActions(resolved),
+        ],
+        notes: `Item ${equipment.id} · Family ${family.id} · Slot ${family.slot} · ${family.handUsage} · Moveset ${resolved.moveset.id} · Set ${equipment.setId ?? '없음'} · 특수 조합 ${EQUIPMENT_CATALOG.specialSynergies.some((s) => JSON.stringify(s.requirements).includes(equipment.id)) ? '관련 있음' : '없음'} · Field ${resolved.fieldCapabilities.join(', ')} · Visual ${equipment.visualProfileId}. 현재 placeholder를 사용합니다.`,
+      };
+    }),
     ...ENEMY_REFERENCE_PROFILES.map((profile) => ({
       id: `enemy-reference:${profile.id}`,
       label: profile.label,
@@ -354,7 +374,7 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       enemyProfileCount: Object.keys(ENCOUNTER_PROFILES).length,
       placedEnemyProfileCount: placements.size,
       unplacedEnemyProfileIds: Object.keys(ENCOUNTER_PROFILES).filter((id) => !placements.has(id)),
-      equipmentCount: EQUIPMENT_PROFILES.length,
+      equipmentCount: EQUIPMENT_ITEMS.length,
       effectCount: GRAPHICS_EFFECT_DEFINITIONS.length,
       categoryCounts: Object.fromEntries(
         GRAPHICS_CATEGORIES.map(({ id }) => [

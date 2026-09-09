@@ -4,13 +4,15 @@
 
 ## Project Sources
 
-- [Product Goal](./PRODUCT_GOAL.html): 사용자가 경험해야 하는 현재 Product Desired State
+- [Product Goal](./PRODUCT_GOAL.html): 처음 보는 사람도 전체 게임을 읽을 수 있는 공식 게임 위키·제품 명세
 - [Architecture](./ARCHITECTURE.md): 코드가 따라야 하는 현재 Engineering Desired State
 - [Human Feedback Inbox](./INBOX.md): 아직 처리하지 않은 제품 feedback
 - [Loop State](./STATE.md): 코드와 실행 evidence에서 재구성되는 현재 비교 snapshot
 - [Product Goal Loop Method](./.ai/methods/product-goal-loop/METHOD.md): Gap을 발견하고 구현·검증하며 두 Desired State에 수렴하는 개발 runtime
 
 `AGENTS.md`는 위 경로만 bootstrap합니다. 개발 loop의 완료 의미는 특정 Agent, scheduler, worktree, CI나 orchestration 도구에 의존하지 않습니다.
+
+- [장비 시스템 명세](docs/game-systems/equipment.md): 6슬롯·Family/Moveset·성장·세트/특수 시너지·저장 계약
 
 ## 시작하기
 
@@ -70,6 +72,8 @@ Quick Tunnel은 인증 없는 공개 개발 주소입니다. secret, personal da
 - `npm run test:pwa:recovery`: 과거 설치 정체 → 데이터 유지한 브라우저 완전 재시작 → 정상 설치·오프라인 복구 실증
 - `npm run test:mobile-menu`: 가로/세로 메뉴, 화면 회전·높이, 주요 버튼과 버전 표시의 실제 viewport 검사
 - `npm run test:campaign`, `npm run test:intro`, `npm run test:platform`: 해당 흐름의 focused fixture
+- `npm run verify`: 전체 check·PWA·장비 PC/mobile 실제 UI·저장 migration·전투 입력 검증
+- `npm run test:equipment`: Family/6슬롯·세트/특수 발견·v10 migration·전투 연결 검사
 - `npm run check`: 모든 lint, format, domain fixture를 실행하는 완료 후보의 전체 검사
 - `npm run format`: Prettier 적용
 - `npm run format:check`: formatting 검사
@@ -93,7 +97,7 @@ player/enemy/contact metadata를 함께 남깁니다. 공간·도입 scenario는
 
 ## GitHub Pages
 
-개발 저장은 현재 schema만 사용한다. 호환되지 않는 이전 개발 저장은 초기화 안내를 표시하며 자동으로 덮어쓰지 않는다. 사용자가 메뉴에서 초기화를 선택하면 현행 캠페인을 새로 시작한다.
+장비 schema v11은 v10 저장의 장비·성장·캠페인을 명시 migration으로 보존한다. 더 오래된 호환 불가 캠페인이나 손상 저장은 안내하며 자동으로 덮어쓰지 않는다. 사용자가 메뉴에서 초기화를 선택하면 현행 캠페인을 새로 시작한다.
 
 Production은 별도 bundle 없이 `main /`의 static files를 제공합니다.
 

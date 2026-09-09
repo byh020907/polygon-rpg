@@ -1,6 +1,6 @@
 import { createProloguePresentation } from '../graphics/scene/ProloguePresentation.js';
 import { GameScene } from '../game/GameScene.js';
-import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentCatalog.js';
 import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';

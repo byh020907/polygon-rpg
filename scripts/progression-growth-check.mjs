@@ -6,13 +6,15 @@ import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfil
 import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
+import { EQUIPMENT_CATALOG } from '../src/game/equipment/EquipmentCatalog.js';
+const DEFAULT_EQUIPMENT_PROFILE_ID = EQUIPMENT_CATALOG.defaultItemId;
+const EQUIPMENT_PROFILES = EQUIPMENT_CATALOG.items;
+const getEquipmentProfile = (id) => {
+  const item = EQUIPMENT_CATALOG.getItem(id);
+  return { ...item, ...item.modifiers };
+};
 import {
-  DEFAULT_EQUIPMENT_PROFILE_ID,
-  EQUIPMENT_PROFILES,
-  getEquipmentProfile,
-} from '../src/game/equipment/EquipmentProfiles.js';
-import {
-  SCRAP_WEAPON_FORGE_PROFILE,
+  SCRAP_EQUIPMENT_FORGE_PROFILE,
   COMBAT_PROGRESSION_PROFILE,
   getCombatSkillTrainingMarkRequirement,
   getCombatSkillUpgradeCost,
@@ -23,9 +25,9 @@ import {
   awardCampaignEncounterReward,
   awardGold,
   assertProgressionSnapshot,
-  awardWeaponForgeMaterial,
+  awardEquipmentForgeMaterial,
   createProgressionSnapshot,
-  forgeWeaponArchetype,
+  forgeEquipmentArchetype,
   getAvailableGold,
   mergeProgressionSnapshot,
   purchaseEquipment,
@@ -39,10 +41,10 @@ import { TrainingEncounterNode } from '../src/game/training/TrainingEncounterNod
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
-const HEAVY_PROFILE_ID = 'heavy-sword';
-const SWIFT_ARCHETYPE_ID = 'swift-chain-sword';
-const BREAKER_ARCHETYPE_ID = 'posture-breaker-sword';
-const REAR_ARCHETYPE_ID = 'rear-punish-sword';
+const HEAVY_PROFILE_ID = 'field-cutter-heavy';
+const SWIFT_ARCHETYPE_ID = 'field-cutter-swift';
+const BREAKER_ARCHETYPE_ID = 'field-cutter-breaker';
+const REAR_ARCHETYPE_ID = 'field-cutter-reach';
 const ARCHETYPE_PROFILE_IDS = Object.freeze([
   SWIFT_ARCHETYPE_ID,
   BREAKER_ARCHETYPE_ID,
@@ -106,25 +108,25 @@ function assertFrozenTransaction(transaction) {
   assert.ok(Object.isFrozen(transaction), 'progression transaction result는 immutable이어야 한다.');
   assert.ok(Object.isFrozen(transaction.snapshot), 'transaction snapshot은 immutable이어야 한다.');
   assert.ok(
-    Object.isFrozen(transaction.snapshot.ownedEquipmentIds),
+    Object.isFrozen(transaction.snapshot.ownedEquipmentItemIds),
     '소유 장비 ID 목록은 immutable이어야 한다.',
   );
 }
 
 function forgeArchetype(snapshot, profileId) {
-  const forge = SCRAP_WEAPON_FORGE_PROFILE;
-  return forgeWeaponArchetype(snapshot, {
+  const forge = SCRAP_EQUIPMENT_FORGE_PROFILE;
+  return forgeEquipmentArchetype(snapshot, {
     choiceGroupId: forge.choiceGroupId,
-    profileId,
-    optionProfileIds: forge.optionProfileIds,
+    itemId: profileId,
+    optionItemIds: forge.optionItemIds,
     materialId: forge.materialId,
     materialCost: forge.materialCost,
   });
 }
 
 function awardCampaignForgeMaterial(snapshot) {
-  const forge = SCRAP_WEAPON_FORGE_PROFILE;
-  return awardWeaponForgeMaterial(snapshot, {
+  const forge = SCRAP_EQUIPMENT_FORGE_PROFILE;
+  return awardEquipmentForgeMaterial(snapshot, {
     sourceId: forge.sourceId,
     materialId: forge.materialId,
     quantity: forge.sourceQuantity,
@@ -132,7 +134,7 @@ function awardCampaignForgeMaterial(snapshot) {
 }
 
 function verifyWeaponArchetypeForgeTransactions() {
-  const forge = SCRAP_WEAPON_FORGE_PROFILE;
+  const forge = SCRAP_EQUIPMENT_FORGE_PROFILE;
   const fresh = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
   const unavailable = forgeArchetype(fresh, SWIFT_ARCHETYPE_ID);
   assert.equal(unavailable.changed, false);
@@ -141,8 +143,8 @@ function verifyWeaponArchetypeForgeTransactions() {
   const awarded = awardCampaignForgeMaterial(fresh);
   assert.equal(awarded.changed, true);
   assert.equal(awarded.reason, PROGRESSION_TRANSACTION_REASON.AWARDED);
-  assert.equal(awarded.snapshot.weaponForge.materialQuantities[forge.materialId], 1);
-  assert.deepEqual(awarded.snapshot.weaponForge.claimedSourceIds, [forge.sourceId]);
+  assert.equal(awarded.snapshot.equipmentForge.materialQuantities[forge.materialId], 1);
+  assert.deepEqual(awarded.snapshot.equipmentForge.claimedSourceIds, [forge.sourceId]);
   const repeatedAward = awardCampaignForgeMaterial(awarded.snapshot);
   assert.equal(repeatedAward.changed, false);
   assert.equal(repeatedAward.reason, PROGRESSION_TRANSACTION_REASON.ALREADY_CLAIMED);
@@ -158,15 +160,15 @@ function verifyWeaponArchetypeForgeTransactions() {
     forgedResults.set(profileId, transaction);
     assert.equal(transaction.changed, true);
     assert.equal(transaction.reason, PROGRESSION_TRANSACTION_REASON.FORGED);
-    assert.equal(transaction.snapshot.equippedEquipmentId, profileId);
-    assert.ok(transaction.snapshot.ownedEquipmentIds.includes(profileId));
-    assert.deepEqual(transaction.snapshot.enchantment.swordEnchantments[profileId], {
+    assert.equal(transaction.snapshot.loadout.weaponItemId, profileId);
+    assert.ok(transaction.snapshot.ownedEquipmentItemIds.includes(profileId));
+    assert.deepEqual(transaction.snapshot.enchantment.equipmentEnchantments[profileId], {
       elementId: null,
       level: 0,
     });
-    assert.equal(transaction.snapshot.weaponForge.materialQuantities[forge.materialId], 0);
+    assert.equal(transaction.snapshot.equipmentForge.materialQuantities[forge.materialId], 0);
     assert.equal(
-      transaction.snapshot.weaponForge.selectedProfileIdsByGroup[forge.choiceGroupId],
+      transaction.snapshot.equipmentForge.selectedItemIdsByGroup[forge.choiceGroupId],
       profileId,
     );
     const alternativeId = ARCHETYPE_PROFILE_IDS.find((candidate) => candidate !== profileId);
@@ -175,10 +177,10 @@ function verifyWeaponArchetypeForgeTransactions() {
     assert.equal(blockedAlternative.reason, PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN);
     assert.deepEqual(blockedAlternative.snapshot, transaction.snapshot);
   }
-  const unknown = forgeWeaponArchetype(awarded.snapshot, {
+  const unknown = forgeEquipmentArchetype(awarded.snapshot, {
     choiceGroupId: forge.choiceGroupId,
-    profileId: 'unknown-archetype',
-    optionProfileIds: forge.optionProfileIds,
+    itemId: 'unknown-archetype',
+    optionItemIds: forge.optionItemIds,
     materialId: forge.materialId,
     materialCost: forge.materialCost,
   });
@@ -190,7 +192,7 @@ function verifyChoiceTransactions() {
   const profile = getEquipmentProfile(HEAVY_PROFILE_ID);
   const noReward = createProgressionSnapshot(DEFAULT_EQUIPMENT_PROFILE_ID);
   const insufficientTraining = purchaseEquipment(noReward, {
-    profileId: profile.id,
+    itemId: profile.id,
     goldCost: profile.goldCost,
     trainingMarkRequirement: 1,
   });
@@ -205,7 +207,7 @@ function verifyChoiceTransactions() {
 
   const noGold = currentCampaignProgression({ gold: 0 });
   const insufficientGold = purchaseEquipment(noGold, {
-    profileId: profile.id,
+    itemId: profile.id,
     goldCost: profile.goldCost,
     trainingMarkRequirement: profile.trainingMarkRequirement,
   });
@@ -219,7 +221,7 @@ function verifyChoiceTransactions() {
 
   const reward = currentCampaignProgression();
   const purchase = purchaseEquipment(reward, {
-    profileId: profile.id,
+    itemId: profile.id,
     goldCost: profile.goldCost,
     trainingMarkRequirement: profile.trainingMarkRequirement,
   });
@@ -231,14 +233,14 @@ function verifyChoiceTransactions() {
     reward.trainingMarks,
     '인장은 소모하지 않는 학습 조건이다.',
   );
-  assert.ok(purchase.snapshot.ownedEquipmentIds.includes(profile.id));
+  assert.ok(purchase.snapshot.ownedEquipmentItemIds.includes(profile.id));
   assertFrozenTransaction(purchase);
 
   const equip = selectEquipment(purchase.snapshot, profile.id);
   assert.equal(equip.changed, true);
-  assert.equal(equip.snapshot.equippedEquipmentId, profile.id);
+  assert.equal(equip.snapshot.loadout.weaponItemId, profile.id);
   const repeated = purchaseEquipment(equip.snapshot, {
-    profileId: profile.id,
+    itemId: profile.id,
     goldCost: profile.goldCost,
     trainingMarkRequirement: profile.trainingMarkRequirement,
   });
@@ -259,7 +261,7 @@ function verifyChoiceTransactions() {
   assert.equal(train.snapshot.combatSkillLevel, 1);
   assert.equal(getAvailableGold(train.snapshot), 0);
   const blockedAlternative = purchaseEquipment(train.snapshot, {
-    profileId: profile.id,
+    itemId: profile.id,
     goldCost: profile.goldCost,
     trainingMarkRequirement: profile.trainingMarkRequirement,
   });
@@ -291,7 +293,7 @@ function verifyCurrentStateAndSingleReward() {
   assert.equal(awarded.snapshot.gold, 120);
   assert.equal(awarded.snapshot.trainingMarks, 3);
   assert.equal(
-    awarded.snapshot.weaponForge.materialQuantities[SCRAP_WEAPON_FORGE_PROFILE.materialId],
+    awarded.snapshot.equipmentForge.materialQuantities[SCRAP_EQUIPMENT_FORGE_PROFILE.materialId],
     1,
   );
   const repeated = claimIntroReward(awarded.snapshot);
@@ -473,7 +475,7 @@ function verifyRuntimeTradeoffsAndStatus() {
     hitStopSeconds: 0.04,
   });
   assert.equal(
-    scene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-heavy-sword').reason,
+    scene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-field-cutter-heavy').reason,
     PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
     '활성 무기상 대화 밖에서는 구매 command를 실행할 수 없어야 한다.',
   );
@@ -481,13 +483,13 @@ function verifyRuntimeTradeoffsAndStatus() {
   assert.equal(merchantDialogue.active, true);
   assert.equal(merchantDialogue.speaker, '고물상인');
   const optionBefore = merchantDialogue.commands.find(
-    (command) => command.profileId === HEAVY_PROFILE_ID,
+    (command) => command.itemId === HEAVY_PROFILE_ID,
   );
   assert.equal(optionBefore.canChoose, true);
   assert.equal(optionBefore.actionLabel, '120 Gold');
   assert.equal(scene.getWorldStatus().combatSkill.canTrain, true);
   assert.equal(
-    scene.executeDialogueCommand('wrong-workshop-interaction', 'manage-heavy-sword').reason,
+    scene.executeDialogueCommand('wrong-workshop-interaction', 'manage-field-cutter-heavy').reason,
     PROGRESSION_TRANSACTION_REASON.UNAVAILABLE,
     '다른 NPC interaction ID로는 무기 구매를 위조할 수 없어야 한다.',
   );
@@ -499,14 +501,14 @@ function verifyRuntimeTradeoffsAndStatus() {
 
   const purchaseResult = scene.executeDialogueCommand(
     'scrapyard-owner-workshop',
-    'manage-heavy-sword',
+    'manage-field-cutter-heavy',
   );
   assert.equal(purchaseResult.changed, true);
   assert.equal(purchaseResult.reason, PROGRESSION_TRANSACTION_REASON.PURCHASED);
   assert.ok(Object.isFrozen(purchaseResult));
   const status = scene.getWorldStatus();
   const heavyOption = status.dialogue.commands.find(
-    (command) => command.profileId === HEAVY_PROFILE_ID,
+    (command) => command.itemId === HEAVY_PROFILE_ID,
   );
   assert.equal(heavyOption.active, true);
   assert.equal(heavyOption.actionLabel, '장착 중');
@@ -544,24 +546,24 @@ function verifyRuntimeTradeoffsAndStatus() {
   const forgeDialogue = openWeaponMerchantDialogue(forgeScene);
   assert.deepEqual(
     forgeDialogue.commands
-      .filter((command) => command.type === 'forge-weapon-archetype')
-      .map((command) => command.profileId),
+      .filter((command) => command.type === 'forge-equipment-archetype')
+      .map((command) => command.itemId),
     ARCHETYPE_PROFILE_IDS,
     '첫 전투 회수 재료로 세 제작 선택지를 제공해야 한다.',
   );
   assert.ok(
     forgeDialogue.commands
-      .filter((command) => command.type === 'forge-weapon-archetype')
+      .filter((command) => command.type === 'forge-equipment-archetype')
       .every((command) => command.canChoose),
   );
   assert.equal(
-    forgeDialogue.commands.find((command) => command.type === 'forge-weapon-archetype')
+    forgeDialogue.commands.find((command) => command.type === 'forge-equipment-archetype')
       .materialQuantity,
-    SCRAP_WEAPON_FORGE_PROFILE.sourceQuantity,
+    SCRAP_EQUIPMENT_FORGE_PROFILE.sourceQuantity,
   );
   const forgeResult = forgeScene.executeDialogueCommand(
     'scrapyard-owner-workshop',
-    'forge-posture-breaker-sword',
+    'forge-field-cutter-breaker',
   );
   assert.equal(forgeResult.changed, true);
   assert.equal(forgeResult.reason, PROGRESSION_TRANSACTION_REASON.FORGED);
@@ -569,26 +571,28 @@ function verifyRuntimeTradeoffsAndStatus() {
   const forgedDialogue = forgeScene.getWorldStatus().dialogue;
   assert.deepEqual(
     forgedDialogue.commands
-      .filter((command) => command.profileId)
-      .map((command) => command.profileId),
+      .filter((command) => ['manage-equipment', 'forge-equipment-archetype'].includes(command.type))
+      .map((command) => command.itemId),
     [DEFAULT_EQUIPMENT_PROFILE_ID, HEAVY_PROFILE_ID, BREAKER_ARCHETYPE_ID],
     '선택 뒤에는 일반 구매 검과 선택한 archetype만 관리해야 한다.',
   );
   assert.equal(
-    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-rear-punish-sword').reason,
+    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-field-cutter-reach')
+      .reason,
     PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN,
   );
   assert.equal(
-    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-balanced-sword').changed,
+    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'manage-field-cutter-balanced')
+      .changed,
     true,
   );
   const selectedForgeOption = forgeScene
     .getWorldStatus()
-    .dialogue.commands.find((command) => command.profileId === BREAKER_ARCHETYPE_ID);
+    .dialogue.commands.find((command) => command.itemId === BREAKER_ARCHETYPE_ID);
   assert.equal(selectedForgeOption.canChoose, true);
   assert.equal(selectedForgeOption.actionLabel, '제작 선택 · 장착');
   assert.equal(
-    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-posture-breaker-sword')
+    forgeScene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-field-cutter-breaker')
       .changed,
     true,
   );
@@ -647,7 +651,7 @@ function verifyPersistenceAndFailure() {
   scene.enterTree();
   openWeaponMerchantDialogue(scene);
   assert.equal(
-    scene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-rear-punish-sword').changed,
+    scene.executeDialogueCommand('scrapyard-owner-workshop', 'forge-field-cutter-reach').changed,
     true,
   );
   const storageAdapter = new MemoryStorage();
@@ -655,7 +659,7 @@ function verifyPersistenceAndFailure() {
     storageAdapter,
     'growth-check',
     ENCHANTMENT_CATALOG,
-    SCRAP_WEAPON_FORGE_PROFILE,
+    SCRAP_EQUIPMENT_FORGE_PROFILE,
   );
   const saved = storage.save(scene.getProgressionSnapshot());
   assert.equal(saved.ok, true);
@@ -665,13 +669,15 @@ function verifyPersistenceAndFailure() {
     ENCHANTMENT_CATALOG,
   );
   assert.equal(loaded.ok, true);
-  assert.equal(loaded.snapshot.equippedEquipmentId, REAR_ARCHETYPE_ID);
+  assert.equal(loaded.snapshot.loadout.weaponItemId, REAR_ARCHETYPE_ID);
   assert.equal(
-    loaded.snapshot.weaponForge.selectedProfileIdsByGroup[SCRAP_WEAPON_FORGE_PROFILE.choiceGroupId],
+    loaded.snapshot.equipmentForge.selectedItemIdsByGroup[
+      SCRAP_EQUIPMENT_FORGE_PROFILE.choiceGroupId
+    ],
     REAR_ARCHETYPE_ID,
   );
   assert.equal(
-    loaded.snapshot.weaponForge.materialQuantities[SCRAP_WEAPON_FORGE_PROFILE.materialId],
+    loaded.snapshot.equipmentForge.materialQuantities[SCRAP_EQUIPMENT_FORGE_PROFILE.materialId],
     0,
   );
   assert.equal(getAvailableGold(loaded.snapshot), 120, 'forge 선택은 Gold를 소비하지 않는다.');
@@ -683,13 +689,13 @@ function verifyPersistenceAndFailure() {
   assert.equal(restoredScene.getWorldStatus().equipmentId, REAR_ARCHETYPE_ID);
   assert.equal(restoredScene.getPlayerStatus().gold, 120);
 
-  for (let version = 1; version < PROGRESSION_SCHEMA_VERSION; version += 1) {
+  for (let version = 1; version < 10; version += 1) {
     const rejectedAdapter = new MemoryStorage(JSON.stringify({ ...loaded.snapshot, version }));
     const incompatible = new ProgressionStorage(
       rejectedAdapter,
       'incompatible-development-save',
       ENCHANTMENT_CATALOG,
-      SCRAP_WEAPON_FORGE_PROFILE,
+      SCRAP_EQUIPMENT_FORGE_PROFILE,
       SCRAP_CAMPAIGN_PROFILE,
     ).load(
       DEFAULT_EQUIPMENT_PROFILE_ID,
@@ -705,7 +711,7 @@ function verifyPersistenceAndFailure() {
     new MemoryStorage(null, { throwOnWrite: true }),
     'growth-check-failure',
     ENCHANTMENT_CATALOG,
-    SCRAP_WEAPON_FORGE_PROFILE,
+    SCRAP_EQUIPMENT_FORGE_PROFILE,
   );
   const failedSave = failingStorage.save(loaded.snapshot);
   assert.deepEqual(
@@ -717,13 +723,13 @@ function verifyPersistenceAndFailure() {
 
   for (const mutateForge of [
     (record) => {
-      record.weaponForge.materialQuantities['unknown-forge-material'] = 1;
+      record.equipmentForge.materialQuantities['unknown-forge-material'] = 1;
     },
     (record) => {
-      record.weaponForge.claimedSourceIds.push('unknown-forge-source');
+      record.equipmentForge.claimedSourceIds.push('unknown-forge-source');
     },
     (record) => {
-      record.weaponForge.selectedProfileIdsByGroup['unknown-choice-group'] = REAR_ARCHETYPE_ID;
+      record.equipmentForge.selectedItemIdsByGroup['unknown-choice-group'] = REAR_ARCHETYPE_ID;
     },
   ]) {
     const invalidRecord = JSON.parse(storageAdapter.value);
@@ -732,7 +738,7 @@ function verifyPersistenceAndFailure() {
       new MemoryStorage(JSON.stringify(invalidRecord)),
       'growth-invalid-forge',
       ENCHANTMENT_CATALOG,
-      SCRAP_WEAPON_FORGE_PROFILE,
+      SCRAP_EQUIPMENT_FORGE_PROFILE,
     ).load(
       DEFAULT_EQUIPMENT_PROFILE_ID,
       EQUIPMENT_PROFILES.map((profile) => profile.id),
@@ -746,7 +752,7 @@ function verifyPersistenceAndFailure() {
     new MemoryStorage('{broken'),
     'growth-corrupt',
     ENCHANTMENT_CATALOG,
-    SCRAP_WEAPON_FORGE_PROFILE,
+    SCRAP_EQUIPMENT_FORGE_PROFILE,
   ).load(
     DEFAULT_EQUIPMENT_PROFILE_ID,
     EQUIPMENT_PROFILES.map((profile) => profile.id),
@@ -867,7 +873,7 @@ console.log(
         'equipment-range-speed-hitstun-guard-tradeoff',
         'command-route-unlock',
         'idempotence-and-wallet-order',
-        'schema-v10-archetype-round-trip-incompatible-reset-and-write-failure',
+        'schema-v11-archetype-round-trip-incompatible-reset-and-write-failure',
         'active-weapon-merchant-dialogue-only-and-static-equipment-ui-removal',
         'authored-content-composition-injection-boundary',
       ],

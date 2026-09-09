@@ -132,8 +132,8 @@ export const SCRAP_QUARRY_SEPARATION_CONVERSATION_ID = 'red-quarry:machine-separ
 export const SCRAP_QUARRY_PART_CONVERSATION_ID = 'red-quarry:part-claimed';
 
 const PALETTE = Object.freeze({
-  background: '#171a1c',
-  arena: '#3b4748',
+  background: '#d9e4df',
+  arena: '#c4d8d7',
   grid: '#5b6865',
   ground: '#302d29',
   outline: '#111416',
@@ -297,8 +297,8 @@ const renderItems = [
       { x: 1440, y: 426 },
       { x: 0, y: 426 },
     ],
-    '#283536',
-    { stroke: '#172021', order: -80 },
+    '#899b96',
+    { stroke: '#7b8a86', order: -80 },
   ),
   item('scrap-yard-ground', rectangle(0, 426, 1440, 114), '#39342e', {
     stroke: '#1f1c1a',
@@ -1850,7 +1850,7 @@ const mineTunnelRenderItems = [
 ];
 
 const mineMachineRenderItems = [
-  item('mine-machine-skyline', rectangle(0, 0, 1440, 540), '#252320', {
+  item('mine-machine-skyline', rectangle(0, 0, 1440, 540), '#b5a68d', {
     stroke: '#11100e',
     order: -100,
     label: '보행식 굴착기 작업장',
@@ -1934,7 +1934,7 @@ const mineMachineRenderItems = [
 ];
 
 const shipyardRoadheadRenderItems = [
-  item('shipyard-roadhead-sky', rectangle(0, 0, 1440, 426), '#20363e', {
+  item('shipyard-roadhead-sky', rectangle(0, 0, 1440, 426), '#c4dce2', {
     stroke: '#102126',
     order: -100,
     label: '항구 조선소 해안선',
@@ -2164,7 +2164,7 @@ const shipyardDrydockRenderItems = [
 ];
 
 const shipyardCraneRenderItems = [
-  item('shipyard-crane-sky', rectangle(0, 0, 1440, 540), '#1d333a', {
+  item('shipyard-crane-sky', rectangle(0, 0, 1440, 540), '#bed8de', {
     stroke: '#0b171a',
     order: -100,
     label: '쌍둥이 크레인 부두',
@@ -2280,7 +2280,7 @@ const shipyardCraneRenderItems = [
 ];
 
 const greenhouseRoadheadRenderItems = [
-  item('greenhouse-roadhead-sky', rectangle(0, 0, 1440, 426), '#253d35', {
+  item('greenhouse-roadhead-sky', rectangle(0, 0, 1440, 426), '#dde2c9', {
     stroke: '#10221c',
     order: -100,
     label: '유리 온실이 이어진 평원',
@@ -2596,7 +2596,7 @@ const greenhouseReactorRenderItems = [
 ];
 
 const snowRoadheadRenderItems = [
-  item('snow-roadhead-sky', rectangle(0, 0, 1440, 426), '#203442', {
+  item('snow-roadhead-sky', rectangle(0, 0, 1440, 426), '#dbe7ef', {
     stroke: '#0d1820',
     order: -100,
     label: '눈보라가 가라앉은 설산 교역로',
@@ -2913,7 +2913,7 @@ const snowTrainRenderItems = [
 ];
 
 const quarryRoadheadRenderItems = [
-  item('quarry-roadhead-sky', rectangle(0, 0, 1440, 426), '#4b2925', {
+  item('quarry-roadhead-sky', rectangle(0, 0, 1440, 426), '#e3c6b2', {
     stroke: '#211313',
     order: -100,
     label: '붉은 먼지가 걷힌 채석장 진입로',
@@ -3738,26 +3738,34 @@ export const SCRAP_AWAKENING_MAP = defineMap({
               presentationProfileId: 'scrapyard-owner',
               commands: [
                 { id: 'train-combat-skill', type: 'train-combat-skill' },
-                { id: 'manage-balanced-sword', type: 'manage-sword', profileId: 'balanced-sword' },
-                { id: 'manage-heavy-sword', type: 'manage-sword', profileId: 'heavy-sword' },
                 {
-                  id: 'forge-swift-chain-sword',
-                  type: 'forge-weapon-archetype',
-                  profileId: 'swift-chain-sword',
+                  id: 'manage-field-cutter-balanced',
+                  type: 'manage-equipment',
+                  itemId: 'field-cutter-balanced',
                 },
                 {
-                  id: 'forge-posture-breaker-sword',
-                  type: 'forge-weapon-archetype',
-                  profileId: 'posture-breaker-sword',
+                  id: 'manage-field-cutter-heavy',
+                  type: 'manage-equipment',
+                  itemId: 'field-cutter-heavy',
                 },
                 {
-                  id: 'forge-rear-punish-sword',
-                  type: 'forge-weapon-archetype',
-                  profileId: 'rear-punish-sword',
+                  id: 'forge-field-cutter-swift',
+                  type: 'forge-equipment-archetype',
+                  itemId: 'field-cutter-swift',
+                },
+                {
+                  id: 'forge-field-cutter-breaker',
+                  type: 'forge-equipment-archetype',
+                  itemId: 'field-cutter-breaker',
+                },
+                {
+                  id: 'forge-field-cutter-reach',
+                  type: 'forge-equipment-archetype',
+                  itemId: 'field-cutter-reach',
                 },
                 ...['fire', 'ice', 'earth', 'lightning'].map((enchantId) => ({
                   id: 'enchant-' + enchantId,
-                  type: 'upgrade-sword-enchantment',
+                  type: 'upgrade-equipment-enchantment',
                   enchantId,
                 })),
               ],

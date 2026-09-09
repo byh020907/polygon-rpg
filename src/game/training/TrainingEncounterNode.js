@@ -14,7 +14,7 @@ import {
 import { Scene } from '../../core/Scene.js';
 import { SceneNode } from '../../core/SceneNode.js';
 import { Signal } from '../../core/Signal.js';
-import { resolveSwordEnchantment } from '../enchantment/EnchantmentPolicy.js';
+import { resolveEquipmentEnchantment } from '../enchantment/EnchantmentPolicy.js';
 import { resolveEncounterBodyCollider } from '../encounter/EncounterBodyCollider.js';
 
 const GRAVITY = 1180;
@@ -222,7 +222,7 @@ export class TrainingEncounterNode extends SceneNode {
       contactSpacings: spinContact.contactSpacings,
     });
     this.enchantmentContext = Object.freeze({
-      swordId: enchantmentContext?.swordId ?? null,
+      itemId: enchantmentContext?.itemId ?? null,
       level: enchantmentContext?.level ?? 0,
       active: enchantmentContext?.active ?? null,
     });
@@ -312,7 +312,7 @@ export class TrainingEncounterNode extends SceneNode {
 
   setEnchantmentContext(context) {
     this.enchantmentContext = Object.freeze({
-      swordId: context?.swordId ?? null,
+      itemId: context?.itemId ?? null,
       level: context?.level ?? 0,
       active: context?.active ?? null,
     });
@@ -1176,7 +1176,10 @@ export class TrainingEncounterNode extends SceneNode {
     const interruptsStrongStartup = enemy.aiState === 'windup' && enemy.attackKind === 'heavy';
     const postureDamage =
       combatState.id === 'shieldBash'
-        ? (this.entity.encounterProfile.posture?.shieldCounterDamage ?? 0)
+        ? Math.round(
+            (this.entity.encounterProfile.posture?.shieldCounterDamage ?? 0) *
+              (profile.guardCounterPostureScale ?? 1),
+          )
         : profile.guardBreak
           ? Math.round(
               (this.entity.encounterProfile.posture?.strongDamage ?? 0) *
@@ -1291,7 +1294,7 @@ export class TrainingEncounterNode extends SceneNode {
     const enchantment =
       combatState.id === 'shieldBash' || profile.contactPart === 'shield'
         ? null
-        : resolveSwordEnchantment({
+        : resolveEquipmentEnchantment({
             enchantId: this.enchantmentContext.active?.id,
             enchantLevel: this.enchantmentContext.active?.level ?? 0,
             affinity:
@@ -1363,7 +1366,7 @@ export class TrainingEncounterNode extends SceneNode {
         enchantment: enchantment
           ? {
               id: this.enchantmentContext.active.id,
-              swordId: this.enchantmentContext.swordId,
+              itemId: this.enchantmentContext.itemId,
               level: this.enchantmentContext.active.level,
               affinity: enchantment.affinity,
               additionalDamage: enchantment.additionalDamage,
@@ -1501,7 +1504,7 @@ export class TrainingEncounterNode extends SceneNode {
           enchantment: enchantment
             ? Object.freeze({
                 id: this.enchantmentContext.active.id,
-                swordId: this.enchantmentContext.swordId,
+                itemId: this.enchantmentContext.itemId,
                 level: this.enchantmentContext.active.level,
                 affinity: enchantment.affinity,
                 additionalDamage: enchantment.additionalDamage,

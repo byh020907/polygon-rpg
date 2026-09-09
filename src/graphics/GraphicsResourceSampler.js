@@ -1,3 +1,6 @@
+import { applyEquipmentPresentation, equipmentSlotForGraphic } from './EquipmentPresentation.js';
+import { canonicalizeEnchantmentSnapshot } from '../game/enchantment/EnchantmentState.js';
+import { EQUIPMENT_SLOT_KEYS } from '../game/equipment/EquipmentLoadout.js';
 import { sampleSvgResource } from './SvgResourceSample.js';
 import { createGameScene } from '../app/createGameScene.js';
 import { CombatEventBuffer } from '../combat/CombatEvent.js';
@@ -25,7 +28,7 @@ import { createTrainingEnemyItems } from '../game/training/TrainingEncounterPres
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../game/training/TrainingEnemyAttackProfiles.js';
 import { ENCOUNTER_PROFILES } from '../game/encounter/EncounterProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
-import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentCatalog.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
 import { createScrapFinalBattlePresentation } from '../game/campaign/ScrapFinalBattlePresentation.js';
@@ -169,15 +172,31 @@ export function createGraphicsResourceSampler(catalog) {
   const enemyBases = new Map();
   let disposed = false;
 
-  function sceneFor(equipmentId = EQUIPMENT_CATALOG.defaultProfileId) {
+  function sceneFor(equipmentId = EQUIPMENT_CATALOG.defaultItemId) {
     if (disposed) throw new Error('GraphicsResourceSampler가 이미 종료됐습니다.');
     if (!scenes.has(equipmentId)) {
       const scene = createGameScene({
-        progressionSnapshot: createProgressionSnapshot(
-          equipmentId,
-          ENCHANTMENT_CATALOG,
-          SCRAP_CAMPAIGN_PROFILE,
-        ),
+        progressionSnapshot: (() => {
+          const base = createProgressionSnapshot(
+            EQUIPMENT_CATALOG.defaultItemId,
+            ENCHANTMENT_CATALOG,
+            SCRAP_CAMPAIGN_PROFILE,
+          );
+          const item = EQUIPMENT_CATALOG.getItem(equipmentId),
+            family = EQUIPMENT_CATALOG.getFamily(item.familyId);
+          const ownedEquipmentItemIds = [...new Set([...base.ownedEquipmentItemIds, equipmentId])];
+          return {
+            ...base,
+            ownedEquipmentItemIds,
+            everOwnedEquipmentItemIds: ownedEquipmentItemIds,
+            loadout: { ...base.loadout, [EQUIPMENT_SLOT_KEYS[family.slot]]: equipmentId },
+            enchantment: canonicalizeEnchantmentSnapshot(
+              base.enchantment,
+              ENCHANTMENT_CATALOG,
+              ownedEquipmentItemIds,
+            ),
+          };
+        })(),
       });
       scenes.set(equipmentId, scene);
     }
@@ -287,11 +306,24 @@ export function createGraphicsResourceSampler(catalog) {
           : 0,
       blockImpactStrength:
         (effect?.id === 'guard-break' ? 1.35 : TRAINING_ENEMY_ATTACK_PROFILES.light.blockStrength) *
-        scene.equipmentProfile.guard.impactScale,
+        scene.resolvedLoadout.guardModifiers.impactScale,
       retaliationSeconds: effect?.id === 'retaliation' ? Math.max(0, 0.3 - time) : 0,
       activeEnchant: effect?.blade ? ENCHANTMENT_CATALOG.getProfile(effect.enchantId) : null,
     });
-    return { presentation, pose, geometry, input, contactProfile, sweep };
+    return {
+      presentation: {
+        ...presentation,
+        characterItems: applyEquipmentPresentation(
+          presentation.characterItems,
+          scene.resolvedLoadout,
+        ),
+      },
+      pose,
+      geometry,
+      input,
+      contactProfile,
+      sweep,
+    };
   }
 
   function baseEnemy(profileId) {
@@ -585,8 +617,8 @@ export function createGraphicsResourceSampler(catalog) {
       );
       items =
         resource.producer === 'equipment' && action.id === 'static'
-          ? player.presentation.characterItems.filter((item) =>
-              /^(sword-(blade|hilt)|shield(?:-rivet-plate)?)$/.test(item.id),
+          ? player.presentation.characterItems.filter(
+              (item) => equipmentSlotForGraphic(item) === resource.slot,
             )
           : [...player.presentation.characterItems, ...player.presentation.combatEffectItems];
       sourceFrameId = player.pose.bonePose.frameId;
@@ -600,7 +632,7 @@ export function createGraphicsResourceSampler(catalog) {
       ).map(([id, position]) => ({ id, parent: SIDE_VIEW_SKELETON_PARENTS[id], position }));
       extra = {
         animationTime: player.input.boneInput.animationTime,
-        equipment: sceneFor(resource.equipmentId).equipmentProfile,
+        equipment: sceneFor(resource.equipmentId).resolvedLoadout,
         combatMotion: {
           ...base.frame.combatMotion,
           ...player.input.motionState,

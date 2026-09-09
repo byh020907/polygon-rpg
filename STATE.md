@@ -2,24 +2,25 @@
 
 ## Current Phase
 
-RUNNING — Human이 승인한 그래픽 시스템 우선 구현을 검증했고 main 통합 후 다음 장비 작업을 진행한다. 자동 heartbeat와 OpenCode는 PAUSED 유지. 이 작업 뒤 최신 공식 위키·6슬롯 장비·세트/특수 시너지 작업을 문서부터 순차 진행한다.
+HUMAN_REVIEW — 시스템 우선 작업에 이어 공식 위키/6슬롯 장비 구현·검증을 마쳤다. main/public 반영을 확인하고 수동 작업을 종료한다. 자동 heartbeat/OpenCode는 PAUSED 유지.
 
 ## Active Execution Goal
 
-Human Feedback Priority: SVG master/normalized part → body/pose/contact → XYZ Composition/LOD/lighting → 검토실과 실제 prologue 연결을 먼저 닫는다. 그래픽 담당자가 최종 디테일을 공급하며 기술 fixture는 승인 아트가 아니다. 현재 implementation은 docs/system-runtime.md에 정리했다.
+Human Feedback Priority: 최신 공식 위키/장비 명세 → Equipment Family/Moveset/Item/6슬롯 → v10 보존 migration → 전투/field/graphics/UI → 실제 PC/mobile 검증. 문서 stage를 먼저 마친 뒤 runtime·저장·UI를 구현하고 전체 verify 및 실제 화면을 검증했다. 다음은 최종 그래픽 원본 공급 후 artwork 검수이며 기존 playable frontier의 미완료 흐름은 별도다.
 
 ## Evidence
 
-- 전체 npm run check 최종 통과: artifacts/system-final-check.log. 593개 catalog/handoff 포함.
-- PC1280×720/mobile844×390 native 업로드·LOD/pose·실제 이동·복귀·저장 보존 검증: artifacts/system-browser-final.log, artifacts/system-runtime.
-- 독립 감사 후 유한 attack envelope, 정상 edge-on projection, 실제 projection 기반 Composition residency, 회전 anchor, SVG 세션 예산/비우기 수정. 독립 재검사와 test:systems·전체 check·lint/format·PWA fixture/native update 검사 통과. 근거 artifacts/system-final-systems.log, system-pwa-final.log, system-pwa-browser-final.log.
+- 이전 시스템 d07563d main/public0.5.0(7ef62a43b961) 통합, 전체 check·PC/mobile·PWA update와 독립감사 확인 완료.
+- docs/game-systems/equipment.md, PRODUCT_GOAL 위키 13개 목차, ARCHITECTURE, generator sources를 먼저 작성했다.
+- Family/Moveset/Item/resolvedLoadout, 독립 방패/중립 작업 방어구, 1세트/1특수 조합과 영구 발견, generic forge/enchant, v11저장이 현재 GameScene에 연결됐다. 기존5modifier/비용 exact parity·main/recovery v10migration·unknowncampaign거부 검사 통과.
+- artifacts/equipment-browser.log: PC1280×720/mobile844×390에서 v10→v11 실제 로딩·6slots·세트·발견/해제/재접속·테스트 실제 Basic/Strong/Guard 및 저장 격리 통과.
+- artifacts/equipment-final-verify.log: npm run verify 종료코드0. 장비/시너지/migration/command/actual-contact, 모든 기존 check, PWA fixture, PC/mobile native equipment+wiki 검사 PASS. 별도 PWA native update·offline, 모바일메뉴34상태, 최종전 회귀도 PASS.
 
 ## Remaining Human Feedback Priority
 
-- 현재 systems 검증 완료. 최신 main 병합 후 공개 release fingerprint를 확인한다.
-- 후속 장비 요청 원문 main INBOX 395949a, 최신 6슬롯/시너지/공식 위키 확장 27a4849. 최신 슬롯 계약을 적용하되 기존 v10 save reset 금지와 progression/forge/enchant 보존 필수. 문서 owner 하나로 먼저 정리한 후 runtime 구현한다.
-- 최종 승인 플랫 항구 reference 정확한 자산은 관리 대화에 확인 요청. 추정 대체 금지. 기존 story/campaign 인터뷰 결과 보존.
-- 최종 Hero/Rival/Owner·기계 상태·Garage·prologue composite 아트 공급/승인과 후속 첫 mine↔shipyard 실제 플레이 전선은 아직 완료가 아니다.
+- 장비 문서/코드 정합 및 독립 통합 감사 완료. counter 실제posture baseline66/특수76, unknowncampaign거부, 위키390px table내부scroll 수정 재검증 완료. main/public0.6.0 반영 여부는 현재 Git/Pages release fingerprint로 확인한다.
+- 승인 플랫 항구 원본 파일은 미확보. docs/references/flat-harbor-approval.md에 출처와 승인 메시지를 보존했다. 현재 하늘/원경의 밝기와 기존 단순 형태를 정렬했지만 해당 이미지와 직접 비교한 최종 아트 승인을 주장하지 않는다.
+- 최종 Hero/Rival/Owner·기계 상태·Garage·prologue composite 공급/승인과 첫 mine↔shipyard 실제 플레이 전선은 별도 미완료다. 자동 루프 재개 없음.
 
 ## Human Pause
 

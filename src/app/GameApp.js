@@ -1,8 +1,9 @@
+import { EQUIPMENT_SLOT_KEYS } from '../game/equipment/EquipmentLoadout.js';
 import { createSvgTestPresentation } from '../graphics/scene/SvgTestPresentation.js';
 import { FixedStepRunner } from '../core/FixedStepRunner.js';
 import { SceneNode } from '../core/SceneNode.js';
 import { createGameScene } from './createGameScene.js';
-import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentCatalog.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
 import { canonicalizeEnchantmentSnapshot } from '../game/enchantment/EnchantmentState.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
@@ -85,7 +86,7 @@ function createProgressionStorage() {
         window.localStorage,
         PROGRESSION_STORAGE_KEY,
         ENCHANTMENT_CATALOG,
-        COMBAT_PROGRESSION_PROFILE.weaponForge,
+        COMBAT_PROGRESSION_PROFILE.equipmentForge,
         SCRAP_CAMPAIGN_PROFILE,
       ),
     });
@@ -103,10 +104,10 @@ export class GameApp extends SceneNode {
     super('GameApp');
     this.qaInputEnabled = qaInputEnabled;
     this.qaInputScenario = qaInputEnabled ? readQaInputScenario() : null;
-    const equipmentIds = EQUIPMENT_CATALOG.profiles.map((profile) => profile.id);
+    const equipmentIds = EQUIPMENT_CATALOG.items.map((profile) => profile.id);
     this.equipmentIds = Object.freeze([...equipmentIds]);
     const freshProgression = createProgressionSnapshot(
-      EQUIPMENT_CATALOG.defaultProfileId,
+      EQUIPMENT_CATALOG.defaultItemId,
       ENCHANTMENT_CATALOG,
       SCRAP_CAMPAIGN_PROFILE,
     );
@@ -126,7 +127,7 @@ export class GameApp extends SceneNode {
       if (storageResult.ok) {
         this.progressionStorage = storageResult.storage;
         this.progressionLoadResult = this.progressionStorage.load(
-          EQUIPMENT_CATALOG.defaultProfileId,
+          EQUIPMENT_CATALOG.defaultItemId,
           equipmentIds,
           ENCHANTMENT_CATALOG,
         );
@@ -398,7 +399,7 @@ export class GameApp extends SceneNode {
       return result;
     }
     const loaded = this.progressionStorage.loadRecoverySlots(
-      EQUIPMENT_CATALOG.defaultProfileId,
+      EQUIPMENT_CATALOG.defaultItemId,
       this.equipmentIds,
       ENCHANTMENT_CATALOG,
     );
@@ -450,7 +451,7 @@ export class GameApp extends SceneNode {
       return result;
     }
     const loaded = this.progressionStorage.loadRecoverySlots(
-      EQUIPMENT_CATALOG.defaultProfileId,
+      EQUIPMENT_CATALOG.defaultItemId,
       this.equipmentIds,
       ENCHANTMENT_CATALOG,
     );
@@ -490,7 +491,7 @@ export class GameApp extends SceneNode {
 
   resetSavedProgress() {
     const freshProgression = createProgressionSnapshot(
-      EQUIPMENT_CATALOG.defaultProfileId,
+      EQUIPMENT_CATALOG.defaultItemId,
       ENCHANTMENT_CATALOG,
       SCRAP_CAMPAIGN_PROFILE,
     );
@@ -597,7 +598,7 @@ export class GameApp extends SceneNode {
     if (scenario.scrapGameOverStageId) {
       const recoverySnapshot = this.scene.getProgressionSnapshot();
       const fresh = createProgressionSnapshot(
-        EQUIPMENT_CATALOG.defaultProfileId,
+        EQUIPMENT_CATALOG.defaultItemId,
         ENCHANTMENT_CATALOG,
         SCRAP_CAMPAIGN_PROFILE,
       );
@@ -981,24 +982,32 @@ export class GameApp extends SceneNode {
       scenario: { ...request.scenario, progressionSnapshot: progression },
     };
     if (equipmentId !== undefined) {
-      const ownedEquipmentIds = Object.freeze([
-        ...new Set([...progression.ownedEquipmentIds, equipmentId]),
+      const ownedEquipmentItemIds = Object.freeze([
+        ...new Set([...progression.ownedEquipmentItemIds, equipmentId]),
       ]);
       preparedRequest.scenario.progressionSnapshot = Object.freeze({
         ...progression,
-        ownedEquipmentIds,
-        equippedEquipmentId: equipmentId,
+        ownedEquipmentItemIds,
+        everOwnedEquipmentItemIds: [
+          ...new Set([...progression.everOwnedEquipmentItemIds, ...ownedEquipmentItemIds]),
+        ],
+        loadout: {
+          ...progression.loadout,
+          [EQUIPMENT_SLOT_KEYS[
+            EQUIPMENT_CATALOG.getFamily(EQUIPMENT_CATALOG.getItem(equipmentId).familyId).slot
+          ]]: equipmentId,
+        },
         enchantment: canonicalizeEnchantmentSnapshot(
           progression.enchantment,
           ENCHANTMENT_CATALOG,
-          ownedEquipmentIds,
+          ownedEquipmentItemIds,
         ),
       });
     }
     preparedRequest.scenario.enchantmentSnapshot = canonicalizeEnchantmentSnapshot(
       request.scenario.enchantmentSnapshot ?? progression.enchantment,
       ENCHANTMENT_CATALOG,
-      preparedRequest.scenario.progressionSnapshot.ownedEquipmentIds,
+      preparedRequest.scenario.progressionSnapshot.ownedEquipmentItemIds,
     );
     const result = this.runVisualQa(preparedRequest);
     if (location) this.scene.setVisualQaLocation(location);
@@ -1083,6 +1092,17 @@ export class GameApp extends SceneNode {
     this.resize();
   }
 
+  getEquipmentView() {
+    return this.scene.getEquipmentView();
+  }
+  equipOwnedItem(itemId) {
+    if (this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU) return null;
+    return this.scene.equipOwnedItem(itemId);
+  }
+  unequipOwnedSlot(slot) {
+    if (this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU) return null;
+    return this.scene.unequipOwnedSlot(slot);
+  }
   trainCombatSkill() {
     return this.scene.trainCombatSkill();
   }

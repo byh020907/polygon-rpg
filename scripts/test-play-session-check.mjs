@@ -1,3 +1,5 @@
+import { EQUIPMENT_CATALOG } from '../src/game/equipment/EquipmentCatalog.js';
+import { EQUIPMENT_SLOT_KEYS } from '../src/game/equipment/EquipmentLoadout.js';
 import assert from 'node:assert/strict';
 import { GameApp } from '../src/app/GameApp.js';
 import { GameApplication } from '../src/app/GameApplication.js';
@@ -138,7 +140,11 @@ const equipmentId = application.currentApp.equipmentIds.at(-1);
 const location = { ...application.currentApp.scene.mapRuntime.getActiveLocation(), x: 300 };
 application.startTestPlay(request, { equipmentId, location });
 assert.equal(
-  application.currentApp.scene.getProgressionSnapshot().equippedEquipmentId,
+  application.currentApp.scene.getProgressionSnapshot().loadout[
+    EQUIPMENT_SLOT_KEYS[
+      EQUIPMENT_CATALOG.getFamily(EQUIPMENT_CATALOG.getItem(equipmentId).familyId).slot
+    ]
+  ],
   equipmentId,
 );
 assert.deepEqual(application.currentApp.scene.mapRuntime.getActiveLocation(), {

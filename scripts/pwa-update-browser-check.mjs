@@ -534,9 +534,9 @@ async function diagnoseStalledInstallerRecovery(browser, server) {
 async function seedProgress(browser) {
   return browser.evaluate(`(async()=>{
     const [{createProgressionSnapshot,mergeProgressionSnapshot,awardTrainingMarks},{ProgressionStorage},{EQUIPMENT_CATALOG},{ENCHANTMENT_CATALOG},{COMBAT_PROGRESSION_PROFILE},{SCRAP_CAMPAIGN_PROFILE},{createInitialMorningRecoveryRequest}]=await Promise.all([
-      import('./src/game/progression/ProgressionState.js'),import('./src/game/progression/ProgressionStorage.js'),import('./src/game/equipment/EquipmentProfiles.js'),import('./src/game/enchantment/EnchantmentCatalog.js'),import('./src/game/progression/ProgressionProfiles.js'),import('./src/game/campaign/ScrapCampaignProfiles.js'),import('./src/game/progression/CampaignRecoveryPolicy.js')]);
-    const storage=new ProgressionStorage(localStorage,'polygon-rpg.progression.v1',ENCHANTMENT_CATALOG,COMBAT_PROGRESSION_PROFILE.weaponForge,SCRAP_CAMPAIGN_PROFILE);
-    const fresh=createProgressionSnapshot(EQUIPMENT_CATALOG.defaultProfileId,ENCHANTMENT_CATALOG,SCRAP_CAMPAIGN_PROFILE);
+      import('./src/game/progression/ProgressionState.js'),import('./src/game/progression/ProgressionStorage.js'),import('./src/game/equipment/EquipmentCatalog.js'),import('./src/game/enchantment/EnchantmentCatalog.js'),import('./src/game/progression/ProgressionProfiles.js'),import('./src/game/campaign/ScrapCampaignProfiles.js'),import('./src/game/progression/CampaignRecoveryPolicy.js')]);
+    const storage=new ProgressionStorage(localStorage,'polygon-rpg.progression.v1',ENCHANTMENT_CATALOG,COMBAT_PROGRESSION_PROFILE.equipmentForge,SCRAP_CAMPAIGN_PROFILE);
+    const fresh=createProgressionSnapshot(EQUIPMENT_CATALOG.defaultItemId,ENCHANTMENT_CATALOG,SCRAP_CAMPAIGN_PROFILE);
     const snapshot=awardTrainingMarks(mergeProgressionSnapshot(fresh,{gold:137,viewedConversationIds:['pwa-qa-progress']}),3).snapshot;
     const saved=storage.save(snapshot);
     if(!saved.ok)throw new Error(JSON.stringify(saved));
@@ -942,7 +942,7 @@ async function saveResetFlow() {
     assert.match(await browser.evaluate(`${shell}.saveStatus`), /초기화 완료/);
     const resetStorage = await browser.evaluate(storageState);
     const fresh = JSON.parse(resetStorage['polygon-rpg.progression.v1']);
-    assert.equal(fresh.version, 10);
+    assert.equal(fresh.version, 11);
     assert.equal(fresh.gold, 0);
     assert.deepEqual(fresh.viewedConversationIds, []);
     assert.notEqual(

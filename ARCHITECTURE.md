@@ -62,7 +62,7 @@ Keyboard / Touch / DOM intent
 
 ## State Ownership and Data Flow
 
-- 현재 고철 campaign만 production progression의 세계 진행을 소유한다. 폐기된 학원·first journey·glasswind 진행과 그 금고를 현재 저장에 병렬 보유하거나 현재 통화·체력·story를 계산하는 우회 경로로 사용하지 않는다. 현재 통화는 progression의 단일 필드이며 도메인 transaction으로만 변경한다. 현행 schema만 복원하고 호환되지 않는 개발 save는 명시적인 초기화 안내로 처리한다.
+- 현재 고철 campaign만 production progression의 세계 진행을 소유한다. 폐기된 학원·first journey·glasswind 진행과 그 금고를 현재 저장에 병렬 보유하거나 현재 통화·체력·story를 계산하는 우회 경로로 사용하지 않는다. 현재 통화는 progression의 단일 필드이며 도메인 transaction으로만 변경한다. 현행 schema와 명시 migration이 있는 v10 저장을 복원한다. v10→v11은 장비·forge·enchant·캠페인을 보존하며 초기화를 요구하지 않는다. 그 외 호환되지 않는 캠페인과 corrupt 저장은 명시적인 실패 안내로 처리한다.
 
 - Application composition이 listener, ResizeObserver, animation frame, screen/modal adapter와 renderer lifecycle을 소유한다.
 - Game orchestrator가 Player, combat result 적용과 domain coordination의 최종 writer다.
@@ -291,3 +291,18 @@ Keyboard / Touch / DOM intent
 ## 시스템 공급 경계
 
 구체적인 SVG subset·metadata·예산·원본/export 흐름과 runtime 연결 API는 [그래픽 시스템 공급 계약](docs/system-runtime.md)을 따른다. GameScene은 실제 renderer projection을 받은 Composition snapshot을 제공하며 고정 가상 viewport로 residency를 먼저 제외하지 않는다. actor의 정상 edge-on 투영은 source singular transform 오류와 구분하고 visible/contact contour를 동일하게 유지한다. 최종 아트 승인은 기술 fixture 통과와 별도다.
+
+## Equipment Domain 계약
+
+상세 명세는 [장비 시스템](docs/game-systems/equipment.md)이다. 최신 Human의 6슬롯이 이전 main/off/utility 예시보다 우선한다. UI는 주무기·방패·투구·몸통·신발·도구, 저장은 weaponItemId/shieldItemId/helmetItemId/bodyArmorItemId/bootsItemId/toolItemId다.
+
+- Family는 slot/handUsage/호환/fieldCapabilities/enchantable을, Moveset은 command/timing/stamina/attack/guard/animation profile을 소유한다. Item은 Family·visual/material·modifier·origin/제작 정보만 소유한다.
+- catalog → resolveEquipmentLoadout → Combat/GameScene/Presentation/UI의 단방향 의존이다. resolver만 Item/Family/Moveset/Set/SpecialSynergy를 합성한다. immutable resolved 결과의 combatTiming, attackModifiers, defenseModifiers, guardModifiers, geometryProfile, animationProfile, commandModifiers, fieldCapabilities를 소비한다. CombatCommandController는 concrete sword/Item ID를 읽지 않는다.
+- 한손/양손 호환과 6슬롯 유효성은 Family 규칙으로 검증한다. 주무기는 필수, 방패/방어구/도구는 nullable이며 미지원 조합을 조용히 기본 장비로 바꾸지 않는다.
+- Set은 같은 setId 조각 수, SpecialSynergy는 별도 authored requirements/effect catalog다. 조건은 현재 필요한 concrete Item 조합과 확장 가능한 명시 predicate까지만 구현하고 범용 DSL이나 전조합 생성은 하지 않는다. effect는 command/attack/guard/field modifier hook으로 반환하며 GameScene의 synergy ID 분기를 금지한다.
+- progression은 everOwnedEquipmentItemIds와 discoveredSpecialSynergyIds를 영구 보존한다. 실제 장착 성공 transaction에서 발견을 갱신한다. UI는 미관련 숨김/관련 ???/발견 후 완전 공개만 읽고 정답 힌트를 생성하지 않는다.
+- schema v11과 엄격 v10→v11 migration을 main/recovery 동일 decode 경계에 둔다. alias는 저장 migration 경계에만 존재한다. 기존 경제·장비·forge 선택·enchant element/level·대화·campaign을 보존하고 malformed는 거부한다. runtime는 옛 key나 ID를 이중 authority로 저장하지 않는다.
+- enchantable Family의 Item만 generic equipmentEnchantments에 기록한다. 기존 Cutter 기능/비용을 유지하고 Shield/Armor enchant를 추가하지 않는다. equipmentForge/optionItemIds/merchantItemIds는 실제 Item catalog를 참조한다.
+- Field Capability evaluator는 {capabilityId,mode:assist|require}를 받는다. production field interaction은 Item ID를 요구하지 않는다. 신규 mandatory gate를 만들지 않는다.
+- 장비 visual geometry와 실제 contact는 같은 authored sample을 사용한다. Moveset이 Animation Profile을 참조하며 Item별 animation 복제를 하지 않는다. 최종 아트 공급 전에는 기존 placeholder/reference로 시스템 연결을 검증한다.
+- verify 흐름에 장비·synergy·migration fixture와 기존 domain 검사/PC·mobile 실제 UI·combat 검증을 포함한다. baseline5개와 기본 Loadout parity를 따로 검증한다.

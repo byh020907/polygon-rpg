@@ -4,7 +4,7 @@ import {
   awardCampaignEncounterReward,
 } from '../game/progression/ProgressionState.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
-import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
+import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentCatalog.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.js';
 import { SCRAP_AWAKENING_STAGE } from '../game/campaign/ScrapAwakeningState.js';
@@ -280,7 +280,7 @@ function createCombatScenarioLocation(boss) {
 
 const WORKSHOP_QA_PROGRESSION = awardCampaignEncounterReward(
   createProgressionSnapshot(
-    EQUIPMENT_CATALOG.defaultProfileId,
+    EQUIPMENT_CATALOG.defaultItemId,
     ENCHANTMENT_CATALOG,
     SCRAP_CAMPAIGN_PROFILE,
   ),
@@ -1484,8 +1484,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     combatScenarioId: 'enchant-fire-contact',
     enchantmentSnapshot: Object.freeze({
       materialQuantities: Object.freeze({}),
-      swordEnchantments: Object.freeze({
-        'balanced-sword': Object.freeze({ elementId: 'fire', level: 1 }),
+      equipmentEnchantments: Object.freeze({
+        'field-cutter-balanced': Object.freeze({ elementId: 'fire', level: 1 }),
       }),
     }),
     expectation: Object.freeze({
@@ -1508,8 +1508,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     combatScenarioId: 'enchant-lightning-contact',
     enchantmentSnapshot: Object.freeze({
       materialQuantities: Object.freeze({}),
-      swordEnchantments: Object.freeze({
-        'balanced-sword': Object.freeze({ elementId: 'lightning', level: 5 }),
+      equipmentEnchantments: Object.freeze({
+        'field-cutter-balanced': Object.freeze({ elementId: 'lightning', level: 5 }),
       }),
     }),
     expectation: Object.freeze({
@@ -1532,8 +1532,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     combatScenarioId: 'enchant-ice-status',
     enchantmentSnapshot: Object.freeze({
       materialQuantities: Object.freeze({}),
-      swordEnchantments: Object.freeze({
-        'balanced-sword': Object.freeze({ elementId: 'ice', level: 3 }),
+      equipmentEnchantments: Object.freeze({
+        'field-cutter-balanced': Object.freeze({ elementId: 'ice', level: 3 }),
       }),
     }),
     expectation: Object.freeze({
@@ -1560,8 +1560,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     combatScenarioId: 'enchant-earth-posture',
     enchantmentSnapshot: Object.freeze({
       materialQuantities: Object.freeze({}),
-      swordEnchantments: Object.freeze({
-        'balanced-sword': Object.freeze({ elementId: 'earth', level: 5 }),
+      equipmentEnchantments: Object.freeze({
+        'field-cutter-balanced': Object.freeze({ elementId: 'earth', level: 5 }),
       }),
     }),
     expectation: Object.freeze({
@@ -1585,8 +1585,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
     combatScenarioId: 'enchant-shield-excluded',
     enchantmentSnapshot: Object.freeze({
       materialQuantities: Object.freeze({}),
-      swordEnchantments: Object.freeze({
-        'balanced-sword': Object.freeze({ elementId: 'fire', level: 5 }),
+      equipmentEnchantments: Object.freeze({
+        'field-cutter-balanced': Object.freeze({ elementId: 'fire', level: 5 }),
       }),
     }),
     expectation: Object.freeze({

@@ -3926,3 +3926,113 @@ html[data-ui-review] {
 #graphics-review .gr-radial--tree .gr-radial-center {
   border-color: var(--radial-accent, #c3a75e);
 }
+
+.equipment-dialog {
+  color: #edf0e8;
+  background: #222c2c;
+  border: 1px solid #718381;
+  border-radius: 12px;
+  width: min(880px, 92vw);
+  max-height: 88dvh;
+  overflow: auto;
+  padding: 20px;
+}
+.equipment-dialog::backdrop {
+  background: #000a;
+}
+.equipment-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.equipment-dialog button {
+  padding: 8px 12px;
+  min-height: 40px;
+}
+.equipment-slots,
+.equipment-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.equipment-dialog article {
+  border: 1px solid #536361;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 6px 0;
+}
+.equipment-slots span {
+  display: block;
+  margin: 6px 0;
+}
+
+.equipment-dialog .equipment-slots {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.equipment-dialog .equipment-items {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.equipment-dialog button {
+  color: #f1e8d1;
+  background: #40514c;
+  border: 1px solid #879c8b;
+  border-radius: 5px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.equipment-dialog button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.equipment-dialog article p {
+  line-height: 1.5;
+}
+@media (max-width: 560px) {
+  .equipment-dialog .equipment-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .equipment-dialog .equipment-items {
+    grid-template-columns: 1fr;
+  }
+}
+
+.equipment-overview {
+  margin: 8px 0 12px;
+}
+.equipment-overview summary {
+  cursor: pointer;
+  color: #c8d9cc;
+}
+@media (max-height: 500px) {
+  .equipment-dialog {
+    padding: 12px 18px;
+  }
+  .equipment-dialog h2 {
+    font-size: 1.1rem;
+    margin: 4px 0;
+  }
+  .equipment-dialog .equipment-slots article {
+    padding: 8px;
+    margin: 0;
+  }
+  .equipment-dialog .equipment-slots {
+    gap: 6px;
+  }
+  .equipment-dialog .equipment-slots button {
+    min-height: 44px;
+    padding: 3px 10px;
+  }
+}
+
+@media (max-width: 900px) {
+  .menu-data-tools {
+    gap: 6px;
+  }
+  .menu-data-tools .menu-reset-progress {
+    padding-inline: 8px;
+  }
+  .menu-data-notice summary {
+    white-space: nowrap;
+  }
+}

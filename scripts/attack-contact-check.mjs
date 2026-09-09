@@ -2,7 +2,7 @@ import { createAttackEnvelope } from '../src/combat/AttackEnvelope.js';
 import assert from 'node:assert/strict';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
-import { EQUIPMENT_PROFILES } from '../src/game/equipment/EquipmentProfiles.js';
+import { CUTTER_LOADOUTS } from './fixtures/equipment-loadouts.mjs';
 import { ATTACK_SPATIAL_PROFILES } from '../src/combat/AttackSpatialProfiles.js';
 import { sampleCombatFrame } from '../src/combat/CombatFrame.js';
 import { isAttackContactFrame } from '../src/combat/CombatMotionTimingProfiles.js';
@@ -282,9 +282,9 @@ try {
     pulseHits += 1;
   }
   assert.equal(pulseHits, spin.hitPulses.length);
-  const originalEquipment = scene.equipmentProfile;
-  for (const equipment of EQUIPMENT_PROFILES) {
-    scene.equipmentProfile = equipment;
+  const originalEquipment = scene.resolvedLoadout;
+  for (const equipment of CUTTER_LOADOUTS) {
+    scene.resolvedLoadout = equipment;
     scene.combatCommands.setTimingProfile(equipment.combatTiming);
     for (const id of attacks) {
       const profile = scene.getAttackHitProfile(id);
@@ -314,7 +314,10 @@ try {
           `${id}: sweep exists only in authored active phase`,
         );
       }
-      assert.equal(profile.range, ATTACK_SPATIAL_PROFILES[id].reach * equipment.attack.rangeScale);
+      assert.equal(
+        profile.range,
+        ATTACK_SPATIAL_PROFILES[id].reach * equipment.attackModifiers.rangeScale,
+      );
       let maximumReach = -Infinity;
       let firstLengthScale = null;
       for (
@@ -370,7 +373,7 @@ try {
       );
     }
   }
-  scene.equipmentProfile = originalEquipment;
+  scene.resolvedLoadout = originalEquipment;
   scene.combatCommands.setTimingProfile(originalEquipment.combatTiming);
   console.log(
     JSON.stringify({

@@ -292,6 +292,7 @@ export function registerGameShell(
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
     selectedEquipmentId: '',
+    equipmentView: { slots: [], items: [], codex: { sets: [], specialSynergies: [] } },
     selectedEquipmentLabel: '장비 정보 불러오는 중',
     trainingMarks: 0,
     combatSkillLevel: 0,
@@ -1136,6 +1137,18 @@ export function registerGameShell(
       this.qaHeldInput = Object.freeze({});
     },
 
+    openEquipment() {
+      this.equipmentView = gameApp.getEquipmentView();
+      this.$refs.equipmentDialog.showModal();
+    },
+    equipItem(itemId) {
+      gameApp.equipOwnedItem(itemId);
+      this.equipmentView = gameApp.getEquipmentView();
+    },
+    unequipSlot(slot) {
+      gameApp.unequipOwnedSlot(slot);
+      this.equipmentView = gameApp.getEquipmentView();
+    },
     trainCombatSkill() {
       gameApp.trainCombatSkill();
     },

@@ -1,6 +1,28 @@
 import { combatFramesToSeconds, defineCombatFrame, sampleCombatFrame } from './CombatFrame.js';
 import { COMBAT_MOTION_TIMING_PROFILES } from './CombatMotionTimingProfiles.js';
 
+const DEFAULT_MOVESET_COMMANDS = Object.freeze({
+  basic: true,
+  strong: true,
+  airBasic: true,
+  guard: true,
+  justGuard: true,
+  guardCounter: true,
+});
+function normalizeMovesetCommands(moveset) {
+  if (moveset === undefined || moveset === null) return DEFAULT_MOVESET_COMMANDS;
+  const commands = moveset.commands;
+  if (
+    !commands ||
+    typeof commands !== 'object' ||
+    Array.isArray(commands) ||
+    Object.keys(commands).some((key) => !Object.hasOwn(DEFAULT_MOVESET_COMMANDS, key)) ||
+    Object.keys(DEFAULT_MOVESET_COMMANDS).some((key) => typeof commands[key] !== 'boolean')
+  )
+    throw new TypeError('Moveset requires boolean command capabilities.');
+  return Object.freeze({ ...commands });
+}
+
 const COMMAND_INPUTS = Object.freeze([
   Object.freeze({ input: 'strongAttack', motion: 'heavy' }),
   Object.freeze({ input: 'basicAttack', motion: 'slash' }),
@@ -253,11 +275,40 @@ export function combatMotionFrameData(id, timingProfile = {}) {
 }
 
 export class CombatCommandController {
-  constructor({ timingProfile, commandProfile, staminaProfile } = {}) {
+  constructor({ timingProfile, commandProfile, staminaProfile, moveset } = {}) {
+    this.movesetCommands = normalizeMovesetCommands(moveset);
     this.timingProfile = normalizeTimingProfile(timingProfile);
     this.commandProfile = normalizeCommandProfile(commandProfile);
     this.staminaProfile = normalizeStaminaProfile(staminaProfile);
     this.reset();
+  }
+
+  setMoveset(moveset) {
+    if (this.active) throw new Error('전투 motion 중에는 moveset을 바꿀 수 없습니다.');
+    this.movesetCommands = normalizeMovesetCommands(moveset);
+    if (!this.movesetCommands.guard) {
+      this.heldPose = 'idle';
+      this.guardElapsedSeconds = 0;
+    }
+    if (
+      !this.movesetCommands.guard ||
+      !this.movesetCommands.justGuard ||
+      !this.movesetCommands.guardCounter
+    )
+      this.justGuardCounterWindowSeconds = 0;
+    return this.movesetCommands;
+  }
+
+  isMotionAllowed(motionId) {
+    if (motionId === 'shieldBash')
+      return (
+        this.movesetCommands.guard &&
+        this.movesetCommands.justGuard &&
+        this.movesetCommands.guardCounter
+      );
+    if (STRONG_MOTION_IDS.has(motionId)) return this.movesetCommands.strong;
+    if (AIR_MOTION_IDS.has(motionId)) return this.movesetCommands.airBasic;
+    return this.movesetCommands.basic;
   }
 
   setTimingProfile(timingProfile) {
@@ -323,6 +374,7 @@ export class CombatCommandController {
       staminaDeltaSeconds = deltaSeconds,
     } = {},
   ) {
+    allowGuard = allowGuard && this.movesetCommands.guard;
     if (!isAirborne) this.airActions = 0;
     const counterWindowWasActive = this.justGuardCounterWindowSeconds > 0;
     this.justGuardCounterWindowSeconds = Math.max(
@@ -333,7 +385,7 @@ export class CombatCommandController {
       canRecover:
         !this.active &&
         this.heldPose !== 'guard' &&
-        !inputSnapshot.guard &&
+        (!inputSnapshot.guard || !this.movesetCommands.guard) &&
         this.justGuardCounterWindowSeconds === 0,
     });
     const issuedCommand = acceptCommands
@@ -440,6 +492,7 @@ export class CombatCommandController {
   readIssuedMotion(inputSnapshot, { isAirborne = false, counterOnly = false } = {}) {
     if (this.active?.id === 'shieldBash') return null;
     if (counterOnly && !this.active) {
+      if (!this.isMotionAllowed('shieldBash')) return null;
       const sequence = inputSnapshot.basicAttackSequence;
       const sequenceIssued =
         Number.isSafeInteger(sequence) && sequence > this.previousSequences.basicAttack;
@@ -452,6 +505,9 @@ export class CombatCommandController {
         : null;
     }
     for (const command of COMMAND_INPUTS) {
+      const capability =
+        command.input === 'strongAttack' ? 'strong' : isAirborne ? 'airBasic' : 'basic';
+      if (!this.movesetCommands[capability]) continue;
       const sequence = inputSnapshot[`${command.input}Sequence`];
       const sequenceIssued =
         Number.isSafeInteger(sequence) && sequence > this.previousSequences[command.input];
@@ -593,8 +649,19 @@ export class CombatCommandController {
     if (!Number.isFinite(staminaDamage) || staminaDamage < 0) {
       throw new RangeError('guard contact staminaDamage는 0 이상의 유한한 숫자여야 합니다.');
     }
+    if (!this.movesetCommands.guard)
+      return Object.freeze({
+        broken: false,
+        drain: 0,
+        recovery: 0,
+        justGuard: false,
+        stamina: this.stamina,
+        accepted: false,
+        reason: 'command-unavailable',
+      });
     const before = this.stamina;
     const justGuard =
+      this.movesetCommands.justGuard &&
       !guardBreak &&
       justGuardEligible &&
       this.heldPose === 'guard' &&
@@ -607,7 +674,9 @@ export class CombatCommandController {
       const recovery = stamina - before;
       this.stamina = stamina;
       this.staminaRecoveryDelaySeconds = this.staminaProfile.recoveryDelaySeconds;
-      this.justGuardCounterWindowSeconds = this.staminaProfile.counterWindowSeconds;
+      this.justGuardCounterWindowSeconds = this.movesetCommands.guardCounter
+        ? this.staminaProfile.counterWindowSeconds
+        : 0;
       this.heldPose = 'guard';
       this.lastStaminaAction = Object.freeze({
         action: 'just-guard',
@@ -658,6 +727,7 @@ export class CombatCommandController {
   }
 
   startIssuedCommand(command, transitionFrom = null, options = {}) {
+    if (!this.isMotionAllowed(command.motionId)) return false;
     if (!command.costless && !this.trySpendStamina(command.action)) return false;
     if (command.motionId === 'shieldBash') this.justGuardCounterWindowSeconds = 0;
     this.start(command.motionId, transitionFrom, options);
@@ -666,6 +736,7 @@ export class CombatCommandController {
 
   start(motionId, transitionFrom = null, { continuesCombo = false } = {}) {
     const policy = combatMotionPolicy(motionId, this.timingProfile);
+    if (!this.isMotionAllowed(motionId)) return false;
     const durationSeconds = policy.durationSeconds;
     if (!(durationSeconds > 0)) {
       throw new Error(`실행할 수 없는 combat motion입니다: ${motionId}`);

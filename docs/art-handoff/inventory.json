@@ -1,6 +1,6 @@
 {
-  "fingerprint": "548c3e5a84a4",
-  "resourceCount": 593,
+  "fingerprint": "b2e387350afc",
+  "resourceCount": 597,
   "records": [
     {
       "id": "player:protagonist",
@@ -126,20 +126,20 @@
       "page": "resources/player-1.html#player%3Aprotagonist"
     },
     {
-      "id": "equipment:balanced-sword",
-      "label": "속공형 기병검·방패",
+      "id": "equipment:field-cutter-balanced",
+      "label": "속공형 현장 절단검",
       "category": "equipment",
       "producer": "equipment",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": null,
-      "source": "src/game/equipment/EquipmentProfiles.js",
-      "notes": "게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.",
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-cutter-balanced · Family field-cutter · Slot weapon · oneHand · Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-cutter-shared. 현재 placeholder를 사용합니다.",
       "actions": [
         {
           "id": "static",
-          "label": "검·방패 실제 크기",
+          "label": "장비 실제 크기",
           "frameCount": 1
         },
         {
@@ -251,23 +251,23 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/equipment-1.html#equipment%3Abalanced-sword"
+      "page": "resources/equipment-1.html#equipment%3Afield-cutter-balanced"
     },
     {
-      "id": "equipment:heavy-sword",
-      "label": "중량형 대검·방패",
+      "id": "equipment:field-cutter-heavy",
+      "label": "중량형 현장 절단검",
       "category": "equipment",
       "producer": "equipment",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": null,
-      "source": "src/game/equipment/EquipmentProfiles.js",
-      "notes": "게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.",
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-cutter-heavy · Family field-cutter · Slot weapon · oneHand · Moveset cutter-shield-standard · Set 없음 · 특수 조합 관련 있음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-cutter-shared. 현재 placeholder를 사용합니다.",
       "actions": [
         {
           "id": "static",
-          "label": "검·방패 실제 크기",
+          "label": "장비 실제 크기",
           "frameCount": 1
         },
         {
@@ -379,23 +379,23 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/equipment-1.html#equipment%3Aheavy-sword"
+      "page": "resources/equipment-1.html#equipment%3Afield-cutter-heavy"
     },
     {
-      "id": "equipment:swift-chain-sword",
-      "label": "연환형 유선검·방패",
+      "id": "equipment:field-cutter-swift",
+      "label": "연환형 현장 절단검",
       "category": "equipment",
       "producer": "equipment",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": null,
-      "source": "src/game/equipment/EquipmentProfiles.js",
-      "notes": "게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.",
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-cutter-swift · Family field-cutter · Slot weapon · oneHand · Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-cutter-shared. 현재 placeholder를 사용합니다.",
       "actions": [
         {
           "id": "static",
-          "label": "검·방패 실제 크기",
+          "label": "장비 실제 크기",
           "frameCount": 1
         },
         {
@@ -507,23 +507,23 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/equipment-1.html#equipment%3Aswift-chain-sword"
+      "page": "resources/equipment-1.html#equipment%3Afield-cutter-swift"
     },
     {
-      "id": "equipment:posture-breaker-sword",
-      "label": "파쇄형 철심검·방패",
+      "id": "equipment:field-cutter-breaker",
+      "label": "파쇄형 현장 절단검",
       "category": "equipment",
       "producer": "equipment",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": null,
-      "source": "src/game/equipment/EquipmentProfiles.js",
-      "notes": "게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.",
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-cutter-breaker · Family field-cutter · Slot weapon · oneHand · Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-cutter-shared. 현재 placeholder를 사용합니다.",
       "actions": [
         {
           "id": "static",
-          "label": "검·방패 실제 크기",
+          "label": "장비 실제 크기",
           "frameCount": 1
         },
         {
@@ -635,23 +635,23 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/equipment-1.html#equipment%3Aposture-breaker-sword"
+      "page": "resources/equipment-1.html#equipment%3Afield-cutter-breaker"
     },
     {
-      "id": "equipment:rear-punish-sword",
-      "label": "추격형 장검·방패",
+      "id": "equipment:field-cutter-reach",
+      "label": "추격형 현장 절단검",
       "category": "equipment",
       "producer": "equipment",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": null,
-      "source": "src/game/equipment/EquipmentProfiles.js",
-      "notes": "게임과 같은 장비 timing·attack reach 사이징. 동작 보기에는 장비를 든 주인공이 함께 표시됩니다.",
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-cutter-reach · Family field-cutter · Slot weapon · oneHand · Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-cutter-shared. 현재 placeholder를 사용합니다.",
       "actions": [
         {
           "id": "static",
-          "label": "검·방패 실제 크기",
+          "label": "장비 실제 크기",
           "frameCount": 1
         },
         {
@@ -763,7 +763,519 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/equipment-1.html#equipment%3Arear-punish-sword"
+      "page": "resources/equipment-1.html#equipment%3Afield-cutter-reach"
+    },
+    {
+      "id": "equipment:field-shield-standard",
+      "label": "기본 방호판",
+      "category": "equipment",
+      "producer": "equipment",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-shield-standard · Family field-shield · Slot shield · oneHand · Moveset cutter-shield-standard · Set 없음 · 특수 조합 관련 있음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-shield-shared. 현재 placeholder를 사용합니다.",
+      "actions": [
+        {
+          "id": "static",
+          "label": "장비 실제 크기",
+          "frameCount": 1
+        },
+        {
+          "id": "idle",
+          "label": "대기",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "달리기 · 정상 33주기",
+          "frameCount": 160
+        },
+        {
+          "id": "jump",
+          "label": "점프 상승",
+          "frameCount": 24
+        },
+        {
+          "id": "fall",
+          "label": "낙하",
+          "frameCount": 24
+        },
+        {
+          "id": "landing",
+          "label": "착지 · 현재 gameplay에서 미사용 자세",
+          "frameCount": 8
+        },
+        {
+          "id": "roll",
+          "label": "전방 구르기",
+          "frameCount": 25
+        },
+        {
+          "id": "guard",
+          "label": "방어 · 정상 7주기",
+          "frameCount": 200
+        },
+        {
+          "id": "hit",
+          "label": "피격",
+          "frameCount": 14
+        },
+        {
+          "id": "block",
+          "label": "기본공격 방어 반동",
+          "frameCount": 8,
+          "blockStrength": 0.5940000000000001,
+          "durationSeconds": 0.126
+        },
+        {
+          "id": "knocked-out",
+          "label": "쓰러짐 · 고정 자세",
+          "frameCount": 1
+        },
+        {
+          "id": "slash",
+          "label": "기본 횡베기",
+          "frameCount": 27
+        },
+        {
+          "id": "heavy",
+          "label": "강한 사선 베기",
+          "frameCount": 41
+        },
+        {
+          "id": "thrust",
+          "label": "찌르기",
+          "frameCount": 22
+        },
+        {
+          "id": "rising",
+          "label": "올려베기",
+          "frameCount": 32
+        },
+        {
+          "id": "spin",
+          "label": "회전 공격",
+          "frameCount": 43
+        },
+        {
+          "id": "airSlash",
+          "label": "공중 베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airHeavy",
+          "label": "공중 강공",
+          "frameCount": 26
+        },
+        {
+          "id": "airReturn",
+          "label": "공중 되베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airSpin",
+          "label": "공중 회전",
+          "frameCount": 36
+        },
+        {
+          "id": "airCross",
+          "label": "공중 교차 베기",
+          "frameCount": 26
+        },
+        {
+          "id": "shieldBash",
+          "label": "방패 반격",
+          "frameCount": 23
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/equipment-1.html#equipment%3Afield-shield-standard"
+    },
+    {
+      "id": "equipment:field-work-helmet",
+      "label": "작업모",
+      "category": "equipment",
+      "producer": "equipment",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-work-helmet · Family helmet · Slot helmet · none · Moveset cutter-shield-standard · Set field-work-set · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-work-helmet. 현재 placeholder를 사용합니다.",
+      "actions": [
+        {
+          "id": "static",
+          "label": "장비 실제 크기",
+          "frameCount": 1
+        },
+        {
+          "id": "idle",
+          "label": "대기",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "달리기 · 정상 33주기",
+          "frameCount": 160
+        },
+        {
+          "id": "jump",
+          "label": "점프 상승",
+          "frameCount": 24
+        },
+        {
+          "id": "fall",
+          "label": "낙하",
+          "frameCount": 24
+        },
+        {
+          "id": "landing",
+          "label": "착지 · 현재 gameplay에서 미사용 자세",
+          "frameCount": 8
+        },
+        {
+          "id": "roll",
+          "label": "전방 구르기",
+          "frameCount": 25
+        },
+        {
+          "id": "guard",
+          "label": "방어 · 정상 7주기",
+          "frameCount": 200
+        },
+        {
+          "id": "hit",
+          "label": "피격",
+          "frameCount": 14
+        },
+        {
+          "id": "block",
+          "label": "기본공격 방어 반동",
+          "frameCount": 8,
+          "blockStrength": 0.5940000000000001,
+          "durationSeconds": 0.126
+        },
+        {
+          "id": "knocked-out",
+          "label": "쓰러짐 · 고정 자세",
+          "frameCount": 1
+        },
+        {
+          "id": "slash",
+          "label": "기본 횡베기",
+          "frameCount": 27
+        },
+        {
+          "id": "heavy",
+          "label": "강한 사선 베기",
+          "frameCount": 41
+        },
+        {
+          "id": "thrust",
+          "label": "찌르기",
+          "frameCount": 22
+        },
+        {
+          "id": "rising",
+          "label": "올려베기",
+          "frameCount": 32
+        },
+        {
+          "id": "spin",
+          "label": "회전 공격",
+          "frameCount": 43
+        },
+        {
+          "id": "airSlash",
+          "label": "공중 베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airHeavy",
+          "label": "공중 강공",
+          "frameCount": 26
+        },
+        {
+          "id": "airReturn",
+          "label": "공중 되베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airSpin",
+          "label": "공중 회전",
+          "frameCount": 36
+        },
+        {
+          "id": "airCross",
+          "label": "공중 교차 베기",
+          "frameCount": 26
+        },
+        {
+          "id": "shieldBash",
+          "label": "방패 반격",
+          "frameCount": 23
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/equipment-1.html#equipment%3Afield-work-helmet"
+    },
+    {
+      "id": "equipment:field-work-body",
+      "label": "작업 덧옷",
+      "category": "equipment",
+      "producer": "equipment",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-work-body · Family body-armor · Slot bodyArmor · none · Moveset cutter-shield-standard · Set field-work-set · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-work-body. 현재 placeholder를 사용합니다.",
+      "actions": [
+        {
+          "id": "static",
+          "label": "장비 실제 크기",
+          "frameCount": 1
+        },
+        {
+          "id": "idle",
+          "label": "대기",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "달리기 · 정상 33주기",
+          "frameCount": 160
+        },
+        {
+          "id": "jump",
+          "label": "점프 상승",
+          "frameCount": 24
+        },
+        {
+          "id": "fall",
+          "label": "낙하",
+          "frameCount": 24
+        },
+        {
+          "id": "landing",
+          "label": "착지 · 현재 gameplay에서 미사용 자세",
+          "frameCount": 8
+        },
+        {
+          "id": "roll",
+          "label": "전방 구르기",
+          "frameCount": 25
+        },
+        {
+          "id": "guard",
+          "label": "방어 · 정상 7주기",
+          "frameCount": 200
+        },
+        {
+          "id": "hit",
+          "label": "피격",
+          "frameCount": 14
+        },
+        {
+          "id": "block",
+          "label": "기본공격 방어 반동",
+          "frameCount": 8,
+          "blockStrength": 0.5940000000000001,
+          "durationSeconds": 0.126
+        },
+        {
+          "id": "knocked-out",
+          "label": "쓰러짐 · 고정 자세",
+          "frameCount": 1
+        },
+        {
+          "id": "slash",
+          "label": "기본 횡베기",
+          "frameCount": 27
+        },
+        {
+          "id": "heavy",
+          "label": "강한 사선 베기",
+          "frameCount": 41
+        },
+        {
+          "id": "thrust",
+          "label": "찌르기",
+          "frameCount": 22
+        },
+        {
+          "id": "rising",
+          "label": "올려베기",
+          "frameCount": 32
+        },
+        {
+          "id": "spin",
+          "label": "회전 공격",
+          "frameCount": 43
+        },
+        {
+          "id": "airSlash",
+          "label": "공중 베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airHeavy",
+          "label": "공중 강공",
+          "frameCount": 26
+        },
+        {
+          "id": "airReturn",
+          "label": "공중 되베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airSpin",
+          "label": "공중 회전",
+          "frameCount": 36
+        },
+        {
+          "id": "airCross",
+          "label": "공중 교차 베기",
+          "frameCount": 26
+        },
+        {
+          "id": "shieldBash",
+          "label": "방패 반격",
+          "frameCount": 23
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/equipment-1.html#equipment%3Afield-work-body"
+    },
+    {
+      "id": "equipment:field-work-boots",
+      "label": "작업화",
+      "category": "equipment",
+      "producer": "equipment",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-work-boots · Family boots · Slot boots · none · Moveset cutter-shield-standard · Set field-work-set · 특수 조합 관련 있음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual field-work-boots. 현재 placeholder를 사용합니다.",
+      "actions": [
+        {
+          "id": "static",
+          "label": "장비 실제 크기",
+          "frameCount": 1
+        },
+        {
+          "id": "idle",
+          "label": "대기",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "달리기 · 정상 33주기",
+          "frameCount": 160
+        },
+        {
+          "id": "jump",
+          "label": "점프 상승",
+          "frameCount": 24
+        },
+        {
+          "id": "fall",
+          "label": "낙하",
+          "frameCount": 24
+        },
+        {
+          "id": "landing",
+          "label": "착지 · 현재 gameplay에서 미사용 자세",
+          "frameCount": 8
+        },
+        {
+          "id": "roll",
+          "label": "전방 구르기",
+          "frameCount": 25
+        },
+        {
+          "id": "guard",
+          "label": "방어 · 정상 7주기",
+          "frameCount": 200
+        },
+        {
+          "id": "hit",
+          "label": "피격",
+          "frameCount": 14
+        },
+        {
+          "id": "block",
+          "label": "기본공격 방어 반동",
+          "frameCount": 8,
+          "blockStrength": 0.5940000000000001,
+          "durationSeconds": 0.126
+        },
+        {
+          "id": "knocked-out",
+          "label": "쓰러짐 · 고정 자세",
+          "frameCount": 1
+        },
+        {
+          "id": "slash",
+          "label": "기본 횡베기",
+          "frameCount": 27
+        },
+        {
+          "id": "heavy",
+          "label": "강한 사선 베기",
+          "frameCount": 41
+        },
+        {
+          "id": "thrust",
+          "label": "찌르기",
+          "frameCount": 22
+        },
+        {
+          "id": "rising",
+          "label": "올려베기",
+          "frameCount": 32
+        },
+        {
+          "id": "spin",
+          "label": "회전 공격",
+          "frameCount": 43
+        },
+        {
+          "id": "airSlash",
+          "label": "공중 베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airHeavy",
+          "label": "공중 강공",
+          "frameCount": 26
+        },
+        {
+          "id": "airReturn",
+          "label": "공중 되베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airSpin",
+          "label": "공중 회전",
+          "frameCount": 36
+        },
+        {
+          "id": "airCross",
+          "label": "공중 교차 베기",
+          "frameCount": 26
+        },
+        {
+          "id": "shieldBash",
+          "label": "방패 반격",
+          "frameCount": 23
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/equipment-1.html#equipment%3Afield-work-boots"
     },
     {
       "id": "enemy-reference:humanoid",

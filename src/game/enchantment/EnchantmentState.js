@@ -1,3 +1,7 @@
+import {
+  EQUIPMENT_CATALOG,
+  getEnchantableEquipmentItemIds,
+} from '../equipment/EquipmentCatalog.js';
 export const ENCHANTMENT_MAX_LEVEL = 5;
 export const ENCHANTMENT_MATERIAL_COSTS = Object.freeze([null, 2, 4, 8, 16, 32]);
 
@@ -5,14 +9,15 @@ export const ENCHANTMENT_TRANSACTION_REASON = Object.freeze({
   MATERIAL_AWARDED: 'material-awarded',
   UPGRADED: 'upgraded',
   NOT_OWNED: 'not-owned',
+  NOT_ENCHANTABLE: 'not-enchantable',
   INVALID_ELEMENT: 'invalid-element',
   INSUFFICIENT_MATERIAL: 'insufficient-material',
   INSUFFICIENT_GOLD: 'insufficient-gold',
   MAX_LEVEL: 'max-level',
 });
 
-function assertSwordId(swordId) {
-  if (typeof swordId !== 'string' || swordId.trim().length === 0) {
+function assertItemId(itemId) {
+  if (typeof itemId !== 'string' || itemId.trim().length === 0) {
     throw new TypeError('검 ID는 비어 있지 않은 문자열이어야 합니다.');
   }
 }
@@ -37,58 +42,73 @@ function createMaterialQuantities(catalog, quantities = {}) {
   );
 }
 
-function createSwordEnchantments(swordIds, records = {}, catalog) {
-  const ids = [...swordIds];
+function createEquipmentEnchantments(itemIds, records = {}, catalog) {
+  const ids = [...itemIds];
   if (new Set(ids).size !== ids.length) throw new TypeError('검 ID는 중복될 수 없습니다.');
   const knownEnchantIds = new Set(catalog.profiles.map((profile) => profile.id));
-  for (const swordId of Object.keys(records)) {
-    if (!ids.includes(swordId))
-      throw new TypeError(`소유하지 않은 검의 enchant 기록입니다: ${swordId}`);
+  for (const itemId of Object.keys(records)) {
+    if (!ids.includes(itemId))
+      throw new TypeError(`소유하지 않은 검의 enchant 기록입니다: ${itemId}`);
   }
   return Object.freeze(
     Object.fromEntries(
-      ids.map((swordId) => {
-        assertSwordId(swordId);
-        const record = records[swordId] ?? { elementId: null, level: 0 };
+      ids.map((itemId) => {
+        assertItemId(itemId);
+        const record = records[itemId] ?? { elementId: null, level: 0 };
         if (!record || typeof record !== 'object' || Array.isArray(record)) {
-          throw new TypeError(`${swordId} enchant 기록이 올바르지 않습니다.`);
+          throw new TypeError(`${itemId} enchant 기록이 올바르지 않습니다.`);
         }
         if (
           !Number.isInteger(record.level) ||
           record.level < 0 ||
           record.level > ENCHANTMENT_MAX_LEVEL
         ) {
-          throw new TypeError(`${swordId} enchant level은 0..5여야 합니다.`);
+          throw new TypeError(`${itemId} enchant level은 0..5여야 합니다.`);
         }
         if (
           (record.level === 0 && record.elementId !== null) ||
           (record.level > 0 && !knownEnchantIds.has(record.elementId))
         ) {
-          throw new TypeError(`${swordId} enchant element/level 조합이 올바르지 않습니다.`);
+          throw new TypeError(`${itemId} enchant element/level 조합이 올바르지 않습니다.`);
         }
-        return [swordId, Object.freeze({ elementId: record.elementId, level: record.level })];
+        return [itemId, Object.freeze({ elementId: record.elementId, level: record.level })];
       }),
     ),
   );
 }
 
-export function createEnchantmentSnapshot(swordIds = [], catalog) {
+export function createEnchantmentSnapshot(
+  itemIds = [],
+  catalog,
+  equipmentCatalog = EQUIPMENT_CATALOG,
+) {
+  itemIds = getEnchantableEquipmentItemIds(itemIds, equipmentCatalog);
   if (!catalog || !Array.isArray(catalog.profiles)) {
     throw new TypeError('enchantment catalog이 필요합니다.');
   }
   return Object.freeze({
     materialQuantities: createMaterialQuantities(catalog),
-    swordEnchantments: createSwordEnchantments(swordIds, {}, catalog),
+    equipmentEnchantments: createEquipmentEnchantments(itemIds, {}, catalog),
   });
 }
 
-export function canonicalizeEnchantmentSnapshot(snapshot, catalog, swordIds = []) {
+export function canonicalizeEnchantmentSnapshot(
+  snapshot,
+  catalog,
+  itemIds = [],
+  equipmentCatalog = EQUIPMENT_CATALOG,
+) {
+  itemIds = getEnchantableEquipmentItemIds(itemIds, equipmentCatalog);
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new TypeError('enchantment snapshot이 필요합니다.');
   }
   return Object.freeze({
     materialQuantities: createMaterialQuantities(catalog, snapshot.materialQuantities),
-    swordEnchantments: createSwordEnchantments(swordIds, snapshot.swordEnchantments, catalog),
+    equipmentEnchantments: createEquipmentEnchantments(
+      itemIds,
+      snapshot.equipmentEnchantments,
+      catalog,
+    ),
   });
 }
 
@@ -100,9 +120,10 @@ export function awardEnchantmentMaterial(
   enchantment,
   { elementId, quantity = 1 } = {},
   catalog,
-  swordIds = Object.keys(enchantment?.swordEnchantments ?? {}),
+  itemIds = Object.keys(enchantment?.equipmentEnchantments ?? {}),
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
-  const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, swordIds);
+  const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, itemIds, equipmentCatalog);
   const profile = catalog.getProfile(elementId);
   if (!Number.isSafeInteger(quantity) || quantity <= 0) {
     throw new TypeError('material award 수량은 양의 안전한 정수여야 합니다.');
@@ -131,14 +152,17 @@ export function awardEnchantmentMaterial(
   );
 }
 
-export function upgradeSwordEnchantment(
+export function upgradeEquipmentEnchantment(
   enchantment,
-  { swordId, elementId, availableGold } = {},
+  { itemId, elementId, availableGold } = {},
   catalog,
-  swordIds = Object.keys(enchantment?.swordEnchantments ?? {}),
+  itemIds = Object.keys(enchantment?.equipmentEnchantments ?? {}),
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
-  const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, swordIds);
-  if (!swordIds.includes(swordId)) {
+  const current = canonicalizeEnchantmentSnapshot(enchantment, catalog, itemIds, equipmentCatalog);
+  if (itemIds.includes(itemId) && !Object.hasOwn(current.equipmentEnchantments, itemId))
+    return transaction(false, ENCHANTMENT_TRANSACTION_REASON.NOT_ENCHANTABLE, current);
+  if (!itemIds.includes(itemId)) {
     return transaction(false, ENCHANTMENT_TRANSACTION_REASON.NOT_OWNED, current);
   }
   let profile;
@@ -147,7 +171,7 @@ export function upgradeSwordEnchantment(
   } catch {
     return transaction(false, ENCHANTMENT_TRANSACTION_REASON.INVALID_ELEMENT, current);
   }
-  const currentRecord = current.swordEnchantments[swordId];
+  const currentRecord = current.equipmentEnchantments[itemId];
   if (currentRecord.level > 0 && currentRecord.elementId !== elementId) {
     return transaction(false, ENCHANTMENT_TRANSACTION_REASON.INVALID_ELEMENT, current);
   }
@@ -183,9 +207,9 @@ export function upgradeSwordEnchantment(
         ...current.materialQuantities,
         [profile.materialId]: current.materialQuantities[profile.materialId] - materialCost,
       }),
-      swordEnchantments: Object.freeze({
-        ...current.swordEnchantments,
-        [swordId]: Object.freeze({ elementId, level: targetLevel }),
+      equipmentEnchantments: Object.freeze({
+        ...current.equipmentEnchantments,
+        [itemId]: Object.freeze({ elementId, level: targetLevel }),
       }),
     }),
     { targetLevel, materialCost, goldCost },

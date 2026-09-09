@@ -1,3 +1,15 @@
+import { assertStoredCampaignSnapshot } from './ProgressionCampaignValidation.js';
+import {
+  EQUIPMENT_CATALOG,
+  getEnchantableEquipmentItemIds,
+} from '../equipment/EquipmentCatalog.js';
+import {
+  DEFAULT_LOADOUT,
+  DEFAULT_OWNED_EQUIPMENT_ITEM_IDS,
+  validateLoadout,
+  EQUIPMENT_SLOT_KEYS,
+} from '../equipment/EquipmentLoadout.js';
+import { getNewlyDiscoveredSpecialSynergyIds } from '../equipment/EquipmentSynergy.js';
 import {
   createScrapCampaignSnapshot,
   commitScrapCampaignAction,
@@ -7,10 +19,10 @@ import {
 import {
   awardEnchantmentMaterial,
   createEnchantmentSnapshot,
-  upgradeSwordEnchantment as upgradeEnchantment,
+  upgradeEquipmentEnchantment as upgradeEnchantment,
 } from '../enchantment/EnchantmentState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 10;
+export const PROGRESSION_SCHEMA_VERSION = 11;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -50,239 +62,183 @@ function assertPositiveInteger(value, label) {
   }
 }
 
-function freezeSnapshot({
-  gold,
-  trainingMarks,
-  ownedEquipmentIds,
-  equippedEquipmentId,
-  combatSkillLevel,
-  viewedConversationIds,
-  weaponForge = {
-    materialQuantities: {},
-    claimedSourceIds: [],
-    selectedProfileIdsByGroup: {},
-  },
-  scrapCampaign,
-  enchantment = {
-    materialQuantities: {},
-    swordEnchantments: {},
-  },
-}) {
-  return Object.freeze({
+function freezeSnapshot(snapshot) {
+  const freeze = (value) => {
+    if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+      Object.values(value).forEach(freeze);
+      Object.freeze(value);
+    }
+    return value;
+  };
+  return freeze({
+    ...structuredClone(snapshot),
     version: PROGRESSION_SCHEMA_VERSION,
-    gold,
-    trainingMarks,
-    ownedEquipmentIds: Object.freeze([...ownedEquipmentIds]),
-    equippedEquipmentId,
-    combatSkillLevel,
-    viewedConversationIds: Object.freeze([...viewedConversationIds]),
-    weaponForge: Object.freeze({
-      materialQuantities: Object.freeze({ ...weaponForge.materialQuantities }),
-      claimedSourceIds: Object.freeze([...weaponForge.claimedSourceIds]),
-      selectedProfileIdsByGroup: Object.freeze({ ...weaponForge.selectedProfileIdsByGroup }),
-    }),
-    scrapCampaign: toScrapCampaignSnapshot(scrapCampaign),
-    enchantment: Object.freeze({
-      materialQuantities: Object.freeze({ ...enchantment.materialQuantities }),
-      swordEnchantments: Object.freeze(
-        Object.fromEntries(
-          Object.entries(enchantment.swordEnchantments).map(([swordId, record]) => [
-            swordId,
-            Object.freeze({ elementId: record.elementId, level: record.level }),
-          ]),
-        ),
-      ),
-    }),
+    scrapCampaign: toScrapCampaignSnapshot(snapshot.scrapCampaign),
   });
 }
-
 export function createProgressionSnapshot(
-  defaultEquipmentId,
+  defaultItemId,
   enchantmentCatalog = null,
   scrapCampaignProfile,
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
-  assertEquipmentId(defaultEquipmentId, '기본 장비 ID');
-  return freezeSnapshot({
+  equipmentCatalog.getItem(defaultItemId);
+  const ownedEquipmentItemIds = [...new Set([defaultItemId, ...DEFAULT_OWNED_EQUIPMENT_ITEM_IDS])];
+  const enchantable = getEnchantableEquipmentItemIds(ownedEquipmentItemIds, equipmentCatalog);
+  const snapshot = {
+    version: 11,
     gold: 0,
     trainingMarks: 0,
-    ownedEquipmentIds: [defaultEquipmentId],
-    equippedEquipmentId: defaultEquipmentId,
+    ownedEquipmentItemIds,
+    loadout: { ...DEFAULT_LOADOUT, weaponItemId: defaultItemId },
+    everOwnedEquipmentItemIds: [...ownedEquipmentItemIds],
+    discoveredSpecialSynergyIds: [],
     combatSkillLevel: 0,
     viewedConversationIds: [],
-    weaponForge: {
-      materialQuantities: {},
-      claimedSourceIds: [],
-      selectedProfileIdsByGroup: {},
-    },
+    equipmentForge: { materialQuantities: {}, claimedSourceIds: [], selectedItemIdsByGroup: {} },
     scrapCampaign: createScrapCampaignSnapshot(scrapCampaignProfile),
     enchantment: enchantmentCatalog
-      ? createEnchantmentSnapshot([defaultEquipmentId], enchantmentCatalog)
+      ? createEnchantmentSnapshot(enchantable, enchantmentCatalog)
       : {
           materialQuantities: {},
-          swordEnchantments: { [defaultEquipmentId]: { elementId: null, level: 0 } },
+          equipmentEnchantments: Object.fromEntries(
+            enchantable.map((id) => [id, { elementId: null, level: 0 }]),
+          ),
         },
-  });
+  };
+  assertProgressionSnapshot(snapshot, scrapCampaignProfile, equipmentCatalog);
+  return freezeSnapshot(snapshot);
 }
-
-export function assertProgressionSnapshot(snapshot, scrapCampaignProfile) {
-  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
-    throw new TypeError('progression snapshot은 객체여야 합니다.');
-  }
-  if (snapshot.version !== PROGRESSION_SCHEMA_VERSION) {
-    throw new Error(`지원하지 않는 progression schema version입니다: ${snapshot.version}`);
-  }
-  const supportedFields = new Set([
+function record(value, label, keys) {
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw new TypeError(label + ' must be a record');
+  if (keys && Object.keys(value).some((k) => !keys.includes(k)))
+    throw new TypeError(label + ' contains unknown fields');
+  return value;
+}
+function uniqueIds(value, label) {
+  if (
+    !Array.isArray(value) ||
+    value.some((id) => typeof id !== 'string' || !id.trim()) ||
+    new Set(value).size !== value.length
+  )
+    throw new TypeError(label + ' must contain unique IDs');
+  return value;
+}
+export function assertProgressionSnapshot(
+  snapshot,
+  scrapCampaignProfile,
+  equipmentCatalog = EQUIPMENT_CATALOG,
+) {
+  record(snapshot, 'progression', [
     'version',
     'gold',
     'trainingMarks',
-    'ownedEquipmentIds',
-    'equippedEquipmentId',
+    'ownedEquipmentItemIds',
+    'loadout',
+    'everOwnedEquipmentItemIds',
+    'discoveredSpecialSynergyIds',
     'combatSkillLevel',
     'viewedConversationIds',
-    'weaponForge',
+    'equipmentForge',
     'enchantment',
     'scrapCampaign',
   ]);
-  if (Object.keys(snapshot).some((field) => !supportedFields.has(field))) {
-    throw new TypeError('현재 progression schema에 없는 저장 필드가 있습니다.');
-  }
-  assertNonNegativeInteger(snapshot.gold, '보유 Gold');
-  assertNonNegativeInteger(snapshot.trainingMarks, '훈련 인장');
-  if (!Array.isArray(snapshot.ownedEquipmentIds) || snapshot.ownedEquipmentIds.length === 0) {
-    throw new TypeError('소유 장비 ID 목록에는 적어도 하나의 장비가 필요합니다.');
-  }
-  const ownedIds = new Set();
-  for (const equipmentId of snapshot.ownedEquipmentIds) {
-    assertEquipmentId(equipmentId, '소유 장비 ID');
-    if (ownedIds.has(equipmentId)) {
-      throw new Error(`소유 장비 ID가 중복됩니다: ${equipmentId}`);
-    }
-    ownedIds.add(equipmentId);
-  }
-  assertEquipmentId(snapshot.equippedEquipmentId, '착용 장비 ID');
-  if (!ownedIds.has(snapshot.equippedEquipmentId)) {
-    throw new Error(`착용 장비는 먼저 소유해야 합니다: ${snapshot.equippedEquipmentId}`);
-  }
+  if (snapshot.version !== 11) throw new TypeError('Unsupported progression schema');
+  assertNonNegativeInteger(snapshot.gold, 'Gold');
+  assertNonNegativeInteger(snapshot.trainingMarks, 'Training marks');
+  const owned = uniqueIds(snapshot.ownedEquipmentItemIds, 'Owned items');
+  if (!owned.length) throw new Error('Owned items cannot be empty');
+  owned.forEach((id) => equipmentCatalog.getItem(id));
+  const ever = uniqueIds(snapshot.everOwnedEquipmentItemIds, 'Ever-owned items');
+  ever.forEach((id) => equipmentCatalog.getItem(id));
+  if (owned.some((id) => !ever.includes(id)))
+    throw new Error('Owned items must remain in ever-owned history');
+  const discovered = uniqueIds(snapshot.discoveredSpecialSynergyIds, 'Discovered synergies');
+  if (discovered.some((id) => !equipmentCatalog.specialSynergies.some((s) => s.id === id)))
+    throw new Error('Unknown discovered synergy');
+  record(snapshot.loadout, 'Loadout', Object.values(EQUIPMENT_SLOT_KEYS));
+  if (Object.values(EQUIPMENT_SLOT_KEYS).some((k) => !Object.hasOwn(snapshot.loadout, k)))
+    throw new Error('All six loadout slots are required');
+  validateLoadout(snapshot.loadout, equipmentCatalog, { ownedItemIds: owned });
   if (
     !Number.isInteger(snapshot.combatSkillLevel) ||
     snapshot.combatSkillLevel < 0 ||
     snapshot.combatSkillLevel > 3
-  ) {
-    throw new RangeError('combat skill level은 0..3 사이의 정수여야 합니다.');
+  )
+    throw new Error('Combat skill must be 0..3');
+  uniqueIds(snapshot.viewedConversationIds, 'Viewed conversations');
+  const forge = record(snapshot.equipmentForge, 'Equipment forge', [
+    'materialQuantities',
+    'claimedSourceIds',
+    'selectedItemIdsByGroup',
+  ]);
+  record(forge.materialQuantities, 'Forge quantities');
+  Object.entries(forge.materialQuantities).forEach(([id, n]) => {
+    assertEquipmentId(id, 'Material');
+    assertNonNegativeInteger(n, 'Material quantity');
+  });
+  uniqueIds(forge.claimedSourceIds, 'Forge claims');
+  record(forge.selectedItemIdsByGroup, 'Forge choices');
+  for (const [group, itemId] of Object.entries(forge.selectedItemIdsByGroup)) {
+    assertEquipmentId(group, 'Forge group');
+    if (!owned.includes(itemId)) throw new Error('Forge choice must be owned');
   }
+  assertStoredCampaignSnapshot(snapshot.scrapCampaign, scrapCampaignProfile);
+  const enchantment = record(snapshot.enchantment, 'Enchantment', [
+    'materialQuantities',
+    'equipmentEnchantments',
+  ]);
+  record(enchantment.materialQuantities, 'Enchant quantities');
+  Object.entries(enchantment.materialQuantities).forEach(([id, n]) => {
+    assertEquipmentId(id, 'Material');
+    assertNonNegativeInteger(n, 'Material quantity');
+  });
+  record(enchantment.equipmentEnchantments, 'Equipment enchants');
+  const enchantable = getEnchantableEquipmentItemIds(owned, equipmentCatalog);
   if (
-    !Array.isArray(snapshot.viewedConversationIds) ||
-    snapshot.viewedConversationIds.some(
-      (conversationId) => typeof conversationId !== 'string' || conversationId.trim().length === 0,
-    ) ||
-    new Set(snapshot.viewedConversationIds).size !== snapshot.viewedConversationIds.length
-  ) {
-    throw new TypeError('확인한 핵심 대화 ID 목록이 올바르지 않습니다.');
-  }
-  const weaponForge = snapshot.weaponForge;
-  if (!weaponForge || typeof weaponForge !== 'object' || Array.isArray(weaponForge)) {
-    throw new TypeError('무기 forge 진행이 필요합니다.');
-  }
-  if (
-    !weaponForge.materialQuantities ||
-    typeof weaponForge.materialQuantities !== 'object' ||
-    Array.isArray(weaponForge.materialQuantities)
-  ) {
-    throw new TypeError('무기 forge material 수량이 올바르지 않습니다.');
-  }
-  for (const [materialId, quantity] of Object.entries(weaponForge.materialQuantities)) {
-    assertEquipmentId(materialId, '무기 forge material ID');
-    assertNonNegativeInteger(quantity, `${materialId} 수량`);
-  }
-  if (
-    !Array.isArray(weaponForge.claimedSourceIds) ||
-    weaponForge.claimedSourceIds.some((id) => typeof id !== 'string' || id.length === 0) ||
-    new Set(weaponForge.claimedSourceIds).size !== weaponForge.claimedSourceIds.length
-  ) {
-    throw new TypeError('무기 forge claimed source가 올바르지 않습니다.');
-  }
-  if (
-    !weaponForge.selectedProfileIdsByGroup ||
-    typeof weaponForge.selectedProfileIdsByGroup !== 'object' ||
-    Array.isArray(weaponForge.selectedProfileIdsByGroup)
-  ) {
-    throw new TypeError('무기 forge 상호배타 선택 기록이 올바르지 않습니다.');
-  }
-  for (const [groupId, profileId] of Object.entries(weaponForge.selectedProfileIdsByGroup)) {
-    assertEquipmentId(groupId, '무기 forge 선택 group ID');
-    assertEquipmentId(profileId, '무기 forge 선택 profile ID');
-    if (!ownedIds.has(profileId)) {
-      throw new Error(`forge 선택 무기는 먼저 소유해야 합니다: ${profileId}`);
-    }
-  }
-  toScrapCampaignSnapshot(snapshot.scrapCampaign, scrapCampaignProfile);
-  const enchantment = snapshot.enchantment;
-  if (!enchantment || typeof enchantment !== 'object')
-    throw new TypeError('enchantment 진행이 필요합니다.');
-  if (
-    !enchantment.materialQuantities ||
-    typeof enchantment.materialQuantities !== 'object' ||
-    Array.isArray(enchantment.materialQuantities)
-  ) {
-    throw new TypeError('enchantment material 수량이 올바르지 않습니다.');
-  }
-  for (const [materialId, quantity] of Object.entries(enchantment.materialQuantities)) {
-    assertEquipmentId(materialId, 'enchantment material ID');
-    assertNonNegativeInteger(quantity, `${materialId} 수량`);
-  }
-  if (
-    !enchantment.swordEnchantments ||
-    typeof enchantment.swordEnchantments !== 'object' ||
-    Array.isArray(enchantment.swordEnchantments) ||
-    Object.keys(enchantment.swordEnchantments).length !== ownedIds.size
-  ) {
-    throw new TypeError('검별 enchantment 기록이 올바르지 않습니다.');
-  }
-  for (const [swordId, record] of Object.entries(enchantment.swordEnchantments)) {
-    if (!ownedIds.has(swordId) || !record || typeof record !== 'object' || Array.isArray(record)) {
-      throw new TypeError('소유 검과 enchantment 기록이 일치해야 합니다.');
-    }
-    if (!Number.isInteger(record.level) || record.level < 0 || record.level > 5) {
-      throw new TypeError('검 enchantment level은 0..5여야 합니다.');
-    }
+    Object.keys(enchantment.equipmentEnchantments).length !== enchantable.length ||
+    enchantable.some((id) => !Object.hasOwn(enchantment.equipmentEnchantments, id))
+  )
+    throw new Error('Only owned enchantable items must have enchant records');
+  for (const entry of Object.values(enchantment.equipmentEnchantments)) {
+    record(entry, 'Item enchant', ['elementId', 'level']);
     if (
-      (record.level === 0 && record.elementId !== null) ||
-      (record.level > 0 && (typeof record.elementId !== 'string' || record.elementId.length === 0))
-    ) {
-      throw new TypeError('검 enchantment element/level 조합이 올바르지 않습니다.');
-    }
-  }
-  if (
-    Object.keys(enchantment).some(
-      (field) => !['materialQuantities', 'swordEnchantments'].includes(field),
+      !Number.isInteger(entry.level) ||
+      entry.level < 0 ||
+      entry.level > 5 ||
+      (entry.level === 0
+        ? entry.elementId !== null
+        : typeof entry.elementId !== 'string' || !entry.elementId)
     )
-  ) {
-    throw new TypeError('현재 enchantment schema에 없는 저장 필드가 있습니다.');
+      throw new Error('Invalid enchant element/level');
   }
   return snapshot;
 }
-
 export function mergeProgressionSnapshot(
   snapshot,
-  {
-    gold = snapshot?.gold,
-    scrapCampaign = snapshot?.scrapCampaign,
-    enchantment = snapshot?.enchantment,
-    viewedConversationIds = snapshot?.viewedConversationIds,
-    weaponForge = snapshot?.weaponForge,
-  } = {},
+  changes = {},
+  equipmentCatalog = EQUIPMENT_CATALOG,
 ) {
-  assertProgressionSnapshot(snapshot);
-  const next = {
-    ...snapshot,
-    gold,
-    scrapCampaign,
-    enchantment,
-    viewedConversationIds,
-    weaponForge,
-  };
-  assertProgressionSnapshot(next);
+  assertProgressionSnapshot(snapshot, undefined, equipmentCatalog);
+  const next = { ...snapshot, ...changes };
+  assertProgressionSnapshot(next, undefined, equipmentCatalog);
   return freezeSnapshot(next);
+}
+function recordDiscoveries(snapshot, catalog) {
+  return {
+    ...snapshot,
+    discoveredSpecialSynergyIds: [
+      ...new Set([
+        ...snapshot.discoveredSpecialSynergyIds,
+        ...getNewlyDiscoveredSpecialSynergyIds(
+          snapshot.loadout,
+          catalog,
+          snapshot.discoveredSpecialSynergyIds,
+        ),
+      ]),
+    ],
+  };
 }
 
 function createTransaction(changed, reason, snapshot) {
@@ -350,7 +306,7 @@ export function awardEnemyEnchantMaterial(snapshot, reward, catalog) {
     snapshot.enchantment,
     reward,
     catalog,
-    snapshot.ownedEquipmentIds,
+    getEnchantableEquipmentItemIds(snapshot.ownedEquipmentItemIds),
   );
   return Object.freeze({
     changed: true,
@@ -364,15 +320,15 @@ export function awardEnemyEnchantMaterial(snapshot, reward, catalog) {
   });
 }
 
-export function awardWeaponForgeMaterial(snapshot, { sourceId, materialId, quantity = 1 } = {}) {
+export function awardEquipmentForgeMaterial(snapshot, { sourceId, materialId, quantity = 1 } = {}) {
   assertProgressionSnapshot(snapshot);
   assertEquipmentId(sourceId, '무기 forge material source ID');
   assertEquipmentId(materialId, '무기 forge material ID');
   assertPositiveInteger(quantity, '무기 forge material 획득량');
-  if (snapshot.weaponForge.claimedSourceIds.includes(sourceId)) {
+  if (snapshot.equipmentForge.claimedSourceIds.includes(sourceId)) {
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_CLAIMED, snapshot);
   }
-  const currentQuantity = snapshot.weaponForge.materialQuantities[materialId] ?? 0;
+  const currentQuantity = snapshot.equipmentForge.materialQuantities[materialId] ?? 0;
   const nextQuantity = currentQuantity + quantity;
   if (!Number.isSafeInteger(nextQuantity)) {
     throw new RangeError('무기 forge material 수량이 안전한 정수 범위를 넘습니다.');
@@ -382,13 +338,13 @@ export function awardWeaponForgeMaterial(snapshot, { sourceId, materialId, quant
     PROGRESSION_TRANSACTION_REASON.AWARDED,
     freezeSnapshot({
       ...snapshot,
-      weaponForge: {
-        ...snapshot.weaponForge,
+      equipmentForge: {
+        ...snapshot.equipmentForge,
         materialQuantities: {
-          ...snapshot.weaponForge.materialQuantities,
+          ...snapshot.equipmentForge.materialQuantities,
           [materialId]: nextQuantity,
         },
-        claimedSourceIds: [...snapshot.weaponForge.claimedSourceIds, sourceId],
+        claimedSourceIds: [...snapshot.equipmentForge.claimedSourceIds, sourceId],
       },
     }),
   );
@@ -422,8 +378,8 @@ export function awardCampaignEncounterReward(
   next = awardGold(next, reward.gold).snapshot;
   if (reward.trainingMarks > 0) next = awardTrainingMarks(next, reward.trainingMarks).snapshot;
   if (reward.forgeMaterial) {
-    const forge = progressionProfile.weaponForge;
-    next = awardWeaponForgeMaterial(next, {
+    const forge = progressionProfile.equipmentForge;
+    next = awardEquipmentForgeMaterial(next, {
       sourceId: forge.sourceId,
       materialId: forge.materialId,
       quantity: forge.sourceQuantity,
@@ -432,115 +388,124 @@ export function awardCampaignEncounterReward(
   const material = awardEnemyEnchantMaterial(next, reward.materialReward, enchantmentCatalog);
   return Object.freeze({
     ...createTransaction(true, PROGRESSION_TRANSACTION_REASON.AWARDED, material.snapshot),
-    rewardLabel: `${reward.gold} Gold · ${material.materialLabel} +${material.quantity}${reward.forgeMaterial ? ' · ' + progressionProfile.weaponForge.materialLabel : ''}`,
+    rewardLabel: `${reward.gold} Gold · ${material.materialLabel} +${material.quantity}${reward.forgeMaterial ? ' · ' + progressionProfile.equipmentForge.materialLabel : ''}`,
   });
 }
 
-export function forgeWeaponArchetype(
-  snapshot,
-  { choiceGroupId, profileId, optionProfileIds, materialId, materialCost = 1 } = {},
-) {
-  assertProgressionSnapshot(snapshot);
-  assertEquipmentId(choiceGroupId, '무기 archetype choice group ID');
-  assertEquipmentId(profileId, '무기 archetype profile ID');
-  assertEquipmentId(materialId, '무기 archetype material ID');
-  assertPositiveInteger(materialCost, '무기 archetype material 비용');
-  if (
-    !Array.isArray(optionProfileIds) ||
-    optionProfileIds.some((candidate) => typeof candidate !== 'string' || candidate.length === 0)
-  ) {
-    throw new TypeError('무기 archetype option profile ID 목록이 필요합니다.');
-  }
-  if (!optionProfileIds.includes(profileId)) {
-    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.UNAVAILABLE, snapshot);
-  }
-  if (snapshot.weaponForge.selectedProfileIdsByGroup[choiceGroupId]) {
-    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN, snapshot);
-  }
-  if (snapshot.ownedEquipmentIds.includes(profileId)) {
-    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_OWNED, snapshot);
-  }
-  const materialQuantity = snapshot.weaponForge.materialQuantities[materialId] ?? 0;
-  if (materialQuantity < materialCost) {
-    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_MATERIAL, snapshot);
-  }
-  return createTransaction(
-    true,
-    PROGRESSION_TRANSACTION_REASON.FORGED,
-    freezeSnapshot({
-      ...snapshot,
-      ownedEquipmentIds: [...snapshot.ownedEquipmentIds, profileId],
-      equippedEquipmentId: profileId,
-      weaponForge: {
-        ...snapshot.weaponForge,
-        materialQuantities: {
-          ...snapshot.weaponForge.materialQuantities,
-          [materialId]: materialQuantity - materialCost,
-        },
-        selectedProfileIdsByGroup: {
-          ...snapshot.weaponForge.selectedProfileIdsByGroup,
-          [choiceGroupId]: profileId,
-        },
+function acquiredItem(snapshot, itemId, catalog) {
+  catalog.getItem(itemId);
+  const enchantable = getEnchantableEquipmentItemIds([itemId], catalog).length > 0;
+  return {
+    ...snapshot,
+    ownedEquipmentItemIds: [...new Set([...snapshot.ownedEquipmentItemIds, itemId])],
+    everOwnedEquipmentItemIds: [...new Set([...snapshot.everOwnedEquipmentItemIds, itemId])],
+    enchantment: {
+      ...snapshot.enchantment,
+      equipmentEnchantments: {
+        ...snapshot.enchantment.equipmentEnchantments,
+        ...(enchantable
+          ? {
+              [itemId]: snapshot.enchantment.equipmentEnchantments[itemId] ?? {
+                elementId: null,
+                level: 0,
+              },
+            }
+          : {}),
       },
-      enchantment: {
-        ...snapshot.enchantment,
-        swordEnchantments: {
-          ...snapshot.enchantment.swordEnchantments,
-          [profileId]: { elementId: null, level: 0 },
-        },
-      },
-    }),
-  );
+    },
+  };
 }
-
+export function forgeEquipmentArchetype(
+  snapshot,
+  { choiceGroupId, itemId, optionItemIds, materialId, materialCost = 1 } = {},
+  catalog = EQUIPMENT_CATALOG,
+) {
+  assertProgressionSnapshot(snapshot, undefined, catalog);
+  assertEquipmentId(choiceGroupId, 'Forge group');
+  assertEquipmentId(materialId, 'Forge material');
+  assertPositiveInteger(materialCost, 'Forge cost');
+  if (!Array.isArray(optionItemIds) || !optionItemIds.includes(itemId))
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.UNAVAILABLE, snapshot);
+  catalog.getItem(itemId);
+  if (snapshot.equipmentForge.selectedItemIdsByGroup[choiceGroupId])
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_CHOSEN, snapshot);
+  if (snapshot.ownedEquipmentItemIds.includes(itemId))
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_OWNED, snapshot);
+  const quantity = snapshot.equipmentForge.materialQuantities[materialId] ?? 0;
+  if (quantity < materialCost)
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_MATERIAL, snapshot);
+  const next = acquiredItem(snapshot, itemId, catalog);
+  next.equipmentForge = {
+    ...snapshot.equipmentForge,
+    materialQuantities: {
+      ...snapshot.equipmentForge.materialQuantities,
+      [materialId]: quantity - materialCost,
+    },
+    selectedItemIdsByGroup: {
+      ...snapshot.equipmentForge.selectedItemIdsByGroup,
+      [choiceGroupId]: itemId,
+    },
+  };
+  const equipped = selectEquipment(next, itemId, catalog);
+  if (!equipped.changed) return createTransaction(false, equipped.reason, snapshot);
+  return createTransaction(true, PROGRESSION_TRANSACTION_REASON.FORGED, equipped.snapshot);
+}
 export function purchaseEquipment(
   snapshot,
-  { profileId, goldCost, trainingMarkRequirement = 0 } = {},
+  { itemId, goldCost, trainingMarkRequirement = 0 } = {},
+  catalog = EQUIPMENT_CATALOG,
 ) {
-  assertProgressionSnapshot(snapshot);
-  assertEquipmentId(profileId, '구매 장비 profile ID');
-  if (snapshot.ownedEquipmentIds.includes(profileId)) {
+  assertProgressionSnapshot(snapshot, undefined, catalog);
+  catalog.getItem(itemId);
+  if (snapshot.ownedEquipmentItemIds.includes(itemId))
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_OWNED, snapshot);
-  }
-  assertNonNegativeInteger(goldCost, '장비 Gold 비용');
-  assertNonNegativeInteger(trainingMarkRequirement, '장비 훈련 인장 요구량');
-  if (snapshot.trainingMarks < trainingMarkRequirement) {
+  assertNonNegativeInteger(goldCost, 'Equipment Gold');
+  assertNonNegativeInteger(trainingMarkRequirement, 'Equipment training marks');
+  if (snapshot.trainingMarks < trainingMarkRequirement)
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_TRAINING, snapshot);
-  }
-  if (getAvailableGold(snapshot) < goldCost) {
+  if (snapshot.gold < goldCost)
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.INSUFFICIENT_GOLD, snapshot);
-  }
-  const paidSnapshot = spendGold(snapshot, goldCost);
   return createTransaction(
     true,
     PROGRESSION_TRANSACTION_REASON.PURCHASED,
-    freezeSnapshot({
-      ...paidSnapshot,
-      ownedEquipmentIds: [...paidSnapshot.ownedEquipmentIds, profileId],
-      enchantment: {
-        ...paidSnapshot.enchantment,
-        swordEnchantments: {
-          ...paidSnapshot.enchantment.swordEnchantments,
-          [profileId]: { elementId: null, level: 0 },
-        },
-      },
-    }),
+    acquiredItem({ ...snapshot, gold: snapshot.gold - goldCost }, itemId, catalog),
   );
 }
 
-export function selectEquipment(snapshot, profileId) {
-  assertProgressionSnapshot(snapshot);
-  assertEquipmentId(profileId, '선택 장비 profile ID');
-  if (!snapshot.ownedEquipmentIds.includes(profileId)) {
+export function selectEquipment(snapshot, itemId, catalog = EQUIPMENT_CATALOG, { slot } = {}) {
+  assertProgressionSnapshot(snapshot, undefined, catalog);
+  const item = catalog.getItem(itemId);
+  const family = catalog.getFamily(item.familyId);
+  const key = EQUIPMENT_SLOT_KEYS[slot ?? family.slot] ?? slot;
+  if (key !== EQUIPMENT_SLOT_KEYS[family.slot])
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.UNAVAILABLE, snapshot);
+  if (!snapshot.ownedEquipmentItemIds.includes(itemId))
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.NOT_OWNED, snapshot);
-  }
-  if (snapshot.equippedEquipmentId === profileId) {
+  if (snapshot.loadout[key] === itemId)
     return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_EQUIPPED, snapshot);
+  const loadout = { ...snapshot.loadout, [key]: itemId };
+  try {
+    validateLoadout(loadout, catalog, { ownedItemIds: snapshot.ownedEquipmentItemIds });
+  } catch {
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.UNAVAILABLE, snapshot);
   }
   return createTransaction(
     true,
     PROGRESSION_TRANSACTION_REASON.EQUIPPED,
-    freezeSnapshot({ ...snapshot, equippedEquipmentId: profileId }),
+    recordDiscoveries({ ...snapshot, loadout }, catalog),
+  );
+}
+export function unequipEquipment(snapshot, slot, catalog = EQUIPMENT_CATALOG) {
+  assertProgressionSnapshot(snapshot, undefined, catalog);
+  const key = EQUIPMENT_SLOT_KEYS[slot] ?? slot;
+  if (!Object.values(EQUIPMENT_SLOT_KEYS).includes(key) || key === 'weaponItemId')
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.UNAVAILABLE, snapshot);
+  if (snapshot.loadout[key] === null)
+    return createTransaction(false, PROGRESSION_TRANSACTION_REASON.ALREADY_EQUIPPED, snapshot);
+  return createTransaction(
+    true,
+    PROGRESSION_TRANSACTION_REASON.EQUIPPED,
+    recordDiscoveries({ ...snapshot, loadout: { ...snapshot.loadout, [key]: null } }, catalog),
   );
 }
 
@@ -568,13 +533,19 @@ export function trainCombatSkill(snapshot, { goldCost, trainingMarkRequirement =
   );
 }
 
-export function upgradeSwordEnchantment(snapshot, { swordId, elementId } = {}, catalog) {
-  assertProgressionSnapshot(snapshot);
+export function upgradeEquipmentEnchantment(
+  snapshot,
+  { itemId, elementId } = {},
+  catalog,
+  equipmentCatalog = EQUIPMENT_CATALOG,
+) {
+  assertProgressionSnapshot(snapshot, undefined, equipmentCatalog);
   const enchantmentTransaction = upgradeEnchantment(
     snapshot.enchantment,
-    { swordId, elementId, availableGold: getAvailableGold(snapshot) },
+    { itemId, elementId, availableGold: snapshot.gold },
     catalog,
-    snapshot.ownedEquipmentIds,
+    snapshot.ownedEquipmentItemIds,
+    equipmentCatalog,
   );
   if (!enchantmentTransaction.changed) {
     return Object.freeze({

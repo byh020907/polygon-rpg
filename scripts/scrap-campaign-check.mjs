@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { SCRAP_CAST } from '../src/game/campaign/ScrapCastProfile.js';
-import { DEFAULT_EQUIPMENT_PROFILE_ID } from '../src/game/equipment/EquipmentProfiles.js';
+import { DEFAULT_EQUIPMENT_ITEM_ID } from '../src/game/equipment/EquipmentCatalog.js';
 import { ENCHANTMENT_CATALOG } from '../src/game/enchantment/EnchantmentCatalog.js';
 import {
   assertProgressionSnapshot,
@@ -899,7 +899,7 @@ const activeIssuePersistence = new ProgressionStorage(
 );
 const activeIssueProgression = {
   ...createProgressionSnapshot(
-    DEFAULT_EQUIPMENT_PROFILE_ID,
+    DEFAULT_EQUIPMENT_ITEM_ID,
     ENCHANTMENT_CATALOG,
     SCRAP_CAMPAIGN_PROFILE,
   ),
@@ -907,8 +907,8 @@ const activeIssueProgression = {
 };
 assert.equal(activeIssuePersistence.save(activeIssueProgression).ok, true);
 const loadedActiveIssue = activeIssuePersistence.load(
-  DEFAULT_EQUIPMENT_PROFILE_ID,
-  [DEFAULT_EQUIPMENT_PROFILE_ID],
+  DEFAULT_EQUIPMENT_ITEM_ID,
+  [DEFAULT_EQUIPMENT_ITEM_ID],
   ENCHANTMENT_CATALOG,
 );
 assert.equal(loadedActiveIssue.ok, true);
@@ -1410,7 +1410,7 @@ completeCampaign = toScrapCampaignSnapshot(
 );
 const progression = {
   ...createProgressionSnapshot(
-    DEFAULT_EQUIPMENT_PROFILE_ID,
+    DEFAULT_EQUIPMENT_ITEM_ID,
     ENCHANTMENT_CATALOG,
     SCRAP_CAMPAIGN_PROFILE,
   ),
@@ -1420,8 +1420,8 @@ assertProgressionSnapshot(progression, SCRAP_CAMPAIGN_PROFILE);
 const saveResult = persistence.save(progression);
 assert.equal(saveResult.ok, true, JSON.stringify(saveResult));
 const loaded = persistence.load(
-  DEFAULT_EQUIPMENT_PROFILE_ID,
-  [DEFAULT_EQUIPMENT_PROFILE_ID],
+  DEFAULT_EQUIPMENT_ITEM_ID,
+  [DEFAULT_EQUIPMENT_ITEM_ID],
   ENCHANTMENT_CATALOG,
 );
 assert.equal(loaded.ok, true);
@@ -1430,8 +1430,8 @@ assert.deepEqual(loaded.snapshot.scrapCampaign, completeCampaign);
 const previousRecord = { ...JSON.parse(storageAdapter.value), version: 9 };
 storageAdapter.value = JSON.stringify(previousRecord);
 const incompatible = persistence.load(
-  DEFAULT_EQUIPMENT_PROFILE_ID,
-  [DEFAULT_EQUIPMENT_PROFILE_ID],
+  DEFAULT_EQUIPMENT_ITEM_ID,
+  [DEFAULT_EQUIPMENT_ITEM_ID],
   ENCHANTMENT_CATALOG,
 );
 assert.equal(incompatible.ok, false);
@@ -1471,7 +1471,7 @@ console.log(
       'rival-progress-does-not-rewrite-region-progress',
       'five-part-order-independent-final-battle-unlock',
       'last-segment-warning-and-terminal-game-over',
-      'schema-v10-round-trip-and-explicit-incompatible-reset-notice',
+      'schema-v11-round-trip-and-explicit-incompatible-campaign-notice',
       'awakening-stage-storage-round-trip',
       'garage-reveal-stage-storage-round-trip',
     ],

@@ -76,3 +76,7 @@ Before product work, read the selected Method and all four Project Sources compl
 - Preserve existing Human changes and immutable feedback wording.
 - Infer routine implementation choices from the Product and Engineering Desired States instead of repeatedly asking for approval.
 - Keep the development runtime tool-agnostic; do not make correctness depend on a particular Agent, scheduler, worktree, CI service, or orchestration product.
+
+## System Design Baseline
+
+레오곡의 기본 액션 RPG 문법 → 유지할 경험 → Polygon RPG의 Human Delta 순서로 판단한다. 현재 공식 위키와 장비 명세를 먼저 정렬하고 구현한다. 최신 6슬롯·세트/특수 시너지·v10 저장 보존 요구는 과거 검 전용/개발 저장 초기화 허용보다 우선한다. 명백한 표준/hybrid 선택을 반복 인터뷰로 만들지 않으며 실제 아트 결과·콘텐츠량·되돌리기 어려운 의미가 크게 달라질 때만 조사 후 질문한다. 승인 reference 자산을 확보하지 못했으면 다른 파일로 추정 대체하지 않는다.

@@ -24,6 +24,74 @@
       >이 게임을 실행하려면 JavaScript를 활성화해야 합니다.</noscript
     >
     <main id="app" x-data="gameShell" x-cloak>
+      <dialog x-ref="equipmentDialog" class="equipment-dialog" aria-labelledby="equipment-title">
+        <header>
+          <h2 id="equipment-title">장비 · 시너지 도감</h2>
+          <button type="button" @click="$refs.equipmentDialog.close()">닫기</button>
+        </header>
+        <details class="equipment-overview">
+          <summary>현재 전투 방식 · 현장 기능</summary>
+          <p x-text="equipmentView.commandGuide"></p>
+          <p x-show="equipmentView.canChange === false">
+            진행 중인 동작을 마친 뒤 장비를 변경할 수 있습니다.
+          </p>
+          <p x-text="equipmentView.stamina"></p>
+          <p><strong>전투 방식</strong> <span x-text="equipmentView.moveset"></span></p>
+          <p><strong>현장 기능</strong> <span x-text="equipmentView.capabilities"></span></p>
+        </details>
+        <div class="equipment-slots">
+          <template x-for="slot in equipmentView.slots" :key="slot.id"
+            ><article>
+              <strong x-text="slot.label"></strong><span x-text="slot.itemLabel"></span
+              ><button
+                type="button"
+                x-show="slot.canUnequip"
+                @click="unequipSlot(slot.id)"
+                :disabled="equipmentView.canChange === false"
+                :aria-label="slot.label+' 해제'"
+              >
+                해제
+              </button>
+            </article></template
+          >
+        </div>
+        <h3>소유 장비</h3>
+        <div class="equipment-items">
+          <template x-for="item in equipmentView.items" :key="item.id"
+            ><article :data-equipment-item="item.id">
+              <header>
+                <strong x-text="item.label"></strong
+                ><button
+                  type="button"
+                  @click="equipItem(item.id)"
+                  :disabled="item.equipped || equipmentView.canChange === false"
+                  x-text="item.equipped?'장착 중':'장착'"
+                ></button>
+              </header>
+              <p x-text="item.family+' · '+item.slotLabel+' · '+item.handUsage"></p>
+              <p x-text="item.description"></p>
+              <p x-text="'Reach '+item.reach+'배 · Posture '+item.posture+'배'"></p>
+              <small x-text="item.fieldCapabilities"></small></article
+          ></template>
+        </div>
+        <h3>세트 시너지 · 조건 공개</h3>
+        <template x-for="set in equipmentView.codex.sets" :key="set.id"
+          ><article>
+            <strong x-text="set.label"></strong
+            ><template x-for="bonus in set.bonuses" :key="bonus.id"
+              ><p
+                x-text="(bonus.active?'적용 중 · ':'')+bonus.pieces+'부위 · '+bonus.description"
+              ></p
+            ></template></article
+        ></template>
+        <h3>특수 시너지</h3>
+        <template x-for="synergy in equipmentView.codex.specialSynergies" :key="synergy.id"
+          ><article :data-synergy-discovered="synergy.discovered">
+            <strong x-text="synergy.label"></strong>
+            <p x-show="synergy.discovered" x-text="synergy.description??''"></p>
+            <p x-show="synergy.discovered" x-text="synergy.requirementsLabel??''"></p></article
+        ></template>
+      </dialog>
       <section
         class="pwa-transition"
         x-show="pwa.applying"
@@ -148,6 +216,14 @@
               <p class="menu-save-status" x-text="saveStatus" aria-live="polite"></p>
               <div class="menu-data-tools">
                 <button
+                  type="button"
+                  id="menu-equipment-control"
+                  class="menu-reset-progress"
+                  @click="openEquipment"
+                >
+                  장비 · 도감
+                </button>
+                <button
                   id="menu-open-debug-control"
                   class="menu-reset-progress menu-debug-entry"
                   type="button"
@@ -156,7 +232,7 @@
                   디버그 모드
                 </button>
                 <details class="menu-data-notice">
-                  <summary>저장·데이터 안내</summary>
+                  <summary>저장 안내</summary>
                   <p>
                     진행은 이 기기에 저장됩니다. 저장 초기화는 현재 진행과 복구 지점을 지우고 새
                     게임을 준비합니다. 앱이나 브라우저 데이터를 삭제하면 복구 지점도 지워질 수

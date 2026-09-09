@@ -1,3 +1,8 @@
+import { applyEquipmentPresentation } from '../graphics/EquipmentPresentation.js';
+import { sampleAnimationProfile } from '../animation/AnimationProfileSampler.js';
+import { createEquipmentViewModel } from './EquipmentReadModel.js';
+import { resolveEquipmentLoadout } from './equipment/EquipmentLoadout.js';
+import { evaluateEquipmentFieldCapability } from './equipment/EquipmentFieldCapabilities.js';
 import {
   defineAuthoredPoseTrack,
   sampleAuthoredPoseTrack,
@@ -16,10 +21,7 @@ import {
 import { CombatCameraFeedback } from '../combat/CombatCameraFeedback.js';
 import { COMBAT_EVENT_TYPE, CombatEventBuffer } from '../combat/CombatEvent.js';
 import { combatFramesToSeconds } from '../combat/CombatFrame.js';
-import {
-  COMBAT_MOTION_TIMING_PROFILES,
-  isAttackContactFrame,
-} from '../combat/CombatMotionTimingProfiles.js';
+import { isAttackContactFrame } from '../combat/CombatMotionTimingProfiles.js';
 import {
   PLAYER_CHARACTER_FOOT_OFFSET,
   PLAYER_COMBAT_GEOMETRY_SCALE,
@@ -48,13 +50,14 @@ import {
   awardCampaignEncounterReward,
   createProgressionSnapshot,
   getAvailableGold,
-  forgeWeaponArchetype as forgeProgressionWeaponArchetype,
+  forgeEquipmentArchetype as forgeProgressionEquipmentArchetype,
   mergeProgressionSnapshot,
   purchaseEquipment as purchaseProgressionEquipment,
   recordViewedConversation,
   selectEquipment as selectProgressionEquipment,
+  unequipEquipment as unequipProgressionEquipment,
   trainCombatSkill as trainProgressionCombatSkill,
-  upgradeSwordEnchantment as upgradeProgressionSwordEnchantment,
+  upgradeEquipmentEnchantment as upgradeProgressionEquipmentEnchantment,
 } from './progression/ProgressionState.js';
 import {
   ENCHANTMENT_MATERIAL_COSTS,
@@ -122,100 +125,6 @@ function resolveConversationTranscripts(viewedConversationIds) {
 }
 
 const PLAYER_KNOCKBACK_STOP_SPEED = 4;
-function attackHitProfile(motionId, profile) {
-  const motionFrame = combatMotionFrameData(motionId);
-  if (!motionFrame) throw new Error(`${motionId}에는 CombatFrame data가 필요합니다.`);
-  const startFrame = motionFrame.startupFrames;
-  const endFrame = startFrame + motionFrame.activeFrames;
-  const hitPulseFrames = COMBAT_MOTION_TIMING_PROFILES[motionId].hitPulseFrames;
-  if (startFrame < 0 || endFrame > motionFrame.durationFrames || endFrame < startFrame) {
-    throw new RangeError(`${motionId} hit frame window가 motion duration을 벗어났습니다.`);
-  }
-  return Object.freeze({
-    ...profile,
-    frame: Object.freeze({ startFrame, endFrame }),
-    start: startFrame / motionFrame.durationFrames,
-    end: endFrame / motionFrame.durationFrames,
-    ...(hitPulseFrames
-      ? {
-          hitPulseFrames: Object.freeze(hitPulseFrames),
-          hitPulses: Object.freeze(
-            hitPulseFrames.map((frame) => frame / motionFrame.durationFrames),
-          ),
-        }
-      : {}),
-  });
-}
-
-const BASE_ATTACK_HIT_PROFILES = Object.freeze({
-  slash: attackHitProfile('slash', {
-    damage: 12,
-    launchY: -90,
-  }),
-  heavy: attackHitProfile('heavy', {
-    damage: 22,
-    launchY: -150,
-    guardBreak: true,
-  }),
-  thrust: attackHitProfile('thrust', {
-    damage: 15,
-    launchY: -80,
-  }),
-  rising: attackHitProfile('rising', {
-    damage: 18,
-    launchY: -470,
-    juggleRole: 'launcher',
-    relaunchSpeed: 310,
-    floatSeconds: 0.16,
-    guardBreak: true,
-  }),
-  spin: attackHitProfile('spin', {
-    damage: 8,
-    launchY: -70,
-    relaunchSpeed: 260,
-    floatSeconds: 0.08,
-    contactSpacings: Object.freeze([23, 17, 5]),
-  }),
-  airSlash: attackHitProfile('airSlash', {
-    damage: 13,
-    launchY: -110,
-    juggleRole: 'sustain',
-    relaunchSpeed: 190,
-    floatSeconds: 0.1,
-  }),
-  airHeavy: attackHitProfile('airHeavy', {
-    damage: 26,
-    launchY: 300,
-    juggleRole: 'finisher',
-    groundBounce: true,
-    guardBreak: true,
-  }),
-  airReturn: attackHitProfile('airReturn', {
-    damage: 15,
-    launchY: -90,
-    juggleRole: 'sustain',
-    relaunchSpeed: 170,
-    floatSeconds: 0.09,
-  }),
-  airSpin: attackHitProfile('airSpin', {
-    damage: 20,
-    launchY: -150,
-    juggleRole: 'sustain',
-    relaunchSpeed: 250,
-    floatSeconds: 0.17,
-    guardBreak: true,
-  }),
-  airCross: attackHitProfile('airCross', {
-    damage: 24,
-    launchY: 250,
-    juggleRole: 'finisher',
-  }),
-  shieldBash: attackHitProfile('shieldBash', {
-    damage: 16,
-    launchY: -90,
-    contactPart: 'shield',
-  }),
-});
 const CHARACTER_RENDER_SCALE = PLAYER_COMBAT_GEOMETRY_SCALE;
 const CHARACTER_CELL_SIZE = 48;
 const CHARACTER_BOUNDARY_HALF_WIDTH = CHARACTER_CELL_SIZE / 2;
@@ -232,8 +141,10 @@ function smoothStep(amount) {
   return bounded * bounded * (3 - 2 * bounded);
 }
 
-function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, skillProfile) {
-  const baseProfile = BASE_ATTACK_HIT_PROFILES[motionId];
+function resolveEquipmentAttackProfile(motionId, motionFrame, resolvedLoadout, skillProfile) {
+  if (motionId === 'shieldBash' && !resolvedLoadout.commandModifiers.guardCounterEnabled)
+    return null;
+  const baseProfile = resolvedLoadout.attackProfiles[motionId];
   if (!baseProfile || !motionFrame) return null;
   const baseMotionFrame = combatMotionFrameData(motionId);
   const startupShift = motionFrame.startupFrames - baseMotionFrame.startupFrames;
@@ -245,14 +156,20 @@ function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, 
     .map((frame) => frame + startupShift);
   return Object.freeze({
     ...baseProfile,
-    damage: baseProfile.damage * equipmentProfile.attack.damageScale * skillProfile.damageScale,
-    range: ATTACK_SPATIAL_PROFILES[motionId].reach * equipmentProfile.attack.rangeScale,
-    hitstunScale: equipmentProfile.attack.hitstunScale,
-    postureDamageScale: equipmentProfile.attack.postureDamageScale ?? 1,
-    backPunishDamageScale: equipmentProfile.attack.backPunishDamageScale ?? 1,
-    launchY: baseProfile.launchY * equipmentProfile.attack.launchScale,
+    damage:
+      baseProfile.damage * resolvedLoadout.attackModifiers.damageScale * skillProfile.damageScale,
+    range: ATTACK_SPATIAL_PROFILES[motionId].reach * resolvedLoadout.attackModifiers.rangeScale,
+    hitstunScale: resolvedLoadout.attackModifiers.hitstunScale,
+    guardCounterPostureScale: resolvedLoadout.commandModifiers.guardCounterPostureScale ?? 1,
+    postureDamageScale:
+      (resolvedLoadout.attackModifiers.postureDamageScale ?? 1) *
+      (motionId === 'shieldBash'
+        ? (resolvedLoadout.commandModifiers.guardCounterPostureScale ?? 1)
+        : 1),
+    backPunishDamageScale: resolvedLoadout.attackModifiers.backPunishDamageScale ?? 1,
+    launchY: baseProfile.launchY * resolvedLoadout.attackModifiers.launchScale,
     ...(baseProfile.relaunchSpeed
-      ? { relaunchSpeed: baseProfile.relaunchSpeed * equipmentProfile.attack.launchScale }
+      ? { relaunchSpeed: baseProfile.relaunchSpeed * resolvedLoadout.attackModifiers.launchScale }
       : {}),
     ...(baseProfile.contactSpacings
       ? { contactSpacings: Object.freeze(baseProfile.contactSpacings.slice(0, hitPulseCount)) }
@@ -274,9 +191,9 @@ function resolveEquipmentAttackProfile(motionId, motionFrame, equipmentProfile, 
 function assertEquipmentCatalog(catalog) {
   if (
     !catalog ||
-    typeof catalog.defaultProfileId !== 'string' ||
-    !Array.isArray(catalog.profiles) ||
-    typeof catalog.getProfile !== 'function'
+    typeof catalog.defaultItemId !== 'string' ||
+    !Array.isArray(catalog.items) ||
+    typeof catalog.getItem !== 'function'
   ) {
     throw new TypeError('GameScene에는 authored equipment catalog 주입이 필요합니다.');
   }
@@ -284,21 +201,21 @@ function assertEquipmentCatalog(catalog) {
 }
 
 function assertCombatProgressionProfile(profile) {
-  const weaponForge = profile?.weaponForge;
+  const equipmentForge = profile?.equipmentForge;
   if (
     !profile ||
     !Number.isInteger(profile.maxSkillLevel) ||
     typeof profile.getSkillLevelProfile !== 'function' ||
     typeof profile.getSkillUpgradeCost !== 'function' ||
     typeof profile.getSkillTrainingMarkRequirement !== 'function' ||
-    !Array.isArray(profile.merchantProfileIds) ||
-    !weaponForge ||
-    typeof weaponForge.choiceGroupId !== 'string' ||
-    typeof weaponForge.sourceId !== 'string' ||
-    typeof weaponForge.materialId !== 'string' ||
-    !Number.isSafeInteger(weaponForge.sourceQuantity) ||
-    !Number.isSafeInteger(weaponForge.materialCost) ||
-    !Array.isArray(weaponForge.optionProfileIds)
+    !Array.isArray(profile.merchantItemIds) ||
+    !equipmentForge ||
+    typeof equipmentForge.choiceGroupId !== 'string' ||
+    typeof equipmentForge.sourceId !== 'string' ||
+    typeof equipmentForge.materialId !== 'string' ||
+    !Number.isSafeInteger(equipmentForge.sourceQuantity) ||
+    !Number.isSafeInteger(equipmentForge.materialCost) ||
+    !Array.isArray(equipmentForge.optionItemIds)
   ) {
     throw new TypeError('GameScene에는 authored combat progression profile 주입이 필요합니다.');
   }
@@ -456,7 +373,7 @@ export class GameScene extends SceneNode {
     const initialProgression =
       progressionSnapshot ??
       createProgressionSnapshot(
-        this.equipmentCatalog.defaultProfileId,
+        this.equipmentCatalog.defaultItemId,
         this.enchantmentCatalog,
         this.scrapCampaignProfile,
       );
@@ -464,15 +381,18 @@ export class GameScene extends SceneNode {
       enchantment: canonicalizeEnchantmentSnapshot(
         initialProgression.enchantment,
         this.enchantmentCatalog,
-        initialProgression.ownedEquipmentIds,
+        initialProgression.ownedEquipmentItemIds,
       ),
     });
-    this.equipmentProfile = this.equipmentCatalog.getProfile(
-      this.progressionSnapshot.equippedEquipmentId,
+    this.resolvedLoadout = resolveEquipmentLoadout(
+      this.progressionSnapshot.loadout,
+      this.equipmentCatalog,
     );
     const skillProfile = this.getCombatSkillProfile();
     this.combatCommands = new CombatCommandController({
-      timingProfile: this.equipmentProfile.combatTiming,
+      timingProfile: this.resolvedLoadout.combatTiming,
+      moveset: this.resolvedLoadout.moveset,
+      staminaProfile: this.resolvedLoadout.staminaProfile,
       commandProfile: skillProfile,
     });
     this.combatCameraFeedback = new CombatCameraFeedback();
@@ -603,16 +523,16 @@ export class GameScene extends SceneNode {
   }
 
   getEnchantContext() {
-    const swordId = this.progressionSnapshot.equippedEquipmentId;
-    const sword = this.progressionSnapshot.enchantment.swordEnchantments[swordId];
-    const profile = sword?.elementId ? this.enchantmentCatalog.getProfile(sword.elementId) : null;
+    const itemId = this.progressionSnapshot.loadout.weaponItemId;
+    const record = this.progressionSnapshot.enchantment.equipmentEnchantments[itemId];
+    const profile = record?.elementId ? this.enchantmentCatalog.getProfile(record.elementId) : null;
     return Object.freeze({
-      swordId,
-      level: sword?.level ?? 0,
+      itemId,
+      level: record?.level ?? 0,
       active: profile
         ? Object.freeze({
-            swordId,
-            level: sword.level,
+            itemId,
+            level: record.level,
             id: profile.id,
             label: profile.label,
             color: profile.color,
@@ -629,12 +549,12 @@ export class GameScene extends SceneNode {
       enchantment: canonicalizeEnchantmentSnapshot(
         snapshot.enchantment,
         this.enchantmentCatalog,
-        snapshot.ownedEquipmentIds,
+        snapshot.ownedEquipmentItemIds,
       ),
     });
-    const nextEquipment = this.equipmentCatalog.getProfile(nextSnapshot.equippedEquipmentId);
+    const nextEquipment = resolveEquipmentLoadout(nextSnapshot.loadout, this.equipmentCatalog);
     this.progressionSnapshot = nextSnapshot;
-    this.equipmentProfile = nextEquipment;
+    this.resolvedLoadout = nextEquipment;
     this.reset();
     return this.progressionSnapshot;
   }
@@ -720,11 +640,13 @@ export class GameScene extends SceneNode {
     this.pendingScrapCampaignAction = null;
     this.cameraPosition = { ...mapSnapshot.cameraPosition };
     this.previousCameraPosition = { ...this.cameraPosition };
-    this.equipmentProfile = this.equipmentCatalog.getProfile(
-      this.progressionSnapshot.equippedEquipmentId,
+    this.resolvedLoadout = resolveEquipmentLoadout(
+      this.progressionSnapshot.loadout,
+      this.equipmentCatalog,
     );
     this.combatCommands.reset();
-    this.combatCommands.setTimingProfile(this.equipmentProfile.combatTiming);
+    this.combatCommands.setTimingProfile(this.resolvedLoadout.combatTiming);
+    this.combatCommands.setMoveset(this.resolvedLoadout.moveset);
     this.combatCommands.setCommandProfile(this.getCombatSkillProfile());
     this.prepareAttackSpatialProfiles();
     this.combatCameraFeedback.reset();
@@ -1207,7 +1129,7 @@ export class GameScene extends SceneNode {
             durationSeconds: 0.22,
             enchantment: {
               id,
-              swordId: activeEnchant?.id === id ? activeEnchant.swordId : null,
+              itemId: activeEnchant?.id === id ? activeEnchant.itemId : null,
               level: activeEnchant?.id === id ? activeEnchant.level : 0,
               affinity: 'neutral',
               ...this.enchantmentCatalog.getProfile(id),
@@ -2248,21 +2170,21 @@ export class GameScene extends SceneNode {
     const dialogue = this.storyInteractionOwner.snapshot(this.getStoryInteractionContext());
     if (!dialogue.active || dialogue.commands.length === 0) return dialogue;
     const progression = this.progressionSnapshot;
-    const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
+    const record = progression.enchantment.equipmentEnchantments[progression.loadout.weaponItemId];
     const availableGold = getAvailableGold(progression);
-    const forgeProfile = this.combatProgressionProfile.weaponForge;
+    const forgeProfile = this.combatProgressionProfile.equipmentForge;
     const selectedArchetypeId =
-      progression.weaponForge.selectedProfileIdsByGroup[forgeProfile.choiceGroupId] ?? null;
+      progression.equipmentForge.selectedItemIdsByGroup[forgeProfile.choiceGroupId] ?? null;
     const forgeMaterialQuantity =
-      progression.weaponForge.materialQuantities[forgeProfile.materialId] ?? 0;
+      progression.equipmentForge.materialQuantities[forgeProfile.materialId] ?? 0;
     const visibleCommands = dialogue.commands.filter(
       (command) =>
-        command.type !== 'forge-weapon-archetype' ||
+        command.type !== 'forge-equipment-archetype' ||
         selectedArchetypeId === null ||
-        command.profileId === selectedArchetypeId,
+        command.itemId === selectedArchetypeId,
     );
     const commands = visibleCommands.map((command) => {
-      if (command.type === 'upgrade-sword-enchantment') {
+      if (command.type === 'upgrade-equipment-enchantment') {
         const profile = this.enchantmentCatalog.getProfile(command.enchantId);
         const active = record.elementId === profile.id;
         const lockedToOtherElement = record.elementId !== null && !active;
@@ -2278,7 +2200,7 @@ export class GameScene extends SceneNode {
           enchantId: profile.id,
           label: profile.label,
           materialLabel: profile.materialLabel,
-          swordId: progression.equippedEquipmentId,
+          itemId: progression.loadout.weaponItemId,
           level: active ? record.level : 0,
           targetLevel,
           materialQuantity,
@@ -2294,17 +2216,17 @@ export class GameScene extends SceneNode {
               : `Lv.${targetLevel} · ${materialCost}개 + ${goldCost} Gold`,
         });
       }
-      if (command.type === 'manage-sword') {
-        const profile = this.equipmentCatalog.getProfile(command.profileId);
-        const owned = progression.ownedEquipmentIds.includes(profile.id);
-        const active = progression.equippedEquipmentId === profile.id;
+      if (command.type === 'manage-equipment') {
+        const profile = this.equipmentCatalog.getItem(command.itemId);
+        const owned = progression.ownedEquipmentItemIds.includes(profile.id);
+        const active = progression.loadout.weaponItemId === profile.id;
         const affordable =
           progression.trainingMarks >= profile.trainingMarkRequirement &&
           availableGold >= profile.goldCost;
         return Object.freeze({
           id: command.id,
           type: command.type,
-          profileId: profile.id,
+          itemId: profile.id,
           label: profile.label,
           description: profile.description,
           goldCost: profile.goldCost,
@@ -2321,15 +2243,15 @@ export class GameScene extends SceneNode {
                 : `${profile.goldCost} Gold`,
         });
       }
-      if (command.type === 'forge-weapon-archetype') {
-        const profile = this.equipmentCatalog.getProfile(command.profileId);
+      if (command.type === 'forge-equipment-archetype') {
+        const profile = this.equipmentCatalog.getItem(command.itemId);
         const selected = selectedArchetypeId === profile.id;
         const choiceComplete = selectedArchetypeId !== null;
-        const active = progression.equippedEquipmentId === profile.id;
+        const active = progression.loadout.weaponItemId === profile.id;
         return Object.freeze({
           id: command.id,
           type: command.type,
-          profileId: profile.id,
+          itemId: profile.id,
           label: profile.label,
           description: profile.description,
           materialId: forgeProfile.materialId,
@@ -2399,19 +2321,19 @@ export class GameScene extends SceneNode {
       return this.unavailableProgressionTransaction();
     }
     if (command.type === 'train-combat-skill') return this.trainCombatSkill();
-    if (command.type === 'manage-sword') {
-      return this.manageMerchantSword(command.profileId);
+    if (command.type === 'manage-equipment') {
+      return this.manageMerchantEquipment(command.itemId);
     }
-    if (command.type === 'forge-weapon-archetype') {
-      return this.forgeMerchantWeaponArchetype(command.profileId);
+    if (command.type === 'forge-equipment-archetype') {
+      return this.forgeMerchantEquipmentArchetype(command.itemId);
     }
-    if (command.type !== 'upgrade-sword-enchantment') {
+    if (command.type !== 'upgrade-equipment-enchantment') {
       return this.unavailableProgressionTransaction();
     }
-    const transaction = upgradeProgressionSwordEnchantment(
+    const transaction = upgradeProgressionEquipmentEnchantment(
       this.progressionSnapshot,
       {
-        swordId: this.progressionSnapshot.equippedEquipmentId,
+        itemId: this.progressionSnapshot.loadout.weaponItemId,
         elementId: command.enchantId,
       },
       this.enchantmentCatalog,
@@ -2420,7 +2342,7 @@ export class GameScene extends SceneNode {
       (candidate) => candidate.id === command.enchantId,
     );
     this.progressionNotice = transaction.changed
-      ? `${profile.label} ${this.equipmentProfile.shortLabel} 인챈트 Lv.${transaction.targetLevel}`
+      ? `${profile.label} ${this.resolvedLoadout.mainItem.shortLabel} 인챈트 Lv.${transaction.targetLevel}`
       : transaction.reason === 'insufficient-material'
         ? `${profile?.materialLabel ?? '인챈트 재료'}이 부족합니다.`
         : transaction.reason === 'insufficient-gold'
@@ -2435,14 +2357,14 @@ export class GameScene extends SceneNode {
     return this.commitProgression(transaction);
   }
 
-  manageMerchantSword(profileId) {
+  manageMerchantEquipment(profileId) {
     let profile;
     try {
-      profile = this.equipmentCatalog.getProfile(profileId);
+      profile = this.equipmentCatalog.getItem(profileId);
     } catch {
       return this.unavailableProgressionTransaction();
     }
-    const owned = this.progressionSnapshot.ownedEquipmentIds.includes(profile.id);
+    const owned = this.progressionSnapshot.ownedEquipmentItemIds.includes(profile.id);
     if (owned) {
       const transaction = selectProgressionEquipment(this.progressionSnapshot, profile.id);
       this.progressionNotice = transaction.changed
@@ -2456,7 +2378,7 @@ export class GameScene extends SceneNode {
     }
 
     const purchase = purchaseProgressionEquipment(this.progressionSnapshot, {
-      profileId: profile.id,
+      itemId: profile.id,
       goldCost: profile.goldCost,
       trainingMarkRequirement: profile.trainingMarkRequirement,
     });
@@ -2480,23 +2402,23 @@ export class GameScene extends SceneNode {
     return this.commitProgression(transaction, { equipmentChanged: true });
   }
 
-  forgeMerchantWeaponArchetype(profileId) {
-    const forgeProfile = this.combatProgressionProfile.weaponForge;
-    if (!forgeProfile.optionProfileIds.includes(profileId)) {
+  forgeMerchantEquipmentArchetype(profileId) {
+    const forgeProfile = this.combatProgressionProfile.equipmentForge;
+    if (!forgeProfile.optionItemIds.includes(profileId)) {
       return this.unavailableProgressionTransaction();
     }
     let profile;
     try {
-      profile = this.equipmentCatalog.getProfile(profileId);
+      profile = this.equipmentCatalog.getItem(profileId);
     } catch {
       return this.unavailableProgressionTransaction();
     }
     const selectedProfileId =
-      this.progressionSnapshot.weaponForge.selectedProfileIdsByGroup[forgeProfile.choiceGroupId] ??
+      this.progressionSnapshot.equipmentForge.selectedItemIdsByGroup[forgeProfile.choiceGroupId] ??
       null;
     if (
       selectedProfileId === profile.id &&
-      this.progressionSnapshot.ownedEquipmentIds.includes(profile.id)
+      this.progressionSnapshot.ownedEquipmentItemIds.includes(profile.id)
     ) {
       const equip = selectProgressionEquipment(this.progressionSnapshot, profile.id);
       this.progressionNotice = equip.changed
@@ -2508,10 +2430,10 @@ export class GameScene extends SceneNode {
       }
       return this.commitProgression(equip, { equipmentChanged: true });
     }
-    const transaction = forgeProgressionWeaponArchetype(this.progressionSnapshot, {
+    const transaction = forgeProgressionEquipmentArchetype(this.progressionSnapshot, {
       choiceGroupId: forgeProfile.choiceGroupId,
-      profileId: profile.id,
-      optionProfileIds: forgeProfile.optionProfileIds,
+      itemId: profile.id,
+      optionItemIds: forgeProfile.optionItemIds,
       materialId: forgeProfile.materialId,
       materialCost: forgeProfile.materialCost,
     });
@@ -2532,15 +2454,18 @@ export class GameScene extends SceneNode {
   commitProgression(transaction, { equipmentChanged = false, skillChanged = false } = {}) {
     if (!transaction.changed) return transaction;
     const nextSnapshot = transaction.snapshot;
-    const nextEquipment = this.equipmentCatalog.getProfile(nextSnapshot.equippedEquipmentId);
+    const nextEquipment = resolveEquipmentLoadout(nextSnapshot.loadout, this.equipmentCatalog);
     const nextSkill = this.combatProgressionProfile.getSkillLevelProfile(
       nextSnapshot.combatSkillLevel,
     );
-    if (equipmentChanged) this.combatCommands.setTimingProfile(nextEquipment.combatTiming);
+    if (equipmentChanged) {
+      this.combatCommands.setTimingProfile(nextEquipment.combatTiming);
+      this.combatCommands.setMoveset(nextEquipment.moveset);
+    }
     if (skillChanged) this.combatCommands.setCommandProfile(nextSkill);
     this.progressionSnapshot = nextSnapshot;
     this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
-    this.equipmentProfile = nextEquipment;
+    this.resolvedLoadout = nextEquipment;
     if (equipmentChanged || skillChanged) this.prepareAttackSpatialProfiles();
     this.progressionChanged.emit(this.progressionSnapshot);
     this.statusNode.publish({ force: true });
@@ -2555,6 +2480,39 @@ export class GameScene extends SceneNode {
     });
   }
 
+  getEquipmentView() {
+    return {
+      ...createEquipmentViewModel(
+        this.resolvedLoadout,
+        this.progressionSnapshot,
+        this.equipmentCatalog,
+      ),
+      canChange: !this.combatCommands.active && !this.rollState,
+    };
+  }
+  equipOwnedItem(itemId) {
+    if (this.combatCommands.active || this.rollState)
+      return this.unavailableProgressionTransaction();
+    const transaction = selectProgressionEquipment(
+      this.progressionSnapshot,
+      itemId,
+      this.equipmentCatalog,
+    );
+    this.progressionNotice = transaction.changed
+      ? '장비를 변경했습니다'
+      : '장착할 수 없거나 이미 장착한 장비입니다.';
+    return this.commitProgression(transaction, { equipmentChanged: true });
+  }
+  unequipOwnedSlot(slot) {
+    if (this.combatCommands.active || this.rollState)
+      return this.unavailableProgressionTransaction();
+    const transaction = unequipProgressionEquipment(
+      this.progressionSnapshot,
+      slot,
+      this.equipmentCatalog,
+    );
+    return this.commitProgression(transaction, { equipmentChanged: true });
+  }
   trainCombatSkill() {
     if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
     const currentLevel = this.progressionSnapshot.combatSkillLevel;
@@ -2715,7 +2673,7 @@ export class GameScene extends SceneNode {
     return resolveEquipmentAttackProfile(
       motionId,
       this.combatCommands.getMotionFrameData(motionId),
-      this.equipmentProfile,
+      this.resolvedLoadout,
       this.getCombatSkillProfile(),
     );
   }
@@ -2919,14 +2877,22 @@ export class GameScene extends SceneNode {
 
   applyTrainingEncounterPlayerResult(result) {
     if (result.kind === 'guard' || result.kind === 'guard-break') {
+      this.lastFieldAssistance = evaluateEquipmentFieldCapability(this.resolvedLoadout, {
+        capabilityId: 'pressure-block',
+        mode: 'assist',
+      });
+    }
+    if (result.kind === 'guard' || result.kind === 'guard-break') {
       const staminaResult = this.combatCommands.applyGuardContact({
         guardBreak: result.kind === 'guard-break',
-        staminaDamage: result.guardStaminaDamage,
+        staminaDamage:
+          (result.guardStaminaDamage ?? this.combatCommands.staminaProfile.costs.block) *
+          (this.resolvedLoadout.guardModifiers.staminaDamageScale ?? 1),
         justGuardEligible: result.justGuardEligible,
       });
       const reactionTiming = playerBlockReactionTiming(
         { blockStrength: result.blockImpactStrength, blockstunSeconds: result.blockstunSeconds },
-        this.equipmentProfile.guard,
+        this.resolvedLoadout.guardModifiers,
       );
       this.playerBlockImpactSeconds = staminaResult.justGuard ? 0.18 : result.blockImpactSeconds;
       this.playerBlockImpactStrength = staminaResult.justGuard ? 1.8 : reactionTiming.blockStrength;
@@ -2961,7 +2927,7 @@ export class GameScene extends SceneNode {
     if (result.kind === 'hit') {
       const damage = Math.max(
         1,
-        Math.round(result.damage * this.equipmentProfile.defense.damageTakenScale),
+        Math.round(result.damage * this.resolvedLoadout.defenseModifiers.damageTakenScale),
       );
       this.playerHealth = Math.max(0, this.playerHealth - damage);
       this.pendingPlayerKnockbackX = result.knockbackVelocityX;
@@ -3009,7 +2975,7 @@ export class GameScene extends SceneNode {
     const override = track
       ? sampleAuthoredPoseTrack(track, input.motionState.progress ?? 0)
       : this.characterAnimationSettings.authoredOverride;
-    const pose = samplePlayerMotionPose({
+    const pose = sampleAnimationProfile(this.resolvedLoadout.animationProfile, {
       ...this.characterAnimationSettings,
       authoredOverride: override,
       ...input,
@@ -3036,7 +3002,7 @@ export class GameScene extends SceneNode {
     const profile = this.getAttackHitProfile(motionId);
     return profile && profile.contactPart !== 'shield'
       ? 1
-      : this.equipmentProfile.geometry.weaponLengthScale;
+      : this.resolvedLoadout.geometryProfile.weaponLengthScale;
   }
 
   samplePlayerCombatGeometry(
@@ -3334,7 +3300,7 @@ export class GameScene extends SceneNode {
           !wallMapConsumed &&
           !restConsumed,
         isAirborne: !this.isGrounded,
-        allowGuard: this.isGrounded,
+        allowGuard: this.isGrounded && this.resolvedLoadout.moveset.commands.guard !== false,
         staminaDeltaSeconds: deltaSeconds,
       },
     );
@@ -3795,26 +3761,27 @@ export class GameScene extends SceneNode {
       roomId,
       canManageProgression: this.canManageProgression(),
       activeEnchantId:
-        progression.enchantment.swordEnchantments[progression.equippedEquipmentId].elementId,
+        progression.enchantment.equipmentEnchantments[progression.loadout.weaponItemId].elementId,
       activeEnchantLevel:
-        progression.enchantment.swordEnchantments[progression.equippedEquipmentId].level,
+        progression.enchantment.equipmentEnchantments[progression.loadout.weaponItemId].level,
       activeEnchantLabel: (() => {
-        const record = progression.enchantment.swordEnchantments[progression.equippedEquipmentId];
+        const record =
+          progression.enchantment.equipmentEnchantments[progression.loadout.weaponItemId];
         return record.elementId
           ? `${this.enchantmentCatalog.getProfile(record.elementId).label} Lv.${record.level}`
           : '미활성';
       })(),
-      equipmentId: this.equipmentProfile.id,
-      equipmentLabel: this.equipmentProfile.label,
-      weaponForge: Object.freeze({
-        materialLabel: this.combatProgressionProfile.weaponForge.materialLabel,
+      equipmentId: this.resolvedLoadout.mainItem.id,
+      equipmentLabel: this.resolvedLoadout.mainItem.label,
+      equipmentForge: Object.freeze({
+        materialLabel: this.combatProgressionProfile.equipmentForge.materialLabel,
         materialQuantity:
-          progression.weaponForge.materialQuantities[
-            this.combatProgressionProfile.weaponForge.materialId
+          progression.equipmentForge.materialQuantities[
+            this.combatProgressionProfile.equipmentForge.materialId
           ] ?? 0,
         selectedProfileId:
-          progression.weaponForge.selectedProfileIdsByGroup[
-            this.combatProgressionProfile.weaponForge.choiceGroupId
+          progression.equipmentForge.selectedItemIdsByGroup[
+            this.combatProgressionProfile.equipmentForge.choiceGroupId
           ] ?? null,
       }),
       combatSkill: this.getCombatSkillReadModel(),
@@ -3838,8 +3805,8 @@ export class GameScene extends SceneNode {
       trainingMarks: this.progressionSnapshot.trainingMarks,
       activeEnchantLabel: (() => {
         const record =
-          this.progressionSnapshot.enchantment.swordEnchantments[
-            this.progressionSnapshot.equippedEquipmentId
+          this.progressionSnapshot.enchantment.equipmentEnchantments[
+            this.progressionSnapshot.loadout.weaponItemId
           ];
         return record.elementId
           ? `${this.enchantmentCatalog.getProfile(record.elementId).label} Lv.${record.level}`
@@ -3938,8 +3905,10 @@ export class GameScene extends SceneNode {
         appearanceProfile: this.playerPresentationProfile,
       }),
     );
-    const characterItems =
-      renderCombatGeometry.svgPresentation?.items ?? playerPresentation.characterItems;
+    const characterItems = applyEquipmentPresentation(
+      renderCombatGeometry.svgPresentation?.items ?? playerPresentation.characterItems,
+      this.resolvedLoadout,
+    );
     const { combatEffectItems } = playerPresentation;
     const encounterRender = this.roomSceneNode?.createEncounterRenderSnapshot(
       activeRoom.renderOrder + 0.45,
@@ -4097,7 +4066,8 @@ export class GameScene extends SceneNode {
         appliedPatchIds: mapSnapshot.appliedPatchIds,
         portalIds: Object.freeze(mapSnapshot.portals.map((portal) => portal.id).sort()),
       }),
-      equipment: this.equipmentProfile,
+      equipment: this.resolvedLoadout,
+      fieldAssistance: this.lastFieldAssistance ?? null,
       combatMotion: Object.freeze({
         id: combatState.id,
         label: combatState.label,

@@ -204,6 +204,15 @@ export class GameApplication {
     return this.currentApp.prepareUiReview(presentation);
   }
 
+  getEquipmentView() {
+    return this.currentApp.getEquipmentView();
+  }
+  equipOwnedItem(itemId) {
+    return this.currentApp.equipOwnedItem(itemId);
+  }
+  unequipOwnedSlot(slot) {
+    return this.currentApp.unequipOwnedSlot(slot);
+  }
   trainCombatSkill() {
     return this.currentApp.trainCombatSkill();
   }

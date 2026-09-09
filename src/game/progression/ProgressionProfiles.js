@@ -1,14 +1,14 @@
-export const SCRAP_WEAPON_FORGE_PROFILE = Object.freeze({
+export const SCRAP_EQUIPMENT_FORGE_PROFILE = Object.freeze({
   choiceGroupId: 'scrap-weapon-archetype',
   sourceId: 'scrap-yard-guard-collector',
   materialId: 'salvaged-drive-core',
   materialLabel: '회수한 구동핵',
   sourceQuantity: 1,
   materialCost: 1,
-  optionProfileIds: Object.freeze([
-    'swift-chain-sword',
-    'posture-breaker-sword',
-    'rear-punish-sword',
+  optionItemIds: Object.freeze([
+    'field-cutter-swift',
+    'field-cutter-breaker',
+    'field-cutter-reach',
   ]),
 });
 
@@ -128,8 +128,8 @@ export function getCombatSkillTrainingMarkRequirement(level) {
 
 export const COMBAT_PROGRESSION_PROFILE = Object.freeze({
   maxSkillLevel: COMBAT_SKILL_LEVEL_PROFILES.length - 1,
-  merchantProfileIds: Object.freeze(['balanced-sword', 'heavy-sword']),
-  weaponForge: SCRAP_WEAPON_FORGE_PROFILE,
+  merchantItemIds: Object.freeze(['field-cutter-balanced', 'field-cutter-heavy']),
+  equipmentForge: SCRAP_EQUIPMENT_FORGE_PROFILE,
   encounterRewards: SCRAP_ENCOUNTER_REWARDS,
   getSkillLevelProfile: getCombatSkillLevelProfile,
   getSkillUpgradeCost: getCombatSkillUpgradeCost,

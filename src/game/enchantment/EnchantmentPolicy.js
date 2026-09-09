@@ -1,7 +1,7 @@
 const DAMAGE = Object.freeze({ weak: 1.35, neutral: 1, resistant: 0.72 });
 const BUILDUP = Object.freeze({ weak: 1.35, neutral: 1, resistant: 0.65 });
 
-export function resolveSwordEnchantment({
+export function resolveEquipmentEnchantment({
   enchantId,
   enchantLevel = 0,
   affinity,
