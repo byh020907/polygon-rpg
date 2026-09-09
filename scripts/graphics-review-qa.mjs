@@ -24,6 +24,12 @@ for (const [name, width, height] of [
       for (const category of GRAPHICS_CATEGORIES) {
         await choose('[data-gr=category]', category.id);
         await click('[data-gr=resources] button', name === 'mobile');
+        await browser.send('Input.dispatchKeyEvent', {
+          type: 'keyDown',
+          key: 'Escape',
+          code: 'Escape',
+          windowsVirtualKeyCode: 27,
+        });
         await until(ready);
         const record = await evaluate(snapshot);
         assert.equal(record.error, null, `${name}/${category.id}`);
@@ -33,6 +39,12 @@ for (const [name, width, height] of [
       }
       await choose('[data-gr=category]', 'player');
       await click('[data-resource-id="player:protagonist"]', name === 'mobile');
+      await browser.send('Input.dispatchKeyEvent', {
+        type: 'keyDown',
+        key: 'Escape',
+        code: 'Escape',
+        windowsVirtualKeyCode: 27,
+      });
       for (const action of ['roll', 'slash', 'heavy', 'run']) {
         await choose('[data-gr=action]', action);
         const max = await evaluate(`Number(document.querySelector('[data-gr=frame]').max)`);

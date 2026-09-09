@@ -21,6 +21,9 @@ const selection = Object.freeze({
   category: 'enemy',
   search: '굴착기',
   viewport: 'desktop',
+  speed: 0.5,
+  mesh: true,
+  bones: true,
 });
 const href = buildGraphicsReviewUrl(
   'https://example.test/game/?visualQa=1&gameStart=scrap-garage-0&debugPanel=1&inputQa=1#review',

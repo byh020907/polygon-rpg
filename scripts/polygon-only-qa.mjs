@@ -50,16 +50,6 @@ for (const [name, width, height, dpr] of [
       windowsVirtualKeyCode: 13,
     });
     await b.until("Alpine.$data(document.querySelector('#app')).debugPanelOpen");
-    await b.click('#menu-render-lab-control', name === 'mobile');
-    await b.until("Alpine.$data(document.querySelector('#app')).screen==='render-lab'");
-    await wait(150);
-    const lab = await b.evaluate(
-      "({canvases:document.querySelectorAll('.lab-screen canvas').length,heading:document.querySelector('#render-lab-title').innerText,width:document.querySelector('#polygon-canvas').width})",
-    );
-    assert.equal(lab.canvases, 1);
-    assert.match(lab.heading, /Polygon/);
-    assert.ok(lab.width > 1);
-    await b.screenshot(`${output}/${name}-lab.png`);
     await b.navigate('?visualQa=1&gameStart=pose-idle&visualQaRenderer=retro');
     await b.until('globalThis.__POLYGON_RPG_VISUAL_QA__?.ready');
     await b.navigate(
@@ -86,8 +76,8 @@ for (const [name, width, height, dpr] of [
     await b.evaluate("document.querySelector('[data-gr=canvas]').scrollIntoView({block:'center'})");
     await b.screenshot(`${output}/${name}-review.png`);
     assert.equal(b.events.filter((e) => e.method === 'Runtime.exceptionThrown').length, 0);
-    evidence.push({ name, game, lab, zoom });
-    console.log(`${name}: game/lab/review/DPR/4x PASS`);
+    evidence.push({ name, game, zoom });
+    console.log(`${name}: game/review/DPR/4x PASS`);
   } finally {
     await b.close();
   }

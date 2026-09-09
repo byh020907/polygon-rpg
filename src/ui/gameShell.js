@@ -1,3 +1,6 @@
+import { buildTestPlayUrl } from './TestPlayConfig.js';
+import { buildGraphicsReviewUrl, DEFAULT_GRAPHICS_REVIEW } from './GraphicsReviewConfig.js';
+import { readVisualQaRequest } from '../app/VisualQaConfig.js';
 import { GAME_SCREEN } from '../app/GameApp.js';
 import { SCRAP_CAST } from '../game/campaign/ScrapCastProfile.js';
 import { createDebugConfigurationAdapter } from './DebugConfigurationAdapter.js';
@@ -10,21 +13,6 @@ import {
   ScreenFocusOwner,
   SCREEN_FOCUS_TARGET,
 } from './ScreenFocusOwner.js';
-
-function formatRuntimeStats({
-  fps,
-  logicalWidth,
-  logicalHeight,
-  droppedSteps,
-  degenerateItemIds,
-  rasterCollapseCount,
-}) {
-  const geometryWarning = degenerateItemIds?.length
-    ? ` · INVALID GEOMETRY: ${degenerateItemIds.join(', ')}`
-    : '';
-  const rasterWarning = rasterCollapseCount ? ` · RASTER COLLAPSE: ${rasterCollapseCount}` : '';
-  return `${fps} FPS · ${logicalWidth}×${logicalHeight} logical · ${droppedSteps} dropped${geometryWarning}${rasterWarning}`;
-}
 
 function formatGameStats({ fps, logicalWidth, logicalHeight }) {
   return `${fps} FPS · ${logicalWidth}×${logicalHeight} logical`;
@@ -137,6 +125,7 @@ export function registerGameShell(
     qaInputEnabled = false,
     graphicsReviewRequest = null,
     graphicsReviewFactory = null,
+    testPlayRequest = null,
   } = {},
 ) {
   const uiReviewResource = readUiReviewResource(globalThis.location?.search ?? '');
@@ -234,9 +223,10 @@ export function registerGameShell(
     reducedMotion: gameApp.prefersReducedMotion(),
     forceMobileControls: false,
     isPlaying: true,
-    showMesh: false,
-    animationSpeed: 1,
-    renderStats: 'Renderer idle',
+    testPlayActive: Boolean(testPlayRequest),
+    testPlaySpeed: 1,
+    testPlayLabel: testPlayRequest?.label ?? '',
+    testReturnSelection: testPlayRequest?.returnSelection ?? DEFAULT_GRAPHICS_REVIEW,
     gameStats: 'World ready',
     areaName: '동네 고물상',
     storyBeatId: 'scrap-awakening:commission',
@@ -436,12 +426,8 @@ export function registerGameShell(
             debugPanelOpen: this.debugPanelOpen,
             reducedMotion: this.reducedMotion,
             isPlaying: this.isPlaying,
-            showMesh: Boolean(this.showMesh),
-            animationSpeed: Number(this.animationSpeed),
+            testPlaySpeed: Number(this.testPlaySpeed),
           }),
-        setRenderStats: (stats) => {
-          this.renderStats = formatRuntimeStats(stats);
-        },
         setGameStats: (stats) => {
           this.gameStats = formatGameStats(stats);
         },
@@ -545,13 +531,24 @@ export function registerGameShell(
         if (visualQaRequest) {
           this.isPlaying = false;
           try {
-            gameApp.runVisualQa(visualQaRequest);
+            if (testPlayRequest) {
+              gameApp.startTestPlay(testPlayRequest.request, testPlayRequest.options);
+              this.testPlayActive = true;
+              this.isPlaying = true;
+            } else gameApp.runVisualQa(visualQaRequest);
           } catch (error) {
             globalThis.__POLYGON_RPG_VISUAL_QA__ = Object.freeze({
               ready: false,
               error: error instanceof Error ? error.message : String(error),
             });
-            throw error;
+            if (!testPlayRequest) throw error;
+            this.testPlayActive = false;
+            history.replaceState(
+              history.state,
+              '',
+              buildGraphicsReviewUrl(location.href, this.testReturnSelection),
+            );
+            void this.openGraphicsReview(this.testReturnSelection, error.message);
           }
         } else {
           gameApp.start();
@@ -865,7 +862,7 @@ export function registerGameShell(
       );
     },
 
-    async openGraphicsReview(request = undefined) {
+    async openGraphicsReview(request = undefined, error = '') {
       if (!graphicsReviewFactory || this.graphicsReviewOpen) return;
       this.debugPanelOpen = false;
       this.operationMapOpen = false;
@@ -877,9 +874,12 @@ export function registerGameShell(
       try {
         await graphicsReviewFactory({
           request,
+          error,
+          onTestPlay: (target, selection) => this.startReviewTestPlay(target, selection),
           onClose: () => {
             this.graphicsReviewOpen = false;
-            if (graphicsReviewRequest) this.returnToPlayerGame();
+            if (graphicsReviewRequest || testPlayRequest || gameApp.testPlayActive)
+              this.returnToPlayerGame();
             else this.openDebugPanel();
           },
         });
@@ -960,6 +960,7 @@ export function registerGameShell(
           reducedMotion: Boolean(this.debugReducedMotion),
         });
         this.visualQa = true;
+        this.testPlayActive = false;
         this.screen = GAME_SCREEN.GAME;
         this.isPlaying = false;
         screenFocusOwner.transitionTo(GAME_SCREEN.GAME);
@@ -978,6 +979,7 @@ export function registerGameShell(
         if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
         debugConfigurationAdapter.returnToPlayerGame();
         this.visualQa = false;
+        this.testPlayActive = false;
         void pwaLifecycle.start();
         this.operationMapOpen = false;
         this.campaignActionPreviewOpen = false;
@@ -1003,30 +1005,70 @@ export function registerGameShell(
       }
     },
 
-    openRenderLab() {
-      mobileViewport.leaveLandscape();
-      if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
+    startReviewTestPlay(target, selection = DEFAULT_GRAPHICS_REVIEW) {
+      const href = buildTestPlayUrl(location.href, target, selection);
+      gameApp.startTestPlay(target.request, target.options);
+      history.replaceState(history.state, '', href);
+      this.testPlayActive = true;
+      this.testPlayLabel = target.label;
+      this.debugStart = target.request.start;
+      this.debugFrame = target.request.frame;
+      this.debugPhase = target.request.phase;
+      this.testReturnSelection = selection;
+      this.graphicsReviewOpen = false;
       this.debugPanelOpen = false;
       this.operationMapOpen = false;
       this.campaignActionPreviewOpen = false;
-      debugMenuHold?.cancel();
-      setDebugBackgroundInert(globalThis.document, false);
-      setOperationMapBackgroundInert(globalThis.document, false);
-      setCampaignActionBackgroundInert(globalThis.document, false);
-      setGameOverBackgroundInert(globalThis.document, false);
-      const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.RENDER_LAB, {
-        menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_START,
-      });
-      this.screen = focusRequest.screen;
+      this.gameOverOpen = false;
+      this.visualQa = true;
+      this.screen = GAME_SCREEN.GAME;
       this.isPlaying = true;
-      this.$nextTick(() => {
-        this.clearQaInput();
-        gameApp.onScreenChanged();
-        applyFocusAfterPaint(focusRequest);
-      });
+      setDebugBackgroundInert(document, false);
+      setOperationMapBackgroundInert(document, false);
+      setCampaignActionBackgroundInert(document, false);
+      setGameOverBackgroundInert(document, false);
+      const focusRequest = screenFocusOwner.transitionTo(GAME_SCREEN.GAME);
+      this.$nextTick(() =>
+        afterUiPaint(() => {
+          gameApp.onScreenChanged();
+          applyFocusAfterPaint(focusRequest);
+        }),
+      );
     },
-
+    startDebugTestPlay() {
+      try {
+        const request = readVisualQaRequest(
+          '?visualQa=1&gameStart=' +
+            encodeURIComponent(this.debugStart) +
+            '&gameFrame=' +
+            Number(this.debugFrame),
+        );
+        this.startReviewTestPlay(
+          { request, options: {}, label: this.debugStart },
+          this.testReturnSelection,
+        );
+      } catch (error) {
+        this.debugConfigurationStatus = '테스트 시작 실패 · ' + error.message;
+      }
+    },
+    returnToReview() {
+      history.replaceState(
+        history.state,
+        '',
+        buildGraphicsReviewUrl(location.href, this.testReturnSelection),
+      );
+      this.openGraphicsReview(this.testReturnSelection);
+    },
+    restartTestPlay() {
+      gameApp.resetScene();
+      this.clearQaInput();
+      this.$nextTick(() => gameApp.onScreenChanged());
+    },
     showMenu() {
+      if (this.testPlayActive) {
+        this.returnToReview();
+        return;
+      }
       mobileViewport.leaveLandscape();
       if (this.campaignActionPreviewOpen) gameApp.cancelCampaignActionPreview();
       this.debugPanelOpen = false;
@@ -1052,10 +1094,6 @@ export function registerGameShell(
 
     resetScene() {
       gameApp.resetScene();
-    },
-
-    toggleWorldTime() {
-      gameApp.toggleWorldTime();
     },
 
     toggleQaInput(actionId) {

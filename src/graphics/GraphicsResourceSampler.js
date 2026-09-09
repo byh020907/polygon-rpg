@@ -9,10 +9,13 @@ import {
 } from '../animation/PlayerMotionProfile.js';
 import { sampleEnemyBonePoseFor } from '../animation/EnemyBonePoseLibrary.js';
 import { sampleEnemyReference } from './EnemyReferenceModel.js';
+import { ENEMY_REFERENCE_PROFILES } from './EnemyReferenceProfiles.js';
+import { SIDE_VIEW_SKELETON_PARENTS } from '../animation/SkeletonPoseProjection.js';
 import {
   PLAYER_COMBAT_GEOMETRY_SCALE,
   PLAYER_CHARACTER_FOOT_OFFSET,
   samplePlayerCombatGeometry,
+  projectPlayerSkeleton,
   sampleTrainingEnemyCombatGeometry,
   createSweptWeaponGeometry,
 } from '../combat/SharedCombatGeometry.js';
@@ -180,9 +183,9 @@ export function createGraphicsResourceSampler(catalog) {
     return scenes.get(equipmentId);
   }
 
-  function mapSample(resource, action) {
+  function mapSample(resource, action, lighting = 'scene') {
     const { regionId, roomId } = resource.roomId ? resource : BENCHMARK_ROOM;
-    const key = `${regionId}/${roomId}/${resource.producer === 'final' ? `final:${action.id}` : (action?.patchId ?? 'base')}`;
+    const key = `${regionId}/${roomId}/${lighting}/${resource.producer === 'final' ? `final:${action.id}` : (action?.patchId ?? 'base')}`;
     if (mapSamples.has(key)) return mapSamples.get(key);
     const scene = resource.producer === 'final' ? createGameScene() : sceneFor();
     try {
@@ -203,6 +206,7 @@ export function createGraphicsResourceSampler(catalog) {
           });
         scene.setVisualQaScrapFinalBattleStage(action.id);
       }
+      if (lighting === 'day' || lighting === 'night') scene.setVisualQaTimePhase(lighting);
       const sample = Object.freeze({
         frame: scene.createRenderFrame(1),
         room: scene.mapRuntime.getActiveRoom(),
@@ -421,7 +425,8 @@ export function createGraphicsResourceSampler(catalog) {
     if (![-1, 1].includes(facing)) throw new RangeError('그래픽 facing은 -1 또는 1입니다.');
     const view = resource.kind === 'scene' ? 'scene' : (options.view ?? 'isolated');
     const lighting = options.lighting ?? 'scene';
-    const base = mapSample(resource, action);
+    const base = mapSample(resource, action, lighting);
+    let boneDiagnostics = [];
     const actorPosition = {
       x: base.frame.player.position.x,
       y: base.room.groundY - PLAYER_CHARACTER_FOOT_OFFSET,
@@ -466,6 +471,14 @@ export function createGraphicsResourceSampler(catalog) {
       });
       items = reference.items;
       sourceFrameId = reference.frameId;
+      const nodes = ENEMY_REFERENCE_PROFILES.find(
+        (profile) => profile.id === resource.referenceId,
+      ).nodes;
+      boneDiagnostics = nodes.map((node) => ({
+        id: node.id,
+        parent: node.parent,
+        position: reference.bones[node.id].origin,
+      }));
     } else if (resource.producer === 'enemy' || resource.producer === 'enemy-status') {
       const enemy = enemySample(resource, action, index, facing, enemyPosition);
       items =
@@ -473,6 +486,9 @@ export function createGraphicsResourceSampler(catalog) {
           ? enemy.items.filter((item) => /combat-enemy-(health|posture|resolution)/.test(item.id))
           : enemy.items;
       sourceFrameId = enemy.sourceFrameId;
+      boneDiagnostics = Object.entries(enemy.geometry.presentation.skeleton).map(
+        ([id, position]) => ({ id, parent: SIDE_VIEW_SKELETON_PARENTS[id], position }),
+      );
       extra = {
         combatEnemy: enemy.state,
         combatGeometry: { ...base.frame.combatGeometry, enemyHurt: enemy.geometry.hurt },
@@ -571,6 +587,14 @@ export function createGraphicsResourceSampler(catalog) {
             )
           : [...player.presentation.characterItems, ...player.presentation.combatEffectItems];
       sourceFrameId = player.pose.bonePose.frameId;
+      boneDiagnostics = Object.entries(
+        projectPlayerSkeleton({
+          position: actorPosition,
+          facing,
+          geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+          bonePose: player.pose.bonePose,
+        }),
+      ).map(([id, position]) => ({ id, parent: SIDE_VIEW_SKELETON_PARENTS[id], position }));
       extra = {
         animationTime: player.input.boneInput.animationTime,
         equipment: sceneFor(resource.equipmentId).equipmentProfile,
@@ -623,6 +647,7 @@ export function createGraphicsResourceSampler(catalog) {
           : selectedBounds,
       frameId: `${resource.id}/${action.id}/f${String(index).padStart(4, '0')}`,
       sourceFrameId,
+      boneDiagnostics,
       producerEffectGroups,
       notes,
       conditions: {

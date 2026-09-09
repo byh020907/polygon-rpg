@@ -51,21 +51,7 @@ function verifyScreenFocusTransitions() {
   assert.equal(owner.apply(gameEntry), false, 'stale focus request는 적용되면 안 된다.');
   assert.equal(owner.apply(menuReturn), true);
 
-  const labEntry = owner.transitionTo(GAME_SCREEN.RENDER_LAB, {
-    menuReturnTarget: SCREEN_FOCUS_TARGET.MENU_RENDER_LAB,
-  });
-  assert.equal(labEntry.targetId, SCREEN_FOCUS_TARGET.RENDER_LAB_HEADING);
-  assert.equal(owner.apply(labEntry), true);
-
-  const labReturn = owner.transitionTo(GAME_SCREEN.MENU);
-  assert.equal(labReturn.targetId, SCREEN_FOCUS_TARGET.MENU_RENDER_LAB);
-  assert.equal(owner.apply(labReturn), true);
-  assert.deepEqual(focusedTargets, [
-    SCREEN_FOCUS_TARGET.GAME_MENU,
-    SCREEN_FOCUS_TARGET.MENU_START,
-    SCREEN_FOCUS_TARGET.RENDER_LAB_HEADING,
-    SCREEN_FOCUS_TARGET.MENU_RENDER_LAB,
-  ]);
+  assert.deepEqual(focusedTargets, [SCREEN_FOCUS_TARGET.GAME_MENU, SCREEN_FOCUS_TARGET.MENU_START]);
 }
 
 function verifyFocusPortAndNoFocusSteal() {
@@ -177,7 +163,7 @@ function verifySemanticStatusAndFocusTargets() {
   assert.match(css, /\.operation-map-backdrop/);
   const gameFooterMarkup = html.slice(
     html.indexOf('<footer class="game-footer">'),
-    html.indexOf('<section\n        class="lab-screen"'),
+    html.indexOf('</footer>', html.indexOf('<footer class="game-footer">')),
   );
   assert.doesNotMatch(gameFooterMarkup, /x-text="gameStats"|FPS|logical/);
   assert.match(shell, /debugPanelOpen: this\.debugPanelOpen/);
@@ -498,7 +484,6 @@ function verifySamePageGameApplicationReplacement() {
     return canvas;
   }
   const gameCanvas = createCanvas('current-game-frame');
-  const polygonCanvas = createCanvas('current-polygon-frame');
   const createGameApp = (options) => {
     const app = {
       options,
@@ -526,12 +511,10 @@ function verifySamePageGameApplicationReplacement() {
   };
   const application = new GameApplication({
     gameCanvas,
-    polygonCanvas,
     createGameApp,
   });
   const uiBridge = {
     snapshot: () => Object.freeze({ screen: GAME_SCREEN.GAME, debugPanelOpen: true }),
-    setRenderStats: (value) => uiWrites.push(['render', value]),
     setGameStats: (value) => uiWrites.push(['game', value]),
     setQaInputStatus: (value) => uiWrites.push(['qa-input', value]),
     setPlayerStatus: (value) => uiWrites.push(['player', value]),
@@ -742,7 +725,6 @@ function verifyVisualQaResizeReplaysLatestFrame() {
     manualMode: true,
     latestVisualQaRenderFrame: null,
     gameHost: { resize: () => resizedHosts.push('game') },
-    polygonHost: { resize: () => resizedHosts.push('polygon') },
     uiBridge: {
       snapshot: () => ({ screen: GAME_SCREEN.GAME }),
       setDialoguePresentation: () => {},
@@ -770,7 +752,7 @@ function verifyVisualQaResizeReplaysLatestFrame() {
   );
 
   GameApp.prototype.resize.call(app);
-  assert.deepEqual(resizedHosts, ['game', 'polygon']);
+  assert.deepEqual(resizedHosts, ['game']);
   assert.equal(renderedFrames.length, 2, 'resize 뒤 frame을 다시 그려야 한다.');
   assert.equal(renderedFrames[1], frame, 'resize는 같은 immutable frame을 재사용해야 한다.');
 
@@ -996,7 +978,6 @@ console.log(
     {
       outcomes: [
         'menu-game-menu-focus-return',
-        'menu-render-lab-menu-focus-return',
         'stale-focus-request-rejection',
         'missing-focus-target-safe-result',
         'same-screen-no-focus-steal',
@@ -1015,7 +996,7 @@ console.log(
         'debug-configuration-rejection-boundaries',
         'debug-panel-gameplay-input-suspension',
         'game-footer-debug-stats-removed',
-        'render-lab-control-keyboard-boundary',
+        'interactive-control-keyboard-boundary',
         'native-button-space-enter-activation',
         'canvas-independent-area-objective-player-combat-status',
         'reduced-motion-presentation-policy',

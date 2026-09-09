@@ -1,5 +1,9 @@
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
 import { Camera2D } from '../rendering/Camera2D.js';
+import { ReviewRadialMenu } from './ReviewRadialMenu.js';
+import { graphicsNavigation, graphicsActionMenu } from './GraphicsNavigation.js';
+import { graphicsBoneItems } from '../graphics/GraphicsDiagnostics.js';
+import { graphicsTestTarget } from '../graphics/GraphicsTestTarget.js';
 import { buildUiReviewUrl } from './GameUiCatalog.js';
 import {
   DEFAULT_GRAPHICS_REVIEW,
@@ -106,16 +110,23 @@ export function renderGraphicsSample(canvas, sample, selection, { thumbnail = fa
   target.host.viewport = viewport;
   const renderer = target.polygon;
   renderer.camera = camera;
-  return renderer.render(frame, { ...settings, transparent: isolated });
+  if (selection.bones && !thumbnail)
+    frame = { ...frame, items: [...frame.items, ...graphicsBoneItems(sample.boneDiagnostics)] };
+  return renderer.render(frame, {
+    ...settings,
+    showMesh: !thumbnail && selection.mesh,
+    transparent: isolated,
+  });
 }
 
 export class GraphicsReviewController {
-  constructor({ root, catalog, categories, sampler, onClose }) {
+  constructor({ root, catalog, categories, sampler, onClose, onTestPlay }) {
     this.root = root;
     this.catalog = catalog;
     this.categories = categories;
     this.sampler = sampler;
     this.onClose = onClose;
+    this.onTestPlay = onTestPlay;
     this.selection = DEFAULT_GRAPHICS_REVIEW;
     this.abort = new AbortController();
     this.playing = false;
@@ -146,7 +157,7 @@ export class GraphicsReviewController {
     this.root.innerHTML = `
       <header class="gr-header">
         <div><small>DEVELOPER · GRAPHICS LIBRARY</small><h1 id="graphics-review-title" tabindex="-1">그래픽 리소스 검토</h1></div>
-        <button type="button" data-gr="close">게임으로 돌아가기</button>
+        <nav class="gr-header-actions"><button type="button" data-gr="find">찾기</button><button type="button" data-gr="catalog-toggle" aria-expanded="false">목록</button><button type="button" data-gr="test">테스트 플레이</button><button type="button" data-gr="diagnostics-toggle">진단</button><button type="button" data-gr="copy">복사</button><button type="button" data-gr="close">게임으로 돌아가기</button></nav>
       </header>
       <div class="gr-layout">
         <aside class="gr-catalog" aria-label="리소스 목록">
@@ -158,28 +169,30 @@ export class GraphicsReviewController {
           <details class="gr-inventory"><summary>등록 범위 · 제외 항목</summary><pre data-gr="inventory"></pre></details>
         </aside>
         <main class="gr-main">
-          <header class="gr-resource-heading"><h2 data-gr="name"></h2><code data-gr="id"></code><p data-gr="source" class="gr-muted"></p></header>
-          <div class="gr-options">
-            <label>보기<select data-gr="view"><option value="isolated">개별 보기</option><option value="scene">실제 장면 배치</option></select></label>
-            <label>크기<select data-gr="scale"><option value="fit">화면에 맞춤</option><option value="1">실제 크기 · 1×</option><option value="2">확대 · 2×</option><option value="4">확대 · 4×</option></select></label>
-            <label>방향<select data-gr="facing"><option value="1">오른쪽</option><option value="-1">왼쪽</option></select></label>
-            <label>조명<select data-gr="lighting"><option value="scene">실제 장면 광원</option><option value="unlit">기본색</option></select></label>
-            <label data-gr="viewport-label">UI 화면<select data-gr="viewport"><option value="desktop">1280×720</option><option value="mobile">844×390</option></select></label>
-          </div>
-          <div data-gr="stage" class="gr-stage" aria-label="선택 리소스 출력"><canvas data-gr="canvas" aria-label="실제 게임 renderer의 선택 리소스"></canvas><div data-gr="ui-viewport" class="gr-ui-viewport" hidden><iframe data-gr="ui-frame" title="실제 게임 UI 컴포넌트"></iframe></div><img data-gr="image" alt="선택 앱 아이콘 원본" hidden /></div>
-          <p data-gr="sample-notes" class="gr-muted"></p>
-          <div class="gr-playback">
+          <header class="gr-resource-heading"><h2 data-gr="name"></h2><small>대상이나 미리보기를 누르면 원형 동작 메뉴가 열립니다.</small></header>
+
+          <p data-gr="status" class="gr-feedback-status" role="status" aria-live="polite"></p><div class="gr-playback">
             <label>동작<select data-gr="action" aria-label="리소스 동작"></select></label>
-            <button data-gr="play" type="button">정상 속도 재생</button>
+            <button data-gr="play" type="button">재생</button>
             <button data-gr="previous" type="button" aria-label="이전 프레임">◀</button>
             <button data-gr="next" type="button" aria-label="다음 프레임">▶</button>
             <label class="gr-frame-field">프레임<input data-gr="frame" type="number" min="0" step="1" /></label>
             <span data-gr="frame-count"></span>
           </div>
+          <div data-gr="stage" class="gr-stage" aria-label="선택 리소스 출력"><canvas data-gr="canvas" aria-label="선택 리소스 · 누르면 동작 메뉴" tabindex="0"></canvas><div data-gr="ui-viewport" class="gr-ui-viewport" hidden><iframe data-gr="ui-frame" title="실제 게임 UI 컴포넌트"></iframe></div><img data-gr="image" alt="선택 앱 아이콘 원본" hidden /></div>
+          <details data-gr="diagnostics" class="gr-diagnostics"><summary>진단 옵션</summary>          <div class="gr-options">
+            <label>보기<select data-gr="view"><option value="isolated">개별 보기</option><option value="scene">실제 장면 배치</option></select></label>
+            <label>크기<select data-gr="scale"><option value="fit">화면에 맞춤</option><option value="1">실제 크기 · 1×</option><option value="2">확대 · 2×</option><option value="4">확대 · 4×</option></select></label>
+            <label>방향<select data-gr="facing"><option value="1">오른쪽</option><option value="-1">왼쪽</option></select></label>
+            <label>조명<select data-gr="lighting"><option value="scene">실제 장면 광원</option><option value="unlit">기본색</option><option value="day">낮</option><option value="night">밤</option></select></label>
+            <label data-gr="viewport-label">UI 화면<select data-gr="viewport"><option value="desktop">1280×720</option><option value="mobile">844×390</option></select></label>
+          </div><div class="gr-diagnostic-controls"><label>재생 속도<select data-gr="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1">1×</option><option value="2">2×</option></select></label><label><input type="checkbox" data-gr="bones">본 연결</label><label><input type="checkbox" data-gr="mesh">메시</label></div><code data-gr="id"></code><p data-gr="source" class="gr-muted"></p></details>
+          <p data-gr="sample-notes" class="gr-muted"></p>
+
           <input data-gr="scrubber" class="gr-scrubber" type="range" min="0" step="1" aria-label="프레임 이동" />
           <output data-gr="frame-id" class="gr-frame-id"></output>
-          <section data-gr="strips" class="gr-strips" aria-label="동작별 전체 프레임 시트"></section>
-          <section class="gr-copy"><div><button data-gr="copy" type="button">선택 · 재현 조건 복사</button><button data-gr="png" type="button">현재 PNG 저장</button></div><p data-gr="status" role="status" aria-live="polite">선택한 출력과 조건을 확인한 뒤 복사해 관리 대화에 붙여넣으세요.</p><label>복사할 내용<textarea data-gr="feedback" readonly rows="8"></textarea></label></section>
+          <details data-gr="strips-panel" class="gr-strips-panel"><summary>프레임 시트</summary><section data-gr="strips" class="gr-strips" aria-label="동작별 전체 프레임 시트"></section></details>
+          <details class="gr-copy"><summary>재현 조건 자세히</summary><div><button data-gr="png" type="button">현재 PNG 저장</button></div><label>복사할 내용<textarea data-gr="feedback" readonly rows="8"></textarea></label></details>
         </main>
       </div>`;
     this.nodes = Object.fromEntries(
@@ -187,7 +200,66 @@ export class GraphicsReviewController {
     );
     const listen = (node, event, handler) =>
       node.addEventListener(event, handler, { signal: this.abort.signal });
+    this.radial = new ReviewRadialMenu(root);
     listen(this.nodes.close, 'click', () => this.close());
+    listen(this.nodes['catalog-toggle'], 'click', () =>
+      this.showCatalog(!this.root.classList.contains('gr-show-catalog')),
+    );
+    listen(this.nodes.find, 'click', (event) =>
+      this.radial.open(
+        graphicsNavigation(
+          this.catalog,
+          (id, point) => {
+            this.setFilter({ category: id, search: '' });
+            const found = this.catalog.resources.filter((resource) => resource.category === id);
+            if (found.length === 1) {
+              this.select(
+                { resourceId: found[0].id, actionId: '', frameIndex: 0 },
+                { strips: true },
+              );
+              this.openContext(point);
+            } else this.nodes.search.focus();
+          },
+          (id, point) => {
+            this.select(
+              {
+                resourceId: id,
+                category: this.catalog.get(id).category,
+                search: '',
+                actionId: '',
+                frameIndex: 0,
+              },
+              { list: true, strips: true },
+            );
+            this.openContext(point);
+          },
+        ),
+        { x: event.clientX, y: event.clientY },
+        this.nodes.find,
+      ),
+    );
+    listen(this.nodes.test, 'click', () => this.testPlay());
+    listen(this.nodes['diagnostics-toggle'], 'click', () => this.showDiagnostics());
+    listen(this.nodes.canvas, 'click', (event) => this.openContext(event));
+    listen(this.nodes.canvas, 'contextmenu', (event) => {
+      event.preventDefault();
+      this.openContext(event);
+    });
+    listen(this.nodes.canvas, 'keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.openContext();
+      }
+    });
+    for (const key of ['mesh', 'bones'])
+      listen(this.nodes[key], 'change', () =>
+        this.select({ [key]: this.nodes[key].checked }, { strips: false }),
+      );
+    listen(this.nodes.speed, 'change', () => {
+      const playing = this.playing;
+      this.select({ speed: this.nodes.speed.value }, { strips: false });
+      if (playing) this.togglePlayback();
+    });
     listen(root, 'keydown', (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -350,8 +422,19 @@ export class GraphicsReviewController {
       actionId: action.id,
       frameIndex: Math.min(candidate.frameIndex, Math.max(0, action.frameCount - 1)),
     });
-    for (const key of ['category', 'search', 'view', 'scale', 'facing', 'lighting', 'viewport'])
+    for (const key of [
+      'category',
+      'search',
+      'view',
+      'scale',
+      'facing',
+      'lighting',
+      'viewport',
+      'speed',
+    ])
       this.nodes[key].value = String(this.selection[key]);
+    this.nodes.mesh.checked = this.selection.mesh;
+    this.nodes.bones.checked = this.selection.bones;
     this.nodes.name.textContent = resource.label;
     this.nodes.id.textContent = resource.id;
     this.nodes.source.textContent = resource.source ?? '';
@@ -384,6 +467,7 @@ export class GraphicsReviewController {
   }
 
   setFilter(patch) {
+    this.showCatalog(true);
     this.selection = normalizeGraphicsReview({ ...this.selection, ...patch });
     this.page = 0;
     this.renderList();
@@ -445,9 +529,10 @@ export class GraphicsReviewController {
       button.type = 'button';
       button.dataset.resourceId = resource.id;
       button.setAttribute('aria-pressed', String(resource.id === this.selection.resourceId));
-      button.addEventListener('click', () =>
-        this.select({ resourceId: resource.id, actionId: '', frameIndex: 0 }, { strips: true }),
-      );
+      button.addEventListener('click', (event) => {
+        this.select({ resourceId: resource.id, actionId: '', frameIndex: 0 }, { strips: true });
+        this.openContext(event);
+      });
       if (resource.kind === 'image') {
         const image = el('img');
         image.src = resource.imageUrl;
@@ -539,6 +624,10 @@ export class GraphicsReviewController {
       this.nodes['sample-notes'].textContent = [dimensions, notes].filter(Boolean).join(' · ');
       this.nodes['frame-id'].textContent =
         `${this.sample.frameId}${this.sample.sourceFrameId ? ` · pose ${this.sample.sourceFrameId}` : ''}`;
+      this.testTarget = graphicsTestTarget(resource, this.action, this.sample);
+      this.nodes.test.disabled = !this.testTarget.available;
+      this.nodes.test.title = this.testTarget.reason ?? '이 위치에서 직접 조작';
+      this.nodes.bones.disabled = !this.sample.boneDiagnostics?.length;
       this.updateFrameControls();
     } catch (error) {
       this.pause();
@@ -618,6 +707,72 @@ export class GraphicsReviewController {
     }
   }
 
+  showCatalog(visible) {
+    this.root.classList.toggle('gr-show-catalog', visible);
+    this.nodes['catalog-toggle'].setAttribute('aria-expanded', String(visible));
+    if (innerWidth <= 600) this.root.querySelector('.gr-layout').scrollTop = 0;
+  }
+  showDiagnostics() {
+    this.radial.close();
+    this.nodes.diagnostics.open = true;
+    this.nodes['diagnostics-toggle'].setAttribute('aria-expanded', 'true');
+    this.nodes.diagnostics.scrollIntoView({ block: 'nearest' });
+    this.nodes.speed.focus();
+  }
+  openContext(event) {
+    this.showCatalog(false);
+    const r = this.nodes.canvas.getBoundingClientRect();
+    const point = event
+      ? { x: event.clientX ?? event.x, y: event.clientY ?? event.y }
+      : { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    const target = this.testTarget ?? { available: false, reason: '실제 배치가 없는 대상입니다.' };
+    this.radial.open(
+      {
+        label: this.resource.label,
+        children: [
+          {
+            label: this.playing ? '정지' : '재생',
+            disabled: this.action.frameCount <= 1,
+            run: () => this.togglePlayback(),
+          },
+          graphicsActionMenu(actionsOf(this.resource), (id) => {
+            this.select({ actionId: id, frameIndex: 0 }, { strips: true });
+            if (this.action.frameCount > 1) this.togglePlayback();
+          }),
+          {
+            label: this.selection.view === 'scene' ? '개별 보기' : '장면 보기',
+            run: () =>
+              this.select({ view: this.selection.view === 'scene' ? 'isolated' : 'scene' }),
+          },
+          { label: '진단', run: () => this.showDiagnostics() },
+          {
+            label: '테스트',
+            disabled: !target.available,
+            reason: target.reason,
+            run: () => this.testPlay(),
+          },
+          { label: '복사', run: () => this.copy() },
+        ],
+      },
+      point,
+      this.nodes.canvas,
+    );
+  }
+  testPlay() {
+    if (!this.testTarget?.available || !this.onTestPlay) return;
+    this.radial.close(false);
+    this.pause();
+    try {
+      this.onTestPlay(this.testTarget, this.selection);
+      this.root.hidden = true;
+      this.observer.disconnect();
+      this.nodes['ui-frame'].removeAttribute('src');
+      document.getElementById('app').inert = false;
+      document.body.classList.remove('graphics-review-open');
+    } catch (error) {
+      this.nodes.status.textContent = '테스트 시작 실패 · ' + error.message;
+    }
+  }
   seek(frameIndex) {
     if (!Number.isFinite(frameIndex)) return;
     this.select({
@@ -640,7 +795,8 @@ export class GraphicsReviewController {
     const tick = (now) => {
       if (!this.playing) return;
       const frameIndex =
-        (firstFrame + Math.floor(((now - started) * 60) / 1000)) % this.action.frameCount;
+        (firstFrame + Math.floor(((now - started) * 60 * this.selection.speed) / 1000)) %
+        this.action.frameCount;
       if (frameIndex !== this.selection.frameIndex) {
         this.selection = normalizeGraphicsReview({ ...this.selection, frameIndex });
         this.renderSample();
@@ -655,7 +811,7 @@ export class GraphicsReviewController {
     this.root.dataset.playing = 'false';
     cancelAnimationFrame(this.animationFrameId);
     this.animationFrameId = null;
-    if (this.nodes) this.nodes.play.textContent = '정상 속도 재생';
+    if (this.nodes) this.nodes.play.textContent = '재생';
   }
 
   updateFeedback() {
@@ -679,6 +835,7 @@ export class GraphicsReviewController {
       this.nodes.status.textContent =
         '선택과 재현 조건을 복사했습니다. 관리 대화에 붙여넣고 피드백을 덧붙이세요.';
     } catch {
+      this.nodes.feedback.closest('details').open = true;
       this.nodes.feedback.focus();
       this.nodes.feedback.select();
       this.nodes.status.textContent =
@@ -696,6 +853,7 @@ export class GraphicsReviewController {
   }
 
   close() {
+    this.radial.close(false);
     this.closed = true;
     this.pause();
     this.root.hidden = true;
@@ -711,6 +869,7 @@ export class GraphicsReviewController {
   }
 
   destroy() {
+    this.radial.destroy();
     this.destroyed = true;
     this.pause();
     this.abort.abort();

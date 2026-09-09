@@ -3,6 +3,7 @@ import { SceneNode } from '../core/SceneNode.js';
 import { createGameScene } from './createGameScene.js';
 import { EQUIPMENT_CATALOG } from '../game/equipment/EquipmentProfiles.js';
 import { ENCHANTMENT_CATALOG } from '../game/enchantment/EnchantmentCatalog.js';
+import { canonicalizeEnchantmentSnapshot } from '../game/enchantment/EnchantmentState.js';
 import { createProgressionSnapshot } from '../game/progression/ProgressionState.js';
 import { COMBAT_PROGRESSION_PROFILE } from '../game/progression/ProgressionProfiles.js';
 import { ProgressionStorage } from '../game/progression/ProgressionStorage.js';
@@ -24,7 +25,6 @@ import { projectDialogue } from './DialoguePresentation.js';
 export const GAME_SCREEN = Object.freeze({
   MENU: 'menu',
   GAME: 'game',
-  RENDER_LAB: 'render-lab',
 });
 
 const GAME_RENDER_SETTINGS = Object.freeze({ showMesh: false, showWorldGrid: false });
@@ -57,7 +57,6 @@ function assertUiBridge(uiBridge) {
   if (
     !uiBridge ||
     typeof uiBridge.snapshot !== 'function' ||
-    typeof uiBridge.setRenderStats !== 'function' ||
     typeof uiBridge.setGameStats !== 'function' ||
     typeof uiBridge.setQaInputStatus !== 'function' ||
     typeof uiBridge.setPlayerStatus !== 'function' ||
@@ -99,7 +98,7 @@ function createProgressionStorage() {
 }
 
 export class GameApp extends SceneNode {
-  constructor({ gameCanvas, polygonCanvas, visualQaRequest = null, qaInputEnabled = false }) {
+  constructor({ gameCanvas, visualQaRequest = null, qaInputEnabled = false }) {
     super('GameApp');
     this.qaInputEnabled = qaInputEnabled;
     this.qaInputScenario = qaInputEnabled ? readQaInputScenario() : null;
@@ -112,6 +111,7 @@ export class GameApp extends SceneNode {
     );
     this.visualQaRequest = visualQaRequest;
     this.isVisualQa = Boolean(this.visualQaRequest);
+    this.testPlayOptions = null;
     this.visualQaRecoveryRecords = new Map();
     this.progressionStorage = null;
     if (this.isVisualQa) {
@@ -153,10 +153,8 @@ export class GameApp extends SceneNode {
     this.camera = new Camera2D();
 
     this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
-    this.polygonHost = new CanvasHost(assertCanvas(polygonCanvas, 'Polygon Canvas'));
 
     this.gameRenderer = new CanvasPolygonRenderer(this.gameHost, this.camera);
-    this.polygonRenderer = new CanvasPolygonRenderer(this.polygonHost, this.camera);
 
     this.uiBridge = null;
     this.manualMode = false;
@@ -230,10 +228,13 @@ export class GameApp extends SceneNode {
     );
     if (initialMorningRequest) this.saveRecoveryRequest(initialMorningRequest, { quiet: true });
     this.resizeObserver.observe(this.gameHost.canvas);
-    this.resizeObserver.observe(this.polygonHost.canvas);
     this.resize();
     if (this.manualMode) return;
+    this.startRuntime();
+  }
 
+  startRuntime() {
+    if (this.abortController) return;
     this.input.attach();
     this.abortController = new AbortController();
     this.attachEvents();
@@ -286,6 +287,7 @@ export class GameApp extends SceneNode {
   }
 
   initialSaveStatus() {
+    if (this.isTestPlay) return '테스트 플레이 · 저장하지 않음';
     if (this.isVisualQa) return '시각 검증용 새 진행 · 저장하지 않음';
     if (!this.progressionLoadResult.ok) return this.progressionLoadResult.message;
     if (this.progressionLoadResult.kind === 'loaded') {
@@ -928,7 +930,89 @@ export class GameApp extends SceneNode {
     return result;
   }
 
+  get isTestPlay() {
+    return this.testPlayOptions !== null;
+  }
+
+  startTestPlay(request, options = {}) {
+    if (!this.isVisualQa || !request?.scenario) {
+      throw new TypeError('테스트 플레이에는 저장과 분리된 QA 시나리오가 필요합니다.');
+    }
+    if (
+      !options ||
+      typeof options !== 'object' ||
+      Array.isArray(options) ||
+      Object.keys(options).some(
+        (key) => !['location', 'equipmentId', 'expectedEntityId'].includes(key),
+      )
+    ) {
+      throw new TypeError('지원하지 않는 테스트 플레이 옵션입니다.');
+    }
+    const { location, equipmentId, expectedEntityId } = options;
+    if (
+      location &&
+      (typeof location.regionId !== 'string' ||
+        !location.regionId ||
+        typeof location.roomId !== 'string' ||
+        !location.roomId ||
+        !Number.isFinite(location.x))
+    ) {
+      throw new TypeError('테스트 위치에는 regionId, roomId와 유한한 x가 필요합니다.');
+    }
+    if (equipmentId !== undefined && !this.equipmentIds.includes(equipmentId)) {
+      throw new TypeError('존재하지 않는 테스트 장비입니다.');
+    }
+    const progression = {
+      ...this.progressionLoadResult.snapshot,
+      ...request.scenario.progressionSnapshot,
+    };
+    const preparedRequest = {
+      ...request,
+      scenario: { ...request.scenario, progressionSnapshot: progression },
+    };
+    if (equipmentId !== undefined) {
+      const ownedEquipmentIds = Object.freeze([
+        ...new Set([...progression.ownedEquipmentIds, equipmentId]),
+      ]);
+      preparedRequest.scenario.progressionSnapshot = Object.freeze({
+        ...progression,
+        ownedEquipmentIds,
+        equippedEquipmentId: equipmentId,
+        enchantment: canonicalizeEnchantmentSnapshot(
+          progression.enchantment,
+          ENCHANTMENT_CATALOG,
+          ownedEquipmentIds,
+        ),
+      });
+    }
+    preparedRequest.scenario.enchantmentSnapshot = canonicalizeEnchantmentSnapshot(
+      request.scenario.enchantmentSnapshot ?? progression.enchantment,
+      ENCHANTMENT_CATALOG,
+      preparedRequest.scenario.progressionSnapshot.ownedEquipmentIds,
+    );
+    const result = this.runVisualQa(preparedRequest);
+    if (location) this.scene.setVisualQaLocation(location);
+    if (expectedEntityId && this.scene.createRenderFrame(0).combatEnemy?.id !== expectedEntityId)
+      throw new Error(
+        '선택한 몹이 이 테스트 장면에서 활성화되지 않았습니다. 장면 보기에서 확인하세요.',
+      );
+    this.testPlayOptions = Object.freeze({
+      ...(expectedEntityId ? { expectedEntityId } : {}),
+      ...(location ? { location: Object.freeze({ ...location }) } : {}),
+      ...(equipmentId !== undefined ? { equipmentId } : {}),
+    });
+    this.manualMode = false;
+    this.latestVisualQaRenderFrame = null;
+    this.input.clear({ resetSequences: true });
+    this.runner.reset(performance.now());
+    this.scene.createRenderFrame(0);
+    this.uiBridge.setSaveStatus(this.initialSaveStatus());
+    this.startRuntime();
+    return result;
+  }
+
   resetScene() {
+    if (this.isTestPlay) return this.startTestPlay(this.visualQaRequest, this.testPlayOptions);
     this.input.clear({ resetSequences: true });
     this.scene.reset();
     this.runner.reset(performance.now());
@@ -971,10 +1055,6 @@ export class GameApp extends SceneNode {
     this.resize();
   }
 
-  toggleWorldTime() {
-    this.scene.toggleTimePhase();
-  }
-
   trainCombatSkill() {
     return this.scene.trainCombatSkill();
   }
@@ -1011,7 +1091,6 @@ export class GameApp extends SceneNode {
 
   resize() {
     this.gameHost.resize();
-    this.polygonHost.resize();
     if (this.isVisualQa && this.manualMode && this.latestVisualQaRenderFrame) {
       this.renderFrame(this.latestVisualQaRenderFrame);
     }
@@ -1027,7 +1106,10 @@ export class GameApp extends SceneNode {
 
   createSimulationSettings(uiState) {
     return Object.freeze({
-      animationSpeed: uiState.screen === GAME_SCREEN.RENDER_LAB ? uiState.animationSpeed : 1,
+      animationSpeed:
+        this.isTestPlay && [0.25, 0.5, 1, 2].includes(uiState.testPlaySpeed)
+          ? uiState.testPlaySpeed
+          : 1,
       cameraFeedbackEnabled: !this.prefersReducedMotion(),
     });
   }
@@ -1057,11 +1139,10 @@ export class GameApp extends SceneNode {
     const uiState = this.uiBridge.snapshot();
     if (uiState.graphicsReviewOpen) return;
     const active =
-      (uiState.screen === GAME_SCREEN.GAME &&
-        uiState.debugPanelOpen !== true &&
-        uiState.operationMapOpen !== true &&
-        uiState.campaignActionPreviewOpen !== true) ||
-      (uiState.screen === GAME_SCREEN.RENDER_LAB && uiState.isPlaying);
+      uiState.screen === GAME_SCREEN.GAME &&
+      uiState.debugPanelOpen !== true &&
+      uiState.operationMapOpen !== true &&
+      uiState.campaignActionPreviewOpen !== true;
     if (!active) return;
     this.fixedProcess(deltaSeconds, {
       inputSnapshot,
@@ -1183,12 +1264,6 @@ export class GameApp extends SceneNode {
       }
       return;
     }
-
-    const polygonStats = this.polygonRenderer.render(renderFrame, {
-      showMesh: uiState.showMesh,
-      showWorldGrid: true,
-    });
-    this.latestRenderStats = polygonStats;
   }
 
   updateStats(currentTime) {
@@ -1213,8 +1288,6 @@ export class GameApp extends SceneNode {
 
     if (uiState.screen === GAME_SCREEN.GAME) {
       this.uiBridge.setGameStats(commonStats);
-    } else {
-      this.uiBridge.setRenderStats(commonStats);
     }
   }
 

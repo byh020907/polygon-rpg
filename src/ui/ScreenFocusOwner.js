@@ -3,14 +3,11 @@ import { GAME_SCREEN } from '../app/GameApp.js';
 export const SCREEN_FOCUS_TARGET = Object.freeze({
   MENU_START: 'menu-start-control',
   MENU_MOBILE_START: 'menu-mobile-start-control',
-  MENU_RENDER_LAB: 'menu-render-lab-control',
   GAME_MENU: 'game-menu-control',
-  RENDER_LAB_HEADING: 'render-lab-title',
 });
 
 const SCREEN_ENTRY_TARGET = Object.freeze({
   [GAME_SCREEN.GAME]: SCREEN_FOCUS_TARGET.GAME_MENU,
-  [GAME_SCREEN.RENDER_LAB]: SCREEN_FOCUS_TARGET.RENDER_LAB_HEADING,
 });
 
 function assertScreen(screen) {

@@ -4,48 +4,40 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 픽셀 효과 제거와 폴리곤 단일 표현의 코드·문서·검증 정합성을 확인했다. Codex heartbeat와 OpenCode runner는 Human pause를 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX v0.4.0의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
-`Human Feedback Priority — 폴리곤 단일 표현 검증 완료.` 게임·검토실·연구실의 렌더러/설정/기본값과 문서를 통일했다. 저해상도/좌표 snap/후처리/강제 픽셀 확대를 제거했고, depth 가림은 실제 backing 해상도에서 수행한다. 본·정규좌표·공용 clip·전투·저장은 기존 계약을 유지한다. 다음 미완료 playable frontier는 폐광→항구 연결 전투와 귀환의 연속 검증이나 자동 실행은 중지 상태다.
+Human Feedback Priority — 그래픽 검토/저장 없는 테스트 플레이 역할 통합. 독립 렌더 연구실을 제거하고 본·메시·조명·재생 속도를 검토실 진단으로 모았다. 원형 유형 탐색과 문맥 동작, 세로 화면의 미리보기 우선 배치, 같은 선택으로 복귀하는 테스트 세션을 구현했다. 다음 playable frontier인 폐광→항구 연결 전투와 귀환의 연속 검증은 이번 UX 범위에 포함하지 않았으며 자동 실행은 중지 상태다.
 
 ## Active Execution Goal
 
-없음. 자동 실행은 Human의 명시적 재개 전까지 중지한다.
+활성 자동 실행 없음. 완료한 UX의 dependency chain: 저장 없는 interactive context → 검토실 진단·선택 복귀 → 원형 tree/문맥 UX → desktop/mobile·keyboard·저장 보존 검증. 추가 자율 시나리오 확장은 시작하지 않는다.
 
 ## Desired-State Comparison
 
-| Area                                             | Status                   | Current evidence                                                                                                                                                                                                                                                                             |
-| ------------------------------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PG-VISUAL-FIDELITY / 폴리곤 단일 표현            | satisfied                | Retro renderer·후처리·저해상도surface·비교canvas·설정·폐기test 제거. 실제game/lab/review와DPR2/4×geometry재렌더 확인,3Mbacking budget. oldURL두별칭은읽기경계에서polygon으로정규화.                                                                                                          |
-| PG-GRAPHICS-REVIEW / 유형별 대표                 | satisfied · 시안         | 대표 네 개, 세 공용 clip, 서로 다른 본 계층. 624 frame·mirror/scale·다른 디자인 ID retarget fixture, native desktop/mobile 24기록 및 실제 변형 비교 PNG. 최종 실전 디자인 승인이나 전투 튜닝 완료는 아니다.                                                                                  |
-| PG-PLATFORM-ACCESS / 시작 구간 디버그 진입       | satisfied                | 제목·MENU·MAP의 1초 hold, 초기 MENU 짧게 누르기, 공통 panel 1개, 실제 touch 해제 뒤 focus와 다음 일반 입력, main에서 QA 적용 뒤 canvas resize·일반 복귀·저장 bytes 보존. 독립 desktop/mobile 34기록 PASS.                                                                                    |
-| PG-PWA-OFFLINE / native update                   | satisfied                | 설치fetch정체·동일빌드false restart 수리. 6개이하다운로드/body즉시소비·SHA256검증·networkprobe·scope/release/client별cache. 지속Chrome A→B→C 10조건/715요청 PASS. 실제hidden→visible복귀 후B준비660ms(로컬서버측정).                                                                         |
-| PWA failure/persistence                          | satisfied                | asset503·stale200 거부, 저장실패활성화차단, 명시적용1회reload, 다른탭A게임·A코드계속유지와명시재시작, C offline/newquery. 진행1219bytes·복구1553bytes 전체동일.                                                                                                                              |
-| PG-PLATFORM-ACCESS / 모바일 메인 메뉴            | satisfied                | 기존844×390에서메뉴768px였던overflow수리. 1280×720/844×390/740×360/390×844/360×640 + 회전·주소창높이·safe-area·keyboard/touch 34기록 PASS. 주요버튼44px이상·버전상태12px이상.                                                                                                                |
-| 이전 설치 정체 복구                              | partial · 복구 행동 검증 | 기존 cdd native job은 새로고침·register/unregister·scope page 이탈로 해제되지 않음. 같은 profile/origin의 브라우저 정상 종료(Browser.close)·완전 재시작 뒤2.066초 B설치·offline·모든저장bytes유지 확인. 해당 이전 상태만 한 번 완전종료가 필요하며 새로고침 자동복구 PASS로 표시하지 않는다. |
-| 설치형 Android/iOS PWA                           | Human 확인 대기          | headless native Chromium 지속profile을실제사용했으나설치형실기기A→B완료로확대하지않는다. 기기확인대기는다른개발의전역blocker가아니다.                                                                                                                                                        |
-| 전체 그래픽 검토 / 현재 campaign 기반            | satisfied                | 이전검증된588개리소스·공용production sampler·435RenderFrame/107fixedstep·schema10단일gold/campaign 기반을유지한다.                                                                                                                                                                           |
-| 기존 Human Feedback Priority / playable frontier | partial                  | 폐광briefing→항구건선거진입·Strong HP76→56 및KO fence증거보존. 양연결전투완료·귀환·온실·폐광core/after-state 실제연속검증은남아있다.                                                                                                                                                         |
-| Remaining product                                | gap / unverified         | 캠페인전체·후반·최종전·시각적최종만족과현재미사용착지pose 자동재생은이번수리완료로닫지않는다.                                                                                                                                                                                                |
+| Area                                        | Status                         | Current evidence                                                                                                                                                                                     |
+| ------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 역할 통합·원형 UX                           | locally verified               | 독립 lab 화면/canvas 제거. 찾기 → 유형 → 대상, 대상 주변 동작, 접힌 진단/프레임, 세로 화면 목록 버튼.                                                                                                |
+| 저장 없는 테스트 플레이                     | locally verified               | production GameApplication/GameApp·입력·renderer 사용, 저장 port 접근 0회, restart/RAF/input cleanup/실패 rollback. 선택·동작·프레임·진단 URL 복귀. 미배치 대상은 안내하며 몹 배치 ID 불일치는 거부. |
+| 폴리곤 단일 표현                            | retained                       | 실제 backing depth와 가림, 본·부모 로컬 정규좌표·유형 clip 재사용. 주인공 디자인·전투 규칙은 유지.                                                                                                   |
+| 이전 PWA/모바일 수정                        | retained; device check pending | metadata/manifest/lifecycle/cache fixture PASS. 기존 설치 앱은 legacy SW 조건에 따라 완전종료가 한 번 필요할 수 있다. 실제 설치형 Android/iOS 확인을 headless QA로 대신 판정하지 않는다.             |
+| Human Feedback Priority / playable frontier | partial                        | INBOX에 남은 Human 원문과 이전 KO fence·폐광/항구 관찰 증거 보존. 전투 접촉, 외형 최종 만족과 연결 전투·귀환·후반/최종전은 이번 UX 완료로 닫지 않는다.                                               |
 
 ## Verification
 
-- actual permission은 danger-full-access / approval never다. clean codex/polygon-only에서 free guard를 획득했고 Human pause를 유지했다. e354881/065c2ba의 현재 요청과 이전 픽셀화·정수 표현 요구는 최신 PG-VISUAL-FIDELITY / Rendering 계약이 소유하므로 해당 5개 INBOX 항목만 제거했다.
-- npm run check 전체 PASS: lint/format, combat/enchantment/story/campaign/recovery/intro/character/map/growth/visual/platform/graphics. 근거는 artifacts/polygon-only/full-check.log. 그래픽 검사에는 570개 base 리소스, 2287개 sample, 435개 production frame 비교와 107개 fixed-step 관찰이 포함된다.
-- polygon-only-check는 폐기 파일·UI 부재, 기본값과 옛 URL 정규화, backing 좌표의 depth 범위와 identity 1:1 합성을 확인했다. 기존 z 가림·반투명·외곽선 fixture도 PASS다.
-- artifacts/polygon-only/evidence.json: 실제 desktop 1280×720, mobile 844×390, DPR 2에서 game → menu hold → lab → review를 확인했다. lab canvas는 1개이며, 4×는 1920×1200, DPR 2에서는 2190×1369 backing에 재렌더한다. 3M 상한, smoothing, console 오류 0건과 실제 PNG를 확인했다.
-- visual-qa-orchestration의 desktop/mobile 26개 흐름, debug-entry의 native mouse/touch/keyboard 34개 기록이 PASS다. 현재 PWA metadata/manifest/lifecycle/cache 검사도 통과했다.
-- 기존 검증자 한 명의 읽기 전용 정합성 pass에서 발견한 depth/확대 해상도와 새 sheet의 nearest-neighbor 경로를 수리한 뒤 재확인했다. 추가 agent는 만들지 않았고, 실제 viewport와 전체 suite는 부모가 검증했다.
-- Desired State 문서는 desktop/mobile/print에서 확인했다. 현재 안내의 폐기된 선택·후처리 요구를 제거했고, 원본 PNG와 과거 evidence 및 아래 보존 참조는 변조하지 않았다.
-- 이전 PWA native A→B→C·저장·offline 증거는 artifacts/pwa-update/browser-evidence.json 및 REPORT.md에, legacy 정상 종료 복구는 restart-recovery-evidence.json에 보존한다.
+- npm run check 전체 PASS: lint/format, combat/enchantment/story/campaign/recovery/intro/character/map/growth/visual/platform/graphics. artifacts/review-ux/full-check.log. 570 base 리소스, 2287 samples, 435 production RenderFrame 비교, 107 fixed-step 관찰.
+- scripts/review-workflow-qa.mjs: desktop 1280×720, mobile 844×390, portrait 390×844. 원형 유형/문맥·화면 경계·Escape·진단, 실제 키보드 이동·restart, 같은 URL 선택 복귀·test URL reload, localStorage 바이트 보존. artifacts/review-ux/evidence.json 및 PNG.
+- scripts/graphics-review-qa.mjs: 기존 desktop/mobile 그래픽 검토 68개 항목 PASS. 프레임 이동·재생·복사·URL 복원과 UI 검토를 유지한다.
+- test-play-session-check: production QA 초기화, 저장 getter 접근 0회, 실제 이동, restart/단일 RAF/입력 cleanup, 장비/위치/실패 candidate rollback, 일반 게임 속도 격리 PASS. test-play-config-check: 복귀 조건·장비·위치 URL과 잘못된 복귀/위치 거부 PASS.
+- 실제 선택 몹(scrap-yard-brace-collector) 배치 ID 확인, 일치하지 않는 테스트 대상과 잘못된 URL의 검토실 복구, console 오류 0건 확인. 디버그 진입 mouse/touch/keyboard 34개 기록 PASS.
+- PWA release fingerprint/asset integrity, manifest, lifecycle, cache fixture PASS. 새 기능 검증이 실제 설치형 기기 검증을 뜻하지 않는다.
+- Kando Submenu와 Autodesk Maya Marking Menu 공식 이미지 예시를 사용자에게 제시했다. 큰 한글 원형 버튼으로 분류/문맥을 다루고 많은 leaf는 목록·검색으로 찾는다.
+- 이번 피드백만 Desired State가 소유하므로 INBOX에서 제거했다. 나머지 원문은 보존한다. 자동 loop pause와 이전 미통합 작업은 유지한다.
 
 ## Human 확인 / Pause
 
-- 이전 설치가 멈췄다는 안내가 나오면 이번 한 번 앱과 브라우저를 완전히 종료한 뒤 다시 연다. 저장·복구 데이터와 기존 cache는 유지하며 무조건 unregister하지 않는다.
-- 실제모바일설치앱에서현재버전·업데이트확인·저장후적용과메인메뉴비율을확인할수있다. 코드수리/브라우저검증과실기기판정을구분하며INBOX원문을보존한다.
-- 자동루프는명시적재개전까지중지한다. 기존모션스타일·원본첨부·이전KO수리·OpenCode미통합candidate는유지한다.
+자동 루프는 명시적 재개 전까지 중지한다. 유형 견본은 검토실 전용이며 전투 몹 교체 완료가 아니다. 실제 모바일 설치 앱의 업데이트 동작과 최종 시각 만족은 Human 확인이 남아 있다.
 
 ## Preserved Work Reference
 

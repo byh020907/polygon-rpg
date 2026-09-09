@@ -1,4 +1,14 @@
+export const TEST_PLAY_QUERY_KEYS = Object.freeze([
+  'testPlay',
+  'testResource',
+  'testLabel',
+  'testLocation',
+  'testEquipment',
+  'testEntity',
+  'testReturn',
+]);
 export const GRAPHICS_REVIEW_QUERY_KEYS = Object.freeze([
+  ...TEST_PLAY_QUERY_KEYS,
   'graphicsReview',
   'resource',
   'action',
@@ -11,6 +21,9 @@ export const GRAPHICS_REVIEW_QUERY_KEYS = Object.freeze([
   'reviewCategory',
   'reviewSearch',
   'reviewViewport',
+  'reviewSpeed',
+  'reviewMesh',
+  'reviewBones',
   'uiReview',
 ]);
 
@@ -26,6 +39,9 @@ export const DEFAULT_GRAPHICS_REVIEW = Object.freeze({
   category: 'all',
   search: '',
   viewport: 'desktop',
+  speed: 1,
+  mesh: false,
+  bones: false,
 });
 
 const enumValue = (value, values, label) => {
@@ -42,6 +58,8 @@ export function normalizeGraphicsReview(input = {}) {
     if (typeof value[field] !== 'string' || value[field].length > 300)
       throw new RangeError(`잘못된 검토 조건: ${field}`);
   }
+  if (typeof value.mesh !== 'boolean' || typeof value.bones !== 'boolean')
+    throw new RangeError('진단 설정은 boolean이어야 합니다.');
   return Object.freeze({
     resourceId: value.resourceId,
     actionId: value.actionId,
@@ -50,7 +68,10 @@ export function normalizeGraphicsReview(input = {}) {
     renderer: enumValue(value.renderer, ['polygon'], '렌더러'),
     scale: enumValue(String(value.scale), ['fit', '1', '2', '4'], '배율'),
     facing: enumValue(Number(value.facing), [-1, 1], '방향'),
-    lighting: enumValue(value.lighting, ['scene', 'unlit'], '조명'),
+    lighting: enumValue(value.lighting, ['scene', 'unlit', 'day', 'night'], '조명'),
+    speed: enumValue(Number(value.speed), [0.25, 0.5, 1, 2], '재생 속도'),
+    mesh: Boolean(value.mesh),
+    bones: Boolean(value.bones),
     category: value.category,
     search: value.search,
     viewport: enumValue(value.viewport, ['desktop', 'mobile'], 'UI viewport'),
@@ -75,6 +96,9 @@ export function readGraphicsReviewRequest(search = globalThis.location?.search ?
     category: query.get('reviewCategory') ?? 'all',
     search: query.get('reviewSearch') ?? '',
     viewport: query.get('reviewViewport') ?? 'desktop',
+    speed: query.get('reviewSpeed') ?? 1,
+    mesh: query.get('reviewMesh') === '1',
+    bones: query.get('reviewBones') === '1',
   });
 }
 
@@ -111,6 +135,9 @@ export function buildGraphicsReviewUrl(href, input) {
     reviewScale: selection.scale,
     reviewFacing: selection.facing,
     reviewLighting: selection.lighting,
+    reviewSpeed: selection.speed,
+    reviewMesh: selection.mesh ? '1' : '0',
+    reviewBones: selection.bones ? '1' : '0',
     reviewCategory: selection.category,
     reviewSearch: selection.search,
     reviewViewport: selection.viewport,
@@ -129,6 +156,7 @@ export function graphicsReviewFeedback(resource, selection, sample, href) {
     `종류: ${resource.category} · 출처: ${resource.source ?? ''}`,
     `보기: ${selection.view} · renderer: ${selection.renderer} · 확대: ${selection.scale}`,
     `방향: ${selection.facing === 1 ? '오른쪽' : '왼쪽'} · 조명: ${selection.lighting}`,
+    `진단: 속도 ${selection.speed}× · 본 ${selection.bones ? '표시' : '숨김'} · 메시 ${selection.mesh ? '표시' : '숨김'}`,
     `UI viewport: ${selection.viewport === 'mobile' ? '844×390' : '1280×720'}`,
     `재현: ${buildGraphicsReviewUrl(href, selection)}`,
     '피드백: ',

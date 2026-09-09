@@ -1,3 +1,4 @@
+import { readTestPlayRequest } from './ui/TestPlayConfig.js';
 import Alpine from './vendor/alpine.esm.js';
 import { GameApplication } from './app/GameApplication.js';
 import { readDebugQaRequest } from './ui/DebugConfigurationAdapter.js';
@@ -21,19 +22,30 @@ try {
   graphicsReviewRequest = DEFAULT_GRAPHICS_REVIEW;
   graphicsReviewError = error.message;
 }
+let testPlayRequest = null;
+try {
+  testPlayRequest = readTestPlayRequest();
+} catch (error) {
+  graphicsReviewRequest = DEFAULT_GRAPHICS_REVIEW;
+  graphicsReviewError = error.message;
+}
 const visualQaRequest =
-  readDebugQaRequest() ??
+  (graphicsReviewError ? null : readDebugQaRequest()) ??
   (graphicsReviewRequest ? readDebugQaRequest('?visualQa=1&gameStart=scrap-intro-walk') : null);
 const qaInputEnabled = new URLSearchParams(globalThis.location.search).get('inputQa') === '1';
 const gameApplication = new GameApplication({
   gameCanvas: requireCanvas('game-canvas'),
-  polygonCanvas: requireCanvas('polygon-canvas'),
   visualQaRequest,
   qaInputEnabled,
 });
 
 let graphicsReviewController = null;
-async function openGraphicsReview({ onClose, request = DEFAULT_GRAPHICS_REVIEW } = {}) {
+async function openGraphicsReview({
+  onClose,
+  onTestPlay,
+  error: requestError = '',
+  request = DEFAULT_GRAPHICS_REVIEW,
+} = {}) {
   const [
     { GraphicsReviewController },
     { createGraphicsResourceCatalog, GRAPHICS_CATEGORIES },
@@ -53,15 +65,17 @@ async function openGraphicsReview({ onClose, request = DEFAULT_GRAPHICS_REVIEW }
     categories: GRAPHICS_CATEGORIES,
     sampler: createGraphicsResourceSampler(catalog),
     onClose,
+    onTestPlay,
   });
   graphicsReviewController.open(request);
-  if (graphicsReviewError)
-    graphicsReviewController.nodes.status.textContent = `재현 조건 오류 · ${graphicsReviewError}`;
+  if (graphicsReviewError || requestError)
+    graphicsReviewController.nodes.status.textContent = `재현 조건 오류 · ${requestError || graphicsReviewError}`;
 }
 
 registerGameShell(Alpine, gameApplication, {
   visualQaRequest,
   qaInputEnabled,
+  testPlayRequest,
   graphicsReviewRequest,
   graphicsReviewFactory: openGraphicsReview,
 });

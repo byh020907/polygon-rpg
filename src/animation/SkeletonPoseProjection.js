@@ -29,6 +29,7 @@ const JOINT_PARENT = Object.freeze({
   farFoot: 'farKnee',
 });
 export const SIDE_VIEW_SKELETON_JOINTS = Object.freeze(Object.keys(JOINT_PARENT));
+export const SIDE_VIEW_SKELETON_PARENTS = JOINT_PARENT;
 
 function canonicalJoint(point) {
   if (!point || !['x', 'y', 'z'].every((key) => Number.isFinite(point[key])))

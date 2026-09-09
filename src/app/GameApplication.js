@@ -3,7 +3,6 @@ import { GameApp } from './GameApp.js';
 function createBufferedUiBridge(uiBridge) {
   const pendingWrites = new Map();
   const writerNames = Object.freeze([
-    'setRenderStats',
     'setGameStats',
     'setQaInputStatus',
     'setPlayerStatus',
@@ -68,7 +67,6 @@ function captureCanvasSurfaces(canvases) {
 export class GameApplication {
   constructor({
     gameCanvas,
-    polygonCanvas,
     visualQaRequest = null,
     qaInputEnabled = false,
     createGameApp = (options) => new GameApp(options),
@@ -76,7 +74,7 @@ export class GameApplication {
     if (typeof createGameApp !== 'function') {
       throw new TypeError('GameApplication에는 GameApp factory가 필요합니다.');
     }
-    this.canvases = Object.freeze({ gameCanvas, polygonCanvas, qaInputEnabled });
+    this.canvases = Object.freeze({ gameCanvas, qaInputEnabled });
     this.createGameApp = createGameApp;
     this.uiBridge = null;
     this.currentApp = this.create(visualQaRequest);
@@ -133,6 +131,29 @@ export class GameApplication {
     return result;
   }
 
+  get testPlayActive() {
+    return this.currentApp.isTestPlay === true;
+  }
+
+  startTestPlay(visualQaRequest, options = {}) {
+    if (!visualQaRequest?.scenario) {
+      throw new TypeError('테스트 플레이에는 QA 시나리오가 필요합니다.');
+    }
+    let result;
+    this.replace((bufferedUiBridge) => {
+      const candidateApp = this.create(visualQaRequest);
+      candidateApp.connectUi(bufferedUiBridge);
+      try {
+        result = candidateApp.startTestPlay(visualQaRequest, options);
+        return candidateApp;
+      } catch (error) {
+        candidateApp.destroy();
+        throw error;
+      }
+    });
+    return result;
+  }
+
   returnToPlayerGame() {
     this.replace((bufferedUiBridge) => {
       const candidateApp = this.create(null);
@@ -177,10 +198,6 @@ export class GameApplication {
 
   resetScene() {
     return this.currentApp.resetScene();
-  }
-
-  toggleWorldTime() {
-    return this.currentApp.toggleWorldTime();
   }
 
   prepareUiReview(presentation) {

@@ -90,6 +90,17 @@ function posePlayerPoints(points, { position, facing, geometryScale }) {
   });
 }
 
+export function projectPlayerSkeleton({ position, facing, geometryScale, bonePose }) {
+  return Object.freeze(
+    Object.fromEntries(
+      Object.entries(bonePose.projectedJoints).map(([id, joint]) => [
+        id,
+        Object.freeze(posePlayerPoints([joint], { position, facing, geometryScale })[0]),
+      ]),
+    ),
+  );
+}
+
 export function samplePlayerCombatGeometry({
   position,
   facing,

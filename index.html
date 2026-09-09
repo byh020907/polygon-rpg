@@ -190,11 +190,29 @@
       <section
         class="game-screen"
         x-show="screen === 'game'"
-        x-bind:class="{ 'game-screen--mobile-controls': forceMobileControls }"
+        x-bind:class="{ 'game-screen--mobile-controls': forceMobileControls, 'game-screen--test-play': testPlayActive }"
         x-bind:data-reduced-motion="reducedMotion"
         x-bind:data-camera-feedback-enabled="String(!reducedMotion)"
         aria-labelledby="game-status-title"
       >
+        <aside
+          class="test-play-bar"
+          x-show="testPlayActive && !graphicsReviewOpen"
+          aria-label="테스트 플레이 제어"
+        >
+          <strong x-text="'저장 없는 테스트 · '+testPlayLabel"></strong
+          ><button id="test-review-return" type="button" @click="returnToReview">검토실로</button
+          ><button id="test-restart-control" type="button" @click="restartTestPlay">
+            다시 시작</button
+          ><select aria-label="테스트 속도" x-model.number="testPlaySpeed">
+            <option value="0.25">0.25×</option>
+            <option value="0.5">0.5×</option>
+            <option value="1">1×</option>
+            <option value="2">2×</option></select
+          ><button id="test-exit-control" type="button" @click="returnToPlayerGame">
+            테스트 종료
+          </button>
+        </aside>
         <div class="game-viewport">
           <canvas
             id="game-canvas"
@@ -870,73 +888,6 @@
         </footer>
       </section>
 
-      <section
-        class="lab-screen"
-        x-show="screen === 'render-lab'"
-        aria-labelledby="render-lab-title"
-      >
-        <header class="lab-hero">
-          <div>
-            <p class="eyebrow">CANVAS 2D RENDER LAB</p>
-            <h1 id="render-lab-title" tabindex="-1">Polygon Render Lab</h1>
-            <p class="hero-copy">게임과 같은 폴리곤 geometry·조명·가림을 확인합니다.</p>
-          </div>
-          <div class="hero-actions">
-            <button
-              id="render-lab-playback-control"
-              class="primary-button"
-              type="button"
-              @click="togglePlayback"
-              x-text="playButtonLabel"
-            ></button>
-            <button class="secondary-button" type="button" @click="resetScene">위치 초기화</button>
-            <button class="secondary-button" type="button" @click="toggleWorldTime">
-              낮/밤 전환
-            </button>
-            <button class="secondary-button" type="button" @click="showMenu">메인 메뉴</button>
-          </div>
-        </header>
-
-        <section class="control-panel" aria-label="폴리곤 표현 설정">
-          <label class="range-control" for="animation-speed">
-            <span>Animation Speed</span>
-            <input
-              id="animation-speed"
-              type="range"
-              min="0.25"
-              max="2"
-              step="0.05"
-              x-model.number="animationSpeed"
-            />
-            <output for="animation-speed" x-text="`${Number(animationSpeed).toFixed(2)}×`"></output>
-          </label>
-
-          <div class="toggle-group">
-            <label class="toggle"><input type="checkbox" x-model="showMesh" /> Show Mesh</label>
-          </div>
-        </section>
-
-        <section class="renderer-grid" aria-label="폴리곤 출력">
-          <article class="render-panel">
-            <header class="panel-heading">
-              <div>
-                <p>REFERENCE</p>
-                <h2>POLYGON</h2>
-              </div>
-              <span>FLOAT SCREEN SPACE</span>
-            </header>
-            <canvas id="polygon-canvas" aria-label="Float 좌표 Polygon Renderer 출력"></canvas>
-          </article>
-        </section>
-
-        <footer class="status-bar">
-          <p>
-            이동 <kbd>←</kbd><kbd>→</kbd> · 점프/방어 <kbd>↑</kbd><kbd>↓</kbd> · 기본/강한
-            <kbd>A</kbd><kbd>S</kbd>
-          </p>
-          <p x-text="renderStats" aria-live="polite"></p>
-        </footer>
-      </section>
       <div
         class="debug-panel-backdrop"
         x-show="debugPanelOpen"
@@ -1015,13 +966,8 @@
               </button>
               <button class="debug-primary-action" type="submit">현재 화면에 적용</button>
               <button type="button" @click="returnToPlayerGame">일반 게임으로 돌아가기</button>
-              <button
-                id="menu-render-lab-control"
-                type="button"
-                x-show="!visualQa"
-                @click="openRenderLab"
-              >
-                렌더 연구실
+              <button id="debug-test-play-control" type="button" @click="startDebugTestPlay">
+                테스트 플레이
               </button>
             </div>
           </form>
