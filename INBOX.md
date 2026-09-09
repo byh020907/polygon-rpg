@@ -4,6 +4,1339 @@
 
 ## Pending
 
+- 현재 시스템 구현 완료 후 장비 Family 명세·runtime·저장 migration 구현
+
+  사용자 원문 (이번 시스템 작업 마무리 후 순차 수행):
+
+```text
+다음 개발항목이야 이번건 마무리후 진행해
+
+Polygon RPG의 장비 시스템을 아래 확정 기획에 맞춰 정립하고 실제 구현까지 완료해줘.
+
+이번 작업은 두 단계다.
+
+1. 장기적으로 repository에 남아 이후 AI/개발자가 읽을 "장비 시스템 명세"를 먼저 작성한다.
+2. 그 문서를 authority로 삼아 현재 검+방패 전용 구조를 실제 Equipment Family 기반 시스템으로 리팩터링한다.
+
+문서만 작성하거나 구조만 만들어 놓고 완료하지 않는다.
+반대로 문서 없이 코드부터 수정하지 않는다.
+
+먼저 반드시 읽는다.
+
+- AGENTS.md
+- PRODUCT_GOAL.html
+- ARCHITECTURE.md
+- docs/art-handoff/**
+- src/game/equipment/**
+- src/game/progression/**
+- src/game/enchantment/**
+- src/combat/**
+- src/animation/**
+- src/graphics/**
+- src/game/GameScene.js
+- 장비/상점/성장 관련 UI
+- save/load 및 migration 코드
+- 관련 scripts/tests
+- 현재 Git 상태
+
+
+======================================================================
+1. 남길 문서
+======================================================================
+
+## 1-1. 새 장비 시스템 명세 문서
+
+repository에 장기적으로 남는 시스템 명세를 만든다.
+
+권장 경로:
+
+docs/game-systems/equipment.md
+
+`docs/game-systems/`가 없다면 생성한다.
+
+이 문서는 특정 구현 파일 설명서가 아니라,
+"Polygon RPG의 장비 시스템이 어떤 시스템인가"를 처음 보는 개발자/AI도
+한눈에 이해하고 구현 판단에 사용할 수 있는 명세여야 한다.
+
+나무위키식으로 훑어 읽을 수 있으면서도 실제 구현 계약까지 포함한다.
+
+문서 구조는 최소 다음 순서를 따른다.
+
+
+# 장비 시스템
+
+## 개요
+
+장비는 위험 지역 수거·복구 작업에 사용하는
+"전투 + 현장 작업" 통합 장비다.
+
+주인공의 대표 장비는 현장검 + 방패지만
+게임 시스템 자체는 검 전용이 아니다.
+
+핵심 문장:
+
+> 검은 시스템이 아니다.
+> 검은 장비 시스템의 첫 번째 구현이다.
+
+
+## 세계관상의 위치
+
+고물상인은 과거 현장 수거·복구반 출신이다.
+
+현재 두 견습생은 같은 기본 현장 교육을 받았지만 역할이 다르다.
+
+주인공:
+- 현장 안전 확보
+- 위험 기계 제압
+- 현장검 + 방패
+
+라이벌:
+- 탐색
+- 측량
+- 선점
+- 회수
+- 갈고리 + 측량 장비
+
+검과 방패는 판타지 기사 장비가 아니라
+위험 현장 수거·복구반의 정식 제압/방호 장비다.
+
+이 설정을 장문의 설명 대사로 전달하지 않는다.
+
+고물상의 장비걸이,
+현장 작업 장비,
+첫 의뢰에서 실제로 검/방패를 사용하는 장면,
+라이벌의 갈고리 사용,
+고물상인의 장비 취급 방식 등을 통해 자연스럽게 보여준다.
+
+
+## 기본 Command Grammar
+
+장비가 바뀌어도 다음 기본 입력은 유지한다.
+
+- Move
+- Jump
+- Roll
+- Basic
+- Strong
+- Guard
+
+기존 전투 문법도 유지한다.
+
+- Stamina
+- Startup / Active / Recovery
+- Just Guard
+- Basic 전용 Guard Counter
+- Hit-confirm Cancel
+- Strong Guard Break
+- Startup Interrupt
+- Posture
+- Invulnerability
+
+장비 변경은 새로운 조작 게임을 배우는 것이 아니라
+같은 Command Grammar를 다른 현장 장비로 사용하는 것이다.
+
+
+## 장비 시스템 계층
+
+다음 구조를 authority로 한다.
+
+Equipment Family
+    ↓
+Moveset
+    ↓
+Equipment Item
+    ↓
+Loadout
+    ↓
+Modification / Enchantment
+
+
+### Equipment Family
+
+"어떤 종류의 장비인가"
+
+예:
+
+- Field Cutter
+- Field Shield
+
+향후 확장 가능:
+
+- Breaker
+- Pole
+- Two-Hand Heavy
+- Utility
+
+Family가 정의하는 항목:
+
+- slot
+- handUsage
+- combatRole
+- compatible equipment
+- fieldCapabilities
+- 사용할 수 있는 Moveset 범주
+
+
+### Moveset
+
+"이 장비 조합으로 어떻게 싸우는가"
+
+초기:
+
+Cutter + Shield
+→ cutter-shield-standard
+
+정의:
+
+- Basic
+- Strong
+- Air Attack
+- Guard
+- Just Guard
+- Counter
+- Stamina
+- Timing
+- Cancel
+- Attack Envelope
+- Animation Profile
+
+
+### Equipment Item
+
+플레이어가 실제로 획득/구매/제작/장착하는 구체 장비.
+
+Item은 다음을 가진다.
+
+- familyId
+- visualProfile
+- material
+- stat modifiers
+- origin
+- modification
+- progression data
+
+Item 자체가 Basic/Strong 동작 코드를 소유하지 않는다.
+
+
+### Loadout
+
+기본 슬롯:
+
+- Main Hand
+- Off Hand
+- Utility
+
+예:
+
+Main Hand
+= Field Cutter
+
+Off Hand
+= Field Shield
+
+Utility
+= null
+
+
+### Hand Usage
+
+- oneHand
+- twoHand
+
+twoHand 장비는 기본적으로 Off Hand와 동시에 사용할 수 없다.
+예외 조합이 생긴다면 Family 계약으로 명시한다.
+
+
+## 초기 장비
+
+현재 기본 Loadout:
+
+Main Hand:
+Field Cutter
+
+Off Hand:
+Field Shield
+
+주인공의 대표 스타일은 계속 검+방패다.
+
+그러나 시스템상 이는 첫 번째 장비 조합일 뿐이다.
+
+
+## 미래 장비군
+
+현재 플레이 가능 콘텐츠로 만들지는 않지만
+시스템 구조는 다음을 받을 수 있어야 한다.
+
+Breaker:
+- 충격
+- 파쇄
+- 높은 Posture
+
+Pole:
+- 긴 Reach
+- 견제
+- 밀기/당기기
+
+Two-Hand:
+- 큰 공격
+- Off Hand 제한
+
+Utility:
+- 갈고리
+- 측량
+- 기타 현장 작업 장비
+
+
+## 전투 연결
+
+장비는 다음과 연결된다.
+
+- Basic / Strong Moveset
+- Startup / Active / Recovery
+- Damage
+- Reach
+- Hitstun
+- Launch
+- Posture
+- Guard
+- Stamina
+- Cancel Rule
+- Animation
+- Weapon Geometry
+
+
+## 공격 판정
+
+Gameplay가 최대 공격 범위를 먼저 결정한다.
+
+실제 Hit 조건:
+
+1. Visible Weapon Sweep이 실제 적 Hurt Region에 닿는다.
+2. Gameplay Attack Envelope 안이다.
+
+둘 다 만족해야 Hit.
+
+따라서:
+
+범위 안이지만 보이는 무기가 안 닿음
+→ Miss
+
+보이는 무기가 닿았지만 Gameplay 최대 범위 밖
+→ Miss
+
+
+## Field Capability
+
+장비는 전투뿐 아니라 실제 현장 작업에도 의미가 있다.
+
+Field Cutter 예:
+
+- cable-cut
+- light-plate-cut
+- light-machine-disable
+
+Field Shield 예:
+
+- debris-guard
+- pressure-block
+- brace
+
+향후:
+
+Breaker:
+- heavy-joint-break
+- cracked-structure-break
+
+Pole / Hook:
+- pull
+- retrieve
+- distant-operate
+
+필드 오브젝트는 특정 Item ID를 요구하지 않는다.
+
+나쁜 예:
+
+requiredItemId = "field-cutter-balanced"
+
+좋은 예:
+
+requiredCapability = "cable-cut"
+
+
+## Field Capability와 진행
+
+현재 단계에서는 장비를 단순한 열쇠로 사용하지 않는다.
+
+즉:
+
+"망치 없으면 지역 진행 불가"
+
+같은 Metroidvania식 강제 gating을 임의로 추가하지 않는다.
+
+기본 목적은:
+
+> 이 장비가 실제 현장에서 쓰이는 장비라는 사실을
+> 게임 시스템으로 보여주는 것.
+
+향후 필요하면:
+
+- 우회
+- 작업 속도
+- 보너스
+- 안전한 해결법
+- 선택 경로
+
+등으로 확장한다.
+
+
+## Animation 연결
+
+일반 동작:
+
+- Rig 기반 재사용
+
+중요 동작:
+
+- Authored Key Pose
+
+Moveset이 Animation Profile을 참조한다.
+
+개별 Item마다 전체 애니메이션을 복제하지 않는다.
+
+
+## Graphics 연결
+
+기본 그래픽 원본은 구조화 SVG.
+
+Weapon SVG:
+
+- grip anchor
+- pivot
+- blade visual
+- contact geometry
+- material
+- local depth
+
+Shield SVG:
+
+- grip anchor
+- guard surface
+- visual surface
+- material
+
+PNG embed SVG나 자동 tracing 수천 path 파일을 authority로 사용하지 않는다.
+
+
+## 성장
+
+장비 성장:
+
+Equipment Family
+→ Item 획득
+→ 지역 소재 / Modification
+→ 특성 변화
+
+지역 산업 소재가 장비에도 반영될 수 있다.
+
+장비가 무관한 판타지 마법검/갑옷으로 변하지 않는다.
+
+
+## UI
+
+장비 화면은 숫자만 보여주지 않는다.
+
+최소:
+
+- 이름
+- Family
+- Slot
+- Hand Usage
+- Basic
+- Strong
+- Guard 방식
+- Reach
+- Stamina 특성
+- Posture 특성
+- Field Capability
+
+를 읽을 수 있어야 한다.
+
+
+## 스토리 연결
+
+게임 안에서:
+
+- 고물상에 여러 현장 장비가 보임
+- 주인공은 검/방패를 사용
+- 라이벌은 갈고리/측량 장비 사용
+- 고물상인은 장비를 능숙하게 다룸
+
+으로 보여준다.
+
+"수거반에서는 검과 방패를 씁니다" 같은 설명 대사를 추가하지 않는다.
+
+
+## 확정
+
+- 고물상인 = 전직 현장 수거·복구반
+- 주인공 = 안전 확보 / 위험 기계 제압
+- 라이벌 = 탐색 / 측량 / 회수
+- 검/방패 = 현장 수거반의 제압/방호 장비
+- 기본 장비 = Field Cutter + Field Shield
+- Equipment Family 기반
+- Command Grammar는 장비가 바뀌어도 유지
+- 전투와 Field Capability를 같은 장비 정의에 연결
+- 장비 그래픽/애니메이션/성장/UI까지 같은 시스템에서 연결
+
+
+## 아직 미정
+
+다음은 이번 작업에서 기획 확정하지 않는다.
+
+- 최종 출시 장비군 개수
+- Breaker 실제 구현
+- Pole 실제 구현
+- 실시간 전투 중 무기 교체
+- 장비별 스킬트리
+- 강제 Field Gating
+- Shield Enchantment
+- Moveset별 별도 Combat Skill Tree
+
+
+----------------------------------------------------------------------
+## 1-2. PRODUCT_GOAL 반영
+----------------------------------------------------------------------
+
+PRODUCT_GOAL에는 구현 구조를 넣지 않는다.
+
+사용자 경험 수준만 반영한다.
+
+반영할 핵심:
+
+- 주인공은 위험 현장의 안전 확보와 기계 제압 역할
+- 라이벌은 탐색/회수 역할
+- 검/방패는 현장 수거·복구 장비
+- 장비는 전투뿐 아니라 현장 작업에도 연결
+- 장비가 바뀌어도 기본 Command Grammar가 유지될 수 있음
+
+EquipmentFamily 클래스 구조 같은 내용은 넣지 않는다.
+
+
+----------------------------------------------------------------------
+## 1-3. ARCHITECTURE 반영
+----------------------------------------------------------------------
+
+ARCHITECTURE에는 실제 기술 계약을 남긴다.
+
+최소:
+
+Equipment Family
+Moveset
+Equipment Item
+Loadout
+Resolved Loadout
+Field Capability
+Animation Profile
+Graphics Geometry
+Save Schema
+Progression / Enchantment 연결
+
+의 authority와 dependency 방향을 명시한다.
+
+중요:
+
+Combat Core는 Sword라는 concrete weapon을 authority로 알지 않는다.
+
+Combat Core가 아는 것:
+
+- Command
+- Moveset
+- Timing
+- Attack Profile
+- Guard Profile
+- Geometry
+- Contact
+
+Equipment System이 concrete Item을 위 구조에 resolve한다.
+
+
+----------------------------------------------------------------------
+## 1-4. Graphics Art Handoff 반영
+----------------------------------------------------------------------
+
+docs/art-handoff의 생성 authority를 찾아 수정한다.
+
+직접 생성 결과 HTML만 고치지 않는다.
+
+그래픽 담당자가 읽어야 하는 내용:
+
+Field Cutter:
+- 현장 작업용 넓은 절단 장비
+- 판타지 기사검처럼 만들지 않음
+- 작업강/수리 흔적
+- grip/contact geometry 필요
+
+Field Shield:
+- 현장 방호판 계열
+- 낙하 잔해/기계 충격/전투 Guard
+- 기사 방패 장식 지양
+
+고물상 장비 환경:
+- Cutter
+- Shield
+- Hook
+- Heavy Tool
+- 기타 현장 장비가 같은 작업장 안에 자연스럽게 존재
+
+
+======================================================================
+2. 구현 지시
+======================================================================
+
+문서 1을 먼저 작성한 뒤,
+그 문서를 구현 authority로 사용하여 아래를 실제 코드에 반영한다.
+
+
+----------------------------------------------------------------------
+2-1. 현재 상태
+----------------------------------------------------------------------
+
+현재 `src/game/equipment/EquipmentProfiles.js`는
+사실상 검+방패 variant 5개다.
+
+현재 profile 예:
+
+- balanced-sword
+- heavy-sword
+- swift-chain-sword
+- posture-breaker-sword
+- rear-punish-sword
+
+현재 한 EquipmentProfile 안에:
+
+- combatTiming
+- attack
+- defense
+- guard
+- geometry
+
+가 섞여 있다.
+
+이 구조를 새 Equipment System으로 이전한다.
+
+
+----------------------------------------------------------------------
+2-2. 목표 모듈
+----------------------------------------------------------------------
+
+현재 repository naming/style을 따르되 책임은 최소 다음으로 나눈다.
+
+src/game/equipment/
+
+EquipmentFamilyProfiles.js
+EquipmentMovesetProfiles.js
+EquipmentItemProfiles.js
+EquipmentLoadout.js
+EquipmentFieldCapabilities.js
+
+과도한 framework나 필요 없는 class hierarchy는 만들지 않는다.
+
+
+----------------------------------------------------------------------
+2-3. Family
+----------------------------------------------------------------------
+
+초기 실제 Family:
+
+field-cutter
+field-shield
+
+최소 schema:
+
+{
+  id,
+  label,
+  slot,
+  handUsage,
+  combatRole,
+  compatibleOffhandFamilies,
+  fieldCapabilities,
+  enchantable
+}
+
+
+----------------------------------------------------------------------
+2-4. Moveset
+----------------------------------------------------------------------
+
+초기:
+
+cutter-shield-standard
+
+최소:
+
+{
+  id,
+
+  requirements: {
+    mainFamilyId,
+    offHandFamilyId
+  },
+
+  commands: {
+    basic,
+    strong,
+    airBasic,
+    guard,
+    guardCounter
+  },
+
+  combatTiming,
+  staminaProfile,
+  attackProfileIds,
+  guardProfileId,
+  animationProfileId
+}
+
+
+----------------------------------------------------------------------
+2-5. Item
+----------------------------------------------------------------------
+
+기존 5개 EquipmentProfile을 Cutter Item으로 이동한다.
+
+권장 새 ID:
+
+balanced-sword
+→ field-cutter-balanced
+
+heavy-sword
+→ field-cutter-heavy
+
+swift-chain-sword
+→ field-cutter-swift
+
+posture-breaker-sword
+→ field-cutter-breaker
+
+rear-punish-sword
+→ field-cutter-reach
+
+기본 Off Hand:
+
+field-shield-standard
+
+
+Item은:
+
+{
+  id,
+  label,
+  familyId,
+  visualProfileId,
+  materialProfileId,
+  modifiers,
+  origin
+}
+
+형태.
+
+
+----------------------------------------------------------------------
+2-6. Legacy ID Migration
+----------------------------------------------------------------------
+
+명시적 alias를 둔다.
+
+LEGACY_EQUIPMENT_ID_ALIASES
+
+기존 ID를 runtime core authority로 계속 유지하지 않는다.
+
+기존 세이브 migration에서만 stable mapping으로 사용한다.
+
+
+----------------------------------------------------------------------
+2-7. Loadout
+----------------------------------------------------------------------
+
+새 장착 구조:
+
+loadout: {
+  mainHandItemId,
+  offHandItemId,
+  utilityItemId
+}
+
+기본:
+
+mainHandItemId:
+field-cutter-balanced
+
+offHandItemId:
+field-shield-standard
+
+utilityItemId:
+null
+
+
+규칙:
+
+- mainHand 필수
+- offHand null 가능
+- utility null 가능
+- twoHand main이면 일반 offHand 사용 불가
+- Family compatibility 검증
+
+
+----------------------------------------------------------------------
+2-8. Resolved Loadout
+----------------------------------------------------------------------
+
+모든 combat/presentation 코드가 catalog를 제각각 조합하지 않도록
+하나의 resolver를 둔다.
+
+예:
+
+resolveEquipmentLoadout(...)
+
+결과:
+
+{
+  mainItem,
+  offHandItem,
+  utilityItem,
+
+  mainFamily,
+  offHandFamily,
+
+  moveset,
+
+  combatTiming,
+  attackModifiers,
+  defenseModifiers,
+  guardModifiers,
+
+  geometryProfile,
+  animationProfile,
+
+  fieldCapabilities
+}
+
+immutable 결과를 권장한다.
+
+
+----------------------------------------------------------------------
+2-9. Combat 연결
+----------------------------------------------------------------------
+
+현재 GameScene 등에서:
+
+equipmentProfile.attack.*
+equipmentProfile.guard.*
+equipmentProfile.geometry.*
+
+를 직접 읽는 부분을 찾는다.
+
+resolvedLoadout / resolvedCombatProfile을 사용하도록 변경한다.
+
+기본 Loadout의 전투 결과는 기존과 동일해야 한다.
+
+리팩터링하면서 밸런스를 바꾸지 않는다.
+
+
+----------------------------------------------------------------------
+2-10. Command Controller
+----------------------------------------------------------------------
+
+CombatCommandController가 다음을 알면 안 된다.
+
+- balanced-sword
+- heavy-sword
+- field-cutter-balanced
+- sword
+
+CommandController는:
+
+- Moveset
+- Timing
+- Command Rule
+
+만 사용한다.
+
+
+----------------------------------------------------------------------
+2-11. Visible Weapon Contact
+----------------------------------------------------------------------
+
+기존 Product Goal 계약 유지.
+
+Hit:
+
+visible weapon sweep hit
+AND
+gameplay attack envelope hit
+
+둘 다 만족.
+
+Item geometry와 visual geometry가
+서로 독립적으로 엇나가지 않도록
+같은 authored 장비 기준에서 파생한다.
+
+
+----------------------------------------------------------------------
+2-12. Field Capability
+----------------------------------------------------------------------
+
+API를 만든다.
+
+예:
+
+hasFieldCapability(resolvedLoadout, capabilityId)
+
+초기 capability:
+
+field-cutter:
+- cable-cut
+- light-plate-cut
+- light-machine-disable
+
+field-shield:
+- debris-guard
+- pressure-block
+- brace
+
+
+필드 interaction이 concrete Item ID를 요구하지 않는다.
+
+좋은 예:
+
+{
+  capabilityId: "cable-cut",
+  mode: "assist"
+}
+
+
+지원 mode:
+
+assist
+require
+
+현재 콘텐츠에 새로운 mandatory require gate를 임의로 추가하지 않는다.
+
+
+----------------------------------------------------------------------
+2-13. 실제 Field Integration
+----------------------------------------------------------------------
+
+API만 만들어 놓고 완료하지 않는다.
+
+현재 새 게임부터 가장 먼저 만나는 기존 gameplay flow를 조사하고,
+새 story를 발명하지 않는 범위에서
+최소 한 곳을 실제 capability evaluator와 연결한다.
+
+우선 후보:
+
+- 기존 shield 기반 안전 행동
+- 현장 지지
+- 낙하/압력 방호
+- 기존 기계 정지 interaction
+
+적합한 실제 production interaction이 없다면:
+
+- production evaluator
+- scene fixture integration test
+- review 표시
+
+까지 구현하고
+새 mandatory 사건은 추가하지 않는다.
+
+
+----------------------------------------------------------------------
+2-14. Progression Schema
+----------------------------------------------------------------------
+
+현재 progression schema v10을 v11로 올린다.
+
+목표:
+
+{
+  version: 11,
+
+  gold,
+  trainingMarks,
+
+  ownedEquipmentItemIds,
+
+  loadout: {
+    mainHandItemId,
+    offHandItemId,
+    utilityItemId
+  },
+
+  combatSkillLevel,
+  viewedConversationIds,
+
+  equipmentForge,
+
+  scrapCampaign,
+
+  enchantment
+}
+
+
+----------------------------------------------------------------------
+2-15. v10 -> v11 Migration
+----------------------------------------------------------------------
+
+기존 save를 reset하지 않는다.
+
+ownedEquipmentIds
+→ ownedEquipmentItemIds
+
+legacy equipment ID
+→ 새 Item ID
+
+equippedEquipmentId
+→ loadout.mainHandItemId
+
+loadout.offHandItemId
+→ field-shield-standard
+
+utility
+→ null
+
+weaponForge
+→ equipmentForge
+
+selectedProfileIdsByGroup
+→ selectedItemIdsByGroup
+
+swordEnchantments
+→ equipmentEnchantments
+
+기존:
+
+- Gold
+- Training Marks
+- Combat Skill
+- Campaign
+- Forge choice
+- Element
+- Enchantment level
+
+을 보존한다.
+
+migration은 idempotent해야 한다.
+
+
+----------------------------------------------------------------------
+2-16. Enchantment
+----------------------------------------------------------------------
+
+검 전용 naming을 generic하게 변경한다.
+
+upgradeSwordEnchantment
+→ upgradeEquipmentEnchantment
+
+swordEnchantments
+→ equipmentEnchantments
+
+단:
+
+모든 Family가 enchantable이라고 가정하지 않는다.
+
+초기 Cutter는 기존 enchant 기능 유지.
+
+Shield enchant 신규 기능은 추가하지 않는다.
+
+
+----------------------------------------------------------------------
+2-17. Forge / Merchant
+----------------------------------------------------------------------
+
+기존:
+
+SCRAP_WEAPON_FORGE_PROFILE
+
+을 generic equipment item choice 구조로 이동한다.
+
+가능하면:
+
+SCRAP_EQUIPMENT_FORGE_PROFILE
+
+optionProfileIds
+→ optionItemIds
+
+merchantProfileIds
+→ merchantItemIds
+
+기존 획득 비용/진행/선택 결과는 유지한다.
+
+
+----------------------------------------------------------------------
+2-18. Combat Skill
+----------------------------------------------------------------------
+
+현재 Combat Skill Level은 장비 시스템과 분리 유지한다.
+
+Combat Skill:
+= 플레이어의 공통 전투 숙련
+
+Equipment:
+= 현재 어떻게 싸우는가
+
+기존:
+
+- ground combos
+- air combos
+- air actions
+- loop cancel
+- damage progression
+
+을 유지한다.
+
+
+----------------------------------------------------------------------
+2-19. Graphics Catalog
+----------------------------------------------------------------------
+
+GraphicsResourceCatalog가
+기존 EQUIPMENT_PROFILES가 아니라 실제 Equipment Item Catalog를 사용하도록 변경한다.
+
+review 화면에서 최소:
+
+- Item
+- Family
+- Slot
+- Hand Usage
+- Moveset
+- Geometry
+- Field Capability
+
+를 확인할 수 있어야 한다.
+
+
+----------------------------------------------------------------------
+2-20. UI
+----------------------------------------------------------------------
+
+기존 UI를 새 구조와 연결한다.
+
+장비 상세 최소 표시:
+
+이름
+Family
+Slot
+Hand Usage
+Moveset
+Reach 성격
+Stamina 성격
+Posture 성격
+Field Capability
+
+수치만 나열하는 UI로 끝내지 않는다.
+
+
+----------------------------------------------------------------------
+2-21. Two-Hand 확장
+----------------------------------------------------------------------
+
+실제 Two-Hand 장비는 만들지 않는다.
+
+하지만 fixture/test 수준에서:
+
+twoHand main
++
+offHand
+
+조합이 기본적으로 거부되는 계약을 검증한다.
+
+Sword+Shield를 hard-code해서 이 결과를 만들지 않는다.
+
+
+----------------------------------------------------------------------
+2-22. 문서와 코드 일치
+----------------------------------------------------------------------
+
+구현 후 반드시 처음 만든:
+
+docs/game-systems/equipment.md
+
+를 다시 읽는다.
+
+코드와 문서가 다르면:
+
+- 코드가 잘못된 경우 코드 수정
+- 구현 과정에서 계약 변경이 불가피했던 경우 문서 수정
+
+둘 중 하나를 수행한다.
+
+문서와 코드가 서로 다른 상태로 완료하지 않는다.
+
+
+----------------------------------------------------------------------
+2-23. 테스트
+----------------------------------------------------------------------
+
+기존 관련 테스트 유지.
+
+최소 신규 검증:
+
+1. Item familyId 유효
+2. Family slot 유효
+3. handUsage 유효
+4. Moveset requirement 유효
+5. Cutter + Shield가 올바른 Moveset으로 resolve
+6. incompatible Loadout 거부
+7. twoHand + offHand 거부
+8. Field Capability aggregation
+9. Item modifier merge
+10. 기본 Loadout combat 결과 기존과 동일
+11. Graphics 모든 실제 Item 등록
+12. Forge 유효 Item 참조
+13. Merchant 유효 Item 참조
+14. enchantable Item만 enchant
+15. v10 -> v11 migration
+16. legacy ID 정확히 변환
+17. 기존 장착 검 -> mainHand
+18. Shield 자동 장착
+19. Forge 선택 보존
+20. Element/Enchant level 보존
+21. malformed save 거부
+22. gameplay contact/presentation authority 유지
+
+
+기존 관련 scripts도 반드시 통과:
+
+- combat-stamina-check
+- attack-contact-check
+- combat-motion-continuity-check
+- player-combat-presentation-check
+- progression-growth-check
+- enchantment-check
+- graphics-resource-check
+- scrap-campaign-check
+- scrap-recovery-check
+
+신규 테스트를 기존 verify 흐름에 포함한다.
+
+최종:
+
+npm run verify
+
+
+----------------------------------------------------------------------
+2-24. Visual QA
+----------------------------------------------------------------------
+
+코드 테스트 PASS만으로 완료하지 않는다.
+
+최소 실제 화면에서:
+
+- Field Cutter
+- Field Shield
+- Idle/Ready
+- Basic
+- Strong
+- Guard
+- 실제 gameplay scale
+
+을 확인한다.
+
+장비가 판타지 기사 장비처럼 보이도록 새 디자인을 임의 확정하지 않는다.
+
+승인된 최종 SVG가 아직 없다면
+기존 placeholder/reference를 유지하면서
+새 시스템 연결 자체를 검증한다.
+
+
+----------------------------------------------------------------------
+2-25. 이번 작업에서 하지 말 것
+----------------------------------------------------------------------
+
+- Breaker 실제 플레이 구현
+- Pole 실제 플레이 구현
+- 장비 스킬트리
+- 실시간 전투 중 weapon swap
+- 새 장비 변경 키
+- Metroidvania식 필수 gating
+- Shield Enchantment
+- 새로운 lore 설명 대사
+- combat balance 재설계
+- 캠페인 재설계
+
+
+----------------------------------------------------------------------
+2-26. 완료 조건
+----------------------------------------------------------------------
+
+다음 전부 만족해야 완료다.
+
+[ ] docs/game-systems/equipment.md가 존재한다.
+
+[ ] Product Goal / Architecture / Art Handoff가 역할에 맞게 갱신되었다.
+
+[ ] 기본 게임은 Field Cutter + Field Shield로 시작한다.
+
+[ ] 기존 검+방패 전투 감각이 유지된다.
+
+[ ] Equipment Family / Moveset / Item / Loadout이 실제 runtime에서 사용된다.
+
+[ ] Combat Core가 concrete Sword ID를 authority로 사용하지 않는다.
+
+[ ] Loadout main/off/utility 슬롯이 실제 progression에 저장된다.
+
+[ ] v10 save가 v11로 migration된다.
+
+[ ] 기존 progression 데이터가 보존된다.
+
+[ ] Enchantment가 generic Item 기반으로 이동한다.
+
+[ ] Forge / Merchant가 Item Catalog 기반이다.
+
+[ ] Field Capability API가 실제 통합 경로에 연결된다.
+
+[ ] Graphics Resource와 UI가 새 장비 구조를 읽는다.
+
+[ ] 기존 테스트 통과.
+
+[ ] 신규 장비/마이그레이션 테스트 통과.
+
+[ ] npm run verify 통과.
+
+[ ] 실제 화면 Visual QA 완료.
+
+[ ] 최종 문서와 실제 코드 계약이 일치한다.
+
+
+----------------------------------------------------------------------
+2-27. 최종 보고
+----------------------------------------------------------------------
+
+작업 후 다음 순서로 짧게 보고한다.
+
+1. 남긴 문서
+2. 구현된 장비 시스템 구조
+3. 기존 5개 검 profile migration mapping
+4. v10 -> v11 저장 migration
+5. Combat 연결
+6. Field Capability 연결
+7. Progression / Forge / Enchantment 연결
+8. Graphics / UI 연결
+9. 실행한 테스트
+10. Visual QA 결과
+11. 의도적으로 미구현한 미래 확장
+12. Git 상태
+
+중요:
+
+문서를 썼다는 이유로 완료가 아니며,
+코드를 만들었다는 이유로 완료도 아니다.
+
+남긴 장비 시스템 명세가 실제 새 게임의
+전투·저장·성장·그래픽·필드 상호작용에서 동작하는 상태가 완료다.
+```
+
 - 확정 제작 계약에 따른 시스템 우선 구현
 
   사용자 원문:
