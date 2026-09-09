@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>주인공 · 전체 목록 1/1 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="../handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../characters.html">인물</a
+        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
+        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>주인공 · 전체 목록 1/1</h1>
+        <p>현재 등록 1개 중 1–1. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획
+        해설과 현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">원본 ID/이름</th>
+              <th scope="col">역할·제작 묶음</th>
+              <th scope="col">사용 장소/시나리오</th>
+              <th scope="col">현재 등록 상태</th>
+              <th scope="col">검토/출처</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong id="player:protagonist" data-resource-id="player:protagonist"
+                  >주인공 · 고물상 견습생</strong
+                ><br /><code>player:protagonist</code>
+              </td>
+              <td>
+                주인공 · 구조를 선택하고 사고를 수습하는 고물상 견습생<br /><a
+                  href="../characters.html#protagonist"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>공용/미배치·개별 자료 확인</td>
+              <td>
+                <strong>동작 리소스</strong>
+                <details>
+                  <summary>현재 상태·동작 21개</summary>
+                  <ul>
+                    <li>대기 · <code>idle</code> · 25프레임</li>
+                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                    <li>낙하 · <code>fall</code> · 24프레임</li>
+                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
+                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                    <li>피격 · <code>hit</code> · 14프레임</li>
+                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                    <li>올려베기 · <code>rising</code> · 32프레임</li>
+                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                  </ul>
+                </details>
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=player&amp;resource=player%3Aprotagonist"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/PlayerCombatPresentation.js"
+                  >src/game/PlayerCombatPresentation.js</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <nav class="pager"><a href="index.html">전체 분류</a></nav>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

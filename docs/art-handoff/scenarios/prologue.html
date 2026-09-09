@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>도입 · 첫 수거 의뢰와 각성 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="../handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../characters.html">인물</a
+        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
+        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>도입 · 첫 수거 의뢰와 각성</h1>
+        <p>
+          사람을 먼저 구한 선택이 재난의 원인이 됩니다. 값나가는 부품 수집 동기로 바꾸지 않습니다.
+          고대 병기는 옛 명령을 문자 그대로 실행하며 사무적인 낡은 방송과 과장된 조립·수거 행동으로
+          위협과 웃음을 함께 보여 줍니다. 신체 공포물 방향이 아닙니다.
+        </p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획
+        해설과 현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <section>
+        <h2>등장인물</h2>
+        <ul>
+          <li><a href="../characters.html#protagonist">주인공</a></li>
+          <li><a href="../characters.html#owner">고물상인</a></li>
+          <li><a href="../characters.html#rival">라이벌</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>전체 도입 단계</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">현재 stage</th>
+                <th scope="col">이야기/현장 행동</th>
+                <th scope="col">필요 그래픽</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>commission</code><br />고물상 정식 수거 의뢰</td>
+                <td>고물상인이 두 견습생에게 왕국 외곽 폐병기 수거를 맡깁니다.</td>
+                <td>고물상 작업대·주인공·라이벌·말풍선</td>
+              </tr>
+              <tr>
+                <td><code>rival-departure</code><br />라이벌</td>
+                <td>
+                  좋은 부품을 두고 늘 경쟁하던 라이벌이 이번 수거만큼은 먼저 현장을 보자고
+                  재촉합니다.
+                </td>
+                <td>고물상 작업대·주인공·라이벌·말풍선</td>
+              </tr>
+              <tr>
+                <td><code>yard-clearance</code><br />폐병기 수거장 진입</td>
+                <td>
+                  라이벌과 함께 수거 표식을 따라가자, 멈춰 있던 소형 수거 유닛이 통로를 막고
+                  움직이기 시작합니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-brace</code><br />수거장 안전 지지대</td>
+                <td>
+                  라이벌이 안쪽 흉곽으로 가는 판금 통로를 고정하려 하지만, 회수 신호가 지지대를 다시
+                  잠급니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-perimeter</code><br />흉곽 통로 확보</td>
+                <td>
+                  안쪽 통로를 지키던 회수 유닛이 지지대를 끌어당기기 시작합니다. 방패로 간격을
+                  만들고 길을 확보해야 합니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-survey</code><br />끊긴 구조 줄 점검</td>
+                <td>
+                  라이벌과 함께 끊긴 구조 줄 받침과 흉곽 지지대를 직접 확인한 뒤 안쪽 현장으로
+                  들어갑니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-approach</code><br />흉곽 안쪽 경계</td>
+                <td>
+                  구조 줄 받침을 확인한 두 견습생 앞을 흉곽 경계 수거 유닛이 막습니다. 라이벌이
+                  표식을 붙이는 동안 방패로 간격을 만드세요.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-plate</code><br />떨어진 흉갑 조각 점검</td>
+                <td>
+                  라이벌과 함께 흉곽 아래로 가는 길에 떨어진 흉갑 조각과 연결 줄을 직접 확인한 뒤
+                  안쪽 현장으로 들어갑니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-ridge</code><br />흉곽 능선 경계</td>
+                <td>
+                  라이벌과 함께 흉갑 조각 너머 능선으로 가는 길에 넓게 휘두르는 회수팔 경계 유닛이
+                  통로를 막습니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-guard</code><br />심부 방패 경계</td>
+                <td>
+                  라이벌과 함께 흉곽 심부로 가는 길에 묵직하게 내려찍는 경계 수거 유닛이 통로를
+                  막습니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>yard-search</code><br />폐병기 수거장 탐색</td>
+                <td>
+                  두 견습생은 수거 표식과 안전 지지대를 확인하며 거대한 폐병기 안쪽으로 들어갑니다.
+                </td>
+                <td>수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>collapse</code><br />붕괴 사고</td>
+                <td>
+                  움직이던 자동 회수팔이 라이벌의 갈고리를 잡아 안쪽으로 끌고 가며 통로가
+                  무너집니다.
+                </td>
+                <td>회수팔·갈고리 장력·무너진 통로·갇힌 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>rescue-request</code><br />잔해 아래 구조 요청</td>
+                <td>
+                  라이벌은 회수팔에 붙잡혀 끌려가고 있으며, 팔과 직접 연결된 흉곽 장치를 빼야
+                  멈춘다고 알립니다.
+                </td>
+                <td>회수팔·갈고리 장력·무너진 통로·갇힌 라이벌</td>
+              </tr>
+              <tr>
+                <td><code>player-decision</code><br />구조 장치의 유일한 전원</td>
+                <td>라이벌을 끌고 간 회수팔은 폐병기 흉곽의 청록 제어핵으로 움직입니다.</td>
+                <td>핵/접속부·조사/독백·핵 분리·회수팔 해제</td>
+              </tr>
+              <tr>
+                <td><code>device-investigated</code><br />사람을 먼저 구한다</td>
+                <td>
+                  제어핵을 떼면 잠들어 있던 폐병기가 깨어날 수 있지만, 회수팔을 멈춰 라이벌을 구할
+                  다른 방법은 없습니다.
+                </td>
+                <td>핵/접속부·조사/독백·핵 분리·회수팔 해제</td>
+              </tr>
+              <tr>
+                <td><code>device-recovered</code><br />회수팔 정상 제어 차단</td>
+                <td>제어핵이 빠지자 자동 회수팔이 풀리고 라이벌을 붙잡은 장력이 사라집니다.</td>
+                <td>핵/접속부·조사/독백·핵 분리·회수팔 해제</td>
+              </tr>
+              <tr>
+                <td><code>rescue-succeeded</code><br />라이벌 구조 성공</td>
+                <td>
+                  라이벌이 빠져나온 순간 제어핵 접속부가 비상 장갑 안으로 봉쇄되고 폐병기가 비상
+                  운용으로 전환됩니다.
+                </td>
+                <td>비상 장갑 봉쇄·단안 점등·고철 결합·적 진군·D-30</td>
+              </tr>
+              <tr>
+                <td><code>eyes-lit</code><br />고대 병기 각성</td>
+                <td>어둡던 단안이 켜지고 주변 고철이 몸체 쪽으로 끌려갑니다.</td>
+                <td>비상 장갑 봉쇄·단안 점등·고철 결합·적 진군·D-30</td>
+              </tr>
+              <tr>
+                <td><code>assembled</code><br />불완전한 고대 병기</td>
+                <td>서로 맞지 않는 판금과 케이블이 거대한 상체를 억지로 세웁니다.</td>
+                <td>비상 장갑 봉쇄·단안 점등·고철 결합·적 진군·D-30</td>
+              </tr>
+              <tr>
+                <td><code>deadline-revealed</code><br />수도까지 남은 시간</td>
+                <td>
+                  제어핵 응답 없음. 고대 병기가 &quot;중앙 지휘소&quot;, 옛 본부의 위치를 따라
+                  왕도로 갑니다. 도착까지 D-30.
+                </td>
+                <td>비상 장갑 봉쇄·단안 점등·고철 결합·적 진군·D-30</td>
+              </tr>
+              <tr>
+                <td><code>complete</code><br />각성 직후</td>
+                <td>
+                  라이벌을 구한 두 견습생은 자신들이 깨운 고대 병기보다 먼저 고물상으로 돌아갑니다.
+                </td>
+                <td>고물상 작업대·주인공·라이벌·말풍선</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>제작 요청 묶음</h2>
+        <p>
+          주인공 기본 모션 + 라이벌 동행/조사/끌려감/구조 후 + 고물상 의뢰. 폐병기 현장, 회수팔과
+          갈고리, 제어핵과 접속부, 비상 장갑 봉쇄, 눈 점등/조립/진군, D-30 UI를 같은 관계로
+          설계합니다. 상호작용·공격 예고와 겹치는 부분은 게임 검토실에서 확인합니다.
+        </p>
+        <ul>
+          <li>
+            <a href="../resources/scene-1.html#scene%3Ascrap-waste-edge%3Aabandoned-weapon-yard"
+              >첫 수거 의뢰 · 폐병기 구역</a
+            >
+            ·
+            <a
+              href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ascrap-waste-edge%3Aabandoned-weapon-yard"
+              >게임 검토실</a
+            >
+          </li>
+          <li>
+            <a href="../resources/scene-1.html#scene%3Afinal-battle"
+              >대항 병기와 고대 병기 · 최종 전장</a
+            >
+            ·
+            <a
+              href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Afinal-battle"
+              >게임 검토실</a
+            >
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>현재 작성된 대화 원문</h2>
+        <p>아래는 원본 대화 데이터입니다. 전체 최종 대본·컷 수의 확정본으로 해석하지 않습니다.</p>
+        <article id="scrap-prologue:owner-commission">
+          <h3>고물상인의 정식 수거 의뢰</h3>
+          <p>고물상인 · <code>scrap-prologue:owner-commission</code></p>
+          <ol>
+            <li>
+              둘 다 정식 견습생이 됐으니 첫 공동 의뢰다. 외곽 폐병기에 전원이 남았는지만 확인하고
+              와.
+            </li>
+            <li>먼저 찾은 부품은 먼저 기록한다. 경쟁은 하되 안전 지지대부터 확인해.</li>
+            <li>나는 퇴직했는데 또 야근이군. 사고 없이 돌아오면 그걸로 됐다.</li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:rival-departure">
+          <h3>라이벌과 현장 출발</h3>
+          <p>라이벌 · <code>scrap-prologue:rival-departure</code></p>
+          <ol>
+            <li>공동 의뢰라도 좋은 부품은 먼저 표시한 사람이 가져가는 거다. 이번엔 내가 앞설게.</li>
+            <li>그래도 혼자 폐병기 안으로 들어가진 말자. 네 방패가 앞, 내 갈고리가 뒤다.</li>
+            <li>오른쪽 수거 표식까지 같이 가자. 이동하면서 작은 수거 유닛은 기본기로 정리하고.</li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:yard-brace">
+          <h3>폐병기 지지대 점검</h3>
+          <p>라이벌 · <code>scrap-prologue:yard-brace</code></p>
+          <ol>
+            <li>첫 유닛은 멈췄어. 여기 지지대를 고정하면 흉곽 아래 통로까지 갈 수 있겠지.</li>
+            <li>잠깐, 안쪽 회수 신호가 판금을 다시 당긴다. 저 유닛이 지지대를 물고 있어.</li>
+            <li>내가 표식을 붙일 테니 네가 길을 열어. 흔들리면 바로 방패를 들어.</li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:yard-survey">
+          <h3>끊긴 구조 줄 점검</h3>
+          <p>라이벌 · <code>scrap-prologue:yard-survey</code></p>
+          <ol>
+            <li>두 번째 유닛도 멈췄어. 위를 봐, 사람을 끌어올리는 구조 줄이 받침째 끊겨 있어.</li>
+            <li>
+              흉곽 지지대 표식도 흔들려. 저 받침을 직접 점검하면 안쪽 통로가 버티는지 알 수 있어.
+            </li>
+            <li>
+              네가 받침을 확인하면 나는 흉곽 아래 표식을 붙일게. 그다음엔 같이 안쪽으로 들어가자.
+            </li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:yard-plate">
+          <h3>떨어진 흉갑 조각 점검</h3>
+          <p>라이벌 · <code>scrap-prologue:yard-plate</code></p>
+          <ol>
+            <li>저기 떨어진 흉갑 조각 봐. 수거 표식보다 오래된 판금이 연결 줄째 내려앉았어.</li>
+            <li>
+              조각 아래 통로가 버티는지 직접 점검해야 안쪽으로 갈 수 있어. 내가 표식을 붙일게.
+            </li>
+            <li>흔들리면 바로 방패를 들어. 확인이 끝나면 같이 흉곽 아래 표식으로 가자.</li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:yard-search">
+          <h3>폐병기 내부 안전 조사</h3>
+          <p>라이벌 · <code>scrap-prologue:yard-search</code></p>
+          <ol>
+            <li>이 지지대, 수거 표식보다 훨씬 오래됐어. 안쪽 회수팔이 아직 움직여.</li>
+            <li>나는 위쪽 연결 줄을 볼게. 넌 흉곽 아래 통로가 버티는지 확인해 줘.</li>
+            <li>잠깐, 회수팔이 내 갈고리를— 잡혔어!</li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:rival-rescue">
+          <h3>잔해 아래 라이벌의 구조 요청</h3>
+          <p>라이벌 · <code>scrap-prologue:rival-rescue</code></p>
+          <ol>
+            <li>나 여기 있어. 회수팔이 갈고리를 잡고 안쪽으로 끌고 가고 있어.</li>
+            <li>회수팔은 저 청록 장치에 바로 연결돼 있어. 저걸 빼야 멈출 거야.</li>
+            <li>하지만 그 장치를 빼면 잠들어 있던 폐병기가 깨어날 수도 있어.</li>
+          </ol>
+        </article>
+        <article id="scrap-prologue:player-decision">
+          <h3>주인공의 구조 선택</h3>
+          <p>주인공 (독백) · <code>scrap-prologue:player-decision</code></p>
+          <ol>
+            <li>이 제어핵은 회수팔을 움직이는 장치다. 빼면 라이벌을 꺼낼 수 있다.</li>
+            <li>
+              이걸 빼면 폐병기가 깨어날 수도 있다. 그래도 사람을 두고 다른 방법을 찾을 시간은 없어.
+            </li>
+            <li>먼저 구한다. 무슨 일이 깨어나든 그다음에 내가 책임진다.</li>
+          </ol>
+        </article>
+        <a href="../../../src/game/story/ScrapPrologueStory.js"
+          >src/game/story/ScrapPrologueStory.js</a
+        >
+      </section>
+      <a href="../../../src/game/campaign/ScrapAwakeningState.js"
+        >src/game/campaign/ScrapAwakeningState.js</a
+      >
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

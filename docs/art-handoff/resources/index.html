@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>전체 그래픽 리소스 목록 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="../handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../characters.html">인물</a
+        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
+        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>전체 그래픽 리소스 목록</h1>
+        <p>
+          592개 stable ID를 분류별 최대 30행으로 나눴습니다. 필요할 때만 해당 페이지를 읽습니다.
+        </p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획
+        해설과 현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">분류</th>
+              <th scope="col">현재 등록 수</th>
+              <th scope="col">목록 페이지</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>주인공</td>
+              <td>1</td>
+              <td><a href="player-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>NPC</td>
+              <td>113</td>
+              <td>
+                <a href="npc-1.html">1쪽</a> · <a href="npc-2.html">2쪽</a> ·
+                <a href="npc-3.html">3쪽</a> · <a href="npc-4.html">4쪽</a>
+              </td>
+            </tr>
+            <tr>
+              <td>몹</td>
+              <td>21</td>
+              <td><a href="enemy-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>몹 유형 시안</td>
+              <td>4</td>
+              <td><a href="enemy-reference-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>무기·장비</td>
+              <td>5</td>
+              <td><a href="equipment-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>배경</td>
+              <td>15</td>
+              <td><a href="background-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>전경</td>
+              <td>4</td>
+              <td><a href="foreground-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>지형</td>
+              <td>29</td>
+              <td><a href="terrain-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>건물</td>
+              <td>96</td>
+              <td>
+                <a href="building-1.html">1쪽</a> · <a href="building-2.html">2쪽</a> ·
+                <a href="building-3.html">3쪽</a> · <a href="building-4.html">4쪽</a>
+              </td>
+            </tr>
+            <tr>
+              <td>설비</td>
+              <td>110</td>
+              <td>
+                <a href="facility-1.html">1쪽</a> · <a href="facility-2.html">2쪽</a> ·
+                <a href="facility-3.html">3쪽</a> · <a href="facility-4.html">4쪽</a>
+              </td>
+            </tr>
+            <tr>
+              <td>소품</td>
+              <td>122</td>
+              <td>
+                <a href="prop-1.html">1쪽</a> · <a href="prop-2.html">2쪽</a> ·
+                <a href="prop-3.html">3쪽</a> · <a href="prop-4.html">4쪽</a> ·
+                <a href="prop-5.html">5쪽</a>
+              </td>
+            </tr>
+            <tr>
+              <td>이펙트</td>
+              <td>32</td>
+              <td><a href="effect-1.html">1쪽</a> · <a href="effect-2.html">2쪽</a></td>
+            </tr>
+            <tr>
+              <td>장면</td>
+              <td>17</td>
+              <td><a href="scene-1.html">1쪽</a></td>
+            </tr>
+            <tr>
+              <td>UI·아이콘</td>
+              <td>23</td>
+              <td><a href="ui-1.html">1쪽</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        현재 action의 frameCount가 1인 map patch는 상태 표본이며 애니메이션 완료를 뜻하지 않습니다.
+        npc: 묶음과 map: 부위는 원본 item을 공유할 수 있습니다. 미배치 적과 검토용 유형 견본은 실전
+        완료로 합산하지 않습니다.
+      </p>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

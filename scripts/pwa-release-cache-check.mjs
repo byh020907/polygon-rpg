@@ -98,6 +98,7 @@ function loadWorker(
       if (asset === 'public/release.json') {
         return new Response(JSON.stringify({ appVersion: '0.2.1', buildId: 'build-server' }));
       }
+      if (asset === 'docs/art-handoff/handbook.css') return new Response('body{color:black}');
       if (asset === 'PRODUCT_GOAL.html') return new Response('<html>project document</html>');
       assert.equal(address.searchParams.get('build'), build.metadata.buildId);
       assert.equal(request.cache, 'reload');
@@ -182,6 +183,17 @@ assert.equal(
 assert.equal(
   await (await fetchAsset(workerA, 'src/main.js?arbitrary=1')).text(),
   A.files['src/main.js'],
+);
+assert.equal(
+  await (await fetchAsset(workerA, 'docs/art-handoff/handbook.css')).text(),
+  'body{color:black}',
+);
+assert.equal(
+  await (
+    await cacheStorage.open(prefix + A.metadata.buildId)
+  ).match(url('docs/art-handoff/handbook.css')),
+  undefined,
+  'docs must not enter game release cache',
 );
 const requestCount = workerA.requests.length;
 assert.equal((await fetchAsset(workerA, 'src/unknown-new-module.js')).status, 503);

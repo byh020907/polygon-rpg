@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>공통 아트 기준 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="characters.html">인물</a
+        ><a href="enemies.html">몹</a><a href="scenarios/index.html">시나리오</a
+        ><a href="resources/index.html">전체 목록</a><a href="request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>공통 아트 기준</h1>
+        <p>컨셉 아트 → 부위와 본 비율 조정 → 유형 공용 애니메이션 재사용.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획 해설과
+        현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <section>
+        <h2>모든 요청에 붙일 기준</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">항목</th>
+                <th scope="col">그래픽 담당자에게 전달할 내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>그림체</td>
+                <td>
+                  얇고 각진 폴리곤/컷아웃·벡터 셀 아트. 화면의 85~90%는 저채도 명암. 에디터 유형색을
+                  게임 몸체의 원색으로 복사하지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>실루엣</td>
+                <td>
+                  작은 머리·가늘고 긴 팔다리·직업 도구. 주인공의 기존 동작 스타일 보존; 몹 유형별
+                  체형은 구별. 같은 뚱뚱한 몸체를 색만 바꿔 배포하지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>재질</td>
+                <td>
+                  판금·리벳·케이블·작업용 천·수리 흔적. 지역 재질은 5개 로봇 모듈에 다시 보입니다.
+                </td>
+              </tr>
+              <tr>
+                <td>화면 크기</td>
+                <td>
+                  1280×720 PC, 844×390 모바일 실제 장면에서 판단. 인간형 높이는 PC 약 18~22% 기준,
+                  모바일은 동작 판독을 위해 보정. 확대 그림만으로 승인하지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>출력</td>
+                <td>
+                  픽셀화 후처리·좌표 snap·강제 정수 확대 없음. 원본 면/윤곽/명암이 직접 읽혀야
+                  합니다.
+                </td>
+              </tr>
+              <tr>
+                <td>동작</td>
+                <td>
+                  검은 낮게 당겼다가 몸 앞을 가로지르는 빠른 횡/사선 베기. 전방 구르기는 실제 한
+                  바퀴. 공격 크기·유효 범위를 임의로 바꾸지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>고대 병기의 톤</td>
+                <td>
+                  옛 군수 명령을 문자 그대로 실행하는 융통성 없는 병기. 짧고 사무적인 낡은 방송,
+                  과장된 불완전 조립·수거 행동으로 위협과 웃음을 함께 만듭니다. 무거운 신체 공포로
+                  만들지 않습니다.
+                </td>
+              </tr>
+              <tr>
+                <td>기본 납품</td>
+                <td>
+                  컨셉 정면/측면 + 대표 자세 + 부위 분해/재질/가려짐 설명. PNG 가능, 수정 가능한
+                  SVG/레이어 원본은 있으면 함께 전달합니다. 그림 담당자가 엔진 코드를 작성해야 하는
+                  계약은 아닙니다.
+                </td>
+              </tr>
+              <tr>
+                <td>AI 구현 경계</td>
+                <td>
+                  AI가 부위/본 profile을 반영하고 기존 clip에 연결합니다. 수동 sprite sheet 재생성은
+                  기본 원본 방식이 아닙니다. 본 부착/vertex는 부모축 기준 [-1,1], 크기는 별도 ratio.
+                  상세는 기존 저작 안내를 봅니다.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>참고 원본</h2>
+        <div class="reference-grid">
+          <figure>
+            <img
+              src="../references/enemy-archetypes/hero-style-reference.png"
+              alt="주인공 스타일 참고 원본"
+            />
+            <figcaption>주인공 참고 · 현재 모션 스타일의 최종 폐기 지시가 아닙니다.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../references/enemy-archetypes/enemy-archetypes-reference.png"
+              alt="몹 전체 그림체와 실루엣 참고 원본"
+            />
+            <figcaption>몹 전체 그림체·실루엣 참고 · 개별 최종 디자인 승인이 아닙니다.</figcaption>
+          </figure>
+        </div>
+        <ul>
+          <li><a href="../references/enemy-archetypes/README.md">원본 출처</a></li>
+          <li><a href="../enemy-reference-authoring.md">AI 구현용 본/부위 저작 안내</a></li>
+          <li><a href="../../PRODUCT_GOAL.html#PG-SCRAP-READABILITY">PG-SCRAP-READABILITY</a></li>
+          <li><a href="../../PRODUCT_GOAL.html#PG-VISUAL-FIDELITY">PG-VISUAL-FIDELITY</a></li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

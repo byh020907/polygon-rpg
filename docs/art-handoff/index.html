@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>그래픽 제작 요청 안내 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="characters.html">인물</a
+        ><a href="enemies.html">몹</a><a href="scenarios/index.html">시나리오</a
+        ><a href="resources/index.html">전체 목록</a><a href="request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>그래픽 제작 요청 안내</h1>
+        <p>인물의 역할과 이야기의 인과를 먼저 읽고, 제작할 묶음의 원본 ID를 골라 요청합니다.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획 해설과
+        현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <section>
+        <h2>담당자에게 전달할 순서</h2>
+        <ol>
+          <li><a href="art-direction.html">공통 아트 기준</a> — 그림체·크기·본/재사용·납품 형태</li>
+          <li>
+            <a href="characters.html">인물·NPC 역할표</a> 또는
+            <a href="enemies.html">몹·Boss 역할표</a> — 같은 사람의 상태 변형과 별도 디자인 구분
+          </li>
+          <li>
+            <a href="scenarios/index.html">전체 이야기 개요</a> → 담당
+            <a href="scenarios/prologue.html">도입</a> / 지역 한 편 — 장소·등장인물·필요 그래픽
+          </li>
+          <li>
+            <a href="request.html">요청서 양식</a>에 대상과 상태를 복사하고
+            <a href="decisions.html">미정 사항</a>을 남깁니다.
+          </li>
+        </ol>
+      </section>
+      <section>
+        <h2>목록의 수를 제작 건수로 해석하지 않기</h2>
+        <p>
+          현재 검토실은 592개 항목입니다. NPC 분류 113개에는 조립 묶음 26개와 몸/도구 조각이 함께
+          들어갑니다. 아래 인물표는 이를 13개 NPC 역할 묶음과 주인공 1개로 정리합니다. 갇힌 작업자
+          묶음은 한 명으로 확정한 것이 아닙니다.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">자료</th>
+                <th scope="col">무엇을 요청하는가</th>
+                <th scope="col">읽을 범위</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="characters.html">인물·NPC</a></td>
+                <td>고유 인물 디자인 + 전/중/후 변형 + 동작 제안</td>
+                <td>인물 하나와 등장 지역</td>
+              </tr>
+              <tr>
+                <td><a href="enemies.html">21개 현재 적 + 4개 유형 견본</a></td>
+                <td>실전 적과 검토용 템플릿을 구별</td>
+                <td>유형/부품 재사용과 공격 준비</td>
+              </tr>
+              <tr>
+                <td><a href="world.html">환경·기계·VFX·UI</a></td>
+                <td>장소·기계 전체 묶음과 작동/분리/복구 상태</td>
+                <td>담당 지역 한 편</td>
+              </tr>
+              <tr>
+                <td><a href="resources/index.html">전체 592개 원본 목록</a></td>
+                <td>기존 stable ID·원본·상태·검토 링크</td>
+                <td>필요한 분류의 최대 30행 페이지</td>
+              </tr>
+              <tr>
+                <td><a href="scenarios/index.html">전체 시나리오</a></td>
+                <td>도입→자유 순서의 5지역→결전/후일담·실패</td>
+                <td>개요 + 작업할 지역 한 편</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>요청 우선순위</h2>
+        <p>
+          먼저 주인공·라이벌·고물상인, 제어핵/회수팔/각성 병기, 차고 0%로 도입의 기준 장면을
+          맞춥니다. 그 다음 몹 유형 견본과 폐광↔항구 연결 사건을 같은 표현으로 검토합니다. 기준
+          장면을 검토한 뒤 다음 지역 요청을 확장합니다.
+        </p>
+      </section>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

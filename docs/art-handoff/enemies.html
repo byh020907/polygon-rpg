@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>몹·Boss와 유형 견본 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="characters.html">인물</a
+        ><a href="enemies.html">몹</a><a href="scenarios/index.html">시나리오</a
+        ><a href="resources/index.html">전체 목록</a><a href="request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>몹·Boss와 유형 견본</h1>
+        <p>실전 배치, 미배치 작성된 profile, 검토용 유형 템플릿을 분리합니다.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획 해설과
+        현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <section>
+        <h2>먼저 만들 유형 기준</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">유형</th>
+                <th scope="col">수정 단위</th>
+                <th scope="col">검토</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>인간형 · 수거반 견본</td>
+                <td>
+                  고유 본 계층·실루엣·부위. 기존 유형 공용 clip 재사용; 실전 몹 교체 전 검토용
+                </td>
+                <td>
+                  <a href="resources/enemy-reference-1.html#enemy-reference%3Ahumanoid"
+                    >인간형 · 수거반 견본</a
+                  >
+                  ·
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy-reference&amp;resource=enemy-reference%3Ahumanoid"
+                    >게임 검토실</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>짐승형 · 드릴 하운드</td>
+                <td>
+                  고유 본 계층·실루엣·부위. 기존 유형 공용 clip 재사용; 실전 몹 교체 전 검토용
+                </td>
+                <td>
+                  <a href="resources/enemy-reference-1.html#enemy-reference%3Abeast"
+                    >짐승형 · 드릴 하운드</a
+                  >
+                  ·
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy-reference&amp;resource=enemy-reference%3Abeast"
+                    >게임 검토실</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>비행형 · 정찰 말벌</td>
+                <td>
+                  고유 본 계층·실루엣·부위. 기존 유형 공용 clip 재사용; 실전 몹 교체 전 검토용
+                </td>
+                <td>
+                  <a href="resources/enemy-reference-1.html#enemy-reference%3Aflying"
+                    >비행형 · 정찰 말벌</a
+                  >
+                  ·
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy-reference&amp;resource=enemy-reference%3Aflying"
+                    >게임 검토실</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>기계형 · 산업 중장비</td>
+                <td>
+                  고유 본 계층·실루엣·부위. 기존 유형 공용 clip 재사용; 실전 몹 교체 전 검토용
+                </td>
+                <td>
+                  <a href="resources/enemy-reference-1.html#enemy-reference%3Amachine"
+                    >기계형 · 산업 중장비</a
+                  >
+                  ·
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy-reference&amp;resource=enemy-reference%3Amachine"
+                    >게임 검토실</a
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>현재 적 전체 21개</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">적/역할</th>
+                <th scope="col">배치 또는 연결 사건</th>
+                <th scope="col">종료·전투 표현</th>
+                <th scope="col">현재 원본·동작</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong id="yard-scout-collector">폐병기 소형 수거 유닛</strong><br />일반 조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/prologue.html">왕국 외곽 고철 수거장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-scout-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ayard-scout-collector"
+                    >폐병기 소형 수거 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td><strong id="yard-brace-collector">지지대 회수 유닛</strong><br />일반 조우</td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/prologue.html">왕국 외곽 고철 수거장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-brace-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ayard-brace-collector">지지대 회수 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="yard-approach-collector">흉곽 경계 수거 유닛</strong><br />일반 조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/prologue.html">왕국 외곽 고철 수거장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-approach-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ayard-approach-collector"
+                    >흉곽 경계 수거 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="yard-ridge-collector">흉곽 능선 경계 유닛</strong><br />일반 조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/prologue.html">왕국 외곽 고철 수거장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-ridge-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ayard-ridge-collector"
+                    >흉곽 능선 경계 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="yard-guard-collector">심부 방패 경계 유닛</strong><br />일반 조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/prologue.html">왕국 외곽 고철 수거장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-guard-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ayard-guard-collector"
+                    >심부 방패 경계 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td><strong id="mine-tunnel-collector">갱도 수거 유닛</strong><br />일반 조우</td>
+                <td>
+                  <strong>현재 맵 미배치</strong>
+                  <ul></ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-tunnel-collector"
+                    >게임 검토실</a
+                  >
+                  · <a href="resources/enemy-1.html#enemy%3Amine-tunnel-collector">갱도 수거 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td><strong id="mine-claim-jacker">광산 선점 수거반</strong><br />일반 조우</td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/abandoned-mine.html">폐광 산촌</a></li>
+                  </ul>
+                </td>
+                <td>실제 인간 수거반 · 항복; 사망 연출 금지</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-claim-jacker"
+                    >게임 검토실</a
+                  >
+                  · <a href="resources/enemy-1.html#enemy%3Amine-claim-jacker">광산 선점 수거반</a
+                  ><br />외형 원본: <code>mine-claim-jacker</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>항복 · 고정 자세 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="mine-seal-plate-raider">밀폐 철판 절취 수거반</strong><br />일반 조우
+                </td>
+                <td>
+                  <strong>현재 맵 미배치</strong>
+                  <ul>
+                    <li>배관 밀폐 철판 규격 확인</li>
+                  </ul>
+                </td>
+                <td>실제 인간 수거반 · 도주; 사망 연출 금지</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-seal-plate-raider"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Amine-seal-plate-raider"
+                    >밀폐 철판 절취 수거반</a
+                  ><br />외형 원본: <code>mine-claim-jacker</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="mine-collapse-boss">붕괴 광산 굴착기 Boss</strong><br />지역 Boss
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/abandoned-mine.html">폐광 산촌</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-collapse-boss"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Amine-collapse-boss"
+                    >붕괴 광산 굴착기 Boss</a
+                  ><br />외형 원본: <code>mine-collapse-boss</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="shipyard-drydock-collector">건선거 케이블 수거 유닛</strong><br />일반
+                  조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/harbor-shipyard.html">항구 조선소</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ashipyard-drydock-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ashipyard-drydock-collector"
+                    >건선거 케이블 수거 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td><strong id="dock-salvage-raider">부두 선점 수거반</strong><br />일반 조우</td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/harbor-shipyard.html">항구 조선소</a></li>
+                    <li><a href="scenarios/harbor-shipyard.html">항구 조선소</a></li>
+                  </ul>
+                </td>
+                <td>실제 인간 수거반 · 도주; 사망 연출 금지</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Adock-salvage-raider"
+                    >게임 검토실</a
+                  >
+                  · <a href="resources/enemy-1.html#enemy%3Adock-salvage-raider">부두 선점 수거반</a
+                  ><br />외형 원본: <code>dock-salvage-raider</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="shipyard-twin-crane-boss">점거된 쌍둥이 크레인 Boss</strong><br />지역
+                  Boss
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/harbor-shipyard.html">항구 조선소</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ashipyard-twin-crane-boss"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Ashipyard-twin-crane-boss"
+                    >점거된 쌍둥이 크레인 Boss</a
+                  ><br />외형 원본: <code>shipyard-twin-crane-boss</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="greenhouse-pipe-parasite">지열 배관 기생 기계</strong><br />일반 조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/greenhouse-plains.html">온실 평원</a></li>
+                    <li><a href="scenarios/greenhouse-plains.html">온실 평원</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-pipe-parasite"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Agreenhouse-pipe-parasite"
+                    >지열 배관 기생 기계</a
+                  ><br />외형 원본: <code>industrial-creature</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="greenhouse-coolant-parasite">냉각수 배관 기생 기계</strong><br />일반
+                  조우
+                </td>
+                <td>
+                  <strong>현재 맵 미배치</strong>
+                  <ul>
+                    <li>용접선 냉각수 확보</li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-coolant-parasite"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Agreenhouse-coolant-parasite"
+                    >냉각수 배관 기생 기계</a
+                  ><br />외형 원본: <code>industrial-creature</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="greenhouse-geothermal-boss">과열 지열 조절기 Boss</strong><br />지역
+                  Boss
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/greenhouse-plains.html">온실 평원</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-geothermal-boss"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Agreenhouse-geothermal-boss"
+                    >과열 지열 조절기 Boss</a
+                  ><br />외형 원본: <code>greenhouse-geothermal-boss</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="snow-tunnel-collector">터널 열선 수거 유닛</strong><br />일반 조우
+                </td>
+                <td>
+                  <strong>현재 맵 미배치</strong>
+                  <ul></ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-tunnel-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Asnow-tunnel-collector"
+                    >터널 열선 수거 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td><strong id="snow-route-raider">설산 길목 수거반</strong><br />일반 조우</td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/snow-trade-road.html">설산 교역로</a></li>
+                  </ul>
+                </td>
+                <td>실제 인간 수거반 · 항복; 사망 연출 금지</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-route-raider"
+                    >게임 검토실</a
+                  >
+                  · <a href="resources/enemy-1.html#enemy%3Asnow-route-raider">설산 길목 수거반</a
+                  ><br />외형 원본: <code>snow-route-raider</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>항복 · 고정 자세 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="snow-thermal-raider">내한 케이블 절취 수거반</strong><br />일반 조우
+                </td>
+                <td>
+                  <strong>현재 맵 미배치</strong>
+                  <ul>
+                    <li>내한 열선 cable 확보</li>
+                  </ul>
+                </td>
+                <td>실제 인간 수거반 · 도주; 사망 연출 금지</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-thermal-raider"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Asnow-thermal-raider"
+                    >내한 케이블 절취 수거반</a
+                  ><br />외형 원본: <code>snow-route-raider</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="snowplow-train-boss">폭주 장갑 제설 열차 Boss</strong><br />지역 Boss
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/snow-trade-road.html">설산 교역로</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnowplow-train-boss"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Asnowplow-train-boss"
+                    >폭주 장갑 제설 열차 Boss</a
+                  ><br />외형 원본: <code>snowplow-train-boss</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="quarry-cut-collector">발파선 점거 수거 유닛</strong><br />일반 조우
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/red-quarry.html">붉은 채석장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Aquarry-cut-collector"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Aquarry-cut-collector"
+                    >발파선 점거 수거 유닛</a
+                  ><br />외형 원본: <code>collector-unit</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong id="quarry-rock-cutter-boss">폭주 초대형 암반 절단기 Boss</strong
+                  ><br />지역 Boss
+                </td>
+                <td>
+                  <ul>
+                    <li><a href="scenarios/red-quarry.html">붉은 채석장</a></li>
+                  </ul>
+                </td>
+                <td>동원 기계/기계 생물 · 도구 기능을 공격 예고와 해체/정지 상태로 구분</td>
+                <td>
+                  <a
+                    href="../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Aquarry-rock-cutter-boss"
+                    >게임 검토실</a
+                  >
+                  ·
+                  <a href="resources/enemy-1.html#enemy%3Aquarry-rock-cutter-boss"
+                    >폭주 초대형 암반 절단기 Boss</a
+                  ><br />외형 원본: <code>quarry-rock-cutter-boss</code>
+                  <details>
+                    <summary>현재 action 목록</summary>
+                    <ul>
+                      <li>대기 — <code>idle</code></li>
+                      <li>접근 — <code>advance</code></li>
+                      <li>강공 · 공격 준비 — <code>windup:heavy</code></li>
+                      <li>강공 · 공격 — <code>attack:heavy</code></li>
+                      <li>강공 · 회수 — <code>recovery:heavy</code></li>
+                      <li>기본 · 공격 준비 — <code>windup:light</code></li>
+                      <li>기본 · 공격 — <code>attack:light</code></li>
+                      <li>기본 · 회수 — <code>recovery:light</code></li>
+                      <li>대공 · 공격 준비 — <code>windup:antiAir</code></li>
+                      <li>대공 · 공격 — <code>attack:antiAir</code></li>
+                      <li>대공 · 회수 — <code>recovery:antiAir</code></li>
+                      <li>피격 · 현재 고정 반응 자세 — <code>hit</code></li>
+                      <li>방어 · 현재 고정 자세 — <code>guard</code></li>
+                      <li>종료 자세 · 고정 — <code>surrender</code></li>
+                    </ul>
+                  </details>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h2>미정인 최종 적 구성</h2>
+        <p>
+          기획 목표는 각 지역 8개 실루엣(비인간 고유 4, 인간형 고유 1, 현지 동원 기계·엘리트·Boss
+          포함), 전체 전투의 인간형 약 20~25%입니다. 현재 21개 profile과 같은 외형 재사용, 미배치
+          5개는 그 목표의 완료 목록이 아닙니다. 미정 적을 새 이름으로 만들어 확정 발주하지 말고
+          지역/유형 슬롯을 먼저 설계합니다.
+        </p>
+        <a href="../../PRODUCT_GOAL.html#PG-SCRAP-READABILITY">PG-SCRAP-READABILITY</a>
+      </section>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

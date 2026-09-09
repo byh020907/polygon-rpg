@@ -256,3 +256,9 @@ Keyboard / Touch / DOM intent
 - `INBOX.md`는 아직 처리하지 않은 Human feedback만 보존하고 `STATE.md`는 current comparison/evidence만 유지한다.
 - Gap이 있으면 runtime은 `RUNNING`이고 모든 Product와 Engineering Desired State가 current evidence로 충족될 때만 `IMPLEMENTATION_COMPLETE`가 된다.
 - 실행 환경은 Agent, local process, CI나 review tool을 사용할 수 있지만 repository contract와 완료 의미는 어느 하나에 의존하지 않는다.
+
+## Graphics Handoff Documentation
+
+- Product What의 authority는 PRODUCT_GOAL.html 하나다. docs/art-handoff는 기준 링크, 제작 요청 해설과 현재 authored data의 파생 목록이며 새로운 기획 authority가 아니다. 요구와 구현의 불일치·미정은 명시하여 외주 확정으로 복사하지 않는다.
+- 담당자용 인물/몹/지역별 문서와 최대 30행의 resource 목록 페이지를 분리한다. 각 resource는 기존 stable ID, producer, action/variant와 검토 URL을 보존하며 조립 묶음·부위 중복을 제작 건수로 합산하지 않는다.
+- scripts/generate-art-handoff.mjs가 production catalog/campaign/story를 읽어 정적 HTML과 기계용 index를 생성한다. 사람이 관리하는 요청 해설은 scripts/art-handoff-content.mjs에 한 번만 두고, 생성물의 누락/중복/링크 및 최신성을 검사한다. 문서와 원본 reference는 게임 PWA runtime asset에 포함하지 않는다. 공개 docs namespace는 HTML·CSS·reference를 네트워크로 읽고 게임 release cache와 분리한다. 게임 import의 cache-only 계약은 유지한다. local server도 docs와 요청서 generator/content의 명시적 공개 경로만 허용한다.

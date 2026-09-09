@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NPC · 전체 목록 1/4 · Polygon RPG 제작 요청</title>
+    <link rel="stylesheet" href="../handbook.css" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
+      <nav>
+        <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../characters.html">인물</a
+        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
+        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
+      </nav>
+    </header>
+    <main>
+      <header class="page-title">
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 64fa2e7780cc</p>
+        <h1>NPC · 전체 목록 1/4</h1>
+        <p>현재 등록 113개 중 1–30. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
+      </header>
+      <aside class="notice">
+        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 기획
+        해설과 현재 작성된 자료를 연결합니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+      </aside>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">원본 ID/이름</th>
+              <th scope="col">역할·제작 묶음</th>
+              <th scope="col">사용 장소/시나리오</th>
+              <th scope="col">현재 등록 상태</th>
+              <th scope="col">검토/출처</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-weapon-yard:scrapyard-owner"
+                  data-resource-id="npc:abandoned-weapon-yard:scrapyard-owner"
+                  >고물상인</strong
+                ><br /><code>npc:abandoned-weapon-yard:scrapyard-owner</code>
+              </td>
+              <td>
+                고물상인 · 의뢰인·제어핵 분석·지도/차고 공개·생활권 성장 서비스<br /><a
+                  href="../characters.html#owner"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
+                    </li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-weapon-yard%3Ascrapyard-owner"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-weapon-yard:scrap-rival-departure"
+                  data-resource-id="npc:abandoned-weapon-yard:scrap-rival-departure"
+                  >라이벌</strong
+                ><br /><code>npc:abandoned-weapon-yard:scrap-rival-departure</code>
+              </td>
+              <td>
+                라이벌 · 경쟁하는 동년배 견습생·구조 대상·반복 정찰 연결 인물<br /><a
+                  href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-departure ·
+                      <code>patch:scrap-prologue-rival-departure</code>
+                    </li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-weapon-yard%3Ascrap-rival-departure"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-weapon-yard:scrap-rival-search"
+                  data-resource-id="npc:abandoned-weapon-yard:scrap-rival-search"
+                  >현장을 조사하는 라이벌</strong
+                ><br /><code>npc:abandoned-weapon-yard:scrap-rival-search</code>
+              </td>
+              <td>
+                라이벌 · 경쟁하는 동년배 견습생·구조 대상·반복 정찰 연결 인물<br /><a
+                  href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 10개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-yard-clearance ·
+                      <code>patch:scrap-prologue-yard-clearance</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-brace ·
+                      <code>patch:scrap-prologue-yard-brace</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-perimeter ·
+                      <code>patch:scrap-prologue-yard-perimeter</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-survey ·
+                      <code>patch:scrap-prologue-yard-survey</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-approach ·
+                      <code>patch:scrap-prologue-yard-approach</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-plate ·
+                      <code>patch:scrap-prologue-yard-plate</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-ridge ·
+                      <code>patch:scrap-prologue-yard-ridge</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-guard ·
+                      <code>patch:scrap-prologue-yard-guard</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-search ·
+                      <code>patch:scrap-prologue-yard-search</code>
+                    </li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-weapon-yard%3Ascrap-rival-search"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-weapon-yard:scrap-rival-trapped"
+                  data-resource-id="npc:abandoned-weapon-yard:scrap-rival-trapped"
+                  >잔해에 갇힌 라이벌</strong
+                ><br /><code>npc:abandoned-weapon-yard:scrap-rival-trapped</code>
+              </td>
+              <td>
+                라이벌 · 경쟁하는 동년배 견습생·구조 대상·반복 정찰 연결 인물<br /><a
+                  href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-collapse-and-rescue ·
+                      <code>patch:scrap-prologue-collapse-and-rescue</code>
+                    </li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-weapon-yard%3Ascrap-rival-trapped"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-weapon-yard:scrap-rival-rescued"
+                  data-resource-id="npc:abandoned-weapon-yard:scrap-rival-rescued"
+                  >구조된 라이벌</strong
+                ><br /><code>npc:abandoned-weapon-yard:scrap-rival-rescued</code>
+              </td>
+              <td>
+                라이벌 · 경쟁하는 동년배 견습생·구조 대상·반복 정찰 연결 인물<br /><a
+                  href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-rescued ·
+                      <code>patch:scrap-prologue-rival-rescued</code>
+                    </li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-weapon-yard%3Ascrap-rival-rescued"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-torso"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-torso"
+                  >고물상인</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-torso</code
+                >
+              </td>
+              <td>
+                고물상인 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#owner"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · scrapyard-owner · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-torso"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-head"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-head"
+                  >scrapyard-owner-head</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-head</code
+                >
+              </td>
+              <td>
+                고물상인 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#owner"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · welding-goggles · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-head"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-goggles"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-goggles"
+                  >scrapyard-owner-goggles</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-goggles</code
+                >
+              </td>
+              <td>
+                고물상인 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#owner"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · welding-goggles · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-goggles"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-ledger"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-ledger"
+                  >scrapyard-owner-ledger</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-ledger</code
+                >
+              </td>
+              <td>
+                고물상인 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#owner"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · ledger · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-ledger"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-wrench"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-wrench"
+                  >scrapyard-owner-wrench</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-wrench</code
+                >
+              </td>
+              <td>
+                고물상인 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#owner"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · large-wrench · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-wrench"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-torso"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-torso"
+                  >라이벌</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-torso</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-departure ·
+                      <code>patch:scrap-prologue-rival-departure</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-apprentice · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-departure-torso"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-head"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-head"
+                  >scrap-rival-departure-head</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-head</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-departure ·
+                      <code>patch:scrap-prologue-rival-departure</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-head · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-departure-head"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-hook"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-hook"
+                  >scrap-rival-departure-hook</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-hook</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-departure ·
+                      <code>patch:scrap-prologue-rival-departure</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · salvage-hook · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-departure-hook"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-torso"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-torso"
+                  >현장을 조사하는 라이벌</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-torso</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 10개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-yard-clearance ·
+                      <code>patch:scrap-prologue-yard-clearance</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-brace ·
+                      <code>patch:scrap-prologue-yard-brace</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-perimeter ·
+                      <code>patch:scrap-prologue-yard-perimeter</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-survey ·
+                      <code>patch:scrap-prologue-yard-survey</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-approach ·
+                      <code>patch:scrap-prologue-yard-approach</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-plate ·
+                      <code>patch:scrap-prologue-yard-plate</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-ridge ·
+                      <code>patch:scrap-prologue-yard-ridge</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-guard ·
+                      <code>patch:scrap-prologue-yard-guard</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-search ·
+                      <code>patch:scrap-prologue-yard-search</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-apprentice · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-search-torso"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-head"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-head"
+                  >scrap-rival-search-head</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-head</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 10개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-yard-clearance ·
+                      <code>patch:scrap-prologue-yard-clearance</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-brace ·
+                      <code>patch:scrap-prologue-yard-brace</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-perimeter ·
+                      <code>patch:scrap-prologue-yard-perimeter</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-survey ·
+                      <code>patch:scrap-prologue-yard-survey</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-approach ·
+                      <code>patch:scrap-prologue-yard-approach</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-plate ·
+                      <code>patch:scrap-prologue-yard-plate</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-ridge ·
+                      <code>patch:scrap-prologue-yard-ridge</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-guard ·
+                      <code>patch:scrap-prologue-yard-guard</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-search ·
+                      <code>patch:scrap-prologue-yard-search</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-head · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-search-head"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-hook"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-hook"
+                  >scrap-rival-search-hook</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-hook</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 10개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-yard-clearance ·
+                      <code>patch:scrap-prologue-yard-clearance</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-brace ·
+                      <code>patch:scrap-prologue-yard-brace</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-perimeter ·
+                      <code>patch:scrap-prologue-yard-perimeter</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-survey ·
+                      <code>patch:scrap-prologue-yard-survey</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-approach ·
+                      <code>patch:scrap-prologue-yard-approach</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-plate ·
+                      <code>patch:scrap-prologue-yard-plate</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-ridge ·
+                      <code>patch:scrap-prologue-yard-ridge</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-guard ·
+                      <code>patch:scrap-prologue-yard-guard</code>
+                    </li>
+                    <li>
+                      상태 · scrap-prologue-yard-search ·
+                      <code>patch:scrap-prologue-yard-search</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · salvage-hook · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-search-hook"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-torso"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-torso"
+                  >잔해에 갇힌 라이벌</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-torso</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-collapse-and-rescue ·
+                      <code>patch:scrap-prologue-collapse-and-rescue</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-trapped · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-torso"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-head"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-head"
+                  >scrap-rival-trapped-head</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-head</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-collapse-and-rescue ·
+                      <code>patch:scrap-prologue-collapse-and-rescue</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-head · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-head"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-arm"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-arm"
+                  >잔해 밖으로 뻗은 라이벌의 팔</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-arm</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-collapse-and-rescue ·
+                      <code>patch:scrap-prologue-collapse-and-rescue</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rescue-request-arm · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-arm"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-marker"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-marker"
+                  >라이벌의 청록 수거 표식띠</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-marker</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-collapse-and-rescue ·
+                      <code>patch:scrap-prologue-collapse-and-rescue</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-marker · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-marker"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-torso"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-torso"
+                  >구조된 라이벌</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-torso</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-rescued ·
+                      <code>patch:scrap-prologue-rival-rescued</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-rescued · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-torso"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-head"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-head"
+                  >scrap-rival-rescued-head</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-head</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-rescued ·
+                      <code>patch:scrap-prologue-rival-rescued</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-head · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-head"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-hook"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-hook"
+                  >scrap-rival-rescued-hook</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-hook</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-rescued ·
+                      <code>patch:scrap-prologue-rival-rescued</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · salvage-hook · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-hook"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-marker"
+                  data-resource-id="map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-marker"
+                  >구조 뒤에도 남은 라이벌의 청록 수거 표식띠</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-marker</code
+                >
+              </td>
+              <td>
+                라이벌 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
+                폐병기 구역
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 2개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                    <li>
+                      상태 · scrap-prologue-rival-rescued ·
+                      <code>patch:scrap-prologue-rival-rescued</code>
+                    </li>
+                  </ul>
+                </details>
+                원본 비활성 리소스 · rival-marker · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-marker"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-mine-roadhead:mine-waiting-miner"
+                  data-resource-id="npc:abandoned-mine-roadhead:mine-waiting-miner"
+                  >대기 광부</strong
+                ><br /><code>npc:abandoned-mine-roadhead:mine-waiting-miner</code>
+              </td>
+              <td>
+                대기 광부 · 갇힌 동료를 기다리며 구조 성과를 생활로 보여 주는 주민<br /><a
+                  href="../characters.html#mine-waiting"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
+                진입부
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 1개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-waiting-miner"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-mine-roadhead:mine-foreman"
+                  data-resource-id="npc:abandoned-mine-roadhead:mine-foreman"
+                  >폐광 작업반장</strong
+                ><br /><code>npc:abandoned-mine-roadhead:mine-foreman</code>
+              </td>
+              <td>
+                폐광 작업반장 · 붕괴 구조 판단과 굴착기 인수 결정<br /><a
+                  href="../characters.html#mine-foreman"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
+                진입부
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 1개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-foreman"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-mine-roadhead:mine-rival-scout"
+                  data-resource-id="npc:abandoned-mine-roadhead:mine-rival-scout"
+                  >라이벌</strong
+                ><br /><code>npc:abandoned-mine-roadhead:mine-rival-scout</code>
+              </td>
+              <td>
+                라이벌 · 경쟁하는 동년배 견습생·구조 대상·반복 정찰 연결 인물<br /><a
+                  href="../characters.html#rival"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
+                진입부
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 1개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-rival-scout"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="npc:abandoned-mine-roadhead:mine-gate-miner"
+                  data-resource-id="npc:abandoned-mine-roadhead:mine-gate-miner"
+                  >구조 갱도 앞 대기 광부</strong
+                ><br /><code>npc:abandoned-mine-roadhead:mine-gate-miner</code>
+              </td>
+              <td>
+                대기 광부 · 갇힌 동료를 기다리며 구조 성과를 생활로 보여 주는 주민<br /><a
+                  href="../characters.html#mine-waiting"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
+                진입부
+              </td>
+              <td>
+                <strong>조립 묶음</strong>
+                <details>
+                  <summary>현재 상태·동작 1개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                  </ul>
+                </details>
+                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
+                표시합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-gate-miner"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat"
+                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat"
+                  >대기 광부 · 분진 작업복</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat</code
+                >
+              </td>
+              <td>
+                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
+                진입부
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 1개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · mine-worker · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong
+                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet"
+                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet"
+                  >대기 광부 · 광부등</strong
+                ><br /><code
+                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet</code
+                >
+              </td>
+              <td>
+                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
+                  >인물 역할표</a
+                >
+              </td>
+              <td>
+                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
+                진입부
+              </td>
+              <td>
+                <strong>원본 부위/장면</strong>
+                <details>
+                  <summary>현재 상태·동작 1개</summary>
+                  <ul>
+                    <li>기본 상태 · <code>base</code></li>
+                  </ul>
+                </details>
+                원본 기본 활성 리소스 · mining-helmet · stone
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                  >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <nav class="pager"><a href="index.html">전체 분류</a> <a href="npc-2.html">다음</a></nav>
+    </main>
+    <footer>
+      필요한 인물·지역 문서만 전달하세요. 자동 목록 갱신: <code>npm run docs:art</code> ·
+      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+    </footer>
+  </body>
+</html>

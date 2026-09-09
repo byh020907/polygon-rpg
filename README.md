@@ -100,3 +100,9 @@ Production은 별도 bundle 없이 `main /`의 static files를 제공합니다.
 - 공개 주소: `https://byh020907.github.io/polygon-rpg/`
 - 배포 자산: `index.html`, `offline.html`, `manifest.webmanifest`, `sw.js`, `.nojekyll`, `src/**/*.js`, `src/style.css`, `public/icons/**`
 - Product Goal은 repository 문서이자 local server에서 열 수 있는 semantic HTML이며 게임 bootstrap에는 import되지 않습니다.
+
+## 그래픽 제작 요청 문서
+
+그래픽 담당자에게는 [제작 요청 안내](./docs/art-handoff/index.html)와 담당 인물·지역 링크를 전달한다. [인물/NPC 역할표](./docs/art-handoff/characters.html), [몹/Boss](./docs/art-handoff/enemies.html), [전체 시나리오](./docs/art-handoff/scenarios/index.html), [전체 원본 목록](./docs/art-handoff/resources/index.html), [요청서 양식](./docs/art-handoff/request.html)을 분리해 필요한 자료만 읽을 수 있다.
+
+Product Goal이 제품 기준을 소유하며 요청 자료는 기획 해설과 현재 authored snapshot이다. 기획이 바뀌면 요청 해설을 먼저 재검토하고, 원본 code/content 변경 후 `npm run docs:art`, 최신성·ID·링크 검사는 `npm run docs:art:check`로 수행한다. NPC 부위/상태와 조립 묶음은 별도 인물 수로 합산하지 않는다.

@@ -4,48 +4,37 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX 및 업데이트 진행 안내 및 시작 디버그 진입·원형 트리 탐색 v0.4.4의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 그래픽 담당자용 역할/시나리오/원본 목록 문서의 구현과 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
-Human Feedback Priority — 그래픽 검토/저장 없는 테스트 플레이 역할 통합. 독립 렌더 연구실을 제거하고 본·메시·조명·재생 속도를 검토실 진단으로 모았다. 원형 유형 탐색과 문맥 동작, 세로 화면의 미리보기 우선 배치, 같은 선택으로 복귀하는 테스트 세션을 구현했다. 다음 playable frontier인 폐광→항구 연결 전투와 귀환의 연속 검증은 이번 UX 범위에 포함하지 않았으며 자동 실행은 중지 상태다.
+Human Feedback Priority — 그래픽 제작 요청 자료. Product Goal의 단일 제품 기준을 유지하고 링크로 요청 자료를 분리했다. 인물 단위 역할/상태/포즈, 실전 적과 유형 견본, 전체 이야기와 지역별 필요 그래픽, 원본 ID/검토 링크, 미정·충돌, 요청서 양식을 연결한다. 문서의 시나리오 서술은 새로운 gameplay 구현 완료를 의미하지 않는다.
 
 ## Active Execution Goal
 
-활성 자동 실행 없음. 완료한 UX의 dependency chain: 저장 없는 interactive context → 검토실 진단·선택 복귀 → 원형 tree/문맥 UX → desktop/mobile·keyboard·저장 보존 검증. 추가 자율 시나리오 확장은 시작하지 않는다.
+활성 자동 실행 없음. 완료한 문서 작업의 dependency chain: 기획/작성된 자료 대조 → 인물 묶음/리소스 ID 매핑 → 작은 링크 문서 생성 → 누락/링크/독립 내용 검토 → PC/mobile/print 및 설치 앱 문서 열기 검증. 자동 게임 개발은 재개하지 않는다.
 
 ## Desired-State Comparison
 
-| Area                                        | Status                         | Current evidence                                                                                                                                                                                     |
-| ------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 역할 통합·원형 UX                           | locally verified               | 독립 lab 화면/canvas 제거. 찾기 → 유형 → 대상, 대상 주변 동작, 접힌 진단/프레임, 세로 화면 목록 버튼.                                                                                                |
-| 저장 없는 테스트 플레이                     | locally verified               | production GameApplication/GameApp·입력·renderer 사용, 저장 port 접근 0회, restart/RAF/input cleanup/실패 rollback. 선택·동작·프레임·진단 URL 복귀. 미배치 대상은 안내하며 몹 배치 ID 불일치는 거부. |
-| 폴리곤 단일 표현                            | retained                       | 실제 backing depth와 가림, 본·부모 로컬 정규좌표·유형 clip 재사용. 주인공 디자인·전투 규칙은 유지.                                                                                                   |
-| 이전 PWA/모바일 수정                        | retained; device check pending | metadata/manifest/lifecycle/cache fixture PASS. 기존 설치 앱은 legacy SW 조건에 따라 완전종료가 한 번 필요할 수 있다. 실제 설치형 Android/iOS 확인을 headless QA로 대신 판정하지 않는다.             |
-| Human Feedback Priority / playable frontier | partial                        | INBOX에 남은 Human 원문과 이전 KO fence·폐광/항구 관찰 증거 보존. 전투 접촉, 외형 최종 만족과 연결 전투·귀환·후반/최종전은 이번 UX 완료로 닫지 않는다.                                               |
+| Area                                             | Status           | Evidence                                                                                                                                                                                  |
+| ------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 그래픽 제작 요청 자료                            | locally verified | 주인공 1 + NPC 역할 묶음 13, 현재 적 21 + 유형 견본 4, 전체 시나리오 10쪽, 592개 원본 행. 목록 한 쪽 최대 30행. 기획/현재 등록/요청 제안/미정 구분.                                       |
+| 문서 접근·최신성                                 | locally verified | 정적 HTML, 2,832개 로컬 링크와 673개 검토 URL 검사. docs:art / docs:art:check. docs namespace의 CSS·reference를 게임 캐시 밖에서 읽으며 게임 import의 cache-only 계약 유지.               |
+| 기존 그래픽 검토/폴리곤/원형 탐색                | retained         | 단일 polygon, 부모 로컬 정규좌표/유형 clip 재사용, 저장 없는 테스트 세션과 원형 검색/색상, 시작 디버그·업데이트 진행 안내 유지. 그래픽 원본/게임 장면은 이번 문서 작업에서 변경하지 않음. |
+| 기존 Human Feedback Priority / playable frontier | partial          | 폐광→항구 연결 전투/귀환과 전투 접촉·최종 시각 만족 등 INBOX 미완료 사항은 유지. 후반/최종전은 문서만으로 완료 판정하지 않음.                                                             |
+| 설치형 실기기                                    | Human 확인 대기  | native Chromium 지속 profile 증거와 Android/iOS 설치형 실기기 판정을 구분.                                                                                                                |
 
 ## Verification
 
-- v0.4.4: 트리 안 descendant 이름/ID 검색·검색 해제·빈 결과, breadcrumb 상위 복귀, 분리된 이전/다음·고정 6방향·긴 이름 설명, 낮은 화면 압축 배치와 resize cleanup을 구현했다. category/reference 기반 유형 palette를 배경·테두리·focus에 공유하며 4개 몹 유형의 서로 다른 색을 실제 확인했다. 592개 leaf coverage, graphics-navigation-qa, radial-refinement-qa의 desktop/landscape/portrait, 기존 test-play workflow PASS. artifacts/radial-refinement 및 artifacts/radial-leaves/refined-navigation.log.
-
-- v0.4.3: 시작 화면에 디버그 모드 버튼을 노출하여 기존 panel을 한 번에 연다. 기존 hold 진입 유지, 실제 opener focus 복귀. desktop 1280×720·landscape 740×360·portrait 360×640의 클릭/터치/키보드 진입과 버튼 경계 확인. mobile-menu 34개 viewport, platform 및 PWA fixture PASS. artifacts/start-debug와 artifacts/update-loading/start-debug-menu.log.
-
-- v0.4.2: 최초 등록/확인·다운로드에 spinner와 불확정 progress를 표시하며 적용은 saving→activating→reloading lifecycle 단계로 안내한다. 적용 중 메뉴 inert와 상태 focus, 실패 시 해제. pwa-lifecycle-check의 실제 단계/중복/실패와 native 지속 profile A→B→C·저장 보존·두 탭·offline 회귀 PASS. pwa-loading-qa는 지연된 실제 버전 확인과 desktop/landscape/portrait 단계 시각 fixture·경계·실패 종료·reduced motion을 확인했다. artifacts/update-loading 및 artifacts/pwa-update/loading-native.log. mobile-menu 34개 viewport 회귀 PASS.
-
-- v0.4.1: 찾기 tree의 592개 최종 리소스가 정확히 한 번씩 도달/선택 가능함을 검사했다. category→region→room→resource와 페이지 이동은 목록 전환 없이 이어진다. 반경 116→84px, 하위 중심 고정. graphics-navigation-qa의 desktop/mobile/portrait에서 최종 leaf 선택·페이지·중심·경계를 확인했다. artifacts/radial-leaves의 PNG와 기존 workflow 회귀 검증을 남겼다.
-
-- npm run check 전체 PASS: lint/format, combat/enchantment/story/campaign/recovery/intro/character/map/growth/visual/platform/graphics. artifacts/review-ux/full-check.log. 570 base 리소스, 2287 samples, 435 production RenderFrame 비교, 107 fixed-step 관찰.
-- scripts/review-workflow-qa.mjs: desktop 1280×720, mobile 844×390, portrait 390×844. 원형 유형/문맥·화면 경계·Escape·진단, 실제 키보드 이동·restart, 같은 URL 선택 복귀·test URL reload, localStorage 바이트 보존. artifacts/review-ux/evidence.json 및 PNG.
-- scripts/graphics-review-qa.mjs: 기존 desktop/mobile 그래픽 검토 68개 항목 PASS. 프레임 이동·재생·복사·URL 복원과 UI 검토를 유지한다.
-- test-play-session-check: production QA 초기화, 저장 getter 접근 0회, 실제 이동, restart/단일 RAF/입력 cleanup, 장비/위치/실패 candidate rollback, 일반 게임 속도 격리 PASS. test-play-config-check: 복귀 조건·장비·위치 URL과 잘못된 복귀/위치 거부 PASS.
-- 실제 선택 몹(scrap-yard-brace-collector) 배치 ID 확인, 일치하지 않는 테스트 대상과 잘못된 URL의 검토실 복구, console 오류 0건 확인. 디버그 진입 mouse/touch/keyboard 34개 기록 PASS.
-- PWA release fingerprint/asset integrity, manifest, lifecycle, cache fixture PASS. 새 기능 검증이 실제 설치형 기기 검증을 뜻하지 않는다.
-- Kando Submenu와 Autodesk Maya Marking Menu 공식 이미지 예시를 사용자에게 제시했다. 큰 한글 원형 버튼으로 분류/문맥을 다루고 많은 leaf는 목록·검색으로 찾는다.
-- 이번 피드백만 Desired State가 소유하므로 INBOX에서 제거했다. 나머지 원문은 보존한다. 자동 loop pause와 이전 미통합 작업은 유지한다.
+- npm run docs:art:check: 592개 resource ID가 누락/중복 없이 한 번씩 등장, 전체 NPC actor mapping, 10개 시나리오 페이지, source/anchor와 검토 URL 검증 PASS.
+- 독립 source audit 한 명을 재사용했다. 폐광 구조 대상 링크 누락과 고대 병기의 사무적/비공포 연출 톤 누락을 수정하고 재확인 PASS. 모듈 소유권·자유 순서·우회 원인·온실 지형·선박 구분·후반 분량 미정을 확인 자료에 유지한다.
+- art-handoff-qa: desktop 1280×900, mobile 390×844의 주요 문서/표, 실제 reference 이미지, body overflow, 인쇄 view, Product Goal→자료와 원본→실제 검토실 링크 확인. 현재 Service Worker가 제어하는 문서의 CSS/이미지도 네트워크로 로드. artifacts/art-handoff/evidence.json 및 PNG.
+- PWA fixture는 문서 CSS의 network-only 응답과 game cache 미포함, 기존 game missing-import 차단/버전 고정/저장/오프라인 계약을 확인한다. 기존 native A→B→C 회귀 근거는 artifacts/art-handoff/pwa-browser.log.
+- 코드·문서 lint/format과 release metadata 최신성 확인. 문서/참고 원본을 runtime precache에 추가하지 않는다.
 
 ## Human 확인 / Pause
 
-자동 루프는 명시적 재개 전까지 중지한다. 유형 견본은 검토실 전용이며 전투 몹 교체 완료가 아니다. 실제 모바일 설치 앱의 업데이트 동작과 최종 시각 만족은 Human 확인이 남아 있다.
+문서 요청은 디자인 최종 승인이 아니다. 담당자는 docs/art-handoff/index.html과 작업할 인물/지역 링크를 받고 request.html 양식으로 요청을 구체화한다. decisions.html의 미정은 자료 완성으로 소거하지 않는다. 자동 루프는 명시적 재개 전까지 중지한다.
 
 ## Preserved Work Reference
 

@@ -12,12 +12,16 @@ const publicFiles = new Set([
   '/manifest.webmanifest',
   '/sw.js',
   '/PRODUCT_GOAL.html',
+  '/scripts/art-handoff-content.mjs',
+  '/scripts/generate-art-handoff.mjs',
   '/.nojekyll',
 ]);
 const mimeTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],
   ['.js', 'text/javascript; charset=utf-8'],
+  ['.mjs', 'text/javascript; charset=utf-8'],
+  ['.md', 'text/plain; charset=utf-8'],
   ['.json', 'application/json; charset=utf-8'],
   ['.png', 'image/png'],
   ['.webmanifest', 'application/manifest+json; charset=utf-8'],
@@ -46,7 +50,8 @@ function resolveRequestPath(rootPath, requestUrl) {
   if (
     !publicFiles.has(normalizedPath) &&
     !normalizedPath.startsWith('/src/') &&
-    !normalizedPath.startsWith('/public/')
+    !normalizedPath.startsWith('/public/') &&
+    !normalizedPath.startsWith('/docs/')
   ) {
     return null;
   }

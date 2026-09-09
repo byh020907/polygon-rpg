@@ -10,6 +10,7 @@ if (!RELEASE?.buildId || (expectedBuildId && expectedBuildId !== RELEASE.buildId
 
 const SCOPE = self.registration.scope;
 const SCOPE_PATH = new URL(SCOPE).pathname;
+const DOCS_PATH = new URL('./docs/', SCOPE).pathname;
 const CACHE_PREFIX = `polygon-rpg-release-v2-${encodeURIComponent(SCOPE)}-`;
 const CACHE_NAME = `${CACHE_PREFIX}${RELEASE.buildId}`;
 const CLIENT_CACHE_NAME = `polygon-rpg-clients-v2-${encodeURIComponent(SCOPE)}`;
@@ -283,13 +284,13 @@ async function serveRelease(event, url) {
     }
   }
   // Project documents can live beside the app without becoming game release assets.
-  // Only a separate document navigation may use the network; imports never do.
-  if (navigation && !rootNavigation) {
+  // Public docs and their styles/references stay online-only; game imports never fall back.
+  if ((navigation && !rootNavigation) || url.pathname.startsWith(DOCS_PATH)) {
     try {
       return await fetch(event.request);
     } catch {
       const offline = await cache?.match(OFFLINE_URL);
-      if (offline) return offline;
+      if (navigation && offline) return offline;
     }
   }
   void reportDiagnostic(`현재 버전의 파일을 불러올 수 없습니다: ${url.pathname}`);
