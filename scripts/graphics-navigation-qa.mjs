@@ -35,11 +35,12 @@ for (const [name, width, height] of [
           `[...document.querySelectorAll('.gr-radial-item')].findIndex(n=>n.title===${JSON.stringify(label)})`,
         );
         if (index >= 0) break;
-        const next = await b.evaluate(
-          "[...document.querySelectorAll('.gr-radial-item')].findIndex(n=>n.textContent.startsWith('다음 '))",
+        assert.equal(
+          await b.evaluate("document.querySelector('.gr-radial-next').disabled"),
+          false,
+          label,
         );
-        assert.ok(next >= 0, label);
-        await b.click(`.gr-radial-item:nth-of-type(${next + 1})`, name !== 'desktop');
+        await b.click('.gr-radial-next', name !== 'desktop');
       }
       assert.ok(index >= 0, label);
       const boxes = await b.evaluate(
@@ -48,11 +49,14 @@ for (const [name, width, height] of [
       assert.ok(
         boxes.every((r) => r.left >= 0 && r.top >= 0 && r.right <= width && r.bottom <= height),
       );
-      const c = boxes.at(-1);
-      assert.ok(
-        Math.abs(c.x - center.x) < 1 && Math.abs(c.y - center.y) < 1,
-        'submenu center moved',
+      const c = await b.evaluate(
+        "document.querySelector('.gr-radial-center').getBoundingClientRect().toJSON()",
       );
+      if (height >= 470)
+        assert.ok(
+          Math.abs(c.x - center.x) < 1 && Math.abs(c.y - center.y) < 1,
+          'submenu center moved',
+        );
       await b.screenshot(`artifacts/radial-leaves/${name}-leaves.png`);
       await b.click(`.gr-radial-item:nth-of-type(${index + 1})`, name !== 'desktop');
     }

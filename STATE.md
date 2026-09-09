@@ -4,7 +4,7 @@
 
 ## Runtime Status
 
-`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX 및 업데이트 진행 안내 및 시작 디버그 진입 v0.4.3의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
+`WAITING_FOR_HUMAN` — 검토 도구 통합과 원형 UX 및 업데이트 진행 안내 및 시작 디버그 진입·원형 트리 탐색 v0.4.4의 구현 및 로컬 검증을 마쳤다. Codex heartbeat와 OpenCode runner의 Human pause는 유지한다. 전체 게임의 IMPLEMENTATION_COMPLETE 판정은 아니다.
 
 ## Current Phase
 
@@ -25,6 +25,8 @@ Human Feedback Priority — 그래픽 검토/저장 없는 테스트 플레이 �
 | Human Feedback Priority / playable frontier | partial                        | INBOX에 남은 Human 원문과 이전 KO fence·폐광/항구 관찰 증거 보존. 전투 접촉, 외형 최종 만족과 연결 전투·귀환·후반/최종전은 이번 UX 완료로 닫지 않는다.                                               |
 
 ## Verification
+
+- v0.4.4: 트리 안 descendant 이름/ID 검색·검색 해제·빈 결과, breadcrumb 상위 복귀, 분리된 이전/다음·고정 6방향·긴 이름 설명, 낮은 화면 압축 배치와 resize cleanup을 구현했다. category/reference 기반 유형 palette를 배경·테두리·focus에 공유하며 4개 몹 유형의 서로 다른 색을 실제 확인했다. 592개 leaf coverage, graphics-navigation-qa, radial-refinement-qa의 desktop/landscape/portrait, 기존 test-play workflow PASS. artifacts/radial-refinement 및 artifacts/radial-leaves/refined-navigation.log.
 
 - v0.4.3: 시작 화면에 디버그 모드 버튼을 노출하여 기존 panel을 한 번에 연다. 기존 hold 진입 유지, 실제 opener focus 복귀. desktop 1280×720·landscape 740×360·portrait 360×640의 클릭/터치/키보드 진입과 버튼 경계 확인. mobile-menu 34개 viewport, platform 및 PWA fixture PASS. artifacts/start-debug와 artifacts/update-loading/start-debug-menu.log.
 

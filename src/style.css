@@ -3814,3 +3814,115 @@ html[data-ui-review] {
   border-color: #8d794a;
   background: #252b22;
 }
+/* Tree controls stay outside the six stable radial slots. */
+#graphics-review .gr-radial-header,
+#graphics-review .gr-radial-footer {
+  position: absolute;
+  left: -160px;
+  width: 320px;
+  padding: 6px;
+  background: #10241df5;
+  border: 1px solid #53694e;
+  border-radius: 9px;
+}
+#graphics-review .gr-radial-header {
+  top: -228px;
+}
+#graphics-review .gr-radial-footer {
+  top: 128px;
+}
+#graphics-review .gr-radial-trail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+#graphics-review .gr-radial-trail strong {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 60px;
+}
+#graphics-review .gr-radial-trail button {
+  flex: 0 0 auto;
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#graphics-review .gr-radial-ancestor,
+#graphics-review .gr-radial-pages button {
+  min-height: 44px;
+  padding: 5px 9px;
+  color: #f3d58c;
+  background: #263d32;
+  border: 1px solid #647452;
+  border-radius: 6px;
+  font-size: 12px;
+}
+#graphics-review .gr-radial-search {
+  min-height: 38px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px;
+  font-size: 14px;
+}
+#graphics-review .gr-radial-detail {
+  height: 32px;
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 16px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  color: #f2e7c5;
+}
+#graphics-review .gr-radial-pages {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+#graphics-review .gr-radial-pages span {
+  font-size: 12px;
+  color: #b4c7bd;
+}
+#graphics-review .gr-radial-pages button:disabled {
+  opacity: 0.4;
+}
+#graphics-review .gr-radial--compact .gr-radial-header,
+#graphics-review .gr-radial--compact .gr-radial-footer {
+  position: static;
+  width: auto;
+  grid-column: 1/-1;
+  padding: 4px;
+}
+#graphics-review .gr-radial--compact .gr-radial-center {
+  grid-column: 1/-1;
+}
+#graphics-review .gr-radial--compact {
+  gap: 6px;
+  padding: 8px;
+}
+#graphics-review .gr-radial--compact .gr-radial-item,
+#graphics-review .gr-radial--compact .gr-radial-center {
+  height: 44px;
+}
+#graphics-review .gr-radial-item {
+  background: var(--radial-fill, #19332d);
+  border-color: var(--radial-accent, #c3a75e);
+  border-width: 2px;
+  color: #fff8e9;
+}
+#graphics-review .gr-radial-item:hover,
+#graphics-review .gr-radial-item:focus-visible {
+  background: var(--radial-accent, #d5b96d);
+  border-color: var(--radial-accent, #d5b96d);
+  outline-color: var(--radial-accent, #d5b96d);
+  color: #101c1c;
+}
+#graphics-review .gr-radial--tree .gr-radial-header,
+#graphics-review .gr-radial--tree .gr-radial-footer,
+#graphics-review .gr-radial--tree .gr-radial-center {
+  border-color: var(--radial-accent, #c3a75e);
+}

@@ -2,6 +2,7 @@ export function graphicsNavigation(catalog, select) {
   const leaf = (resource, label = resource.label) => ({
     label,
     resourceId: resource.id,
+    colorKey: resource.referenceId ?? resource.category,
     run: (point) => select(resource.id, point),
   });
   const group = (resources, depth = 0) => {
@@ -18,26 +19,30 @@ export function graphicsNavigation(catalog, select) {
     return [...groups.values()].map((items) => ({
       label: items[0][labelField] ?? items[0][field] ?? '공용·미배치',
       children: group(items, depth + 1),
+      colorKey: items[0].category,
     }));
   };
   const category = (label, id) => {
     const resources = catalog.resources.filter((r) => r.category === id);
     return resources.length === 1
       ? leaf(resources[0], label)
-      : { label, children: group(resources) };
+      : { label, colorKey: id, children: group(resources) };
   };
   return {
     label: '찾기',
+    searchable: true,
     children: [
       category('주인공', 'player'),
       {
         label: '몹',
+        colorKey: 'enemy',
         children: [category('유형 견본', 'enemy-reference'), category('실전 몹', 'enemy')],
       },
       category('NPC', 'npc'),
       category('장비', 'equipment'),
       {
         label: '월드',
+        colorKey: 'world',
         children: [
           category('장면', 'scene'),
           category('지형', 'terrain'),
@@ -48,7 +53,11 @@ export function graphicsNavigation(catalog, select) {
           category('전경', 'foreground'),
         ],
       },
-      { label: '효과·UI', children: [category('이펙트', 'effect'), category('UI·아이콘', 'ui')] },
+      {
+        label: '효과·UI',
+        colorKey: 'effect',
+        children: [category('이펙트', 'effect'), category('UI·아이콘', 'ui')],
+      },
     ],
   };
 }

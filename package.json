@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "private": true,
   "type": "module",
   "engines": {
@@ -40,7 +40,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:polygon:browser": "node scripts/polygon-only-qa.mjs",
-    "test:review-workflow": "node scripts/review-workflow-qa.mjs"
+    "test:review-workflow": "node scripts/review-workflow-qa.mjs",
+    "test:radial:browser": "node scripts/radial-refinement-qa.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
