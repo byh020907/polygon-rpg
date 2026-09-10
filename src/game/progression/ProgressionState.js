@@ -1,3 +1,5 @@
+import { createQuestState, assertQuestState } from '../quests/QuestState.js';
+import { assertMaterialLedger } from './MaterialLedger.js';
 import { assertStoredCampaignSnapshot } from './ProgressionCampaignValidation.js';
 import {
   EQUIPMENT_CATALOG,
@@ -22,7 +24,7 @@ import {
   upgradeEquipmentEnchantment as upgradeEnchantment,
 } from '../enchantment/EnchantmentState.js';
 
-export const PROGRESSION_SCHEMA_VERSION = 11;
+export const PROGRESSION_SCHEMA_VERSION = 12;
 
 export const PROGRESSION_TRANSACTION_REASON = Object.freeze({
   AWARDED: 'awarded',
@@ -86,7 +88,11 @@ export function createProgressionSnapshot(
   const ownedEquipmentItemIds = [...new Set([defaultItemId, ...DEFAULT_OWNED_EQUIPMENT_ITEM_IDS])];
   const enchantable = getEnchantableEquipmentItemIds(ownedEquipmentItemIds, equipmentCatalog);
   const snapshot = {
-    version: 11,
+    version: 12,
+    quests: createQuestState(0),
+    materials: { 'salvaged-steel': 0 },
+    rewardClaims: [],
+    equipmentUpgrades: {},
     gold: 0,
     trainingMarks: 0,
     ownedEquipmentItemIds,
@@ -125,10 +131,11 @@ function uniqueIds(value, label) {
     throw new TypeError(label + ' must contain unique IDs');
   return value;
 }
-export function assertProgressionSnapshot(
+function assertProgressionVersion(
   snapshot,
   scrapCampaignProfile,
   equipmentCatalog = EQUIPMENT_CATALOG,
+  expectedVersion = 12,
 ) {
   record(snapshot, 'progression', [
     'version',
@@ -143,8 +150,9 @@ export function assertProgressionSnapshot(
     'equipmentForge',
     'enchantment',
     'scrapCampaign',
+    ...(expectedVersion === 12 ? ['quests', 'materials', 'rewardClaims', 'equipmentUpgrades'] : []),
   ]);
-  if (snapshot.version !== 11) throw new TypeError('Unsupported progression schema');
+  if (snapshot.version !== expectedVersion) throw new TypeError('Unsupported progression schema');
   assertNonNegativeInteger(snapshot.gold, 'Gold');
   assertNonNegativeInteger(snapshot.trainingMarks, 'Training marks');
   const owned = uniqueIds(snapshot.ownedEquipmentItemIds, 'Owned items');
@@ -213,7 +221,38 @@ export function assertProgressionSnapshot(
     )
       throw new Error('Invalid enchant element/level');
   }
+  if (expectedVersion === 12) {
+    assertQuestState(snapshot.quests);
+    if (snapshot.quests.lastElapsedSegments > snapshot.scrapCampaign.elapsedSegments)
+      throw new Error('Quest clock cannot be ahead of campaign');
+    assertMaterialLedger(snapshot);
+    uniqueIds(snapshot.rewardClaims, 'Reward claims');
+    if (snapshot.rewardClaims.length > 4096) throw new Error('Reward claim budget exceeded');
+    record(snapshot.equipmentUpgrades, 'Equipment upgrades');
+    for (const [id, level] of Object.entries(snapshot.equipmentUpgrades)) {
+      const item = equipmentCatalog.getItem(id);
+      if (
+        !owned.includes(id) ||
+        equipmentCatalog.getFamily(item.familyId).slot === 'tool' ||
+        !Number.isInteger(level) ||
+        level < 0 ||
+        level >
+          (snapshot.scrapCampaign.collectedPartIds.length >= 4
+            ? 3
+            : snapshot.scrapCampaign.collectedPartIds.length >= 2
+              ? 2
+              : 1)
+      )
+        throw new Error('Invalid equipment upgrade');
+    }
+  }
   return snapshot;
+}
+export function assertProgressionSnapshot(snapshot, profile, catalog = EQUIPMENT_CATALOG) {
+  return assertProgressionVersion(snapshot, profile, catalog, 12);
+}
+export function assertV11ProgressionSnapshot(snapshot, profile, catalog = EQUIPMENT_CATALOG) {
+  return assertProgressionVersion(snapshot, profile, catalog, 11);
 }
 export function mergeProgressionSnapshot(
   snapshot,

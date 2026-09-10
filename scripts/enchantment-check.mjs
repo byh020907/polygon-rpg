@@ -627,7 +627,7 @@ function verifyPersistenceAndRecovery() {
   ).snapshot;
   const adapter = new MemoryStorage();
   const storage = new ProgressionStorage(adapter, 'enchantment-current', ENCHANTMENT_CATALOG);
-  assert.equal(PROGRESSION_SCHEMA_VERSION, 11);
+  assert.equal(PROGRESSION_SCHEMA_VERSION, 12);
   assert.equal(storage.save(upgraded).ok, true);
   const roundTrip = storage.load(DEFAULT_SWORD_ID, [DEFAULT_SWORD_ID], ENCHANTMENT_CATALOG);
   assert.equal(roundTrip.ok, true);
@@ -777,7 +777,7 @@ console.log(
         'affinity-non-zero-basic-strong-status-and-four-elements',
         'shield-contact-exclusion',
         'current-authored-victory-resources-and-one-ledger-award',
-        'production-victory-single-snapshot-and-v11-round-trip',
+        'production-victory-single-snapshot-and-v12-round-trip',
         'incompatible-reset-notice-corrupt-and-write-failure',
         'active-npc-conversation-command-only-and-static-hud-removal',
       ],

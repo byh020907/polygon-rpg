@@ -873,7 +873,7 @@ console.log(
         'equipment-range-speed-hitstun-guard-tradeoff',
         'command-route-unlock',
         'idempotence-and-wallet-order',
-        'schema-v11-archetype-round-trip-incompatible-reset-and-write-failure',
+        'schema-v12-archetype-round-trip-incompatible-reset-and-write-failure',
         'active-weapon-merchant-dialogue-only-and-static-equipment-ui-removal',
         'authored-content-composition-injection-boundary',
       ],

@@ -58,7 +58,7 @@ export const EQUIPMENT_FAMILY_PROFILES = freezeEquipmentData([
     slot: 'tool',
     handUsage: 'none',
     combatRole: 'field-work',
-    fieldCapabilities: [],
+    fieldCapabilities: ['illuminate'],
     enchantable: false,
   },
 ]);

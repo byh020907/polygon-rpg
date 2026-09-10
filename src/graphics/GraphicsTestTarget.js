@@ -5,6 +5,8 @@ const scenarios = visualQaDebugScenarioEntries().map((entry) =>
 );
 export function graphicsTestTarget(resource, action, sample) {
   const unavailable = (reason) => ({ available: false, reason });
+  if (resource.producer === 'field-quest')
+    return unavailable('의뢰 상태 표본입니다. 실제 의뢰는 게시판에서 수락해 확인합니다.');
   if (resource.producer === 'svg')
     return {
       available: true,

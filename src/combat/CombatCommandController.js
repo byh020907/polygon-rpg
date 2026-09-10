@@ -334,15 +334,32 @@ export class CombatCommandController {
     return combatMotionPolicy(id, this.timingProfile).frame ?? null;
   }
 
-  reset({ inputSnapshot = null } = {}) {
+  reset({ inputSnapshot = null, preserveStamina = false, preserveInputHistory = false } = {}) {
+    // Modal actions do not restart the input adapters' monotonic counters.
+    // Keep their consumed edges so a past attack cannot replay after resting.
+    if (preserveInputHistory && inputSnapshot === null) {
+      inputSnapshot = {
+        ...this.previousInputs,
+        guard: this.previousGuardInput,
+        guardSequence: this.previousGuardSequence,
+      };
+      for (const name of INPUT_NAMES)
+        inputSnapshot[`${name}Sequence`] = this.previousSequences?.[name] ?? 0;
+    }
+    const previousStamina = this.stamina,
+      previousDelay = this.staminaRecoveryDelaySeconds;
     this.active = null;
     this.queuedMotion = null;
     this.sequence = 0;
     this.comboCycle = 0;
     this.airActions = 0;
     this.heldPose = 'idle';
-    this.stamina = this.staminaProfile.maximum;
-    this.staminaRecoveryDelaySeconds = 0;
+    this.stamina =
+      preserveStamina && Number.isFinite(previousStamina)
+        ? previousStamina
+        : this.staminaProfile.maximum;
+    this.staminaRecoveryDelaySeconds =
+      preserveStamina && Number.isFinite(previousDelay) ? previousDelay : 0;
     this.lastStaminaAction = null;
     this.lastCommandTransition = null;
     this.continueNextStarterInCombo = false;

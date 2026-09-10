@@ -24,73 +24,196 @@
       >이 게임을 실행하려면 JavaScript를 활성화해야 합니다.</noscript
     >
     <main id="app" x-data="gameShell" x-cloak>
-      <dialog x-ref="equipmentDialog" class="equipment-dialog" aria-labelledby="equipment-title">
+      <dialog
+        x-ref="equipmentDialog"
+        class="equipment-dialog"
+        aria-labelledby="equipment-title"
+        @close="closeFieldJournal"
+      >
         <header>
-          <h2 id="equipment-title">장비 · 시너지 도감</h2>
+          <h2 id="equipment-title">장비 · 재료 · 의뢰 · 도감</h2>
           <button type="button" @click="$refs.equipmentDialog.close()">닫기</button>
         </header>
-        <details class="equipment-overview">
-          <summary>현재 전투 방식 · 현장 기능</summary>
-          <p x-text="equipmentView.commandGuide"></p>
-          <p x-show="equipmentView.canChange === false">
-            진행 중인 동작을 마친 뒤 장비를 변경할 수 있습니다.
-          </p>
-          <p x-text="equipmentView.stamina"></p>
-          <p><strong>전투 방식</strong> <span x-text="equipmentView.moveset"></span></p>
-          <p><strong>현장 기능</strong> <span x-text="equipmentView.capabilities"></span></p>
-        </details>
-        <div class="equipment-slots">
-          <template x-for="slot in equipmentView.slots" :key="slot.id"
-            ><article>
-              <strong x-text="slot.label"></strong><span x-text="slot.itemLabel"></span
-              ><button
-                type="button"
-                x-show="slot.canUnequip"
-                @click="unequipSlot(slot.id)"
-                :disabled="equipmentView.canChange === false"
-                :aria-label="slot.label+' 해제'"
-              >
-                해제
-              </button>
-            </article></template
+        <nav class="field-journal-tabs" aria-label="관리 항목">
+          <button
+            type="button"
+            data-journal-tab="equipment"
+            @click="journalTab='equipment'"
+            :aria-pressed="journalTab==='equipment'"
           >
-        </div>
-        <h3>소유 장비</h3>
-        <div class="equipment-items">
-          <template x-for="item in equipmentView.items" :key="item.id"
-            ><article :data-equipment-item="item.id">
-              <header>
-                <strong x-text="item.label"></strong
+            장비
+          </button>
+          <button
+            type="button"
+            data-journal-tab="materials"
+            @click="journalTab='materials'"
+            :aria-pressed="journalTab==='materials'"
+          >
+            재료
+          </button>
+          <button
+            type="button"
+            data-journal-tab="quests"
+            @click="journalTab='quests'"
+            :aria-pressed="journalTab==='quests'"
+          >
+            의뢰
+          </button>
+          <button
+            type="button"
+            data-journal-tab="codex"
+            @click="journalTab='codex'"
+            :aria-pressed="journalTab==='codex'"
+          >
+            도감
+          </button>
+        </nav>
+        <section x-show="journalTab==='equipment'">
+          <details class="equipment-overview">
+            <summary>현재 전투 방식 · 현장 기능</summary>
+            <p x-text="equipmentView.commandGuide"></p>
+            <p x-show="equipmentView.canChange === false">
+              주변 전투와 진행 중인 동작을 마친 뒤 장비를 변경할 수 있습니다.
+            </p>
+            <p x-text="equipmentView.stamina"></p>
+            <p><strong>전투 방식</strong> <span x-text="equipmentView.moveset"></span></p>
+            <p><strong>현장 기능</strong> <span x-text="equipmentView.capabilities"></span></p>
+          </details>
+          <div class="equipment-slots">
+            <template x-for="slot in equipmentView.slots" :key="slot.id"
+              ><article>
+                <strong x-text="slot.label"></strong><span x-text="slot.itemLabel"></span
                 ><button
                   type="button"
-                  @click="equipItem(item.id)"
-                  :disabled="item.equipped || equipmentView.canChange === false"
-                  x-text="item.equipped?'장착 중':'장착'"
-                ></button>
-              </header>
-              <p x-text="item.family+' · '+item.slotLabel+' · '+item.handUsage"></p>
-              <p x-text="item.description"></p>
-              <p x-text="'Reach '+item.reach+'배 · Posture '+item.posture+'배'"></p>
-              <small x-text="item.fieldCapabilities"></small></article
+                  x-show="slot.canUnequip"
+                  @click="unequipSlot(slot.id)"
+                  :disabled="equipmentView.canChange === false"
+                  :aria-label="slot.label+' 해제'"
+                >
+                  해제
+                </button>
+              </article></template
+            >
+          </div>
+          <h3>소유 장비</h3>
+          <div class="equipment-items">
+            <template x-for="item in equipmentView.items" :key="item.id"
+              ><article :data-equipment-item="item.id">
+                <header>
+                  <strong x-text="item.label"></strong
+                  ><button
+                    type="button"
+                    @click="equipItem(item.id)"
+                    :disabled="item.equipped || equipmentView.canChange === false"
+                    x-text="item.equipped?'장착 중':'장착'"
+                  ></button>
+                </header>
+                <p x-text="item.family+' · '+item.slotLabel+' · '+item.handUsage"></p>
+                <p x-text="item.description"></p>
+                <p x-text="'Reach '+item.reach+'배 · Posture '+item.posture+'배'"></p>
+                <small x-text="item.fieldCapabilities"></small>
+                <p x-text="'강화 +'+item.upgradeLevel+' / 현재 상한 '+item.upgradeCap"></p>
+                <button
+                  type="button"
+                  class="equipment-upgrade"
+                  @click="upgradeItem(item.id)"
+                  :disabled="!item.canUpgrade || !equipmentView.workshopAvailable"
+                  x-text="equipmentView.workshopAvailable?'강화 · '+item.upgradeGold+' Gold / 철재 '+item.upgradeSteel:'고물상에서 강화'"
+                ></button></article
+            ></template>
+          </div>
+        </section>
+        <section x-show="journalTab==='codex'">
+          <h3>세트 시너지 · 조건 공개</h3>
+          <template x-for="set in equipmentView.codex.sets" :key="set.id"
+            ><article>
+              <strong x-text="set.label"></strong
+              ><template x-for="bonus in set.bonuses" :key="bonus.id"
+                ><p
+                  x-text="(bonus.active?'적용 중 · ':'')+bonus.pieces+'부위 · '+bonus.description"
+                ></p
+              ></template></article
           ></template>
-        </div>
-        <h3>세트 시너지 · 조건 공개</h3>
-        <template x-for="set in equipmentView.codex.sets" :key="set.id"
-          ><article>
-            <strong x-text="set.label"></strong
-            ><template x-for="bonus in set.bonuses" :key="bonus.id"
-              ><p
-                x-text="(bonus.active?'적용 중 · ':'')+bonus.pieces+'부위 · '+bonus.description"
-              ></p
-            ></template></article
-        ></template>
-        <h3>특수 시너지</h3>
-        <template x-for="synergy in equipmentView.codex.specialSynergies" :key="synergy.id"
-          ><article :data-synergy-discovered="synergy.discovered">
-            <strong x-text="synergy.label"></strong>
-            <p x-show="synergy.discovered" x-text="synergy.description??''"></p>
-            <p x-show="synergy.discovered" x-text="synergy.requirementsLabel??''"></p></article
-        ></template>
+          <h3>특수 시너지</h3>
+          <template x-for="synergy in equipmentView.codex.specialSynergies" :key="synergy.id"
+            ><article :data-synergy-discovered="synergy.discovered">
+              <strong x-text="synergy.label"></strong>
+              <p x-show="synergy.discovered" x-text="synergy.description??''"></p>
+              <p x-show="synergy.discovered" x-text="synergy.requirementsLabel??''"></p></article
+          ></template>
+          <h3 x-show="fieldJournal.quests.explorations?.length">발견한 장소</h3>
+          <template x-for="place in fieldJournal.quests.explorations??[]" :key="place.id"
+            ><p x-text="place.label"></p
+          ></template>
+        </section>
+        <section x-show="journalTab==='materials'">
+          <h3>재료 장부</h3>
+          <p>회수·제작·강화에 쓰는 재료입니다. 보유량만 관리합니다.</p>
+          <dl class="material-ledger">
+            <template x-for="material in fieldJournal.materials" :key="material.id"
+              ><div>
+                <dt x-text="material.label"></dt>
+                <dd x-text="material.quantity"></dd></div
+            ></template>
+          </dl>
+        </section>
+        <section x-show="journalTab==='quests'" class="quest-journal">
+          <p x-text="fieldJournal.clockLabel"></p>
+          <button type="button" data-field-rest x-show="fieldJournal.canRest" @click="restAtField">
+            현장 휴식 · 1구간 / 완전 회복
+          </button>
+          <h3>주요 의뢰</h3>
+          <article>
+            <strong
+              x-text="fieldJournal.quests.main?.title??fieldJournal.quests.main?.label??'현장 의뢰 확인'"
+            ></strong>
+            <p
+              x-text="fieldJournal.quests.main?.summary??fieldJournal.quests.main?.objective??''"
+            ></p>
+          </article>
+          <h3 x-show="fieldJournal.quests.linked.length">연결 의뢰</h3>
+          <template x-for="quest in fieldJournal.quests.linked" :key="quest.id"
+            ><article>
+              <strong x-text="quest.label"></strong>
+              <p x-text="quest.objective"></p>
+              <small x-text="quest.completed?'해결':'현장에서 진행'"></small></article
+          ></template>
+          <h3>일반 의뢰 <small x-text="(fieldJournal.quests.slotCount??0)+' / 4'"></small></h3>
+          <p x-show="!fieldJournal.quests.general.length">
+            차고 공개 후 게시판과 현장에서 오늘의 의뢰를 확인하세요.
+          </p>
+          <div class="general-quests">
+            <template x-for="quest in fieldJournal.quests.general" :key="quest.instanceId"
+              ><article
+                :data-quest-instance="quest.instanceId"
+                :class="{'quest-deadline':quest.deadlineRisk}"
+              >
+                <header>
+                  <strong x-text="quest.title"></strong
+                  ><button
+                    type="button"
+                    @click="acceptGeneralQuest(quest.instanceId)"
+                    :disabled="quest.status!=='offered'"
+                    x-text="quest.status==='offered'?'수락':'진행 중'"
+                  ></button>
+                </header>
+                <p x-text="quest.summary"></p>
+                <small
+                  x-text="quest.regionLabel+' · '+quest.issuerLabel+' · '+quest.statusLabel+' · 남은 '+quest.remainingSegments+'구간'"
+                ></small>
+                <p x-text="quest.rewardLabel"></p>
+                <small
+                  x-text="quest.objective.phaseId==='night'?'밤에 현장 확인':quest.objective.workSegments?'현장 작업 1구간 · 시작 전 확인':'현장에서 해결'"
+                ></small></article
+            ></template>
+          </div>
+          <details>
+            <summary>지난 의뢰</summary>
+            <template x-for="quest in fieldJournal.quests.history" :key="quest.instanceId"
+              ><p x-text="quest.title+' · '+quest.statusLabel"></p
+            ></template>
+          </details>
+        </section>
       </dialog>
       <section
         class="pwa-transition"
@@ -221,7 +344,7 @@
                   class="menu-reset-progress"
                   @click="openEquipment"
                 >
-                  장비 · 도감
+                  장비 · 의뢰
                 </button>
                 <button
                   id="menu-open-debug-control"
@@ -335,6 +458,30 @@
           </button>
         </aside>
         <div class="game-viewport">
+          <aside class="acquisition-feed" aria-live="polite" aria-label="획득과 현장 소식">
+            <template x-for="notice in acquisitionFeed" :key="notice.id"
+              ><article
+                :data-acquisition-kind="notice.kind"
+                :class="'acquisition-'+notice.importance"
+              >
+                <strong x-text="notice.title"></strong
+                ><template x-for="(line,i) in notice.lines" :key="i"
+                  ><span
+                    x-text="line.label+(line.quantity!==null&&line.quantity!==undefined?' ×'+line.quantity:'')"
+                  ></span
+                ></template></article
+            ></template>
+          </aside>
+          <p
+            class="field-action-prompt"
+            x-show="fieldPrompt"
+            x-text="'↑ / 상호작용 · '+fieldPrompt"
+          ></p>
+          <aside class="quest-epilogue" x-show="campaign.finalBattle?.stageId==='epilogue'">
+            <template x-for="outcome in questOutcomes" :key="outcome.factId"
+              ><p x-text="outcome.text"></p
+            ></template>
+          </aside>
           <canvas
             id="game-canvas"
             tabindex="0"
@@ -480,12 +627,12 @@
                   <div class="operation-map-issue-grid">
                     <article class="operation-map-primary-issue" data-issue-kind="primary">
                       <small
-                        x-text="`주목표 · ${campaign.issueWindow.primary.regionLabel}`"
+                        x-text="`주요 의뢰 · ${campaign.issueWindow.primary.regionLabel}`"
                       ></small>
                       <h4 x-text="campaign.issueWindow.primary.label"></h4>
                       <p x-text="campaign.issueWindow.primary.objective"></p>
                     </article>
-                    <ol class="operation-map-linked-issues" aria-label="연결 이슈">
+                    <ol class="operation-map-linked-issues" aria-label="연결 의뢰">
                       <template x-for="issue in campaign.issueWindow.linked" x-bind:key="issue.id">
                         <li
                           x-bind:data-issue-id="issue.id"
@@ -506,7 +653,7 @@
                   </div>
                 </template>
                 <p class="operation-map-issue-empty" x-show="!campaign.issueWindow.primary">
-                  어느 지역부터 시작해도 됩니다. 현장의 첫 설명을 들으면 그 사건 하나와 연결 이슈
+                  어느 지역부터 시작해도 됩니다. 현장의 첫 설명을 들으면 그 사건 하나와 연결 의뢰
                   최대 두 개만 여기에 고정됩니다.
                 </p>
               </section>
@@ -596,7 +743,7 @@
             >
               <header>
                 <small
-                  x-text="campaignActionPreview.kind === 'region-event-start' ? 'CORE EVENT · CONFIRM' : 'LONG-DISTANCE ROAD · CONFIRM'"
+                  x-text="({'region-event-start':'핵심 사건 확인','field-work':'현장 작업 확인',rest:'휴식 확인',travel:'장거리 이동 확인'})[campaignActionPreview.kind] ?? '행동 확인'"
                 ></small>
                 <h2
                   id="campaign-action-title"
@@ -652,7 +799,7 @@
                   @click="confirmCampaignActionPreview"
                 >
                   <span
-                    x-text="`${campaignActionPreview.kind === 'region-event-start' ? '사건 시작' : '이동 확정'} · ${campaignActionPreview.costSegments}구간`"
+                    x-text="`${({'region-event-start':'사건 시작','field-work':'작업 확정',rest:'휴식 확정',travel:'이동 확정'})[campaignActionPreview.kind] ?? '행동 확정'} · ${campaignActionPreview.costSegments}구간`"
                   ></span>
                 </button>
               </footer>

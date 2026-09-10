@@ -16,6 +16,15 @@ const entry = (id, label, selector, scenario, presentation = 'game', notes = '')
 
 // These are selectors into the production page, never copied markup or canvas approximations.
 export const GAME_UI_RESOURCES = Object.freeze([
+  ...['equipment', 'materials', 'quests', 'codex'].map((tab, i) =>
+    entry(
+      'journal-' + tab,
+      ['장비 장착·강화', '재료 장부', '주요·연결·일반 의뢰', '세트·특수 조합 도감'][i],
+      '.equipment-dialog',
+      'scrap-garage-0',
+      'journal:' + tab,
+    ),
+  ),
   entry(
     'menu',
     '메인 메뉴 · 버전 / 저장 / PWA',

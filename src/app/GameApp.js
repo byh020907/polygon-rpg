@@ -168,6 +168,7 @@ export class GameApp extends SceneNode {
           uiState?.screen === GAME_SCREEN.GAME &&
           uiState?.debugPanelOpen !== true &&
           uiState?.graphicsReviewOpen !== true &&
+          uiState?.journalOpen !== true &&
           uiState?.operationMapOpen !== true &&
           uiState?.campaignActionPreviewOpen !== true &&
           uiState?.gameOverOpen !== true
@@ -216,6 +217,9 @@ export class GameApp extends SceneNode {
     });
     this.connectTo(this.scene.progressionChanged, (snapshot) => {
       this.saveProgression(snapshot);
+    });
+    this.connectTo(this.scene.fieldJournalRequested, (request) => {
+      this.uiBridge.requestFieldJournal?.(request);
     });
     this.connectTo(this.scene.operationMapRequested, () => {
       this.uiBridge.requestOperationMap();
@@ -1092,15 +1096,40 @@ export class GameApp extends SceneNode {
     this.resize();
   }
 
+  requestFieldRest() {
+    return this.scene.requestFieldRest();
+  }
+  getFieldJournalView() {
+    return this.scene.getFieldJournalView();
+  }
+  acceptGeneralQuest(id) {
+    if (
+      this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU &&
+      !this.uiBridge?.snapshot().journalOpen
+    )
+      return null;
+    return this.scene.acceptGeneralQuest(id);
+  }
+  upgradeOwnedEquipment(id) {
+    return this.scene.upgradeOwnedEquipment(id);
+  }
   getEquipmentView() {
     return this.scene.getEquipmentView();
   }
   equipOwnedItem(itemId) {
-    if (this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU) return null;
+    if (
+      this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU &&
+      !this.uiBridge?.snapshot().journalOpen
+    )
+      return null;
     return this.scene.equipOwnedItem(itemId);
   }
   unequipOwnedSlot(slot) {
-    if (this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU) return null;
+    if (
+      this.uiBridge?.snapshot().screen !== GAME_SCREEN.MENU &&
+      !this.uiBridge?.snapshot().journalOpen
+    )
+      return null;
     return this.scene.unequipOwnedSlot(slot);
   }
   trainCombatSkill() {
@@ -1189,6 +1218,7 @@ export class GameApp extends SceneNode {
     const active =
       uiState.screen === GAME_SCREEN.GAME &&
       uiState.debugPanelOpen !== true &&
+      uiState.journalOpen !== true &&
       uiState.operationMapOpen !== true &&
       uiState.campaignActionPreviewOpen !== true;
     if (!active) return;

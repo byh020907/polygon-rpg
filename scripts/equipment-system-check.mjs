@@ -177,7 +177,7 @@ assert.deepEqual(Object.keys(EQUIPMENT_SLOT_KEYS), [
   'boots',
   'tool',
 ]);
-assert.equal(EQUIPMENT_CATALOG.items.length, 9);
+assert.equal(EQUIPMENT_CATALOG.items.length, 10);
 for (const item of EQUIPMENT_CATALOG.items) {
   assert.equal(typeof item.visualProfileId, 'string');
   assert.ok(['raw-steel', 'painted-steel', 'cloth'].includes(item.materialProfileId));

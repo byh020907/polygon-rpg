@@ -1081,7 +1081,9 @@ for (const [relative, raw] of files) {
     }
   } else {
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, content);
+    if (!fs.existsSync(target) || fs.readFileSync(target, 'utf8') !== content) {
+      fs.writeFileSync(target, content);
+    }
   }
 }
 if (mismatch) process.exitCode = 1;

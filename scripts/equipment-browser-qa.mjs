@@ -82,8 +82,10 @@ for (const [name, width, height] of [
     );
     await b.evaluate("document.querySelector('.equipment-dialog').scrollTop=0");
     await b.screenshot(out + '/' + name + '-loadout.png');
-    await b.evaluate("document.querySelector('.equipment-dialog').scrollTop=10000");
+    await nativeClick('[data-journal-tab=codex]');
+    await b.until("Alpine.$data(document.querySelector('#app'))" + '.journalTab==="codex"');
     await b.screenshot(out + '/' + name + '-synergy.png');
+    await nativeClick('[data-journal-tab=equipment]');
     await nativeClick('[aria-label="신발 해제"]');
     assert.equal(
       await b.evaluate(shell + '.equipmentView.codex.specialSynergies[0].discovered'),
@@ -92,7 +94,7 @@ for (const [name, width, height] of [
     const stored = await b.evaluate(
       'JSON.parse(localStorage.getItem("polygon-rpg.progression.v1"))',
     );
-    assert.equal(stored.version, 11);
+    assert.equal(stored.version, 12);
     assert.equal(stored.gold, 321);
     assert.equal(stored.trainingMarks, 7);
     assert.equal(stored.loadout.bootsItemId, null);
@@ -148,7 +150,7 @@ for (const [name, width, height] of [
       });
     await b.navigate(b.origin + '/PRODUCT_GOAL.html');
     await b.until("document.readyState==='complete' && !!document.querySelector('.wiki-toc')");
-    assert.equal(await b.evaluate("document.querySelectorAll('.wiki-toc a').length"), 13);
+    assert.equal(await b.evaluate("document.querySelectorAll('.wiki-toc a').length"), 17);
     assert.ok(await b.evaluate('document.documentElement.scrollWidth <= innerWidth'));
     await b.screenshot(out + '/' + name + '-wiki.png');
     console.log(

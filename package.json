@@ -1,6 +1,6 @@
 {
   "name": "polygon-rpg",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,7 +14,7 @@
     "graphics:ui-qa": "node scripts/ui-review-qa.mjs",
     "test:graphics": "node scripts/graphics-resource-check.mjs && node scripts/graphics-review-config-check.mjs && node scripts/graphics-navigation-check.mjs",
     "lint": "eslint .",
-    "check": "npm run lint && npm run format:check && npm run test:equipment && npm run test:systems && npm run assets:check && npm run test:combat && npm run test:enchantment && npm run test:story && npm run test:campaign && npm run test:recovery && npm run test:intro && npm run test:character && npm run test:map && npm run test:growth && npm run test:visual && npm run test:platform && npm run test:graphics && npm run docs:art:check",
+    "check": "npm run lint && npm run format:check && npm run test:equipment && npm run test:month && npm run test:systems && npm run assets:check && npm run test:combat && npm run test:enchantment && npm run test:story && npm run test:campaign && npm run test:recovery && npm run test:intro && npm run test:character && npm run test:map && npm run test:growth && npm run test:visual && npm run test:platform && npm run test:graphics && npm run docs:art:check",
     "test:combat": "node scripts/shared-combat-geometry-check.mjs && node scripts/player-combat-presentation-check.mjs && node scripts/combat-motion-continuity-check.mjs && node scripts/enemy-bone-pose-check.mjs && node scripts/combat-stamina-check.mjs && node scripts/combat-posture-cancel-check.mjs && node scripts/attack-contact-check.mjs && node scripts/semantic-contact-check.mjs",
     "test:enchantment": "node scripts/enchantment-check.mjs",
     "test:story": "node scripts/story-interaction-check.mjs",
@@ -48,7 +48,9 @@
     "assets:compile": "node scripts/compile-svg-assets.mjs && node scripts/compile-svg-assets.mjs public/graphics/prologue-control-core.master.svg && node scripts/compile-prologue-asset.mjs",
     "assets:check": "node scripts/compile-svg-assets.mjs --check && node scripts/compile-svg-assets.mjs public/graphics/prologue-control-core.master.svg --check && node scripts/compile-prologue-asset.mjs --check",
     "test:equipment": "node scripts/equipment-system-check.mjs && node scripts/equipment-migration-check.mjs && node scripts/equipment-command-check.mjs && node scripts/equipment-runtime-check.mjs",
-    "verify": "npm run check && npm run test:pwa && node scripts/equipment-browser-qa.mjs"
+    "verify": "npm run check && npm run test:pwa && node scripts/equipment-browser-qa.mjs && npm run test:month:browser",
+    "test:month": "node scripts/field-quest-check.mjs && node scripts/field-runtime-check.mjs && node scripts/month-loop-check.mjs && node scripts/month-loop-integration-check.mjs && node scripts/slot-equipment-visual-check.mjs && node scripts/field-graphics-check.mjs",
+    "test:month:browser": "node scripts/month-loop-browser-qa.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

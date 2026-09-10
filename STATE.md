@@ -2,29 +2,17 @@
 
 ## Current Phase
 
-HUMAN_REVIEW — 시스템 우선 작업에 이어 공식 위키/6슬롯 장비 구현·검증을 마쳤다. main/public 반영을 확인하고 수동 작업을 종료한다. 자동 heartbeat/OpenCode는 PAUSED 유지.
+PAUSED — 요청한 한 달의 의뢰·현장 시스템 slice를 v0.7.0으로 검증했다. heartbeat/OpenCode는 기존 Human pause를 유지하며 자동 개발을 재개하지 않는다.
 
 ## Active Execution Goal
 
-Human Feedback Priority: 최신 공식 위키/장비 명세 → Equipment Family/Moveset/Item/6슬롯 → v10 보존 migration → 전투/field/graphics/UI → 실제 PC/mobile 검증. 문서 stage를 먼저 마친 뒤 runtime·저장·UI를 구현하고 전체 verify 및 실제 화면을 검증했다. 다음은 최종 그래픽 원본 공급 후 artwork 검수이며 기존 playable frontier의 미완료 흐름은 별도다.
+없음. 이번 요청의 의뢰·현장·보상·시간·월드 결과 통합은 완료했다. 기존 INBOX의 미완료 결과와 다음 검증 완료 전선은 명시적 재개 시 선택한다.
 
-## Evidence
+## Current Evidence / Gap
 
-- 이전 시스템 d07563d main/public0.5.0(7ef62a43b961) 통합, 전체 check·PC/mobile·PWA update와 독립감사 확인 완료.
-- docs/game-systems/equipment.md, PRODUCT_GOAL 위키 13개 목차, ARCHITECTURE, generator sources를 먼저 작성했다.
-- Family/Moveset/Item/resolvedLoadout, 독립 방패/중립 작업 방어구, 1세트/1특수 조합과 영구 발견, generic forge/enchant, v11저장이 현재 GameScene에 연결됐다. 기존5modifier/비용 exact parity·main/recovery v10migration·unknowncampaign거부 검사 통과.
-- artifacts/equipment-browser.log: PC1280×720/mobile844×390에서 v10→v11 실제 로딩·6slots·세트·발견/해제/재접속·테스트 실제 Basic/Strong/Guard 및 저장 격리 통과.
-- artifacts/equipment-final-verify.log: npm run verify 종료코드0. 장비/시너지/migration/command/actual-contact, 모든 기존 check, PWA fixture, PC/mobile native equipment+wiki 검사 PASS. 별도 PWA native update·offline, 모바일메뉴34상태, 최종전 회귀도 PASS.
+artifacts/month-loop-verify-final.log: npm run verify 전체 PASS(장비·월간 루프·SVG/scene·전투·도입/지역·저장/복구·그래픽·문서·PWA·PC/mobile native). v0.7.0/build d8a7436d5c45. artifacts/month-loop-runtime/report.json: desktop1280×720/mobile844×390 실제 입력 수락·취소·확정·야간 Strong 전투·보상 1회·기한 만료·재로드 PASS, 오류/넘침0. artifacts/month-loop-clean/report.json: 동일 낮/밤 정비등·임시등 비교. 독립 감사에서 before/working/after NPC 원문 보존과 휴식 입력 재진입/자원 회복 회귀 PASS. docs/art-handoff는608리소스로 재생성했다. artifacts/month-loop-clean/epilogue-report.json: 성공/방치 후일담의 PC/mobile 표시·이전 단계 숨김 PASS(UI fixture이며 최종전 전체 플레이 완료 주장은 아님). 현재 placeholder는 시스템 검증이며 최종 art 승인이 아니다.
 
-## Remaining Human Feedback Priority
-
-- 장비 문서/코드 정합 및 독립 통합 감사 완료. counter 실제posture baseline66/특수76, unknowncampaign거부, 위키390px table내부scroll 수정 재검증 완료. main/public0.6.0 반영 여부는 현재 Git/Pages release fingerprint로 확인한다.
-- 승인 플랫 항구 원본 파일은 미확보. docs/references/flat-harbor-approval.md에 출처와 승인 메시지를 보존했다. 현재 하늘/원경의 밝기와 기존 단순 형태를 정렬했지만 해당 이미지와 직접 비교한 최종 아트 승인을 주장하지 않는다.
-- 최종 Hero/Rival/Owner·기계 상태·Garage·prologue composite 공급/승인과 첫 mine↔shipyard 실제 플레이 전선은 별도 미완료다. 자동 루프 재개 없음.
-
-## Human Pause
-
-자동 루프 재개 지시 없음. 현재 수동 승인 작업만 진행한다. 설치형 Android/iOS 최종 만족은 데스크톱 에뮬레이션 QA만으로 승인 처리하지 않는다.
+기존 INBOX의 미완료 Human Feedback Priority와 새 게임 검증 완료 전선은 다음 명시적 개발 재개 시 재평가한다. 이번 선택 의뢰는 핵심 엔딩 조건을 바꾸지 않는다. 승인된 항구 이미지 직접 비교는 자산 공급 후다.
 
 ## Preserved Work Reference
 

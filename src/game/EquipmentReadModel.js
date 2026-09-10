@@ -1,3 +1,5 @@
+import { getEquipmentUpgradeCap } from './progression/EquipmentUpgrade.js';
+import { getMaterialQuantity } from './progression/MaterialLedger.js';
 import { EQUIPMENT_SLOT_KEYS } from './equipment/EquipmentLoadout.js';
 import { createEquipmentSynergyCodex } from './equipment/EquipmentSynergy.js';
 export const EQUIPMENT_SLOT_LABELS = Object.freeze({
@@ -15,6 +17,7 @@ const FIELD_LABELS = Object.freeze({
   'debris-guard': '낙하 잔해 방호',
   'pressure-block': '압력 차단',
   brace: '현장 지지',
+  illuminate: '작업등 조명',
 });
 const capabilityLabels = (ids) => ids.map((id) => FIELD_LABELS[id] ?? id).join(' · ');
 export function createEquipmentViewModel(resolved, snapshot, catalog) {
@@ -53,6 +56,16 @@ export function createEquipmentViewModel(resolved, snapshot, catalog) {
         family = catalog.getFamily(item.familyId);
       return {
         id,
+        upgradeLevel: snapshot.equipmentUpgrades[id] ?? 0,
+        upgradeCap: getEquipmentUpgradeCap(snapshot),
+        upgradeGold: 40 * ((snapshot.equipmentUpgrades[id] ?? 0) + 1),
+        upgradeSteel: 3 * ((snapshot.equipmentUpgrades[id] ?? 0) + 1),
+        canUpgrade:
+          family.slot !== 'tool' &&
+          (snapshot.equipmentUpgrades[id] ?? 0) < getEquipmentUpgradeCap(snapshot) &&
+          snapshot.gold >= 40 * ((snapshot.equipmentUpgrades[id] ?? 0) + 1) &&
+          getMaterialQuantity(snapshot, 'salvaged-steel') >=
+            3 * ((snapshot.equipmentUpgrades[id] ?? 0) + 1),
         label: item.label,
         family: family.label ?? family.id,
         slot: family.slot,

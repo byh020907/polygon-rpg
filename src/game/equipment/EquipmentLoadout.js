@@ -78,7 +78,16 @@ export function validateLoadout(loadout, catalog = EQUIPMENT_CATALOG, { ownedIte
     throw new RangeError('Unsupported equipment combination moveset');
   return normalized;
 }
-export function resolveEquipmentLoadout(loadout, catalog = EQUIPMENT_CATALOG) {
+export function resolveEquipmentLoadout(loadout, catalog = EQUIPMENT_CATALOG, upgrades = {}) {
+  if (!upgrades || typeof upgrades !== 'object' || Array.isArray(upgrades))
+    throw new Error('Invalid upgrades');
+  for (const [id, level] of Object.entries(upgrades)) {
+    const upgradeItem = catalog.getItem(id);
+    if (catalog.getFamily(upgradeItem.familyId).slot === 'tool')
+      throw new Error('Tools do not have upgrade levels');
+    if (!Number.isInteger(level) || level < 0 || level > 3)
+      throw new Error('Invalid upgrade level');
+  }
   const normalized = validateLoadout(loadout, catalog);
   const itemsBySlot = Object.fromEntries(
     Object.entries(EQUIPMENT_SLOT_KEYS).map(([slot, key]) => [
@@ -104,6 +113,13 @@ export function resolveEquipmentLoadout(loadout, catalog = EQUIPMENT_CATALOG) {
   });
   for (const item of Object.values(itemsBySlot).filter(Boolean))
     multiplyEquipmentModifiers(modifiers, item.modifiers);
+  for (const [slot, item] of Object.entries(itemsBySlot)) {
+    const level = upgrades[item?.id] ?? 0;
+    if (slot === 'weapon') modifiers.attack.damageScale *= 1.08 ** level;
+    else if (slot === 'shield') modifiers.guard.staminaDamageScale *= 0.97 ** level;
+    else if (['helmet', 'bodyArmor', 'boots'].includes(slot))
+      modifiers.defense.damageTakenScale *= 0.97 ** level;
+  }
   const synergies = evaluateEquipmentSynergies(normalized, catalog);
   for (const effect of [...synergies.activeSetBonuses, ...synergies.activeSpecialSynergies])
     multiplyEquipmentModifiers(modifiers, effect.modifiers);

@@ -62,11 +62,11 @@ Keyboard / Touch / DOM intent
 
 ## State Ownership and Data Flow
 
-- 현재 고철 campaign만 production progression의 세계 진행을 소유한다. 폐기된 학원·first journey·glasswind 진행과 그 금고를 현재 저장에 병렬 보유하거나 현재 통화·체력·story를 계산하는 우회 경로로 사용하지 않는다. 현재 통화는 progression의 단일 필드이며 도메인 transaction으로만 변경한다. 현행 schema와 명시 migration이 있는 v10 저장을 복원한다. v10→v11은 장비·forge·enchant·캠페인을 보존하며 초기화를 요구하지 않는다. 그 외 호환되지 않는 캠페인과 corrupt 저장은 명시적인 실패 안내로 처리한다.
+- 현재 고철 campaign만 production progression의 세계 진행을 소유한다. 폐기된 학원·first journey·glasswind 진행과 그 금고를 현재 저장에 병렬 보유하거나 현재 통화·체력·story를 계산하는 우회 경로로 사용하지 않는다. 현재 통화는 progression의 단일 필드이며 도메인 transaction으로만 변경한다. 현행 schema와 명시 migration이 있는 v10/v11 저장을 복원한다. v10→v11→v12는 장비·forge·enchant·캠페인을 보존하며 초기화를 요구하지 않는다. 그 외 호환되지 않는 캠페인과 corrupt 저장은 명시적인 실패 안내로 처리한다.
 
 - Application composition이 listener, ResizeObserver, animation frame, screen/modal adapter와 renderer lifecycle을 소유한다.
 - Game orchestrator가 Player, combat result 적용과 domain coordination의 최종 writer다.
-- Campaign owner만 현재 날짜·구간, remaining D-DAY, current region, rival route progress, region state, part collection, robot completion과 committed action ID를 쓴다.
+- Campaign owner만 현재 날짜·구간, remaining D-DAY, current region, ancient-machine route progress, region state, part collection, robot completion과 committed action ID를 쓴다.
 - Campaign owner는 현재 주목표 하나와 연결 이슈 최대 두 개의 stable ID·dependency·해결 상태도 함께 쓰며 UI는 이 read model을 그대로 투영한다.
 - Operation map과 HUD는 같은 frozen Campaign Read Model을 투영하고 campaign state를 직접 쓰지 않는다.
 - Map runtime만 active Region/Room, available entrance, collision/entity source와 pending transition을 쓴다. Campaign context를 읽어 stable patch를 resolve할 뿐 시간을 소비하지 않는다.
@@ -83,14 +83,14 @@ Keyboard / Touch / DOM intent
 - Campaign clock은 하루를 `morning`, `day`, `evening`, `night` 네 authored segment로 표현한다. 내부 minute 표현을 쓰더라도 public transaction은 segment 단위다.
 - 새 campaign은 Day 1 morning, 수도 도착까지 30일에서 시작한다. D-DAY 0은 terminal game-over state다.
 - Long-distance route, full-rest, KO return과 core event만 명시된 segment 비용을 가진다. Dialogue, shop, inventory, instant enchant, normal combat, local exploration, Room/Chunk transition과 offline time은 비용이 0이다.
-- 모든 시간 action은 `preview → optional warning → confirm → single commit` 순서다. 예상 결과 DTO에는 비용, 결과 날짜·구간·D-DAY, rival movement와 game-over 여부가 포함된다.
+- 모든 시간 action은 `preview → optional warning → confirm → single commit` 순서다. 예상 결과 DTO에는 비용, 결과 날짜·구간·D-DAY, ancient-machine movement와 game-over 여부가 포함된다.
 - Stable action ID는 ledger에서 idempotent하고 repeatable action은 caller가 고유 occurrence ID를 제공한다. 취소·실패한 transition은 commit하지 않는다.
 - Authored Campaign Profile은 다섯 region의 stable ID, label, color/material language, route, event segment cost, D-DAY extension, industrial machine, part와 robot module을 immutable data로 제공한다.
 - Authored Campaign Profile은 약 10시간/부품당 약 2시간의 target pacing, issue dependency graph와 각 issue의 region·cast·required encounter/state change를 제공한다. Cross-region dependency는 item delivery만으로 완료되지 않고 destination issue의 authored interaction, exploration, combat 또는 world patch 중 하나 이상을 요구한다.
 - Issue activation policy는 공간적으로 열린 다섯 region과 별개로 primary issue 하나 및 linked issue 최대 두 개만 active로 만든다. 완료 transaction이 다음 연결을 결정하며 UI가 모든 region request를 임의로 나열하지 않는다.
 - Region core event의 소비 시간은 마지막 작업으로 생기는 2~5일 상당의 실제 우회 거리보다 크다. Player-first 완료는 region을 resolved로 만들고, 지도 route patch와 일치하는 distance-derived D-DAY 변화를 기록하며 part를 지급한다. 임의의 부품 보상 연장은 금지한다.
 - 지역 부품은 군수 인장 해제, 현지 산업기계 오작동 해결과 마지막 작업을 하나의 region success transaction으로 확정할 때 한 번만 지급한다. 그 마지막 작업이 만든 stable route patch와 거리 기반 D-DAY 변화는 같은 transaction에 기록한다.
-- Rival position과 route는 time-consuming commit에서만 deterministic하게 전진하고 같은 snapshot/context는 같은 read model을 만든다. Background simulation과 wall-clock catch-up을 금지한다.
+- 고대 병기 position과 route는 time-consuming commit에서만 deterministic하게 전진하고 같은 snapshot/context는 같은 read model을 만든다. Background simulation과 wall-clock catch-up을 금지한다.
 - 다섯 part를 모두 가진 snapshot만 final battle available을 참으로 resolve한다.
 - D-DAY 0 이후 combat/map command를 성공 처리하지 않고 game-over presentation sequence가 state의 terminal reason을 투영한다.
 - Main issue chain을 authored 최단 집중 경로로 실행한 pacing fixture는 초기 D-DAY budget의 약 75~80%를 소비한다. Optional issue와 실수는 남은 budget을 사용하고 반복되는 큰 손실은 D-DAY 0으로 연결한다.
@@ -98,7 +98,7 @@ Keyboard / Touch / DOM intent
 
 ## Operation Map Contract
 
-- Campaign Domain은 current location, route nodes/edges, rival node·direction·arrival estimate, region event status, travel/event cost, success extension, collected part와 robot completion을 하나의 immutable DTO로 만든다.
+- Campaign Domain은 current location, route nodes/edges, 고대 병기 node·direction·arrival estimate, region event status, travel/event cost, success extension, collected part와 robot completion을 하나의 immutable DTO로 만든다.
 - Game MENU short activation과 고물상 wall-map interaction은 동일한 operation-map UI command를 호출한다. 1초 hold debug completion은 뒤 click/keyup을 소비해 map을 중복 열지 않는다.
 - Map modal은 gameplay input을 멈추고 time을 소비하지 않으며 닫으면 같은 simulation state로 돌아간다.
 - UI adapter는 responsive layout과 focus trap을 소유하지만 route 판단·예상값을 계산하지 않는다.
@@ -223,7 +223,7 @@ Keyboard / Touch / DOM intent
 
 ## Performance, Security and Compatibility
 
-- Human의 릴리즈 선언 전 제품 버전은 0.x.y이며 개발용 save·내부 API·옛 형식의 하위 호환 유지 의무는 없다. 현재 기획을 막는 호환 계층은 제거할 수 있으며 호환되지 않는 저장은 정상 복구로 위장하지 않고 초기화 사실을 알린다.
+- Human의 릴리즈 선언 전 제품 버전은 0.x.y이며 내부 API·별도 미지원 옛 형식의 일반 하위 호환 의무는 없다. 단 v10/v11 migration과 기존 진행 보존은 필수다. 현재 기획을 막는 호환 계층은 제거할 수 있으며 호환되지 않는 저장은 정상 복구로 위장하지 않고 초기화 사실을 알린다.
 - Fixed runner는 catch-up 상한과 dropped-step diagnostics로 runaway simulation을 막는다.
 - Canvas backing size는 CSS size와 DPR을 고려하되 logical viewport/gameplay scale을 변경하지 않는다.
 - Static server는 repository root 탈출, backslash traversal과 허용되지 않은 method/path를 거부하고 올바른 MIME과 `nosniff`를 제공한다.
@@ -301,8 +301,20 @@ Keyboard / Touch / DOM intent
 - 한손/양손 호환과 6슬롯 유효성은 Family 규칙으로 검증한다. 주무기는 필수, 방패/방어구/도구는 nullable이며 미지원 조합을 조용히 기본 장비로 바꾸지 않는다.
 - Set은 같은 setId 조각 수, SpecialSynergy는 별도 authored requirements/effect catalog다. 조건은 현재 필요한 concrete Item 조합과 확장 가능한 명시 predicate까지만 구현하고 범용 DSL이나 전조합 생성은 하지 않는다. effect는 command/attack/guard/field modifier hook으로 반환하며 GameScene의 synergy ID 분기를 금지한다.
 - progression은 everOwnedEquipmentItemIds와 discoveredSpecialSynergyIds를 영구 보존한다. 실제 장착 성공 transaction에서 발견을 갱신한다. UI는 미관련 숨김/관련 ???/발견 후 완전 공개만 읽고 정답 힌트를 생성하지 않는다.
-- schema v11과 엄격 v10→v11 migration을 main/recovery 동일 decode 경계에 둔다. alias는 저장 migration 경계에만 존재한다. 기존 경제·장비·forge 선택·enchant element/level·대화·campaign을 보존하고 malformed는 거부한다. runtime는 옛 key나 ID를 이중 authority로 저장하지 않는다.
+- schema v12와 엄격 v10→v11→v12 migration을 main/recovery 동일 decode 경계에 둔다. alias는 저장 migration 경계에만 존재한다. 기존 경제·장비·forge 선택·enchant element/level·대화·campaign을 보존하고 malformed는 거부한다. runtime는 옛 key나 ID를 이중 authority로 저장하지 않는다.
 - enchantable Family의 Item만 generic equipmentEnchantments에 기록한다. 기존 Cutter 기능/비용을 유지하고 Shield/Armor enchant를 추가하지 않는다. equipmentForge/optionItemIds/merchantItemIds는 실제 Item catalog를 참조한다.
 - Field Capability evaluator는 {capabilityId,mode:assist|require}를 받는다. production field interaction은 Item ID를 요구하지 않는다. 신규 mandatory gate를 만들지 않는다.
 - 장비 visual geometry와 실제 contact는 같은 authored sample을 사용한다. Moveset이 Animation Profile을 참조하며 Item별 animation 복제를 하지 않는다. 최종 아트 공급 전에는 기존 placeholder/reference로 시스템 연결을 검증한다.
 - verify 흐름에 장비·synergy·migration fixture와 기존 domain 검사/PC·mobile 실제 UI·combat 검증을 포함한다. baseline5개와 기본 Loadout parity를 따로 검증한다.
+
+## Quest / Field / Month Loop
+
+- [현장 의뢰 명세](docs/game-systems/field-quests.md)가 상세 계약이다. main/linked는 기존 issueWindow, general만 별도 상태 머신/4슬롯을 가진다. catalog/instance/objective/deadline/reward/outcome을 분리하고 GameScene의 quest ID if문이나 범용 DSL을 만들지 않는다.
+- rotation은 campaign elapsedSegments/day/phase와 발급 기록만 쓴다. offered/accepted/completed/failed/expired 전이에서 기한 판정이 event보다 먼저다. occurrence ID와 rewardClaims는 원자 결합하며 이전 encounter 완료를 새 일일 처치로 쓰지 않는다.
+- 수락·보고·메뉴·일반 전투는 무료다. 명시된 FIELD_WORK만 확인 후 1구간을 소비하고 기존 Campaign writer/preview/recovery를 사용한다. KO의 시간·복귀·회복을 유지하며 자원 rollback은 없다.
+- v12는 quests/materials/rewardClaims/equipmentUpgrades를 추가한다. 엄격 11→12와 기존10→11→12를 main/recovery 공통 decoder에 둔다. Material ID마다 owner는 하나이며 enchant/forge와 일반 ledger를 공통 API로 읽고 지급/소비한다.
+- AcquisitionFeedback은 실제 transaction의 immutable DTO를 소비한다. transient UI/VFX는 보상 truth를 쓰지 않는다. 일반은 non-blocking이며 장비/특수 발견/핵심 부품은 중요도를 분리한다.
+- campaign의 4 phase는 presentation fact를 공급한다. 특정 night placement/behavior만 gameplay owner가 선택하며 renderer의 재판정·전역 공격 배율·NPC 시간표를 금지한다.
+- routine 실패는 기록만, 중요한 outcome만 authored patch/NPC/region 후일담을 바꾼다. optional 결과는 finalBattleAvailable에 영향을 주지 않는다.
+- rivalProgressSegments/rivalDelaySegments는 고대 병기 이동의 호환 저장 key다. ancientMachine 의미를 domain/read-model에 노출하고 라이벌 견습생은 authored story actor로 유지한다.
+- 장비는 슬롯 part/로컬 anchor만 교체하고 Body Profile·다른 슬롯·무기 contact는 보존한다. Set의 명시 pieces 목록은 6슬롯 중 필요한 부위만 센다. 강화는 Item ID를 유지하고 resolver에서 sidegrade modifier 뒤 합성한다.

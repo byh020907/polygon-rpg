@@ -121,9 +121,9 @@ Family → Item 획득 → 지역 소재/Modification → 특성 변화. 상점�
 
 ## 저장 및 마이그레이션
 
-schema v11은 gold/trainingMarks/combatSkillLevel/viewedConversationIds/scrapCampaign을 그대로 보존하고 ownedEquipmentItemIds, loadout 6슬롯, everOwnedEquipmentItemIds, discoveredSpecialSynergyIds, equipmentForge, enchantment.equipmentEnchantments를 저장한다.
+schema v12는 gold/trainingMarks/combatSkillLevel/viewedConversationIds/scrapCampaign을 그대로 보존하고 ownedEquipmentItemIds, loadout 6슬롯, everOwnedEquipmentItemIds, discoveredSpecialSynergyIds, equipmentForge, enchantment.equipmentEnchantments를 저장하고 quests/materials/rewardClaims/equipmentUpgrades를 추가한다. [의뢰·현장 명세](field-quests.md)가 추가 데이터의 계약을 소유한다.
 
-v10→v11은 저장 decoding 경계의 단일 명시 migration이다. LEGACY_EQUIPMENT_ID_ALIASES는 이 경계와 migration test에서만 쓰고 runtime core의 Item authority로 남기지 않는다. owned/equipped ID와 forge selectedProfileIdsByGroup을 새 ID로 변환하고 equipped는 weaponItemId, 기본 방패는 자동 소유·장착, 기본 작업 방어구 3개는 소유에 추가하고 나머지 슬롯은 null이다. weaponForge→equipmentForge, selectedProfileIdsByGroup→selectedItemIdsByGroup, swordEnchantments→equipmentEnchantments로 이동한다. 기존 element/level/재료/선택·캠페인·대화·경제를 보존한다. ever-owned는 보존된 소유 목록으로 시작하고 발견 목록은 기존에 없으므로 빈 목록이다. v11 재읽기는 같은 결과다.
+v10→v11은 저장 decoding 경계의 단일 명시 migration이다. LEGACY_EQUIPMENT_ID_ALIASES는 이 경계와 migration test에서만 쓰고 runtime core의 Item authority로 남기지 않는다. owned/equipped ID와 forge selectedProfileIdsByGroup을 새 ID로 변환하고 equipped는 weaponItemId, 기본 방패는 자동 소유·장착, 기본 작업 방어구 3개는 소유에 추가하고 나머지 슬롯은 null이다. weaponForge→equipmentForge, selectedProfileIdsByGroup→selectedItemIdsByGroup, swordEnchantments→equipmentEnchantments로 이동한다. 기존 element/level/재료/선택·캠페인·대화·경제를 보존한다. ever-owned는 보존된 소유 목록으로 시작하고 발견 목록은 기존에 없으므로 빈 목록이다. 이후 v11→v12가 기존 필드를 보존하며 의뢰·재료·보상 수령·강화 상태를 초기화한다. 현재 v12 재읽기는 같은 결과이며 로드만으로 저장을 덮어쓰지 않는다.
 
 Malformed v10을 기본값으로 세탁하거나 덮어쓰지 않는다. 이전 저장을 먼저 엄격 검증하고 변환 후 새 schema/Item/소유/호환/forge/enchant를 다시 검증한다. main save와 recovery slot에 같은 migration을 사용하며 쓰기 실패 시 원본을 유지한다. v10 외 더 오래된 캠페인 호환 문제를 이번에 추정 복원하지 않는다.
 
@@ -141,6 +141,10 @@ Malformed v10을 기본값으로 세탁하거나 덮어쓰지 않는다. 이전 
 
 ## 구현 경계와 검증
 
-EquipmentFamilyProfiles / EquipmentMovesetProfiles / EquipmentItemProfiles / EquipmentLoadout / EquipmentFieldCapabilities / EquipmentSetProfiles / SpecialSynergyProfiles / EquipmentSynergy를 equipment 모듈에 둔다. resolveEquipmentLoadout(loadout, catalog)는 immutable 결과를 반환한다. catalog는 families/movesets/items/sets/specialSynergies와 getItem/getFamily/getMoveset을 제공한다. resolved 결과는 mainItem/offHandItem/utilityItem, mainFamily/offHandFamily, moveset, combatTiming, attackModifiers/defenseModifiers/guardModifiers, geometryProfile, animationProfile, fieldCapabilities, activeSetBonuses/activeSpecialSynergies, commandModifiers를 제공한다. Armor Item은 resolved 결과의 itemsBySlot에서도 접근한다.
+EquipmentFamilyProfiles / EquipmentMovesetProfiles / EquipmentItemProfiles / EquipmentLoadout / EquipmentFieldCapabilities / EquipmentSetProfiles / SpecialSynergyProfiles / EquipmentSynergy를 equipment 모듈에 둔다. resolveEquipmentLoadout(loadout, catalog, equipmentUpgrades = {})는 강화와 조합을 합성한 immutable 결과를 반환한다. catalog는 families/movesets/items/sets/specialSynergies와 getItem/getFamily/getMoveset을 제공한다. resolved 결과는 mainItem/offHandItem/utilityItem, mainFamily/offHandFamily, moveset, combatTiming, attackModifiers/defenseModifiers/guardModifiers, geometryProfile, animationProfile, fieldCapabilities, activeSetBonuses/activeSpecialSynergies, commandModifiers를 제공한다. Armor Item은 resolved 결과의 itemsBySlot에서도 접근한다.
 
 검증은 schema/catalog/호환/두손 fixture, modifier parity, 실제 damage/guard/counter, field scene, 5ID migration과 recovery, malformed 거부, 세트·발견·저장, 모든 Item의 graphics/UI, 기존 전체 검사와 실제 PC/mobile gameplay를 포함한다. npm run verify는 전체 완료 흐름에 새 검사도 포함한다. 문서만 또는 catalog만 만든 상태는 완료가 아니다.
+
+## 현장 운영 확장
+
+슬롯 외형은 metadata 표기에서 끝나지 않고 담당 부위 그림을 실제 교체한다. 같은 Body Profile/다른 부위를 유지한다. 6슬롯 모두 명시 Set pieces에 참여 가능하다. Item별 강화는 ID/조합을 유지하여 같은 단계 sidegrade를 보존한다. 재사용 도구·재료 장부·v12와 강화 비용/상한은 [현장 의뢰 명세](field-quests.md)를 따른다.

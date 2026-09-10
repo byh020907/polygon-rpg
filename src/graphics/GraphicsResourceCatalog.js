@@ -1,3 +1,4 @@
+import { createFieldQuestResources } from './FieldQuestResources.js';
 import { BUILTIN_SVG_RESOURCES } from './SvgAssetSession.js';
 import { COMBAT_MOTION_TIMING_PROFILES } from '../combat/CombatMotionTimingProfiles.js';
 import { combatMotionFrameData } from '../combat/CombatCommandController.js';
@@ -317,6 +318,7 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
     })),
     ...map.resources,
     ...BUILTIN_SVG_RESOURCES,
+    ...createFieldQuestResources(),
     ...GRAPHICS_EFFECT_DEFINITIONS.map((effect) => ({
       id: `effect:${effect.id}`,
       label: effect.label,

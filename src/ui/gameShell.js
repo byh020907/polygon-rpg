@@ -283,7 +283,7 @@ export function registerGameShell(
         linkedCount: 0,
         completedLinkedCount: 0,
         maximumLinkedCount: 2,
-        summaryLabel: '현장에서 주목표를 선택하세요',
+        summaryLabel: '현장에서 주요 의뢰를 선택하세요',
       }),
       routeEdges: Object.freeze([]),
       regions: Object.freeze([]),
@@ -292,6 +292,15 @@ export function registerGameShell(
     activeEnchantId: null,
     activeEnchantLabel: '미활성',
     selectedEquipmentId: '',
+    journalOpen: false,
+    journalTab: 'equipment',
+    fieldJournal: {
+      quests: { main: null, linked: [], general: [], history: [], epilogue: { outcomes: [] } },
+      materials: [],
+    },
+    acquisitionFeed: [],
+    fieldPrompt: null,
+    questOutcomes: [],
     equipmentView: { slots: [], items: [], codex: { sets: [], specialSynergies: [] } },
     selectedEquipmentLabel: '장비 정보 불러오는 중',
     trainingMarks: 0,
@@ -420,6 +429,7 @@ export function registerGameShell(
         snapshot: () =>
           Object.freeze({
             screen: this.screen,
+            journalOpen: this.journalOpen,
             graphicsReviewOpen: this.graphicsReviewOpen,
             operationMapOpen: this.operationMapOpen,
             campaignActionPreviewOpen: this.campaignActionPreviewOpen,
@@ -445,7 +455,11 @@ export function registerGameShell(
           this.gold = status.gold;
           this.trainingMarks = status.trainingMarks;
         },
+        requestFieldJournal: ({ tab }) => this.openEquipment(tab),
         setWorldStatus: (status) => {
+          this.acquisitionFeed = status.acquisitionFeed ?? [];
+          this.fieldPrompt = status.fieldPrompt;
+          this.questOutcomes = status.questOutcomes ?? [];
           const previousGameOverStageId = this.gameOverPresentation.stageId;
           const wasGameOverOpen = this.gameOverOpen;
           this.areaName = status.areaName;
@@ -924,6 +938,8 @@ export function registerGameShell(
       if (resource.presentation === 'action') gameApp.prepareUiReview('action');
       if (resource.presentation === 'touch') this.forceMobileControls = true;
       if (resource.presentation === 'debug') this.openDebugPanel();
+      if (resource.presentation.startsWith('journal:'))
+        this.openEquipment(resource.presentation.slice(8));
       this.$nextTick(() =>
         globalThis.requestAnimationFrame(async () => {
           const result = await isolateUiReview(resource, {
@@ -1137,9 +1153,33 @@ export function registerGameShell(
       this.qaHeldInput = Object.freeze({});
     },
 
-    openEquipment() {
-      this.equipmentView = gameApp.getEquipmentView();
+    openEquipment(tab = 'equipment') {
+      this.journalTab = typeof tab === 'string' ? tab : 'equipment';
+      this.refreshFieldJournal();
+      this.journalOpen = true;
       this.$refs.equipmentDialog.showModal();
+      gameApp.onScreenChanged();
+    },
+    refreshFieldJournal() {
+      this.fieldJournal = gameApp.getFieldJournalView();
+      this.equipmentView = gameApp.getEquipmentView();
+    },
+    closeFieldJournal() {
+      this.journalOpen = false;
+      gameApp.onScreenChanged();
+    },
+    restAtField() {
+      this.$refs.equipmentDialog.close();
+      this.journalOpen = false;
+      gameApp.requestFieldRest();
+    },
+    acceptGeneralQuest(id) {
+      gameApp.acceptGeneralQuest(id);
+      this.refreshFieldJournal();
+    },
+    upgradeItem(id) {
+      gameApp.upgradeOwnedEquipment(id);
+      this.refreshFieldJournal();
     },
     equipItem(itemId) {
       gameApp.equipOwnedItem(itemId);

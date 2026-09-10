@@ -18,9 +18,9 @@
     </header>
     <main>
       <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 b2e387350afc</p>
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 ffd4140b2afe</p>
         <h1>무기·장비 · 전체 목록 1/1</h1>
-        <p>현재 등록 9개 중 1–9. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
+        <p>현재 등록 10개 중 1–10. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
       </header>
       <aside class="notice">
         제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
@@ -509,6 +509,57 @@
               <td>
                 <a
                   href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-boots"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                  >src/game/equipment/EquipmentItemProfiles.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong id="equipment:field-work-lamp" data-resource-id="equipment:field-work-lamp"
+                  >재사용 작업등</strong
+                ><br /><code>equipment:field-work-lamp</code>
+              </td>
+              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+              <td>공용/미배치·개별 자료 확인</td>
+              <td>
+                <strong>동작 리소스</strong>
+                <details>
+                  <summary>현재 상태·동작 22개</summary>
+                  <ul>
+                    <li>장비 실제 크기 · <code>static</code></li>
+                    <li>대기 · <code>idle</code> · 25프레임</li>
+                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                    <li>낙하 · <code>fall</code> · 24프레임</li>
+                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
+                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                    <li>피격 · <code>hit</code> · 14프레임</li>
+                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                    <li>올려베기 · <code>rising</code> · 32프레임</li>
+                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                  </ul>
+                </details>
+                Item field-work-lamp · Family tool · Slot tool · none · Moveset
+                cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
+                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace,
+                illuminate · Visual field-work-lamp. 현재 placeholder를 사용합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-lamp"
                   >게임 검토실</a
                 ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
                   >src/game/equipment/EquipmentItemProfiles.js</a

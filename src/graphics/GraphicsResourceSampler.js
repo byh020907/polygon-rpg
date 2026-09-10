@@ -1,3 +1,4 @@
+import { sampleFieldQuestResource } from './FieldQuestResources.js';
 import { applyEquipmentPresentation, equipmentSlotForGraphic } from './EquipmentPresentation.js';
 import { canonicalizeEnchantmentSnapshot } from '../game/enchantment/EnchantmentState.js';
 import { EQUIPMENT_SLOT_KEYS } from '../game/equipment/EquipmentLoadout.js';
@@ -316,6 +317,13 @@ export function createGraphicsResourceSampler(catalog) {
         characterItems: applyEquipmentPresentation(
           presentation.characterItems,
           scene.resolvedLoadout,
+          {
+            bonePose: pose.bonePose,
+            position,
+            facing,
+            scale: PLAYER_COMBAT_GEOMETRY_SCALE,
+            renderOrder: 30.5,
+          },
         ),
       },
       pose,
@@ -458,6 +466,8 @@ export function createGraphicsResourceSampler(catalog) {
     if (![-1, 1].includes(facing)) throw new RangeError('그래픽 facing은 -1 또는 1입니다.');
     const view = resource.kind === 'scene' ? 'scene' : (options.view ?? 'isolated');
     const lighting = options.lighting ?? 'scene';
+    if (resource.producer === 'field-quest')
+      return sampleFieldQuestResource(resource, action, { ...options, facing, lighting });
     const base = mapSample(resource, action, lighting);
     if (resource.producer === 'svg')
       return sampleSvgResource(resource, action, { ...options, facing, lighting }, base.frame);

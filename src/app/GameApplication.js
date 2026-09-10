@@ -204,6 +204,18 @@ export class GameApplication {
     return this.currentApp.prepareUiReview(presentation);
   }
 
+  requestFieldRest() {
+    return this.currentApp.requestFieldRest();
+  }
+  getFieldJournalView() {
+    return this.currentApp.getFieldJournalView();
+  }
+  acceptGeneralQuest(id) {
+    return this.currentApp.acceptGeneralQuest(id);
+  }
+  upgradeOwnedEquipment(id) {
+    return this.currentApp.upgradeOwnedEquipment(id);
+  }
   getEquipmentView() {
     return this.currentApp.getEquipmentView();
   }

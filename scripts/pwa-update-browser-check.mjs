@@ -942,7 +942,7 @@ async function saveResetFlow() {
     assert.match(await browser.evaluate(`${shell}.saveStatus`), /초기화 완료/);
     const resetStorage = await browser.evaluate(storageState);
     const fresh = JSON.parse(resetStorage['polygon-rpg.progression.v1']);
-    assert.equal(fresh.version, 11);
+    assert.equal(fresh.version, 12);
     assert.equal(fresh.gold, 0);
     assert.deepEqual(fresh.viewedConversationIds, []);
     assert.notEqual(
@@ -981,7 +981,7 @@ async function saveResetFlow() {
     await confirmReset(true, true);
     assert.equal(
       JSON.parse((await browser.evaluate(storageState))['polygon-rpg.progression.v1']).version,
-      10,
+      12,
     );
     await record(browser, 'save-reset-success-mobile');
     const errors = browser.events.filter((event) => event.method === 'Runtime.exceptionThrown');

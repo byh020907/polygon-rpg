@@ -187,8 +187,8 @@ function verifySemanticStatusAndFocusTargets() {
   const gameApp = readFileSync(new URL('../src/app/GameApp.js', import.meta.url), 'utf8');
   assert.match(
     gameApp,
-    /uiState\.debugPanelOpen !== true &&\s*uiState\.operationMapOpen !== true/,
-    '작전 지도 modal 동안 fixed simulation도 멈춰야 한다.',
+    /uiState\.debugPanelOpen !== true &&\s*uiState\.journalOpen !== true &&\s*uiState\.operationMapOpen !== true/,
+    '의뢰·장비 및 작전 지도 modal 동안 fixed simulation도 멈춰야 한다.',
   );
 }
 

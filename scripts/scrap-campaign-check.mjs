@@ -94,7 +94,7 @@ function issueFocusAction(regionId) {
   return {
     actionId: `issue-focus:${region.id}`,
     kind: SCRAP_CAMPAIGN_ACTION_KIND.ISSUE_FOCUS,
-    label: `주목표 고정 · ${region.label}`,
+    label: `주요 의뢰 고정 · ${region.label}`,
     targetRegionId: region.id,
     costSegments: 0,
   };
@@ -507,7 +507,7 @@ assert.deepEqual(blockedMineEventPreview.blockingIssueIds, [
   'mine-harbor-lift-cable',
   'mine-greenhouse-pressure-brace',
 ]);
-assert.throws(() => commit(mineStarted, regionEventStartAction('abandoned-mine')), /연결 이슈 2개/);
+assert.throws(() => commit(mineStarted, regionEventStartAction('abandoned-mine')), /연결 의뢰 2개/);
 
 let crossRegionIssues = progressRegionToStage(mineStarted, 'harbor-shipyard', 'facility-observed');
 let crossRegionReadModel = getScrapCampaignReadModel(crossRegionIssues, SCRAP_CAMPAIGN_PROFILE);
@@ -546,7 +546,7 @@ assert.deepEqual(blockedCableEventPreview.blockingIssueIds, [
 ]);
 assert.throws(
   () => commit(crossRegionIssues, regionEventStartAction('abandoned-mine')),
-  /연결 이슈 2개/,
+  /연결 의뢰 2개/,
 );
 assert.throws(
   () =>
@@ -566,15 +566,15 @@ assert.throws(
       crossRegionIssues,
       linkedEncounterAction('harbor-shipyard', 'mine-collapse-boss', 'unknown'),
     ),
-  /연결 이슈가 요구한 연결 전투/,
-  '연결 이슈가 요구하지 않은 전투는 기록할 수 없습니다.',
+  /연결 의뢰가 요구한 연결 전투/,
+  '연결 의뢰가 요구하지 않은 전투는 기록할 수 없습니다.',
 );
 const cableEncounterPreview = previewScrapCampaignAction(
   crossRegionIssues,
   linkedEncounterAction('harbor-shipyard', 'shipyard-drydock-collector', 'preview'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(cableEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(cableEncounterPreview.title, '연결 의뢰 현장 전투를 기록할까요?');
 assert.equal(cableEncounterPreview.costSegments, 0);
 assert.equal(cableEncounterPreview.willGameOver, false);
 crossRegionIssues = commit(
@@ -679,7 +679,7 @@ const braceEncounterPreview = previewScrapCampaignAction(
   linkedEncounterAction('greenhouse-plains', 'greenhouse-pipe-parasite', 'preview'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(braceEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(braceEncounterPreview.title, '연결 의뢰 현장 전투를 기록할까요?');
 assert.equal(braceEncounterPreview.costSegments, 0);
 assert.equal(braceEncounterPreview.willGameOver, false);
 crossRegionIssues = commit(
@@ -747,7 +747,7 @@ assert.deepEqual(blockedHarborEventPreview.blockingIssueIds, [
 ]);
 assert.throws(
   () => commit(harborIssue, regionEventStartAction('harbor-shipyard')),
-  /연결 이슈 2개/,
+  /연결 의뢰 2개/,
 );
 
 harborIssue = progressRegionToStage(harborIssue, 'snow-trade-road', 'facility-observed');
@@ -787,7 +787,7 @@ const winchEncounterPreview = previewScrapCampaignAction(
   linkedEncounterAction('snow-trade-road', 'snow-route-raider', 'preview'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(winchEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(winchEncounterPreview.title, '연결 의뢰 현장 전투를 기록할까요?');
 assert.equal(winchEncounterPreview.costSegments, 0);
 assert.equal(winchEncounterPreview.willGameOver, false);
 harborIssue = commit(
@@ -849,7 +849,7 @@ const coolantEncounterPreview = previewScrapCampaignAction(
   linkedEncounterAction('greenhouse-plains', 'greenhouse-coolant-parasite', 'preview'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(coolantEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(coolantEncounterPreview.title, '연결 의뢰 현장 전투를 기록할까요?');
 assert.equal(coolantEncounterPreview.costSegments, 0);
 assert.equal(coolantEncounterPreview.willGameOver, false);
 harborIssue = commit(
@@ -993,10 +993,10 @@ const nonActiveRegionPreview = previewScrapCampaignAction(
   SCRAP_CAMPAIGN_PROFILE,
 );
 assert.equal(nonActiveRegionPreview.allowed, false);
-assert.match(nonActiveRegionPreview.blockedReason, /현재 주목표/);
+assert.match(nonActiveRegionPreview.blockedReason, /현재 주요 의뢰/);
 assert.throws(
   () => commit(nonActiveRegionProbe, regionEventStartAction('snow-trade-road')),
-  /현재 주목표/,
+  /현재 주요 의뢰/,
 );
 const greenhouseProfile = SCRAP_CAMPAIGN_PROFILE.getRegion('greenhouse-plains');
 let greenhouseStarted = toScrapCampaignSnapshot(
@@ -1080,7 +1080,7 @@ const thermalEncounterPreview = previewScrapCampaignAction(
   linkedEncounterAction('snow-trade-road', 'snow-thermal-raider', 'preview'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(thermalEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(thermalEncounterPreview.title, '연결 의뢰 현장 전투를 기록할까요?');
 assert.equal(thermalEncounterPreview.costSegments, 0);
 assert.equal(thermalEncounterPreview.willGameOver, false);
 greenhouseIssue = commit(
@@ -1183,7 +1183,7 @@ const sealEncounterPreview = previewScrapCampaignAction(
   linkedEncounterAction('abandoned-mine', 'mine-seal-plate-raider', 'preview'),
   SCRAP_CAMPAIGN_PROFILE,
 );
-assert.equal(sealEncounterPreview.title, '연결 이슈 현장 전투를 기록할까요?');
+assert.equal(sealEncounterPreview.title, '연결 의뢰 현장 전투를 기록할까요?');
 assert.equal(sealEncounterPreview.costSegments, 0);
 assert.equal(sealEncounterPreview.willGameOver, false);
 greenhouseIssue = commit(

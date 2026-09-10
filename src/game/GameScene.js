@@ -1,3 +1,13 @@
+import { FieldQuestRuntime } from './quests/FieldQuestRuntime.js';
+import { createQuestReadModel } from './quests/QuestReadModel.js';
+import {
+  createQuestEpilogueReadModel,
+  applyQuestNpcOutcomes,
+} from './quests/QuestWorldProfiles.js';
+import { AcquisitionFeedback, acquisitionChanges } from './presentation/AcquisitionFeedback.js';
+import { MATERIAL_PROFILES, getMaterialLedger } from './progression/MaterialLedger.js';
+import { upgradeEquipment } from './progression/EquipmentUpgrade.js';
+import { applyCampaignTimePresentation } from './presentation/CampaignTimePresentation.js';
 import { applyEquipmentPresentation } from '../graphics/EquipmentPresentation.js';
 import { sampleAnimationProfile } from '../animation/AnimationProfileSampler.js';
 import { createEquipmentViewModel } from './EquipmentReadModel.js';
@@ -425,7 +435,14 @@ export class GameScene extends SceneNode {
     this.statusNode = this.addChild(new GameStatusNode(this));
     this.playerStatusChanged = this.statusNode.playerStatusChanged;
     this.worldStatusChanged = this.statusNode.worldStatusChanged;
+    this.fieldJournalRequested = this.ownSignal(new Signal('fieldJournalRequested'));
+    this.acquisitionFeedback = new AcquisitionFeedback();
+    this.fieldQuests = new FieldQuestRuntime(this);
+    this.lastFeedbackSnapshot = this.progressionSnapshot;
     this.reset();
+    const prepared = this.fieldQuests.prepare();
+    this.progressionSnapshot = prepared.snapshot;
+    this.lastFeedbackSnapshot = this.progressionSnapshot;
   }
 
   dispose() {
@@ -552,7 +569,11 @@ export class GameScene extends SceneNode {
         snapshot.ownedEquipmentItemIds,
       ),
     });
-    const nextEquipment = resolveEquipmentLoadout(nextSnapshot.loadout, this.equipmentCatalog);
+    const nextEquipment = resolveEquipmentLoadout(
+      nextSnapshot.loadout,
+      this.equipmentCatalog,
+      nextSnapshot.equipmentUpgrades,
+    );
     this.progressionSnapshot = nextSnapshot;
     this.resolvedLoadout = nextEquipment;
     this.reset();
@@ -569,6 +590,8 @@ export class GameScene extends SceneNode {
   }
 
   reset() {
+    this.acquisitionFeedback?.reset();
+    this.lastFeedbackSnapshot = this.progressionSnapshot;
     this.scenePresentation?.reset();
     const scrapCampaign = getScrapCampaignReadModel(
       this.progressionSnapshot.scrapCampaign,
@@ -840,7 +863,7 @@ export class GameScene extends SceneNode {
         ...current,
         activePrimaryIssueId,
         completedIssueIds: [...completedIssueIds],
-        lastChangeLabel: `${primaryIssue.label} · 연결 이슈 ${completedIssueIds.length}/${primaryIssue.linkedIssues.length}`,
+        lastChangeLabel: `${primaryIssue.label} · 연결 의뢰 ${completedIssueIds.length}/${primaryIssue.linkedIssues.length}`,
       },
       this.scrapCampaignProfile,
     );
@@ -1407,7 +1430,7 @@ export class GameScene extends SceneNode {
   }
 
   setVisualQaTimePhase(timePhase) {
-    if (timePhase !== 'day' && timePhase !== 'night') {
+    if (!['morning', 'day', 'evening', 'night'].includes(timePhase)) {
       throw new Error(`지원하지 않는 Visual QA time phase입니다: ${timePhase}`);
     }
     this.visualQaTimePhase = timePhase;
@@ -1716,11 +1739,11 @@ export class GameScene extends SceneNode {
 
   createScrapCampaignIssueFocusAction(regionId) {
     const region = this.scrapCampaignProfile.getRegion(regionId);
-    if (!region) throw new Error(`지원하지 않는 주목표 region입니다: ${regionId}`);
+    if (!region) throw new Error(`지원하지 않는 주요 의뢰 region입니다: ${regionId}`);
     return Object.freeze({
       actionId: `issue-focus:${region.id}`,
       kind: SCRAP_CAMPAIGN_ACTION_KIND.ISSUE_FOCUS,
-      label: `주목표 고정 · ${region.label}`,
+      label: `주요 의뢰 고정 · ${region.label}`,
       targetRegionId: region.id,
       costSegments: 0,
     });
@@ -1751,7 +1774,7 @@ export class GameScene extends SceneNode {
       throw new Error(`지원하지 않는 연결 전투입니다: ${regionId}:${encounterId}`);
     }
     if (!linkedIssue) {
-      throw new Error(`현재 주목표가 요구하지 않는 연결 전투입니다: ${regionId}:${encounterId}`);
+      throw new Error(`현재 주요 의뢰가 요구하지 않는 연결 전투입니다: ${regionId}:${encounterId}`);
     }
     return Object.freeze({
       actionId: `linked-encounter:${region.id}:${encounterId}:${entityId}`,
@@ -1825,7 +1848,7 @@ export class GameScene extends SceneNode {
       action,
       preview,
     });
-    this.combatCommands.reset();
+    this.combatCommands.reset({ preserveStamina: true, preserveInputHistory: true });
     this.rollState = null;
     this.campaignActionPreviewRequested.emit(
       Object.freeze({
@@ -1854,7 +1877,7 @@ export class GameScene extends SceneNode {
       action,
       preview,
     });
-    this.combatCommands.reset();
+    this.combatCommands.reset({ preserveStamina: true, preserveInputHistory: true });
     this.rollState = null;
     this.campaignActionPreviewRequested.emit(
       Object.freeze({ source: 'region-core-event', regionId, preview }),
@@ -1872,7 +1895,7 @@ export class GameScene extends SceneNode {
       this.scrapCampaignProfile,
     );
     this.pendingScrapCampaignAction = Object.freeze({ type: 'full-rest', action, preview });
-    this.combatCommands.reset();
+    this.combatCommands.reset({ preserveStamina: true, preserveInputHistory: true });
     this.rollState = null;
     this.campaignActionPreviewRequested.emit(
       Object.freeze({ source: 'full-recovery-camp', preview }),
@@ -1898,11 +1921,42 @@ export class GameScene extends SceneNode {
       this.pendingScrapCampaignAction = null;
       return Object.freeze({ started: true, reason: 'confirmed', preview: pending.preview });
     }
+    if (pending.type === 'field-work') {
+      const current = this.fieldQuests.nearbyAction();
+      if (!current || JSON.stringify(current.event) !== JSON.stringify(pending.fieldEvent)) {
+        this.pendingScrapCampaignAction = null;
+        return Object.freeze({ started: false, reason: 'field-target-changed' });
+      }
+      const campaign = commitScrapCampaignAction(
+        this.progressionSnapshot.scrapCampaign,
+        pending.action,
+        this.scrapCampaignProfile,
+      );
+      const draft = mergeProgressionSnapshot(this.progressionSnapshot, {
+        scrapCampaign: campaign.snapshot,
+      });
+      const transaction = this.fieldQuests.perform(pending.fieldEvent, draft);
+      this.pendingScrapCampaignAction = null;
+      this.commitProgression({ ...transaction, changed: true });
+      this.syncScrapAwakeningWorldContext();
+      if (campaign.snapshot.gameOver) this.beginScrapGameOverPresentation();
+      return Object.freeze({
+        started: true,
+        reason: 'confirmed',
+        preview: pending.preview,
+        transaction,
+      });
+    }
     const transaction = this.commitScrapCampaignDomainAction(pending.action);
     this.pendingScrapCampaignAction = null;
-    if (pending.type === 'full-rest' && transaction.changed) {
+    if (
+      pending.type === 'full-rest' &&
+      transaction.changed &&
+      !this.progressionSnapshot.scrapCampaign.gameOver
+    ) {
       this.playerHealth = this.playerMaxHealth;
-      this.recoveryNotice = '야전 침상에서 완전히 회복했습니다.';
+      this.combatCommands.reset({ preserveInputHistory: true });
+      this.recoveryNotice = '휴식 지점에서 체력과 스태미나를 완전히 회복했습니다.';
       this.statusNode.publish({ force: true });
     }
     return Object.freeze({
@@ -1947,6 +2001,24 @@ export class GameScene extends SceneNode {
   }
 
   emitDurableProgressionChanged() {
+    if (this.fieldQuests) {
+      const prepared = this.fieldQuests.prepare();
+      this.progressionSnapshot = prepared.snapshot;
+      this.acquisitionFeedback.push(prepared.notifications, this.position);
+      if (this.lastFeedbackSnapshot)
+        this.acquisitionFeedback.push(
+          acquisitionChanges(
+            this.lastFeedbackSnapshot,
+            this.progressionSnapshot,
+            this.equipmentCatalog,
+            this.scrapCampaignProfile,
+            'change-' + ++this.acquisitionFeedback.sequence,
+          ),
+          this.position,
+        );
+      this.lastFeedbackSnapshot = this.progressionSnapshot;
+      this.syncFieldEncounter();
+    }
     this.progressionChanged.emit(this.progressionSnapshot);
     return this.progressionSnapshot;
   }
@@ -1991,7 +2063,7 @@ export class GameScene extends SceneNode {
   getStoryInteractionContext() {
     const mapSnapshot = this.mapRuntime.getResolvedSnapshot();
     return Object.freeze({
-      entities: mapSnapshot.entities,
+      entities: applyQuestNpcOutcomes(mapSnapshot.entities, this.progressionSnapshot.quests),
       playerPosition: Object.freeze({ ...this.position }),
       transcripts: resolveConversationTranscripts(this.progressionSnapshot.viewedConversationIds),
     });
@@ -2454,7 +2526,11 @@ export class GameScene extends SceneNode {
   commitProgression(transaction, { equipmentChanged = false, skillChanged = false } = {}) {
     if (!transaction.changed) return transaction;
     const nextSnapshot = transaction.snapshot;
-    const nextEquipment = resolveEquipmentLoadout(nextSnapshot.loadout, this.equipmentCatalog);
+    const nextEquipment = resolveEquipmentLoadout(
+      nextSnapshot.loadout,
+      this.equipmentCatalog,
+      nextSnapshot.equipmentUpgrades,
+    );
     const nextSkill = this.combatProgressionProfile.getSkillLevelProfile(
       nextSnapshot.combatSkillLevel,
     );
@@ -2467,9 +2543,10 @@ export class GameScene extends SceneNode {
     this.roomSceneNode?.setEnchantmentContext(this.getEnchantContext());
     this.resolvedLoadout = nextEquipment;
     if (equipmentChanged || skillChanged) this.prepareAttackSpatialProfiles();
-    this.progressionChanged.emit(this.progressionSnapshot);
+    this.acquisitionFeedback.push(transaction.notifications ?? [], this.position);
+    this.emitDurableProgressionChanged();
     this.statusNode.publish({ force: true });
-    return transaction;
+    return Object.freeze({ ...transaction, snapshot: this.progressionSnapshot });
   }
 
   unavailableProgressionTransaction() {
@@ -2480,6 +2557,177 @@ export class GameScene extends SceneNode {
     });
   }
 
+  syncFieldEncounter() {
+    if (!this.fieldQuests || !this.roomSceneNode) return;
+    const snapshot = this.fieldQuests.decorateSnapshot(this.mapRuntime.getResolvedSnapshot());
+    const desired =
+      snapshot.entities.find((e) => ['combat-test-mob', 'combat-enemy'].includes(e.kind))?.id ??
+      null;
+    const current = this.roomSceneNode.encounter?.entity?.id ?? null;
+    if (desired !== current) this.replaceRoomScene(snapshot, { forceReplace: true });
+  }
+  getFieldJournalView() {
+    const prepared = this.fieldQuests.prepare();
+    if (prepared.changed) this.commitProgression(prepared);
+    const context = this.fieldQuests.context();
+    const ledger = getMaterialLedger(this.progressionSnapshot);
+    const quests = createQuestReadModel(
+      this.progressionSnapshot.quests,
+      context.campaignReadModel,
+      context,
+    );
+    const issuers = new Map(
+      this.mapRuntime
+        .getResolvedMap()
+        .regions.flatMap((r) =>
+          r.rooms.flatMap((room) => room.entities.map((e) => [e.id, e.speaker ?? e.label ?? e.id])),
+        ),
+    );
+    const present = (q) => ({
+      ...q,
+      issuerLabel: issuers.get(q.issuerId) ?? q.issuerId,
+      regionLabel: this.scrapCampaignProfile.getRegion(q.regionId)?.label ?? q.regionId,
+      statusLabel: {
+        offered: '미수락',
+        accepted: '진행 중',
+        completed: '완료',
+        failed: '기한 초과',
+        expired: '기간 종료',
+      }[q.status],
+      rewardLabel: [
+        q.rewards.gold + ' Gold',
+        ...Object.entries(q.rewards.materials).map(
+          ([id, n]) => (MATERIAL_PROFILES.find((p) => p.id === id)?.label ?? id) + ' ×' + n,
+        ),
+        ...(q.rewards.trainingMarks ? [q.rewards.trainingMarks + ' 수련 인장'] : []),
+      ].join(' · '),
+    });
+    return Object.freeze({
+      clockLabel: context.campaignReadModel.hudLabel,
+      quests: {
+        ...quests,
+        general: quests.general.map(present),
+        history: quests.history.map(present),
+      },
+      materials: MATERIAL_PROFILES.map((p) => ({
+        id: p.id,
+        label: p.label,
+        quantity: ledger[p.id],
+      })),
+      canUpgrade: this.canManageProgression(),
+      canRest: Boolean(this.fieldQuests.getBoardPrompt()),
+    });
+  }
+  requestFieldRest() {
+    if (
+      !this.fieldQuests.getBoardPrompt() ||
+      this.combatCommands.active ||
+      this.pendingScrapCampaignAction ||
+      this.progressionSnapshot.scrapCampaign.gameOver
+    )
+      return false;
+    const enemy = this.roomSceneNode?.encounter?.enemy;
+    if (enemy?.health > 0 && Math.abs(enemy.position.x - this.position.x) < 300) return false;
+    const action = Object.freeze({
+      ...this.createScrapCampaignRestAction(),
+      label: '진입부 휴식 지점',
+    });
+    const preview = Object.freeze({
+      ...previewScrapCampaignAction(
+        this.progressionSnapshot.scrapCampaign,
+        action,
+        this.scrapCampaignProfile,
+      ),
+      detailLabel: '현장 휴식 지점 · 체력 전부 회복',
+    });
+    this.pendingScrapCampaignAction = Object.freeze({ type: 'full-rest', action, preview });
+    this.campaignActionPreviewRequested.emit(
+      Object.freeze({ source: 'field-rest-point', preview }),
+    );
+    return true;
+  }
+  acceptGeneralQuest(id) {
+    if (this.progressionSnapshot.scrapCampaign.gameOver)
+      return this.unavailableProgressionTransaction();
+    return this.commitProgression(this.fieldQuests.accept(id));
+  }
+  upgradeOwnedEquipment(id) {
+    if (!this.canManageProgression()) return this.unavailableProgressionTransaction();
+    const result = upgradeEquipment(this.progressionSnapshot, id, this.equipmentCatalog);
+    if (!result.changed)
+      this.progressionNotice = '강화 불가 · 재료/Gold 또는 현재 진행 상한을 확인하세요.';
+    return this.commitProgression(result, { equipmentChanged: result.changed });
+  }
+  chooseFieldInteraction() {
+    const action = this.fieldQuests?.nearbyAction(),
+      board = this.fieldQuests?.getBoardPrompt();
+    if (
+      board &&
+      (!action ||
+        Math.abs(board.position.x - this.position.x) <=
+          Math.abs(action.position.x - this.position.x))
+    )
+      return { ...board, board: true };
+    return action;
+  }
+  tryFieldInteraction() {
+    if (this.pendingScrapCampaignAction || this.rollState || this.combatCommands.active)
+      return false;
+    const action = this.chooseFieldInteraction();
+    if (!action) return false;
+    if (action.board) {
+      this.fieldJournalRequested.emit({ tab: 'quests' });
+      return true;
+    }
+    const enemy = this.roomSceneNode?.encounter?.enemy;
+    if (enemy?.health > 0 && Math.abs(enemy.position.x - this.position.x) < 300) {
+      this.acquisitionFeedback.push(
+        [
+          {
+            id: 'field-combat-' + ++this.acquisitionFeedback.sequence,
+            kind: 'field-warning',
+            title: '먼저 작업선을 확보하세요.',
+            importance: 'normal',
+            lines: [],
+          },
+        ],
+        this.position,
+      );
+      return true;
+    }
+    if (action.workSegments) {
+      const campaignAction = Object.freeze({
+        actionId: action.event.occurrenceId + ':work',
+        kind: SCRAP_CAMPAIGN_ACTION_KIND.FIELD_WORK,
+        label: action.label,
+        costSegments: 1,
+      });
+      const preview = previewScrapCampaignAction(
+        this.progressionSnapshot.scrapCampaign,
+        campaignAction,
+        this.scrapCampaignProfile,
+      );
+      this.pendingScrapCampaignAction = Object.freeze({
+        type: 'field-work',
+        action: campaignAction,
+        preview,
+        fieldEvent: action.event,
+      });
+      this.campaignActionPreviewRequested.emit(Object.freeze({ source: 'field-work', preview }));
+    } else this.commitProgression(this.fieldQuests.perform(action.event));
+    return true;
+  }
+
+  isEquipmentChangeSafe() {
+    const enemy = this.roomSceneNode?.encounter?.enemy;
+    return (
+      !this.progressionSnapshot.scrapCampaign.gameOver &&
+      this.playerHealth > 0 &&
+      !this.combatCommands.active &&
+      !this.rollState &&
+      !(enemy?.health > 0 && Math.abs(enemy.position.x - this.position.x) < 320)
+    );
+  }
   getEquipmentView() {
     return {
       ...createEquipmentViewModel(
@@ -2487,12 +2735,12 @@ export class GameScene extends SceneNode {
         this.progressionSnapshot,
         this.equipmentCatalog,
       ),
-      canChange: !this.combatCommands.active && !this.rollState,
+      canChange: this.isEquipmentChangeSafe(),
+      workshopAvailable: this.canManageProgression(),
     };
   }
   equipOwnedItem(itemId) {
-    if (this.combatCommands.active || this.rollState)
-      return this.unavailableProgressionTransaction();
+    if (!this.isEquipmentChangeSafe()) return this.unavailableProgressionTransaction();
     const transaction = selectProgressionEquipment(
       this.progressionSnapshot,
       itemId,
@@ -2682,6 +2930,7 @@ export class GameScene extends SceneNode {
     snapshot = this.mapRuntime.getResolvedSnapshot(),
     { resetExisting = false, forceReplace = false } = {},
   ) {
+    snapshot = this.fieldQuests?.decorateSnapshot(snapshot) ?? snapshot;
     const activeRoomScene = this.roomSceneNode;
     if (
       !forceReplace &&
@@ -2757,6 +3006,8 @@ export class GameScene extends SceneNode {
   }
 
   resolveCampaignEncounter(result) {
+    const fieldEvent = this.fieldQuests?.completionEvent(result);
+    if (fieldEvent) return this.commitProgression(this.fieldQuests.perform(fieldEvent));
     if (result.scrapAwakeningNextStageId) {
       assertScrapAwakeningStageId(result.scrapAwakeningNextStageId);
       const transaction = advanceScrapAwakening(
@@ -3148,6 +3399,7 @@ export class GameScene extends SceneNode {
     }
     this.combatCameraFeedback.update(deltaSeconds);
     this.combatEvents.update(deltaSeconds);
+    this.acquisitionFeedback.update(deltaSeconds);
     this.scrapFinalBattleOpeningSeconds = Math.max(
       0,
       this.scrapFinalBattleOpeningSeconds - deltaSeconds,
@@ -3242,8 +3494,10 @@ export class GameScene extends SceneNode {
       }
     }
     const dialogueConsumed = dialogueResult?.consumed === true;
+    const fieldConsumed =
+      jumpIssued && !awakeningConsumed && !dialogueConsumed ? this.tryFieldInteraction() : false;
     const wallMapConsumed =
-      jumpIssued && !awakeningConsumed && !dialogueConsumed
+      jumpIssued && !awakeningConsumed && !dialogueConsumed && !fieldConsumed
         ? this.tryRequestOperationMapFromWorld()
         : false;
     const restConsumed =
@@ -3256,6 +3510,7 @@ export class GameScene extends SceneNode {
       !dialogueConsumed &&
       !wallMapConsumed &&
       !restConsumed &&
+      !fieldConsumed &&
       this.tryPortalTransition();
     if (
       !portalStarted &&
@@ -3275,6 +3530,7 @@ export class GameScene extends SceneNode {
       !dialogueConsumed &&
       !wallMapConsumed &&
       !restConsumed &&
+      !fieldConsumed &&
       jumpIssued &&
       this.isGrounded &&
       currentCombatState.canJump
@@ -3298,7 +3554,8 @@ export class GameScene extends SceneNode {
           !storyBlocksGameplay &&
           !awakeningConsumed &&
           !wallMapConsumed &&
-          !restConsumed,
+          !restConsumed &&
+          !fieldConsumed,
         isAirborne: !this.isGrounded,
         allowGuard: this.isGrounded && this.resolvedLoadout.moveset.commands.guard !== false,
         staminaDeltaSeconds: deltaSeconds,
@@ -3608,7 +3865,7 @@ export class GameScene extends SceneNode {
         );
         if (incompleteLinkedIssue) {
           return incompleteLinkedIssue.encounterLabel
-            ? `${incompleteLinkedIssue.encounterLabel}을 완료해 “${incompleteLinkedIssue.label}” 연결 이슈를 해결하세요.`
+            ? `${incompleteLinkedIssue.encounterLabel}을 완료해 “${incompleteLinkedIssue.label}” 연결 의뢰를 해결하세요.`
             : incompleteLinkedIssue.objective;
         }
         const pendingPrimaryLinkedIssue = scrapCampaign.issueWindow.linked.find(
@@ -3786,6 +4043,9 @@ export class GameScene extends SceneNode {
       }),
       combatSkill: this.getCombatSkillReadModel(),
       progressionNotice: this.progressionNotice,
+      acquisitionFeed: this.acquisitionFeedback?.snapshot() ?? [],
+      fieldPrompt: this.chooseFieldInteraction()?.label ?? null,
+      questOutcomes: createQuestEpilogueReadModel(progression.quests).outcomes,
     });
   }
 
@@ -3908,6 +4168,13 @@ export class GameScene extends SceneNode {
     const characterItems = applyEquipmentPresentation(
       renderCombatGeometry.svgPresentation?.items ?? playerPresentation.characterItems,
       this.resolvedLoadout,
+      {
+        bonePose: pose.bonePose,
+        position: renderPosition,
+        facing: this.facing,
+        scale: characterRenderScale,
+        renderOrder: characterRenderOrder,
+      },
     );
     const { combatEffectItems } = playerPresentation;
     const encounterRender = this.roomSceneNode?.createEncounterRenderSnapshot(
@@ -3961,6 +4228,8 @@ export class GameScene extends SceneNode {
     const items = Object.freeze(
       [
         ...mapSnapshot.renderItems,
+        ...(this.fieldQuests?.renderItems() ?? []),
+        ...(this.acquisitionFeedback?.renderItems(renderPosition) ?? []),
         ...scrapFinalBattleItems,
         ...encounterItems,
         ...characterItems,
@@ -4038,7 +4307,7 @@ export class GameScene extends SceneNode {
       y: lerp(this.previousCameraPosition.y, this.cameraPosition.y, interpolationAlpha),
     };
     const combatCameraOffset = this.combatCameraFeedback.snapshot();
-    const renderFrame = Object.freeze({
+    const rawRenderFrame = Object.freeze({
       worldSize: map.worldSize,
       groundY: map.groundY,
       gridSize: map.gridSize,
@@ -4133,6 +4402,12 @@ export class GameScene extends SceneNode {
         ? (viewAt) => this.scenePresentation.snapshotProjected(viewAt)
         : null,
       items,
+    });
+    const renderFrame = applyCampaignTimePresentation(rawRenderFrame, {
+      phaseId: this.visualQaTimePhase ?? this.getScrapAwakeningReadModel().phaseId,
+      player: renderPosition,
+      fieldCapabilities: this.resolvedLoadout.fieldCapabilities,
+      workLights: this.fieldQuests?.workLights?.() ?? [],
     });
     this.renderFrameCreated.emit(renderFrame);
     return renderFrame;

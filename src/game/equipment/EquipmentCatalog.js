@@ -102,6 +102,16 @@ export function createEquipmentCatalog({
     multiplyEquipmentModifiers(structuredClone(EQUIPMENT_MODIFIER_DEFAULTS), item.modifiers);
   }
   for (const set of lists.sets) {
+    if (
+      !Array.isArray(set.pieceItemIds) ||
+      !set.pieceItemIds.length ||
+      new Set(set.pieceItemIds).size !== set.pieceItemIds.length ||
+      set.pieceItemIds.some(
+        (id) => !indexes.items.has(id) || indexes.items.get(id).setId !== set.id,
+      ) ||
+      lists.items.some((item) => item.setId === set.id && !set.pieceItemIds.includes(item.id))
+    )
+      throw new TypeError('Set requires explicit matching pieceItemIds');
     if (!Array.isArray(set.bonuses)) throw new TypeError('Set bonuses required');
     const thresholds = new Set();
     for (const bonus of set.bonuses) {
@@ -109,6 +119,7 @@ export function createEquipmentCatalog({
         !idValid(bonus.id) ||
         !Number.isInteger(bonus.pieces) ||
         bonus.pieces < 1 ||
+        bonus.pieces > set.pieceItemIds.length ||
         thresholds.has(bonus.pieces)
       )
         throw new TypeError('Invalid set threshold');

@@ -1,3 +1,4 @@
+import { migrateFieldProgressionV11 } from './FieldProgressionMigration.js';
 import { EQUIPMENT_CATALOG } from '../equipment/EquipmentCatalog.js';
 import { DEFAULT_OWNED_EQUIPMENT_ITEM_IDS } from '../equipment/EquipmentLoadout.js';
 import { migrateEquipmentSaveV10 } from './EquipmentSaveMigration.js';
@@ -137,6 +138,10 @@ function validateCurrentSnapshot(
 function createStoredRecord(snapshot) {
   return {
     version: PROGRESSION_SCHEMA_VERSION,
+    quests: snapshot.quests,
+    materials: snapshot.materials,
+    rewardClaims: snapshot.rewardClaims,
+    equipmentUpgrades: snapshot.equipmentUpgrades,
     gold: snapshot.gold,
     trainingMarks: snapshot.trainingMarks,
     ownedEquipmentItemIds: [...snapshot.ownedEquipmentItemIds],
@@ -169,6 +174,8 @@ function decodeStoredSnapshot(
       equipmentForgeProfile,
       scrapCampaignProfile,
     });
+  if (parsed.version === 11)
+    parsed = migrateFieldProgressionV11(parsed, { scrapCampaignProfile, equipmentCatalog });
   if (
     parsed.version !== PROGRESSION_SCHEMA_VERSION ||
     (Number.isSafeInteger(parsed.scrapCampaign?.version) &&

@@ -18,9 +18,9 @@
     </header>
     <main>
       <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 b2e387350afc</p>
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 ffd4140b2afe</p>
         <h1>설비 · 전체 목록 4/4</h1>
-        <p>현재 등록 110개 중 91–110. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
+        <p>현재 등록 111개 중 91–111. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
       </header>
       <aside class="notice">
         제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
@@ -555,6 +555,37 @@
                   >게임 검토실</a
                 ><br /><a href="../../../src/game/maps/scrapAwakening.js"
                   >src/game/maps/scrapAwakening.js</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong id="field:harbor-lamp" data-resource-id="field:harbor-lamp"
+                  >항구 정비·임시 작업등</strong
+                ><br /><code>field:harbor-lamp</code>
+              </td>
+              <td>조사·작업·복구/분해 상태와 기계 기능</td>
+              <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
+              <td>
+                <strong>정적 리소스</strong>
+                <details>
+                  <summary>현재 상태·동작 4개</summary>
+                  <ul>
+                    <li>정비 완료 · <code>serviced</code></li>
+                    <li>방치 뒤 임시 조명 · <code>temporary</code></li>
+                    <li>정비 작업등 · 밤 · <code>serviced-night</code></li>
+                    <li>임시 조명 · 밤 · <code>temporary-night</code></li>
+                  </ul>
+                </details>
+                실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반
+                테스트 플레이 시작 상태와 구분합니다.
+              </td>
+              <td>
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=facility&amp;resource=field%3Aharbor-lamp"
+                  >게임 검토실</a
+                ><br /><a href="../../../src/game/quests/FieldQuestRuntime.js"
+                  >src/game/quests/FieldQuestRuntime.js</a
                 >
               </td>
             </tr>

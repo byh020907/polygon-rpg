@@ -307,4 +307,22 @@ export const EQUIPMENT_ITEM_PROFILES = freezeEquipmentData([
     visualProfileId: 'field-work-boots',
     materialProfileId: 'cloth',
   },
+  {
+    id: 'field-work-lamp',
+    familyId: 'tool',
+    label: '재사용 작업등',
+    shortLabel: '작업등',
+    description: '현장 어두운 접속부를 비추는 재사용 작업등.',
+    goldCost: 0,
+    trainingMarkRequirement: 0,
+    visualProfile: {
+      kind: 'work-lamp',
+      source: 'slot-local-work-lamp',
+      materialId: 'painted-steel',
+    },
+    visualProfileId: 'field-work-lamp',
+    materialProfileId: 'painted-steel',
+    origin: { kind: 'exploration', id: 'mine-cable-cache' },
+    modifiers: {},
+  },
 ]);

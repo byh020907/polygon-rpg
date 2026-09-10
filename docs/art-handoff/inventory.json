@@ -1,6 +1,6 @@
 {
-  "fingerprint": "b2e387350afc",
-  "resourceCount": 597,
+  "fingerprint": "ffd4140b2afe",
+  "resourceCount": 608,
   "records": [
     {
       "id": "player:protagonist",
@@ -1276,6 +1276,134 @@
       ],
       "itemIds": [],
       "page": "resources/equipment-1.html#equipment%3Afield-work-boots"
+    },
+    {
+      "id": "equipment:field-work-lamp",
+      "label": "재사용 작업등",
+      "category": "equipment",
+      "producer": "equipment",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "src/game/equipment/EquipmentItemProfiles.js",
+      "notes": "Item field-work-lamp · Family tool · Slot tool · none · Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut, light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace, illuminate · Visual field-work-lamp. 현재 placeholder를 사용합니다.",
+      "actions": [
+        {
+          "id": "static",
+          "label": "장비 실제 크기",
+          "frameCount": 1
+        },
+        {
+          "id": "idle",
+          "label": "대기",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "달리기 · 정상 33주기",
+          "frameCount": 160
+        },
+        {
+          "id": "jump",
+          "label": "점프 상승",
+          "frameCount": 24
+        },
+        {
+          "id": "fall",
+          "label": "낙하",
+          "frameCount": 24
+        },
+        {
+          "id": "landing",
+          "label": "착지 · 현재 gameplay에서 미사용 자세",
+          "frameCount": 8
+        },
+        {
+          "id": "roll",
+          "label": "전방 구르기",
+          "frameCount": 25
+        },
+        {
+          "id": "guard",
+          "label": "방어 · 정상 7주기",
+          "frameCount": 200
+        },
+        {
+          "id": "hit",
+          "label": "피격",
+          "frameCount": 14
+        },
+        {
+          "id": "block",
+          "label": "기본공격 방어 반동",
+          "frameCount": 8,
+          "blockStrength": 0.5940000000000001,
+          "durationSeconds": 0.126
+        },
+        {
+          "id": "knocked-out",
+          "label": "쓰러짐 · 고정 자세",
+          "frameCount": 1
+        },
+        {
+          "id": "slash",
+          "label": "기본 횡베기",
+          "frameCount": 27
+        },
+        {
+          "id": "heavy",
+          "label": "강한 사선 베기",
+          "frameCount": 41
+        },
+        {
+          "id": "thrust",
+          "label": "찌르기",
+          "frameCount": 22
+        },
+        {
+          "id": "rising",
+          "label": "올려베기",
+          "frameCount": 32
+        },
+        {
+          "id": "spin",
+          "label": "회전 공격",
+          "frameCount": 43
+        },
+        {
+          "id": "airSlash",
+          "label": "공중 베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airHeavy",
+          "label": "공중 강공",
+          "frameCount": 26
+        },
+        {
+          "id": "airReturn",
+          "label": "공중 되베기",
+          "frameCount": 22
+        },
+        {
+          "id": "airSpin",
+          "label": "공중 회전",
+          "frameCount": 36
+        },
+        {
+          "id": "airCross",
+          "label": "공중 교차 베기",
+          "frameCount": 26
+        },
+        {
+          "id": "shieldBash",
+          "label": "방패 반격",
+          "frameCount": 23
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/equipment-1.html#equipment%3Afield-work-lamp"
     },
     {
       "id": "enemy-reference:humanoid",
@@ -18527,6 +18655,166 @@
       "page": "resources/prop-4.html#svg%3Aprologue-control-core"
     },
     {
+      "id": "field:mine-board",
+      "label": "폐광 의뢰 게시판",
+      "category": "prop",
+      "producer": "field-quest",
+      "kind": "static",
+      "regionId": "abandoned-mine",
+      "roomId": "abandoned-mine-roadhead",
+      "actorId": null,
+      "source": "src/game/quests/FieldQuestRuntime.js",
+      "notes": "실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반 테스트 플레이 시작 상태와 구분합니다.",
+      "actions": [
+        {
+          "id": "day",
+          "label": "낮",
+          "frameCount": 1
+        },
+        {
+          "id": "night",
+          "label": "밤",
+          "frameCount": 1,
+          "night": true
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/prop-4.html#field%3Amine-board"
+    },
+    {
+      "id": "field:harbor-board",
+      "label": "항구 의뢰 게시판",
+      "category": "prop",
+      "producer": "field-quest",
+      "kind": "static",
+      "regionId": "harbor-shipyard",
+      "roomId": "harbor-shipyard-roadhead",
+      "actorId": null,
+      "source": "src/game/quests/FieldQuestRuntime.js",
+      "notes": "실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반 테스트 플레이 시작 상태와 구분합니다.",
+      "actions": [
+        {
+          "id": "day",
+          "label": "낮",
+          "frameCount": 1
+        },
+        {
+          "id": "night",
+          "label": "밤",
+          "frameCount": 1,
+          "night": true
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/prop-4.html#field%3Aharbor-board"
+    },
+    {
+      "id": "field:mine-cable-cache",
+      "label": "판금 틈의 회수 단서",
+      "category": "prop",
+      "producer": "field-quest",
+      "kind": "static",
+      "regionId": "abandoned-mine",
+      "roomId": "abandoned-mine-roadhead",
+      "actorId": null,
+      "source": "src/game/quests/FieldQuestRuntime.js",
+      "notes": "실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반 테스트 플레이 시작 상태와 구분합니다.",
+      "actions": [
+        {
+          "id": "undiscovered",
+          "label": "발견 전 판금·케이블",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/prop-4.html#field%3Amine-cable-cache"
+    },
+    {
+      "id": "field:harbor-lamp",
+      "label": "항구 정비·임시 작업등",
+      "category": "facility",
+      "producer": "field-quest",
+      "kind": "static",
+      "regionId": "harbor-shipyard",
+      "roomId": "harbor-shipyard-roadhead",
+      "actorId": null,
+      "source": "src/game/quests/FieldQuestRuntime.js",
+      "notes": "실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반 테스트 플레이 시작 상태와 구분합니다.",
+      "actions": [
+        {
+          "id": "serviced",
+          "label": "정비 완료",
+          "frameCount": 1,
+          "outcome": "serviced"
+        },
+        {
+          "id": "temporary",
+          "label": "방치 뒤 임시 조명",
+          "frameCount": 1,
+          "outcome": "temporary-lighting"
+        },
+        {
+          "id": "serviced-night",
+          "label": "정비 작업등 · 밤",
+          "frameCount": 1,
+          "outcome": "serviced",
+          "night": true
+        },
+        {
+          "id": "temporary-night",
+          "label": "임시 조명 · 밤",
+          "frameCount": 1,
+          "outcome": "temporary-lighting",
+          "night": true
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/facility-4.html#field%3Aharbor-lamp"
+    },
+    {
+      "id": "field:mine-quest-marker",
+      "label": "수락한 폐광 현장 표시",
+      "category": "effect",
+      "producer": "field-quest",
+      "kind": "static",
+      "regionId": "abandoned-mine",
+      "roomId": "abandoned-mine-roadhead",
+      "actorId": null,
+      "source": "src/game/quests/FieldQuestRuntime.js",
+      "notes": "실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반 테스트 플레이 시작 상태와 구분합니다.",
+      "actions": [
+        {
+          "id": "accepted",
+          "label": "작업등 점검 수락",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/effect-1.html#field%3Amine-quest-marker"
+    },
+    {
+      "id": "field:mine-night-enemy",
+      "label": "수락 회차의 밤 작업선 수거 유닛",
+      "category": "enemy",
+      "producer": "field-quest",
+      "kind": "static",
+      "regionId": "abandoned-mine",
+      "roomId": "abandoned-mine-roadhead",
+      "actorId": null,
+      "source": "src/game/quests/FieldQuestRuntime.js",
+      "notes": "실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반 테스트 플레이 시작 상태와 구분합니다.",
+      "actions": [
+        {
+          "id": "accepted-night",
+          "label": "밤 의뢰 수락 · 실제 조우",
+          "frameCount": 1,
+          "night": true
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/enemy-1.html#field%3Amine-night-enemy"
+    },
+    {
       "id": "effect:player-hit",
       "label": "주인공 피격",
       "category": "effect",
@@ -19154,7 +19442,7 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/effect-1.html#effect%3Aenchant-contact-lightning"
+      "page": "resources/effect-2.html#effect%3Aenchant-contact-lightning"
     },
     {
       "id": "effect:enchant-status-lightning",
@@ -19958,7 +20246,7 @@
         }
       ],
       "itemIds": ["scrap-final-ancient-open-chest"],
-      "page": "resources/prop-4.html#final%3Ascrap-final-ancient-open-chest"
+      "page": "resources/prop-5.html#final%3Ascrap-final-ancient-open-chest"
     },
     {
       "id": "final:scrap-final-exposed-control-core",
@@ -19979,7 +20267,7 @@
         }
       ],
       "itemIds": ["scrap-final-exposed-control-core"],
-      "page": "resources/prop-4.html#final%3Ascrap-final-exposed-control-core"
+      "page": "resources/prop-5.html#final%3Ascrap-final-exposed-control-core"
     },
     {
       "id": "final:scrap-final-reinstalled-control-core",
@@ -20000,7 +20288,7 @@
         }
       ],
       "itemIds": ["scrap-final-reinstalled-control-core"],
-      "page": "resources/prop-4.html#final%3Ascrap-final-reinstalled-control-core"
+      "page": "resources/prop-5.html#final%3Ascrap-final-reinstalled-control-core"
     },
     {
       "id": "final:scrap-final-stop-signal",
@@ -20085,6 +20373,86 @@
       ],
       "itemIds": ["scrap-final-epilogue-signal"],
       "page": "resources/prop-5.html#final%3Ascrap-final-epilogue-signal"
+    },
+    {
+      "id": "ui/journal-equipment",
+      "label": "장비 장착·강화",
+      "category": "ui",
+      "kind": "ui",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "index.html · gameShell.js · style.css",
+      "notes": "",
+      "actions": [
+        {
+          "id": "static",
+          "label": "현재 컴포넌트",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/ui-1.html#ui%2Fjournal-equipment"
+    },
+    {
+      "id": "ui/journal-materials",
+      "label": "재료 장부",
+      "category": "ui",
+      "kind": "ui",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "index.html · gameShell.js · style.css",
+      "notes": "",
+      "actions": [
+        {
+          "id": "static",
+          "label": "현재 컴포넌트",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/ui-1.html#ui%2Fjournal-materials"
+    },
+    {
+      "id": "ui/journal-quests",
+      "label": "주요·연결·일반 의뢰",
+      "category": "ui",
+      "kind": "ui",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "index.html · gameShell.js · style.css",
+      "notes": "",
+      "actions": [
+        {
+          "id": "static",
+          "label": "현재 컴포넌트",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/ui-1.html#ui%2Fjournal-quests"
+    },
+    {
+      "id": "ui/journal-codex",
+      "label": "세트·특수 조합 도감",
+      "category": "ui",
+      "kind": "ui",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "index.html · gameShell.js · style.css",
+      "notes": "",
+      "actions": [
+        {
+          "id": "static",
+          "label": "현재 컴포넌트",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/ui-1.html#ui%2Fjournal-codex"
     },
     {
       "id": "ui/menu",

@@ -147,6 +147,14 @@ export const SHADOW_ROWS = [
 ];
 export const CHARACTER_ROWS = [
   [
+    '장비 슬롯 외형',
+    '투구=머리/얼굴 주변, 몸통=상체/작업복, 신발=발/종아리, 주무기/방패/도구=실제 부착 영역만 교체합니다. 기본 Body Profile과 다른 슬롯을 유지합니다. 장비는 보여야 하지만 캐릭터를 삼키지 않습니다.',
+  ],
+  [
+    '시간대와 작은 결과',
+    '아침/낮/저녁/밤의 하늘·면·작업등을 구별하되 지역 전체 이중 제작은 하지 않습니다. 중요한 부가 의뢰만 정비/임시 작업 상태와 짧은 주민 반응을 제작합니다. 방치는 폐허나 파멸이 아닙니다.',
+  ],
+  [
     'Rig Family + Body Profile',
     '공유하는 것은 bone naming·hierarchy·animation grammar입니다. 인물별 head/shoulder/hip 크기, arm/leg 길이, torso/limb SVG와 stance는 다릅니다. 같은 관절 언어이지 같은 몸이 아닙니다.',
   ],

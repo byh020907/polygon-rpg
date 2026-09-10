@@ -4036,3 +4036,117 @@ html[data-ui-review] {
     white-space: nowrap;
   }
 }
+
+.field-journal-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  position: sticky;
+  top: 0;
+  background: #222c2c;
+  padding: 6px 0;
+  z-index: 2;
+}
+.field-journal-tabs button {
+  flex: 1;
+}
+.field-journal-tabs [aria-pressed='true'] {
+  background: #557064;
+  border-color: #c2ceab;
+}
+.material-ledger > div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #485954;
+  padding: 10px;
+}
+.general-quests {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.quest-journal .quest-deadline {
+  border-color: #c39960;
+}
+.quest-journal small {
+  color: #c9cfb9;
+}
+.acquisition-feed {
+  position: absolute;
+  right: 14px;
+  top: 62px;
+  z-index: 12;
+  width: min(290px, 36%);
+  pointer-events: none;
+  display: grid;
+  gap: 5px;
+}
+.acquisition-feed article {
+  background: #18302ded;
+  border-left: 3px solid #aac3a1;
+  border-radius: 4px;
+  padding: 9px 12px;
+  color: #f4efdb;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.acquisition-feed strong,
+.acquisition-feed span {
+  display: block;
+}
+.acquisition-feed .acquisition-important {
+  border-color: #e4ca77;
+  background: #394232f0;
+}
+.acquisition-feed .acquisition-major {
+  border-color: #f7d475;
+  font-size: 14px;
+}
+.field-action-prompt {
+  position: absolute;
+  bottom: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: #152d2de8;
+  color: #eee6c8;
+  padding: 7px 12px;
+  font-size: 12px;
+  border-radius: 5px;
+  pointer-events: none;
+}
+.quest-epilogue {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 28%;
+  z-index: 11;
+  color: #f0e2c3;
+  text-align: center;
+  background: #152b2bd9;
+}
+.equipment-upgrade {
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .general-quests {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-height: 500px) {
+  .acquisition-feed {
+    top: 48px;
+    right: 8px;
+    width: 230px;
+  }
+  .acquisition-feed article:nth-child(n + 2) {
+    display: none;
+  }
+  .field-action-prompt {
+    bottom: 64px;
+    max-width: 50%;
+  }
+  .field-journal-tabs {
+    margin: 4px 0;
+  }
+}

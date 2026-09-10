@@ -22,7 +22,11 @@ export function evaluateEquipmentSynergies(loadout, catalog) {
       .filter(Boolean)
       .map((item) => [item.id, item]),
   ).values())
-    if (item.setId) counts.set(item.setId, (counts.get(item.setId) ?? 0) + 1);
+    if (
+      item.setId &&
+      catalog.sets.find((set) => set.id === item.setId)?.pieceItemIds.includes(item.id)
+    )
+      counts.set(item.setId, (counts.get(item.setId) ?? 0) + 1);
   const activeSetBonuses = catalog.sets.flatMap((set) =>
     set.bonuses
       .filter((bonus) => (counts.get(set.id) ?? 0) >= bonus.pieces)

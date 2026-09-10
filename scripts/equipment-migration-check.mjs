@@ -72,7 +72,7 @@ for (const [id, mapped] of Object.entries(LEGACY_EQUIPMENT_ID_ALIASES)) {
   const result = load();
   assert.equal(result.ok, true);
   const s = result.snapshot;
-  assert.equal(s.version, 11);
+  assert.equal(s.version, 12);
   assert.equal(s.loadout.weaponItemId, mapped);
   assert.equal(s.loadout.shieldItemId, 'field-shield-standard');
   assert.equal(s.loadout.helmetItemId, null);
@@ -152,7 +152,7 @@ for (const source of [legacy, fresh]) {
     memory.setItem('save', bytes);
     assert.equal(load().ok, false, 'unknown campaign fields must not be silently discarded');
     assert.equal(memory.getItem('save'), bytes);
-    if (source.version === 11) {
+    if (source.version === 12) {
       assert.equal(store.save(malformed).ok, false);
       assert.equal(memory.getItem('save'), bytes);
     }
@@ -184,7 +184,7 @@ const slots = store.loadRecoverySlots(
   EQUIPMENT_CATALOG.items.map((i) => i.id),
 );
 assert.equal(slots.ok, true);
-assert.equal(slots.records[0].snapshot.version, 11);
+assert.equal(slots.records[0].snapshot.version, 12);
 assert.equal(memory.getItem('save.recovery.v1'), recoveryBytes);
 assert.deepEqual(slots.records[0].metadata, envelope.slots[recovery.slotId].metadata);
 memory.fail = true;

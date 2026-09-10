@@ -35,6 +35,7 @@ export const SCRAP_CAMPAIGN_SCHEMA_VERSION = 8;
 
 export const SCRAP_CAMPAIGN_ACTION_KIND = Object.freeze({
   FREE: 'free',
+  FIELD_WORK: 'field-work',
   TRAVEL: 'travel',
   REST: 'rest',
   KO_RETURN: 'ko-return',
@@ -443,16 +444,25 @@ function validateAction(action, profile) {
       SCRAP_CAMPAIGN_ACTION_KIND.TRAVEL,
       SCRAP_CAMPAIGN_ACTION_KIND.REST,
       SCRAP_CAMPAIGN_ACTION_KIND.KO_RETURN,
+      SCRAP_CAMPAIGN_ACTION_KIND.FIELD_WORK,
     ].includes(action.kind) &&
     action.costSegments !== 1
   ) {
-    throw new Error('장거리 이동·완전 회복·KO 복귀는 정확히 1구간이어야 합니다.');
+    throw new Error('장거리 이동·완전 회복·KO 복귀·현장 작업은 정확히 1구간이어야 합니다.');
+  }
+  if (
+    action.kind === SCRAP_CAMPAIGN_ACTION_KIND.FIELD_WORK &&
+    (extensionSegments !== 0 ||
+      action.targetLocationId !== undefined ||
+      action.targetRegionId !== undefined)
+  ) {
+    throw new Error('현장 작업은 위치 변경/연장 없이 명시된 1구간만 소비합니다.');
   }
   if (
     action.kind === SCRAP_CAMPAIGN_ACTION_KIND.ISSUE_FOCUS &&
     (action.costSegments !== 0 || extensionSegments !== 0 || !action.targetRegionId)
   ) {
-    throw new Error('주목표 고정 action은 target region과 0구간 비용을 사용해야 합니다.');
+    throw new Error('주요 의뢰 고정 action은 target region과 0구간 비용을 사용해야 합니다.');
   }
   if (action.targetRegionId !== undefined && !profile.getRegion(action.targetRegionId)) {
     throw new Error(`지원하지 않는 target region입니다: ${action.targetRegionId}`);
@@ -549,7 +559,7 @@ function locationLabel(locationId, profile) {
   return profile.getRegion(locationId)?.label ?? locationId;
 }
 
-function rivalRouteReadModel(progressSegments, profile) {
+function ancientMachineRouteReadModel(progressSegments, profile) {
   const reachedRegions = profile.regions.filter(
     (region) => progressSegments >= region.route.rivalArrivalSegment,
   );
@@ -625,8 +635,8 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
   const appliedCostSegments = alreadyCommitted ? 0 : authoredAction.costSegments;
   const rivalDelayConsumedSegments = Math.min(current.rivalDelaySegments, appliedCostSegments);
   const rivalMovementSegments = appliedCostSegments - rivalDelayConsumedSegments;
-  const rivalBefore = rivalRouteReadModel(current.rivalProgressSegments, profile);
-  const rivalAfter = rivalRouteReadModel(
+  const rivalBefore = ancientMachineRouteReadModel(current.rivalProgressSegments, profile);
+  const rivalAfter = ancientMachineRouteReadModel(
     current.rivalProgressSegments + rivalMovementSegments,
     profile,
   );
@@ -639,24 +649,30 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
     actionId: authoredAction.actionId,
     label: authoredAction.label,
     kind: authoredAction.kind,
-    title: finalBattleStage
-      ? getScrapFinalBattlePresentation(authoredAction.finalBattleStageId).title
-      : regionEventStart
-        ? '지역 핵심 사건을 시작할까요?'
-        : fullRest
-          ? '완전히 회복하고 다음 시간대로 갈까요?'
-          : linkedEncounter
-            ? '연결 이슈 현장 전투를 기록할까요?'
-            : '장거리 이동을 확정할까요?',
-    detailLabel: finalBattleStage
-      ? getScrapFinalBattlePresentation(authoredAction.finalBattleStageId).cue
-      : regionEventStart
-        ? (targetRegion?.event.label ?? authoredAction.label)
-        : fullRest
-          ? '고물상 작업장 · 체력 전부 회복'
-          : linkedEncounter
-            ? authoredAction.label
-            : locationLabel(authoredAction.targetLocationId, profile),
+    title:
+      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.FIELD_WORK
+        ? '현장 작업을 진행할까요?'
+        : finalBattleStage
+          ? getScrapFinalBattlePresentation(authoredAction.finalBattleStageId).title
+          : regionEventStart
+            ? '지역 핵심 사건을 시작할까요?'
+            : fullRest
+              ? '완전히 회복하고 다음 시간대로 갈까요?'
+              : linkedEncounter
+                ? '연결 의뢰 현장 전투를 기록할까요?'
+                : '장거리 이동을 확정할까요?',
+    detailLabel:
+      authoredAction.kind === SCRAP_CAMPAIGN_ACTION_KIND.FIELD_WORK
+        ? authoredAction.label
+        : finalBattleStage
+          ? getScrapFinalBattlePresentation(authoredAction.finalBattleStageId).cue
+          : regionEventStart
+            ? (targetRegion?.event.label ?? authoredAction.label)
+            : fullRest
+              ? '고물상 작업장 · 체력 전부 회복'
+              : linkedEncounter
+                ? authoredAction.label
+                : locationLabel(authoredAction.targetLocationId, profile),
     costSegments: authoredAction.costSegments,
     extensionSegments: authoredAction.extensionSegments,
     successExtensionSegments:
@@ -684,11 +700,11 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
         : finalBattleStage && !finalBattleStageInOrder
           ? `final battle은 ${expectedFinalBattleStage} stage부터 순서대로 진행해야 합니다.`
           : differentPrimaryActive
-            ? `현재 주목표 “${activePrimaryIssue.label}”를 먼저 마쳐야 합니다.`
+            ? `현재 주요 의뢰 “${activePrimaryIssue.label}”를 먼저 마쳐야 합니다.`
             : primaryFocusMissing
-              ? '이 지역을 주목표로 먼저 고정해야 합니다.'
+              ? '이 지역을 주요 의뢰로 먼저 고정해야 합니다.'
               : blockingLinkedIssues.length > 0
-                ? `연결 이슈 ${blockingLinkedIssues.length}개를 현장에서 먼저 해결해야 합니다.`
+                ? `연결 의뢰 ${blockingLinkedIssues.length}개를 현장에서 먼저 해결해야 합니다.`
                 : null,
     blockingIssueIds: Object.freeze(blockingLinkedIssues.map((issue) => issue.id)),
     blockingIssueLabels: Object.freeze(blockingLinkedIssues.map((issue) => issue.label)),
@@ -700,6 +716,13 @@ export function previewScrapCampaignAction(snapshot, action, profile) {
       current.elapsedSegments + (alreadyCommitted ? 0 : authoredAction.costSegments),
       nextDeadlineSegments,
     ),
+    ancientMachine: Object.freeze({
+      before: rivalBefore,
+      after: rivalAfter,
+      movementSegments: rivalMovementSegments,
+      delayConsumedSegments: rivalDelayConsumedSegments,
+    }),
+    // Legacy DTO alias. These values describe the ancient machine, not the apprentice.
     rival: Object.freeze({
       before: rivalBefore,
       after: rivalAfter,
@@ -852,7 +875,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
         [SCRAP_CAMPAIGN_REGION_STATUS.RESOLVED].includes(regionStates[region.id]) ||
         completedIssueIds.includes(primaryIssue.id)
       ) {
-        throw new Error('현장 확인을 마친 미해결 region만 새 주목표로 고정할 수 있습니다.');
+        throw new Error('현장 확인을 마친 미해결 region만 새 주요 의뢰로 고정할 수 있습니다.');
       }
       activePrimaryIssueId = primaryIssue.id;
       completedIssueIds = reconcileLinkedIssuesForPrimary(
@@ -920,7 +943,7 @@ export function commitScrapCampaignAction(snapshot, action, profile) {
         ),
       );
       if (!demanded) {
-        throw new Error('연결 이슈가 요구한 연결 전투만 기록할 수 있습니다.');
+        throw new Error('연결 의뢰가 요구한 연결 전투만 기록할 수 있습니다.');
       }
       clearedEncounterIds.push(authoredAction.encounterId);
       const reachedStage = region.eventStages.find(
@@ -1091,12 +1114,12 @@ export function getScrapCampaignReadModel(snapshot, profile) {
             ? '현장 해결'
             : remainingEncounterIds.length > 0
               ? '현장 전투 필요'
-              : '연결 이슈',
+              : '연결 의뢰',
         });
       })
     : [];
   const completedLinkedIssueCount = linkedIssueReadModels.filter((issue) => issue.completed).length;
-  const rivalRoute = rivalRouteReadModel(current.rivalProgressSegments, profile);
+  const rivalRoute = ancientMachineRouteReadModel(current.rivalProgressSegments, profile);
   const completionPercent = Math.round(
     (current.collectedPartIds.length / profile.regions.length) * 100,
   );
@@ -1146,6 +1169,14 @@ export function getScrapCampaignReadModel(snapshot, profile) {
     garageReveal: getScrapGarageRevealPresentation(current.garageRevealStageId),
     currentLocationId: current.currentLocationId,
     currentLocationLabel: currentLocation.label,
+    ancientMachine: Object.freeze({
+      locationLabel: rivalRoute.locationLabel,
+      directionLabel: current.gameOver ? profile.capital.label : rivalRoute.directionLabel,
+      arrivalLabel: 'Day ' + rivalArrival.day + ' · ' + rivalArrival.phaseLabel,
+      progressSegments: current.rivalProgressSegments,
+      delaySegments: current.rivalDelaySegments,
+    }),
+    // Compatibility display aliases for the ancient machine route.
     rivalLocationLabel: rivalRoute.locationLabel,
     rivalDirectionLabel: current.gameOver ? profile.capital.label : rivalRoute.directionLabel,
     rivalArrivalLabel: `Day ${rivalArrival.day} · ${rivalArrival.phaseLabel}`,
@@ -1172,8 +1203,8 @@ export function getScrapCampaignReadModel(snapshot, profile) {
       completedLinkedCount: completedLinkedIssueCount,
       maximumLinkedCount: 2,
       summaryLabel: primaryIssueReadModel
-        ? `주목표 1 · 연결 ${completedLinkedIssueCount}/${linkedIssueReadModels.length}`
-        : '현장에서 주목표를 선택하세요',
+        ? `주요 의뢰 1 · 연결 ${completedLinkedIssueCount}/${linkedIssueReadModels.length}`
+        : '현장에서 주요 의뢰를 선택하세요',
     }),
     routeEdges: Object.freeze(routeEdges),
     regions: Object.freeze(regions),

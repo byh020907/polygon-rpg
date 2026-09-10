@@ -2,6 +2,7 @@ import { freezeEquipmentData } from './EquipmentData.js';
 export const EQUIPMENT_SET_PROFILES = freezeEquipmentData([
   {
     id: 'field-work-set',
+    pieceItemIds: ['field-work-helmet', 'field-work-body', 'field-work-boots'],
     label: '현장 작업 세트',
     description: '작업모·작업 덧옷·작업화의 공개 세트 보너스.',
     bonuses: [
