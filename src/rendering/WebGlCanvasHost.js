@@ -3,6 +3,16 @@ const DEFAULT_MAX_BACKING_PIXELS = 3_000_000;
 const DEFAULT_RENDER_WIDTH = 1440;
 const DEFAULT_RENDER_HEIGHT = 810;
 
+export const WEB_GL_CONTEXT_ATTRIBUTES = Object.freeze({
+  alpha: true,
+  antialias: true,
+  depth: true,
+  stencil: false,
+  premultipliedAlpha: false,
+  preserveDrawingBuffer: false,
+  powerPreference: 'high-performance',
+});
+
 function positiveDimension(value, label) {
   if (!Number.isFinite(value) || value <= 0) {
     throw new TypeError(`${label}은 양의 유한수여야 합니다.`);
@@ -10,7 +20,14 @@ function positiveDimension(value, label) {
   return value;
 }
 
-export class CanvasHost {
+export class WebGl2UnsupportedError extends Error {
+  constructor() {
+    super('이 기기는 Polygon RPG에 필요한 WebGL2 그래픽을 지원하지 않습니다.');
+    this.name = 'WebGl2UnsupportedError';
+  }
+}
+
+export class WebGlCanvasHost {
   constructor(
     canvas,
     {
@@ -18,16 +35,17 @@ export class CanvasHost {
       maxBackingPixels = DEFAULT_MAX_BACKING_PIXELS,
       renderWidth = DEFAULT_RENDER_WIDTH,
       renderHeight = DEFAULT_RENDER_HEIGHT,
+      contextAttributes = {},
     } = {},
   ) {
     if (!(canvas instanceof HTMLCanvasElement)) {
-      throw new TypeError('CanvasHost에는 HTMLCanvasElement가 필요합니다.');
+      throw new TypeError('WebGlCanvasHost에는 HTMLCanvasElement가 필요합니다.');
     }
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      throw new Error('Canvas 2D context를 생성할 수 없습니다.');
-    }
+    const context = canvas.getContext('webgl2', {
+      ...WEB_GL_CONTEXT_ATTRIBUTES,
+      ...contextAttributes,
+    });
+    if (!context) throw new WebGl2UnsupportedError();
 
     this.canvas = canvas;
     this.context = context;
@@ -35,6 +53,9 @@ export class CanvasHost {
     this.maxBackingPixels = maxBackingPixels;
     this.renderWidth = positiveDimension(renderWidth, 'Render width');
     this.renderHeight = positiveDimension(renderHeight, 'Render height');
+    this.contextLost = false;
+    this.destroyed = false;
+    this.contextListeners = new Set();
     this.viewport = Object.freeze({
       width: this.renderWidth,
       height: this.renderHeight,
@@ -48,6 +69,26 @@ export class CanvasHost {
       presentationWidth: 1,
       presentationHeight: 1,
     });
+    this.onContextLost = (event) => {
+      event.preventDefault();
+      this.contextLost = true;
+      for (const listener of this.contextListeners) listener('lost');
+    };
+    this.onContextRestored = () => {
+      this.contextLost = false;
+      for (const listener of this.contextListeners) listener('restored');
+    };
+    this.listensForContextEvents = typeof canvas.addEventListener === 'function';
+    if (this.listensForContextEvents) {
+      canvas.addEventListener('webglcontextlost', this.onContextLost, false);
+      canvas.addEventListener('webglcontextrestored', this.onContextRestored, false);
+    }
+  }
+
+  subscribeContext(listener) {
+    if (typeof listener !== 'function') throw new TypeError('Context listener가 필요합니다.');
+    this.contextListeners.add(listener);
+    return () => this.contextListeners.delete(listener);
   }
 
   resize() {
@@ -71,10 +112,6 @@ export class CanvasHost {
     );
     const presentationWidth = Math.max(1, Math.round(this.renderWidth * presentationScale));
     const presentationHeight = Math.max(1, Math.round(this.renderHeight * presentationScale));
-    const presentationX = Math.floor((backingWidth - presentationWidth) / 2);
-    const presentationY = Math.floor((backingHeight - presentationHeight) / 2);
-
-    this.context.setTransform(1, 0, 0, 1, 0, 0);
     this.viewport = Object.freeze({
       width: this.renderWidth,
       height: this.renderHeight,
@@ -83,11 +120,21 @@ export class CanvasHost {
       pixelRatio,
       backingWidth,
       backingHeight,
-      presentationX,
-      presentationY,
+      presentationX: Math.floor((backingWidth - presentationWidth) / 2),
+      presentationY: Math.floor((backingHeight - presentationHeight) / 2),
       presentationWidth,
       presentationHeight,
     });
     return this.viewport;
+  }
+
+  destroy() {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    if (this.listensForContextEvents && typeof this.canvas.removeEventListener === 'function') {
+      this.canvas.removeEventListener('webglcontextlost', this.onContextLost, false);
+      this.canvas.removeEventListener('webglcontextrestored', this.onContextRestored, false);
+    }
+    this.contextListeners.clear();
   }
 }

@@ -816,6 +816,24 @@ dd {
   image-rendering: auto;
 }
 
+.render-recovery-status {
+  position: absolute;
+  z-index: 12;
+  inset: 50% auto auto 50%;
+  width: min(90%, 430px);
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid rgb(228 189 100 / 65%);
+  color: #f7f0dc;
+  background: rgb(7 16 20 / 94%);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
+  font:
+    700 0.78rem/1.45 Arial,
+    sans-serif;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
 @media (min-width: 901px) {
   .game-screen {
     height: 100dvh;

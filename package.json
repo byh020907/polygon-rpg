@@ -40,6 +40,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:polygon:browser": "node scripts/polygon-only-qa.mjs",
+    "test:webgl:browser": "node scripts/webgl-renderer-qa.mjs",
+    "test:renderer:performance": "node scripts/renderer-performance-qa.mjs",
     "test:review-workflow": "node scripts/review-workflow-qa.mjs",
     "test:radial:browser": "node scripts/radial-refinement-qa.mjs",
     "docs:art": "node scripts/generate-art-handoff.mjs",
@@ -48,7 +50,7 @@
     "assets:compile": "node scripts/compile-svg-assets.mjs && node scripts/compile-svg-assets.mjs public/graphics/prologue-control-core.master.svg && node scripts/compile-prologue-asset.mjs",
     "assets:check": "node scripts/compile-svg-assets.mjs --check && node scripts/compile-svg-assets.mjs public/graphics/prologue-control-core.master.svg --check && node scripts/compile-prologue-asset.mjs --check",
     "test:equipment": "node scripts/equipment-system-check.mjs && node scripts/equipment-migration-check.mjs && node scripts/equipment-command-check.mjs && node scripts/equipment-runtime-check.mjs",
-    "verify": "npm run check && npm run test:pwa && node scripts/equipment-browser-qa.mjs && npm run test:intro:browser && npm run test:month:browser",
+    "verify": "npm run check && npm run test:pwa && npm run test:webgl:browser && node scripts/equipment-browser-qa.mjs && npm run test:intro:browser && npm run test:month:browser",
     "test:month": "node scripts/field-quest-check.mjs && node scripts/field-runtime-check.mjs && node scripts/month-loop-check.mjs && node scripts/month-loop-integration-check.mjs && node scripts/slot-equipment-visual-check.mjs && node scripts/field-graphics-check.mjs",
     "test:month:browser": "node scripts/month-loop-browser-qa.mjs",
     "test:intro:browser": "node scripts/scrap-awakening-browser-qa.mjs"

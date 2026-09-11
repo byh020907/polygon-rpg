@@ -700,15 +700,25 @@ async function fixedFlow() {
     assert.equal(backgroundVisibility, 'hidden');
     // Let the normal short debounce elapse before returning, with both startup checks finished.
     await wait(1100);
+    await browser.evaluate(`globalThis.PWA_QA_ORIGINAL_SET_ITEM=Storage.prototype.setItem;
+      Storage.prototype.setItem=function(key,value){
+        if(key.startsWith('polygon-rpg.progression.'))throw new DOMException('Quota denied for update-save verification','QuotaExceededError');
+        return PWA_QA_ORIGINAL_SET_ITEM.call(this,key,value);
+      }`);
+    await other.evaluate(`globalThis.PWA_QA_ORIGINAL_SET_ITEM=Storage.prototype.setItem;
+      Storage.prototype.setItem=function(key,value){
+        if(key.startsWith('polygon-rpg.progression.'))throw new DOMException('Quota denied for update-save verification','QuotaExceededError');
+        return PWA_QA_ORIGINAL_SET_ITEM.call(this,key,value);
+      }`);
     server.switchTo(b.directory);
     const foregroundStartedAt = Date.now();
     await browser.send('Page.bringToFront');
     assert.equal(await browser.evaluate('document.visibilityState'), 'visible');
     await browser.until(
-      `${shell}.pwa.updateReady && ${shell}.pwa.availableBuildId === ${JSON.stringify(b.buildId)}`,
+      `${shell}.pwa.updateReady && ${shell}.pwa.updateError?.includes('저장') && ${shell}.pwa.availableBuildId === ${JSON.stringify(b.buildId)}`,
       45000,
     );
-    current = await record(browser, 'foreground-detects-b', {
+    current = await record(browser, 'foreground-detects-b-save-failure', {
       backgroundVisibility,
       foregroundVisibility: 'visible',
       discoveryMs: Date.now() - foregroundStartedAt,
@@ -719,34 +729,22 @@ async function fixedFlow() {
     assert.equal(current.worker.active.release.buildId, a.buildId);
     assert.equal(current.worker.waiting.release.buildId, b.buildId);
     assert.deepEqual(current.storage, preserved);
+    assert.match(current.state.status, /저장/);
     assert.equal(
       await browser.evaluate(`document.querySelector('.menu-button--update').checkVisibility()`),
       true,
     );
-    await browser.evaluate(`globalThis.PWA_QA_ORIGINAL_SET_ITEM=Storage.prototype.setItem;
-      Storage.prototype.setItem=function(key,value){
-        if(key.startsWith('polygon-rpg.progression.'))throw new DOMException('Quota denied for update-save verification','QuotaExceededError');
-        return PWA_QA_ORIGINAL_SET_ITEM.call(this,key,value);
-      }`);
-    try {
-      await browser.click('.menu-button--update', true);
-      await wait(250);
-      current = await record(browser, 'save-failure-blocks-activation');
-      assert.equal(current.worker.active.release.buildId, a.buildId);
-      assert.equal(current.worker.waiting.release.buildId, b.buildId);
-      assert.equal(current.marker, 'release-a');
-      assert.match(current.state.status, /저장/);
-      assert.deepEqual(current.storage, preserved);
-    } finally {
-      await browser.evaluate(
-        'Storage.prototype.setItem=PWA_QA_ORIGINAL_SET_ITEM;delete globalThis.PWA_QA_ORIGINAL_SET_ITEM',
-      );
-    }
+    await browser.evaluate(
+      'Storage.prototype.setItem=PWA_QA_ORIGINAL_SET_ITEM;delete globalThis.PWA_QA_ORIGINAL_SET_ITEM',
+    );
+    await other.evaluate(
+      'Storage.prototype.setItem=PWA_QA_ORIGINAL_SET_ITEM;delete globalThis.PWA_QA_ORIGINAL_SET_ITEM',
+    );
     const reloadEvents = browser.events.length;
-    await browser.click('.menu-button--update', true);
+    await browser.click('#pwa-check-update-control', true);
     await browser.until(`${ready} && ${shell}.pwa.currentBuildId === ${JSON.stringify(b.buildId)}`);
     await installReady(browser);
-    current = await record(browser, 'user-applied-b');
+    current = await record(browser, 'automatic-retry-applied-b');
     assert.equal(current.marker, 'release-b');
     assert.equal(current.worker.active.release.buildId, b.buildId);
     assert.deepEqual(current.storage, preserved);
@@ -754,50 +752,28 @@ async function fixedFlow() {
       .slice(reloadEvents)
       .filter((event) => event.method === 'Page.frameNavigated' && !event.params.frame.parentId);
     assert.equal(topNavigations.length, 1, 'Applying a waiting release must reload once');
-    await other.until(`${shell}.pwa.restartRequired`);
-    await browser.send('Target.activateTarget', { targetId: other.targetId });
-    await wait(200);
+    await other.until(`${ready} && ${shell}.pwa.currentBuildId === ${JSON.stringify(b.buildId)}`);
     const otherState = await other.evaluate(pwaState);
-    assert.equal(otherState.currentBuildId, a.buildId);
-    assert.equal(otherState.availableBuildId, b.buildId);
+    assert.equal(otherState.currentBuildId, b.buildId);
     const oldGamePresentation = await other.evaluate(`({
       screen:${shell}.screen,
       isPlaying:${shell}.isPlaying,
       gameVisible:document.querySelector('#game-canvas').checkVisibility(),
       menuVisible:document.querySelector('.menu-screen').checkVisibility(),
     })`);
-    assert.equal(
-      oldGamePresentation.screen,
-      'game',
-      'Another tab applying B must not force an A player into the menu',
-    );
-    assert.equal(oldGamePresentation.isPlaying, true);
-    assert.equal(oldGamePresentation.gameVisible, true);
-    assert.equal(oldGamePresentation.menuVisible, false);
-    await other.screenshot(path.join(output, 'second-tab-game-a-after-b.png'));
+    await other.screenshot(path.join(output, 'second-tab-auto-updated-b.png'));
     const oldTabAsset = await other.evaluate(
       `fetch('./src/main.js').then(response=>response.text())`,
     );
-    assert.ok(
-      oldTabAsset.includes('"release-a"'),
-      'Old JS client must keep its A asset cache until explicit restart',
-    );
-    assert.ok(!oldTabAsset.includes('"release-b"'));
+    assert.ok(oldTabAsset.includes('"release-b"'));
+    assert.ok(!oldTabAsset.includes('"release-a"'));
     evidence.checks.push({
-      name: 'second-tab-stays-on-a',
+      name: 'second-tab-auto-updates-to-b',
       state: otherState,
-      assetMarker: 'release-a',
+      assetMarker: 'release-b',
       presentation: oldGamePresentation,
       storage: await other.evaluate(storageState),
     });
-    await other.evaluate(`${shell}.showMenu()`);
-    await other.until(
-      `${shell}.screen === 'menu' && document.querySelector('.menu-button--restart').checkVisibility()`,
-    );
-    await other.screenshot(path.join(output, 'second-tab-user-menu-restart.png'));
-    await other.click('.menu-button--restart');
-    await other.until(`${ready} && ${shell}.pwa.currentBuildId === ${JSON.stringify(b.buildId)}`);
-    assert.equal(await other.evaluate('PWA_QA_RELEASE_MARKER'), 'release-b');
     assert.deepEqual(await other.evaluate(storageState), preserved);
     await other.close();
     other = null;
@@ -812,15 +788,9 @@ async function fixedFlow() {
     assert.deepEqual(current.storage, preserved);
     server.switchTo(c.directory);
     await browser.click('#pwa-check-update-control', true);
-    await browser.until(
-      `${shell}.pwa.updateReady && ${shell}.pwa.availableBuildId === ${JSON.stringify(c.buildId)}`,
-      45000,
-    );
-    current = await record(browser, 'manual-detects-c');
-    assert.equal(current.marker, 'release-b');
-    assert.equal(current.state.restartRequired, false);
-    await browser.click('.menu-button--update', true);
     await browser.until(`${ready} && ${shell}.pwa.currentBuildId === ${JSON.stringify(c.buildId)}`);
+    current = await record(browser, 'manual-recheck-auto-applies-c');
+    assert.equal(current.marker, 'release-c');
     server.offline(true);
     await browser.send('Network.emulateNetworkConditions', {
       offline: true,
@@ -839,6 +809,8 @@ async function fixedFlow() {
     );
     assert.ok(mainSource.includes('"release-c"'));
     assert.ok(!mainSource.includes('"release-a"') && !mainSource.includes('"release-b"'));
+    const browserDiagnostics = JSON.stringify(browser.events);
+    assert.doesNotMatch(browserDiagnostics, /현재 앱 버전을 확인하지 못|Uncaught \(in promise\)/);
     evidence.networkRequests = server.requests;
     assert.equal(
       digest(root),

@@ -6,6 +6,7 @@ import { readDebugQaRequest } from './ui/DebugConfigurationAdapter.js';
 import { registerGameShell } from './ui/gameShell.js';
 import { readGraphicsReviewRequest, DEFAULT_GRAPHICS_REVIEW } from './ui/GraphicsReviewConfig.js';
 import { GAME_UI_RESOURCES, APP_IMAGE_RESOURCES } from './ui/GameUiCatalog.js';
+import { WEB_GL_CONTEXT_ATTRIBUTES } from './rendering/WebGlCanvasHost.js';
 
 function requireCanvas(id) {
   const canvas = document.getElementById(id);
@@ -14,6 +15,21 @@ function requireCanvas(id) {
   }
   return canvas;
 }
+
+function requireWebGl2(canvas) {
+  const context = canvas.getContext('webgl2', WEB_GL_CONTEXT_ATTRIBUTES);
+  if (context) return;
+  const loading = document.querySelector('.app-loading');
+  if (loading) {
+    loading.textContent =
+      '이 기기는 Polygon RPG에 필요한 WebGL2 그래픽을 지원하지 않습니다. 브라우저와 그래픽 드라이버를 업데이트해 주세요.';
+    loading.removeAttribute('x-init');
+  }
+  throw new Error('WebGL2 graphics are unavailable.');
+}
+
+const gameCanvas = requireCanvas('game-canvas');
+requireWebGl2(gameCanvas);
 
 const svgAssetSession = createSvgAssetSession();
 let graphicsReviewRequest;
@@ -39,7 +55,7 @@ const visualQaRequest =
   (graphicsReviewRequest ? readDebugQaRequest('?visualQa=1&gameStart=scrap-intro-walk') : null);
 const qaInputEnabled = new URLSearchParams(globalThis.location.search).get('inputQa') === '1';
 const gameApplication = new GameApplication({
-  gameCanvas: requireCanvas('game-canvas'),
+  gameCanvas,
   visualQaRequest,
   qaInputEnabled,
 });

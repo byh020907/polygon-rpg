@@ -64,6 +64,7 @@ for (const method of [
   'setPlayerStatus',
   'setWorldStatus',
   'setDialoguePresentation',
+  'setRenderStatus',
   'setSaveStatus',
   'setRecoverySlots',
   'requestOperationMap',
@@ -76,11 +77,41 @@ const application = new GameApplication({
   gameCanvas: canvas,
   visualQaRequest: request,
   createGameApp(options) {
-    const app = new GameApp(options);
-    app.gameRenderer.render = () => {
-      canvas.pixel = `frame-${instances.indexOf(app)}`;
-      return { logicalWidth: 320, logicalHeight: 180 };
-    };
+    const app = new GameApp({
+      ...options,
+      canvasHostFactory(hostCanvas) {
+        return {
+          canvas: hostCanvas,
+          contextLost: false,
+          viewport: {
+            width: 1440,
+            height: 810,
+            cssWidth: 320,
+            cssHeight: 180,
+            pixelRatio: 1,
+            backingWidth: 320,
+            backingHeight: 180,
+            presentationX: 0,
+            presentationY: 0,
+            presentationWidth: 320,
+            presentationHeight: 180,
+          },
+          resize() {
+            return this.viewport;
+          },
+          destroy() {},
+        };
+      },
+      rendererFactory() {
+        return {
+          render() {
+            canvas.pixel = `frame-${instances.indexOf(app)}`;
+            return { logicalWidth: 320, logicalHeight: 180 };
+          },
+          destroy() {},
+        };
+      },
+    });
     instances.push(app);
     return app;
   },

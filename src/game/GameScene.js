@@ -683,6 +683,11 @@ export class GameScene extends SceneNode {
     this.visualQaCombatOverlay = enabled === true;
   }
 
+  setRenderPerformanceEnabled(enabled) {
+    this.renderPerformanceEnabled = enabled === true;
+    this.lastRenderBuildTimings = null;
+  }
+
   setVisualQaLocation({ regionId, roomId, x, facing }) {
     const mapSnapshot = this.mapRuntime.setActiveLocation(regionId, roomId);
     this.replaceRoomScene(mapSnapshot, { resetExisting: true });
@@ -4078,6 +4083,8 @@ export class GameScene extends SceneNode {
   }
 
   createRenderFrame(interpolationAlpha) {
+    const measurePerformance = this.renderPerformanceEnabled === true;
+    const frameBuildStarted = measurePerformance ? performance.now() : 0;
     const renderPosition = Object.freeze({
       x: lerp(this.previousPosition.x, this.position.x, interpolationAlpha),
       y: lerp(this.previousPosition.y, this.position.y, interpolationAlpha),
@@ -4109,6 +4116,7 @@ export class GameScene extends SceneNode {
         ? this.playerCombatGeometry
         : null;
     const contactProfile = this.getAttackHitProfile(combatState.id);
+    const poseStarted = measurePerformance ? performance.now() : 0;
     const pose = this.sampleSizedPlayerMotionPose(
       Object.freeze({
         motionState: poseCombatState,
@@ -4131,6 +4139,8 @@ export class GameScene extends SceneNode {
         }),
       }),
     );
+    const poseMilliseconds = measurePerformance ? performance.now() - poseStarted : 0;
+    const geometryStarted = measurePerformance ? performance.now() : 0;
     let renderCombatGeometry = sampleSharedPlayerCombatGeometry({
       position: renderPosition,
       facing: this.facing,
@@ -4428,6 +4438,13 @@ export class GameScene extends SceneNode {
       fieldCapabilities: this.resolvedLoadout.fieldCapabilities,
       workLights: this.fieldQuests?.workLights?.() ?? [],
     });
+    if (measurePerformance) {
+      this.lastRenderBuildTimings = Object.freeze({
+        poseMilliseconds,
+        geometryMilliseconds: performance.now() - geometryStarted,
+        frameBuildMilliseconds: performance.now() - frameBuildStarted,
+      });
+    }
     this.renderFrameCreated.emit(renderFrame);
     return renderFrame;
   }

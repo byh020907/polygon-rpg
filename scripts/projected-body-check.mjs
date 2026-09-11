@@ -7,7 +7,7 @@ import { createPlayerSurfaceItems } from '../src/animation/CharacterSurfaceItems
 import { sampleCharacterBonePose } from '../src/animation/CharacterBonePoseLibrary.js';
 import { projectSideViewSkeletonFrame } from '../src/animation/SkeletonPoseProjection.js';
 import { axisAngleQuaternion } from '../src/animation/Quaternion.js';
-import { rasterizeDepthPolygons } from '../src/rendering/DepthPolygonRasterizer.js';
+import { flattenSurfaceTriangles } from '../src/rendering/WebGlGeometry.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 
@@ -107,9 +107,17 @@ assert.deepEqual(
   'same sampler reproduces attachment geometry',
 );
 const item = withBoneSurface({ id: 'limb', fill: '#708090' }, round, 'actor');
-const render = () => rasterizeDepthPolygons([item], { width: 64, height: 80 });
-assert.deepEqual(render().data, render().data);
-assert.ok(render().data.some(Boolean));
+const itemSurface = item.surface ?? item;
+const flattened = flattenSurfaceTriangles(
+  itemSurface.points,
+  itemSurface.depths,
+  itemSurface.triangles,
+);
+assert.equal(flattened.vertexCount, itemSurface.triangles.length * 3);
+assert.deepEqual(
+  flattened,
+  flattenSurfaceTriangles(itemSurface.points, itemSurface.depths, itemSurface.triangles),
+);
 
 const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
 const liveFrame = scene.createRenderFrame(0);
@@ -128,14 +136,13 @@ for (const [id, indices] of groups) {
     `${id} depth group must be contiguous in production sorted frame`,
   );
   const items = indices.map((index) => liveFrame.items[index]);
-  const points = items.flatMap((entry) => entry.surface?.points ?? entry.points);
-  const left = Math.min(...points.map((p) => p.x)) - 2;
-  const top = Math.min(...points.map((p) => p.y)) - 2;
-  const width = Math.ceil(Math.max(...points.map((p) => p.x)) - left + 2);
-  const height = Math.ceil(Math.max(...points.map((p) => p.y)) - top + 2);
-  const pixels = rasterizeDepthPolygons(items, { width, height, offsetX: left, offsetY: top });
-  assert.ok(pixels.data.some(Boolean), `${id} production geometry rasterizes visible pixels`);
+  for (const entry of items) {
+    const surface = entry.surface ?? entry;
+    if (surface.points.length < 3) continue;
+    const triangles = flattenSurfaceTriangles(surface.points, surface.depths, surface.triangles);
+    assert.ok(triangles.vertexCount >= 3, `${id}/${entry.id} has GPU triangle topology`);
+  }
 }
 console.log(
-  'Projected body sections, XYZ inheritance, pelvis hem foreshortening, deterministic raster and production depth groups PASS',
+  'Projected body sections, XYZ inheritance, pelvis hem foreshortening, deterministic GPU topology and production depth groups PASS',
 );

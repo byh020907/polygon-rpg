@@ -57,6 +57,7 @@ function release(buildId) {
 
 const A = release('build-A');
 const B = release('build-B');
+const C = release('build-C');
 const cacheStorage = memoryCaches();
 const clients = [
   { id: 'old-client', url: scope, postMessage() {} },
@@ -219,7 +220,15 @@ for (const failure of [{ stale: true }, { missing: true }]) {
 
 const workerB = loadWorker(B, { active: workerA.controller, expected: B.metadata.buildId });
 await workerB.dispatch('install');
-assert.equal(workerB.skips, 0, 'a prepared update must wait for the user');
+assert.equal(workerB.skips, 0, 'a prepared update waits for the save-gated lifecycle adapter');
+let pinAcknowledgement = null;
+await workerB.dispatch('message', {
+  data: { type: 'PWA_CLIENT_RELEASE', release: A.metadata, acknowledge: true },
+  source: clients[0],
+  ports: [{ postMessage: (message) => (pinAcknowledgement = message) }],
+});
+assert.equal(pinAcknowledgement.type, 'PWA_CLIENT_RELEASE_PINNED');
+assert.equal(pinAcknowledgement.buildId, A.metadata.buildId);
 assert.equal(
   await (await fetchAsset(workerA, '?new-query=while-B-waiting', '', 'waiting-client')).text(),
   A.files['index.html'],
@@ -274,6 +283,40 @@ await migratedB.dispatch('activate');
 assert.equal(await (await fetchAsset(migratedB, 'src/main.js')).text(), A.files['src/main.js']);
 assert.equal(await cacheStorage.has(`polygon-rpg-release-${A.metadata.buildId}`), true);
 
+// An active legacy worker that cannot identify itself no longer blocks the
+// complete new cache. It is not claimed or mixed with that cache; normal close
+// and reopen lets the already-active new worker serve C safely.
+await cacheStorage.delete(clientCacheName);
+const unknownActive = {
+  postMessage() {
+    throw new Error('legacy worker has no metadata protocol');
+  },
+};
+const unknownUpgrade = loadWorker(C, {
+  active: unknownActive,
+  expected: C.metadata.buildId,
+});
+await unknownUpgrade.dispatch('install');
+assert.equal(await cacheStorage.has(`${prefix}${C.metadata.buildId}`), true);
+assert.equal(unknownUpgrade.skips, 0);
+await unknownUpgrade.dispatch('activate');
+assert.equal(
+  unknownUpgrade.claims,
+  0,
+  'unknown legacy clients retain their controller until reopen',
+);
+assert.equal(
+  await (
+    await fetchAsset(unknownUpgrade, 'index.html?legacy-reopen=1', '', 'legacy-reopened')
+  ).text(),
+  C.files['index.html'],
+);
+assert.equal(
+  await (await fetchAsset(unknownUpgrade, 'src/main.js', 'legacy-reopened')).text(),
+  C.files['src/main.js'],
+  'the next normal navigation binds the formerly unknown client to the complete latest release',
+);
+
 console.log(
-  'Production SW digest failure, scope isolation, query shell, persistent client pins and legacy upgrade: PASS',
+  'Production SW digest failure, scope isolation, automatic pin, unknown legacy install and safe reopen: PASS',
 );

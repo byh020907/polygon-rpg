@@ -15,6 +15,7 @@ export async function openQaBrowser({
   profileRoot = tmpdir(),
   profileDirectory = null,
   port = 0,
+  browserArguments = [],
 } = {}) {
   // A supplied directory belongs to the caller and must be a dedicated test profile.
   if (
@@ -33,11 +34,11 @@ export async function openQaBrowser({
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
     [
       '--headless=new',
-      '--disable-gpu',
       '--no-first-run',
       '--no-default-browser-check',
       '--remote-debugging-port=0',
       `--user-data-dir=${profile}`,
+      ...browserArguments,
       `${origin}/${search}`,
     ],
     { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },

@@ -27,10 +27,20 @@ function worker(release, state = 'activated') {
     release,
     state,
     skips: 0,
+    pins: 0,
+    scriptURL: `https://example.test/sw.js?build=${release?.buildId ?? 'unknown'}`,
     postMessage(message, ports = []) {
       if (message.type === 'GET_RELEASE_METADATA')
         ports[0].postMessage({ type: 'RELEASE_METADATA', release });
       if (message.type === 'SKIP_WAITING') this.skips += 1;
+      if (message.type === 'PWA_CLIENT_RELEASE') {
+        this.pins += 1;
+        if (message.acknowledge)
+          ports[0]?.postMessage({
+            type: 'PWA_CLIENT_RELEASE_PINNED',
+            buildId: message.release?.buildId ?? null,
+          });
+      }
     },
   });
 }
@@ -144,6 +154,7 @@ function environment() {
 }
 {
   const env = environment();
+  env.latest = B;
   env.registration.installing = worker(B, 'installing');
   const app = createPwaLifecycleAdapter({ browserWindow: env.window, releaseMetadata: A });
   await app.start();
@@ -320,6 +331,129 @@ function environment() {
   assert.equal(unregisters, 0);
   app.stop();
 }
+{
+  const env = environment();
+  env.latest = B;
+  const waiting = worker(B, 'installed');
+  env.registration.waiting = waiting;
+  let saves = 0;
+  const app = createPwaLifecycleAdapter({
+    browserWindow: env.window,
+    releaseMetadata: A,
+    saveProgress: async () => {
+      saves += 1;
+      return { ok: true };
+    },
+  });
+  await app.start();
+  await wait();
+  assert.equal(saves, 1, 'a complete new waiting release saves automatically once');
+  assert.equal(waiting.skips, 1, 'automatic update activates the waiting worker once');
+  assert.ok(waiting.pins >= 1, 'current release is pinned in the waiting worker before activation');
+  env.serviceWorker.controller = waiting;
+  env.registration.active = waiting;
+  env.registration.waiting = null;
+  env.serviceWorker.emit('controllerchange');
+  env.serviceWorker.emit('controllerchange');
+  assert.equal(env.reloads, 1, 'automatic controller change reloads exactly once');
+  app.stop();
+}
+{
+  const env = environment();
+  env.latest = B;
+  const waiting = worker(B, 'installed');
+  env.registration.waiting = waiting;
+  let saves = 0;
+  const app = createPwaLifecycleAdapter({
+    browserWindow: env.window,
+    releaseMetadata: A,
+    saveProgress: async () => {
+      saves += 1;
+      return saves === 1 ? { ok: false, message: '자동 저장 실패' } : { ok: true };
+    },
+  });
+  await app.start();
+  await wait();
+  assert.equal(waiting.skips, 0);
+  assert.equal(env.reloads, 0);
+  assert.match(app.getState().updateError, /자동 저장 실패/);
+  await app.checkForUpdate({ force: true });
+  await wait();
+  assert.equal(saves, 2, 'an explicit recheck retries the same waiting release after save failure');
+  assert.equal(waiting.skips, 1);
+  app.stop();
+}
+{
+  const env = environment();
+  env.latest = B;
+  const waiting = worker(B, 'installed');
+  env.registration.waiting = waiting;
+  let saves = 0;
+  const app = createPwaLifecycleAdapter({
+    browserWindow: env.window,
+    releaseMetadata: {},
+    saveProgress: async () => {
+      saves += 1;
+      return { ok: true };
+    },
+  });
+  await app.start();
+  await wait();
+  assert.equal(app.getState().currentBuildId, 'unknown');
+  assert.equal(saves, 1, 'unknown current build does not block a verified waiting release');
+  assert.equal(waiting.skips, 1);
+  env.registration.active = waiting;
+  env.registration.waiting = null;
+  waiting.state = 'activated';
+  waiting.emit('statechange');
+  assert.equal(env.reloads, 1, 'saved unknown-build client reloads when the new worker activates');
+  app.stop();
+}
+{
+  const env = environment();
+  env.registration.waiting = worker(A, 'installed');
+  let saves = 0;
+  const app = createPwaLifecycleAdapter({
+    browserWindow: env.window,
+    releaseMetadata: A,
+    saveProgress: async () => {
+      saves += 1;
+      return { ok: true };
+    },
+  });
+  await app.start();
+  await wait();
+  assert.equal(saves, 0, 'same current/latest build never starts an automatic save or reload');
+  assert.equal(env.reloads, 0);
+  app.stop();
+}
+{
+  const env = environment();
+  env.latest = B;
+  const unreadableWaiting = worker(null, 'installed');
+  unreadableWaiting.scriptURL = 'https://example.test/sw.js';
+  env.registration.waiting = unreadableWaiting;
+  let saves = 0;
+  const app = createPwaLifecycleAdapter({
+    browserWindow: env.window,
+    releaseMetadata: A,
+    saveProgress: async () => {
+      saves += 1;
+      return { ok: true };
+    },
+  });
+  await app.start();
+  await wait();
+  assert.equal(saves, 0, 'an unidentified waiting worker is never treated as the latest release');
+  assert.equal(unreadableWaiting.skips, 0);
+  assert.equal(app.getState().updateReady, false);
+  assert.match(app.getState().updateError, /worker의 배포 정보/);
+  assert.ok(
+    env.serviceWorker.registrations.some(({ url }) => url.endsWith(`?build=${B.buildId}`)),
+    'the verified latest worker is requested instead of activating the unidentified waiter',
+  );
+  app.stop();
+}
 console.log(
-  'PWA lifecycle: initial install, waiting race, save/duplicate/restart guards, resume, retry and cleanup PASS',
+  'PWA lifecycle: automatic waiting/unknown/retry update, save/duplicate/restart guards, resume and cleanup PASS',
 );

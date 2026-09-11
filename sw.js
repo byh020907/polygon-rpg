@@ -109,7 +109,7 @@ async function activeRelease() {
   });
 }
 
-async function cacheCompleteRelease(cache, previousRelease) {
+async function cacheCompleteRelease(cache, previousRelease, hadActiveWorker) {
   let nextAsset = 0;
   let failure = null;
   const prepareAsset = async () => {
@@ -170,7 +170,12 @@ async function cacheCompleteRelease(cache, previousRelease) {
   await cache.put(
     COMPLETE_URL,
     new Response(
-      JSON.stringify({ scope: SCOPE, release: releaseIdentity(RELEASE), previousRelease }),
+      JSON.stringify({
+        scope: SCOPE,
+        release: releaseIdentity(RELEASE),
+        previousRelease,
+        hadActiveWorker,
+      }),
       {
         headers: { 'Content-Type': 'application/json' },
       },
@@ -185,15 +190,13 @@ async function reportDiagnostic(message) {
 }
 
 async function installRelease() {
+  const hadActiveWorker = Boolean(self.registration.active);
   const previousRelease = await activeRelease();
-  if (self.registration.active && !previousRelease) {
-    throw new Error('현재 앱 버전을 확인하지 못해 업데이트를 보류합니다. 다시 확인해 주세요.');
-  }
   await pinUnrecordedClients(previousRelease);
   if (!(await readCompleteRelease(RELEASE.buildId))) {
     const cache = await caches.open(CACHE_NAME);
     try {
-      await cacheCompleteRelease(cache, previousRelease);
+      await cacheCompleteRelease(cache, previousRelease, hadActiveWorker);
     } catch (error) {
       // All in-flight writers have settled before this deletion. Old complete builds
       // and progress storage are independent of this failed preparation.
@@ -240,13 +243,24 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const complete = await readCompleteRelease(RELEASE.buildId);
       if (!complete) throw new Error('완전한 업데이트 cache가 없어 활성화할 수 없습니다.');
-      // Also pin pages opened while the new worker was downloading/waiting.
-      await pinUnrecordedClients(complete.previousRelease ?? RELEASE);
+      // A known previous worker can safely pin pages opened during installation.
+      // Unknown legacy pages must keep their old controller until a normal reopen;
+      // claiming them would mix old JavaScript with the new release cache.
+      if (complete.previousRelease) await pinUnrecordedClients(complete.previousRelease);
+      else if (complete.hadActiveWorker === false) await pinUnrecordedClients(RELEASE);
       await cleanUnusedReleases();
-      await self.clients.claim();
-      for (const client of await scopeClients()) {
+      const clients = await scopeClients();
+      const allClientsPinned = (
+        await Promise.all(clients.map((client) => clientRelease(client.id)))
+      ).every(Boolean);
+      if (allClientsPinned) await self.clients.claim();
+      for (const client of clients) {
         client.postMessage({ type: 'PWA_RELEASE_ACTIVATED', release: releaseIdentity(RELEASE) });
       }
+      if (!allClientsPinned)
+        await reportDiagnostic(
+          '버전을 식별할 수 없는 이전 화면은 현재 상태를 유지합니다. 창을 닫고 다시 열면 최신 버전으로 시작합니다.',
+        );
     })(),
   );
 });
@@ -264,8 +278,16 @@ self.addEventListener('message', (event) => {
     event.waitUntil(
       (async () => {
         const release = releaseIdentity(event.data.release);
-        if (release && (await releaseCache(release.buildId)))
+        let pinned = false;
+        if (release && (await releaseCache(release.buildId))) {
           await pinClient(event.source.id, release);
+          pinned = true;
+        }
+        if (event.data.acknowledge)
+          event.ports[0]?.postMessage({
+            type: 'PWA_CLIENT_RELEASE_PINNED',
+            buildId: pinned ? release.buildId : null,
+          });
       })(),
     );
   }

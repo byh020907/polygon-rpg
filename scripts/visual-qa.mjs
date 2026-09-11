@@ -190,7 +190,7 @@ async function run() {
     browser = spawn(
       browserPath,
       [
-        ...(headless ? ['--headless=new', '--disable-gpu'] : []),
+        ...(headless ? ['--headless=new'] : []),
         `--remote-debugging-port=${debugPort}`,
         `--user-data-dir=${profileDirectory}`,
         `--window-size=${width},${height + 90}`,

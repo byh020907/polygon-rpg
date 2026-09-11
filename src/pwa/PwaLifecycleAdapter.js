@@ -25,6 +25,17 @@ function validRelease(value) {
     value.buildId.length > 0
   );
 }
+function workerBuildId(worker) {
+  try {
+    const buildId = new URL(worker?.scriptURL).searchParams.get('build');
+    return buildId && /^[a-zA-Z0-9_-]+$/.test(buildId) ? buildId : null;
+  } catch {
+    return null;
+  }
+}
+function isTransitionError(message) {
+  return /저장하지 못해|자동 업데이트 실패/.test(message ?? '');
+}
 function readWorkerRelease(worker) {
   return new Promise((resolve) => {
     if (!worker?.postMessage || typeof MessageChannel === 'undefined') return resolve(null);
@@ -61,11 +72,16 @@ function deadline(promise, milliseconds, message) {
 export function createPwaLifecycleAdapter({
   browserWindow = globalThis,
   releaseMetadata,
+  saveProgress = null,
   timeoutMs = PWA_UPDATE_TIMING.timeoutMs,
 } = {}) {
   const browserNavigator = browserWindow.navigator;
   const serviceWorker = browserNavigator?.serviceWorker;
-  const currentRelease = releaseMetadata ?? RELEASE_METADATA;
+  const suppliedRelease = releaseMetadata ?? RELEASE_METADATA;
+  const currentReleaseKnown = validRelease(suppliedRelease);
+  const currentRelease = currentReleaseKnown
+    ? suppliedRelease
+    : Object.freeze({ appVersion: '?', buildId: 'unknown' });
   const listeners = new Set();
   const removers = [];
   const observedWorkers = new WeakSet();
@@ -84,6 +100,9 @@ export function createPwaLifecycleAdapter({
   let applyEpoch = 0;
   let applyTimer = null;
   let fetchController = null;
+  let automaticTransition = null;
+  const automaticWorkers = new WeakSet();
+  const automaticRestartBuilds = new Set();
   let screen = 'menu';
   let state = Object.freeze({
     installAvailable: false,
@@ -117,7 +136,7 @@ export function createPwaLifecycleAdapter({
     if (next.restartRequired)
       return '다른 창에서 새 버전을 적용했습니다 · 진행 저장 후 다시 열어 주세요.';
     if (next.updateReady)
-      return `업데이트 준비 완료 · v${next.currentVersion} → v${next.availableVersion ?? '?'}`;
+      return `업데이트 준비 완료 · v${next.currentVersion} → v${next.availableVersion ?? '?'} · 진행을 저장한 뒤 자동 적용합니다.`;
     if (next.updateInstalling)
       return next.updateAvailable
         ? '새 버전 파일을 내려받고 확인하는 중입니다.'
@@ -135,15 +154,49 @@ export function createPwaLifecycleAdapter({
     target?.addEventListener?.(type, listener);
     removers.push(() => target?.removeEventListener?.(type, listener));
   }
-  function pinClient() {
+  function pinWorker(worker) {
+    if (!currentReleaseKnown) return;
     try {
-      serviceWorker?.controller?.postMessage({
+      worker?.postMessage({
         type: 'PWA_CLIENT_RELEASE',
         release: currentRelease,
       });
     } catch {
       /* A replacing controller is pinned by controllerchange/pageshow. */
     }
+  }
+  function pinClient() {
+    pinWorker(serviceWorker?.controller);
+  }
+  function pinWorkerBeforeTransition(worker) {
+    if (!currentReleaseKnown) return Promise.resolve(true);
+    if (!worker?.postMessage || typeof MessageChannel === 'undefined')
+      return Promise.resolve(false);
+    return new Promise((resolve) => {
+      const channel = new MessageChannel();
+      let finished = false;
+      const finish = (pinned) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
+        channel.port1.close();
+        channel.port2.close();
+        resolve(pinned);
+      };
+      const timeout = setTimeout(() => finish(false), PWA_UPDATE_TIMING.workerMetadataMs);
+      channel.port1.onmessage = ({ data }) =>
+        finish(
+          data?.type === 'PWA_CLIENT_RELEASE_PINNED' && data.buildId === currentRelease.buildId,
+        );
+      try {
+        worker.postMessage(
+          { type: 'PWA_CLIENT_RELEASE', release: currentRelease, acknowledge: true },
+          [channel.port2],
+        );
+      } catch {
+        finish(false);
+      }
+    });
   }
   function reloadOnce() {
     if (stopped || reloadHandled) return;
@@ -152,32 +205,83 @@ export function createPwaLifecycleAdapter({
     publish({ applyPhase: 'reloading' });
     browserWindow.location.reload();
   }
+  function beginAutomaticTransition(worker = null) {
+    if (typeof saveProgress !== 'function' || automaticTransition || stopped) return;
+    if (worker) {
+      if (automaticWorkers.has(worker)) return;
+      automaticWorkers.add(worker);
+    } else {
+      const buildId = state.availableBuildId;
+      if (!buildId || automaticRestartBuilds.has(buildId)) return;
+      automaticRestartBuilds.add(buildId);
+    }
+    automaticTransition = Promise.resolve()
+      .then(() => (worker ? applyUpdate(saveProgress) : restartForActivatedRelease(saveProgress)))
+      .catch((error) => {
+        publish({
+          applying: false,
+          updateError: `자동 업데이트 실패 · ${error instanceof Error ? error.message : String(error)}`,
+        });
+        return false;
+      })
+      .finally(() => {
+        automaticTransition = null;
+      });
+  }
   async function receiveWaitingWorker(worker) {
     if (!worker) return;
     const available = await readWorkerRelease(worker);
     if (stopped || worker !== registration?.waiting) return;
-    const sameBuild = available?.buildId === currentRelease.buildId;
+    const candidateBuildId = available?.buildId ?? workerBuildId(worker);
+    const candidateVersion =
+      available?.appVersion ??
+      (candidateBuildId === state.availableBuildId ? state.availableVersion : null);
+    const sameBuild = currentReleaseKnown && candidateBuildId === currentRelease.buildId;
+    const matchesLatestRelease =
+      Boolean(candidateBuildId) && candidateBuildId === state.availableBuildId;
+    const updateReady = Boolean(matchesLatestRelease && !sameBuild);
+    const retainedTransitionError =
+      state.availableBuildId === candidateBuildId && isTransitionError(state.updateError)
+        ? state.updateError
+        : null;
     publish({
-      updateReady: !sameBuild,
-      updateAvailable: !sameBuild,
+      updateReady,
+      updateAvailable: updateReady,
       updateInstalling: Boolean(registration?.installing),
-      availableVersion: sameBuild ? null : (available?.appVersion ?? state.availableVersion),
-      availableBuildId: sameBuild ? null : (available?.buildId ?? state.availableBuildId),
-      updateError: available ? null : '업데이트는 준비됐지만 버전 응답을 확인하지 못했습니다.',
+      availableVersion: sameBuild ? null : (candidateVersion ?? state.availableVersion),
+      availableBuildId: sameBuild ? null : state.availableBuildId,
+      updateError:
+        retainedTransitionError ??
+        (state.availableBuildId && !candidateBuildId
+          ? '업데이트 worker의 배포 정보를 확인하지 못해 자동 적용하지 않았습니다.'
+          : state.availableBuildId && candidateBuildId !== state.availableBuildId
+            ? '대기 중인 worker와 서버 최신 배포가 일치하지 않아 자동 적용하지 않았습니다.'
+            : null),
     });
+    if (updateReady) beginAutomaticTransition(worker);
   }
   async function receiveActiveWorker(worker) {
     if (!worker) return;
     const active = await readWorkerRelease(worker);
     if (stopped || worker !== registration?.active) return;
     publish({ offlineReady: worker.state === 'activated' || Boolean(serviceWorker?.controller) });
-    if (active && active.buildId !== currentRelease.buildId && !updateRequested)
+    const shouldRestartForActive =
+      active &&
+      !updateRequested &&
+      !registration?.waiting &&
+      !registration?.installing &&
+      (currentReleaseKnown
+        ? active.buildId !== currentRelease.buildId
+        : state.availableBuildId === active.buildId);
+    if (shouldRestartForActive) {
       publish({
         restartRequired: true,
         updateReady: false,
         availableVersion: active.appVersion,
         availableBuildId: active.buildId,
       });
+      beginAutomaticTransition();
+    }
   }
   function observeWorker(worker) {
     if (!worker || observedWorkers.has(worker)) return;
@@ -197,6 +301,12 @@ export function createPwaLifecycleAdapter({
         publish({ offlineReady: true });
         pinClient();
         void receiveActiveWorker(registration?.active);
+        if (
+          updateRequested &&
+          worker === registration?.active &&
+          serviceWorker.controller === originalController
+        )
+          reloadOnce();
       }
       if (worker.state === 'redundant' && !completed && !registration?.waiting)
         publish({
@@ -272,7 +382,10 @@ export function createPwaLifecycleAdapter({
   }
   function checkForUpdate({ force = false } = {}) {
     if (stopped || !serviceWorker || !browserWindow.isSecureContext) return Promise.resolve(false);
-    if (checking) return checking;
+    if (checking) return force ? checking.then(() => checkForUpdate({ force: true })) : checking;
+    if (force && registration?.waiting) automaticWorkers.delete(registration.waiting);
+    if (force && state.restartRequired && state.availableBuildId)
+      automaticRestartBuilds.delete(state.availableBuildId);
     if (state.installationBlocked && !force) return Promise.resolve(false);
     if (!force && Date.now() - lastCheckAt < PWA_UPDATE_TIMING.debounceMs)
       return Promise.resolve(false);
@@ -401,6 +514,7 @@ export function createPwaLifecycleAdapter({
       return false;
     const waiting = registration.waiting;
     originalController = serviceWorker.controller;
+    await pinWorkerBeforeTransition(waiting);
     if (!(await saveBeforeTransition(saveProgress))) return false;
     if (waiting !== registration.waiting) {
       if (serviceWorker.controller && serviceWorker.controller !== originalController) {
@@ -433,6 +547,12 @@ export function createPwaLifecycleAdapter({
       publish({ applying: false, updateError: `새 버전 적용 실패 · ${error.message}` });
       return false;
     }
+  }
+  async function restartForActivatedRelease(saveCurrentProgress) {
+    if (!state.restartRequired || !(await saveBeforeTransition(saveCurrentProgress))) return false;
+    updateRequested = true;
+    reloadOnce();
+    return true;
   }
   return Object.freeze({
     getState: () => state,
@@ -491,13 +611,19 @@ export function createPwaLifecycleAdapter({
             pinClient();
             return;
           }
-          if (!updateRequested)
+          if (updateRequested) {
+            reloadOnce();
+            return;
+          }
+          if (!updateRequested) {
             publish({
               restartRequired: true,
               updateReady: false,
               availableVersion: activated.appVersion,
               availableBuildId: activated.buildId,
             });
+            beginAutomaticTransition();
+          }
         });
         const resume = () => {
           pinClient();
@@ -553,12 +679,7 @@ export function createPwaLifecycleAdapter({
         });
     },
     applyUpdate,
-    async restartForActivatedRelease(saveProgress) {
-      if (!state.restartRequired || !(await saveBeforeTransition(saveProgress))) return false;
-      updateRequested = true;
-      reloadOnce();
-      return true;
-    },
+    restartForActivatedRelease,
   });
 }
 export { isStandalone };

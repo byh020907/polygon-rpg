@@ -26,6 +26,8 @@ for (const [name, width, height, dpr] of [
       'globalThis.__POLYGON_RPG_INPUT_QA__?.raster?.backingWidth && globalThis.__POLYGON_RPG_INPUT_QA__.raster',
     );
     assert.equal(game.logicalWidth, 1440);
+    assert.equal(game.renderer, 'webgl2-gpu');
+    assert.equal(game.contextLost, false);
     await b.screenshot(`${output}/${name}-game.png`);
     assert.equal(
       await b.evaluate(
@@ -63,14 +65,15 @@ for (const [name, width, height, dpr] of [
     assert.equal(await b.evaluate("document.querySelectorAll('[data-gr=renderer]').length"), 0);
     await b.choose('[data-gr=scale]', '4');
     const zoom = await b.evaluate(
-      "(()=>{const c=document.querySelector('[data-gr=canvas]'),r=c.getBoundingClientRect();return{width:c.width,height:c.height,cssWidth:r.width,cssHeight:r.height,smoothing:c.getContext('2d').imageSmoothingEnabled}})()",
+      "(()=>{const c=document.querySelector('[data-gr=canvas]'),r=c.getBoundingClientRect(),gl=c.getContext('webgl2');return{width:c.width,height:c.height,cssWidth:r.width,cssHeight:r.height,webgl2:Boolean(gl),antialias:gl?.getContextAttributes()?.antialias??false}})()",
     );
     assert.ok(
       zoom.width >= zoom.cssWidth - 1 && zoom.height >= zoom.cssHeight - 1,
       '4× must rerender at its output size',
     );
     assert.ok(zoom.width * zoom.height <= 3_000_000);
-    assert.equal(zoom.smoothing, true);
+    assert.equal(zoom.webgl2, true);
+    assert.equal(zoom.antialias, true);
     await b.screenshot(`${output}/${name}-review-4x.png`);
     await b.choose('[data-gr=scale]', 'fit');
     await b.evaluate("document.querySelector('[data-gr=canvas]').scrollIntoView({block:'center'})");

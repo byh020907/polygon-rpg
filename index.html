@@ -316,19 +316,19 @@
                 <button
                   class="menu-button menu-button--update"
                   type="button"
-                  x-show="pwa.updateReady && !pwa.restartRequired"
+                  x-show="pwa.updateReady && pwa.updateError && !pwa.restartRequired"
                   @click="applyPwaUpdate"
                   :disabled="pwa.applying"
                 >
                   <span
-                    x-text="pwa.availableVersion ? `v${pwa.availableVersion} 적용` : '새 버전 적용'"
+                    x-text="pwa.availableVersion ? `v${pwa.availableVersion} 자동 업데이트 다시 시도` : '자동 업데이트 다시 시도'"
                   ></span>
-                  <small>진행을 먼저 저장하고 한 번만 전환</small>
+                  <small>진행 저장 또는 적용 실패 뒤 수동 재시도</small>
                 </button>
                 <button
                   class="menu-button menu-button--update menu-button--restart"
                   type="button"
-                  x-show="pwa.restartRequired"
+                  x-show="pwa.restartRequired && pwa.updateError"
                   @click="restartForPwaRelease"
                   :disabled="pwa.applying"
                 >
@@ -540,6 +540,14 @@
             aria-label="고대 병기 D-30 캠페인 게임 화면"
             aria-describedby="game-status-surface"
           ></canvas>
+          <p
+            class="render-recovery-status"
+            x-cloak
+            x-show="renderStatus"
+            x-text="renderStatus"
+            role="status"
+            aria-live="assertive"
+          ></p>
 
           <div class="game-hud-overlay" aria-label="캐릭터 상태">
             <div class="vital-row">

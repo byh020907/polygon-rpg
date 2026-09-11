@@ -12,7 +12,7 @@
 
 ## Technology and Runtime Boundary
 
-- Vanilla JavaScript ES modules, Canvas 2D와 vendored Alpine.js ES module을 사용한다.
+- Vanilla JavaScript ES modules, WebGL2 polygon rendering과 vendored Alpine.js ES module을 사용한다. Canvas 2D는 QA evidence sheet처럼 production scene 밖의 정적 이미지 합성에만 사용할 수 있다.
 - 하나의 animation-frame owner가 120Hz fixed simulation을 구동하고 60Hz integer combat frame을 결정적으로 sample한다.
 - Production은 `index.html`과 static source를 직접 제공한다. Node.js는 local server, lint, fixtures와 visual verification에만 사용한다.
 - PWA는 manifest와 root-scoped Service Worker를 사용한다. 현재 release의 필수 static asset은 atomic versioned cache로 준비하고 Service Worker lifecycle은 shell에 explicit status만 전달한다.
@@ -180,12 +180,16 @@ Keyboard / Touch / DOM intent
   interaction target을 가리지 않는다.
 - Bottom objective ribbon은 현재 action과 command만 compact하게 표시한다. Story title·briefing·감정 설명은 이 HUD surface에 렌더하지 않는다.
 - 게임·검토실·테스트 플레이는 같은 폴리곤 출력 경로를 사용한다. SVG는 저작 원본이며 별도 게임 규칙/검토 전용 그림을 만들지 않는다. 저해상도 surface, 좌표 snap, pixel-size/alpha-threshold/posterization 설정, 정수 nearest-neighbor 확대와 비교용 Retro canvas를 두지 않는다. UI/CLI/URL 기본값·검증·문서도 같은 계약을 따른다. 오래된 renderer query는 URL 읽기 경계에서만 polygon으로 정규화하고 폐기된 renderer를 다시 만들지 않는다.
-- 깊이 가림의 raster buffer는 폴리곤 표면의 z/소유권을 판정하는 내부 구현이며 픽셀화 효과가 아니다. 프레임의 geometry와 material을 Canvas backing 좌표에서 rasterize한 뒤 identity transform으로 1:1 합성한다. 검토실 확대는 CSS 크기와 DPR에 맞춰 backing을 다시 만들고 geometry를 재렌더하며 전체 canvas는 3M pixel budget을 넘지 않는다. CSS 확대나 새 evidence sheet에도 pixelated/nearest-neighbor 처리를 적용하지 않는다.
-- 캐릭터 외곽 윤곽은 depth 합성 후 실제로 보이는 불투명 pixel 소유 mask에서 완성하고 배경 합성 전에 확정한다. 완성된 월드 화면의 투명도 경계에서 캐릭터를 뒤늦게 찾지 않는다. 내부 부위선은 depth를 따르고, 반투명 효과는 확정된 외곽선을 지우지 않는다. 배경이 있는 정지 gameplay와 투명 preview의 동일 캐릭터 픽셀을 함께 검증한다.
+- WebGL2 renderer는 immutable RenderFrame의 painter order와 각 연속 `depthGroup` 내부 surface depth를 서로 다른 계약으로 보존한다. 일반 scene item·shadow는 authored painter order를 따르고, 각 depth group은 독립 depth clear 뒤 더 큰 camera depth가 앞에 오도록 정규화한다. 전 scene global z-buffer로 두 authority를 합치지 않는다.
+- 불투명 surface는 depth test/write 후, 내부선·외곽선은 최종 불투명 depth에 가려지는 triangle stroke pass로 그린다. WebGL 구현별 1px 제한이 있는 native line width에 의존하지 않는다. 반투명 trail/effect는 평균 depth 기준 back-to-front, opaque depth test, depth write off와 premultiplied 되지 않은 alpha blend를 사용하며 확정된 불투명 외곽선을 지우지 않는다.
+- 투영은 logical world → camera/parallax → presentation rectangle → backing pixel → clip space 순서로 한 번만 수행한다. Canvas/SVG y 방향, camera depth 부호, clip depth 정밀도와 coplanar stable order를 명시적으로 변환하며 camera zoom·DPR·resize가 gameplay geometry나 contact를 바꾸지 않는다. 검토실 확대는 CSS 크기와 DPR에 맞춰 backing을 다시 만들고 geometry를 재렌더하며 전체 canvas는 3M pixel budget을 넘지 않는다. 저해상도 upscale·nearest-neighbor로 성능을 대신하지 않는다.
+- 정적 topology의 triangulation/stroke index와 growable GPU buffer는 stable resource identity와 topology signature로 재사용한다. 동적 vertex/color는 필요한 범위만 갱신하고 draw call을 pass/group 단위로 batch한다. 정상 gameplay에서 CPU pixel raster, ImageData/putImageData, 동기 `readPixels`/GPU finish와 매 frame shader/program/FBO 생성을 금지한다. PNG export·독립 QA의 명시적 capture만 제한된 readback을 허용한다.
+- Canvas 하나의 WebGL2 context와 GPU resource owner는 명확히 하나이며 게임·검토 main surface·공유 thumbnail staging surface 수를 제한한다. 화면 전환 rollback은 이전 immutable frame을 같은 renderer로 다시 그려 복구하고 이미 WebGL context가 붙은 canvas에서 2D context 복원을 시도하지 않는다. renderer dispose는 buffer/program/VAO와 listener를 해제한다.
+- `webglcontextlost`는 기본 복구를 허용하고 render를 중단하며 사용자에게 지원 상태를 전달한다. `webglcontextrestored`에서는 program/buffer/state/cache를 재생성하고 최신 immutable frame을 다시 그린다. WebGL2를 만들 수 없는 환경은 게임 규칙이나 저장을 변경하지 않고 메인 UI에서 명시적인 지원 불가 안내를 제공한다.
 - Keyboard와 mobile adapter는 common action ID와 monotonic sequence를 만들며 pointer capture/cancel/blur cleanup은 idempotent다.
 - UI screen state, operation-map modal과 debug panel state는 gameplay input에 섞지 않는다.
 - Debug panel은 특정 gameplay screen이나 작전 지도 해금에 종속되지 않는 공통 modal이다. 메인 제목과 gameplay MENU/MAP이 같은 hold controller를 사용하고, opener별 focus 복귀·background inert·scene 교체 뒤 viewport 갱신을 UI adapter가 소유한다.
-- PWA Lifecycle Adapter는 `beforeinstallprompt`, iOS standalone 안내, update waiting과 controller change를 UI command로 변환한다. 설치·갱신은 사용자 입력으로만 시작하며 game screen에서 자동 prompt/reload하지 않는다.
+- PWA Lifecycle Adapter는 `beforeinstallprompt`, iOS standalone 안내, update waiting과 controller change를 UI command로 변환한다. 설치 prompt만 사용자 입력으로 시작한다. 갱신 owner는 앱 시작·복귀·온라인 복귀·제한된 주기와 수동 재확인에서 유효한 최신 release를 발견하고 전체 cache 준비 뒤 진행 저장을 요청해 자동 activation과 controllerchange 뒤 single reload를 수행한다.
 - standalone game start는 orientation lock을 best-effort로 요청하되 fullscreen을 기본 요청하지 않는다. safe-area inset은 UI adapter layout token으로만 소비한다.
 - Semantic controls는 accessible name과 keyboard focus order를 가지며 modal은 focus를 trap하고 opener로 복귀한다.
 - Mobile/desktop은 같은 simulation과 world framing을 공유하고 safe area/layout만 adapter가 조정한다.
@@ -198,9 +202,10 @@ Keyboard / Touch / DOM intent
 - Storage는 `latest morning`, `latest core event`, `pre-action` recovery slot을 구분한다. Morning boundary, core completion 직후와 time action confirm 직전에 orchestrator가 explicit save request를 보낸다.
 - Load/save failure는 explicit result로 UI에 전달하고 domain state를 부분 적용하지 않는다.
 - 저장 초기화는 메인 UI adapter의 명시적 확인 뒤 기존 application reset capability로 실행한다. UI는 storage key나 schema를 직접 삭제·변환하지 않는다. 초기화 성공 뒤 PWA 상태를 다시 확인하고, 다음 버전 전환도 정상 저장 성공을 요구한다. 취소·초기화 실패에는 전환을 요청하지 않는다.
-- cache version 전환은 ProgressionStorage와 독립이다. update 적용 전 UI adapter가 explicit save를 요청하고, cache 실패는 active cache와 typed progress snapshot을 유지한다.
+- cache version 전환은 ProgressionStorage와 독립이다. update 적용 전 lifecycle adapter가 UI/application capability로 explicit save를 요청하고 성공 뒤에만 자동 전환한다. cache 또는 저장 실패는 active cache와 typed progress snapshot을 유지한다.
 - Service Worker cache는 scope와 release별로 분리한다. root navigation의 query가 달라도 해당 release의 shell을 사용하며, 열려 있는 client는 자신이 시작한 build의 cache에 고정한다. client/build 기록은 worker 재시작을 견디고, 새 navigation은 새 release를 선택한다. 정리는 현재 release와 살아 있는 client가 사용하는 release를 보존하며 다른 scope·앱 cache를 삭제하지 않는다.
-- PWA lifecycle owner는 최초 동일 build 활성화와 다른 build 활성화를 구분하고 installing worker와 waiting worker를 모두 관찰한다. 업데이트 확인·설치·저장·활성화·reload를 lifecycle 사실에서 도출한 단계로 표시하며 UI는 불확정 진행 표시를 사용한다. 최초 등록 대기도 busy로 노출하고 적용 중 menu는 inert로 중복 입력을 막는다. 오류는 busy보다 우선하며 새 lifecycle timer/가짜 진행률을 UI에서 만들지 않는다. 기존의 duplicate apply, 무한 확인 대기와 사라진 waiting worker를 명시적으로 처리한다. 다른 창의 활성화 후 다시 열기도 저장 성공 뒤 한 번만 수행한다.
+- PWA lifecycle owner는 최초 동일 build 활성화와 다른 build 활성화를 구분하고 installing worker와 waiting worker를 모두 관찰한다. 업데이트 확인·설치·저장·활성화·reload를 lifecycle 사실에서 도출한 단계로 표시하며 UI는 불확정 진행 표시를 사용한다. 최초 등록 대기도 busy로 노출하고 적용 중 화면은 inert로 중복 입력을 막는다. 오류는 busy보다 우선하며 새 lifecycle timer/가짜 진행률을 UI에서 만들지 않는다. duplicate apply, 무한 확인 대기와 사라진 waiting worker를 명시적으로 처리한다. 다른 창의 활성화 뒤 현재 client도 저장 성공 뒤 한 번만 다시 연다.
+- 현재 page의 build metadata가 없거나 invalid한 레거시 client와 서버 release/asset 검증 실패를 구분한다. 최신 release metadata와 해당 build의 worker/cache가 유효하면 current build를 비교할 수 없어도 update candidate로 받아 자동 전환한다. 동일 최신 build, 정상 이전 build, unknown legacy build, offline, 저장 실패와 mixed client를 각각 판정하고 promise rejection을 UI 상태로 종결한다.
 - 현재 page의 build와 별개로 실제 active/waiting/installing worker의 build를 비교한다. 과거 bare-URL worker의 무한 설치가 native 등록 작업을 막았고 정상 active/controller/waiting이 없는 경우에는 bounded timeout 뒤 브라우저 완전 종료·재실행 복구를 명시한다. 캐시·저장 삭제나 상시 unregister, 다른 scope 우회로 이를 성공처럼 위장하지 않는다.
 - Game-over restart는 사용자가 선택한 recovery snapshot을 원자 복원하며 story 안의 rewind flag를 만들지 않는다.
 - Reward, part, boss와 route transition은 reload/repeated trigger에서 중복 지급하지 않는다.
@@ -237,7 +242,7 @@ Keyboard / Touch / DOM intent
 - Persistence fixture는 campaign round-trip, incompatible schema의 명시적 거부/초기화 안내, corrupt/write failure와 recovery slot selection을 검증한다.
 - 시작 화면의 명시적 디버그 버튼과 기존 hold 진입은 같은 panel owner를 사용하고 닫을 때 실제 opener로 focus를 돌려준다.
 - Browser flow는 MENU short operation map, MENU hold debug separation, HUD/map same-state projection, desktop/mobile focus·overflow와 console error를 확인한다.
-- PWA fixture는 manifest field/icon purpose, root scope·navigation fallback, complete cache inventory, offline first-visit fallback, waiting update의 user-applied single reload 및 storage/cache 분리를 고정한다.
+- PWA fixture는 manifest field/icon purpose, root scope·navigation fallback, complete cache inventory, offline first-visit fallback, unknown legacy/정상 이전/동일 최신 build 판정, waiting update의 save-gated automatic single reload 및 storage/cache 분리를 고정한다.
 - Prologue fixture는 의뢰→라이벌 동행→탐색·전투→회수팔 붕괴/구조 요청→독백→제어핵 회수·구조→접속부 봉쇄·각성→귀환의 stage order, input-lock 경계, transcript, save/reload와 중복 보상 방지를 고정한다.
 - Story Browser flow는 목표 HUD를 숨긴 상태에서 원인·감정·다음 행동이 world bubble과 실제 action으로 이해되는지, bubble 없이 objective ribbon만으로 전체 story가 누출되지 않는지, ambient 이동과 transcript replay가 campaign state를 다시 쓰지 않는지 확인한다.
 - Region fixture는 authored cast/issue graph completeness, primary 1 + linked 2 window, cross-region dependency의 실제 encounter/state-change 조건, order independence, stable before/in-progress/after map patch와 robot module accumulation을 고정한다.

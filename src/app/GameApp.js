@@ -20,8 +20,8 @@ import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.j
 import { GameInputController } from '../input/GameInputController.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { readVisualQaRequest } from './VisualQaConfig.js';
-import { CanvasHost } from '../rendering/CanvasHost.js';
-import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
+import { WebGlCanvasHost } from '../rendering/WebGlCanvasHost.js';
+import { WebGlPolygonRenderer } from '../rendering/WebGlPolygonRenderer.js';
 import { projectDialogue } from './DialoguePresentation.js';
 import { TestPlayDiagnostics } from './TestPlayDiagnostics.js';
 
@@ -65,6 +65,7 @@ function assertUiBridge(uiBridge) {
     typeof uiBridge.setPlayerStatus !== 'function' ||
     typeof uiBridge.setWorldStatus !== 'function' ||
     typeof uiBridge.setDialoguePresentation !== 'function' ||
+    typeof uiBridge.setRenderStatus !== 'function' ||
     typeof uiBridge.setSaveStatus !== 'function' ||
     typeof uiBridge.setRecoverySlots !== 'function' ||
     typeof uiBridge.requestOperationMap !== 'function' ||
@@ -101,7 +102,13 @@ function createProgressionStorage() {
 }
 
 export class GameApp extends SceneNode {
-  constructor({ gameCanvas, visualQaRequest = null, qaInputEnabled = false }) {
+  constructor({
+    gameCanvas,
+    visualQaRequest = null,
+    qaInputEnabled = false,
+    canvasHostFactory = (canvas) => new WebGlCanvasHost(canvas),
+    rendererFactory = (host, camera) => new WebGlPolygonRenderer(host, camera),
+  }) {
     super('GameApp');
     this.qaInputEnabled = qaInputEnabled;
     this.qaInputScenario = qaInputEnabled ? readQaInputScenario() : null;
@@ -149,6 +156,17 @@ export class GameApp extends SceneNode {
       qaInputScenario: this.qaInputScenario,
     });
     this.scene = this.addChild(createGameScene({ mapDefinition, progressionSnapshot }));
+    this.performanceQa = qaInputEnabled
+      ? {
+          simulationMilliseconds: [],
+          poseMilliseconds: [],
+          geometryMilliseconds: [],
+          frameBuildMilliseconds: [],
+          renderMilliseconds: [],
+          uiMilliseconds: [],
+        }
+      : null;
+    this.scene.setRenderPerformanceEnabled(Boolean(this.performanceQa));
     if (qaInputEnabled) {
       this.scene.setVisualQaCombatOverlay(
         new URLSearchParams(globalThis.location?.search ?? '').get('inputQaOverlay') === '1',
@@ -156,9 +174,18 @@ export class GameApp extends SceneNode {
     }
     this.camera = new Camera2D();
 
-    this.gameHost = new CanvasHost(assertCanvas(gameCanvas, 'Game Canvas'));
+    this.canvasHostFactory = canvasHostFactory;
+    this.rendererFactory = rendererFactory;
+    this.gameHost = this.canvasHostFactory(assertCanvas(gameCanvas, 'Game Canvas'));
 
-    this.gameRenderer = new CanvasPolygonRenderer(this.gameHost, this.camera);
+    this.gameRenderer = this.rendererFactory(this.gameHost, this.camera);
+    this.lastRenderFrame = null;
+    this.renderStatus = '';
+    this.unsubscribeRenderContext = this.gameHost.subscribeContext?.((state) => {
+      this.renderStatus =
+        state === 'lost' ? '그래픽 장치를 복구하는 중입니다. 게임 상태는 그대로 유지됩니다.' : '';
+      this.uiBridge?.setRenderStatus(this.renderStatus);
+    });
 
     this.uiBridge = null;
     this.manualMode = false;
@@ -198,6 +225,7 @@ export class GameApp extends SceneNode {
 
   connectUi(uiBridge) {
     this.uiBridge = assertUiBridge(uiBridge);
+    this.uiBridge.setRenderStatus(this.renderStatus);
   }
 
   start({ manual = false } = {}) {
@@ -264,13 +292,22 @@ export class GameApp extends SceneNode {
     ) {
       delete globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__;
       delete globalThis.__POLYGON_RPG_INPUT_QA__;
+      delete globalThis.__POLYGON_RPG_PERFORMANCE_QA__;
+      delete globalThis.__POLYGON_RPG_PERFORMANCE_QA_STEP__;
+      delete globalThis.__POLYGON_RPG_RENDER_STRESS_QA__;
     }
     if (this.qaActorSurface) {
+      this.qaActorSurface.renderer.destroy();
+      this.qaActorSurface.host.destroy();
       this.qaActorSurface.canvas.width = 0;
       this.qaActorSurface.canvas.height = 0;
       this.qaActorSurface = null;
     }
     this.qaPixelExporter = null;
+    this.unsubscribeRenderContext?.();
+    this.unsubscribeRenderContext = null;
+    this.gameRenderer.destroy();
+    this.gameHost.destroy();
   }
 
   attachEvents() {
@@ -1261,12 +1298,16 @@ export class GameApp extends SceneNode {
       uiState.campaignActionPreviewOpen !== true;
     if (!active) return;
     if (this.testDiagnostics?.paused && !singleStep) return;
+    const simulationStarted = this.performanceQa ? performance.now() : 0;
     this.fixedProcess(deltaSeconds, {
       inputSnapshot,
       simulationSettings: singleStep
         ? { ...this.createSimulationSettings(uiState), animationSpeed: 1 }
         : this.createSimulationSettings(uiState),
     });
+    if (this.performanceQa) {
+      this.recordPerformanceSample('simulationMilliseconds', performance.now() - simulationStarted);
+    }
     if (this.testDiagnostics) {
       // Observe immediately after each 120 Hz update, before another catch-up tick
       // can move the weapon past the contact or expire the event.
@@ -1283,6 +1324,11 @@ export class GameApp extends SceneNode {
   }
 
   renderFrame(renderFrame) {
+    if (this.performanceQa && this.scene.lastRenderBuildTimings) {
+      for (const key of ['poseMilliseconds', 'geometryMilliseconds', 'frameBuildMilliseconds']) {
+        this.recordPerformanceSample(key, this.scene.lastRenderBuildTimings[key]);
+      }
+    }
     if (this.testDiagnostics) {
       this.testDiagnostics.observe(renderFrame);
       this.uiBridge.setTestDiagnostics?.(this.testDiagnostics.snapshot());
@@ -1311,8 +1357,8 @@ export class GameApp extends SceneNode {
       this.qaPixelExporter = () => {
         if (!this.qaActorSurface) {
           const canvas = document.createElement('canvas');
-          const host = new CanvasHost(canvas);
-          const renderer = new CanvasPolygonRenderer(host, this.camera);
+          const host = this.canvasHostFactory(canvas);
+          const renderer = this.rendererFactory(host, this.camera);
           this.qaActorSurface = { canvas, host, renderer };
         }
         const { canvas, host, renderer } = this.qaActorSurface;
@@ -1360,9 +1406,50 @@ export class GameApp extends SceneNode {
         combatGeometry: renderFrame.combatGeometry,
         map: Object.freeze({ id: renderFrame.map.id, roomId: renderFrame.map.activeRoomId }),
       });
+      globalThis.__POLYGON_RPG_PERFORMANCE_QA_STEP__ = () => {
+        this.update(1 / 120, this.createInputSnapshot(), true);
+        this.render(1);
+        return globalThis.__POLYGON_RPG_PERFORMANCE_QA__;
+      };
+      globalThis.__POLYGON_RPG_RENDER_STRESS_QA__ = (requestedCopies = 4) => {
+        const copies = Math.max(1, Math.min(8, Math.floor(requestedCopies)));
+        const enemyItems = renderFrame.items.filter(
+          (item) => item.depthGroup && item.id.startsWith('combat-enemy-'),
+        );
+        const stressItems = [...renderFrame.items];
+        for (let copy = 0; copy < copies; copy += 1) {
+          const direction = copy % 2 === 0 ? -1 : 1;
+          const offsetX = direction * Math.ceil((copy + 1) / 2) * 72;
+          for (const item of enemyItems) {
+            const shift = (point) => Object.freeze({ x: point.x + offsetX, y: point.y });
+            stressItems.push(
+              Object.freeze({
+                ...item,
+                id: `${item.id}:stress-${copy}`,
+                depthGroup: `${item.depthGroup}:stress-${copy}`,
+                points: Object.freeze(item.points.map(shift)),
+                ...(item.surface
+                  ? {
+                      surface: Object.freeze({
+                        ...item.surface,
+                        points: Object.freeze(item.surface.points.map(shift)),
+                      }),
+                    }
+                  : {}),
+              }),
+            );
+          }
+        }
+        return this.gameRenderer.render(
+          Object.freeze({ ...renderFrame, items: Object.freeze(stressItems) }),
+          GAME_RENDER_SETTINGS,
+        );
+      };
     }
     if (this.isVisualQa && this.manualMode) this.latestVisualQaRenderFrame = renderFrame;
+    this.lastRenderFrame = renderFrame;
     const uiState = this.uiBridge.snapshot();
+    const uiStarted = this.performanceQa ? performance.now() : 0;
     this.uiBridge.setDialoguePresentation(
       projectDialogue(
         this.scene.getWorldStatus().dialogue,
@@ -1371,9 +1458,24 @@ export class GameApp extends SceneNode {
         this.camera.worldSize,
       ),
     );
+    if (this.performanceQa) {
+      this.recordPerformanceSample('uiMilliseconds', performance.now() - uiStarted);
+    }
+    const drawFrame = () => {
+      const renderStarted = this.performanceQa ? performance.now() : 0;
+      const result = this.gameRenderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      if (this.performanceQa) {
+        this.recordPerformanceSample('renderMilliseconds', performance.now() - renderStarted);
+        globalThis.__POLYGON_RPG_PERFORMANCE_QA__ = {
+          ...this.performanceQa,
+          renderer: result,
+          heapBytes: performance.memory?.usedJSHeapSize ?? null,
+        };
+      }
+      return result;
+    };
     if (this.isVisualQa) {
-      const renderer = this.gameRenderer;
-      this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      this.latestRenderStats = drawFrame();
       if (this.qaInputEnabled) {
         globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
           ...globalThis.__POLYGON_RPG_INPUT_QA__,
@@ -1383,8 +1485,7 @@ export class GameApp extends SceneNode {
       return;
     }
     if (uiState.screen === GAME_SCREEN.GAME) {
-      const renderer = this.gameRenderer;
-      this.latestRenderStats = renderer.render(renderFrame, GAME_RENDER_SETTINGS);
+      this.latestRenderStats = drawFrame();
       if (this.qaInputEnabled) {
         globalThis.__POLYGON_RPG_INPUT_QA__ = Object.freeze({
           ...globalThis.__POLYGON_RPG_INPUT_QA__,
@@ -1393,6 +1494,13 @@ export class GameApp extends SceneNode {
       }
       return;
     }
+  }
+
+  recordPerformanceSample(key, value) {
+    const samples = this.performanceQa?.[key];
+    if (!samples || !Number.isFinite(value)) return;
+    samples.push(value);
+    if (samples.length > 600) samples.splice(0, samples.length - 600);
   }
 
   updateStats(currentTime) {
@@ -1418,6 +1526,12 @@ export class GameApp extends SceneNode {
     if (uiState.screen === GAME_SCREEN.GAME) {
       this.uiBridge.setGameStats(commonStats);
     }
+  }
+
+  restoreRenderSurface() {
+    if (!this.lastRenderFrame || this.gameHost.contextLost) return false;
+    this.latestRenderStats = this.gameRenderer.render(this.lastRenderFrame, GAME_RENDER_SETTINGS);
+    return true;
   }
 
   loop(currentTime) {

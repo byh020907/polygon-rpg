@@ -161,7 +161,6 @@ async function run() {
     args.get('browser') ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe',
     [
       '--headless=new',
-      '--disable-gpu',
       '--no-first-run',
       '--no-default-browser-check',
       `--remote-debugging-port=${debugPort}`,

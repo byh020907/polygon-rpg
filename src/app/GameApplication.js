@@ -9,6 +9,7 @@ function createBufferedUiBridge(uiBridge) {
     'setPlayerStatus',
     'setWorldStatus',
     'setDialoguePresentation',
+    'setRenderStatus',
     'setSaveStatus',
     'setRecoverySlots',
     'requestOperationMap',
@@ -25,42 +26,6 @@ function createBufferedUiBridge(uiBridge) {
         const args = pendingWrites.get(name);
         if (args) uiBridge[name]?.(...args);
       }
-    },
-  });
-}
-
-function captureCanvasSurface(canvas) {
-  const ownerDocument = canvas?.ownerDocument;
-  if (
-    !canvas ||
-    typeof canvas.getContext !== 'function' ||
-    !ownerDocument ||
-    typeof ownerDocument.createElement !== 'function'
-  ) {
-    return null;
-  }
-  const backup = ownerDocument.createElement('canvas');
-  backup.width = canvas.width;
-  backup.height = canvas.height;
-  const backupContext = backup.getContext('2d');
-  if (!backupContext) return null;
-  backupContext.drawImage(canvas, 0, 0);
-  return Object.freeze({
-    restore() {
-      canvas.width = backup.width;
-      canvas.height = backup.height;
-      canvas.getContext('2d')?.drawImage(backup, 0, 0);
-    },
-  });
-}
-
-function captureCanvasSurfaces(canvases) {
-  const surfaces = Object.values(canvases)
-    .map((canvas) => captureCanvasSurface(canvas))
-    .filter(Boolean);
-  return Object.freeze({
-    restore() {
-      for (const surface of surfaces) surface.restore();
     },
   });
 }
@@ -101,12 +66,11 @@ export class GameApplication {
     }
     const previousApp = this.currentApp;
     const bufferedUi = createBufferedUiBridge(this.uiBridge);
-    const canvasSurfaces = captureCanvasSurfaces(this.canvases);
     let candidateApp;
     try {
       candidateApp = createAndStart(bufferedUi.bridge);
     } catch (error) {
-      canvasSurfaces.restore();
+      previousApp.restoreRenderSurface?.();
       throw error;
     }
     this.currentApp = candidateApp;

@@ -159,17 +159,17 @@ try {
     for (const action of resource.actions) {
       const result = await browser.evaluate(`(async()=>{
    const {createFieldQuestResources,sampleFieldQuestResource}=await import('/src/graphics/FieldQuestResources.js');
-   const {CanvasHost}=await import('/src/rendering/CanvasHost.js');const {Camera2D}=await import('/src/rendering/Camera2D.js');const {CanvasPolygonRenderer}=await import('/src/rendering/CanvasPolygonRenderer.js');
+   const {WebGlCanvasHost}=await import('/src/rendering/WebGlCanvasHost.js');const {Camera2D}=await import('/src/rendering/Camera2D.js');const {WebGlPolygonRenderer}=await import('/src/rendering/WebGlPolygonRenderer.js');
    const resource=createFieldQuestResources().find(r=>r.id===${JSON.stringify(resource.id)}),action=resource.actions.find(a=>a.id===${JSON.stringify(action.id)});
-   const canvas=document.createElement('canvas');canvas.style.cssText='width:480px;height:270px';document.body.append(canvas);const host=new CanvasHost(canvas,{renderWidth:960,renderHeight:540,maxPixelRatio:1});host.resize();const renderer=new CanvasPolygonRenderer(host,new Camera2D());
-   try{const sampled=sampleFieldQuestResource(resource,action);const stats=renderer.render(sampled.frame,{transparent:true,showWorldGrid:false});const pixels=host.context.getImageData(0,0,canvas.width,canvas.height).data;let painted=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i])painted++;return {id:resource.id,action:action.id,painted,finite:Number.isFinite(stats.logicalWidth)};}finally{canvas.remove();}
+   const canvas=document.createElement('canvas');canvas.style.cssText='width:480px;height:270px';document.body.append(canvas);const host=new WebGlCanvasHost(canvas,{renderWidth:960,renderHeight:540,maxPixelRatio:1});host.resize();const renderer=new WebGlPolygonRenderer(host,new Camera2D());
+   try{const sampled=sampleFieldQuestResource(resource,action);const stats=renderer.render(sampled.frame,{transparent:true,showWorldGrid:false});const pixels=renderer.readPixelsForQa().data;let painted=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i])painted++;return {id:resource.id,action:action.id,painted,finite:Number.isFinite(stats.logicalWidth)};}finally{renderer.destroy();host.destroy();canvas.remove();}
   })()`);
       renders.push(result);
     }
   assert.equal(renders.length, 11);
   assert.ok(
     renders.every((r) => r.painted > 0 && r.finite),
-    'real CanvasPolygonRenderer paints all retained field samples',
+    'real WebGlPolygonRenderer paints all retained field samples',
   );
 } finally {
   await browser.close();

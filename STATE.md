@@ -2,20 +2,21 @@
 
 ## Current Phase
 
-RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. OpenCode는 계속 pause 상태다.
+RUNNING — Human이 별도 수동 구현 대화에서 WebGL2 renderer 전환을 지시했다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
 
 ## Active Execution Goal
 
-Human Feedback Priority — 모바일 메인 메뉴에서 제목·게임 시작/이어하기·버전/업데이트 상태가 844×390 landscape와 좁은 portrait의 실제 보이는 높이·safe area 안에서 겹침이나 잘림 없이 읽히고 주요 버튼에 접근되는지 현재 output으로 다시 확인하고 수정한다. 전체 그래픽 재작업 우선순위와 기존 도입/주인공 모션 기술 기준선을 보존하며 승인되지 않은 reference나 캠페인 확장으로 넓히지 않는다.
+Human Feedback Priority — WebGL2 renderer 기반에서 최신 `docs/art-handoff` 승인 순서대로 전체 그래픽 재작업을 이어간다. 자동 실행은 pause 상태이므로 이 수동 전환 완료가 loop 재개를 뜻하지 않는다. 기존 도입·주인공 모션·접촉 기준선을 보존하고 승인되지 않은 reference나 캠페인 확장으로 넓히지 않는다.
 
 ## Current Evidence / Gap
 
-- 기본 `slash`와 강한 `heavy`에 별도 `drive` key를 두어 load→drive에서 흉곽 이동이 손보다 먼저 일어나고, 손은 root 뒤에 남았다가 contact에서 앞을 통과한다. Basic tip 상승은 39.157px, Strong은 86.604px라 얕은 횡궤적과 큰 사선이 구분되고 기존 31/46 frame timing·stamina·이동 계약은 유지된다.
-- `attack-contact-check`의 production `GameScene` damage owner에서 Basic/Strong 양방향 경계는 각각 147.109px/144.956px로 대칭이며 miss/hit·HP·event·sweep lifecycle을 PASS했다. desktop keyboard/mobile touch의 8개 실제 입력 strip은 검·방패·가방 연결, 머리 위 준비 없음, 바닥 비관통, Basic 100→88/Strong 100→76 stamina와 contact 결과를 보존한다.
-- 그래픽 검토실은 정상 속도 측정과 정확한 12-frame 단일-cycle strip 생성을 분리했다. 최종 `graphics:qa` 98 checks에서 Slash 0..26, Heavy 0..40을 복원했고 다음 cycle의 wrap frame은 evidence에서 제외했다.
-- `npm run check`, `npm run test:pwa`, `npm run graphics:qa`, `git diff --check`가 PASS했다. 구현과 분리된 verifier도 코드·8개 actual-input strip·전투 fixture를 다시 비교해 이번 횡/사선 베기 목표를 PASS했다.
+- 게임·그래픽 검토실·저장 없는 테스트 플레이는 같은 `WebGlPolygonRenderer`와 immutable RenderFrame/pose/geometry를 사용한다. 기존 CPU `DepthPolygonRasterizer`, ImageData/putImageData와 Canvas 2D production renderer는 제거했고 release `85c50776f3ef`은 네 WebGL module을 offline asset으로 포함한다.
+- scene painter order와 연속 depth group을 분리하고 opaque depth/write → 가려지는 polygon stroke → back-to-front translucent no-write → visible silhouette 순서로 합성한다. DPR/resize, 4× review, shared thumbnail staging context, screen replacement rollback, resource dispose, context-loss 감지와 WebGL2 미지원 안내를 실제 browser fixture로 검사했다.
+- 동일 Chrome/viewport render-only 기준에서 `scrap-art-benchmark` desktop p95 23.5→6.7ms, mobile p95 19.1→7.1ms, `combat-hit` desktop p95 66.6→6.9ms, mobile p95 22.5→9.0ms였다. 300-frame actual staged combat은 desktop/mobile p50 8.4/8.0ms, p95 15.6/16.1ms였고 heap은 GC 하강을 포함한 sawtooth라 단조 증가하지 않았다. production geometry를 사용한 5-enemy render stress는 desktop/mobile p95 5.6/11.9ms, garage는 9.9/8.0ms였다.
+- `graphics:qa` 98 checks, desktop/mobile actual input motion 755/1141 frames, fresh-profile 도입 전체 browser flow, combat geometry/damage owner, mobile menu 34 viewport records와 인앱 browser 실제 화면·console을 확인했다. 게임 규칙·120Hz simulation/60Hz combat·저장 schema와 공격 contact는 변경하지 않았다.
+- PWA는 active worker metadata 미식별을 새 cache 설치 실패로 취급하지 않는다. waiting worker 자체 build와 서버 최신 release가 일치할 때만 진행/recovery 저장 후 자동 적용하고, 미식별 waiting은 활성화하지 않는다. 실제 지속 Chromium profile에서 A offline → broken B 유지 → save 실패 차단 → 재확인 뒤 B 자동 적용·두 탭 자동 전환 → stale C 차단 → C 자동 적용·offline reopen과 single reload를 PASS했다. 새 PWA feedback은 Product/Architecture와 구현이 소유해 INBOX에서 제거했다.
 
-Human Feedback Priority Gap: 모바일 메인 메뉴 화면 비율은 최신 actual viewport 재검증과 수정이 남았다. 전체 그래픽 재작업은 계속 최우선이며 REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 아직 공급·승인되지 않아 현재 결과는 기술 기준선이다. Human의 최종 손맛·reference 직접 비교, mobile continuous intro/reload와 clean final composition은 unverified다. INBOX의 전체 그래픽 재작업·접촉·모바일/연속 플레이 복합 원문은 보존한다.
+Human Feedback Priority Gap: 강제 `WEBGL_lose_context`의 loss와 게임/검토 안내는 확인했지만 같은 headless session의 restore event는 5초 안에 오지 않아 실제 context-restored redraw/status-clear는 unverified다. 측정 기기 밖의 60fps, 설치형 mobile GPU와 장시간 memory 안정성은 보장하지 않는다. metadata/message 계약이 없는 이미 열린 legacy client는 mixed release와 저장 손실을 피하려 claim하지 않으며 정상 종료·재실행에서 최신 complete cache로 진입한다. 이 실제 legacy Chromium reopen은 unverified다. 전체 그래픽 재작업은 계속 최우선이며 REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 아직 공급·승인되지 않아 현재 결과는 기술 기반이다. 남은 INBOX 원문은 보존한다.
 
 ## Preserved Work Reference
 

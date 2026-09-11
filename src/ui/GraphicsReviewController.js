@@ -1,4 +1,5 @@
-import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
+import { WebGlCanvasHost } from '../rendering/WebGlCanvasHost.js';
+import { WebGlPolygonRenderer } from '../rendering/WebGlPolygonRenderer.js';
 import { Camera2D } from '../rendering/Camera2D.js';
 import { ReviewRadialMenu } from './ReviewRadialMenu.js';
 import { graphicsNavigation, graphicsActionMenu } from './GraphicsNavigation.js';
@@ -23,10 +24,47 @@ const el = (tag, className, text) => {
 };
 const settings = Object.freeze({ showWorldGrid: false, showMesh: false });
 const renderTargets = new WeakMap();
+let sharedThumbnailTarget = null;
+
+function createRenderTarget(canvas, camera) {
+  const host = new WebGlCanvasHost(canvas);
+  return {
+    host,
+    polygon: new WebGlPolygonRenderer(host, camera),
+    contextStatusListener: null,
+    unsubscribeContextStatus: null,
+  };
+}
+
+function thumbnailRenderTarget(camera) {
+  if (!sharedThumbnailTarget) {
+    const canvas = document.createElement('canvas');
+    sharedThumbnailTarget = { canvas, ...createRenderTarget(canvas, camera) };
+  }
+  sharedThumbnailTarget.polygon.camera = camera;
+  return sharedThumbnailTarget;
+}
+
+function disposeRenderTarget(target) {
+  target?.unsubscribeContextStatus?.();
+  target?.polygon.destroy();
+  target?.host.destroy();
+}
+
+function setContextStatusListener(target, listener) {
+  if (!target || target.contextStatusListener === listener) return;
+  target.unsubscribeContextStatus?.();
+  target.contextStatusListener = listener;
+  target.unsubscribeContextStatus = listener ? target.host.subscribeContext(listener) : null;
+}
 
 // All views call the game polygon renderer. Only the inspection camera and viewport differ.
-export function renderGraphicsSample(canvas, sample, selection, { thumbnail = false } = {}) {
-  const context = canvas.getContext('2d');
+export function renderGraphicsSample(
+  canvas,
+  sample,
+  selection,
+  { thumbnail = false, onContextState = null } = {},
+) {
   const bounds = sample.bounds;
   const isolated = selection.view !== 'scene';
   const zoom = selection.scale === 'fit' || thumbnail ? null : Number(selection.scale);
@@ -47,8 +85,13 @@ export function renderGraphicsSample(canvas, sample, selection, { thumbnail = fa
     : Math.min(2, globalThis.devicePixelRatio || 1, Math.sqrt(3_000_000 / (cssWidth * cssHeight)));
   const backingWidth = Math.max(1, Math.floor(cssWidth * pixelRatio));
   const backingHeight = Math.max(1, Math.floor(cssHeight * pixelRatio));
-  if (canvas.width !== backingWidth) canvas.width = backingWidth;
-  if (canvas.height !== backingHeight) canvas.height = backingHeight;
+  const renderCanvas = thumbnail ? thumbnailRenderTarget(new Camera2D()).canvas : canvas;
+  if (renderCanvas.width !== backingWidth) renderCanvas.width = backingWidth;
+  if (renderCanvas.height !== backingHeight) renderCanvas.height = backingHeight;
+  if (thumbnail) {
+    if (canvas.width !== backingWidth) canvas.width = backingWidth;
+    if (canvas.height !== backingHeight) canvas.height = backingHeight;
+  }
   if (!thumbnail) {
     canvas.style.width = `${cssWidth}px`;
     canvas.style.height = `${cssHeight}px`;
@@ -65,10 +108,10 @@ export function renderGraphicsSample(canvas, sample, selection, { thumbnail = fa
     cssWidth,
     cssHeight,
     pixelRatio,
-    backingWidth: canvas.width,
-    backingHeight: canvas.height,
-    presentationX: Math.floor((canvas.width - presentationWidth) / 2),
-    presentationY: Math.floor((canvas.height - presentationHeight) / 2),
+    backingWidth: renderCanvas.width,
+    backingHeight: renderCanvas.height,
+    presentationX: Math.floor((renderCanvas.width - presentationWidth) / 2),
+    presentationY: Math.floor((renderCanvas.height - presentationHeight) / 2),
     presentationWidth,
     presentationHeight,
   });
@@ -98,25 +141,28 @@ export function renderGraphicsSample(canvas, sample, selection, { thumbnail = fa
         : null,
     });
   }
-  let target = renderTargets.get(canvas);
+  let target = thumbnail ? thumbnailRenderTarget(camera) : renderTargets.get(canvas);
   if (!target) {
-    const host = { context, viewport };
-    target = {
-      host,
-      polygon: new CanvasPolygonRenderer(host, camera),
-    };
+    target = createRenderTarget(canvas, camera);
     renderTargets.set(canvas, target);
   }
+  setContextStatusListener(target, onContextState);
   target.host.viewport = viewport;
   const renderer = target.polygon;
   renderer.camera = camera;
   if (selection.bones && !thumbnail)
     frame = { ...frame, items: [...frame.items, ...graphicsBoneItems(sample.boneDiagnostics)] };
-  return renderer.render(frame, {
+  const result = renderer.render(frame, {
     ...settings,
     showMesh: !thumbnail && selection.mesh,
     transparent: isolated,
   });
+  if (thumbnail) {
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(renderCanvas, 0, 0);
+  }
+  return result;
 }
 
 export class GraphicsReviewController {
@@ -198,6 +244,13 @@ export class GraphicsReviewController {
     this.nodes = Object.fromEntries(
       [...root.querySelectorAll('[data-gr]')].map((node) => [node.dataset.gr, node]),
     );
+    this.onRenderContextState = (state) => {
+      if (this.destroyed || this.closed) return;
+      this.nodes.status.textContent =
+        state === 'lost'
+          ? '그래픽 장치를 복구하는 중입니다. 선택과 프레임은 그대로 유지됩니다.'
+          : '그래픽 장치 복구가 완료되어 현재 선택을 다시 그렸습니다.';
+    };
     const listen = (node, event, handler) =>
       node.addEventListener(event, handler, { signal: this.abort.signal });
     this.radial = new ReviewRadialMenu(root);
@@ -608,6 +661,7 @@ export class GraphicsReviewController {
         this.lazy(canvas, () =>
           renderGraphicsSample(canvas, this.sampleResource(resource.id, selection), selection, {
             thumbnail: true,
+            onContextState: this.onRenderContextState,
           }),
         );
       }
@@ -656,7 +710,9 @@ export class GraphicsReviewController {
       } else {
         this.sample = this.sampleResource(resource.id, this.selection);
         this.nodes.canvas.hidden = false;
-        renderGraphicsSample(this.nodes.canvas, this.sample, this.selection);
+        renderGraphicsSample(this.nodes.canvas, this.sample, this.selection, {
+          onContextState: this.onRenderContextState,
+        });
       }
       this.root.dataset.resourceId = resource.id;
       this.root.dataset.frameIndex = String(this.selection.frameIndex);
@@ -730,7 +786,7 @@ export class GraphicsReviewController {
             canvas,
             this.sampleResource(this.resource.id, selection),
             selection,
-            { thumbnail: true },
+            { thumbnail: true, onContextState: this.onRenderContextState },
           ),
         );
         strip.append(button);
@@ -896,6 +952,7 @@ export class GraphicsReviewController {
   downloadPng() {
     if (this.nodes.canvas.hidden) return;
     this.pause();
+    this.renderSample();
     const anchor = el('a');
     anchor.download = `${this.selection.resourceId.replaceAll('/', '_')}-${this.selection.actionId}-${this.selection.frameIndex}.png`;
     anchor.href = this.nodes.canvas.toDataURL('image/png');
@@ -925,5 +982,10 @@ export class GraphicsReviewController {
     this.abort.abort();
     this.observer.disconnect();
     this.sampler.destroy?.();
+    const mainTarget = renderTargets.get(this.nodes.canvas);
+    disposeRenderTarget(mainTarget);
+    renderTargets.delete(this.nodes.canvas);
+    disposeRenderTarget(sharedThumbnailTarget);
+    sharedThumbnailTarget = null;
   }
 }

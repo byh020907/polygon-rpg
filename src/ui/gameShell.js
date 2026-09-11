@@ -131,7 +131,10 @@ export function registerGameShell(
   const uiReviewResource = readUiReviewResource(globalThis.location?.search ?? '');
   const mobileViewport = createMobileViewportController(globalThis.screen);
   const standaloneViewport = createStandaloneViewportAdapter({ browserWindow: globalThis });
-  const pwaLifecycle = createPwaLifecycleAdapter({ browserWindow: globalThis });
+  const pwaLifecycle = createPwaLifecycleAdapter({
+    browserWindow: globalThis,
+    saveProgress: () => gameApp.saveCurrentProgress(),
+  });
   const debugConfigurationAdapter = createDebugConfigurationAdapter(
     globalThis.location,
     visualQaRequest,
@@ -232,6 +235,7 @@ export function registerGameShell(
     testPlayLabel: testPlayRequest?.label ?? '',
     testReturnSelection: testPlayRequest?.returnSelection ?? DEFAULT_GRAPHICS_REVIEW,
     gameStats: 'World ready',
+    renderStatus: '',
     areaName: '동네 고물상',
     storyBeatId: 'scrap-awakening:commission',
     storyTitle: '고물상 정식 수거 의뢰',
@@ -521,6 +525,9 @@ export function registerGameShell(
         },
         setDialoguePresentation: (dialogue) => {
           this.dialogue = dialogue;
+        },
+        setRenderStatus: (status) => {
+          this.renderStatus = status;
         },
         setSaveStatus: (status) => {
           this.saveStatus = status;

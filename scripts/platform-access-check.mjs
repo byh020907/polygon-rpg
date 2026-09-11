@@ -489,6 +489,7 @@ function verifySamePageGameApplicationReplacement() {
     const app = {
       options,
       destroyed: false,
+      lastRenderedPixel: options.gameCanvas.pixel,
       connectUi(uiBridge) {
         this.uiBridge = uiBridge;
       },
@@ -500,11 +501,15 @@ function verifySamePageGameApplicationReplacement() {
         this.uiBridge.setQaInputStatus(Object.freeze({ playerPosition: { x: 730, y: 344 } }));
         this.uiBridge.setSaveStatus(`visual-qa:${request.start}`);
         options.gameCanvas.pixel = failNextVisualQa ? 'failed-candidate-frame' : 'next-game-frame';
+        if (!failNextVisualQa) this.lastRenderedPixel = options.gameCanvas.pixel;
         if (failNextVisualQa) throw new Error('fixture visual QA failure');
         return Object.freeze({ ready: true, start: request.start });
       },
       destroy() {
         this.destroyed = true;
+      },
+      restoreRenderSurface() {
+        options.gameCanvas.pixel = this.lastRenderedPixel;
       },
     };
     apps.push(app);
@@ -521,6 +526,7 @@ function verifySamePageGameApplicationReplacement() {
     setPlayerStatus: (value) => uiWrites.push(['player', value]),
     setWorldStatus: (value) => uiWrites.push(['world', value]),
     setDialoguePresentation: (value) => uiWrites.push(['dialogue', value]),
+    setRenderStatus: (value) => uiWrites.push(['render', value]),
     setSaveStatus: (value) => uiWrites.push(['save', value]),
     requestOperationMap: () => uiWrites.push(['operation-map-request']),
     requestCampaignActionPreview: (value) => uiWrites.push(['campaign-action-preview', value]),
