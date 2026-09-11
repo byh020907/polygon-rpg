@@ -76,15 +76,24 @@ function authoredCharacterFrame(options) {
       ? 'ready'
       : /(?:windup|load)$/.test(options.id)
         ? 'load'
-        : options.id.endsWith('contact')
-          ? 'contact'
-          : options.id.endsWith('follow-through')
-            ? 'followThrough'
-            : 'settle';
+        : options.id.endsWith('-drive')
+          ? 'drive'
+          : options.id.endsWith('contact')
+            ? 'contact'
+            : options.id.endsWith('follow-through')
+              ? 'followThrough'
+              : 'settle';
   const yaw = (
     groundedCut
-      ? { ready: 0.22, load: 0.52, contact: -0.28, followThrough: -0.68, settle: 0 }
-      : { ready: 0, load: 0.85, contact: 0.25, followThrough: -0.6, settle: 0 }
+      ? {
+          ready: 0.18,
+          load: 0.62,
+          drive: 0.16,
+          contact: -0.38,
+          followThrough: -0.74,
+          settle: 0,
+        }
+      : { ready: 0, load: 0.85, drive: 0.25, contact: 0.25, followThrough: -0.6, settle: 0 }
   )[phase];
   // Grounded cuts keep the broad blade visible while it travels below the head:
   // ready -> low rear load -> fast cross-body contact -> weighted follow-through.
@@ -93,25 +102,74 @@ function authoredCharacterFrame(options) {
   const bladeAngle = (
     groundedCut
       ? options.id.startsWith('heavy-')
-        ? { ready: 0.38, load: 0.5, contact: -0.42, followThrough: 0.72, settle: 0.35 }
-        : { ready: 0.32, load: 0.44, contact: -0.08, followThrough: 0.62, settle: 0.35 }
-      : { ready: 0.35, load: 0.2, contact: 0.2, followThrough: 0.3, settle: 0.35 }
+        ? {
+            ready: 0.38,
+            load: 0.68,
+            drive: 0.22,
+            contact: 0.05,
+            followThrough: -0.42,
+            settle: 0.35,
+          }
+        : {
+            ready: 0.32,
+            load: 0.45,
+            drive: 0.25,
+            contact: 0.12,
+            followThrough: -0.08,
+            settle: 0.35,
+          }
+      : {
+          ready: 0.35,
+          load: 0.2,
+          drive: 0.2,
+          contact: 0.2,
+          followThrough: 0.3,
+          settle: 0.35,
+        }
   )[phase];
   const bladeYaw = (
     groundedCut
-      ? { ready: -0.24, load: -0.36, contact: 0.04, followThrough: 0.42, settle: 0 }
-      : { ready: 0.08, load: 0.95, contact: 0.65, followThrough: -0.5, settle: 0.08 }
+      ? {
+          ready: -0.24,
+          load: -0.3,
+          drive: -0.16,
+          contact: 0.04,
+          followThrough: 0.42,
+          settle: 0,
+        }
+      : {
+          ready: 0.08,
+          load: 0.95,
+          drive: 0.65,
+          contact: 0.65,
+          followThrough: -0.5,
+          settle: 0.08,
+        }
   )[phase];
   const handTarget = (
     groundedCut
       ? {
           ready: { x: options.id.startsWith('heavy-') ? -8 : -6, y: 10 },
-          load: { x: options.id.startsWith('heavy-') ? -22 : -18, y: 5 },
-          contact: { x: options.id.startsWith('heavy-') ? 13 : 11, y: 4 },
-          followThrough: { x: options.id.startsWith('heavy-') ? 40 : 38, y: 14 },
+          load: {
+            x: options.id.startsWith('heavy-') ? -24 : -19,
+            y: options.id.startsWith('heavy-') ? -22 : -12,
+          },
+          drive: {
+            x: options.id.startsWith('heavy-') ? -15 : -12,
+            y: options.id.startsWith('heavy-') ? -5 : 0,
+          },
+          contact: {
+            x: options.id.startsWith('heavy-') ? 14 : 12,
+            y: 4,
+          },
+          followThrough: {
+            x: options.id.startsWith('heavy-') ? 42 : 39,
+            y: options.id.startsWith('heavy-') ? 10 : 14,
+          },
         }
       : {
           load: { x: -26, y: 3 },
+          drive: { x: -10, y: 4 },
           contact: { x: 8, y: 5 },
           followThrough: { x: 35, y: 15 },
         }
@@ -122,7 +180,9 @@ function authoredCharacterFrame(options) {
     ...options,
     depth: 0,
     armPose:
-      phase === 'load' || (phase === 'ready' && groundedCut) ? 'followThrough' : options.armPose,
+      phase === 'load' || phase === 'drive' || (phase === 'ready' && groundedCut)
+        ? 'followThrough'
+        : options.armPose,
     wristFlex: bladeAngle,
     nearHandTarget: handTarget,
   });
@@ -420,7 +480,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
     authoredCharacterFrame({
       id: 'slash-windup',
-      at: 0.24,
+      at: 0.18,
       transition: 'linear',
       rootX: -5,
       rootY: 2,
@@ -430,6 +490,20 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       leadFootX: 11,
       depth: -0.55,
       capeLift: 0.46,
+      armPose: 'windup',
+    }),
+    authoredCharacterFrame({
+      id: 'slash-drive',
+      at: 9 / 31,
+      transition: 'linear',
+      rootX: 0,
+      rootY: 2,
+      bodyLean: 0.06,
+      headTilt: -0.03,
+      rearFootX: -16,
+      leadFootX: 15,
+      depth: 0.08,
+      capeLift: 0.62,
       armPose: 'windup',
     }),
     authoredCharacterFrame({
@@ -491,7 +565,7 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
     }),
     authoredCharacterFrame({
       id: 'heavy-load',
-      at: 0.27,
+      at: 0.19,
       transition: 'linear',
       rootX: -8,
       rootY: 7,
@@ -501,6 +575,20 @@ const AUTHORED_COMBAT_POSE_FRAMES = Object.freeze({
       leadFootX: 10,
       depth: -0.7,
       capeLift: 0.58,
+      armPose: 'windup',
+    }),
+    authoredCharacterFrame({
+      id: 'heavy-drive',
+      at: 13 / 46,
+      transition: 'linear',
+      rootX: -1,
+      rootY: 7,
+      bodyLean: 0.1,
+      headTilt: -0.05,
+      rearFootX: -20,
+      leadFootX: 17,
+      depth: 0.08,
+      capeLift: 0.76,
       armPose: 'windup',
     }),
     authoredCharacterFrame({

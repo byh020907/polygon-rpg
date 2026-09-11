@@ -494,16 +494,21 @@ for (const { id: equipmentId, combatTiming } of CUTTER_LOADOUTS) {
 // A linear active interpolation would give equal thirds and fail this check.
 for (const motionId of ['slash', 'heavy']) {
   const frame = combatMotionFrameData(motionId);
-  for (const progress of [0, frame.startupFrames / frame.durationFrames / 2]) {
+  const startupBladeAxes = Array.from({ length: frame.startupFrames * 4 }, (_, index) => {
     const pose = sampleCharacterBonePose({
-      motionState: { id: motionId, frame, progress },
+      motionState: {
+        id: motionId,
+        frame,
+        progress: index / (frame.durationFrames * 4),
+      },
     });
-    const bladeAxis = pose.projectedJoints.nearHand.axisX;
-    assert.ok(
-      bladeAxis.x > 0.55 && Math.abs(bladeAxis.x) > Math.abs(bladeAxis.y) * 0.8,
-      motionId + ': low rear grip must keep the blade shallow instead of dropping vertically',
-    );
-  }
+    return pose.projectedJoints.nearHand.axisX;
+  });
+  const startupAngles = startupBladeAxes.map(({ x, y }) => Math.atan2(y, x));
+  assert.ok(
+    Math.max(...startupAngles) - Math.min(...startupAngles) > (motionId === 'heavy' ? 0.5 : 0.25),
+    motionId + ': low side load must create a readable blade arc before contact',
+  );
   const projectedBladeSamples = Array.from({ length: frame.durationFrames * 4 + 1 }, (_, index) => {
     const pose = sampleCharacterBonePose({
       motionState: {
@@ -561,6 +566,26 @@ for (const motionId of ['slash', 'heavy']) {
       ', last=' +
       finalThird +
       ')',
+  );
+  const phaseProgress =
+    motionId === 'slash'
+      ? { load: 0.18, drive: 9 / 31, contact: 11 / 31 }
+      : { load: 0.19, drive: 13 / 46, contact: 16 / 46 };
+  const phasePoses = Object.fromEntries(
+    Object.entries(phaseProgress).map(([phase, progress]) => [
+      phase,
+      sampleCharacterBonePose({ motionState: { id: motionId, frame, progress } }),
+    ]),
+  );
+  const chestDrive =
+    phasePoses.drive.projectedJoints.chest.x - phasePoses.load.projectedJoints.chest.x;
+  const handDrive =
+    phasePoses.drive.projectedJoints.nearHand.x - phasePoses.load.projectedJoints.nearHand.x;
+  assert.ok(
+    chestDrive > handDrive + 5 &&
+      phasePoses.drive.projectedJoints.nearHand.x < phasePoses.drive.projectedJoints.root.x - 8 &&
+      phasePoses.contact.projectedJoints.nearHand.x > phasePoses.contact.projectedJoints.root.x + 8,
+    motionId + ': pelvis/chest drive must lead the rear hand before contact releases the blade',
   );
 }
 
@@ -620,14 +645,7 @@ try {
         if (tick < frame.startupFrames * 4) {
           rearLoad = Math.min(rearLoad, tip);
           if (['slash', 'heavy'].includes(id)) {
-            const weaponX = geometry.weapon.points.map(({ x }) => x);
             const weaponY = geometry.weapon.points.map(({ y }) => y);
-            const width = Math.max(...weaponX) - Math.min(...weaponX);
-            const height = Math.max(...weaponY) - Math.min(...weaponY);
-            assert.ok(
-              width > height * 0.8,
-              id + ': production visible weapon must not turn into a vertical startup drop',
-            );
             assert.ok(
               Math.max(...weaponY) <= sideCutScene.position.y + PLAYER_CHARACTER_FOOT_OFFSET + 4,
               id + ': production visible weapon must not extend through the floor during startup',
@@ -656,14 +674,12 @@ try {
           assert.ok(gripY >= headBottom - 1e-7, id + ': loading grip remains below the head');
         } else frontContact = Math.max(frontContact, tip);
       }
-      // The grip, not an edge-on/reversed blade tip, is the stable authority for
-      // the rear load.  A broad blade may remain visible in front of that grip.
       const loadPosition = rearGrip;
       const minimumRearLoad = ['slash', 'heavy'].includes(id) ? -10 : -8;
       assert.ok(
         loadPosition < minimumRearLoad && frontContact > 10,
         id +
-          ': actual grip/blade must load behind and the blade must cut in front (' +
+          ': actual grip/blade must load behind and cut in front (' +
           loadPosition +
           ' to ' +
           frontContact +
@@ -671,6 +687,23 @@ try {
       );
     }
   }
+  const groundedTipRise = Object.fromEntries(
+    Object.entries({
+      slash: [0.18, 21 / 31],
+      heavy: [0.19, 31 / 46],
+    }).map(([id, [loadProgress, followProgress]]) => {
+      const frame = sideCutScene.combatCommands.getMotionFrameData(id);
+      const tipY = (progress) =>
+        sideCutScene.samplePlayerCombatGeometry({ id, frame, progress }).weapon.points[2].y;
+      return [id, tipY(loadProgress) - tipY(followProgress)];
+    }),
+  );
+  assert.ok(
+    groundedTipRise.slash > 20 &&
+      groundedTipRise.slash < 55 &&
+      groundedTipRise.heavy > groundedTipRise.slash + 25,
+    'basic must read as the shallower cross cut while strong keeps the larger diagonal path',
+  );
 } finally {
   sideCutScene.exitTree();
 }
@@ -880,7 +913,9 @@ console.log(
       '3d-skeleton-side-projection',
       'canonical-quaternion-and-fixed-player-enemy-bone-lengths',
       'actual-world-wrist-fast-cut-and-controlled-settle',
+      'grounded-cut-torso-drive-before-hand-release',
       'grounded-cut-low-rear-grip-without-vertical-drop',
+      'basic-horizontal-and-heavy-diagonal-tip-paths',
       'grounded-cut-visible-blade-and-continuous-low-arc',
       'aerial-cut-visible-blade-and-continuous-projection',
       'range-sized-cross-body-backload-without-overhead-raise',

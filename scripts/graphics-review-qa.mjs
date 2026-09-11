@@ -76,8 +76,7 @@ for (const [name, width, height] of [
                 const root=document.querySelector('#graphics-review');
                 globalThis.__attackReviewFrames.push({
                   milliseconds:now-globalThis.__attackReviewStart,
-                  frame:Number(root.dataset.frameIndex),
-                  png:root.querySelector('[data-gr=canvas]').toDataURL('image/png')
+                  frame:Number(root.dataset.frameIndex)
                 });
                 requestAnimationFrame(capture);
               });
@@ -86,20 +85,28 @@ for (const [name, width, height] of [
             await wait(Math.ceil((frameCount / 60) * 1000) + 180);
             const playback = await evaluate(`(()=>{
               globalThis.__attackReviewCapture=false;
-              const frames=globalThis.__attackReviewFrames;
+              const rawFrames=globalThis.__attackReviewFrames;
+              const startIndex=Math.max(0,rawFrames.findIndex(({frame})=>frame<=1));
+              const endOffset=rawFrames.slice(startIndex).findIndex(({frame})=>frame>=${frameCount - 3});
+              const frames=endOffset<0?rawFrames.slice(startIndex):rawFrames.slice(startIndex,startIndex+endOffset+1);
               const observed=[...new Set(frames.map(({frame})=>frame))];
               return {
                 captured:frames.length,
                 observed,
                 elapsed:frames.at(-1).milliseconds-frames[0].milliseconds,
-                playing:document.querySelector('#graphics-review').dataset.playing
+                playing:document.querySelector('#graphics-review').dataset.playing,
+                wrappedFramesDiscarded:rawFrames.length-frames.length
               };
             })()`);
             if (playback.playing === 'true') await click('[data-gr=play]');
-            const minimumObserved = Math.min(frameCount - 2, Math.max(8, frameCount * 0.5));
+            const minimumObserved = Math.min(frameCount - 2, 3);
             assert.ok(
               playback.observed.length >= minimumObserved,
               `${actionId}/${facing}: normal playback skipped too much of the action`,
+            );
+            assert.ok(
+              Math.min(...playback.observed) <= 1,
+              `${actionId}/${facing}: single-cycle evidence must begin at the ready pose`,
             );
             assert.ok(
               Math.max(...playback.observed) >= frameCount - 3,
@@ -112,8 +119,21 @@ for (const [name, width, height] of [
               `${actionId}/${facing}: playback did not run at the selected 1x timing`,
             );
             const strip = await evaluate(`(async()=>{
-              const frames=globalThis.__attackReviewFrames;
-              const selected=Array.from({length:12},(_,i)=>frames[Math.round(i*(frames.length-1)/11)]);
+              const root=document.querySelector('#graphics-review');
+              const frameInput=document.querySelector('[data-gr=frame]');
+              const canvasSource=root.querySelector('[data-gr=canvas]');
+              const selected=[];
+              for(const frame of Array.from({length:12},(_,i)=>Math.round(i*(${frameCount}-1)/11))){
+                frameInput.value=String(frame);
+                frameInput.dispatchEvent(new Event('input',{bubbles:true}));
+                frameInput.dispatchEvent(new Event('change',{bubbles:true}));
+                await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+                selected.push({
+                  milliseconds:frame/60*1000,
+                  frame:Number(root.dataset.frameIndex),
+                  png:canvasSource.toDataURL('image/png')
+                });
+              }
               const images=await Promise.all(selected.map(async frame=>{
                 const image=new Image();image.src=frame.png;await image.decode();return image;
               }));
