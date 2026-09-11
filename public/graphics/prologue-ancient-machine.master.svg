@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="prologue-ancient-machine" data-rig-family="biped-machine" viewBox="700 130 570 300">
+  <title>REF-03 ancient machine awakening — runtime integration baseline, not approved final art</title>
+  <g id="machine-body" data-material="raw-steel" data-normal="0 -1 -0.18" data-shadow="cast">
+    <polygon id="hull-lower" points="790,350 842,306 1106,306 1174,350 1152,410 806,410" fill="#5b5e5d" data-occlusion="0.28"/>
+    <polygon id="hull-mid" points="846,270 906,234 1060,234 1118,270 1092,360 870,360" fill="#686b69" data-normal="0 -1 -0.28"/>
+    <polygon id="rib-left" points="842,386 874,244 922,214 904,392" fill="#77766f" data-normal="-0.35 -1 -0.15"/>
+    <polygon id="rib-right" points="1062,392 1048,216 1098,242 1124,388" fill="#686965" data-normal="0.35 -1 -0.15"/>
+    <polygon id="head" points="918,210 948,174 1024,174 1052,210 1038,252 932,252" fill="#62635f" data-normal="0 -1 -0.3"/>
+    <polygon id="face-slit" points="934,212 1036,212 1028,232 942,232" fill="#171b1c" data-material="painted-steel" data-normal="0 0 -1"/>
+    <polygon id="left-brace" points="742,382 802,342 826,360 790,416 722,416" fill="#4d504f" data-normal="-0.4 -1 -0.1"/>
+    <polygon id="right-brace" points="1144,354 1218,382 1250,416 1172,416" fill="#4d504f" data-normal="0.4 -1 -0.1"/>
+    <polygon id="body-occluder" points="790,350 874,244 948,174 1024,174 1098,242 1174,350 1152,410 806,410" fill="#000000" data-role="occluder"/>
+    <circle id="machine-socket-marker" data-anchor="socket-contact" cx="774" cy="354" r="1"/>
+    <circle id="machine-eye-marker" data-anchor="mono-eye" cx="985" cy="222" r="1"/>
+    <circle id="machine-root-marker" data-anchor="ground-contact" cx="986" cy="410" r="1"/>
+  </g>
+  <g id="dormant-state" data-pose="dormant" data-material="painted-steel" data-normal="0 0 -1" data-z="-0.1">
+    <polygon id="dormant-eye-shutter" points="942,214 1028,214 1022,230 948,230" fill="#252a2b"/>
+    <polygon id="dormant-socket-ring" points="748,334 772,326 802,342 806,374 778,388 752,374" fill="#3e4343" data-material="raw-steel"/>
+  </g>
+  <g id="socket-sealed-state" data-pose="socket-sealed" data-material="raw-steel" data-normal="-0.25 -1 -0.25" data-z="-0.1">
+    <polygon id="sealed-socket-plate" points="746,330 776,320 810,340 812,372 780,392 748,376" fill="#7c6f55"/>
+    <polygon id="sealed-socket-clamp" points="758,342 784,334 800,346 798,370 774,378 758,366" fill="#b89150" data-material="brass" data-z="-0.2"/>
+    <polygon id="sealed-eye-shutter" points="942,214 1028,214 1022,230 948,230" fill="#252a2b" data-material="painted-steel" data-normal="0 0 -1"/>
+    <circle id="sealed-socket-marker" data-anchor="socket-contact" cx="778" cy="356" r="1"/>
+  </g>
+  <g id="eyes-lit-state" data-pose="eyes-lit" data-material="raw-steel" data-normal="-0.25 -1 -0.25" data-z="-0.1">
+    <polygon id="lit-socket-plate" points="746,330 776,320 810,340 812,372 780,392 748,376" fill="#7c6f55"/>
+    <polygon id="lit-socket-clamp" points="758,342 784,334 800,346 798,370 774,378 758,366" fill="#b89150" data-material="brass" data-z="-0.2"/>
+    <polygon id="mono-eye-glow" points="944,214 1026,214 1016,230 954,230" fill="#80f4df" data-material="glass" data-normal="0 0 -1"/>
+    <circle id="lit-eye-marker" data-anchor="mono-eye" cx="985" cy="222" r="1"/>
+  </g>
+  <g id="parts-assembled-state" data-pose="parts-assembled" data-material="raw-steel" data-normal="0 -1 -0.24" data-z="-0.1">
+    <polygon id="assembled-socket-plate" points="746,330 776,320 810,340 812,372 780,392 748,376" fill="#7c6f55"/>
+    <polygon id="assembled-socket-clamp" points="758,342 784,334 800,346 798,370 774,378 758,366" fill="#b89150" data-material="brass" data-z="-0.2"/>
+    <polygon id="assembled-mono-eye" points="944,214 1026,214 1016,230 954,230" fill="#80f4df" data-material="glass" data-normal="0 0 -1" data-z="-0.2"/>
+    <polygon id="assembled-shoulder-left" points="816,278 746,252 710,316 796,350" fill="#a0643e" data-material="painted-steel" data-normal="-0.45 -1 -0.15"/>
+    <polygon id="assembled-shoulder-right" points="1150,276 1228,248 1260,320 1174,350" fill="#667b79" data-material="painted-steel" data-normal="0.45 -1 -0.15"/>
+    <polygon id="assembled-cable-bundle" points="964,286 1010,286 1010,402 964,402" fill="#b79855" data-material="brass" data-normal="0 -1 -0.35"/>
+    <polygon id="assembled-cable-gap" points="978,292 990,292 990,398 978,398" fill="#4b4030" data-material="painted-steel" data-z="-0.2"/>
+  </g>
+  <g id="incomplete-march-state" data-pose="incomplete-march" data-material="raw-steel" data-normal="0 -1 -0.24" data-z="-0.1">
+    <polygon id="march-socket-plate" points="746,330 776,320 810,340 812,372 780,392 748,376" fill="#7c6f55"/>
+    <polygon id="march-socket-clamp" points="758,342 784,334 800,346 798,370 774,378 758,366" fill="#b89150" data-material="brass" data-z="-0.2"/>
+    <polygon id="march-mono-eye" points="952,214 1034,214 1024,230 962,230" fill="#80f4df" data-material="glass" data-normal="0 0 -1" data-z="-0.2"/>
+    <polygon id="march-shoulder-left" points="824,278 754,252 718,316 804,350" fill="#a0643e" data-material="painted-steel" data-normal="-0.45 -1 -0.15"/>
+    <polygon id="march-shoulder-right" points="1158,276 1236,248 1268,320 1182,350" fill="#667b79" data-material="painted-steel" data-normal="0.45 -1 -0.15"/>
+    <polygon id="march-cable-bundle" points="972,286 1018,286 1018,402 972,402" fill="#b79855" data-material="brass" data-normal="0 -1 -0.35"/>
+    <polygon id="march-route-beacon" points="993,142 1031,180 993,218 955,180" fill="#ef9a55" data-material="glass" data-normal="0 0 -1" data-z="-0.2"/>
+    <polygon id="march-forward-brace" points="1138,354 1228,374 1266,416 1178,416" fill="#5b5e5d" data-normal="0.4 -1 -0.1"/>
+    <circle id="march-heading-marker" data-anchor="route-heading" cx="1031" cy="180" r="1"/>
+  </g>
+</svg>

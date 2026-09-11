@@ -7,6 +7,7 @@ import { SceneCompositionPresenter } from '../src/graphics/scene/SceneCompositio
 import { defineCharacterBodyProfile } from '../src/animation/RigFamily.js';
 import { LINEAR_ROOT_MOTION_CURVE } from '../src/animation/RootMotionCurve.js';
 import { createSvgTestPresentation } from '../src/graphics/scene/SvgTestPresentation.js';
+import { BUILTIN_SVG_RESOURCES } from '../src/graphics/SvgAssetSession.js';
 const asset = compileSvgMaster(
   fs.readFileSync('scripts/fixtures/svg-character-system.master.svg', 'utf8'),
   { parseXml: (s) => new DOMParser().parseFromString(s, 'image/svg+xml') },
@@ -14,6 +15,15 @@ const asset = compileSvgMaster(
 const scene = createGameScene();
 scene.enterTree();
 try {
+  for (const [resourceId, referenceGroupId] of [
+    ['svg:prologue-control-core', 'REF-02'],
+    ['svg:prologue-retrieval-arm', 'REF-02'],
+    ['svg:prologue-ancient-machine', 'REF-03'],
+  ]) {
+    const resource = BUILTIN_SVG_RESOURCES.find((candidate) => candidate.id === resourceId);
+    assert.equal(resource.referenceGroupId, referenceGroupId);
+    assert.equal(resource.approvalStatus, 'runtime-baseline-unapproved');
+  }
   scene.setVisualQaScrapAwakeningStage('player-decision');
   scene.setVisualQaLocation({
     regionId: 'scrap-waste-edge',
@@ -144,6 +154,90 @@ try {
     releasedGrip.x - capturedGrip.x > 40,
     'recovering the core visibly moves the released claw away from the rival',
   );
+  const presentMachine = (stageId) => {
+    scene.setVisualQaScrapAwakeningStage(stageId);
+    scene.setVisualQaLocation({
+      regionId: 'scrap-waste-edge',
+      roomId: 'abandoned-weapon-yard',
+      x: 960,
+    });
+    return presenter.resolve(scene.createRenderFrame(1), {
+      viewport: { width: 960, height: 540 },
+      project: (point) => ({ x: point.x - 500, y: point.y }),
+    });
+  };
+  const machineCases = [
+    { stageId: 'yard-survey', pose: 'dormant', anchorIds: ['socket-contact', 'mono-eye'] },
+    { stageId: 'device-recovered', pose: 'socket-sealed', anchorIds: ['socket-contact'] },
+    { stageId: 'eyes-lit', pose: 'eyes-lit', anchorIds: ['mono-eye'] },
+    { stageId: 'assembled', pose: 'parts-assembled', anchorIds: ['mono-eye'] },
+    {
+      stageId: 'deadline-revealed',
+      pose: 'incomplete-march',
+      anchorIds: ['mono-eye', 'route-heading'],
+    },
+  ];
+  const replacedMachineItems = [
+    'wreck-hull-lower',
+    'wreck-rib-left',
+    'wreck-rib-right',
+    'wreck-head',
+    'wreck-face-slit',
+    'scrap-king-eye-left',
+    'scrap-king-eye-right',
+    'scrap-king-shoulder-left',
+    'scrap-king-shoulder-right',
+    'scrap-king-cable-bundle',
+    'scrap-king-route-beacon',
+  ];
+  for (const machineCase of machineCases) {
+    const machineOutput = presentMachine(machineCase.stageId);
+    const machine = machineOutput.diagnostics.objects.find(
+      (object) => object.id === 'world-ancient-machine',
+    );
+    assert.equal(machine.pose, machineCase.pose);
+    assert.equal(machine.legacyPoseBindingId, machineCase.pose);
+    assert.ok(
+      machineOutput.frame.items.some((item) => item.worldObjectId === 'world-ancient-machine'),
+      `${machineCase.pose} ancient machine must reach the production render frame`,
+    );
+    for (const id of replacedMachineItems)
+      assert.equal(
+        machineOutput.frame.items.some((item) => item.id === id),
+        false,
+        `${id} must be replaced by the shared REF-03 SVG machine when enabled`,
+      );
+    for (const anchorId of machineCase.anchorIds)
+      assert.ok(
+        machineOutput.diagnostics.anchors.some(
+          (anchor) => anchor.worldObjectId === 'world-ancient-machine' && anchor.id === anchorId,
+        ),
+        `${machineCase.pose} exposes ${anchorId}`,
+      );
+    const visibleEyeParts = machineOutput.frame.items.filter(
+      (item) => item.worldObjectId === 'world-ancient-machine' && item.id.includes('mono-eye'),
+    );
+    if (['eyes-lit', 'parts-assembled', 'incomplete-march'].includes(machineCase.pose))
+      assert.equal(
+        visibleEyeParts.length,
+        1,
+        `${machineCase.pose} exposes one continuous mono-eye`,
+      );
+    else assert.equal(visibleEyeParts.length, 0);
+    const firstMachineIndex = machineOutput.frame.items.findIndex(
+      (item) => item.worldObjectId === 'world-ancient-machine',
+    );
+    const skylineIndex = machineOutput.frame.items.findIndex(
+      (item) => item.id === 'scrap-yard-skyline',
+    );
+    const firstActorIndex = machineOutput.frame.items.findIndex(
+      (item) => item.depthGroup?.startsWith('cast-runtime:') || item.depthGroup === 'player',
+    );
+    assert.ok(
+      skylineIndex < firstMachineIndex && firstMachineIndex < firstActorIndex,
+      `${machineCase.pose} stays ahead of the background and behind the cast`,
+    );
+  }
   const progressBefore = JSON.stringify(scene.getProgressionSnapshot());
   for (const factor of [0.85, 1.15]) {
     scene.setCharacterAnimationSettings({
@@ -245,7 +339,7 @@ try {
   assert.equal(current.diagnostics.objects[0].lod, 'mid');
   assert.ok(current.frame.artDirection.lights.length);
   console.log(
-    'PASS actual GameScene: core interaction anchor, stage-bound retrieval arm poses/contact, deduplicated identity, body retarget/SVG visible-contact contour, whole pose, root distance and save preservation',
+    'PASS actual GameScene: core interaction anchor, stage-bound retrieval arm and REF-03 ancient machine poses/contact, deduplicated identity, body retarget/SVG visible-contact contour, whole pose, root distance and save preservation',
   );
 } finally {
   scene.dispose();

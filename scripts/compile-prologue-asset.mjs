@@ -14,6 +14,11 @@ const specifications = [
     target: 'src/graphics/assets/PrologueRetrievalArmAsset.js',
     exportName: 'PROLOGUE_RETRIEVAL_ARM_ASSET',
   },
+  {
+    source: 'public/graphics/prologue-ancient-machine.master.svg',
+    target: 'src/graphics/assets/PrologueAncientMachineAsset.js',
+    exportName: 'PROLOGUE_ANCIENT_MACHINE_ASSET',
+  },
 ];
 const check = process.argv.includes('--check');
 for (const specification of specifications) {

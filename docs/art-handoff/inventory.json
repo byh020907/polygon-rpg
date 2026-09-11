@@ -1,6 +1,6 @@
 {
-  "fingerprint": "385d714e9e24",
-  "resourceCount": 588,
+  "fingerprint": "f2bf89e19103",
+  "resourceCount": 589,
   "records": [
     {
       "id": "player:protagonist",
@@ -17803,6 +17803,148 @@
       ],
       "itemIds": [],
       "page": "resources/facility-4.html#svg%3Aprologue-retrieval-arm"
+    },
+    {
+      "id": "svg:prologue-ancient-machine",
+      "label": "SVG · prologue-ancient-machine",
+      "category": "facility",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "public/graphics/prologue-ancient-machine.master.svg",
+      "notes": "REF-03 SVG 기술 기준선 · dormant/socket-sealed/eyes-lit/parts-assembled/incomplete-march pose와 소켓·단안·진로 anchor 검토. 최종 reference/Composition 승인은 별도입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "far:dormant",
+          "label": "far · dormant",
+          "lod": "far",
+          "pose": "dormant",
+          "frameCount": 1
+        },
+        {
+          "id": "far:socket-sealed",
+          "label": "far · socket-sealed",
+          "lod": "far",
+          "pose": "socket-sealed",
+          "frameCount": 1
+        },
+        {
+          "id": "far:eyes-lit",
+          "label": "far · eyes-lit",
+          "lod": "far",
+          "pose": "eyes-lit",
+          "frameCount": 1
+        },
+        {
+          "id": "far:parts-assembled",
+          "label": "far · parts-assembled",
+          "lod": "far",
+          "pose": "parts-assembled",
+          "frameCount": 1
+        },
+        {
+          "id": "far:incomplete-march",
+          "label": "far · incomplete-march",
+          "lod": "far",
+          "pose": "incomplete-march",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:dormant",
+          "label": "mid · dormant",
+          "lod": "mid",
+          "pose": "dormant",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:socket-sealed",
+          "label": "mid · socket-sealed",
+          "lod": "mid",
+          "pose": "socket-sealed",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:eyes-lit",
+          "label": "mid · eyes-lit",
+          "lod": "mid",
+          "pose": "eyes-lit",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:parts-assembled",
+          "label": "mid · parts-assembled",
+          "lod": "mid",
+          "pose": "parts-assembled",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:incomplete-march",
+          "label": "mid · incomplete-march",
+          "lod": "mid",
+          "pose": "incomplete-march",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:dormant",
+          "label": "near · dormant",
+          "lod": "near",
+          "pose": "dormant",
+          "frameCount": 1
+        },
+        {
+          "id": "near:socket-sealed",
+          "label": "near · socket-sealed",
+          "lod": "near",
+          "pose": "socket-sealed",
+          "frameCount": 1
+        },
+        {
+          "id": "near:eyes-lit",
+          "label": "near · eyes-lit",
+          "lod": "near",
+          "pose": "eyes-lit",
+          "frameCount": 1
+        },
+        {
+          "id": "near:parts-assembled",
+          "label": "near · parts-assembled",
+          "lod": "near",
+          "pose": "parts-assembled",
+          "frameCount": 1
+        },
+        {
+          "id": "near:incomplete-march",
+          "label": "near · incomplete-march",
+          "lod": "near",
+          "pose": "incomplete-march",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/facility-4.html#svg%3Aprologue-ancient-machine"
     },
     {
       "id": "field:mine-board",

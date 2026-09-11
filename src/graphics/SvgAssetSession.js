@@ -1,7 +1,13 @@
 import { compileSvgMaster } from './svg/SvgAssetCompiler.js';
 import { PROLOGUE_CORE_ASSET } from './assets/PrologueCoreAsset.js';
 import { PROLOGUE_RETRIEVAL_ARM_ASSET } from './assets/PrologueRetrievalArmAsset.js';
-const resourceFor = (asset, id, source, { category = 'prop', notes = null } = {}) =>
+import { PROLOGUE_ANCIENT_MACHINE_ASSET } from './assets/PrologueAncientMachineAsset.js';
+const resourceFor = (
+  asset,
+  id,
+  source,
+  { category = 'prop', notes = null, referenceGroupId = null, approvalStatus = null } = {},
+) =>
   Object.freeze({
     id,
     label: `SVG · ${asset.id}`,
@@ -10,6 +16,8 @@ const resourceFor = (asset, id, source, { category = 'prop', notes = null } = {}
     producer: 'svg',
     source,
     svgAsset: asset,
+    ...(referenceGroupId ? { referenceGroupId } : {}),
+    ...(approvalStatus ? { approvalStatus } : {}),
     actions: Object.freeze(
       asset.lods.flatMap((lod) =>
         asset.poses.map((pose) =>
@@ -87,6 +95,8 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
     'svg:prologue-control-core',
     'public/graphics/prologue-control-core.master.svg',
     {
+      referenceGroupId: 'REF-02',
+      approvalStatus: 'runtime-baseline-unapproved',
       notes:
         'SVG 시스템 자산 · LOD/pose/관절 metadata 검토. 승인 아트와 별도입니다. 기존 제어핵을 연결한 시스템 검증용 master입니다.',
     },
@@ -97,8 +107,22 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
     'public/graphics/prologue-retrieval-arm.master.svg',
     {
       category: 'facility',
+      referenceGroupId: 'REF-02',
+      approvalStatus: 'runtime-baseline-unapproved',
       notes:
         'SVG 시스템 자산 · dormant/captured/released pose와 접촉 anchor 검토. 승인 아트와 별도인 기존 회수팔 연결 기준선입니다.',
+    },
+  ),
+  resourceFor(
+    PROLOGUE_ANCIENT_MACHINE_ASSET,
+    'svg:prologue-ancient-machine',
+    'public/graphics/prologue-ancient-machine.master.svg',
+    {
+      category: 'facility',
+      referenceGroupId: 'REF-03',
+      approvalStatus: 'runtime-baseline-unapproved',
+      notes:
+        'REF-03 SVG 기술 기준선 · dormant/socket-sealed/eyes-lit/parts-assembled/incomplete-march pose와 소켓·단안·진로 anchor 검토. 최종 reference/Composition 승인은 별도입니다.',
     },
   ),
 ]);
