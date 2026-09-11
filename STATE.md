@@ -6,7 +6,7 @@ RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. O
 
 ## Active Execution Goal
 
-Human Feedback Priority — 그래픽 문서의 승인 순서와 제작 계약에 따라 기준 장면의 실제 외형·모션·구도·조명 재작업을 최우선으로 진행한다. 현재 승인 주인공 스타일을 유지하며 미완료 횡·사선 베기의 낮은 준비·힘 전달·빠른 횡/사선·후반 감속을 실제 속도와 연속 프레임으로 수리·판독한다. 시스템/QA 보강은 선택한 시각 결과의 직접 의존일 때만 포함하고, 원본 공급·reference/Composition 승인은 구체적 대상별로 분리한다. 이 기반이 안정화되기 전에는 캠페인/후반 콘텐츠로 확장하지 않는다.
+Human Feedback Priority — 승인 주인공 스타일과 안정화된 횡·사선 베기를 기준선으로 유지하며 Hero/Rival/Owner의 실제 game data·pose sampler·renderer·검토 UI를 같은 대상으로 비교하고 gameplay-scale composite에서 외형·동작·장비 연결을 검증한다. 이후에만 Core/Retrieval Arm → Ancient Machine Awakening → Garage 0% → prologue composite 순서로 전진한다. 미공급 원본이나 승인되지 않은 reference/Composition을 임의 확정하지 않고 캠페인/후반 콘텐츠로 확장하지 않는다.
 
 ## Current Evidence / Gap
 
@@ -17,8 +17,10 @@ Human Feedback Priority — 그래픽 문서의 승인 순서와 제작 계약�
 - `npm run test:combat`과 `git diff --check` PASS. 11개 공격군의 양방향 definite hit/miss·경계·sweep lifecycle·semantic hurt·damage-owner fixture는 통과했지만 실제 browser 입력 관찰은 위 기본 공격 한 건뿐이다. 전체 게임 완료 판정은 아니다.
 - 2026-09-11: 테스트 플레이 URL의 `location.facing`을 `-1|1`로 검증·복원하고, restart도 같은 방향을 유지하게 했다. production RenderFrame의 immutable `player.facing`과 접촉 진단 요약이 이 방향을 읽는다. `npm run test:platform`, `npm run test:combat`, `git diff --check` PASS. 이는 좌우 실제 입력 검증을 위한 재현 기반이며, 왼쪽/공중/나머지 공격군의 Browser 접촉 PASS를 대신하지 않는다.
 - 2026-09-11 Human이 PWA 관련 개선과 실환경 확인 대기를 완료로 확인했다. 해당 PWA feedback은 queue에서 닫았으며, 독립적으로 남은 모바일 메인 메뉴 비율 요구는 보존한다.
+- 2026-09-11: 기본·강공의 검이 낮은 후방 준비 중 깊이축에서 edge-on으로 사라지고 뒤집히던 원인을 제거했다. 두 동작은 넓은 검날을 유지한 채 화면 아래의 준비 호 → 빠른 횡/사선 접촉 → 느린 follow-through로 이어지며, actual world wrist의 선행 가속·후반 감속과 renderer/contact 공용 geometry를 보존한다. `artifacts/slash-rework-candidate/{slash,heavy}-actor-strip.png`와 `artifacts/slash-rework-mobile/{slash,heavy}-actor-strip.png`에서 실제 속도 연속 frame을 판독했고, Codex in-app Browser의 desktop 및 844×390 `scrap-art-benchmark`에서 검·적·피격 접촉을 같은 위치로 확인했다.
+- `npm run test:combat`, `npm run test:character`, `npm run test:graphics`, `npm run test:visual`, `npm run test:pwa`, `git diff --check` PASS. Ground slash/heavy는 전 구간 검날 투영 길이 90% 이상과 1/240초 sample의 연속 회전을 고정한다. 이 evidence는 현재 주인공 동작 구현의 기준선이며 새 reference/Composition 승인이나 전체 그래픽 완료를 뜻하지 않는다.
 
-Human Feedback Priority Gap: 전체 노출 공격과 양방향·mobile의 실제 입력 연속 프레임, 준비 자세의 무게/낮은 side pull, 도입부의 연속 실제 플레이는 아직 미완료다. 좌측 지상과 우측 공중 keyboard contact, 11개 공격 좌우 contact/miss fixture 통과나 시작 방향 재현 기반으로 해당 INBOX를 닫지 않는다. 현재 art/composition은 시스템 검증용이며 최종 reference/Composition 승인과 visual fidelity는 미검증이다. INBOX 원문은 보존한다.
+Human Feedback Priority Gap: 기본·강공의 낮은 준비와 연속 횡·사선 베기 구현은 이번 evidence로 안정화했지만, Human의 최종 동작 만족 확인과 전체 노출 공격·양방향·touch 실제 입력의 연속 판독, 도입부 처음부터의 실제 플레이는 남아 있다. 현재 art/composition은 시스템 검증용이며 Hero/Rival/Owner부터 시작하는 최종 reference/Composition 승인과 visual fidelity는 미검증이다. INBOX 원문은 보존한다.
 
 ## Preserved Work Reference
 

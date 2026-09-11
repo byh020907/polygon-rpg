@@ -70,6 +70,7 @@ function sampleHitReaction(intensity, knockedOut) {
 function authoredCharacterFrame(options) {
   if (!/^(slash-|heavy-|air-(?:slash|heavy|return|cross)-)/.test(options.id))
     return authorPlayerRigFrame(options);
+  const groundedCut = /^(?:slash|heavy)-/.test(options.id);
   const phase = /(?:windup|load)$/.test(options.id)
     ? 'load'
     : options.id.endsWith('contact')
@@ -77,9 +78,27 @@ function authoredCharacterFrame(options) {
       : options.id.endsWith('follow-through')
         ? 'followThrough'
         : 'settle';
-  const yaw = { load: 0.85, contact: 0.25, followThrough: -0.6, settle: 0 }[phase];
-  const bladeAngle = { load: 0.2, contact: 0.2, followThrough: 0.3, settle: 0.35 }[phase];
-  const bladeYaw = { load: 2.35, contact: 1.9, followThrough: -0.55, settle: 0 }[phase];
+  const yaw = (
+    groundedCut
+      ? { load: 0.48, contact: -0.12, followThrough: -0.52, settle: 0 }
+      : { load: 0.85, contact: 0.25, followThrough: -0.6, settle: 0 }
+  )[phase];
+  // Grounded cuts keep the broad blade visible while it travels below the head:
+  // ready -> low rear load -> fast cross-body contact -> weighted follow-through.
+  // The previous >90deg depth yaw made the blade collapse edge-on and then flip
+  // backwards before contact, which read as a pop rather than a continuous cut.
+  const bladeAngle = (
+    groundedCut
+      ? options.id.startsWith('heavy-')
+        ? { load: 2.42, contact: -0.38, followThrough: 0.68, settle: 0.35 }
+        : { load: 2.66, contact: -0.16, followThrough: 0.5, settle: 0.35 }
+      : { load: 0.2, contact: 0.2, followThrough: 0.3, settle: 0.35 }
+  )[phase];
+  const bladeYaw = (
+    groundedCut
+      ? { load: -0.38, contact: 0.04, followThrough: 0.38, settle: 0 }
+      : { load: 2.35, contact: 1.9, followThrough: -0.55, settle: 0 }
+  )[phase];
   const handTarget = {
     load: { x: options.id.startsWith('heavy-') ? -20 : -12, y: 3 },
     contact: { x: 8, y: 5 },

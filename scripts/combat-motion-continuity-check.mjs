@@ -494,6 +494,31 @@ for (const { id: equipmentId, combatTiming } of CUTTER_LOADOUTS) {
 // A linear active interpolation would give equal thirds and fail this check.
 for (const motionId of ['slash', 'heavy']) {
   const frame = combatMotionFrameData(motionId);
+  const projectedBladeSamples = Array.from({ length: frame.durationFrames * 4 + 1 }, (_, index) => {
+    const pose = sampleCharacterBonePose({
+      motionState: {
+        id: motionId,
+        frame,
+        progress: index / (frame.durationFrames * 4),
+      },
+    });
+    const axis = pose.projectedJoints.nearHand.axisX;
+    return Object.freeze({
+      angle: Math.atan2(axis.y, axis.x),
+      visibleLength: Math.hypot(axis.x, axis.y),
+    });
+  });
+  assert.ok(
+    projectedBladeSamples.every(({ visibleLength }) => visibleLength >= 0.9),
+    motionId + ': broad blade must stay readable instead of collapsing edge-on during the low load',
+  );
+  for (let index = 1; index < projectedBladeSamples.length; index += 1) {
+    let turn = Math.abs(
+      projectedBladeSamples[index].angle - projectedBladeSamples[index - 1].angle,
+    );
+    if (turn > Math.PI) turn = Math.PI * 2 - turn;
+    assert.ok(turn < 0.24, motionId + ': projected blade must not pop or reverse between samples');
+  }
   const rotations = Array.from(
     { length: 61 },
     (_, index) =>
@@ -785,6 +810,7 @@ console.log(
       '3d-skeleton-side-projection',
       'canonical-quaternion-and-fixed-player-enemy-bone-lengths',
       'actual-world-wrist-fast-cut-and-controlled-settle',
+      'grounded-cut-visible-blade-and-continuous-low-arc',
       'range-sized-cross-body-backload-without-overhead-raise',
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',
