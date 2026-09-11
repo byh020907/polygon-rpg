@@ -106,6 +106,20 @@ function normalizeRoom(mapId, regionId, room, roomIndex) {
           validatePoint(point, `${result.qualifiedId}.points[${pointIndex}]`),
         );
       }
+      if (collectionName === 'entities' && result.kind === 'cast-character') {
+        validatePoint(result.position, `${result.qualifiedId}.position`);
+        assertId(result.presentationProfileId, `${result.qualifiedId}.presentationProfileId`);
+        assertId(result.bodyProfileId, `${result.qualifiedId}.bodyProfileId`);
+        if (result.actorId !== undefined) assertId(result.actorId, `${result.qualifiedId}.actorId`);
+        if (result.motionId !== undefined)
+          assertId(result.motionId, `${result.qualifiedId}.motionId`);
+        if (result.facing !== undefined && ![-1, 1].includes(result.facing)) {
+          throw new RangeError(`${result.qualifiedId}.facing은 -1 또는 1이어야 합니다.`);
+        }
+        if (result.dialogueAnchorOffset !== undefined) {
+          validatePoint(result.dialogueAnchorOffset, `${result.qualifiedId}.dialogueAnchorOffset`);
+        }
+      }
       return result;
     });
   }

@@ -1,6 +1,6 @@
 {
-  "fingerprint": "5181271fe5d1",
-  "resourceCount": 611,
+  "fingerprint": "be0b026b561b",
+  "resourceCount": 587,
   "records": [
     {
       "id": "player:protagonist",
@@ -3839,248 +3839,6 @@
       "page": "resources/building-1.html#assembly%3Aabandoned-weapon-yard%3Ascrapyard-workshop"
     },
     {
-      "id": "npc:abandoned-weapon-yard:scrapyard-owner",
-      "label": "고물상인",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "owner",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrapyard-owner-returned",
-          "label": "상태 · scrapyard-owner-returned",
-          "frameCount": 1,
-          "patchId": "scrapyard-owner-returned",
-          "facts": {
-            "scrapAwakeningStageId": "complete"
-          }
-        }
-      ],
-      "itemIds": [
-        "scrapyard-owner-torso",
-        "scrapyard-owner-head",
-        "scrapyard-owner-goggles",
-        "scrapyard-owner-ledger",
-        "scrapyard-owner-wrench"
-      ],
-      "page": "resources/npc-1.html#npc%3Aabandoned-weapon-yard%3Ascrapyard-owner"
-    },
-    {
-      "id": "npc:abandoned-weapon-yard:scrap-rival-departure",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-departure",
-          "label": "상태 · scrap-prologue-rival-departure",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-departure",
-          "facts": {
-            "scrapAwakeningStageId": "rival-departure"
-          }
-        }
-      ],
-      "itemIds": [
-        "scrap-rival-departure-torso",
-        "scrap-rival-departure-head",
-        "scrap-rival-departure-hook"
-      ],
-      "page": "resources/npc-1.html#npc%3Aabandoned-weapon-yard%3Ascrap-rival-departure"
-    },
-    {
-      "id": "npc:abandoned-weapon-yard:scrap-rival-search",
-      "label": "현장을 조사하는 라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-yard-clearance",
-          "label": "상태 · scrap-prologue-yard-clearance",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-clearance",
-          "facts": {
-            "scrapAwakeningStageId": "yard-clearance"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-brace",
-          "label": "상태 · scrap-prologue-yard-brace",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-brace",
-          "facts": {
-            "scrapAwakeningStageId": "yard-brace"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-perimeter",
-          "label": "상태 · scrap-prologue-yard-perimeter",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-perimeter",
-          "facts": {
-            "scrapAwakeningStageId": "yard-perimeter"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-survey",
-          "label": "상태 · scrap-prologue-yard-survey",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-survey",
-          "facts": {
-            "scrapAwakeningStageId": "yard-survey"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-approach",
-          "label": "상태 · scrap-prologue-yard-approach",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-approach",
-          "facts": {
-            "scrapAwakeningStageId": "yard-approach"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-plate",
-          "label": "상태 · scrap-prologue-yard-plate",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-plate",
-          "facts": {
-            "scrapAwakeningStageId": "yard-plate"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-ridge",
-          "label": "상태 · scrap-prologue-yard-ridge",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-ridge",
-          "facts": {
-            "scrapAwakeningStageId": "yard-ridge"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-guard",
-          "label": "상태 · scrap-prologue-yard-guard",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-guard",
-          "facts": {
-            "scrapAwakeningStageId": "yard-guard"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-search",
-          "label": "상태 · scrap-prologue-yard-search",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-search",
-          "facts": {
-            "scrapAwakeningStageId": "yard-search"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-search-torso", "scrap-rival-search-head", "scrap-rival-search-hook"],
-      "page": "resources/npc-1.html#npc%3Aabandoned-weapon-yard%3Ascrap-rival-search"
-    },
-    {
-      "id": "npc:abandoned-weapon-yard:scrap-rival-trapped",
-      "label": "잔해에 갇힌 라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-collapse-and-rescue",
-          "label": "상태 · scrap-prologue-collapse-and-rescue",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-collapse-and-rescue",
-          "facts": {
-            "scrapAwakeningStageId": "collapse"
-          }
-        }
-      ],
-      "itemIds": [
-        "scrap-rival-trapped-torso",
-        "scrap-rival-trapped-head",
-        "scrap-rival-trapped-arm",
-        "scrap-rival-trapped-marker"
-      ],
-      "page": "resources/npc-1.html#npc%3Aabandoned-weapon-yard%3Ascrap-rival-trapped"
-    },
-    {
-      "id": "npc:abandoned-weapon-yard:scrap-rival-rescued",
-      "label": "구조된 라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-rescued",
-          "label": "상태 · scrap-prologue-rival-rescued",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-rescued",
-          "facts": {
-            "scrapAwakeningStageId": "rescue-succeeded"
-          }
-        }
-      ],
-      "itemIds": [
-        "scrap-rival-rescued-torso",
-        "scrap-rival-rescued-head",
-        "scrap-rival-rescued-hook",
-        "scrap-rival-rescued-marker"
-      ],
-      "page": "resources/npc-1.html#npc%3Aabandoned-weapon-yard%3Ascrap-rival-rescued"
-    },
-    {
       "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-yard-skyline",
       "label": "scrap-yard-skyline",
       "category": "background",
@@ -4352,156 +4110,6 @@
       ],
       "itemIds": ["scrapyard-workbench"],
       "page": "resources/prop-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-workbench"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-torso",
-      "label": "고물상인",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "owner",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · scrapyard-owner · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrapyard-owner-returned",
-          "label": "상태 · scrapyard-owner-returned",
-          "frameCount": 1,
-          "patchId": "scrapyard-owner-returned",
-          "facts": {
-            "scrapAwakeningStageId": "complete"
-          }
-        }
-      ],
-      "itemIds": ["scrapyard-owner-torso"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-head",
-      "label": "scrapyard-owner-head",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "owner",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · welding-goggles · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrapyard-owner-returned",
-          "label": "상태 · scrapyard-owner-returned",
-          "frameCount": 1,
-          "patchId": "scrapyard-owner-returned",
-          "facts": {
-            "scrapAwakeningStageId": "complete"
-          }
-        }
-      ],
-      "itemIds": ["scrapyard-owner-head"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-goggles",
-      "label": "scrapyard-owner-goggles",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "owner",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · welding-goggles · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrapyard-owner-returned",
-          "label": "상태 · scrapyard-owner-returned",
-          "frameCount": 1,
-          "patchId": "scrapyard-owner-returned",
-          "facts": {
-            "scrapAwakeningStageId": "complete"
-          }
-        }
-      ],
-      "itemIds": ["scrapyard-owner-goggles"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-goggles"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-ledger",
-      "label": "scrapyard-owner-ledger",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "owner",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · ledger · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrapyard-owner-returned",
-          "label": "상태 · scrapyard-owner-returned",
-          "frameCount": 1,
-          "patchId": "scrapyard-owner-returned",
-          "facts": {
-            "scrapAwakeningStageId": "complete"
-          }
-        }
-      ],
-      "itemIds": ["scrapyard-owner-ledger"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-ledger"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-owner-wrench",
-      "label": "scrapyard-owner-wrench",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "owner",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · large-wrench · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrapyard-owner-returned",
-          "label": "상태 · scrapyard-owner-returned",
-          "frameCount": 1,
-          "patchId": "scrapyard-owner-returned",
-          "facts": {
-            "scrapAwakeningStageId": "complete"
-          }
-        }
-      ],
-      "itemIds": ["scrapyard-owner-wrench"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrapyard-owner-wrench"
     },
     {
       "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrapyard-device-analysis-beam",
@@ -6176,642 +5784,6 @@
       ],
       "itemIds": ["wreck-face-slit"],
       "page": "resources/prop-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Awreck-face-slit"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-torso",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-departure",
-          "label": "상태 · scrap-prologue-rival-departure",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-departure",
-          "facts": {
-            "scrapAwakeningStageId": "rival-departure"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-departure-torso"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-departure-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-head",
-      "label": "scrap-rival-departure-head",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-departure",
-          "label": "상태 · scrap-prologue-rival-departure",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-departure",
-          "facts": {
-            "scrapAwakeningStageId": "rival-departure"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-departure-head"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-departure-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-departure-hook",
-      "label": "scrap-rival-departure-hook",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-departure",
-          "label": "상태 · scrap-prologue-rival-departure",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-departure",
-          "facts": {
-            "scrapAwakeningStageId": "rival-departure"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-departure-hook"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-departure-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-torso",
-      "label": "현장을 조사하는 라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-yard-clearance",
-          "label": "상태 · scrap-prologue-yard-clearance",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-clearance",
-          "facts": {
-            "scrapAwakeningStageId": "yard-clearance"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-brace",
-          "label": "상태 · scrap-prologue-yard-brace",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-brace",
-          "facts": {
-            "scrapAwakeningStageId": "yard-brace"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-perimeter",
-          "label": "상태 · scrap-prologue-yard-perimeter",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-perimeter",
-          "facts": {
-            "scrapAwakeningStageId": "yard-perimeter"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-survey",
-          "label": "상태 · scrap-prologue-yard-survey",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-survey",
-          "facts": {
-            "scrapAwakeningStageId": "yard-survey"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-approach",
-          "label": "상태 · scrap-prologue-yard-approach",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-approach",
-          "facts": {
-            "scrapAwakeningStageId": "yard-approach"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-plate",
-          "label": "상태 · scrap-prologue-yard-plate",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-plate",
-          "facts": {
-            "scrapAwakeningStageId": "yard-plate"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-ridge",
-          "label": "상태 · scrap-prologue-yard-ridge",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-ridge",
-          "facts": {
-            "scrapAwakeningStageId": "yard-ridge"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-guard",
-          "label": "상태 · scrap-prologue-yard-guard",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-guard",
-          "facts": {
-            "scrapAwakeningStageId": "yard-guard"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-search",
-          "label": "상태 · scrap-prologue-yard-search",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-search",
-          "facts": {
-            "scrapAwakeningStageId": "yard-search"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-search-torso"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-search-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-head",
-      "label": "scrap-rival-search-head",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-yard-clearance",
-          "label": "상태 · scrap-prologue-yard-clearance",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-clearance",
-          "facts": {
-            "scrapAwakeningStageId": "yard-clearance"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-brace",
-          "label": "상태 · scrap-prologue-yard-brace",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-brace",
-          "facts": {
-            "scrapAwakeningStageId": "yard-brace"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-perimeter",
-          "label": "상태 · scrap-prologue-yard-perimeter",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-perimeter",
-          "facts": {
-            "scrapAwakeningStageId": "yard-perimeter"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-survey",
-          "label": "상태 · scrap-prologue-yard-survey",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-survey",
-          "facts": {
-            "scrapAwakeningStageId": "yard-survey"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-approach",
-          "label": "상태 · scrap-prologue-yard-approach",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-approach",
-          "facts": {
-            "scrapAwakeningStageId": "yard-approach"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-plate",
-          "label": "상태 · scrap-prologue-yard-plate",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-plate",
-          "facts": {
-            "scrapAwakeningStageId": "yard-plate"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-ridge",
-          "label": "상태 · scrap-prologue-yard-ridge",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-ridge",
-          "facts": {
-            "scrapAwakeningStageId": "yard-ridge"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-guard",
-          "label": "상태 · scrap-prologue-yard-guard",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-guard",
-          "facts": {
-            "scrapAwakeningStageId": "yard-guard"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-search",
-          "label": "상태 · scrap-prologue-yard-search",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-search",
-          "facts": {
-            "scrapAwakeningStageId": "yard-search"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-search-head"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-search-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-search-hook",
-      "label": "scrap-rival-search-hook",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-yard-clearance",
-          "label": "상태 · scrap-prologue-yard-clearance",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-clearance",
-          "facts": {
-            "scrapAwakeningStageId": "yard-clearance"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-brace",
-          "label": "상태 · scrap-prologue-yard-brace",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-brace",
-          "facts": {
-            "scrapAwakeningStageId": "yard-brace"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-perimeter",
-          "label": "상태 · scrap-prologue-yard-perimeter",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-perimeter",
-          "facts": {
-            "scrapAwakeningStageId": "yard-perimeter"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-survey",
-          "label": "상태 · scrap-prologue-yard-survey",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-survey",
-          "facts": {
-            "scrapAwakeningStageId": "yard-survey"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-approach",
-          "label": "상태 · scrap-prologue-yard-approach",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-approach",
-          "facts": {
-            "scrapAwakeningStageId": "yard-approach"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-plate",
-          "label": "상태 · scrap-prologue-yard-plate",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-plate",
-          "facts": {
-            "scrapAwakeningStageId": "yard-plate"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-ridge",
-          "label": "상태 · scrap-prologue-yard-ridge",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-ridge",
-          "facts": {
-            "scrapAwakeningStageId": "yard-ridge"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-guard",
-          "label": "상태 · scrap-prologue-yard-guard",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-guard",
-          "facts": {
-            "scrapAwakeningStageId": "yard-guard"
-          }
-        },
-        {
-          "id": "patch:scrap-prologue-yard-search",
-          "label": "상태 · scrap-prologue-yard-search",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-yard-search",
-          "facts": {
-            "scrapAwakeningStageId": "yard-search"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-search-hook"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-search-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-torso",
-      "label": "잔해에 갇힌 라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-trapped · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-collapse-and-rescue",
-          "label": "상태 · scrap-prologue-collapse-and-rescue",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-collapse-and-rescue",
-          "facts": {
-            "scrapAwakeningStageId": "collapse"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-trapped-torso"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-head",
-      "label": "scrap-rival-trapped-head",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-collapse-and-rescue",
-          "label": "상태 · scrap-prologue-collapse-and-rescue",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-collapse-and-rescue",
-          "facts": {
-            "scrapAwakeningStageId": "collapse"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-trapped-head"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-arm",
-      "label": "잔해 밖으로 뻗은 라이벌의 팔",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rescue-request-arm · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-collapse-and-rescue",
-          "label": "상태 · scrap-prologue-collapse-and-rescue",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-collapse-and-rescue",
-          "facts": {
-            "scrapAwakeningStageId": "collapse"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-trapped-arm"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-arm"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-trapped-marker",
-      "label": "라이벌의 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-collapse-and-rescue",
-          "label": "상태 · scrap-prologue-collapse-and-rescue",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-collapse-and-rescue",
-          "facts": {
-            "scrapAwakeningStageId": "collapse"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-trapped-marker"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-trapped-marker"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-torso",
-      "label": "구조된 라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-rescued · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-rescued",
-          "label": "상태 · scrap-prologue-rival-rescued",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-rescued",
-          "facts": {
-            "scrapAwakeningStageId": "rescue-succeeded"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-rescued-torso"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-head",
-      "label": "scrap-rival-rescued-head",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-rescued",
-          "label": "상태 · scrap-prologue-rival-rescued",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-rescued",
-          "facts": {
-            "scrapAwakeningStageId": "rescue-succeeded"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-rescued-head"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-hook",
-      "label": "scrap-rival-rescued-hook",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-rescued",
-          "label": "상태 · scrap-prologue-rival-rescued",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-rescued",
-          "facts": {
-            "scrapAwakeningStageId": "rescue-succeeded"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-rescued-hook"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-rival-rescued-marker",
-      "label": "구조 뒤에도 남은 라이벌의 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "scrap-waste-edge",
-      "roomId": "abandoned-weapon-yard",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 비활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        },
-        {
-          "id": "patch:scrap-prologue-rival-rescued",
-          "label": "상태 · scrap-prologue-rival-rescued",
-          "frameCount": 1,
-          "patchId": "scrap-prologue-rival-rescued",
-          "facts": {
-            "scrapAwakeningStageId": "rescue-succeeded"
-          }
-        }
-      ],
-      "itemIds": ["scrap-rival-rescued-marker"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Ascrap-waste-edge%3Aabandoned-weapon-yard%3Ascrap-rival-rescued-marker"
     },
     {
       "id": "map:scrap-awakening-commission:scrap-waste-edge:abandoned-weapon-yard:scrap-collapse-debris",
@@ -9321,7 +8293,7 @@
         }
       ],
       "itemIds": ["mine-waiting-miner-coat"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet",
@@ -9342,7 +8314,7 @@
         }
       ],
       "itemIds": ["mine-waiting-miner-helmet"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe",
@@ -9363,7 +8335,7 @@
         }
       ],
       "itemIds": ["mine-waiting-miner-pickaxe"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-pickaxe"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-pickaxe"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-roadhead-warning-post",
@@ -9426,7 +8398,7 @@
         }
       ],
       "itemIds": ["mine-foreman-workwear"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-workwear"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-workwear"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet",
@@ -9447,7 +8419,7 @@
         }
       ],
       "itemIds": ["mine-foreman-helmet"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-helmet"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp",
@@ -9468,7 +8440,7 @@
         }
       ],
       "itemIds": ["mine-foreman-lamp"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-lamp"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-lamp"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe",
@@ -9489,7 +8461,7 @@
         }
       ],
       "itemIds": ["mine-foreman-pickaxe"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-pickaxe"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-pickaxe"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-shaft-status-console",
@@ -9552,7 +8524,7 @@
         }
       ],
       "itemIds": ["mine-rival-scout-torso"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-torso"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-torso"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-head",
@@ -9573,7 +8545,7 @@
         }
       ],
       "itemIds": ["mine-rival-scout-head"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-head"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-head"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-hook",
@@ -9594,7 +8566,7 @@
         }
       ],
       "itemIds": ["mine-rival-scout-hook"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-hook"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-hook"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-band",
@@ -9615,7 +8587,7 @@
         }
       ],
       "itemIds": ["mine-rival-scout-band"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-band"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat",
@@ -9636,7 +8608,7 @@
         }
       ],
       "itemIds": ["mine-gate-miner-coat"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-coat"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-coat"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet",
@@ -9657,7 +8629,7 @@
         }
       ],
       "itemIds": ["mine-gate-miner-helmet"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-helmet"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-lantern-dim",
@@ -10011,7 +8983,7 @@
         "mine-trapped-worker-pack",
         "mine-trapped-worker-tool"
       ],
-      "page": "resources/npc-2.html#npc%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker"
+      "page": "resources/npc-1.html#npc%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-tunnel-backdrop",
@@ -10683,7 +9655,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-signal"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-signal"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-signal"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat",
@@ -10704,7 +9676,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-coat"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-coat"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-coat"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head",
@@ -10725,7 +9697,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-head"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-head"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-head"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet",
@@ -10746,7 +9718,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-helmet"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-helmet"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp",
@@ -10767,7 +9739,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-lamp"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-lamp"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-lamp"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack",
@@ -10788,7 +9760,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-pack"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-pack"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-pack"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool",
@@ -10809,7 +9781,7 @@
         }
       ],
       "itemIds": ["mine-trapped-worker-tool"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-tool"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-tool"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-tunnel-foreground-cable-left",
@@ -11611,7 +10583,7 @@
         "shipyard-waiting-crew-mask",
         "shipyard-waiting-crew-hook"
       ],
-      "page": "resources/npc-2.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew"
+      "page": "resources/npc-1.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew"
     },
     {
       "id": "npc:harbor-shipyard-roadhead:shipyard-rival-scout",
@@ -11637,7 +10609,7 @@
         "shipyard-rival-scout-hook",
         "shipyard-rival-scout-band"
       ],
-      "page": "resources/npc-2.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout"
+      "page": "resources/npc-1.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout"
     },
     {
       "id": "npc:harbor-shipyard-roadhead:shipyard-gate-crew",
@@ -11658,7 +10630,7 @@
         }
       ],
       "itemIds": ["shipyard-gate-crew-apron", "shipyard-gate-crew-mask"],
-      "page": "resources/npc-2.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew"
+      "page": "resources/npc-1.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew"
     },
     {
       "id": "npc:harbor-shipyard-roadhead:shipyard-worker",
@@ -11889,7 +10861,7 @@
         }
       ],
       "itemIds": ["shipyard-rival-scout-hook"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-hook"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-hook"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-rival-scout-band",
@@ -11910,7 +10882,7 @@
         }
       ],
       "itemIds": ["shipyard-rival-scout-band"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-band"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron",
@@ -11931,7 +10903,7 @@
         }
       ],
       "itemIds": ["shipyard-gate-crew-apron"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-apron"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-apron"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask",
@@ -11952,7 +10924,7 @@
         }
       ],
       "itemIds": ["shipyard-gate-crew-mask"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-mask"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-mask"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-lamp-dim",
@@ -12157,7 +11129,7 @@
         }
       ],
       "itemIds": ["shipyard-worker-apron"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-worker-apron"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-worker-apron"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-worker-mask",
@@ -12178,7 +11150,7 @@
         }
       ],
       "itemIds": ["shipyard-worker-mask"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-worker-mask"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-worker-mask"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-worker-rivet-gun",
@@ -12199,7 +11171,7 @@
         }
       ],
       "itemIds": ["shipyard-worker-rivet-gun"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-worker-rivet-gun"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-worker-rivet-gun"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-occupation-board",
@@ -13540,7 +12512,7 @@
         "greenhouse-waiting-grower-visor",
         "greenhouse-waiting-grower-sensor"
       ],
-      "page": "resources/npc-3.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower"
+      "page": "resources/npc-2.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower"
     },
     {
       "id": "npc:greenhouse-plains-roadhead:greenhouse-rival-scout",
@@ -13566,7 +12538,7 @@
         "greenhouse-rival-scout-hook",
         "greenhouse-rival-scout-band"
       ],
-      "page": "resources/npc-3.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout"
+      "page": "resources/npc-2.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout"
     },
     {
       "id": "npc:greenhouse-plains-roadhead:greenhouse-gate-grower",
@@ -13587,7 +12559,7 @@
         }
       ],
       "itemIds": ["greenhouse-gate-grower-vest", "greenhouse-gate-grower-visor"],
-      "page": "resources/npc-3.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-gate-grower"
+      "page": "resources/npc-2.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-gate-grower"
     },
     {
       "id": "npc:greenhouse-plains-roadhead:greenhouse-technician",
@@ -13612,7 +12584,7 @@
         "greenhouse-technician-visor",
         "greenhouse-technician-sensor"
       ],
-      "page": "resources/npc-3.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-technician"
+      "page": "resources/npc-2.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-technician"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-roadhead-sky",
@@ -13696,7 +12668,7 @@
         }
       ],
       "itemIds": ["greenhouse-waiting-grower-vest"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-vest"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-vest"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-waiting-grower-visor",
@@ -13717,7 +12689,7 @@
         }
       ],
       "itemIds": ["greenhouse-waiting-grower-visor"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-visor"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-visor"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-waiting-grower-sensor",
@@ -13738,7 +12710,7 @@
         }
       ],
       "itemIds": ["greenhouse-waiting-grower-sensor"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-sensor"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-sensor"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-torso",
@@ -13759,7 +12731,7 @@
         }
       ],
       "itemIds": ["greenhouse-rival-scout-torso"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-torso"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-torso"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-head",
@@ -13780,7 +12752,7 @@
         }
       ],
       "itemIds": ["greenhouse-rival-scout-head"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-head"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-head"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-hook",
@@ -13801,7 +12773,7 @@
         }
       ],
       "itemIds": ["greenhouse-rival-scout-hook"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-hook"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-hook"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-band",
@@ -13822,7 +12794,7 @@
         }
       ],
       "itemIds": ["greenhouse-rival-scout-band"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-band"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-gate-grower-vest",
@@ -13843,7 +12815,7 @@
         }
       ],
       "itemIds": ["greenhouse-gate-grower-vest"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-gate-grower-vest"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-gate-grower-vest"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-gate-grower-visor",
@@ -13864,7 +12836,7 @@
         }
       ],
       "itemIds": ["greenhouse-gate-grower-visor"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-gate-grower-visor"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-gate-grower-visor"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-gate-lamp-dim",
@@ -14090,7 +13062,7 @@
         }
       ],
       "itemIds": ["greenhouse-technician-vest"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-technician-vest"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-technician-vest"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-technician-visor",
@@ -14111,7 +13083,7 @@
         }
       ],
       "itemIds": ["greenhouse-technician-visor"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-technician-visor"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-technician-visor"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-technician-sensor",
@@ -14132,7 +13104,7 @@
         }
       ],
       "itemIds": ["greenhouse-technician-sensor"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-technician-sensor"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-technician-sensor"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-pressure-board",
@@ -15280,7 +14252,7 @@
         }
       ],
       "itemIds": ["snow-crew-coat", "snow-crew-hat", "snow-crew-signal-lamp"],
-      "page": "resources/npc-3.html#npc%3Asnow-trade-road-roadhead%3Asnow-crew"
+      "page": "resources/npc-2.html#npc%3Asnow-trade-road-roadhead%3Asnow-crew"
     },
     {
       "id": "npc:snow-trade-road-roadhead:snow-waiting-keeper",
@@ -15640,7 +14612,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-coat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-coat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-coat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-hat",
@@ -15661,7 +14633,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-hat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-hat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-hat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-lamp",
@@ -15682,7 +14654,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-lamp"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-lamp"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-lamp"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-torso",
@@ -15703,7 +14675,7 @@
         }
       ],
       "itemIds": ["snow-rival-scout-torso"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-torso"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-torso"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-head",
@@ -15724,7 +14696,7 @@
         }
       ],
       "itemIds": ["snow-rival-scout-head"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-head"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-head"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-hook",
@@ -15745,7 +14717,7 @@
         }
       ],
       "itemIds": ["snow-rival-scout-hook"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-hook"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-hook"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-band",
@@ -15766,7 +14738,7 @@
         }
       ],
       "itemIds": ["snow-rival-scout-band"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-band"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-gate-keeper-coat",
@@ -15787,7 +14759,7 @@
         }
       ],
       "itemIds": ["snow-gate-keeper-coat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-coat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-coat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-gate-keeper-hat",
@@ -15808,7 +14780,7 @@
         }
       ],
       "itemIds": ["snow-gate-keeper-hat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-hat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-hat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-gate-lamp-dim",
@@ -16981,7 +15953,7 @@
         }
       ],
       "itemIds": ["quarry-worker-coat", "quarry-worker-helmet", "quarry-worker-drill"],
-      "page": "resources/npc-4.html#npc%3Ared-quarry-roadhead%3Aquarry-worker"
+      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-worker"
     },
     {
       "id": "npc:red-quarry-roadhead:quarry-waiting-filler",
@@ -17006,7 +15978,7 @@
         "quarry-waiting-filler-helmet",
         "quarry-waiting-filler-drill"
       ],
-      "page": "resources/npc-4.html#npc%3Ared-quarry-roadhead%3Aquarry-waiting-filler"
+      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-waiting-filler"
     },
     {
       "id": "npc:red-quarry-roadhead:quarry-rival-scout",
@@ -17032,7 +16004,7 @@
         "quarry-rival-scout-hook",
         "quarry-rival-scout-band"
       ],
-      "page": "resources/npc-4.html#npc%3Ared-quarry-roadhead%3Aquarry-rival-scout"
+      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-rival-scout"
     },
     {
       "id": "npc:red-quarry-roadhead:quarry-gate-filler",
@@ -17053,7 +16025,7 @@
         }
       ],
       "itemIds": ["quarry-gate-filler-coat", "quarry-gate-filler-helmet"],
-      "page": "resources/npc-4.html#npc%3Ared-quarry-roadhead%3Aquarry-gate-filler"
+      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-gate-filler"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-roadhead-sky",
@@ -17278,7 +16250,7 @@
         }
       ],
       "itemIds": ["quarry-worker-coat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-coat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-coat"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-worker-helmet",
@@ -17299,7 +16271,7 @@
         }
       ],
       "itemIds": ["quarry-worker-helmet"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-helmet"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-worker-drill",
@@ -17320,7 +16292,7 @@
         }
       ],
       "itemIds": ["quarry-worker-drill"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-drill"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-drill"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-safety-board",
@@ -17383,7 +16355,7 @@
         }
       ],
       "itemIds": ["quarry-waiting-filler-coat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-coat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-coat"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-waiting-filler-helmet",
@@ -17404,7 +16376,7 @@
         }
       ],
       "itemIds": ["quarry-waiting-filler-helmet"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-helmet"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-waiting-filler-drill",
@@ -17425,7 +16397,7 @@
         }
       ],
       "itemIds": ["quarry-waiting-filler-drill"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-drill"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-drill"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-torso",
@@ -17446,7 +16418,7 @@
         }
       ],
       "itemIds": ["quarry-rival-scout-torso"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-torso"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-torso"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-head",
@@ -17467,7 +16439,7 @@
         }
       ],
       "itemIds": ["quarry-rival-scout-head"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-head"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-head"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-hook",
@@ -17488,7 +16460,7 @@
         }
       ],
       "itemIds": ["quarry-rival-scout-hook"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-hook"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-hook"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-band",
@@ -17509,7 +16481,7 @@
         }
       ],
       "itemIds": ["quarry-rival-scout-band"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-band"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-gate-filler-coat",
@@ -17530,7 +16502,7 @@
         }
       ],
       "itemIds": ["quarry-gate-filler-coat"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-gate-filler-coat"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-gate-filler-coat"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-gate-filler-helmet",

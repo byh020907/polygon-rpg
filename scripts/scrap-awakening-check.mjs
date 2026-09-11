@@ -59,6 +59,12 @@ import {
   SCRAP_RIVAL_RESCUE_ENTITY_ID,
   SCRAP_PLAYER_DECISION_ENTITY_ID,
   SCRAPYARD_OWNER_ENTITY_ID,
+  SCRAP_OWNER_CAST_ENTITY_ID,
+  SCRAP_RIVAL_DEPARTURE_CAST_ENTITY_ID,
+  SCRAP_RIVAL_YARD_CAST_ENTITY_ID,
+  SCRAP_RIVAL_TRAPPED_CAST_ENTITY_ID,
+  SCRAP_RIVAL_RESCUED_CAST_ENTITY_ID,
+  SCRAP_RIVAL_RETURN_CAST_ENTITY_ID,
   SCRAP_MINE_ROAD_PORTAL_ID,
   SCRAP_MINE_ROAD_REGION_ID,
   SCRAP_MINE_ROAD_ROOM_ID,
@@ -365,6 +371,40 @@ assert.match(rescueBriefing, /회수팔/);
 assert.match(rescueBriefing, /빼야 멈춘/);
 assert.doesNotMatch(rescueBriefing, /winch.*전원/);
 
+for (const [stageId, entityId, x, motionId] of [
+  [SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE, SCRAP_RIVAL_DEPARTURE_CAST_ENTITY_ID, 431, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_CLEARANCE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 540, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_BRACE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 790, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_PERIMETER, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 870, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_SURVEY, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1012, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_APPROACH, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1038, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_PLATE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1160, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_RIDGE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1196, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_GUARD, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1244, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_SEARCH, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1332, 'idle'],
+  [SCRAP_AWAKENING_STAGE.PLAYER_DECISION, SCRAP_RIVAL_TRAPPED_CAST_ENTITY_ID, 1030, 'knocked-out'],
+  [SCRAP_AWAKENING_STAGE.EYES_LIT, SCRAP_RIVAL_RESCUED_CAST_ENTITY_ID, 1030, 'idle'],
+  [SCRAP_AWAKENING_STAGE.COMPLETE, SCRAP_RIVAL_RETURN_CAST_ENTITY_ID, 620, 'run'],
+]) {
+  const castScene = createAwakeningScene();
+  castScene.setVisualQaScrapAwakeningStage(stageId);
+  const frame = castScene.createRenderFrame(1);
+  const rivalSamples = frame.castCharacters.filter(({ actorId }) => actorId === 'rival-scout');
+  assert.equal(rivalSamples.length, 1, `${stageId}에는 라이벌 cast actor 하나만 있어야 합니다.`);
+  const rival = rivalSamples[0];
+  assert.equal(rival.entityId, entityId);
+  assert.equal(rival.bodyProfileId, 'rival');
+  assert.equal(rival.motionId, motionId);
+  assert.equal(rival.dialogueAnchor.x, x);
+  assert.ok(frame.items.some((item) => item.id === `${entityId}:torso`));
+  assert.ok(frame.items.some((item) => item.id === `${entityId}:salvage-hook`));
+  assert.equal(
+    frame.items.some((item) => item.id.startsWith('scrap-rival-')),
+    false,
+  );
+  castScene.dispose();
+}
+
 const scene = createAwakeningScene();
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COMMISSION);
 assert.equal(scene.getWorldStatus().operationMapAvailable, false);
@@ -375,17 +415,26 @@ assert.ok(
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === 'scrapyard-owner-commission'),
 );
+const commissionFrame = scene.createRenderFrame(1);
+assert.deepEqual(
+  commissionFrame.castCharacters.map(({ entityId, bodyProfileId }) => ({
+    entityId,
+    bodyProfileId,
+  })),
+  [{ entityId: SCRAP_OWNER_CAST_ENTITY_ID, bodyProfileId: 'owner' }],
+);
+assert.ok(commissionFrame.items.some((item) => item.id === 'cast-scrapyard-owner:ledger'));
 
 let prologueSequence = 1;
 setAtStoryInteraction(scene, 'scrapyard-owner-commission');
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE);
-assert.ok(itemIds(scene).includes('scrap-rival-departure-torso'));
+assert.ok(itemIds(scene).includes('cast-rival-departure:torso'));
 
 setAtStoryInteraction(scene, 'scrap-rival-departure');
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_CLEARANCE);
-assert.ok(itemIds(scene).includes('scrap-rival-search-hook'));
+assert.ok(itemIds(scene).includes('cast-rival-yard:salvage-hook'));
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -414,6 +463,7 @@ assert.equal(
 );
 assert.equal(ambientDialogue.presentationMode, 'ambient');
 assert.equal(ambientDialogue.prompt, '이동 중 대화');
+assert.deepEqual(ambientDialogue.worldAnchor, { x: 540, y: 272 });
 const ambientStartX = scene.position.x;
 scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
@@ -1642,8 +1692,8 @@ for (let tick = 0; tick < 1_200 && stage(scene) !== SCRAP_AWAKENING_STAGE.COMPLE
   if (observedStages.at(-1) !== currentStage) observedStages.push(currentStage);
   if (currentStage === SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED) {
     rescuedAfterStateObserved =
-      itemIds(scene).includes('scrap-rival-rescued-torso') &&
-      !itemIds(scene).includes('scrap-rival-trapped-torso');
+      itemIds(scene).includes('cast-rival-rescued:torso') &&
+      !itemIds(scene).includes('cast-rival-trapped:torso');
   }
   const cameraOffset = scene.combatCameraFeedback.snapshot();
   if (Math.abs(cameraOffset.x) > 0.01 || Math.abs(cameraOffset.y) > 0.01) shakeObserved = true;

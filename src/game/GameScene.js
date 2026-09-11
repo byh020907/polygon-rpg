@@ -52,6 +52,7 @@ import { Signal } from '../core/Signal.js';
 import { INPUT_ACTIONS } from '../input/InputAction.js';
 import { GameStatusNode } from './GameStatusNode.js';
 import { createPlayerCombatPresentation } from './PlayerCombatPresentation.js';
+import { createRuntimeCastPresentation } from './character/CastCharacterPresentation.js';
 import { createSceneArtDirectionReadModel } from './ScrapArtDirectionProfiles.js';
 import { MapRuntime } from './map/MapRuntime.js';
 import {
@@ -4234,6 +4235,11 @@ export class GameScene extends SceneNode {
     const scrapFinalBattleItems = createScrapFinalBattlePresentation(
       this.progressionSnapshot.scrapCampaign.finalBattleStageId,
     );
+    const runtimeCast = createRuntimeCastPresentation(
+      mapSnapshot.entities,
+      renderAnimationTime,
+      activeRoom.renderOrder + 0.4,
+    );
     const items = Object.freeze(
       [
         ...mapSnapshot.renderItems,
@@ -4241,6 +4247,7 @@ export class GameScene extends SceneNode {
         ...(this.acquisitionFeedback?.renderItems(renderPosition) ?? []),
         ...scrapFinalBattleItems,
         ...encounterItems,
+        ...runtimeCast.items,
         ...characterItems,
         ...combatEffectItems,
         ...(this.visualQaCombatOverlay
@@ -4408,6 +4415,7 @@ export class GameScene extends SceneNode {
           : null,
       }),
       combatEnemy,
+      castCharacters: runtimeCast.samples,
       artDirection,
       scenePresentationForView: this.scenePresentation
         ? (viewAt) => this.scenePresentation.snapshotProjected(viewAt)

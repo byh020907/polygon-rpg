@@ -176,6 +176,50 @@ function renameForCharacter(item, prefix) {
   });
 }
 
+function runtimeMotionInput(entity, animationTime) {
+  const motionId = entity.motionId ?? 'idle';
+  const progress = Number.isFinite(entity.motionProgress) ? entity.motionProgress : 0;
+  const motionState = { id: 'idle', progress: 0 };
+  const boneInput = {
+    animationTime,
+    movementIntent: 0,
+    isGrounded: true,
+    verticalVelocity: 0,
+  };
+  if (motionId === 'run') boneInput.movementIntent = 1;
+  else if (motionId === 'hit') boneInput.hitstunProgress = 1 - progress;
+  else if (motionId === 'knocked-out') boneInput.knockedOut = true;
+  else if (motionId !== 'idle') Object.assign(motionState, { id: motionId, progress });
+  return freeze({ motionState, boneInput });
+}
+
+function runtimeItem(item, entityId) {
+  const suffix = item.id.split(':').at(-1);
+  const depthGroup = `cast-runtime:${entityId}`;
+  const participatesInDepth = item.surface || Array.isArray(item.depths);
+  return freeze({
+    ...item,
+    id: `${entityId}:${suffix}`,
+    depthGroup: participatesInDepth ? depthGroup : undefined,
+    ...(item.surface ? { surface: { ...item.surface, depthGroup } } : {}),
+  });
+}
+
+function assertRuntimeCastEntity(entity) {
+  if (
+    entity?.kind !== 'cast-character' ||
+    typeof entity.id !== 'string' ||
+    typeof entity.presentationProfileId !== 'string' ||
+    typeof entity.bodyProfileId !== 'string' ||
+    !Number.isFinite(entity.position?.x) ||
+    !Number.isFinite(entity.position?.y) ||
+    ![-1, 1].includes(entity.facing ?? 1)
+  ) {
+    throw new TypeError('cast-character에는 stable ID, profile/body와 유효한 배치가 필요합니다.');
+  }
+  return entity;
+}
+
 export function sampleCastCharacterPresentation({
   profileId,
   bodyProfileId,
@@ -230,5 +274,55 @@ export function sampleCastCharacterPresentation({
     pose,
     geometry,
     items: [...baseItems, ...props],
+  });
+}
+
+export function sampleRuntimeCastCharacter(entity, animationTime, fallbackRenderOrder = 30.45) {
+  assertRuntimeCastEntity(entity);
+  const input = runtimeMotionInput(entity, animationTime);
+  const sample = sampleCastCharacterPresentation({
+    profileId: entity.presentationProfileId,
+    bodyProfileId: entity.bodyProfileId,
+    motionState: input.motionState,
+    boneInput: input.boneInput,
+    position: entity.position,
+    facing: entity.facing ?? 1,
+    renderOrder: entity.renderOrder ?? fallbackRenderOrder,
+  });
+  const dialogueAnchorOffset = entity.dialogueAnchorOffset ?? { x: 0, y: -72 };
+  return freeze({
+    entityId: entity.id,
+    actorId: entity.actorId ?? entity.presentationProfileId,
+    profileId: sample.profileId,
+    bodyProfileId: sample.bodyProfileId,
+    referenceStatus: sample.referenceStatus,
+    motionId: entity.motionId ?? 'idle',
+    frameId: sample.pose.bonePose.frameId,
+    dialogueAnchor: {
+      x: entity.position.x + dialogueAnchorOffset.x,
+      y: entity.position.y + dialogueAnchorOffset.y,
+    },
+    items: sample.items.map((item) => runtimeItem(item, entity.id)),
+  });
+}
+
+export function createRuntimeCastPresentation(
+  entities,
+  animationTime,
+  fallbackRenderOrder = 30.45,
+) {
+  const samples = entities
+    .filter((entity) => entity.kind === 'cast-character')
+    .map((entity) => sampleRuntimeCastCharacter(entity, animationTime, fallbackRenderOrder));
+  const actorIds = new Set();
+  for (const sample of samples) {
+    if (actorIds.has(sample.actorId)) {
+      throw new Error(`같은 cast actor가 한 장면에 중복 배치되었습니다: ${sample.actorId}`);
+    }
+    actorIds.add(sample.actorId);
+  }
+  return freeze({
+    samples,
+    items: samples.flatMap((sample) => sample.items),
   });
 }

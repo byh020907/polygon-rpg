@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createGameScene } from '../src/app/createGameScene.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
 
 const room = SCRAP_AWAKENING_MAP.regions[0].rooms[0];
@@ -29,8 +30,25 @@ for (const id of ['scrapyard-wall-map-frame', 'garage-robot-frame-torso']) {
 assert.ok(bounds('scrapyard-wall-map-frame').right < bounds('garage-robot-frame-torso').left);
 assert.ok(bounds('garage-robot-frame-leg-left').bottom > room.groundY - 6);
 assert.ok(bounds('garage-robot-frame-leg-right').bottom > room.groundY - 6);
-// People and the reachable workbench remain in the foreground at their original
-// positions; narrowing scenery must never scale interaction or collision data.
-assert.equal(bounds('scrapyard-owner-torso').left, 184);
+// The owner is now sampled by the same body/pose/depth path as gameplay characters,
+// while the authored workbench remains a map fixture.
+assert.equal(
+  room.renderItems.some((item) => item.id.startsWith('scrapyard-owner-')),
+  false,
+);
+const scene = createGameScene();
+const frame = scene.createRenderFrame(1);
+const ownerTorso = frame.items.find((item) => item.id === 'cast-scrapyard-owner:torso');
+assert.ok(ownerTorso);
+const ownerBounds = {
+  left: Math.min(...ownerTorso.points.map((point) => point.x)),
+  right: Math.max(...ownerTorso.points.map((point) => point.x)),
+};
+assert.ok(ownerBounds.left > wall.left && ownerBounds.right < wall.right);
+assert.deepEqual(
+  frame.castCharacters.map(({ entityId, bodyProfileId }) => ({ entityId, bodyProfileId })),
+  [{ entityId: 'cast-scrapyard-owner', bodyProfileId: 'owner' }],
+);
 assert.equal(bounds('scrapyard-workbench').left, 74);
+scene.dispose();
 console.log('PASS: grounded workshop, garage, robot and map composition');

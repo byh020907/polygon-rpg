@@ -26,14 +26,23 @@ const COMMA_PAUSE_SECONDS = 0.12;
 const TERMINAL_PAUSE_SECONDS = 0.22;
 const AMBIENT_LINE_HOLD_SECONDS = 2.4;
 
-function dialogueWorldAnchor(interaction, playerPosition = null) {
+function dialogueWorldAnchor(interaction, playerPosition = null, entities = []) {
+  const actorId = interaction.presentationActorId ?? interaction.presentationProfileId;
+  const castActor = actorId
+    ? entities.find(
+        (entity) =>
+          entity.kind === 'cast-character' &&
+          (entity.actorId ?? entity.presentationProfileId) === actorId,
+      )
+    : null;
   const anchor =
     interaction.dialogueAnchor === 'player' && playerPosition
       ? playerPosition
-      : interaction.position;
+      : (castActor?.position ?? interaction.position);
+  const offset = castActor?.dialogueAnchorOffset ?? { x: 0, y: 0 };
   return Object.freeze({
-    x: anchor.x,
-    y: anchor.y,
+    x: anchor.x + offset.x,
+    y: anchor.y + offset.y,
   });
 }
 
@@ -411,7 +420,7 @@ export class StoryInteractionOwner {
               ? '↑ 다음 대사'
               : '↑ 대화 마치기'
             : '↑ 대사 완성',
-        worldAnchor: dialogueWorldAnchor(activeInteraction, playerPosition),
+        worldAnchor: dialogueWorldAnchor(activeInteraction, playerPosition, entities),
         commands:
           source.mode === 'current'
             ? availableCommands(activeInteraction, transcripts)
@@ -427,7 +436,7 @@ export class StoryInteractionOwner {
       interactionId: availableInteraction.id,
       speaker: availableInteraction.speaker,
       prompt: `↑ ${availableInteraction.speaker} 상호작용`,
-      worldAnchor: dialogueWorldAnchor(availableInteraction, playerPosition),
+      worldAnchor: dialogueWorldAnchor(availableInteraction, playerPosition, entities),
     });
   }
 }
