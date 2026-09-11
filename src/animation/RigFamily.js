@@ -149,12 +149,44 @@ export function defineCharacterBodyProfile({
   });
 }
 export const DEFAULT_CHARACTER_BODY_PROFILE = defineCharacterBodyProfile({ id: 'player' });
-// Named ownership slots intentionally retain the accepted proportions until art approval.
-export const CHARACTER_BODY_PROFILES = immutable(
-  Object.fromEntries(
-    ['player', 'rival', 'owner', 'worker', 'human-raider'].map((id) => [
-      id,
-      id === 'player' ? DEFAULT_CHARACTER_BODY_PROFILE : defineCharacterBodyProfile({ id }),
-    ]),
-  ),
-);
+const RIVAL_BODY_PROFILE = defineCharacterBodyProfile({
+  id: 'rival',
+  joints: {
+    nearShoulder: { scale: 0.94 },
+    farShoulder: { scale: 0.94 },
+    nearElbow: { scale: 1.04 },
+    farElbow: { scale: 1.04 },
+    nearHand: { scale: 1.03 },
+    farHand: { scale: 1.03 },
+    nearKnee: { scale: 1.02 },
+    farKnee: { scale: 1.02 },
+    nearFoot: { scale: 1.02 },
+    farFoot: { scale: 1.02 },
+  },
+});
+const OWNER_BODY_PROFILE = defineCharacterBodyProfile({
+  id: 'owner',
+  joints: {
+    nearShoulder: { scale: 1.12 },
+    farShoulder: { scale: 1.12 },
+    nearHip: { scale: 1.08 },
+    farHip: { scale: 1.08 },
+    nearElbow: { scale: 0.91 },
+    farElbow: { scale: 0.91 },
+    nearHand: { scale: 0.92 },
+    farHand: { scale: 0.92 },
+    nearKnee: { scale: 0.94 },
+    farKnee: { scale: 0.94 },
+    nearFoot: { scale: 0.95 },
+    farFoot: { scale: 0.95 },
+  },
+});
+// These named Body Profiles are the current technical review baseline. They keep
+// stable ownership while final SVG proportions remain gated by REF-01 approval.
+export const CHARACTER_BODY_PROFILES = immutable({
+  player: DEFAULT_CHARACTER_BODY_PROFILE,
+  rival: RIVAL_BODY_PROFILE,
+  owner: OWNER_BODY_PROFILE,
+  worker: defineCharacterBodyProfile({ id: 'worker' }),
+  'human-raider': defineCharacterBodyProfile({ id: 'human-raider' }),
+});

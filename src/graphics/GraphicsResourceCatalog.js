@@ -22,6 +22,7 @@ import { createScrapFinalBattlePresentation } from '../game/campaign/ScrapFinalB
 import { deepFreeze } from '../game/map/MapDefinition.js';
 import { createMapGraphicResources, graphicsItemCategory } from './MapGraphicResources.js';
 import { ENEMY_REFERENCE_PROFILES, ENEMY_REFERENCE_ACTIONS } from './EnemyReferenceProfiles.js';
+import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPresentationProfiles.js';
 
 export const GRAPHICS_CATEGORIES = deepFreeze(
   [
@@ -87,6 +88,15 @@ export function graphicsPlayerActions(
       frameCount: combatMotionFrameData(id, equipment.combatTiming).durationFrames,
     })),
   ]);
+}
+
+export function graphicsCastReviewActions() {
+  return deepFreeze(
+    [
+      ['idle', '공용 대기 clip'],
+      ['run', '공용 이동 clip · 부착 확인'],
+    ].map(([id, label]) => ({ id, label, frameCount: playerUtilityFrameCount(id) })),
+  );
 }
 
 const ENEMY_LABELS = Object.freeze({
@@ -245,8 +255,15 @@ function finalResources() {
 export function createGraphicsResourceCatalog({ additionalResources = [] } = {}) {
   const map = createMapGraphicResources();
   const placements = new Map();
+  const castPlacements = new Map();
   for (const region of SCRAP_AWAKENING_MAP.regions)
     for (const room of region.rooms) {
+      for (const entity of room.entities)
+        if (entity.presentationProfileId) {
+          const list = castPlacements.get(entity.presentationProfileId) ?? [];
+          list.push({ regionId: region.id, roomId: room.id, entityId: entity.id });
+          castPlacements.set(entity.presentationProfileId, list);
+        }
       for (const entity of room.entities)
         if (entity.encounterProfileId) {
           const list = placements.get(entity.encounterProfileId) ?? [];
@@ -262,7 +279,48 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       kind: 'animated',
       producer: 'player',
       source: 'src/game/PlayerCombatPresentation.js',
+      presentationProfileId: 'scrapyard-apprentice',
+      bodyProfileId: 'player',
+      referenceGroupId: 'REF-01',
+      approvalStatus: 'runtime-baseline-unapproved',
       actions: graphicsPlayerActions(),
+      notes:
+        'REF-01 기술 기준선 · 기존 승인 동작 스타일 유지 · 최종 front/side/3/4 SVG reference 승인은 별도입니다.',
+    },
+    ...[
+      ['rival-scout', 'rival'],
+      ['scrapyard-owner', 'owner'],
+    ].map(([profileId, bodyProfileId]) => {
+      const profile = CHARACTER_PRESENTATION_PROFILE.getProfile(profileId);
+      return {
+        id: `npc:cast:${profileId}`,
+        label: `${profile.label} · REF-01 기술 기준선`,
+        category: 'npc',
+        kind: 'animated',
+        producer: 'cast',
+        source: 'src/game/character/CastCharacterPresentation.js',
+        presentationProfileId: profileId,
+        bodyProfileId,
+        referenceGroupId: 'REF-01',
+        approvalStatus: 'runtime-baseline-unapproved',
+        placements: castPlacements.get(profileId) ?? [],
+        actions: graphicsCastReviewActions(),
+        notes:
+          '실제 cast profile·공용 3D pose sampler·Polygon renderer 연결 기준선입니다. 도구는 관절에 붙어 이동하지만 최종 SVG 형태와 대표 pose는 아직 승인되지 않았습니다.',
+      };
+    }),
+    {
+      id: 'scene:ref-01-cast-lineup',
+      label: 'REF-01 Hero · Rival · Owner gameplay-scale 비교',
+      category: 'scene',
+      kind: 'animated',
+      producer: 'cast-lineup',
+      source: 'src/game/character/CastCharacterPresentation.js',
+      referenceGroupId: 'REF-01',
+      approvalStatus: 'runtime-baseline-unapproved',
+      actions: graphicsCastReviewActions(),
+      notes:
+        'Hero/Rival/Owner를 같은 960×540 gameplay 좌표·pose sampler·renderer에서 비교하는 미승인 기술 composite입니다. REF-01 reference 또는 REF-05 Composition 승인으로 표시하지 않습니다.',
     },
     ...EQUIPMENT_ITEMS.map((equipment) => {
       const family = EQUIPMENT_CATALOG.getFamily(equipment.familyId);

@@ -36,6 +36,7 @@ import { createScrapFinalBattlePresentation } from '../game/campaign/ScrapFinalB
 import { createSceneArtDirectionReadModel } from '../game/ScrapArtDirectionProfiles.js';
 import { deepFreeze } from '../game/map/MapDefinition.js';
 import { GRAPHICS_EFFECT_DEFINITIONS } from './GraphicsResourceCatalog.js';
+import { sampleCastCharacterPresentation } from '../game/character/CastCharacterPresentation.js';
 
 const BENCHMARK_ROOM = Object.freeze({
   regionId: 'abandoned-mine',
@@ -451,6 +452,37 @@ export function createGraphicsResourceSampler(catalog) {
     };
   }
 
+  function castSample(resource, action, index, facing, position) {
+    const input = graphicsPlayerMotionInput(action.id, index, action.frameCount, action);
+    const cast = sampleCastCharacterPresentation({
+      profileId: resource.presentationProfileId,
+      bodyProfileId: resource.bodyProfileId,
+      motionState: input.motionState,
+      boneInput: input.boneInput,
+      position,
+      facing,
+    });
+    return {
+      ...cast,
+      input,
+      sourceFrameId: cast.pose.bonePose.frameId,
+      boneDiagnostics: Object.entries(
+        projectPlayerSkeleton({
+          position,
+          facing,
+          geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+          bonePose: cast.pose.bonePose,
+        }),
+      ).map(([id, jointPosition]) => ({
+        id: `${resource.presentationProfileId}:${id}`,
+        parent: SIDE_VIEW_SKELETON_PARENTS[id]
+          ? `${resource.presentationProfileId}:${SIDE_VIEW_SKELETON_PARENTS[id]}`
+          : null,
+        position: jointPosition,
+      })),
+    };
+  }
+
   function sample(resourceId, options = {}) {
     if (disposed) throw new Error('GraphicsResourceSampler가 이미 종료됐습니다.');
     const resource = catalog.get(resourceId);
@@ -491,7 +523,70 @@ export function createGraphicsResourceSampler(catalog) {
     if (sourceEntity?.enabled === false)
       notes +=
         ' · 원본 배치 entity는 현재 장면 조건에서 비활성입니다. 해당 위치·profile의 검토 표본을 표시합니다.';
-    if (resource.producer === 'map') {
+    if (resource.producer === 'cast') {
+      const cast = castSample(resource, action, index, facing, actorPosition);
+      items = cast.items;
+      sourceFrameId = cast.sourceFrameId;
+      boneDiagnostics = cast.boneDiagnostics;
+      extra = {
+        animationTime: cast.input.boneInput.animationTime,
+        castReview: {
+          referenceGroupId: resource.referenceGroupId,
+          approvalStatus: resource.approvalStatus,
+          profileId: cast.profileId,
+          bodyProfileId: cast.bodyProfileId,
+        },
+      };
+    } else if (resource.producer === 'cast-lineup') {
+      const lineup = [
+        {
+          profileId: 'scrapyard-apprentice',
+          bodyProfileId: 'player',
+          position: { x: actorPosition.x - 112, y: actorPosition.y },
+        },
+        {
+          profileId: 'rival-scout',
+          bodyProfileId: 'rival',
+          position: { x: actorPosition.x, y: actorPosition.y },
+        },
+        {
+          profileId: 'scrapyard-owner',
+          bodyProfileId: 'owner',
+          position: { x: actorPosition.x + 112, y: actorPosition.y },
+        },
+      ];
+      const hero = playerSample(resource, action, index, facing, lineup[0].position);
+      const castMembers = lineup.slice(1).map((member) =>
+        castSample(
+          {
+            ...resource,
+            presentationProfileId: member.profileId,
+            bodyProfileId: member.bodyProfileId,
+          },
+          action,
+          index,
+          facing,
+          member.position,
+        ),
+      );
+      items = [
+        ...hero.presentation.characterItems,
+        ...castMembers.flatMap((member) => member.items),
+      ];
+      sourceFrameId = [
+        hero.pose.bonePose.frameId,
+        ...castMembers.map((member) => member.sourceFrameId),
+      ].join('|');
+      boneDiagnostics = castMembers.flatMap((member) => member.boneDiagnostics);
+      extra = {
+        animationTime: hero.input.boneInput.animationTime,
+        castReview: {
+          referenceGroupId: resource.referenceGroupId,
+          approvalStatus: resource.approvalStatus,
+          profiles: lineup.map(({ profileId, bodyProfileId }) => ({ profileId, bodyProfileId })),
+        },
+      };
+    } else if (resource.producer === 'map') {
       const selected = base.room.renderItems.filter((item) => resource.itemIds.includes(item.id));
       if (view === 'scene') {
         items = base.frame.items;

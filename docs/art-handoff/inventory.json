@@ -1,6 +1,6 @@
 {
-  "fingerprint": "ffd4140b2afe",
-  "resourceCount": 608,
+  "fingerprint": "5181271fe5d1",
+  "resourceCount": 611,
   "records": [
     {
       "id": "player:protagonist",
@@ -12,7 +12,7 @@
       "roomId": null,
       "actorId": "protagonist",
       "source": "src/game/PlayerCombatPresentation.js",
-      "notes": "",
+      "notes": "REF-01 기술 기준선 · 기존 승인 동작 스타일 유지 · 최종 front/side/3/4 SVG reference 승인은 별도입니다.",
       "actions": [
         {
           "id": "idle",
@@ -124,6 +124,84 @@
       ],
       "itemIds": [],
       "page": "resources/player-1.html#player%3Aprotagonist"
+    },
+    {
+      "id": "npc:cast:rival-scout",
+      "label": "라이벌 · REF-01 기술 기준선",
+      "category": "npc",
+      "producer": "cast",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": "rival",
+      "source": "src/game/character/CastCharacterPresentation.js",
+      "notes": "실제 cast profile·공용 3D pose sampler·Polygon renderer 연결 기준선입니다. 도구는 관절에 붙어 이동하지만 최종 SVG 형태와 대표 pose는 아직 승인되지 않았습니다.",
+      "actions": [
+        {
+          "id": "idle",
+          "label": "공용 대기 clip",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "공용 이동 clip · 부착 확인",
+          "frameCount": 160
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/npc-1.html#npc%3Acast%3Arival-scout"
+    },
+    {
+      "id": "npc:cast:scrapyard-owner",
+      "label": "고물상인 · REF-01 기술 기준선",
+      "category": "npc",
+      "producer": "cast",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": "owner",
+      "source": "src/game/character/CastCharacterPresentation.js",
+      "notes": "실제 cast profile·공용 3D pose sampler·Polygon renderer 연결 기준선입니다. 도구는 관절에 붙어 이동하지만 최종 SVG 형태와 대표 pose는 아직 승인되지 않았습니다.",
+      "actions": [
+        {
+          "id": "idle",
+          "label": "공용 대기 clip",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "공용 이동 clip · 부착 확인",
+          "frameCount": 160
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/npc-1.html#npc%3Acast%3Ascrapyard-owner"
+    },
+    {
+      "id": "scene:ref-01-cast-lineup",
+      "label": "REF-01 Hero · Rival · Owner gameplay-scale 비교",
+      "category": "scene",
+      "producer": "cast-lineup",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "src/game/character/CastCharacterPresentation.js",
+      "notes": "Hero/Rival/Owner를 같은 960×540 gameplay 좌표·pose sampler·renderer에서 비교하는 미승인 기술 composite입니다. REF-01 reference 또는 REF-05 Composition 승인으로 표시하지 않습니다.",
+      "actions": [
+        {
+          "id": "idle",
+          "label": "공용 대기 clip",
+          "frameCount": 25
+        },
+        {
+          "id": "run",
+          "label": "공용 이동 clip · 부착 확인",
+          "frameCount": 160
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/scene-1.html#scene%3Aref-01-cast-lineup"
     },
     {
       "id": "equipment:field-cutter-balanced",
@@ -9243,7 +9321,7 @@
         }
       ],
       "itemIds": ["mine-waiting-miner-coat"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet",
@@ -9264,7 +9342,7 @@
         }
       ],
       "itemIds": ["mine-waiting-miner-helmet"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe",
@@ -11811,7 +11889,7 @@
         }
       ],
       "itemIds": ["shipyard-rival-scout-hook"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-hook"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-hook"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-rival-scout-band",
@@ -11832,7 +11910,7 @@
         }
       ],
       "itemIds": ["shipyard-rival-scout-band"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-band"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron",
@@ -15562,7 +15640,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-coat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-coat"
+      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-coat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-hat",
@@ -15583,7 +15661,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-hat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-hat"
+      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-hat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-lamp",

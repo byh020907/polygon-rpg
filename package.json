@@ -12,7 +12,7 @@
     "visual:qa": "node scripts/visual-qa.mjs",
     "graphics:qa": "node scripts/graphics-review-qa.mjs",
     "graphics:ui-qa": "node scripts/ui-review-qa.mjs",
-    "test:graphics": "node scripts/graphics-resource-check.mjs && node scripts/graphics-review-config-check.mjs && node scripts/graphics-navigation-check.mjs",
+    "test:graphics": "node scripts/graphics-resource-check.mjs && node scripts/graphics-review-config-check.mjs && node scripts/graphics-navigation-check.mjs && node scripts/cast-reference-review-check.mjs",
     "lint": "eslint .",
     "check": "npm run lint && npm run format:check && npm run test:equipment && npm run test:month && npm run test:systems && npm run assets:check && npm run test:combat && npm run test:enchantment && npm run test:story && npm run test:campaign && npm run test:recovery && npm run test:intro && npm run test:character && npm run test:map && npm run test:growth && npm run test:visual && npm run test:platform && npm run test:graphics && npm run docs:art:check",
     "test:combat": "node scripts/shared-combat-geometry-check.mjs && node scripts/player-combat-presentation-check.mjs && node scripts/combat-motion-continuity-check.mjs && node scripts/enemy-bone-pose-check.mjs && node scripts/combat-stamina-check.mjs && node scripts/combat-posture-cancel-check.mjs && node scripts/attack-contact-check.mjs && node scripts/semantic-contact-check.mjs",
