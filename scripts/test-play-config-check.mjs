@@ -15,7 +15,7 @@ const selection = normalizeGraphicsReview({
 });
 const request = readVisualQaRequest('?visualQa=1&gameStart=pose-idle');
 const options = {
-  location: { regionId: 'scrapyard', roomId: 'scrap-garage', x: 300 },
+  location: { regionId: 'scrapyard', roomId: 'scrap-garage', x: 300, facing: -1 },
   equipmentId: 'training-sword',
 };
 const url = buildTestPlayUrl(href, { request, options, label: '주인공' }, selection);
@@ -28,6 +28,11 @@ bad.searchParams.set('testReturn', 'https://other.test/');
 assert.throws(() => readTestPlayRequest(bad.href), /복귀/);
 bad.searchParams.set('testReturn', href);
 bad.searchParams.set('testLocation', '{"x":"bad"}');
+assert.throws(() => readTestPlayRequest(bad.href), /위치/);
+bad.searchParams.set(
+  'testLocation',
+  JSON.stringify({ regionId: 'scrapyard', roomId: 'scrap-garage', x: 300, facing: 0 }),
+);
 assert.throws(() => readTestPlayRequest(bad.href), /위치/);
 assert.equal(new URL(buildGraphicsReviewUrl(url, selection)).searchParams.has('testPlay'), false);
 assert.equal(new URL(buildPlayerGameUrl(url)).searchParams.has('testPlay'), false);

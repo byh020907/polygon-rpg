@@ -38,7 +38,7 @@ export class TestPlayDiagnostics {
       armed: this.armed,
       tick: this.tick,
       summary: frame
-        ? `${motion.id} · ${motion.phase} · frame ${motion.frame?.index ?? '-'} · instance ${motion.sequence} | ${enemy?.id ?? '대상 없음'} HP ${enemy?.health ?? '-'}${this.healthBefore !== null ? ` (접촉 전 ${this.healthBefore})` : ''} | ${contact ? `${contact.attacker} → ${contact.outcome ?? contact.response ?? 'contact'} · ${contact.hurtPart ?? ''}` : '접촉 없음'} | ${frame.combatEvents.map((event) => event.type).join(', ')}`
+        ? `${motion.id} · ${motion.phase} · frame ${motion.frame?.index ?? '-'} · instance ${motion.sequence} | 방향 ${frame.player.facing === -1 ? '좌' : '우'} | ${enemy?.id ?? '대상 없음'} HP ${enemy?.health ?? '-'}${this.healthBefore !== null ? ` (접촉 전 ${this.healthBefore})` : ''} | ${contact ? `${contact.attacker} → ${contact.outcome ?? contact.response ?? 'contact'} · ${contact.hurtPart ?? ''}` : '접촉 없음'} | ${frame.combatEvents.map((event) => event.type).join(', ')}`
         : '실제 입력으로 공격한 뒤 접촉 프레임을 확인하세요.',
     });
   }

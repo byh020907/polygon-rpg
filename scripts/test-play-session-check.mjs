@@ -155,6 +155,24 @@ assert.equal(frames.size, 1);
 assert.equal(storageTouches, 0);
 assert.deepEqual([...storage], originalStorage);
 
+const mirroredLocation = { ...location, facing: -1 };
+application.startTestPlay(request, { location: mirroredLocation });
+assert.equal(
+  application.currentApp.scene.facing,
+  -1,
+  'a replayable test placement must keep its authored left-facing direction',
+);
+assert.equal(application.currentApp.scene.createRenderFrame(0).player.facing, -1);
+application.currentApp.testDiagnostics.observe(application.currentApp.scene.createRenderFrame(0));
+assert.match(application.currentApp.testDiagnostics.snapshot().summary, /방향 좌/);
+application.resetScene();
+assert.equal(
+  application.currentApp.scene.facing,
+  -1,
+  'restart must restore the authored test-facing direction instead of the map spawn direction',
+);
+assert.equal(application.currentApp.scene.createRenderFrame(0).player.facing, -1);
+
 // Exercise diagnostics through the real GameApp and native input adapters. The
 // observer must stop the fixed-step owner, not patch the enemy or command state.
 const contactRequest = readVisualQaRequest('?visualQa=1&gameStart=pose-idle&gameFrame=0');

@@ -682,7 +682,7 @@ export class GameScene extends SceneNode {
     this.visualQaCombatOverlay = enabled === true;
   }
 
-  setVisualQaLocation({ regionId, roomId, x }) {
+  setVisualQaLocation({ regionId, roomId, x, facing }) {
     const mapSnapshot = this.mapRuntime.setActiveLocation(regionId, roomId);
     this.replaceRoomScene(mapSnapshot, { resetExisting: true });
     const room = this.mapRuntime.getActiveRoom();
@@ -698,6 +698,7 @@ export class GameScene extends SceneNode {
       y: this.mapRuntime.getGroundYAt(playerX) - CHARACTER_FOOT_OFFSET,
     };
     this.previousPosition = { ...this.position };
+    if (facing !== undefined) this.facing = facing;
     const cameraBounds = mapSnapshot.cameraBounds;
     const minimumCameraX = cameraBounds.x + 480;
     const maximumCameraX = cameraBounds.x + cameraBounds.width - 480;
@@ -4374,6 +4375,7 @@ export class GameScene extends SceneNode {
       player: Object.freeze({
         presentationProfileId: this.playerPresentationProfile.id,
         position: renderPosition,
+        facing: this.facing,
         isGrounded: this.isGrounded,
         health: this.playerHealth,
         maxHealth: this.playerMaxHealth,

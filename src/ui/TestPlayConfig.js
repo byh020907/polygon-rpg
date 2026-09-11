@@ -52,7 +52,8 @@ export function readTestPlayRequest(
       typeof location.regionId !== 'string' ||
       typeof location.roomId !== 'string' ||
       location.regionId.length > 120 ||
-      location.roomId.length > 120)
+      location.roomId.length > 120 ||
+      (location.facing !== undefined && ![-1, 1].includes(location.facing)))
   )
     throw new Error('잘못된 테스트 위치입니다.');
   const svgResourceId = url.searchParams.get('testSvgResource');
@@ -75,7 +76,14 @@ export function readTestPlayRequest(
         ? { expectedEntityId: url.searchParams.get('testEntity') }
         : {}),
       ...(location
-        ? { location: { regionId: location.regionId, roomId: location.roomId, x: location.x } }
+        ? {
+            location: {
+              regionId: location.regionId,
+              roomId: location.roomId,
+              x: location.x,
+              ...(location.facing === undefined ? {} : { facing: location.facing }),
+            },
+          }
         : {}),
     },
     label,

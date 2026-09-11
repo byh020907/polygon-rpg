@@ -973,7 +973,8 @@ export class GameApp extends SceneNode {
         !location.regionId ||
         typeof location.roomId !== 'string' ||
         !location.roomId ||
-        !Number.isFinite(location.x))
+        !Number.isFinite(location.x) ||
+        (location.facing !== undefined && ![-1, 1].includes(location.facing)))
     ) {
       throw new TypeError('테스트 위치에는 regionId, roomId와 유한한 x가 필요합니다.');
     }
