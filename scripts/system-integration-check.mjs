@@ -19,10 +19,13 @@ try {
     ['svg:prologue-control-core', 'REF-02'],
     ['svg:prologue-retrieval-arm', 'REF-02'],
     ['svg:prologue-ancient-machine', 'REF-03'],
+    ['svg:prologue-garage-zero', 'REF-04'],
   ]) {
     const resource = BUILTIN_SVG_RESOURCES.find((candidate) => candidate.id === resourceId);
     assert.equal(resource.referenceGroupId, referenceGroupId);
     assert.equal(resource.approvalStatus, 'runtime-baseline-unapproved');
+    if (resourceId === 'svg:prologue-garage-zero')
+      assert.equal(resource.source, 'public/graphics/prologue-garage-zero.master.svg');
   }
   scene.setVisualQaScrapAwakeningStage('player-decision');
   scene.setVisualQaLocation({
@@ -238,6 +241,137 @@ try {
       `${machineCase.pose} stays ahead of the background and behind the cast`,
     );
   }
+  const presentGarage = (stageId) => {
+    scene.setVisualQaScrapGarageRevealStage(stageId);
+    scene.setVisualQaLocation({
+      regionId: 'scrap-waste-edge',
+      roomId: 'abandoned-weapon-yard',
+      x: 300,
+    });
+    const rawFrame = scene.createRenderFrame(1);
+    return {
+      rawFrame,
+      output: presenter.resolve(rawFrame, {
+        viewport: { width: 960, height: 540 },
+        project: (point) => ({ x: point.x - 500, y: point.y }),
+      }),
+    };
+  };
+  const garageLegacyItems = [
+    'garage-robot-frame-torso',
+    'garage-robot-frame-leg-left',
+    'garage-robot-frame-leg-right',
+    'garage-robot-brain-core',
+    'garage-robot-zero-label',
+  ];
+  const garageAnchorIds = [
+    'core-socket',
+    'walker-drive-mount-left',
+    'walker-drive-mount-right',
+    'crane-arm-mount-left',
+    'crane-arm-mount-right',
+    'reactor-mount',
+    'snow-armor-mount',
+    'quarry-cutter-mount',
+    'ground-contact',
+  ];
+  for (const stageId of ['garage-opened', 'complete']) {
+    const { rawFrame, output: garageOutput } = presentGarage(stageId);
+    for (const id of garageLegacyItems)
+      assert.ok(
+        rawFrame.items.some((item) => item.id === id),
+        `${stageId} must enable ${id} before presentation migration replaces it`,
+      );
+    const garage = garageOutput.diagnostics.objects.find(
+      (object) => object.id === 'world-garage-zero',
+    );
+    assert.ok(garage, `${stageId} selects the production garage object`);
+    assert.equal(garage.pose, 'garage-zero');
+    assert.equal(garage.legacyPoseBindingId, 'garage-zero');
+    assert.ok(
+      garageOutput.frame.items.some((item) => item.worldObjectId === 'world-garage-zero'),
+      `${stageId} garage frame must reach the production render frame`,
+    );
+    for (const id of garageLegacyItems)
+      assert.equal(
+        garageOutput.frame.items.some((item) => item.id === id),
+        false,
+        `${id} must be replaced by the shared REF-04 SVG garage frame when enabled`,
+      );
+    for (const anchorId of garageAnchorIds)
+      assert.ok(
+        garageOutput.diagnostics.anchors.some(
+          (anchor) => anchor.worldObjectId === 'world-garage-zero' && anchor.id === anchorId,
+        ),
+        `${stageId} exposes ${anchorId}`,
+      );
+    for (const id of ['scrapyard-wall-map-frame', 'scrapyard-wall-map-route'])
+      assert.ok(
+        garageOutput.frame.items.some((item) => item.id === id),
+        `${stageId} keeps the operation map in the same production frame`,
+      );
+    assert.ok(
+      garageOutput.frame.items.some((item) => item.depthGroup === 'player'),
+      `${stageId} keeps the player visible in the same production frame`,
+    );
+    for (const actorId of ['scrapyard-owner', 'rival-scout'])
+      assert.ok(
+        garageOutput.frame.castCharacters.some((actor) => actor.actorId === actorId),
+        `${stageId} keeps the ${actorId} cast actor visible`,
+      );
+    assert.ok(
+      garageOutput.frame.items.some((item) => item.id === 'cast-scrapyard-owner:torso'),
+      `${stageId} keeps the owner presentation in the same production frame`,
+    );
+  }
+  const installedGarageScene = createGameScene();
+  installedGarageScene.enterTree();
+  for (const regionId of [
+    'abandoned-mine',
+    'harbor-shipyard',
+    'greenhouse-plains',
+    'snow-trade-road',
+    'red-quarry',
+  ])
+    installedGarageScene.setVisualQaScrapRegionState({
+      regionId,
+      stageKind: 'campaign-updated',
+      status: 'resolved',
+      collected: true,
+      currentLocationId: 'neighborhood-scrapyard',
+    });
+  installedGarageScene.setVisualQaLocation({
+    regionId: 'scrap-waste-edge',
+    roomId: 'abandoned-weapon-yard',
+    x: 300,
+  });
+  const installedRawFrame = installedGarageScene.createRenderFrame(1);
+  const installedOutput = presenter.resolve(installedRawFrame, {
+    viewport: { width: 960, height: 540 },
+    project: (point) => ({ x: point.x - 500, y: point.y }),
+  });
+  for (const id of [
+    'garage-robot-walker-leg-left',
+    'garage-robot-walker-leg-right',
+    'garage-robot-crane-arm-left',
+    'garage-robot-crane-arm-right',
+    'garage-robot-crane-cable',
+    'garage-robot-reactor-core',
+    'garage-robot-reactor-pipe-left',
+    'garage-robot-reactor-pipe-right',
+    'garage-robot-snow-armor-torso',
+    'garage-robot-snow-armor-rivet-left',
+    'garage-robot-snow-armor-rivet-right',
+    'garage-robot-quarry-cutter-blade',
+    'garage-robot-quarry-cutter-teeth',
+    'garage-robot-hundred-label',
+  ])
+    assert.ok(
+      installedRawFrame.items.some((item) => item.id === id) &&
+        installedOutput.frame.items.some((item) => item.id === id),
+      `${id} remains visible as an installed module overlay beside the REF-04 frame`,
+    );
+  installedGarageScene.dispose();
   const progressBefore = JSON.stringify(scene.getProgressionSnapshot());
   for (const factor of [0.85, 1.15]) {
     scene.setCharacterAnimationSettings({
@@ -339,7 +473,7 @@ try {
   assert.equal(current.diagnostics.objects[0].lod, 'mid');
   assert.ok(current.frame.artDirection.lights.length);
   console.log(
-    'PASS actual GameScene: core interaction anchor, stage-bound retrieval arm and REF-03 ancient machine poses/contact, deduplicated identity, body retarget/SVG visible-contact contour, whole pose, root distance and save preservation',
+    'PASS actual GameScene: core interaction anchor, stage-bound retrieval arm, REF-03 ancient machine and REF-04 garage poses/contact, deduplicated identity, body retarget/SVG visible-contact contour, whole pose, root distance and save preservation',
   );
 } finally {
   scene.dispose();

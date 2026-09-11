@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="prologue-garage-zero" data-rig-family="biped-machine" viewBox="400 174 178 252">
+  <title>REF-04 Garage 0% — runtime integration baseline, not approved final art</title>
+  <g id="garage-frame" data-material="raw-steel" data-normal="0 -1 -0.22" data-shadow="cast">
+    <polygon id="rear-upright-left" points="414,226 430,220 442,410 426,418" fill="#6c7774" data-occlusion="0.18"/>
+    <polygon id="rear-upright-right" points="548,220 564,226 552,418 536,410" fill="#626d6b" data-occlusion="0.18"/>
+    <polygon id="top-gantry" points="414,220 564,220 554,238 424,238" fill="#9aa29e" data-normal="0 -1 -0.35"/>
+    <polygon id="left-foot" points="414,404 448,404 454,426 406,426" fill="#727b77" data-normal="0 -1 -0.12"/>
+    <polygon id="right-foot" points="530,404 564,404 572,426 524,426" fill="#69736f" data-normal="0 -1 -0.12"/>
+    <polygon id="hip-crossbar" points="438,342 540,342 534,362 444,362" fill="#a2a89d" data-normal="0 -1 -0.28"/>
+    <polygon id="torso-cage-left" points="448,252 466,244 474,342 454,342" fill="#8f9994" data-normal="-0.3 -1 -0.18"/>
+    <polygon id="torso-cage-right" points="512,244 530,252 524,342 504,342" fill="#838d89" data-normal="0.3 -1 -0.18"/>
+    <polygon id="shoulder-crossbar" points="438,250 540,250 534,272 444,272" fill="#aaa992" data-normal="0 -1 -0.3"/>
+    <polygon id="spine" points="480,264 498,264 498,350 480,350" fill="#74807a" data-normal="0 -1 -0.18"/>
+    <polygon id="left-leg-strut" points="450,356 468,356 462,418 444,418" fill="#929b95" data-normal="-0.2 -1 -0.15"/>
+    <polygon id="right-leg-strut" points="510,356 528,356 534,418 516,418" fill="#87918c" data-normal="0.2 -1 -0.15"/>
+    <polygon id="frame-occluder" points="414,220 564,220 552,418 534,418 528,356 510,356 504,342 474,342 468,356 450,356 444,418 426,418" fill="#000000" data-role="occluder"/>
+    <circle id="garage-core-socket-marker" data-anchor="core-socket" cx="489" cy="292" r="1"/>
+    <circle id="garage-walker-left-marker" data-anchor="walker-drive-mount-left" cx="454" cy="356" r="1"/>
+    <circle id="garage-walker-right-marker" data-anchor="walker-drive-mount-right" cx="524" cy="356" r="1"/>
+    <circle id="garage-crane-left-marker" data-anchor="crane-arm-mount-left" cx="440" cy="266" r="1"/>
+    <circle id="garage-crane-right-marker" data-anchor="crane-arm-mount-right" cx="538" cy="266" r="1"/>
+    <circle id="garage-reactor-marker" data-anchor="reactor-mount" cx="489" cy="326" r="1"/>
+    <circle id="garage-armor-marker" data-anchor="snow-armor-mount" cx="489" cy="304" r="1"/>
+    <circle id="garage-cutter-marker" data-anchor="quarry-cutter-mount" cx="538" cy="302" r="1"/>
+    <circle id="garage-ground-marker" data-anchor="ground-contact" cx="489" cy="426" r="1"/>
+  </g>
+  <g id="garage-zero-state" data-pose="garage-zero" data-material="painted-steel" data-normal="0 0 -1" data-z="-0.1">
+    <polygon id="core-socket-outer" points="469,278 489,266 509,278 509,306 489,318 469,306" fill="#242d2e" data-material="raw-steel"/>
+    <polygon id="core-socket-brass" points="475,282 489,274 503,282 503,302 489,310 475,302" fill="#b6904f" data-material="brass" data-z="-0.1"/>
+    <polygon id="installed-control-core" points="479,286 489,280 499,286 499,298 489,304 479,298" fill="#8ee9d8" data-material="glass" data-z="-0.2"/>
+    <polygon id="walker-mount-left-outer" points="440,342 458,332 476,342 476,360 458,370 440,360" fill="#252c2d" data-material="raw-steel"/>
+    <polygon id="walker-mount-left-empty" points="446,345 458,338 470,345 470,357 458,364 446,357" fill="#6d7470" data-material="raw-steel" data-z="-0.1"/>
+    <polygon id="walker-mount-right-outer" points="502,342 520,332 538,342 538,360 520,370 502,360" fill="#252c2d" data-material="raw-steel"/>
+    <polygon id="walker-mount-right-empty" points="508,345 520,338 532,345 532,357 520,364 508,357" fill="#656c69" data-material="raw-steel" data-z="-0.1"/>
+    <polygon id="crane-mount-left-outer" points="426,254 440,246 454,254 454,270 440,278 426,270" fill="#252c2d" data-material="raw-steel"/>
+    <polygon id="crane-mount-left-empty" points="432,257 440,252 448,257 448,267 440,272 432,267" fill="#7c7665" data-material="brass" data-z="-0.1"/>
+    <polygon id="crane-mount-right-outer" points="524,254 538,246 552,254 552,270 538,278 524,270" fill="#252c2d" data-material="raw-steel"/>
+    <polygon id="crane-mount-right-empty" points="530,257 538,252 546,257 546,267 538,272 530,267" fill="#747061" data-material="brass" data-z="-0.1"/>
+    <polygon id="reactor-mount-outer" points="471,314 489,304 507,314 507,336 489,346 471,336" fill="#252c2d" data-material="raw-steel"/>
+    <polygon id="reactor-mount-empty" points="478,318 489,312 500,318 500,332 489,338 478,332" fill="#59615d" data-material="raw-steel" data-z="-0.1"/>
+    <polygon id="armor-rail-left" points="450,278 460,274 466,330 456,334" fill="#b08b4f" data-material="brass" data-z="-0.1"/>
+    <polygon id="armor-rail-right" points="518,274 528,278 522,334 512,330" fill="#a6824a" data-material="brass" data-z="-0.1"/>
+    <polygon id="cutter-mount-outer" points="528,288 544,282 556,294 552,312 536,316 524,304" fill="#252c2d" data-material="raw-steel"/>
+    <polygon id="cutter-mount-empty" points="532,292 542,288 550,296 548,306 538,310 530,302" fill="#665f55" data-material="raw-steel" data-z="-0.1"/>
+    <polygon id="completion-rail" points="430,188 548,188 542,208 436,208" fill="#2b3232" data-material="painted-steel"/>
+    <polygon id="completion-empty-1" points="446,192 452,198 446,204 440,198" fill="#756c58" data-material="brass" data-z="-0.1"/>
+    <polygon id="completion-empty-2" points="468,192 474,198 468,204 462,198" fill="#756c58" data-material="brass" data-z="-0.1"/>
+    <polygon id="completion-empty-3" points="490,192 496,198 490,204 484,198" fill="#756c58" data-material="brass" data-z="-0.1"/>
+    <polygon id="completion-empty-4" points="512,192 518,198 512,204 506,198" fill="#756c58" data-material="brass" data-z="-0.1"/>
+    <polygon id="completion-empty-5" points="534,192 540,198 534,204 528,198" fill="#756c58" data-material="brass" data-z="-0.1"/>
+  </g>
+</svg>

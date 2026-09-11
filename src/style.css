@@ -916,8 +916,8 @@ dd {
 .scrap-garage-reveal {
   position: absolute;
   z-index: 15;
+  top: clamp(82px, 14vh, 112px);
   right: clamp(14px, 2vw, 24px);
-  bottom: clamp(86px, 15vw, 132px);
   display: grid;
   min-width: min(310px, calc(100% - 28px));
   gap: 4px;
@@ -946,6 +946,13 @@ dd {
 .scrap-garage-reveal span {
   color: #d6d8cd;
   font-size: clamp(0.56rem, 0.9vw, 0.72rem);
+}
+
+@media (max-width: 900px) {
+  .scrap-garage-reveal {
+    right: auto;
+    left: clamp(14px, 2vw, 24px);
+  }
 }
 
 .game-area-label small {

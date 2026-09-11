@@ -2,6 +2,7 @@ import { compileSvgMaster } from './svg/SvgAssetCompiler.js';
 import { PROLOGUE_CORE_ASSET } from './assets/PrologueCoreAsset.js';
 import { PROLOGUE_RETRIEVAL_ARM_ASSET } from './assets/PrologueRetrievalArmAsset.js';
 import { PROLOGUE_ANCIENT_MACHINE_ASSET } from './assets/PrologueAncientMachineAsset.js';
+import { PROLOGUE_GARAGE_ZERO_ASSET } from './assets/PrologueGarageZeroAsset.js';
 const resourceFor = (
   asset,
   id,
@@ -123,6 +124,18 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
       approvalStatus: 'runtime-baseline-unapproved',
       notes:
         'REF-03 SVG 기술 기준선 · dormant/socket-sealed/eyes-lit/parts-assembled/incomplete-march pose와 소켓·단안·진로 anchor 검토. 최종 reference/Composition 승인은 별도입니다.',
+    },
+  ),
+  resourceFor(
+    PROLOGUE_GARAGE_ZERO_ASSET,
+    'svg:prologue-garage-zero',
+    'public/graphics/prologue-garage-zero.master.svg',
+    {
+      category: 'facility',
+      referenceGroupId: 'REF-04',
+      approvalStatus: 'runtime-baseline-unapproved',
+      notes:
+        'REF-04 SVG 기술 기준선 · 제어핵 socket과 다리·팔·동력원·장갑·거대 검의 독립 module mount를 검토합니다. 최종 Garage 0% reference/Composition 승인은 별도입니다.',
     },
   ),
 ]);

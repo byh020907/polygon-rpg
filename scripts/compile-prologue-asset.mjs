@@ -19,6 +19,11 @@ const specifications = [
     target: 'src/graphics/assets/PrologueAncientMachineAsset.js',
     exportName: 'PROLOGUE_ANCIENT_MACHINE_ASSET',
   },
+  {
+    source: 'public/graphics/prologue-garage-zero.master.svg',
+    target: 'src/graphics/assets/PrologueGarageZeroAsset.js',
+    exportName: 'PROLOGUE_GARAGE_ZERO_ASSET',
+  },
 ];
 const check = process.argv.includes('--check');
 for (const specification of specifications) {

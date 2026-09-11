@@ -6,15 +6,15 @@ RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. O
 
 ## Active Execution Goal
 
-Human Feedback Priority — Hero/Rival/Owner → Core/Retrieval Arm → Ancient Machine Awakening의 production 연결 다음으로 Garage 0%를 기존 owner 분석·지도 점등·차고 개방·완성도 0% stage에 보존하면서 수정 가능한 SVG master·stable world identity·동일 Polygon renderer/검토실 data로 연결한다. 실제 gameplay scale에서 지도·주인공·주인·독립 module mount가 함께 읽히는지 검증하고 REF-04/REF-05 승인과 기술 기준선을 분리한다.
+Human Feedback Priority — Garage 0% production 연결 다음으로 REF-05 prologue gameplay-scale composite를 새 진행의 의뢰·라이벌 동행·구조·제어핵 회수·고대 병기 각성·D-30·귀환·지도·차고 0%까지 같은 data·pose sampler·Polygon renderer·UI로 이어 검증한다. desktop/mobile의 실제 속도·연속 frame에서 인물·핵/팔·병기·차고·조명·횡/사선 베기와 접촉을 함께 판독하며 현재 기술 기준선과 최종 reference/Composition 승인을 분리한다.
 
 ## Current Evidence / Gap
 
-- `public/graphics/prologue-ancient-machine.master.svg`가 dormant/socket-sealed/eyes-lit/parts-assembled/incomplete-march를 한 수정 가능한 REF-03 기준선으로 소유한다. stable `world-ancient-machine`이 기존 `wreck-*`/`scrap-king-*` stage item을 선택 신호로 사용해 같은 production `GameScene`/Composition/Polygon depth renderer에서 교체하며 socket/mono-eye/ground/route anchor를 노출한다. 진행·input lock·camera·저장 writer는 기존 domain에 남고 catalog는 `runtime-baseline-unapproved`를 명시한다.
-- Codex in-app Browser에서 1280×720 eyes-lit·release·D-30과 844×390 eyes-lit를 판독했다. 병기는 배경보다 앞·주인공/라이벌보다 뒤에서 거대한 scale로 읽히고, 단안은 한 청록 slit, 핵 회수 장면은 봉쇄된 socket과 분리된 회수팔, D-30은 결합 부품·진로 beacon을 보여 준다. HUD와 mobile touch control은 핵심 장면을 가리지 않았다. 이는 REF-03/Composition 최종 승인이 아니다.
-- `test:systems`, `assets:check`, `test:intro` 32개 stage/interaction/reload/keyboard-touch, `test:visual`, `test:graphics` 589개 catalog, lint/format, art handoff 589-resource/2,911-link 대조, release metadata와 `git diff --check` PASS. 독립 Sol/high verifier도 production 연결·legacy 교체·depth 순서·구조화된 REF-02/REF-03 미승인 상태 분리를 PASS 판정했다. 전체 노출 공격·양방향 실제 입력과 도입부 처음부터의 연속 플레이는 아직 남아 있다.
+- `public/graphics/prologue-garage-zero.master.svg`가 제어핵 socket과 다리·팔·동력원·장갑·거대 검의 독립 mount를 한 수정 가능한 REF-04 기술 기준선으로 소유한다. stable `world-garage-zero`가 기존 0% frame/core/label을 같은 production Composition/Polygon depth renderer에서 교체하고 이후 20~100% 자유 순서 module overlay는 보존한다. catalog는 `runtime-baseline-unapproved`를 명시한다.
+- Codex in-app Browser에서 `scrap-garage-opened` 1280×720·844×390과 검토실 `svg:prologue-garage-zero / near:garage-zero`를 판독했다. 지도·주인공·주인·라이벌·밝은 골격·청록 핵·빈 mount가 같은 gameplay scale에서 읽히고 mobile 안내는 상단 빈 공간으로 이동해 인물과 골격을 가리지 않는다. 이는 REF-04/REF-05 최종 승인이 아니다.
+- `assets:check`, `test:systems`, `test:intro` 32개 stage/interaction/reload/keyboard-touch, `test:visual`, `test:graphics` 590개 catalog, lint/format, art handoff 590-resource/2,913-link 대조, release metadata와 `git diff --check` PASS. 독립 Sol/high verifier도 stage 경계·legacy 교체·9 anchor·module overlay·map→garage→cast depth와 미승인 상태 분리를 PASS 판정했다.
 
-Human Feedback Priority Gap: REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm의 승인 원본·전용 rival hook anchor, REF-03 Ancient Machine 승인 reference/Composition은 공급·승인되지 않았고 현재 결과는 기술 기준선이다. Garage 0%와 prologue gameplay-scale composite는 아직 같은 production 연결과 실제 화면 검증이 필요하다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
+Human Feedback Priority Gap: REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았고 현재 결과는 기술 기준선이다. REF-05 composite와 새 저장에서 도입부 처음부터의 실제 속도 연속 플레이, 전체 노출 공격·양방향 접촉 검증이 남았다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
 
 ## Preserved Work Reference
 

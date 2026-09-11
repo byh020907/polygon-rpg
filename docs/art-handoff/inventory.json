@@ -1,6 +1,6 @@
 {
-  "fingerprint": "f2bf89e19103",
-  "resourceCount": 589,
+  "fingerprint": "08d79dd56761",
+  "resourceCount": 590,
   "records": [
     {
       "id": "player:protagonist",
@@ -17945,6 +17945,64 @@
       ],
       "itemIds": [],
       "page": "resources/facility-4.html#svg%3Aprologue-ancient-machine"
+    },
+    {
+      "id": "svg:prologue-garage-zero",
+      "label": "SVG · prologue-garage-zero",
+      "category": "facility",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "public/graphics/prologue-garage-zero.master.svg",
+      "notes": "REF-04 SVG 기술 기준선 · 제어핵 socket과 다리·팔·동력원·장갑·거대 검의 독립 module mount를 검토합니다. 최종 Garage 0% reference/Composition 승인은 별도입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "far:garage-zero",
+          "label": "far · garage-zero",
+          "lod": "far",
+          "pose": "garage-zero",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:garage-zero",
+          "label": "mid · garage-zero",
+          "lod": "mid",
+          "pose": "garage-zero",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:garage-zero",
+          "label": "near · garage-zero",
+          "lod": "near",
+          "pose": "garage-zero",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/facility-4.html#svg%3Aprologue-garage-zero"
     },
     {
       "id": "field:mine-board",
