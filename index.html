@@ -434,7 +434,7 @@
       <section
         class="game-screen"
         x-show="screen === 'game'"
-        x-bind:class="{ 'game-screen--mobile-controls': forceMobileControls, 'game-screen--test-play': testPlayActive }"
+        x-bind:class="{ 'game-screen--mobile-controls': forceMobileControls, 'game-screen--test-play': testPlayActive, 'game-screen--contact-diagnostics': testPlayActive && testDiagnosticsOpen }"
         x-bind:data-reduced-motion="reducedMotion"
         x-bind:data-camera-feedback-enabled="String(!reducedMotion)"
         aria-labelledby="game-status-title"
@@ -453,9 +453,61 @@
             <option value="0.5">0.5×</option>
             <option value="1">1×</option>
             <option value="2">2×</option></select
+          ><button
+            type="button"
+            @click="testDiagnosticsOpen = !testDiagnosticsOpen"
+            :aria-expanded="testDiagnosticsOpen"
+          >
+            접촉 진단</button
           ><button id="test-exit-control" type="button" @click="returnToPlayerGame">
             테스트 종료
           </button>
+          <div
+            class="test-contact-controls"
+            x-show="testDiagnosticsOpen"
+            aria-label="실제 전투 접촉 진단"
+          >
+            <div class="test-contact-actions">
+              <button
+                type="button"
+                @click="controlTestDiagnostics('overlay')"
+                :aria-pressed="testDiagnostics.overlay"
+              >
+                판정 표시
+              </button>
+              <button
+                type="button"
+                @click="controlTestDiagnostics('arm')"
+                :aria-pressed="testDiagnostics.armed"
+                x-text="testDiagnostics.armed ? '접촉 대기 취소' : '다음 접촉에서 멈춤'"
+              ></button>
+              <button
+                type="button"
+                @click="controlTestDiagnostics('pause')"
+                x-text="testDiagnostics.paused ? '계속 재생' : '일시정지'"
+              ></button>
+              <button
+                type="button"
+                @click="controlTestDiagnostics('step')"
+                :disabled="!testDiagnostics.paused"
+              >
+                1틱 진행
+              </button>
+              <button type="button" @click="copyTestContact">접촉 기록 복사</button>
+            </div>
+            <output aria-label="현재 접촉 결과" x-text="testDiagnostics.summary"></output>
+            <small
+              >흰색: 보이는 검 · 청록: 판정 무기 · 노랑: sweep · 분홍: 신체 · 파랑: 방어 · 초록:
+              접촉점. 1틱 = 1/120초.</small
+            >
+            <span role="status" x-text="testContactCopyStatus"></span>
+            <textarea
+              x-show="testContactReport"
+              readonly
+              aria-label="복사할 접촉 기록"
+              :value="testContactReport"
+            ></textarea>
+          </div>
         </aside>
         <div class="game-viewport">
           <aside class="acquisition-feed" aria-live="polite" aria-label="획득과 현장 소식">
@@ -1037,6 +1089,7 @@
                   class="mobile-control-button"
                   x-bind:data-slot="control.slot"
                   x-bind:data-mobile-action="control.id"
+                  x-bind:disabled="testPlayActive && testDiagnostics.paused"
                   x-bind:aria-label="control.hint"
                   @contextmenu.prevent
                 >
@@ -1056,6 +1109,7 @@
                   class="mobile-control-button mobile-control-button--action"
                   x-bind:data-slot="control.slot"
                   x-bind:data-mobile-action="control.id"
+                  x-bind:disabled="testPlayActive && testDiagnostics.paused"
                   x-bind:aria-label="control.hint"
                   @contextmenu.prevent
                 >

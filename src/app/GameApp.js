@@ -23,6 +23,7 @@ import { readVisualQaRequest } from './VisualQaConfig.js';
 import { CanvasHost } from '../rendering/CanvasHost.js';
 import { CanvasPolygonRenderer } from '../rendering/CanvasPolygonRenderer.js';
 import { projectDialogue } from './DialoguePresentation.js';
+import { TestPlayDiagnostics } from './TestPlayDiagnostics.js';
 
 export const GAME_SCREEN = Object.freeze({
   MENU: 'menu',
@@ -114,6 +115,7 @@ export class GameApp extends SceneNode {
     this.visualQaRequest = visualQaRequest;
     this.isVisualQa = Boolean(this.visualQaRequest);
     this.testPlayOptions = null;
+    this.testDiagnostics = null;
     this.visualQaRecoveryRecords = new Map();
     this.progressionStorage = null;
     if (this.isVisualQa) {
@@ -166,6 +168,7 @@ export class GameApp extends SceneNode {
         const uiState = this.uiBridge?.snapshot();
         return (
           uiState?.screen === GAME_SCREEN.GAME &&
+          this.testDiagnostics?.paused !== true &&
           uiState?.debugPanelOpen !== true &&
           uiState?.graphicsReviewOpen !== true &&
           uiState?.journalOpen !== true &&
@@ -1042,6 +1045,8 @@ export class GameApp extends SceneNode {
       ...(location ? { location: Object.freeze({ ...location }) } : {}),
       ...(equipmentId !== undefined ? { equipmentId } : {}),
     });
+    this.testDiagnostics = new TestPlayDiagnostics();
+    this.scene.setVisualQaCombatOverlay(false);
     this.manualMode = false;
     this.latestVisualQaRenderFrame = null;
     this.input.clear({ resetSequences: true });
@@ -1057,6 +1062,37 @@ export class GameApp extends SceneNode {
     this.input.clear({ resetSequences: true });
     this.scene.reset();
     this.runner.reset(performance.now());
+  }
+
+  controlTestDiagnostics(command) {
+    if (!this.isTestPlay || !this.testDiagnostics) return false;
+    const diagnostics = this.testDiagnostics;
+    if (command === 'overlay') {
+      diagnostics.overlay = !diagnostics.overlay;
+      this.scene.setVisualQaCombatOverlay(diagnostics.overlay);
+    } else if (command === 'pause') {
+      diagnostics.paused = !diagnostics.paused;
+      diagnostics.armed = false;
+      diagnostics.healthBefore = null;
+      this.input.clear();
+    } else if (command === 'arm') {
+      diagnostics.armed = !diagnostics.armed;
+      diagnostics.paused = false;
+      diagnostics.healthBefore = null;
+      this.input.clear();
+    } else if (command === 'step') {
+      if (!diagnostics.paused) return false;
+      this.update(1 / 120, this.createInputSnapshot(), true);
+    } else {
+      return false;
+    }
+    this.runner.reset(performance.now());
+    this.scene.createRenderFrame(1);
+    return true;
+  }
+
+  getTestContactEvidence() {
+    return this.isTestPlay ? (this.testDiagnostics?.evidence() ?? null) : null;
   }
 
   onScreenChanged() {
@@ -1199,6 +1235,7 @@ export class GameApp extends SceneNode {
   }
 
   pressMobileAction(actionId, pointerId) {
+    if (this.testDiagnostics?.paused) return false;
     if (this.uiBridge.snapshot().screen === GAME_SCREEN.MENU) return false;
     return this.input.pressMobile(actionId, pointerId);
   }
@@ -1212,7 +1249,7 @@ export class GameApp extends SceneNode {
     return this.input.setQaHeld(actionId, held);
   }
 
-  update(deltaSeconds, inputSnapshot) {
+  update(deltaSeconds, inputSnapshot, singleStep = false) {
     const uiState = this.uiBridge.snapshot();
     if (uiState.graphicsReviewOpen) return;
     const active =
@@ -1222,20 +1259,33 @@ export class GameApp extends SceneNode {
       uiState.operationMapOpen !== true &&
       uiState.campaignActionPreviewOpen !== true;
     if (!active) return;
+    if (this.testDiagnostics?.paused && !singleStep) return;
     this.fixedProcess(deltaSeconds, {
       inputSnapshot,
-      simulationSettings: this.createSimulationSettings(uiState),
+      simulationSettings: singleStep
+        ? { ...this.createSimulationSettings(uiState), animationSpeed: 1 }
+        : this.createSimulationSettings(uiState),
     });
+    if (this.testDiagnostics) {
+      // Observe immediately after each 120 Hz update, before another catch-up tick
+      // can move the weapon past the contact or expire the event.
+      this.testDiagnostics.tick += 1;
+      if (this.testDiagnostics.armed) this.scene.createRenderFrame(1);
+    }
   }
 
   render(interpolationAlpha) {
     const uiState = this.uiBridge.snapshot();
     if (uiState.graphicsReviewOpen) return;
     if (uiState.screen === GAME_SCREEN.MENU) return;
-    this.scene.createRenderFrame(interpolationAlpha);
+    this.scene.createRenderFrame(this.testDiagnostics?.paused ? 1 : interpolationAlpha);
   }
 
   renderFrame(renderFrame) {
+    if (this.testDiagnostics) {
+      this.testDiagnostics.observe(renderFrame);
+      this.uiBridge.setTestDiagnostics?.(this.testDiagnostics.snapshot());
+    }
     if (this.qaInputEnabled) {
       this.uiBridge.setQaInputStatus(
         Object.freeze({

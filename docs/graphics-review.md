@@ -18,6 +18,10 @@
 
 원형 탐색 참고: [Kando Submenu](https://kando.menu/item-submenu/), [Maya Marking Menus](https://help.autodesk.com/cloudhelp/2023/ENU/Maya-Animation/files/GUID-8BA1A3AA-4C44-4779-8B22-0AAE3627E8EB.htm).
 
+테스트 상단의 **접촉 진단**에서 **판정 표시**를 켜면 실제 게임의 검·방패·sweep와 적의 semantic 신체 영역, 접촉점을 함께 본다. **다음 접촉에서 멈춤**은 이후 실제 입력으로 낸 플레이어 공격의 첫 접촉 직후 simulation을 멈춘다. 피해뿐 아니라 방어·회피 접촉도 잡으며 HP와 event를 함께 읽는다. **일시정지/계속 재생**과 **1틱 진행**으로 같은 장면을 확인한다. 한 틱은 선택한 재생 속도와 무관하게 simulation 1/120초이고 정지 중 게임 입력은 받지 않는다.
+
+**접촉 기록 복사**는 현재 production frame의 동작/instance, 무기·sweep·semantic hurt, 접촉과 event, HP, 시작 URL을 복사한다. 복사 실패 시 표시된 기록을 직접 선택할 수 있다. URL은 테스트 시작 배치를 복원하며 임의의 실제 입력 결과를 재생하는 replay URL은 아니다. 정상 속도로 동작을 확인한 뒤 느린 재생과 정지를 보조로 사용한다. 다시 시작하면 정지·접촉 대기·표시·기록을 초기화하며 원래 저장은 건드리지 않는다. 모바일 가로 화면에서는 진단 제어를 왼쪽에 배치한다.
+
 ## 등록 경로
 
 `src/graphics/GraphicsResourceCatalog.js`가 목록을 소유하고 `GraphicsResourceSampler.js`가 production producer를 호출한다. 게임·fixture·검토 scene은 `src/app/createGameScene.js`의 같은 composition을 쓴다. UI 목록은 `src/ui/GameUiCatalog.js`에서 이 catalog에 등록하며 자체 그림이나 중복 markup을 작성하지 않는다.
