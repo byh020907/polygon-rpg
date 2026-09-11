@@ -4106,6 +4106,7 @@ export class GameScene extends SceneNode {
       this.playerCombatGeometry?.sequence === combatState.sequence
         ? this.playerCombatGeometry
         : null;
+    const contactProfile = this.getAttackHitProfile(combatState.id);
     const pose = this.sampleSizedPlayerMotionPose(
       Object.freeze({
         motionState: poseCombatState,
@@ -4143,6 +4144,13 @@ export class GameScene extends SceneNode {
       renderPosition,
       characterRenderOrder,
     );
+    // A damaging frame must render the exact geometry that the encounter samples.
+    // Interpolation is useful for ordinary motion, but a second pose sample here can
+    // visually move a blade away from the sweep that just resolved a hit.  The fixed
+    // simulation sample already includes the current root, pose and SVG attachments.
+    if (contactGeometry && isAttackContactFrame(combatState, contactProfile)) {
+      renderCombatGeometry = contactGeometry;
+    }
     const playerPresentation = createPlayerCombatPresentation(
       Object.freeze({
         position: renderPosition,
@@ -4154,7 +4162,7 @@ export class GameScene extends SceneNode {
         renderOrder: characterRenderOrder,
         weaponLengthScale: this.getPresentationWeaponLengthScale(poseCombatState.id),
         contactGeometry,
-        contactProfile: this.getAttackHitProfile(combatState.id),
+        contactProfile,
         contactProgress: combatState.progress,
         combatEvents,
         blockImpactSeconds: this.playerBlockImpactSeconds,

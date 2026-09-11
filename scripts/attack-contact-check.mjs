@@ -282,6 +282,68 @@ try {
     pulseHits += 1;
   }
   assert.equal(pulseHits, spin.hitPulses.length);
+
+  // Drive the real scene command lifecycle (rather than injecting a geometry-only
+  // frame) and ensure the canvas-facing weapon is the same immutable object that
+  // produced the authoritative sweep. This protects the player-visible hit from a
+  // render interpolation sample drifting away from its damage frame.
+  const neutralInput = Object.freeze({
+    left: false,
+    right: false,
+    jump: false,
+    guard: false,
+    basicAttack: false,
+    strongAttack: false,
+    jumpSequence: 0,
+    basicAttackSequence: 0,
+    strongAttackSequence: 0,
+  });
+  for (const facing of [1, -1]) {
+    encounter.reset();
+    scene.facing = facing;
+    scene.position = { x: 560, y: scene.position.y };
+    scene.previousPosition = { ...scene.position };
+    encounter.enemy.position = {
+      x: scene.position.x + facing * 72,
+      y: encounter.enemy.groundY,
+    };
+    encounter.enemy.facing = -facing;
+    encounter.enemy.attackFacing = -facing;
+    encounter.enemy.aiState = 'idle';
+    encounter.enemy.aiSeconds = 99;
+    const basicAttackSequence = ++sequence;
+    let checked = false;
+    for (let tick = 0; tick < 180; tick += 1) {
+      scene.update(
+        1 / 120,
+        Object.freeze({
+          ...neutralInput,
+          basicAttack: tick === 0,
+          basicAttackSequence,
+        }),
+      );
+      const state = scene.combatCommands.snapshot();
+      if (state.phase !== 'strike') continue;
+      checked = true;
+      for (const interpolationAlpha of [0, 0.25, 0.5, 0.75, 1]) {
+        const frame = scene.createRenderFrame(interpolationAlpha);
+        assert.strictEqual(
+          frame.combatGeometry.visibleWeapon,
+          frame.combatGeometry.authoritativeWeapon,
+          `slash/${facing}/${interpolationAlpha}: rendered blade is the damage blade`,
+        );
+        assert.ok(
+          frame.combatGeometry.activeSweep,
+          `slash/${facing}/${interpolationAlpha}: active damage frame retains its sweep`,
+        );
+      }
+      break;
+    }
+    assert.equal(checked, true, `slash/${facing}: command lifecycle reaches a rendered strike`);
+    for (let tick = 0; tick < 180 && scene.combatCommands.active; tick += 1)
+      scene.update(1 / 120, neutralInput);
+  }
+
   const originalEquipment = scene.resolvedLoadout;
   for (const equipment of CUTTER_LOADOUTS) {
     scene.resolvedLoadout = equipment;
