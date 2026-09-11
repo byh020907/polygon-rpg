@@ -16,7 +16,7 @@ Human Feedback Priority — 시작 위치·방향을 고정한 저장 없는 테
 - 2026-09-11: 저장 없는 production input QA에서 keyboard 좌측 기본 공격을 실제로 입력했다. `artifacts/contact-review/left-keyboard-contact/attack-strip.png`의 좌측 slash strike는 수거 유닛을 가로지르고, telemetry는 `facing -1`, 적 HP `58 → 47`, `launch`를 기록한다. 같은 runner의 keyboard 공중 기본 공격은 `artifacts/contact-review/right-air-keyboard-contact/attack-strip.png`에서 착지 전 airSlash strike와 적 HP `58 → 46`, `hit`을 함께 기록한다. keyboard focus를 QA relay button이 아닌 production canvas로 돌리고, 좌측 공중 input은 방향키를 누른 채 jump/attack으로 보내도록 `scripts/motion-play-qa.mjs`를 보완했다. 이는 좌측 지상과 우측 공중의 실제 입력 evidence이며 mobile·나머지 공격군의 PASS를 뜻하지 않는다.
 - `npm run test:combat`과 `git diff --check` PASS. 11개 공격군의 양방향 definite hit/miss·경계·sweep lifecycle·semantic hurt·damage-owner fixture는 통과했지만 실제 browser 입력 관찰은 위 기본 공격 한 건뿐이다. 전체 게임 완료 판정은 아니다.
 - 2026-09-11: 테스트 플레이 URL의 `location.facing`을 `-1|1`로 검증·복원하고, restart도 같은 방향을 유지하게 했다. production RenderFrame의 immutable `player.facing`과 접촉 진단 요약이 이 방향을 읽는다. `npm run test:platform`, `npm run test:combat`, `git diff --check` PASS. 이는 좌우 실제 입력 검증을 위한 재현 기반이며, 왼쪽/공중/나머지 공격군의 Browser 접촉 PASS를 대신하지 않는다.
-- 설치형 PWA의 Release A→B·저장 유지·offline 재실행은 Human 확인 대기로 분리되어 있으며, 다른 제품 Gap 진행을 막지 않는다.
+- 2026-09-11 Human이 PWA 관련 개선과 실환경 확인 대기를 완료로 확인했다. 해당 PWA feedback은 queue에서 닫았으며, 독립적으로 남은 모바일 메인 메뉴 비율 요구는 보존한다.
 
 Human Feedback Priority Gap: 전체 노출 공격과 양방향·mobile의 실제 입력 연속 프레임, 준비 자세의 무게/낮은 side pull, 도입부의 연속 실제 플레이는 아직 미완료다. 좌측 지상과 우측 공중 keyboard contact, 11개 공격 좌우 contact/miss fixture 통과나 시작 방향 재현 기반으로 해당 INBOX를 닫지 않는다. 현재 art/composition은 시스템 검증용이며 최종 reference/Composition 승인과 visual fidelity는 미검증이다. INBOX 원문은 보존한다.
 
