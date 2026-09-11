@@ -42,6 +42,30 @@ function stateData(input = {}) {
   }
   return structuredClone(state);
 }
+function legacyPoseBindings(input, asset) {
+  if (input === undefined) return [];
+  if (!Array.isArray(input) || input.length > 16) throw new Error('Invalid legacy pose bindings');
+  const ids = new Set();
+  return input.map((binding) => {
+    identifier(binding.id);
+    identifier(binding.pose);
+    if (ids.has(binding.id)) throw new Error('Duplicate legacy pose binding');
+    ids.add(binding.id);
+    if (asset && !asset.poses.includes(binding.pose))
+      throw new Error('Unknown legacy binding pose');
+    for (const key of ['whenItemIds', 'replaceItemIds']) {
+      if (!Array.isArray(binding[key]) || binding[key].length < 1 || binding[key].length > 32)
+        throw new Error('Legacy pose binding item IDs required');
+      binding[key].forEach(identifier);
+    }
+    return {
+      id: binding.id,
+      pose: binding.pose,
+      whenItemIds: [...new Set(binding.whenItemIds)],
+      replaceItemIds: [...new Set(binding.replaceItemIds)],
+    };
+  });
+}
 function validateAssetState(object, asset) {
   if (!asset) return;
   if (!asset.poses.includes(object.state.pose))
@@ -115,6 +139,9 @@ export function defineScenePresentation(input) {
         object.legacyItemIds.some((id) => !identifier(id)))
     )
       throw Error('Invalid legacy binding');
+    const poseBindings = legacyPoseBindings(object.legacyPoseBindings);
+    if (object.legacyUseBounds !== undefined && typeof object.legacyUseBounds !== 'boolean')
+      throw Error('Boolean legacyUseBounds required');
     if (object.material !== undefined) validateData(object.material);
     return {
       ...object,
@@ -129,6 +156,8 @@ export function defineScenePresentation(input) {
       presentationOverride,
       presentationBias,
       tags,
+      legacyPoseBindings: poseBindings,
+      legacyUseBounds: object.legacyUseBounds ?? true,
       state: stateData(object.state),
     };
   });
@@ -187,8 +216,11 @@ export class SceneCompositionRuntime {
     for (const object of this.definition.objects)
       if (!assets.hasDefinition(object.assetId))
         throw Error('Unknown scene asset ' + object.assetId);
-    for (const object of this.definition.objects)
-      validateAssetState(object, assets.get(object.assetId));
+    for (const object of this.definition.objects) {
+      const asset = assets.get(object.assetId);
+      validateAssetState(object, asset);
+      legacyPoseBindings(object.legacyPoseBindings, asset);
+    }
   }
   snapshotProjected(viewAt, worldState = {}) {
     const views = new Map(

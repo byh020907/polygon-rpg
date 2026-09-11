@@ -1,10 +1,11 @@
 import { compileSvgMaster } from './svg/SvgAssetCompiler.js';
 import { PROLOGUE_CORE_ASSET } from './assets/PrologueCoreAsset.js';
-const resourceFor = (asset, id, source) =>
+import { PROLOGUE_RETRIEVAL_ARM_ASSET } from './assets/PrologueRetrievalArmAsset.js';
+const resourceFor = (asset, id, source, { category = 'prop', notes = null } = {}) =>
   Object.freeze({
     id,
     label: `SVG · ${asset.id}`,
-    category: 'prop',
+    category,
     kind: 'animated',
     producer: 'svg',
     source,
@@ -23,10 +24,8 @@ const resourceFor = (asset, id, source) =>
       ),
     ),
     notes:
-      'SVG 시스템 자산 · LOD/pose/관절 metadata 검토. 승인 아트와 별도입니다.' +
-      (id.startsWith('uploaded-svg:')
-        ? ' 업로드는 이 세션에만 유지되며 새로 열면 원본을 다시 선택하세요.'
-        : ' 기존 제어핵을 연결한 시스템 검증용 master입니다.'),
+      notes ??
+      'SVG 시스템 자산 · LOD/pose/관절 metadata 검토. 승인 아트와 별도입니다. 업로드는 이 세션에만 유지되며 새로 열면 원본을 다시 선택하세요.',
   });
 export function createSvgAssetSession({ maxAssets = 8, maxBytes = 4 * 1024 * 1024 } = {}) {
   if (
@@ -87,5 +86,19 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
     PROLOGUE_CORE_ASSET,
     'svg:prologue-control-core',
     'public/graphics/prologue-control-core.master.svg',
+    {
+      notes:
+        'SVG 시스템 자산 · LOD/pose/관절 metadata 검토. 승인 아트와 별도입니다. 기존 제어핵을 연결한 시스템 검증용 master입니다.',
+    },
+  ),
+  resourceFor(
+    PROLOGUE_RETRIEVAL_ARM_ASSET,
+    'svg:prologue-retrieval-arm',
+    'public/graphics/prologue-retrieval-arm.master.svg',
+    {
+      category: 'facility',
+      notes:
+        'SVG 시스템 자산 · dormant/captured/released pose와 접촉 anchor 검토. 승인 아트와 별도인 기존 회수팔 연결 기준선입니다.',
+    },
   ),
 ]);

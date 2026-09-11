@@ -548,6 +548,28 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
       ]),
     }),
   }),
+  'scrap-intro-release': Object.freeze({
+    mapId: SCRAP_AWAKENING_MAP_ID,
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: SCRAP_AWAKENING_ROOM_ID,
+    x: 900,
+    scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
+    expectation: Object.freeze({
+      expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
+      expectedPatchIds: Object.freeze([
+        'scrap-prologue-collapse-and-rescue',
+        'scrap-prologue-rescue-powered',
+        'scrap-device-recovered',
+      ]),
+      expectedItems: Object.freeze([
+        'scrap-rescue-signal',
+        'scrap-retrieval-arm-grab-upper',
+        'scrap-retrieval-arm-grab-claw',
+        'scrap-retrieval-arm-grab-signal',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-device-glow-outer']),
+    }),
+  }),
   'scrap-intro-awakening': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
@@ -1712,6 +1734,7 @@ const DEBUG_SCENARIO_LABELS = Object.freeze({
   'scrap-intro-guard': '도입 · 심부 방패 경계 전투',
   'scrap-intro-search': '도입 · 폐병기 내부 현장 조사',
   'scrap-intro-before': '도입 · 붕괴 뒤 제어핵 선택',
+  'scrap-intro-release': '도입 · 제어핵 분리와 회수팔 해제',
   'scrap-intro-awakening': '도입 · 고대 병기 각성',
   'scrap-intro-d30': '도입 · D-30 경보',
   'scrap-intro-after': '도입 · 귀환 완료',

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="prologue-retrieval-arm" data-rig-family="articulated-machine" viewBox="990 220 130 150">
+  <title>Existing prologue retrieval arm — system integration poses, not approved final art</title>
+  <g id="dormant-pose" data-pose="dormant" data-replace="whole" data-material="raw-steel" data-normal="0 -1 -0.2" data-shadow="cast">
+    <polygon id="dormant-upper" points="1000,240 1104,268 1096,296 994,266" fill="#737a80"/>
+    <polygon id="dormant-forearm" points="1078,280 1102,286 1088,352 1066,348" fill="#5c6268" data-normal="0.2 -1 -0.2"/>
+    <polygon id="dormant-claw" points="1058,342 1088,344 1082,368 1064,368" fill="#4d5359" data-normal="0 -1 -0.35"/>
+    <ellipse id="dormant-elbow" cx="1091" cy="285" rx="13" ry="11" fill="#d0a75e" data-material="brass"/>
+    <circle id="dormant-control-marker" data-anchor="control-input" cx="1000" cy="253" r="1"/>
+    <circle id="dormant-claw-marker" data-anchor="claw-contact" cx="1073" cy="356" r="1"/>
+  </g>
+  <g id="captured-pose" data-pose="captured" data-replace="whole" data-material="raw-steel" data-normal="0 -1 -0.2" data-shadow="cast">
+    <polygon id="captured-upper" points="1050,236 1064,250 1036,286 1014,308 1000,296 1022,278" fill="#737a80"/>
+    <polygon id="captured-claw" points="1000,296 1038,302 1034,338 1006,342 996,320" fill="#50565c" data-normal="0 -1 -0.35"/>
+    <ellipse id="captured-elbow" cx="1024" cy="290" rx="13" ry="11" fill="#d0a75e" data-material="brass"/>
+    <polygon id="captured-signal" points="1046,238 1058,238 1058,247 1046,247" fill="#e0a04a" data-material="brass" data-normal="0 0 -1"/>
+    <circle id="captured-control-marker" data-anchor="control-input" cx="1052" cy="243" r="1"/>
+    <circle id="captured-claw-marker" data-anchor="claw-contact" cx="1018" cy="320" r="1"/>
+    <circle id="captured-rival-marker" data-anchor="rival-grip" cx="1030" cy="320" r="1"/>
+  </g>
+  <g id="released-pose" data-pose="released" data-replace="whole" data-material="raw-steel" data-normal="0 -1 -0.2" data-shadow="cast">
+    <polygon id="released-upper" points="1050,236 1066,248 1050,286 1034,310 1018,300 1034,278" fill="#697077"/>
+    <polygon id="released-forearm" points="1032,300 1050,286 1084,320 1070,336" fill="#555b61" data-normal="0.2 -1 -0.2"/>
+    <polygon id="released-claw-top" points="1068,324 1098,316 1104,326 1078,338" fill="#484e54" data-normal="0 -1 -0.35"/>
+    <polygon id="released-claw-bottom" points="1072,338 1102,342 1098,354 1076,348" fill="#484e54" data-normal="0 -1 -0.35"/>
+    <ellipse id="released-elbow" cx="1044" cy="296" rx="13" ry="11" fill="#bd9a5a" data-material="brass"/>
+    <polygon id="released-signal" points="1046,238 1058,238 1058,247 1046,247" fill="#6f817f" data-material="brass" data-normal="0 0 -1"/>
+    <circle id="released-control-marker" data-anchor="control-input" cx="1052" cy="243" r="1"/>
+    <circle id="released-claw-marker" data-anchor="claw-contact" cx="1086" cy="336" r="1"/>
+    <circle id="released-rival-marker" data-anchor="rival-grip" cx="1086" cy="336" r="1"/>
+  </g>
+</svg>

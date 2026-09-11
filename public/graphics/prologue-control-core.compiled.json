@@ -56,12 +56,40 @@
       "replacement": "part"
     }
   ],
-  "anchors": [],
+  "anchors": [
+    {
+      "id": "interaction",
+      "partId": "core-body",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "lod": "common",
+      "pose": "base"
+    },
+    {
+      "id": "socket-contact",
+      "partId": "core-body",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "lod": "common",
+      "pose": "base"
+    },
+    {
+      "id": "control-output",
+      "partId": "core-body",
+      "x": 1,
+      "y": 0,
+      "z": 0,
+      "lod": "common",
+      "pose": "base"
+    }
+  ],
   "lods": ["far", "mid", "near"],
   "poses": ["base"],
   "vertexCount": 6,
   "provenance": {
     "master": "prologue-control-core.master.svg",
-    "sha256": "5e3d8c863d53763c5bde005c23d892e6498c759b7a69d54325fe284796676f65"
+    "sha256": "3a8ce0c341dd2a39736946e910ec8fd0bd8aabe040bf6c9a163dd9e23eea4768"
   }
 }

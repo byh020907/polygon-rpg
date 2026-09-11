@@ -34,6 +34,116 @@ try {
     assert.ok(Math.abs(p.y - after.points[i].y) < 1e-8);
   });
   assert.equal(after.stroke, before.stroke);
+  scene.setVisualQaScrapAwakeningStage('device-investigated');
+  const interactionOutput = presenter.resolve(scene.createRenderFrame(1), {
+    viewport: { width: 960, height: 540 },
+    project: (point) => point,
+  });
+  const coreInteraction = interactionOutput.diagnostics.anchors.find(
+    (anchor) => anchor.worldObjectId === 'world-control-core' && anchor.id === 'interaction',
+  );
+  const coreEntity = scene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.find((entity) => entity.id === 'scrap-control-device');
+  assert.deepEqual(
+    { x: coreInteraction.x, y: coreInteraction.y },
+    coreEntity.position,
+    'SVG core interaction anchor follows the authored gameplay interaction',
+  );
+
+  const presentArm = (stageId) => {
+    scene.setVisualQaScrapAwakeningStage(stageId);
+    scene.setVisualQaLocation({
+      regionId: 'scrap-waste-edge',
+      roomId: 'abandoned-weapon-yard',
+      x: 1030,
+    });
+    return presenter.resolve(scene.createRenderFrame(1), {
+      viewport: { width: 960, height: 540 },
+      project: (point) => ({ x: point.x - 500, y: point.y }),
+    });
+  };
+  const armCases = [
+    {
+      stageId: 'yard-survey',
+      pose: 'dormant',
+      bindingId: 'dormant',
+      removedIds: [
+        'scrap-retrieval-arm-dormant-upper',
+        'scrap-retrieval-arm-dormant-forearm',
+        'scrap-retrieval-arm-dormant-claw',
+      ],
+    },
+    {
+      stageId: 'collapse',
+      pose: 'captured',
+      bindingId: 'captured',
+      removedIds: [
+        'scrap-retrieval-arm-grab-upper',
+        'scrap-retrieval-arm-grab-claw',
+        'scrap-retrieval-arm-grab-signal',
+      ],
+    },
+    {
+      stageId: 'device-recovered',
+      pose: 'released',
+      bindingId: 'released',
+      removedIds: [
+        'scrap-retrieval-arm-grab-upper',
+        'scrap-retrieval-arm-grab-claw',
+        'scrap-retrieval-arm-grab-signal',
+      ],
+    },
+  ];
+  const armOutputs = new Map();
+  for (const armCase of armCases) {
+    const armOutput = presentArm(armCase.stageId);
+    armOutputs.set(armCase.pose, armOutput);
+    const arm = armOutput.diagnostics.objects.find((object) => object.id === 'world-retrieval-arm');
+    assert.equal(arm.pose, armCase.pose);
+    assert.equal(arm.legacyPoseBindingId, armCase.bindingId);
+    for (const id of armCase.removedIds)
+      assert.equal(
+        armOutput.frame.items.some((item) => item.id === id),
+        false,
+        `${id} must be replaced by the shared SVG arm`,
+      );
+    assert.ok(
+      armOutput.frame.items.some((item) => item.worldObjectId === 'world-retrieval-arm'),
+      `${armCase.pose} arm must reach the production render frame`,
+    );
+    for (const anchorId of ['control-input', 'claw-contact'])
+      assert.ok(
+        armOutput.diagnostics.anchors.some(
+          (anchor) => anchor.worldObjectId === 'world-retrieval-arm' && anchor.id === anchorId,
+        ),
+        `${armCase.pose} exposes ${anchorId}`,
+      );
+  }
+  const capturedGrip = armOutputs
+    .get('captured')
+    .diagnostics.anchors.find(
+      (anchor) => anchor.worldObjectId === 'world-retrieval-arm' && anchor.id === 'rival-grip',
+    );
+  const capturedRival = armOutputs
+    .get('captured')
+    .frame.castCharacters.find((actor) => actor.actorId === 'rival-scout');
+  assert.ok(
+    Math.hypot(
+      capturedGrip.x - capturedRival.dialogueAnchor.x,
+      capturedGrip.y - capturedRival.dialogueAnchor.y,
+    ) < 30,
+    'captured claw anchor stays visibly attached to the rival',
+  );
+  const releasedGrip = armOutputs
+    .get('released')
+    .diagnostics.anchors.find(
+      (anchor) => anchor.worldObjectId === 'world-retrieval-arm' && anchor.id === 'rival-grip',
+    );
+  assert.ok(
+    releasedGrip.x - capturedGrip.x > 40,
+    'recovering the core visibly moves the released claw away from the rival',
+  );
   const progressBefore = JSON.stringify(scene.getProgressionSnapshot());
   for (const factor of [0.85, 1.15]) {
     scene.setCharacterAnimationSettings({
@@ -135,7 +245,7 @@ try {
   assert.equal(current.diagnostics.objects[0].lod, 'mid');
   assert.ok(current.frame.artDirection.lights.length);
   console.log(
-    'PASS actual GameScene: same core master geometry, deduplicated identity, body retarget/SVG visible-contact contour, whole pose, root distance and save preservation',
+    'PASS actual GameScene: core interaction anchor, stage-bound retrieval arm poses/contact, deduplicated identity, body retarget/SVG visible-contact contour, whole pose, root distance and save preservation',
   );
 } finally {
   scene.dispose();

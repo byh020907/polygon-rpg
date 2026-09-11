@@ -1,6 +1,6 @@
 {
-  "fingerprint": "be0b026b561b",
-  "resourceCount": 587,
+  "fingerprint": "385d714e9e24",
+  "resourceCount": 588,
   "records": [
     {
       "id": "player:protagonist",
@@ -17703,6 +17703,106 @@
       ],
       "itemIds": [],
       "page": "resources/prop-4.html#svg%3Aprologue-control-core"
+    },
+    {
+      "id": "svg:prologue-retrieval-arm",
+      "label": "SVG · prologue-retrieval-arm",
+      "category": "facility",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "public/graphics/prologue-retrieval-arm.master.svg",
+      "notes": "SVG 시스템 자산 · dormant/captured/released pose와 접촉 anchor 검토. 승인 아트와 별도인 기존 회수팔 연결 기준선입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "far:dormant",
+          "label": "far · dormant",
+          "lod": "far",
+          "pose": "dormant",
+          "frameCount": 1
+        },
+        {
+          "id": "far:captured",
+          "label": "far · captured",
+          "lod": "far",
+          "pose": "captured",
+          "frameCount": 1
+        },
+        {
+          "id": "far:released",
+          "label": "far · released",
+          "lod": "far",
+          "pose": "released",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:dormant",
+          "label": "mid · dormant",
+          "lod": "mid",
+          "pose": "dormant",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:captured",
+          "label": "mid · captured",
+          "lod": "mid",
+          "pose": "captured",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:released",
+          "label": "mid · released",
+          "lod": "mid",
+          "pose": "released",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:dormant",
+          "label": "near · dormant",
+          "lod": "near",
+          "pose": "dormant",
+          "frameCount": 1
+        },
+        {
+          "id": "near:captured",
+          "label": "near · captured",
+          "lod": "near",
+          "pose": "captured",
+          "frameCount": 1
+        },
+        {
+          "id": "near:released",
+          "label": "near · released",
+          "lod": "near",
+          "pose": "released",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/facility-4.html#svg%3Aprologue-retrieval-arm"
     },
     {
       "id": "field:mine-board",

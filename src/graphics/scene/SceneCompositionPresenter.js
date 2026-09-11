@@ -113,16 +113,23 @@ export class SceneCompositionPresenter {
       const asset = scene.assets[object.assetId];
       if (!asset) continue;
       const bindings = object.legacyItemIds ?? [];
-      const bound = bindings.length
-        ? frame.items.find((i) => bindings.includes(i.id) && i.enabled !== false)
-        : null;
-      if (bindings.length && !bound) continue;
+      const poseBinding = object.legacyPoseBindings?.find((binding) =>
+        binding.whenItemIds.some((id) =>
+          frame.items.some((i) => i.id === id && i.enabled !== false),
+        ),
+      );
+      const replacementIds = poseBinding?.replaceItemIds ?? bindings;
+      const boundItems = frame.items.filter(
+        (item) => replacementIds.includes(item.id) && item.enabled !== false,
+      );
+      const bound = boundItems[0] ?? null;
+      if ((bindings.length || object.legacyPoseBindings?.length) && !bound) continue;
       let transform = object.transform,
         size = object.size,
         scale = object.scale;
       let bias = object.renderBias;
-      if (bound) {
-        const b = boundsOf(bound.points);
+      if (bound && object.legacyUseBounds !== false) {
+        const b = boundsOf(boundItems.flatMap((item) => item.points));
         size = { width: b.maxX - b.minX, height: b.maxY - b.minY };
         transform = { ...transform, x: (b.minX + b.maxX) / 2, y: -(b.minY + b.maxY) / 2 };
         scale = 1;
@@ -171,7 +178,7 @@ export class SceneCompositionPresenter {
         ];
       const sample = sampleSvgAsset(asset, {
         lod,
-        pose: object.state.pose ?? 'base',
+        pose: poseBinding?.pose ?? object.state.pose ?? 'base',
         partTransforms: object.state.partTransforms ?? {},
       });
       drawnVertices += sample.items.reduce((sum, item) => sum + item.points.length, 0);
@@ -191,7 +198,7 @@ export class SceneCompositionPresenter {
         drawn.push({
           ...item,
           ...depth,
-          id: bound && index === 0 ? bound.id : object.id + ':' + item.id,
+          id: bound && !poseBinding && index === 0 ? bound.id : object.id + ':' + item.id,
           worldObjectId: object.id,
           sceneZ: transform.z,
           renderBias: bias,
@@ -257,7 +264,7 @@ export class SceneCompositionPresenter {
           occluder: shapes[0] ?? objectItems.flatMap((i) => i.points.map(toCanvas)),
           parallax,
         });
-      bindings.forEach((id) => replacement.add(id));
+      replacementIds.forEach((id) => replacement.add(id));
       selected.push({
         id: object.id,
         assetId: asset.id,
@@ -266,6 +273,8 @@ export class SceneCompositionPresenter {
         occupancy,
         transform,
         shadowRole: shadow,
+        pose: sample.pose,
+        legacyPoseBindingId: poseBinding?.id ?? null,
       });
     }
     const presentIds = new Set(scene.objects.map((o) => o.id));
