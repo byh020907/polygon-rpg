@@ -418,7 +418,7 @@ async function run() {
     await capture('start', Date.now());
     if (args.get('idle-only') === '1') {
       await evaluate(
-        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__,telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__,telemetry:JSON.parse(JSON.stringify(globalThis.__POLYGON_RPG_INPUT_QA__))});requestAnimationFrame(capture)})`,
       );
       await wait(1500);
       args.set('actor', '1');
@@ -461,7 +461,7 @@ async function run() {
       await key(code, true);
       await wait(100);
       await evaluate(
-        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:JSON.parse(JSON.stringify(globalThis.__POLYGON_RPG_INPUT_QA__))});requestAnimationFrame(capture)})`,
       );
       await key('ArrowDown', true);
       await wait(80);
@@ -506,7 +506,7 @@ async function run() {
     if (args.get('motions') === '1') {
       for (const motion of ['idle', 'run', 'guard', 'slash', 'heavy', 'air']) {
         await evaluate(
-          `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+          `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:JSON.parse(JSON.stringify(globalThis.__POLYGON_RPG_INPUT_QA__))});requestAnimationFrame(capture)})`,
         );
         if (motion === 'idle') await wait(450);
         else if (motion === 'air') {
@@ -595,7 +595,7 @@ async function run() {
       }
       await capture('collector-before', Date.now());
       await evaluate(
-        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:globalThis.__POLYGON_RPG_INPUT_QA__});requestAnimationFrame(capture)})`,
+        `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:JSON.parse(JSON.stringify(globalThis.__POLYGON_RPG_INPUT_QA__))});requestAnimationFrame(capture)})`,
       );
       if (args.get('air') === '1') {
         await key('ArrowUp', true);
