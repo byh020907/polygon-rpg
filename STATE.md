@@ -6,15 +6,15 @@ RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. O
 
 ## Active Execution Goal
 
-Human Feedback Priority — Garage 0% production 연결 다음으로 REF-05 prologue gameplay-scale composite를 새 진행의 의뢰·라이벌 동행·구조·제어핵 회수·고대 병기 각성·D-30·귀환·지도·차고 0%까지 같은 data·pose sampler·Polygon renderer·UI로 이어 검증한다. desktop/mobile의 실제 속도·연속 frame에서 인물·핵/팔·병기·차고·조명·횡/사선 베기와 접촉을 함께 판독하며 현재 기술 기준선과 최종 reference/Composition 승인을 분리한다.
+Human Feedback Priority — REF-05 prologue gameplay-scale composite를 새 저장의 의뢰·라이벌 동행·구조·제어핵 회수·고대 병기 각성·D-30·귀환·지도·차고 0%까지 실제 입력으로 이어 검증한다. 이번에 고친 기본/강공의 낮은 후방 준비와 빠른 횡·사선 접촉을 보존하고, desktop/mobile 실제 속도에서 전체 노출 공격·양방향 접촉과 인물·핵/팔·병기·차고·조명을 같은 data·pose sampler·Polygon renderer·UI로 판독한다. 현재 기술 기준선과 최종 reference/Composition 승인은 분리한다.
 
 ## Current Evidence / Gap
 
-- `public/graphics/prologue-garage-zero.master.svg`가 제어핵 socket과 다리·팔·동력원·장갑·거대 검의 독립 mount를 한 수정 가능한 REF-04 기술 기준선으로 소유한다. stable `world-garage-zero`가 기존 0% frame/core/label을 같은 production Composition/Polygon depth renderer에서 교체하고 이후 20~100% 자유 순서 module overlay는 보존한다. catalog는 `runtime-baseline-unapproved`를 명시한다.
-- Codex in-app Browser에서 `scrap-garage-opened` 1280×720·844×390과 검토실 `svg:prologue-garage-zero / near:garage-zero`를 판독했다. 지도·주인공·주인·라이벌·밝은 골격·청록 핵·빈 mount가 같은 gameplay scale에서 읽히고 mobile 안내는 상단 빈 공간으로 이동해 인물과 골격을 가리지 않는다. 이는 REF-04/REF-05 최종 승인이 아니다.
-- `assets:check`, `test:systems`, `test:intro` 32개 stage/interaction/reload/keyboard-touch, `test:visual`, `test:graphics` 590개 catalog, lint/format, art handoff 590-resource/2,913-link 대조, release metadata와 `git diff --check` PASS. 독립 Sol/high verifier도 stage 경계·legacy 교체·9 anchor·module overlay·map→garage→cast depth와 미승인 상태 분리를 PASS 판정했다.
+- 기본/강공 production pose가 몸 앞 수직 낙하 준비를 제거하고 낮은 후방 grip·얕은 검날·골반/흉곽 선행 회전·횡/사선 접촉·후반 감속으로 이어진다. 공중 공격과 gameplay timing/reach/stamina는 바꾸지 않았다. graphics review의 60Hz 연속 frame과 좌우 facing에서 준비→접촉→회수를 직접 판독했으며 이는 승인된 최종 action reference를 뜻하지 않는다.
+- `test:combat`의 전체 공격 11종·좌우 contact/guard/sweep, `test:systems`, `test:intro` 32개 stage/interaction/reload/keyboard-touch, `test:visual`, `test:graphics` 590개 catalog, lint/format, release fingerprint `fe5698589d31`와 `git diff --check`가 PASS다. 새 회귀 검사는 기본/강공 startup 전체를 240Hz로 훑으며 production visible weapon의 가로/세로 비율과 바닥 관통을 양방향에서 고정한다.
+- REF-02 제어핵/회수팔, REF-03 고대 병기, REF-04 차고 0%는 production Composition/Polygon depth renderer의 `runtime-baseline-unapproved` 기술 기준선으로 이어져 있고 이후 자유 순서 module overlay를 보존한다.
 
-Human Feedback Priority Gap: REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았고 현재 결과는 기술 기준선이다. REF-05 composite와 새 저장에서 도입부 처음부터의 실제 속도 연속 플레이, 전체 노출 공격·양방향 접촉 검증이 남았다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
+Human Feedback Priority Gap: REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았고 현재 결과는 기술 기준선이다. REF-05 composite의 새 저장 실제 속도 연속 플레이, 기본/강공 외 전체 노출 공격·양방향 접촉, actual mobile viewport 검증이 남았다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
 
 ## Preserved Work Reference
 

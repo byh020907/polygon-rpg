@@ -71,17 +71,20 @@ function authoredCharacterFrame(options) {
   if (!/^(slash-|heavy-|air-(?:slash|heavy|return|cross)-)/.test(options.id))
     return authorPlayerRigFrame(options);
   const groundedCut = /^(?:slash|heavy)-/.test(options.id);
-  const phase = /(?:windup|load)$/.test(options.id)
-    ? 'load'
-    : options.id.endsWith('contact')
-      ? 'contact'
-      : options.id.endsWith('follow-through')
-        ? 'followThrough'
-        : 'settle';
+  const phase =
+    groundedCut && options.id.endsWith('-ready')
+      ? 'ready'
+      : /(?:windup|load)$/.test(options.id)
+        ? 'load'
+        : options.id.endsWith('contact')
+          ? 'contact'
+          : options.id.endsWith('follow-through')
+            ? 'followThrough'
+            : 'settle';
   const yaw = (
     groundedCut
-      ? { load: 0.48, contact: -0.12, followThrough: -0.52, settle: 0 }
-      : { load: 0.85, contact: 0.25, followThrough: -0.6, settle: 0 }
+      ? { ready: 0.22, load: 0.52, contact: -0.28, followThrough: -0.68, settle: 0 }
+      : { ready: 0, load: 0.85, contact: 0.25, followThrough: -0.6, settle: 0 }
   )[phase];
   // Grounded cuts keep the broad blade visible while it travels below the head:
   // ready -> low rear load -> fast cross-body contact -> weighted follow-through.
@@ -90,26 +93,36 @@ function authoredCharacterFrame(options) {
   const bladeAngle = (
     groundedCut
       ? options.id.startsWith('heavy-')
-        ? { load: 2.42, contact: -0.38, followThrough: 0.68, settle: 0.35 }
-        : { load: 2.66, contact: -0.16, followThrough: 0.5, settle: 0.35 }
-      : { load: 0.2, contact: 0.2, followThrough: 0.3, settle: 0.35 }
+        ? { ready: 0.38, load: 0.5, contact: -0.42, followThrough: 0.72, settle: 0.35 }
+        : { ready: 0.32, load: 0.44, contact: -0.08, followThrough: 0.62, settle: 0.35 }
+      : { ready: 0.35, load: 0.2, contact: 0.2, followThrough: 0.3, settle: 0.35 }
   )[phase];
   const bladeYaw = (
     groundedCut
-      ? { load: -0.38, contact: 0.04, followThrough: 0.38, settle: 0 }
-      : { load: 2.35, contact: 1.9, followThrough: -0.55, settle: 0 }
+      ? { ready: -0.24, load: -0.36, contact: 0.04, followThrough: 0.42, settle: 0 }
+      : { ready: 0, load: 2.35, contact: 1.9, followThrough: -0.55, settle: 0 }
   )[phase];
-  const handTarget = {
-    load: { x: options.id.startsWith('heavy-') ? -20 : -12, y: 3 },
-    contact: { x: 8, y: 5 },
-    followThrough: { x: 35, y: 15 },
-  }[phase];
+  const handTarget = (
+    groundedCut
+      ? {
+          ready: { x: options.id.startsWith('heavy-') ? -8 : -6, y: 10 },
+          load: { x: options.id.startsWith('heavy-') ? -22 : -18, y: 5 },
+          contact: { x: options.id.startsWith('heavy-') ? 13 : 11, y: 4 },
+          followThrough: { x: options.id.startsWith('heavy-') ? 40 : 38, y: 14 },
+        }
+      : {
+          load: { x: -12, y: 3 },
+          contact: { x: 8, y: 5 },
+          followThrough: { x: 35, y: 15 },
+        }
+  )[phase];
   // Main cuts load beside the ribs and travel across the body in XYZ. The shoulder
   // and wrist remain local joints; no overhead arm target or screen-space blade turn.
   const frame = authorPlayerRigFrame({
     ...options,
     depth: 0,
-    armPose: phase === 'load' ? 'followThrough' : options.armPose,
+    armPose:
+      phase === 'load' || (phase === 'ready' && groundedCut) ? 'followThrough' : options.armPose,
     wristFlex: bladeAngle,
     nearHandTarget: handTarget,
   });

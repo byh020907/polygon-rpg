@@ -54,7 +54,7 @@ const POSE_PARITY = Object.freeze({
   }),
   'pose-ground-attack': Object.freeze({
     count: 26,
-    digest: 'b481895d71f387e0fb18f70c4eb1283c30930ffedd1a6baa24810a118bcd3a62',
+    digest: '194c3ccb03fbfc5375c8d74f27c3dc72797ddcc1c8bdfa4a60c9df025e7e6a67',
   }),
   'pose-air-attack': Object.freeze({
     count: 26,
@@ -69,7 +69,7 @@ const POSE_PARITY = Object.freeze({
 const EFFECT_PARITY = Object.freeze({
   'combat-hit': Object.freeze({
     count: 33,
-    digest: '2667292683778c26c9012a2f56888f102902f5bccb96012678770166b4d16e17',
+    digest: 'e08592899dc210e0ba69da6862b4402f4f1d514c1221d4526ce4b957760f22b3',
   }),
   'combat-player-hit': Object.freeze({
     count: 33,
@@ -85,7 +85,7 @@ const EFFECT_PARITY = Object.freeze({
   }),
   'combat-punish': Object.freeze({
     count: 32,
-    digest: '9902929194a25ae365994b356e77b97780fd1105de94f1983763593488478bec',
+    digest: '2574f6cbbd75bfb4146d37808ae1d5123e23d8c3162c5bcbc2c221e80562a4b4',
   }),
   'combat-launch': Object.freeze({
     count: 33,

@@ -494,6 +494,16 @@ for (const { id: equipmentId, combatTiming } of CUTTER_LOADOUTS) {
 // A linear active interpolation would give equal thirds and fail this check.
 for (const motionId of ['slash', 'heavy']) {
   const frame = combatMotionFrameData(motionId);
+  for (const progress of [0, frame.startupFrames / frame.durationFrames / 2]) {
+    const pose = sampleCharacterBonePose({
+      motionState: { id: motionId, frame, progress },
+    });
+    const bladeAxis = pose.projectedJoints.nearHand.axisX;
+    assert.ok(
+      bladeAxis.x > 0.55 && Math.abs(bladeAxis.x) > Math.abs(bladeAxis.y) * 0.8,
+      motionId + ': low rear grip must keep the blade shallow instead of dropping vertically',
+    );
+  }
   const projectedBladeSamples = Array.from({ length: frame.durationFrames * 4 + 1 }, (_, index) => {
     const pose = sampleCharacterBonePose({
       motionState: {
@@ -563,6 +573,7 @@ try {
     for (const facing of [-1, 1]) {
       sideCutScene.facing = facing;
       let rearLoad = Infinity;
+      let rearGrip = Infinity;
       let frontContact = -Infinity;
       for (let tick = 0; tick < (frame.startupFrames + frame.activeFrames) * 4; tick += 1) {
         const progress = tick / (frame.durationFrames * 4);
@@ -571,6 +582,20 @@ try {
         const tip = (geometry.weapon.points[2].x - sideCutScene.position.x) * facing;
         if (tick < frame.startupFrames * 4) {
           rearLoad = Math.min(rearLoad, tip);
+          if (['slash', 'heavy'].includes(id)) {
+            const weaponX = geometry.weapon.points.map(({ x }) => x);
+            const weaponY = geometry.weapon.points.map(({ y }) => y);
+            const width = Math.max(...weaponX) - Math.min(...weaponX);
+            const height = Math.max(...weaponY) - Math.min(...weaponY);
+            assert.ok(
+              width > height * 0.8,
+              id + ': production visible weapon must not turn into a vertical startup drop',
+            );
+            assert.ok(
+              Math.max(...weaponY) <= sideCutScene.position.y + PLAYER_CHARACTER_FOOT_OFFSET + 4,
+              id + ': production visible weapon must not extend through the floor during startup',
+            );
+          }
           const head = geometry.hurt.find(({ part }) => part === 'head');
           const headTop = Math.min(...head.points.map(({ y }) => y));
           const headBottom = Math.max(...head.points.map(({ y }) => y));
@@ -582,6 +607,10 @@ try {
             motionState: state,
             boneInput: {},
           });
+          rearGrip = Math.min(
+            rearGrip,
+            pose.bonePose.projectedJoints.nearHand.x - pose.bonePose.projectedJoints.root.x,
+          );
           const gripY =
             sideCutScene.position.y +
             PLAYER_CHARACTER_FOOT_OFFSET +
@@ -590,11 +619,12 @@ try {
           assert.ok(gripY >= headBottom - 1e-7, id + ': loading grip remains below the head');
         } else frontContact = Math.max(frontContact, tip);
       }
+      const loadPosition = ['slash', 'heavy'].includes(id) ? rearGrip : rearLoad;
       assert.ok(
-        rearLoad < -10 && frontContact > 10,
+        loadPosition < -10 && frontContact > 10,
         id +
-          ': actual range-sized blade must load behind and cut in front (' +
-          rearLoad +
+          ': actual grip/blade must load behind and the blade must cut in front (' +
+          loadPosition +
           ' to ' +
           frontContact +
           ')',
@@ -810,6 +840,7 @@ console.log(
       '3d-skeleton-side-projection',
       'canonical-quaternion-and-fixed-player-enemy-bone-lengths',
       'actual-world-wrist-fast-cut-and-controlled-settle',
+      'grounded-cut-low-rear-grip-without-vertical-drop',
       'grounded-cut-visible-blade-and-continuous-low-arc',
       'range-sized-cross-body-backload-without-overhead-raise',
       'motion-reference-provenance-and-local-retarget-boundary',
