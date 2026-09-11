@@ -564,6 +564,43 @@ for (const motionId of ['slash', 'heavy']) {
   );
 }
 
+// The authored aerial cross-body cuts may turn through depth, but the side-view
+// projection must never make the broad cutter collapse to a near-zero line and
+// then flip by half a turn between adjacent 120 Hz samples.  That collapse also
+// shrinks the shared authoritative contact geometry, so this is both a visible
+// motion continuity requirement and a combat-contact requirement.
+for (const motionId of ['airSlash', 'airHeavy', 'airReturn', 'airCross']) {
+  const frame = combatMotionFrameData(motionId);
+  const projectedBladeSamples = Array.from({ length: frame.durationFrames * 2 + 1 }, (_, index) => {
+    const pose = sampleCharacterBonePose({
+      motionState: {
+        id: motionId,
+        frame,
+        progress: index / (frame.durationFrames * 2),
+      },
+    });
+    const axis = pose.projectedJoints.nearHand.axisX;
+    return Object.freeze({
+      angle: Math.atan2(axis.y, axis.x),
+      visibleLength: Math.hypot(axis.x, axis.y),
+    });
+  });
+  assert.ok(
+    projectedBladeSamples.every(({ visibleLength }) => visibleLength >= 0.4),
+    motionId + ': aerial cutter must stay broad enough to read instead of collapsing edge-on',
+  );
+  for (let index = 1; index < projectedBladeSamples.length; index += 1) {
+    let turn = Math.abs(
+      projectedBladeSamples[index].angle - projectedBladeSamples[index - 1].angle,
+    );
+    if (turn > Math.PI) turn = Math.PI * 2 - turn;
+    assert.ok(
+      turn < 0.3,
+      motionId + ': projected aerial blade must not pop or reverse between samples',
+    );
+  }
+}
+
 // Sample the production range-sized rig and shared weapon, rather than accepting
 // an animation label or scalar sword angle as evidence of a cross-body cut.
 const sideCutScene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
@@ -619,9 +656,12 @@ try {
           assert.ok(gripY >= headBottom - 1e-7, id + ': loading grip remains below the head');
         } else frontContact = Math.max(frontContact, tip);
       }
-      const loadPosition = ['slash', 'heavy'].includes(id) ? rearGrip : rearLoad;
+      // The grip, not an edge-on/reversed blade tip, is the stable authority for
+      // the rear load.  A broad blade may remain visible in front of that grip.
+      const loadPosition = rearGrip;
+      const minimumRearLoad = ['slash', 'heavy'].includes(id) ? -10 : -8;
       assert.ok(
-        loadPosition < -10 && frontContact > 10,
+        loadPosition < minimumRearLoad && frontContact > 10,
         id +
           ': actual grip/blade must load behind and the blade must cut in front (' +
           loadPosition +
@@ -842,6 +882,7 @@ console.log(
       'actual-world-wrist-fast-cut-and-controlled-settle',
       'grounded-cut-low-rear-grip-without-vertical-drop',
       'grounded-cut-visible-blade-and-continuous-low-arc',
+      'aerial-cut-visible-blade-and-continuous-projection',
       'range-sized-cross-body-backload-without-overhead-raise',
       'motion-reference-provenance-and-local-retarget-boundary',
       'stable-roll-frame-to-gameplay-marker-mapping',

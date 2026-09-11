@@ -58,7 +58,7 @@ const POSE_PARITY = Object.freeze({
   }),
   'pose-air-attack': Object.freeze({
     count: 26,
-    digest: 'd7e822b3a98e83cf196ee112ab1e9a31c46235e0be78c4296465d829887e2437',
+    digest: '5cb51d99070db0c89b8176dcb6a34a11a9558d4c04ed7ece178dc14098d4ce1e',
   }),
   'pose-hit': Object.freeze({
     count: 26,

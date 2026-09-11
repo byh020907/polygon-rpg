@@ -6,15 +6,18 @@ RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. O
 
 ## Active Execution Goal
 
-Human Feedback Priority — 리뷰실에 노출된 11개 공격 전부를 양방향 actual Browser 정상 속도에서 연속 재생해 동작·접촉을 판독한다. 특히 공중 4종의 edge-on 칼날 축소와 팝을 수리하고, 완료된 새 저장 도입 연속 경로와 현재 REF-02/03/04 desktop 구도를 보존한다. 현재 기술 기준선과 최종 reference/Composition 승인은 분리한다.
+Human Feedback Priority — 기존 승인 주인공 스타일을 보존하면서 실제 gameplay의 기본 횡베기와 강한 사선 베기를 양방향 정상 속도·접촉에서 다시 다듬는다. 낮은 준비, 골반·흉곽 선행, 빠른 접촉과 후반 감속이 한 동작으로 읽혀야 하며 이번에 복구한 공중 칼날 면·판정과 완료된 도입/REF-02/03/04 기술 기준선을 회귀시키지 않는다.
 
 ## Current Evidence / Gap
 
-- `scripts/scrap-awakening-browser-qa.mjs`는 blank temp profile/localStorage와 `?inputQa=1`만 사용하고 CDP 실제 `keyDown`/`keyUp`을 production `GameApp`/`GameScene`/autosave/renderer에 전달한다. 다섯 도입 전투를 중간 KO 없이 통과하고, 20 awakening stage와 4 garage durable stage를 거쳐 구조·제어핵·고대 병기 각성·D-30·실제 왼쪽 귀환·owner·지도·Garage 0%·Day 1 아침 `elapsed=0`까지 검증한다.
-- 같은 profile에서 9개 transcript ID와 저장 상태를 고정하고 `Page.reload` 후 이어하기 결과의 deep equality와 이벤트 비재발을 확인한다. `Runtime.exceptionThrown`, `consoleAPICalled` error, `Log` error는 모두 0이며 desktop PNG 11장이 production renderer의 연속 장면을 기록한다.
-- `npm run check`와 `npm run test:pwa`는 PASS했다. 독립 verifier는 synthetic `console.error` 검출과 강화된 focused Browser 전체 재실행을 모두 PASS했다.
+- `scripts/graphics-review-qa.mjs`는 주인공 공격 11개를 desktop actual Browser에서 좌우 각각 1×/60fps로 연속 재생한다. 22개 시퀀스 모두 준비부터 회수까지 최소 85.2%의 서로 다른 frame을 실제 Canvas pixel로 통과했고 12-frame strip을 `artifacts/graphics-review`에 남겼으며 suite의 console/runtime error는 0이다.
+- `airSlash`, `airHeavy`, `airReturn`, `airCross`의 손목 3D depth 회전을 90도 edge-on singularity 밖의 연속 곡선으로 다시 저작했다. 실제 review frame의 칼날 최소 면적은 기존 최대 대비 2–11%에서 59–64%로 회복되었고 좌우 strip에서 반전 pop 없이 넓은 cutter 면이 유지된다.
+- 같은 pose sample을 쓰는 `attack-contact-check`는 11개 공격의 양방향 miss/edge/hit·HP·event·sweep lifecycle을 production `GameScene` damage owner까지 PASS했다. 네 공중 공격의 mirrored contact 경계는 약 118~126px이며 damage/stamina/active window/camera는 변경하지 않았다.
+- 실제 입력 Browser에서 `airSlash`/`airHeavy` 좌우 연속 actor strip을 추가로 판독했고, Codex in-app Browser에서 오른쪽 `airSlash`와 왼쪽 `airCross`를 정상 속도로 재생해 칼날 면 유지와 새 console error 없음도 확인했다.
+- `npm run check`와 `npm run test:pwa`는 PASS했다. 연속 full check에서 드러난 field graphics Browser의 navigation/import 경합은 HTTP document complete 대기 후 재현 없이 통과한다.
+- 구현과 분리된 verifier는 22개 1× strip, 네 공중 공격의 좌우 동일 접촉 경계, `test:combat`의 실제 damage owner·HP/event·stamina/timing 보존과 in-app Browser spot check를 다시 확인해 PASS했다.
 
-Human Feedback Priority Gap: 리뷰실의 11개 노출 공격 전체에 대한 양방향 actual Browser 정상 속도/contact 판독이 아직 없고, 공중 4종은 edge-on 칼날 축소와 팝 수리가 필요하다. REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았으며 현재 결과는 기술 기준선이다. mobile에서의 continuous intro/reload는 검증되지 않았고, `inputQa` 패널이 포함된 capture는 clean final composition 증거가 아니다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
+Human Feedback Priority Gap: Human이 기본 횡베기 동작을 여전히 어색하다고 판정했으므로 현재 낮은 베기 결과는 완료가 아닌 다음 시각 개선 대상이다. REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았으며 현재 결과는 기술 기준선이다. mobile에서의 continuous intro/reload는 검증되지 않았고, `inputQa` 패널이 포함된 capture는 clean final composition 증거가 아니다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
 
 ## Preserved Work Reference
 

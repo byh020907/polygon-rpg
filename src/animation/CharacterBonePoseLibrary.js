@@ -100,7 +100,7 @@ function authoredCharacterFrame(options) {
   const bladeYaw = (
     groundedCut
       ? { ready: -0.24, load: -0.36, contact: 0.04, followThrough: 0.42, settle: 0 }
-      : { ready: 0, load: 2.35, contact: 1.9, followThrough: -0.55, settle: 0 }
+      : { ready: 0.08, load: 0.95, contact: 0.65, followThrough: -0.5, settle: 0.08 }
   )[phase];
   const handTarget = (
     groundedCut
@@ -111,7 +111,7 @@ function authoredCharacterFrame(options) {
           followThrough: { x: options.id.startsWith('heavy-') ? 40 : 38, y: 14 },
         }
       : {
-          load: { x: -12, y: 3 },
+          load: { x: -26, y: 3 },
           contact: { x: 8, y: 5 },
           followThrough: { x: 35, y: 15 },
         }

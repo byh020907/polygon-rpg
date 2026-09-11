@@ -153,6 +153,7 @@ try {
 }
 const browser = await openQaBrowser({ width: 960, height: 540, search: 'PRODUCT_GOAL.html' });
 try {
+  await browser.until(`document.readyState === 'complete' && location.protocol === 'http:'`);
   const renders = [];
   for (const resource of resources)
     for (const action of resource.actions) {

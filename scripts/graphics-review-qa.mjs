@@ -8,6 +8,19 @@ import { GAME_UI_RESOURCES } from '../src/ui/GameUiCatalog.js';
 const output = resolve('artifacts/graphics-review');
 mkdirSync(output, { recursive: true });
 const evidence = [];
+const PLAYER_ATTACK_ACTION_IDS = Object.freeze([
+  'slash',
+  'heavy',
+  'thrust',
+  'rising',
+  'spin',
+  'airSlash',
+  'airHeavy',
+  'airReturn',
+  'airSpin',
+  'airCross',
+  'shieldBash',
+]);
 const ready = `document.querySelector('#graphics-review')?.dataset.ready === 'true'`;
 const snapshot = `(()=>{const r=document.querySelector('#graphics-review');const c=r.querySelector('[data-gr=canvas]');return {resource:r.dataset.resourceId,frame:r.dataset.frameIndex,error:r.dataset.error??null,uiVisible:r.dataset.uiVisible,playing:r.dataset.playing,url:location.href,canvas:{width:c.width,height:c.height},bodyOverflow:document.documentElement.scrollWidth>innerWidth}})()`;
 
@@ -45,6 +58,92 @@ for (const [name, width, height] of [
         code: 'Escape',
         windowsVirtualKeyCode: 27,
       });
+      if (name === 'desktop') {
+        await choose('[data-gr=speed]', 1);
+        for (const facing of [1, -1]) {
+          await choose('[data-gr=facing]', facing);
+          for (const actionId of PLAYER_ATTACK_ACTION_IDS) {
+            await choose('[data-gr=action]', actionId);
+            await choose('[data-gr=frame]', 0);
+            const frameCount =
+              Number(await evaluate(`document.querySelector('[data-gr=frame]').max`)) + 1;
+            await evaluate(`(()=>{
+              globalThis.__attackReviewFrames=[];
+              globalThis.__attackReviewCapture=true;
+              globalThis.__attackReviewStart=performance.now();
+              requestAnimationFrame(function capture(now){
+                if(!globalThis.__attackReviewCapture)return;
+                const root=document.querySelector('#graphics-review');
+                globalThis.__attackReviewFrames.push({
+                  milliseconds:now-globalThis.__attackReviewStart,
+                  frame:Number(root.dataset.frameIndex),
+                  png:root.querySelector('[data-gr=canvas]').toDataURL('image/png')
+                });
+                requestAnimationFrame(capture);
+              });
+            })()`);
+            await click('[data-gr=play]');
+            await wait(Math.ceil((frameCount / 60) * 1000) + 180);
+            const playback = await evaluate(`(()=>{
+              globalThis.__attackReviewCapture=false;
+              const frames=globalThis.__attackReviewFrames;
+              const observed=[...new Set(frames.map(({frame})=>frame))];
+              return {
+                captured:frames.length,
+                observed,
+                elapsed:frames.at(-1).milliseconds-frames[0].milliseconds,
+                playing:document.querySelector('#graphics-review').dataset.playing
+              };
+            })()`);
+            if (playback.playing === 'true') await click('[data-gr=play]');
+            const minimumObserved = Math.min(frameCount - 2, Math.max(8, frameCount * 0.5));
+            assert.ok(
+              playback.observed.length >= minimumObserved,
+              `${actionId}/${facing}: normal playback skipped too much of the action`,
+            );
+            assert.ok(
+              Math.max(...playback.observed) >= frameCount - 3,
+              `${actionId}/${facing}: normal playback did not reach the recovery`,
+            );
+            const expectedElapsed = ((frameCount - 2) / 60) * 1000;
+            assert.ok(
+              playback.elapsed >= expectedElapsed * 0.7 &&
+                playback.elapsed <= expectedElapsed * 1.8 + 220,
+              `${actionId}/${facing}: playback did not run at the selected 1x timing`,
+            );
+            const strip = await evaluate(`(async()=>{
+              const frames=globalThis.__attackReviewFrames;
+              const selected=Array.from({length:12},(_,i)=>frames[Math.round(i*(frames.length-1)/11)]);
+              const images=await Promise.all(selected.map(async frame=>{
+                const image=new Image();image.src=frame.png;await image.decode();return image;
+              }));
+              const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=756;
+              const context=canvas.getContext('2d');context.fillStyle='#171b22';context.fillRect(0,0,canvas.width,canvas.height);
+              context.imageSmoothingEnabled=true;
+              for(let i=0;i<selected.length;i++){
+                const x=(i%4)*300,y=Math.floor(i/4)*252,image=images[i],frame=selected[i];
+                context.drawImage(image,0,0,image.width,image.height,x,y,300,220);
+                context.fillStyle='#171b22';context.fillRect(x,y+220,300,32);
+                context.fillStyle='white';context.font='14px sans-serif';
+                context.fillText(Math.round(frame.milliseconds)+' ms · frame '+frame.frame,x+8,y+242);
+              }
+              return canvas.toDataURL('image/png');
+            })()`);
+            const side = facing === 1 ? 'right' : 'left';
+            writeFileSync(
+              join(output, `desktop-attack-${actionId}-${side}-strip.png`),
+              Buffer.from(strip.split(',')[1], 'base64'),
+            );
+            evidence.push({
+              name,
+              attackPlayback: actionId,
+              facing,
+              frameCount,
+              ...playback,
+            });
+          }
+        }
+      }
       for (const action of ['roll', 'slash', 'heavy', 'run']) {
         await choose('[data-gr=action]', action);
         const max = await evaluate(`Number(document.querySelector('[data-gr=frame]').max)`);
