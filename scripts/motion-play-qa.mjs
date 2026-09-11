@@ -283,6 +283,10 @@ async function run() {
     await click(mobile ? '#menu-mobile-start-control' : '#menu-start-control');
     await wait(Number(args.get('start-wait') ?? 1200));
     await click('.qa-input-relay-toggle');
+    // Return keyboard focus to the production canvas after opening the optional
+    // QA controls. Otherwise an arrow key can be targeted at the relay button
+    // instead of exercising the game's keyboard adapter.
+    if (!mobile) await click('#game-canvas');
     const mobilePoints = mobile
       ? await evaluate(
           `Object.fromEntries([...document.querySelectorAll('[data-mobile-action]')].map(n=>{const r=n.getBoundingClientRect();return [n.dataset.mobileAction,{x:r.x+r.width/2,y:r.y+r.height/2}]}))`,
@@ -592,11 +596,17 @@ async function run() {
         await key('ArrowLeft', true);
         await wait(60);
         await key('ArrowLeft', false);
+        // The input adapter commits direction on the following fixed simulation
+        // step. Give the real keyboard event that step before A/S starts, so a
+        // left-facing capture cannot accidentally sample the previous right pose.
+        await wait(40);
       }
       await capture('collector-before', Date.now());
       await evaluate(
         `globalThis.__motionFrames=[];globalThis.__motionCapture=true;globalThis.__motionStart=performance.now();requestAnimationFrame(function capture(t){if(!globalThis.__motionCapture)return;globalThis.__motionFrames.push({milliseconds:t-globalThis.__motionStart,png:document.querySelector('#game-canvas').toDataURL('image/png'),actorRender:${args.get('actor') === '1' ? 'globalThis.__POLYGON_RPG_INPUT_QA_ACTOR_PNG__' : 'null'},telemetry:JSON.parse(JSON.stringify(globalThis.__POLYGON_RPG_INPUT_QA__))});requestAnimationFrame(capture)})`,
       );
+      const holdLeftThroughAirAttack = args.get('facing') === 'left' && args.get('air') === '1';
+      if (holdLeftThroughAirAttack) await key('ArrowLeft', true);
       if (args.get('air') === '1') {
         await key('ArrowUp', true);
         await wait(70);
@@ -621,6 +631,7 @@ async function run() {
       await key(attackKey, true);
       await wait(70);
       await key(attackKey, false);
+      if (holdLeftThroughAirAttack) await key('ArrowLeft', false);
       for (let tap = 1; tap < Number(args.get('taps') ?? 1); tap++) {
         await wait(430);
         await key(attackKey, true);
