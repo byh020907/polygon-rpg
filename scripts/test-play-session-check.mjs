@@ -154,6 +154,64 @@ assert.deepEqual(application.currentApp.scene.mapRuntime.getActiveLocation(), {
 assert.equal(frames.size, 1);
 assert.equal(storageTouches, 0);
 assert.deepEqual([...storage], originalStorage);
+
+// Exercise diagnostics through the real GameApp and native input adapters. The
+// observer must stop the fixed-step owner, not patch the enemy or command state.
+const contactRequest = readVisualQaRequest('?visualQa=1&gameStart=pose-idle&gameFrame=0');
+application.startTestPlay(contactRequest, {
+  location: { regionId: 'scrap-waste-edge', roomId: 'abandoned-weapon-yard', x: 540 },
+});
+const contactApp = application.currentApp;
+application.controlTestDiagnostics('overlay');
+application.controlTestDiagnostics('arm');
+const attackKey = new Event('keydown', { cancelable: true });
+Object.defineProperty(attackKey, 'code', { value: 'KeyA' });
+globalThis.window.dispatchEvent(attackKey);
+for (let tick = 0; tick < 160 && !contactApp.testDiagnostics.paused; tick++) {
+  contactApp.update(1 / 120, contactApp.createInputSnapshot());
+}
+assert.equal(contactApp.testDiagnostics.paused, true, 'real command contact pauses the test');
+const evidence = application.getTestContactEvidence();
+assert.equal(evidence.combatContact.attacker, 'player');
+assert.ok(evidence.combatEnemy.health < evidence.healthBeforeContact);
+assert.ok(evidence.combatEvents.some((event) => event.target === 'enemy'));
+assert.ok(evidence.combatGeometry.semanticHurt.length > 0);
+assert.ok(Object.isFrozen(evidence.combatGeometry.semanticHurt));
+assert.deepEqual(
+  evidence.combatGeometry.visibleWeapon,
+  evidence.combatGeometry.authoritativeWeapon,
+);
+const pausedTick = evidence.tick;
+const pausedInput = contactApp.createInputSnapshot();
+assert.equal(application.pressMobileAction('strongAttack', 918), false);
+const pausedKey = new Event('keydown', { cancelable: true });
+Object.defineProperty(pausedKey, 'code', { value: 'KeyS' });
+globalThis.window.dispatchEvent(pausedKey);
+assert.deepEqual(
+  contactApp.createInputSnapshot(),
+  pausedInput,
+  'paused input must not queue an attack',
+);
+const frozenScene = contactApp.scene.animationTime;
+for (let tick = 0; tick < 10; tick++) contactApp.update(1 / 120, contactApp.createInputSnapshot());
+assert.equal(contactApp.scene.animationTime, frozenScene);
+assert.equal(application.getTestContactEvidence().tick, pausedTick);
+application.controlTestDiagnostics('step');
+assert.equal(
+  application.getTestContactEvidence().tick,
+  pausedTick + 1,
+  'one step means one simulation tick',
+);
+assert.equal(contactApp.testDiagnostics.paused, true);
+assert.equal(evidence.tick, pausedTick, 'previous exported evidence stays immutable');
+application.resetScene();
+assert.equal(contactApp.testDiagnostics.paused, false);
+assert.equal(contactApp.testDiagnostics.armed, false);
+assert.equal(contactApp.testDiagnostics.overlay, false);
+assert.equal(contactApp.testDiagnostics.tick, 0);
+assert.equal(application.getTestContactEvidence().combatContact, null);
+assert.equal(storageTouches, 0, 'diagnostics and restart never access player saves');
+assert.equal(frames.size, 1, 'diagnostics never create a second RAF');
 application.destroy();
 assert.equal(frames.size, 0);
 assert.equal(application.currentApp.input.keyboard.isAttached, false);

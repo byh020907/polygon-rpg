@@ -4365,6 +4365,7 @@ export class GameScene extends SceneNode {
         authoritativeShield: contactGeometry?.shield ?? null,
         activeSweep: contactGeometry?.sweep ?? null,
         enemyHurt: encounterRender.geometry?.hurt ?? Object.freeze([]),
+        semanticHurt: encounterRender.geometry?.semanticHurt ?? Object.freeze([]),
         attackInstance: combatState.sequence,
         phase: combatState.phase,
         targetId: encounterRender.enemy?.id ?? null,

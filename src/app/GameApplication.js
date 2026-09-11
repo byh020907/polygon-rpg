@@ -5,6 +5,7 @@ function createBufferedUiBridge(uiBridge) {
   const writerNames = Object.freeze([
     'setGameStats',
     'setQaInputStatus',
+    'setTestDiagnostics',
     'setPlayerStatus',
     'setWorldStatus',
     'setDialoguePresentation',
@@ -22,7 +23,7 @@ function createBufferedUiBridge(uiBridge) {
     flush() {
       for (const name of writerNames) {
         const args = pendingWrites.get(name);
-        if (args) uiBridge[name](...args);
+        if (args) uiBridge[name]?.(...args);
       }
     },
   });
@@ -198,6 +199,14 @@ export class GameApplication {
 
   resetScene() {
     return this.currentApp.resetScene();
+  }
+
+  controlTestDiagnostics(command) {
+    return this.currentApp.controlTestDiagnostics(command);
+  }
+
+  getTestContactEvidence() {
+    return this.currentApp.getTestContactEvidence();
   }
 
   prepareUiReview(presentation) {

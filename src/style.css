@@ -3631,6 +3631,36 @@ html[data-ui-review] {
   font-size: 12px;
   margin-right: 8px;
 }
+.test-contact-controls {
+  flex-basis: 100%;
+  display: grid;
+  gap: 4px;
+  max-height: 128px;
+  overflow: auto;
+  font-size: 11px;
+}
+.test-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.test-contact-controls output {
+  overflow-wrap: anywhere;
+}
+.test-contact-controls textarea {
+  width: 100%;
+  min-height: 70px;
+}
+.test-contact-actions button[aria-pressed='true'] {
+  outline: 2px solid #e4bd64;
+}
+.game-screen--test-play.game-screen--contact-diagnostics .game-viewport {
+  width: min(
+    100%,
+    calc((var(--app-visible-viewport-height, 100dvh) - var(--test-toolbar-space) - 136px) * 16 / 9)
+  );
+}
 @media (max-width: 600px) {
   .gr-header-actions {
     gap: 4px;
@@ -3671,6 +3701,32 @@ html[data-ui-review] {
 @media (max-width: 600px) and (orientation: portrait) {
   .game-screen--test-play {
     --test-toolbar-space: 140px;
+  }
+}
+@media (max-width: 900px) and (orientation: landscape) {
+  .game-screen--test-play.game-screen--contact-diagnostics {
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .game-screen--contact-diagnostics .test-play-bar {
+    grid-column: 1;
+    height: 100%;
+    overflow: auto;
+    align-content: start;
+    margin: 0;
+  }
+  .game-screen--contact-diagnostics .test-play-bar strong {
+    flex-basis: 100%;
+  }
+  .game-screen--contact-diagnostics .test-contact-controls {
+    max-height: none;
+    overflow: visible;
+  }
+  .game-screen--test-play.game-screen--contact-diagnostics .game-viewport {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
   }
 }
 /* Small screens open on the selected preview; the catalog is one tap away. */

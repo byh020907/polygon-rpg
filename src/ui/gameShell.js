@@ -225,6 +225,10 @@ export function registerGameShell(
     isPlaying: true,
     testPlayActive: Boolean(testPlayRequest),
     testPlaySpeed: 1,
+    testDiagnosticsOpen: false,
+    testDiagnostics: { paused: false, overlay: false, armed: false, tick: 0, summary: '' },
+    testContactReport: '',
+    testContactCopyStatus: '',
     testPlayLabel: testPlayRequest?.label ?? '',
     testReturnSelection: testPlayRequest?.returnSelection ?? DEFAULT_GRAPHICS_REVIEW,
     gameStats: 'World ready',
@@ -444,6 +448,9 @@ export function registerGameShell(
         },
         setQaInputStatus: (status) => {
           this.qaInputStatus = status;
+        },
+        setTestDiagnostics: (status) => {
+          this.testDiagnostics = status;
         },
         setPlayerStatus: (status) => {
           this.health = status.health;
@@ -1103,8 +1110,37 @@ export function registerGameShell(
     },
     restartTestPlay() {
       gameApp.resetScene();
+      this.testContactReport = '';
+      this.testContactCopyStatus = '';
       this.clearQaInput();
       this.$nextTick(() => gameApp.onScreenChanged());
+    },
+    controlTestDiagnostics(command) {
+      this.testContactReport = '';
+      this.testContactCopyStatus = '';
+      gameApp.controlTestDiagnostics(command);
+    },
+    async copyTestContact() {
+      const evidence = gameApp.getTestContactEvidence();
+      if (!evidence) return;
+      this.testContactReport = JSON.stringify(
+        {
+          url: location.href,
+          resource: this.testPlayLabel,
+          speed: this.testPlaySpeed,
+          viewport: { width: innerWidth, height: innerHeight },
+          ...evidence,
+        },
+        null,
+        2,
+      );
+      try {
+        await navigator.clipboard.writeText(this.testContactReport);
+        this.testContactCopyStatus =
+          '접촉 기록을 복사했습니다. URL은 시작 배치를 복원하며 입력 결과는 기록으로 확인합니다.';
+      } catch {
+        this.testContactCopyStatus = '자동 복사 불가 · 아래 기록을 직접 선택해 복사하세요.';
+      }
     },
     showMenu() {
       if (this.testPlayActive) {
