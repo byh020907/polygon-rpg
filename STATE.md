@@ -6,7 +6,7 @@ RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. O
 
 ## Active Execution Goal
 
-Human Feedback Priority — 시작 위치·방향을 고정한 저장 없는 테스트 플레이에서 좌우·공중·전체 공격군의 실제 입력과 연속 동작을 판독한다. production pose/contact → 실제 keyboard/touch → hit/guard presentation의 dependency를 유지하며, 현재 영역의 실제 검증과 승인 기반 graphics review 안정화 전에는 캠페인/후반 콘텐츠로 확장하지 않는다.
+Human Feedback Priority — 그래픽 문서의 승인 순서와 제작 계약에 따라 기준 장면의 실제 외형·모션·구도·조명 재작업을 최우선으로 진행한다. 현재 승인 주인공 스타일을 유지하며 미완료 횡·사선 베기의 낮은 준비·힘 전달·빠른 횡/사선·후반 감속을 실제 속도와 연속 프레임으로 수리·판독한다. 시스템/QA 보강은 선택한 시각 결과의 직접 의존일 때만 포함하고, 원본 공급·reference/Composition 승인은 구체적 대상별로 분리한다. 이 기반이 안정화되기 전에는 캠페인/후반 콘텐츠로 확장하지 않는다.
 
 ## Current Evidence / Gap
 
