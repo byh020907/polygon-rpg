@@ -114,6 +114,136 @@ function input(overrides = {}) {
   return Object.freeze({ ...EMPTY_INPUT, ...overrides });
 }
 
+let combatBasicSequence = 10_000;
+let combatStrongSequence = 15_000;
+let combatGuardSequence = 20_000;
+
+function completeEncounterWithGameplayInput(scene, expectedEntityId, expectedNextStageId) {
+  const enteredHere = !scene.isInsideTree;
+  if (enteredHere) scene.enterTree();
+  const initialEncounter = scene.roomSceneNode?.encounter;
+  assert.equal(initialEncounter?.entity?.id, expectedEntityId);
+  const initialHealth = initialEncounter.enemy.health;
+  let previousHealth = initialHealth;
+  let damagingContacts = 0;
+  let observableContactFrames = 0;
+  let guardHeld = false;
+  let koObserved = false;
+
+  for (let tick = 0; tick < 3_600 && stage(scene) !== expectedNextStageId; tick += 1) {
+    const encounter = scene.roomSceneNode?.encounter;
+    const enemy = encounter?.enemy;
+    if (!enemy || enemy.health <= 0) {
+      scene.update(STEP_SECONDS, EMPTY_INPUT);
+      continue;
+    }
+
+    const nextInput = {};
+    const gap = enemy.position.x - scene.position.x;
+    if (Math.abs(gap) > 95) {
+      if (gap > 0) nextInput.right = true;
+      else nextInput.left = true;
+    }
+
+    const combatState = scene.combatCommands.snapshot();
+    const canStartAction =
+      Math.abs(gap) < 125 &&
+      !combatState.active &&
+      combatState.id === 'idle' &&
+      scene.playerHitstunSeconds === 0 &&
+      !scene.rollState;
+
+    if (enemy.aiState === 'windup' && canStartAction && combatState.stamina >= 18) {
+      if (gap > 0) nextInput.left = true;
+      else nextInput.right = true;
+      nextInput.guard = true;
+      combatGuardSequence += 1;
+      nextInput.guardSequence = combatGuardSequence;
+      guardHeld = true;
+    } else if (enemy.aiState === 'attack') {
+      nextInput.guard = true;
+      if (!guardHeld) combatGuardSequence += 1;
+      nextInput.guardSequence = combatGuardSequence;
+      guardHeld = true;
+    } else {
+      guardHeld = false;
+      if (canStartAction && combatState.stamina >= 24) {
+        combatStrongSequence += 1;
+        nextInput.strongAttackSequence = combatStrongSequence;
+      } else if (canStartAction && combatState.stamina >= 12) {
+        combatBasicSequence += 1;
+        nextInput.basicAttackSequence = combatBasicSequence;
+      }
+    }
+
+    scene.update(
+      STEP_SECONDS,
+      input({
+        basicAttackSequence: combatBasicSequence,
+        strongAttackSequence: combatStrongSequence,
+        guardSequence: combatGuardSequence,
+        ...nextInput,
+      }),
+    );
+    koObserved ||= scene.playerHealth === 0;
+
+    if (enemy.health < previousHealth) {
+      const contactFrame = scene.createRenderFrame(1);
+      damagingContacts += 1;
+      if (stage(scene) !== expectedNextStageId) {
+        assert.ok(contactFrame.combatGeometry.authoritativeWeapon);
+        assert.ok(contactFrame.combatGeometry.activeSweep);
+        assert.ok(contactFrame.combatGeometry.semanticHurt.length > 0);
+        assert.ok(contactFrame.combatContact?.position);
+        observableContactFrames += 1;
+      }
+      previousHealth = enemy.health;
+    }
+  }
+
+  if (stage(scene) === expectedNextStageId) {
+    scene.setVisualQaLocation({
+      regionId: SCRAP_AWAKENING_REGION_ID,
+      roomId: SCRAP_AWAKENING_ROOM_ID,
+      x: 164,
+    });
+  }
+
+  for (let tick = 0; tick < 240; tick += 1) {
+    const combatState = scene.combatCommands.snapshot();
+    if (
+      combatState.id === 'idle' &&
+      scene.playerHitstunSeconds === 0 &&
+      scene.playerBlockstunSeconds === 0
+    )
+      break;
+    scene.update(STEP_SECONDS, EMPTY_INPUT);
+  }
+
+  const remainingEncounter = scene.roomSceneNode?.getEncounterGameplaySnapshot() ?? null;
+  assert.equal(
+    stage(scene),
+    expectedNextStageId,
+    `${expectedEntityId} actual input completion: ${JSON.stringify({
+      playerHealth: scene.playerHealth,
+      playerX: scene.position.x,
+      enemyHealth: remainingEncounter?.health ?? null,
+      enemyX: remainingEncounter?.position?.x ?? null,
+      enemyState: scene.roomSceneNode?.encounter?.enemy?.aiState ?? null,
+      damagingContacts,
+    })}`,
+  );
+  assert.ok(previousHealth < initialHealth, `${expectedEntityId} visible contact decreases HP`);
+  assert.ok(damagingContacts > 0, `${expectedEntityId} exposes contact and damage in one frame`);
+  assert.ok(
+    observableContactFrames > 0,
+    `${expectedEntityId} keeps visible weapon/sweep/hurt/contact evidence on a nonlethal hit`,
+  );
+  assert.equal(koObserved, false, `${expectedEntityId} cannot pass after an intermediate KO`);
+  assert.ok(scene.playerHealth > 0, `${expectedEntityId} can be cleared without KO reset`);
+  if (enteredHere) scene.exitTree();
+}
+
 function createAwakeningScene({ progressionSnapshot = null, x = 740 } = {}) {
   const scene = createTestGameScene({
     mapDefinition: SCRAP_AWAKENING_MAP,
@@ -495,11 +625,10 @@ assert.equal(
   'yard-scout-collector',
   '도입 수거장에는 기존 기본기 grammar를 배우는 산업 수거 유닛이 필요합니다.',
 );
-scene.resolveCampaignEncounter(
-  Object.freeze({
-    entityId: 'scrap-yard-scout-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
-  }),
+completeEncounterWithGameplayInput(
+  scene,
+  'scrap-yard-scout-collector',
+  SCRAP_AWAKENING_STAGE.YARD_BRACE,
 );
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_BRACE);
 assert.equal(
@@ -634,11 +763,10 @@ assert.equal(
   'yard-brace-collector',
   '안전 지지대를 점검한 뒤에는 guard/Strong을 연습할 두 번째 수거 유닛이 필요합니다.',
 );
-scene.resolveCampaignEncounter(
-  Object.freeze({
-    entityId: 'scrap-yard-brace-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
-  }),
+completeEncounterWithGameplayInput(
+  scene,
+  'scrap-yard-brace-collector',
+  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
 );
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SURVEY);
 assert.equal(
@@ -804,11 +932,10 @@ assert.equal(
   false,
   'ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
 );
-scene.resolveCampaignEncounter(
-  Object.freeze({
-    entityId: 'scrap-yard-approach-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_PLATE,
-  }),
+completeEncounterWithGameplayInput(
+  scene,
+  'scrap-yard-approach-collector',
+  SCRAP_AWAKENING_STAGE.YARD_PLATE,
 );
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_PLATE);
 assert.equal(
@@ -1115,11 +1242,10 @@ assert.equal(
   'yard-ridge-collector',
   '흉갑 조각 점검 뒤에는 방향 roll과 Strong을 연습할 네 번째 경계 유닛이 필요합니다.',
 );
-scene.resolveCampaignEncounter(
-  Object.freeze({
-    entityId: 'scrap-yard-ridge-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD,
-  }),
+completeEncounterWithGameplayInput(
+  scene,
+  'scrap-yard-ridge-collector',
+  SCRAP_AWAKENING_STAGE.YARD_GUARD,
 );
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_GUARD);
 assert.equal(
@@ -1258,11 +1384,10 @@ assert.equal(
   'yard-guard-collector',
   '능선 전투 뒤에는 공격 순간에 방패를 맞대는 다섯 번째 경계 유닛이 필요합니다.',
 );
-scene.resolveCampaignEncounter(
-  Object.freeze({
-    entityId: 'scrap-yard-guard-collector',
-    scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
-  }),
+completeEncounterWithGameplayInput(
+  scene,
+  'scrap-yard-guard-collector',
+  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
 );
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
 assert.equal(
@@ -1623,7 +1748,11 @@ assert.equal(monologue.presentationMode, 'monologue');
 assert.equal(monologue.worldAnchor.x, scene.position.x);
 assert.notEqual(monologue.worldAnchor.x, playerDecision.position.x);
 const monologueLockedPosition = Object.freeze({ ...scene.position });
-scene.update(STEP_SECONDS, input({ right: true, basicAttack: true, basicAttackSequence: 1 }));
+combatBasicSequence += 1;
+scene.update(
+  STEP_SECONDS,
+  input({ right: true, basicAttack: true, basicAttackSequence: combatBasicSequence }),
+);
 assert.deepEqual(
   scene.position,
   monologueLockedPosition,
@@ -1669,13 +1798,14 @@ assert.deepEqual(
 );
 
 const lockedX = scene.position.x;
+combatBasicSequence += 1;
 for (let tick = 0; tick < 45; tick += 1) {
   scene.update(
     STEP_SECONDS,
     input({
       right: true,
       basicAttack: true,
-      basicAttackSequence: 1,
+      basicAttackSequence: combatBasicSequence,
     }),
   );
 }
@@ -1867,8 +1997,16 @@ assert.ok(itemIds(scene).includes('scrapyard-analysis-device-core'));
 assert.ok(itemIds(scene).includes('scrapyard-device-analysis-beam'));
 const garageRevealStartSnapshot = scene.getProgressionSnapshot();
 const garageLockedX = scene.position.x;
+combatStrongSequence += 1;
 for (let tick = 0; tick < 60; tick += 1) {
-  scene.update(STEP_SECONDS, input({ right: true, strongAttack: true, strongAttackSequence: 2 }));
+  scene.update(
+    STEP_SECONDS,
+    input({
+      right: true,
+      strongAttack: true,
+      strongAttackSequence: combatStrongSequence,
+    }),
+  );
 }
 assert.equal(scene.position.x, garageLockedX, '차고 reveal 중 이동 입력은 잠겨야 합니다.');
 assert.equal(
@@ -4466,6 +4604,7 @@ assert.deepEqual(
 );
 
 const completionChecks = [
+  'five-prologue-encounters-complete-through-gameplay-input-and-shared-contact-evidence',
   'owner-rival-search-collapse-rescue-decision-stage-order',
   'prologue-transcripts-recorded-and-replayable',
   'rescue-success-before-awakening-signal',

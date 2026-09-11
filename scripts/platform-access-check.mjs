@@ -376,6 +376,7 @@ function verifyDebugConfigurationRoundTrip() {
       'scrap-intro-guard',
       'scrap-intro-search',
       'scrap-intro-before',
+      'scrap-intro-release',
       'scrap-intro-awakening',
       'scrap-intro-d30',
       'scrap-intro-after',

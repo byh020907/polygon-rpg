@@ -6,15 +6,15 @@ RUNNING — Human이 2026-09-11에 Codex loop를 명시적으로 재개했다. O
 
 ## Active Execution Goal
 
-Human Feedback Priority — REF-05 prologue gameplay-scale composite를 새 저장의 의뢰·라이벌 동행·구조·제어핵 회수·고대 병기 각성·D-30·귀환·지도·차고 0%까지 실제 입력으로 이어 검증한다. 이번에 고친 기본/강공의 낮은 후방 준비와 빠른 횡·사선 접촉을 보존하고, desktop/mobile 실제 속도에서 전체 노출 공격·양방향 접촉과 인물·핵/팔·병기·차고·조명을 같은 data·pose sampler·Polygon renderer·UI로 판독한다. 현재 기술 기준선과 최종 reference/Composition 승인은 분리한다.
+Human Feedback Priority — REF-05의 새 저장 Browser 연속 검증을 첫 수거 유닛부터 제어핵 회수·고대 병기 각성·D-30·귀환·지도·차고 0%까지 끝낸다. 같은 실제 속도 surface에서 기본/강공 외 노출 공격의 좌우 연속 동작·접촉을 더 판독하고, 이번에 고정한 다섯 도입 조우의 actual-input damage/stage 경로와 REF-02/03/04 desktop/mobile 구도를 보존한다. 현재 기술 기준선과 최종 reference/Composition 승인은 분리한다.
 
 ## Current Evidence / Gap
 
-- 기본/강공 production pose가 몸 앞 수직 낙하 준비를 제거하고 낮은 후방 grip·얕은 검날·골반/흉곽 선행 회전·횡/사선 접촉·후반 감속으로 이어진다. 공중 공격과 gameplay timing/reach/stamina는 바꾸지 않았다. graphics review의 60Hz 연속 frame과 좌우 facing에서 준비→접촉→회수를 직접 판독했으며 이는 승인된 최종 action reference를 뜻하지 않는다.
-- `test:combat`의 전체 공격 11종·좌우 contact/guard/sweep, `test:systems`, `test:intro` 32개 stage/interaction/reload/keyboard-touch, `test:visual`, `test:graphics` 590개 catalog, lint/format, release fingerprint `fe5698589d31`와 `git diff --check`가 PASS다. 새 회귀 검사는 기본/강공 startup 전체를 240Hz로 훑으며 production visible weapon의 가로/세로 비율과 바닥 관통을 양방향에서 고정한다.
-- REF-02 제어핵/회수팔, REF-03 고대 병기, REF-04 차고 0%는 production Composition/Polygon depth renderer의 `runtime-baseline-unapproved` 기술 기준선으로 이어져 있고 이후 자유 순서 module overlay를 보존한다.
+- 도입의 다섯 수거 유닛 조우는 더 이상 fixture가 `resolveCampaignEncounter`로 건너뛰지 않는다. 120Hz `scene.update`의 실제 이동·방어/회피·공격 sequence로 각 적을 중간 KO 없이 끝내며 nonlethal contact frame의 authoritative weapon·active sweep·semantic hurt·contact point와 실제 HP 감소를 함께 고정한다. 완료 stage와 저장 가능한 다음 장면도 같은 production signal 경로로 전환된다.
+- 고유한 빈 Browser origin에서 `새 진행 · 자동 저장 준비`를 확인하고 실제 keyboard로 고물상 의뢰→라이벌 출발→첫 수거 유닛 조우까지 진행했다. 별도 input-QA 실제 전투에서 적 HP 58→36을 확인했다. in-app Browser의 1280×720 및 844×390에서 REF-02 제어핵/회수팔, REF-03 고대 병기 각성, REF-04 차고 0%의 인물·기계·핵·조명·HUD/touch가 같은 Polygon renderer로 함께 읽혔다.
+- `npm run check`는 새 도입 actual-input 항목을 포함한 33개 intro check, 전체 공격 11종 양방향 contact/guard/sweep, systems/visual/platform, 590개 graphics catalog와 art handoff까지 PASS했다. `npm run test:pwa`, release fingerprint `fe5698589d31`, lint/format과 `git diff --check`도 PASS다. 새 `scrap-intro-release` stable scenario가 debug configuration 검증 목록과 다시 일치한다.
 
-Human Feedback Priority Gap: REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았고 현재 결과는 기술 기준선이다. REF-05 composite의 새 저장 실제 속도 연속 플레이, 기본/강공 외 전체 노출 공격·양방향 접촉, actual mobile viewport 검증이 남았다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
+Human Feedback Priority Gap: REF-01 front/side/3/4와 action key pose, REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition은 공급·승인되지 않았고 현재 결과는 기술 기준선이다. 빈 저장 Browser의 첫 조우 이후부터 구조·회수·각성·귀환·차고 0%까지 하나의 지속 저장으로 실제 속도 완주하고 reload하는 증거, 기본/강공 외 전체 노출 공격의 좌우 actual Browser 연속 판독은 아직 없다. INBOX의 전체 그래픽 재작업·횡/사선 베기·접촉·모바일/연속 플레이 원문은 미완료로 보존한다.
 
 ## Preserved Work Reference
 
