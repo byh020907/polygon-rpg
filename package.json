@@ -42,6 +42,7 @@
     "test:polygon:browser": "node scripts/polygon-only-qa.mjs",
     "test:webgl:browser": "node scripts/webgl-renderer-qa.mjs",
     "test:renderer:performance": "node scripts/renderer-performance-qa.mjs",
+    "test:product-goal": "node scripts/product-goal-wiki-qa.mjs",
     "test:review-workflow": "node scripts/review-workflow-qa.mjs",
     "test:radial:browser": "node scripts/radial-refinement-qa.mjs",
     "docs:art": "node scripts/generate-art-handoff.mjs",

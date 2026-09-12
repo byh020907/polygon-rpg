@@ -1,6 +1,6 @@
 # Polygon RPG
 
-동네 고물상 견습생이 라이벌을 구하려 제어핵을 떼어낸 뒤, D-30 안에 다섯 지역의 산업기계를 대항 병기로 조립해 고대 병기를 멈추는 browser 2D action RPG입니다. 게임과 모든 검토 화면이 같은 Canvas Polygon renderer를 사용합니다.
+동네 고물상 견습생이 라이벌을 구하려 제어핵을 떼어낸 뒤, D-30 안에 다섯 지역의 산업기계를 대항 병기로 조립해 고대 병기를 멈추는 browser 2D action RPG입니다. 게임과 모든 검토 화면이 같은 WebGL2 Polygon renderer를 사용합니다.
 
 ## Project Sources
 

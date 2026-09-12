@@ -61,7 +61,7 @@ for (const [name, width, height] of [
     await b.until("document.querySelector('#graphics-review')?.dataset.ready==='true'");
     assert.equal(
       await b.evaluate("document.querySelector('#graphics-review').dataset.resourceId"),
-      'npc:abandoned-weapon-yard:scrapyard-owner',
+      'npc:cast:rival-scout',
     );
     assert.equal(b.events.filter((e) => e.method === 'Runtime.exceptionThrown').length, 0);
     console.log(name, 'PASS documents, Product Goal link, review anchor, responsive and print');
