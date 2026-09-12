@@ -414,17 +414,43 @@ document(
   'Reference 제작·승인 순서',
   '계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.',
   section(
-    '현재 우선순위',
-    table(
-      ['순서', '제작 묶음', '필수 reference/상태', '이야기/역할'],
-      ProductionContract.REFERENCE_ORDER.map(([id, title, detail, href]) => [
-        esc(id),
-        esc(title),
-        esc(detail),
-        link(href, '관련 자료'),
-      ]),
-    ),
+    'REF-01 · 1차 승인 후보',
+    '<aside class="notice"><strong>상태: Human 승인 대기 · runtime 미적용.</strong> 이 이미지는 체형·실루엣·대표 동작 방향을 합의하기 위한 후보이며, 승인된 master SVG·pose 원본이나 게임 교체 완료를 뜻하지 않습니다.</aside>' +
+      '<figure><img src="../references/ref-01/hero-rival-owner-candidate-v1.png" alt="주인공, 라이벌, 고철장 주인의 정면·측면·사선면과 대표 동작을 한 장에 배치한 REF-01 1차 승인 후보"><figcaption><strong>REF-01 candidate v1.</strong> 위: 작은 머리와 길고 가는 팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과 갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지 안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through 후보입니다. ' +
+      link('../references/ref-01/hero-rival-owner-candidate-v1.png', '원본 크기 PNG 열기') +
+      '</figcaption></figure>' +
+      table(
+        ['Human 검토 항목', '확인할 기준'],
+        [
+          ['주인공 체형', '작은 머리·길고 가는 팔다리·낮은 무게중심이 기존 확인 스타일과 맞는가'],
+          [
+            '공격과 구르기',
+            '낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전이 맞는가',
+          ],
+          [
+            '라이벌 구분',
+            '가벼운 정찰 체형·갈고리·스카프가 주인공과 같은 몸의 색상 변형이 아니라 별도 역할로 읽히는가',
+          ],
+          [
+            '고철장 주인 구분',
+            '넓고 무거운 체형·작업복·정비/운반 도구가 생활형 산업 세계의 현장 인물로 읽히는가',
+          ],
+          ['다음 단계', '수정 또는 승인 기록 뒤에만 REF-01 master SVG parts와 runtime 비교로 진행'],
+        ].map((row) => row.map(esc)),
+      ),
   ) +
+    section(
+      '현재 우선순위',
+      table(
+        ['순서', '제작 묶음', '필수 reference/상태', '이야기/역할'],
+        ProductionContract.REFERENCE_ORDER.map(([id, title, detail, href]) => [
+          esc(id),
+          esc(title),
+          esc(detail),
+          link(href, '관련 자료'),
+        ]),
+      ),
+    ) +
     section(
       '제출할 reference sheet',
       table(
