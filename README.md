@@ -4,7 +4,7 @@
 
 ## Project Sources
 
-- [Product Goal](./PRODUCT_GOAL.html): 처음 보는 사람도 전체 게임을 읽을 수 있는 공식 게임 위키·제품 명세
+- [Product Goal](https://html-preview.github.io/?url=https://github.com/byh020907/polygon-rpg/blob/main/PRODUCT_GOAL.html): 처음 보는 사람도 전체 게임을 읽을 수 있는 공식 게임 위키·제품 명세
 - [Architecture](./ARCHITECTURE.md): 코드가 따라야 하는 현재 Engineering Desired State
 - [Human Feedback Inbox](./INBOX.md): 아직 처리하지 않은 제품 feedback
 - [Loop State](./STATE.md): 코드와 실행 evidence에서 재구성되는 현재 비교 snapshot
