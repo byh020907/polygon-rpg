@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="rival-scout" data-rig-family="Humanoid" viewBox="-100 -100 300 220">
+  <title>Rival scout REF-01 selected-direction base master</title>
+  <desc>Light long-limbed scout with short goggles, rust scarf, salvage band, rope reel and long salvage hook.</desc>
+  <g id="rival-ground-shadow" data-joint="root" data-pivot="0 0" data-material="dirt" data-normal="0 -1 -0.2" data-occlusion="0.1" data-shadow="contact" data-role="visual" data-z="7">
+    <ellipse id="rival-ground-shadow-shape" cx="0" cy="84" rx="24" ry="3.5" fill="#49463f" opacity="0.25"/>
+    <circle id="rival-ground-contact-marker" data-anchor="ground-contact" cx="0" cy="84" r="1" opacity="0"/>
+  </g>
+  <g id="rival-far-upper-leg" data-joint="farHip" data-pivot="-8 20" data-material="cloth" data-normal="-0.18 -0.18 -0.97" data-occlusion="0.2" data-shadow="cast" data-role="visual" data-z="5">
+    <polygon id="rival-far-thigh-shape" points="-13,17 -3,18 -1,49 -10,51 -15,31" fill="#35434a"/>
+  </g>
+  <g id="rival-far-lower-leg" data-joint="farKnee" data-pivot="-8 50" data-material="cloth" data-normal="-0.2 -0.1 -0.97" data-occlusion="0.24" data-shadow="cast" data-role="visual" data-z="5">
+    <polygon id="rival-far-calf-shape" points="-12,47 -3,48 -1,78 -9,80 -14,64" fill="#2f3a40"/>
+  </g>
+  <g id="rival-far-boot" data-joint="farFoot" data-pivot="-8 82" data-material="leather" data-normal="-0.18 -0.22 -0.96" data-occlusion="0.28" data-shadow="contact" data-role="visual" data-z="5">
+    <polygon id="rival-far-boot-shape" points="-11,75 -2,76 2,83 0,87 -17,87 -18,83" fill="#302c2a"/>
+  </g>
+  <g id="rival-rope-coil" data-joint="farShoulder" data-pivot="-14 -25" data-material="leather" data-normal="-0.3 -0.12 -0.95" data-occlusion="0.3" data-shadow="cast" data-role="visual" data-z="4">
+    <polygon id="rival-rope-coil-shape" points="-25,-34 -17,-39 -8,-30 -9,-4 -17,0 -22,-7" fill="#66513d"/>
+    <polygon id="rival-rope-coil-band-shape" points="-23,-25 -10,-23 -10,-18 -23,-20" fill="#b1844a" data-material="brass" data-normal="-0.18 -0.1 -0.98" data-occlusion="0.2"/>
+  </g>
+  <g id="rival-far-upper-arm" data-joint="farShoulder" data-pivot="-14 -25" data-material="skin" data-normal="-0.22 -0.16 -0.96" data-occlusion="0.22" data-shadow="cast" data-role="visual" data-z="3">
+    <polygon id="rival-far-upper-arm-shape" points="-19,-29 -11,-29 -4,-6 -8,1 -15,-2 -22,-20" fill="#c89770"/>
+  </g>
+  <g id="rival-far-forearm" data-joint="farElbow" data-pivot="-3 -3" data-material="skin" data-normal="-0.16 -0.08 -0.98" data-occlusion="0.22" data-shadow="cast" data-role="visual" data-z="3">
+    <polygon id="rival-far-forearm-shape" points="-9,-5 -2,-6 -14,17 -20,18 -21,12" fill="#c99a72"/>
+    <polygon id="rival-far-glove-shape" points="-20,9 -12,11 -14,20 -21,20 -24,16" fill="#303638" data-material="leather" data-normal="-0.2 -0.08 -0.97" data-occlusion="0.24"/>
+  </g>
+  <g id="survey-guard" data-joint="farHand" data-pivot="-19 15" data-material="painted-steel" data-normal="-0.36 -0.16 -0.92" data-occlusion="0.3" data-shadow="cast" data-role="visual" data-z="2">
+    <polygon id="rival-survey-guard-contour" points="-27,5 -15,5 -10,15 -15,25 -27,25 -31,15" fill="#3d494d"/>
+    <circle id="rival-survey-guard-grip-marker" data-anchor="survey-guard-grip" cx="-19" cy="15" r="1" opacity="0"/>
+  </g>
+  <g id="rival-pelvis-wrap" data-joint="pelvis" data-pivot="0 17" data-material="cloth" data-normal="0 -0.14 -0.99" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="1">
+    <polygon id="rival-pelvis-wrap-shape" points="-13,7 13,7 15,27 6,30 0,25 -6,30 -15,26" fill="#465458"/>
+  </g>
+  <g id="rival-vest" data-joint="chest" data-pivot="0 -23" data-material="cloth" data-normal="0 -0.16 -0.99" data-occlusion="0.1" data-shadow="cast" data-role="visual" data-z="0">
+    <polygon id="rival-vest-shape" points="-13,-32 -6,-37 7,-36 14,-28 12,8 -12,8 -16,-13" fill="#64706f"/>
+  </g>
+  <g id="rival-scarf" data-joint="neck" data-pivot="0 -32" data-material="cloth" data-normal="0.12 -0.16 -0.98" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="-2">
+    <polygon id="rival-scarf-collar-shape" points="-10,-37 8,-37 13,-29 2,-23 -10,-28" fill="#75483f"/>
+    <polygon id="rival-scarf-tail-shape" points="7,-32 28,-28 20,-19 8,-23" fill="#824d42" data-normal="0.28 -0.12 -0.95" data-occlusion="0.08"/>
+  </g>
+  <g id="rival-head" data-joint="head" data-pivot="0 -42" data-material="skin" data-normal="0 -0.1 -0.99" data-occlusion="0.07" data-shadow="cast" data-role="visual" data-z="-3">
+    <polygon id="rival-face-shape" points="-7,-55 4,-59 10,-52 8,-39 1,-34 -7,-39 -10,-49" fill="#c99a72"/>
+  </g>
+  <g id="rival-hair" data-joint="head" data-pivot="0 -42" data-material="cloth" data-normal="-0.12 -0.2 -0.97" data-occlusion="0.16" data-shadow="cast" data-role="visual" data-z="-4">
+    <polygon id="rival-hair-shape" points="-11,-52 -6,-62 8,-62 13,-54 9,-46 5,-51 -3,-47 -9,-42 -12,-49" fill="#20282c"/>
+  </g>
+  <g id="rival-survey-goggles" data-joint="head" data-pivot="0 -42" data-material="glass" data-normal="0 -0.04 -1" data-occlusion="0.04" data-shadow="none" data-role="visual" data-z="-6">
+    <polygon id="rival-goggles-shape" points="-8,-52 8,-53 9,-48 -7,-47" fill="#6eb5b1"/>
+    <polygon id="rival-goggles-mid-mark" data-lod="mid" points="-5,-51 5,-52 6,-49 -5,-48" fill="#9ed7d2"/>
+    <polygon id="rival-goggles-near-mark" data-lod="near" points="-6,-52 0,-52 0,-48 -6,-48" fill="#b9e6df"/>
+    <polygon id="rival-goggles-near-side-mark" data-lod="near" points="2,-52 7,-52 8,-49 2,-48" fill="#8ccdc7"/>
+  </g>
+  <g id="rival-harness" data-joint="chest" data-pivot="0 -23" data-material="leather" data-normal="0.14 -0.08 -0.99" data-occlusion="0.1" data-shadow="cast" data-role="visual" data-z="-4">
+    <polygon id="rival-harness-shape" points="-10,-34 -6,-36 12,4 7,7" fill="#584638"/>
+  </g>
+  <g id="rival-salvage-band" data-joint="pelvis" data-pivot="0 17" data-material="cloth" data-normal="0 -0.05 -1" data-occlusion="0.05" data-shadow="none" data-role="visual" data-z="-5">
+    <polygon id="rival-salvage-band-shape" points="-14,7 14,7 14,12 -14,12" fill="#75d6c4"/>
+  </g>
+  <g id="rival-tool-pouch" data-joint="pelvis" data-pivot="0 17" data-material="leather" data-normal="0.3 -0.12 -0.95" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="-3">
+    <polygon id="rival-tool-pouch-shape" points="10,11 21,13 20,29 9,27" fill="#5b4636"/>
+  </g>
+  <g id="rival-near-upper-leg" data-joint="nearHip" data-pivot="8 20" data-material="cloth" data-normal="0.2 -0.14 -0.97" data-occlusion="0.1" data-shadow="cast" data-role="visual" data-z="-5">
+    <polygon id="rival-near-thigh-shape" points="2,18 14,17 17,33 12,51 3,50 -2,30" fill="#3d4b50"/>
+  </g>
+  <g id="rival-near-lower-leg" data-joint="nearKnee" data-pivot="8 50" data-material="cloth" data-normal="0.22 -0.1 -0.97" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="-5">
+    <polygon id="rival-near-calf-shape" points="3,47 13,48 15,64 10,80 1,77" fill="#344248"/>
+  </g>
+  <g id="rival-near-boot" data-joint="nearFoot" data-pivot="8 82" data-material="leather" data-normal="0.2 -0.22 -0.95" data-occlusion="0.16" data-shadow="contact" data-role="visual" data-z="-5">
+    <polygon id="rival-near-boot-shape" points="2,75 12,76 20,82 19,87 0,87 -3,83" fill="#332e2b"/>
+  </g>
+  <g id="rival-near-upper-arm" data-joint="nearShoulder" data-pivot="14 -25" data-material="skin" data-normal="0.28 -0.14 -0.95" data-occlusion="0.08" data-shadow="cast" data-role="visual" data-z="-6">
+    <polygon id="rival-near-upper-arm-shape" points="9,-30 18,-28 21,-18 16,0 8,1 5,-7" fill="#ce9d75"/>
+  </g>
+  <g id="rival-near-forearm" data-joint="nearElbow" data-pivot="14 0" data-material="skin" data-normal="0.22 -0.08 -0.97" data-occlusion="0.08" data-shadow="cast" data-role="visual" data-z="-6">
+    <polygon id="rival-near-forearm-shape" points="9,-3 17,-2 30,17 26,22 20,20 13,8" fill="#d2a079"/>
+    <polygon id="rival-near-glove-shape" points="20,9 28,8 32,18 27,23 21,20" fill="#33393a" data-material="leather" data-normal="0.24 -0.08 -0.97" data-occlusion="0.1"/>
+  </g>
+  <g id="salvage-hook" data-joint="nearHand" data-pivot="27 20" data-material="raw-steel" data-normal="0.1 -0.24 -0.97" data-occlusion="0.06" data-shadow="cast" data-role="visual" data-z="-8">
+    <polygon id="rival-salvage-hook-contour" points="25,18 128,-34 133,-27 30,24" fill="#9ca7a6"/>
+    <circle id="rival-salvage-hook-grip-marker" data-anchor="hook-grip" cx="27" cy="20" r="1" opacity="0"/>
+    <circle id="rival-salvage-hook-tip-marker" data-anchor="hook-tip" cx="136" cy="-29" r="1" opacity="0"/>
+  </g>
+  <g id="rival-hook-head-detail" data-joint="nearHand" data-pivot="27 20" data-material="painted-steel" data-normal="0.16 -0.2 -0.97" data-occlusion="0.08" data-shadow="cast" data-role="visual" data-z="-9">
+    <polygon id="rival-hook-head-inset-shape" points="124,-31 137,-46 149,-40 143,-31 136,-34 131,-27 143,-22 137,-12 124,-22" fill="#566163"/>
+    <polygon id="rival-hook-collar-shape" points="103,-21 111,-25 115,-20 107,-16" fill="#a77b42" data-material="brass" data-normal="0.1 -0.16 -0.98" data-occlusion="0.06"/>
+  </g>
+</svg>

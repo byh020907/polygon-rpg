@@ -108,6 +108,7 @@ Keyboard / Touch / DOM intent
 
 - 이 절은 최신 Human Feedback이 확정한 목표 계약이다. 현재 JS polygon/4개 견본/3D clip의 존재는 SVG·Composition·Rig Family production 구현 또는 reference 승인의 증거가 아니다. 구현 차이는 STATE.md에서 추적한다. Human이 시스템 우선 구현을 명시한 경우 기존 그림과 기술 검증용 자산으로 production 연결을 구현하며 최종 디자인 승인은 실제 공급된 reference에 대해 별도로 받는다.
 - **Product / Art / Engine / Gameplay:** Product Goal은 최종 경험, 승인 reference는 형태·구도·주요 pose, 엔진은 투영·retarget·조명·warp, gameplay는 이동거리·attack envelope·active window·피해 반응·무적을 소유한다. 현재 코드가 승인 reference를 대체하지 않는다.
+- **Three-candidate Human gate:** 새 reference·Composition·중요 pose의 시각적 방향은 차이가 설명되고 같은 조건에서 나란히 비교 가능한 후보 3개를 제시한다. Human이 선택한 안만 master SVG·Composition·authored pose의 제작 authority가 되며, 선택 기록과 export 검사와 runtime 검증을 분리한다. 이미 Human이 선택한 방향을 기계적으로 SVG로 옮기거나 결함을 수리하는 과정에는 같은 선택을 형식적으로 다시 묻지 않는다.
 
 ### SVG Master and Derived Presentation
 

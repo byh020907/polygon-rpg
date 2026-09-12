@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-WAITING_FOR_HUMAN — 최우선 그래픽 재작업의 첫 승인 관문인 REF-01 1차 후보를 만들었다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
+RUNNING — Human이 REF-01 1안을 선택해 수정 가능한 master SVG 제작 단계로 전환했다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
 
 ## Active Execution Goal
 
-Human Feedback Priority — Human이 `docs/references/ref-01/hero-rival-owner-candidate-v1.png`의 주인공·라이벌·고철장 주인 체형, 역할 실루엣과 주인공 대표 동작을 검토한다. 수정 또는 명시적 승인 전에는 master SVG parts 제작·runtime 교체·REF-02 확장으로 진행하지 않는다.
+Human Feedback Priority — 선택된 REF-01 master SVG를 주인공과 prologue 라이벌·고철장 주인의 실제 pose sampler/runtime에 연결한다. 검토실의 기존 stable ID와 gameplay contact authority를 보존하고, 지역별 구형 정적 라이벌 외형은 별도 잔존 Gap으로 명시한 뒤 한 체형씩 실제 화면에서 검증한다.
 
 ## Current Evidence / Gap
 
@@ -17,9 +17,10 @@ Human Feedback Priority — Human이 `docs/references/ref-01/hero-rival-owner-ca
 - PWA는 active worker metadata 미식별을 새 cache 설치 실패로 취급하지 않는다. waiting worker 자체 build와 서버 최신 release가 일치할 때만 진행/recovery 저장 후 자동 적용하고, 미식별 waiting은 활성화하지 않는다. 실제 지속 Chromium profile에서 A offline → broken B 유지 → save 실패 차단 → 재확인 뒤 B 자동 적용·두 탭 자동 전환 → stale C 차단 → C 자동 적용·offline reopen과 single reload를 PASS했다. 새 PWA feedback은 Product/Architecture와 구현이 소유해 INBOX에서 제거했다.
 - `PRODUCT_GOAL.html`은 기존 requirement ID·문장·표·링크를 보존하면서 상단 전역 바, 좌우 탐색, 문서 제목·도구·분류, 접을 수 있는 목차, 번호형 절과 표 중심의 위키 문서 구조로 재구성했다. wide/desktop/mobile/print에서 구조·접근성·overflow와 실제 화면을 검증한다.
 - REF-01 candidate v1은 1672×941 한 장에서 주인공 front/side/3/4와 낮은 횡베기·접촉·강공 후반·전방 회전 구르기, 라이벌 front/side/3/4·갈고리 이동, 고철장 주인 front/side/3/4·정비·중량 도구 운반을 비교한다. 기존 주인공 기술 참고와 Human 첨부의 작고 단순한 머리·긴 팔다리 비율을 출발점으로 삼되 식별 가능한 디자인을 복제하지 않았다.
-- `docs/art-handoff/reference-approval.html`은 후보 이미지, Human 검토 항목, `승인 대기 · runtime 미적용` 상태를 함께 표시한다. 생성·등록을 승인으로 오인하지 않도록 정적 검사에서 이미지 크기·링크·상태 문구·금지된 완료 표시를 확인한다.
+- Human이 REF-01 option 1을 제작 방향으로 선택했다. `docs/art-handoff/reference-approval.html`은 선택 기록과 `master SVG/runtime 미적용` 상태를 분리하고, 이후 새 시각 판단은 의미 있게 다른 3안을 한 번에 비교해 Human이 고른 안만 제작 authority로 넘기는 계약을 표시한다.
+- 선택 방향을 `scrapyard-apprentice` 22 parts/26 shapes, `rival-scout` 25 parts/32 shapes, `scrapyard-owner` 26 parts/34 shapes의 Humanoid master SVG로 옮겼다. 각 원본은 material/normal/occlusion, ground와 역할별 tool grip/tip anchor, 고유 체형·복장·도구와 실제 far/mid/near 디테일 차이를 유지하며 adjacent LOD SVG·compiled JSON 및 source provenance를 생성·검사한다.
 
-Human Feedback Priority Gap: REF-01 후보는 Human 승인 전이며 master SVG parts와 runtime에는 적용하지 않았다. 주인공의 강공 후반이 높은 준비 자세로 오해되지 않는지, 구르기에서 방패를 포함한 장비 부착이 자연스러운지, 라이벌/주인의 체형과 도구가 의도에 맞는지는 Human 판단이 필요하다. REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition도 아직 없다. 강제 `WEBGL_lose_context` restore와 실제 legacy Chromium reopen, 측정 기기 밖의 설치형 mobile GPU·장시간 memory는 계속 unverified다. 남은 INBOX 원문은 보존한다.
+Human Feedback Priority Gap: REF-01 master는 export까지 검증했지만 실제 player/cast runtime에는 아직 연결하지 않았다. 주인공의 강공 후반·구르기 장비 anchor, prologue 라이벌/주인 pose retarget와 다섯 지역에 남은 정적 라이벌 외형을 실제 gameplay scale에서 확인해야 한다. REF-02 Core/Retrieval Arm부터 새 시각 판단은 3안 Human gate를 거치며, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition도 아직 없다. 강제 `WEBGL_lose_context` restore와 실제 legacy Chromium reopen, 측정 기기 밖의 설치형 mobile GPU·장시간 memory는 계속 unverified다. 남은 INBOX 원문은 보존한다.
 
 ## Preserved Work Reference
 

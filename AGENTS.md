@@ -35,6 +35,7 @@ Before product work, read the selected Method and all four Project Sources compl
 ### Reference-led Production
 
 - 기존 이야기·게임 구조를 보존하고 최신 Human Feedback으로 Product What, 기술/저작 계약, 제작 지침, 현재 구현 증거를 구분한다. 현재 code/catalog/test 통과를 기획 또는 디자인 승인의 authority로 삼지 않는다. 세부 계약은 ARCHITECTURE.md와 docs/art-handoff의 생성 원본이 소유한다.
+- Human의 시각적 판단이 필요한 새 reference·Composition·중요 pose는 서로 의미 있게 다른 후보 3개를 한 번에 비교 가능하게 제시한다. Human이 선택한 안만 승인 원본 제작과 runtime 적용의 기준으로 넘기며 후보 생성이나 자동 검사를 Human 선택으로 대체하지 않는다.
 - 정돈된 생활형 산업 세계와 실제 gameplay scale을 기준으로 판단한다. 주요 장면은 승인 Composition/Prefab, 중요한 액션은 승인 reference/key pose에서 출발한다. Kit만으로 주요 화면을 만들거나 임의 pose를 완성 처리하지 않는다.
 - Hero/Rival/Owner → Core/Retrieval Arm → Ancient Machine Awakening → Garage 0% → prologue gameplay-scale composite를 먼저 검토·승인한 뒤 enemy archetype, 폐광↔항구, 나머지 지역으로 확장한다. 기존 주인공 모션 스타일 확인은 새 reference 전체의 승인이 아니다.
 - Human이 시스템 우선 구현을 명시하면 실제 아트 공급 전에도 기존 그림/명시적 기술 검증용 도형으로 importer·scene·rig·contact와 실제 runtime 연결을 구현·검증한다. 이를 최종 디자인/reference 승인으로 간주하지 않는다.

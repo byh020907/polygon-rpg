@@ -18,7 +18,7 @@
     </header>
     <main>
       <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 20f0439037eb</p>
+        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 d1ee0e75d35a</p>
         <h1>Reference 제작·승인 순서</h1>
         <p>계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.</p>
       </header>
@@ -29,22 +29,24 @@
         <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
       </aside>
       <section>
-        <h2>REF-01 · 1차 승인 후보</h2>
+        <h2>REF-01 · 1안 선택됨</h2>
         <aside class="notice">
-          <strong>상태: Human 승인 대기 · runtime 미적용.</strong> 이 이미지는 체형·실루엣·대표 동작
-          방향을 합의하기 위한 후보이며, 승인된 master SVG·pose 원본이나 게임 교체 완료를 뜻하지
-          않습니다.
+          <strong>상태: Human 선택 완료 · master SVG 원본/export 생성 · runtime 미적용.</strong>
+          Human이 2026-09-12에 이 1안을 선호안으로 선택했습니다. 선택 방향을 세 인물의 의미 있는
+          부위·재질·도구 anchor로 옮겼으며, 실제 게임 교체와 gameplay-scale 검증은 다음 상태로
+          분리합니다.
         </aside>
         <figure>
           <img
             src="../references/ref-01/hero-rival-owner-candidate-v1.png"
-            alt="주인공, 라이벌, 고철장 주인의 정면·측면·사선면과 대표 동작을 한 장에 배치한 REF-01 1차 승인 후보"
+            alt="Human이 1안으로 선택한 주인공, 라이벌, 고철장 주인의 REF-01 제작 방향"
           />
           <figcaption>
-            <strong>REF-01 candidate v1.</strong> 위: 작은 머리와 길고 가는 팔다리의 주인공, 낮은
-            횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과 갈고리 도구의 라이벌.
-            아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지 안의 강공 후반 자세는
-            높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through 후보입니다.
+            <strong>REF-01 selected direction · option 1.</strong> 위: 작은 머리와 길고 가는
+            팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과
+            갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지
+            안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through
+            방향입니다.
             <a href="../references/ref-01/hero-rival-owner-candidate-v1.png">원본 크기 PNG 열기</a>
           </figcaption>
         </figure>
@@ -52,35 +54,81 @@
           <table>
             <thead>
               <tr>
-                <th scope="col">Human 검토 항목</th>
-                <th scope="col">확인할 기준</th>
+                <th scope="col">선택 기록</th>
+                <th scope="col">현재 기준</th>
               </tr>
             </thead>
             <tbody>
               <tr>
+                <td>선택안</td>
+                <td>REF-01 option 1 · hero-rival-owner-candidate-v1.png</td>
+              </tr>
+              <tr>
                 <td>주인공 체형</td>
-                <td>작은 머리·길고 가는 팔다리·낮은 무게중심이 기존 확인 스타일과 맞는가</td>
+                <td>작은 머리·길고 가는 팔다리·낮은 무게중심</td>
               </tr>
               <tr>
                 <td>공격과 구르기</td>
-                <td>낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전이 맞는가</td>
+                <td>낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전</td>
               </tr>
               <tr>
                 <td>라이벌 구분</td>
-                <td>
-                  가벼운 정찰 체형·갈고리·스카프가 주인공과 같은 몸의 색상 변형이 아니라 별도 역할로
-                  읽히는가
-                </td>
+                <td>가벼운 정찰 체형·갈고리·스카프로 주인공과 다른 역할을 유지</td>
               </tr>
               <tr>
                 <td>고철장 주인 구분</td>
-                <td>
-                  넓고 무거운 체형·작업복·정비/운반 도구가 생활형 산업 세계의 현장 인물로 읽히는가
-                </td>
+                <td>넓고 무거운 체형·작업복·정비/운반 도구로 생활형 산업 현장 인물을 유지</td>
               </tr>
               <tr>
                 <td>다음 단계</td>
-                <td>수정 또는 승인 기록 뒤에만 REF-01 master SVG parts와 runtime 비교로 진행</td>
+                <td>검증된 REF-01 master SVG를 실제 player/cast pose sampler에 연결</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          생성 원본:
+          <a href="../../public/graphics/scrapyard-apprentice.master.svg">Hero master SVG</a> ·
+          <a href="../../public/graphics/rival-scout.master.svg">Rival master SVG</a> ·
+          <a href="../../public/graphics/scrapyard-owner.master.svg">Owner master SVG</a>
+        </p>
+      </section>
+      <section>
+        <h2>3안 비교 승인 방식</h2>
+        <p>
+          앞으로 Human의 시각적 판단이 필요한 새 reference·Composition·중요 pose는 같은 조건에서
+          의미 있게 다른 3안을 한 번에 보여 줍니다. 선택된 한 안만 제작 authority가 되며 생성된 후보
+          수나 자동 검사 결과가 선택을 대신하지 않습니다.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">단계</th>
+                <th scope="col">계약</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>후보 제시</td>
+                <td>같은 검토 조건에서 시각적으로 의미가 다른 3안을 한 번에 나란히 제시</td>
+              </tr>
+              <tr>
+                <td>차이 설명</td>
+                <td>실루엣·비율·구도·동작·재질 중 선택 결과를 바꾸는 핵심 차이를 각 안에 명시</td>
+              </tr>
+              <tr>
+                <td>Human 선택</td>
+                <td>
+                  Human이 고른 한 안만 다음 master SVG·Composition·authored pose 제작 기준으로 기록
+                </td>
+              </tr>
+              <tr>
+                <td>후속 검증</td>
+                <td>
+                  선택, 원본 제작, export 검사, runtime 적용과 gameplay-scale 검증을 별도 상태로
+                  유지
+                </td>
               </tr>
             </tbody>
           </table>

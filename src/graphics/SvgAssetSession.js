@@ -3,6 +3,9 @@ import { PROLOGUE_CORE_ASSET } from './assets/PrologueCoreAsset.js';
 import { PROLOGUE_RETRIEVAL_ARM_ASSET } from './assets/PrologueRetrievalArmAsset.js';
 import { PROLOGUE_ANCIENT_MACHINE_ASSET } from './assets/PrologueAncientMachineAsset.js';
 import { PROLOGUE_GARAGE_ZERO_ASSET } from './assets/PrologueGarageZeroAsset.js';
+import { SCRAPYARD_APPRENTICE_ASSET } from './assets/ScrapyardApprenticeAsset.js';
+import { RIVAL_SCOUT_ASSET } from './assets/RivalScoutAsset.js';
+import { SCRAPYARD_OWNER_ASSET } from './assets/ScrapyardOwnerAsset.js';
 const resourceFor = (
   asset,
   id,
@@ -91,6 +94,37 @@ export function createSvgAssetSession({ maxAssets = 8, maxBytes = 4 * 1024 * 102
   };
 }
 export const BUILTIN_SVG_RESOURCES = Object.freeze([
+  resourceFor(
+    SCRAPYARD_APPRENTICE_ASSET,
+    'svg:scrapyard-apprentice',
+    'public/graphics/scrapyard-apprentice.master.svg',
+    {
+      category: 'player',
+      referenceGroupId: 'REF-01',
+      approvalStatus: 'selected-direction-master-runtime-pending',
+      notes:
+        'REF-01 Human 선택 1안의 수정 가능한 주인공 master SVG입니다. 원본/export 검증과 runtime 적용 상태는 별도입니다.',
+    },
+  ),
+  resourceFor(RIVAL_SCOUT_ASSET, 'svg:rival-scout', 'public/graphics/rival-scout.master.svg', {
+    category: 'npc',
+    referenceGroupId: 'REF-01',
+    approvalStatus: 'selected-direction-master-runtime-pending',
+    notes:
+      'REF-01 Human 선택 1안의 가벼운 정찰 체형·스카프·갈고리 master SVG입니다. runtime cast 연결 전입니다.',
+  }),
+  resourceFor(
+    SCRAPYARD_OWNER_ASSET,
+    'svg:scrapyard-owner',
+    'public/graphics/scrapyard-owner.master.svg',
+    {
+      category: 'npc',
+      referenceGroupId: 'REF-01',
+      approvalStatus: 'selected-direction-master-runtime-pending',
+      notes:
+        'REF-01 Human 선택 1안의 넓은 작업 체형·앞치마·장부·스패너 master SVG입니다. runtime cast 연결 전입니다.',
+    },
+  ),
   resourceFor(
     PROLOGUE_CORE_ASSET,
     'svg:prologue-control-core',

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="scrapyard-apprentice" data-rig-family="Humanoid" viewBox="-100 -100 300 220">
+  <title>Scrapyard apprentice REF-01 selected-direction base master</title>
+  <desc>Small-headed long-limbed apprentice in short workwear, cross strap, low field cutter and industrial guard plate.</desc>
+  <g id="apprentice-ground-shadow" data-joint="root" data-pivot="0 0" data-material="dirt" data-normal="0 -1 -0.2" data-occlusion="0.12" data-shadow="contact" data-role="visual" data-z="7">
+    <ellipse id="apprentice-ground-shadow-shape" cx="0" cy="84" rx="27" ry="4" fill="#4d4941" opacity="0.28"/>
+    <circle id="apprentice-ground-contact-marker" data-anchor="ground-contact" cx="0" cy="84" r="1" opacity="0"/>
+  </g>
+  <g id="apprentice-far-upper-leg" data-joint="farHip" data-pivot="-8 20" data-material="cloth" data-normal="-0.18 -0.2 -0.96" data-occlusion="0.24" data-shadow="cast" data-role="visual" data-z="5">
+    <polygon id="apprentice-far-thigh-shape" points="-15,17 -3,18 -2,50 -12,51 -17,30" fill="#363d3c"/>
+  </g>
+  <g id="apprentice-far-lower-leg" data-joint="farKnee" data-pivot="-8 50" data-material="cloth" data-normal="-0.2 -0.1 -0.97" data-occlusion="0.28" data-shadow="cast" data-role="visual" data-z="5">
+    <polygon id="apprentice-far-calf-shape" points="-13,47 -3,48 -2,77 -10,80 -15,64" fill="#303737"/>
+  </g>
+  <g id="apprentice-far-boot" data-joint="farFoot" data-pivot="-8 82" data-material="leather" data-normal="-0.16 -0.26 -0.95" data-occlusion="0.32" data-shadow="contact" data-role="visual" data-z="5">
+    <polygon id="apprentice-far-boot-shape" points="-12,75 -2,76 1,83 -2,87 -18,87 -19,83" fill="#302c28"/>
+  </g>
+  <g id="apprentice-far-upper-arm" data-joint="farShoulder" data-pivot="-14 -25" data-material="cloth" data-normal="-0.28 -0.2 -0.94" data-occlusion="0.3" data-shadow="cast" data-role="visual" data-z="4">
+    <polygon id="apprentice-far-upper-arm-shape" points="-20,-29 -10,-29 -3,-5 -8,1 -16,-3 -23,-20" fill="#68716a"/>
+  </g>
+  <g id="apprentice-far-forearm" data-joint="farElbow" data-pivot="-3 -3" data-material="skin" data-normal="-0.15 -0.1 -0.98" data-occlusion="0.24" data-shadow="cast" data-role="visual" data-z="4">
+    <polygon id="apprentice-far-forearm-shape" points="-10,-5 -2,-6 -14,17 -20,18 -21,12" fill="#c89c76"/>
+    <polygon id="apprentice-far-bracer-shape" points="-20,7 -11,8 -14,18 -22,18 -24,13" fill="#654b35" data-material="leather" data-normal="-0.22 -0.12 -0.96" data-occlusion="0.28"/>
+  </g>
+  <g id="shield" data-joint="farHand" data-pivot="-19 15" data-material="painted-steel" data-normal="-0.38 -0.18 -0.91" data-occlusion="0.34" data-shadow="cast" data-role="visual" data-z="3">
+    <polygon id="apprentice-shield-contour" points="-37,-11 -15,-8 -10,5 -13,42 -24,51 -42,39 -46,3" fill="#465056"/>
+    <circle id="apprentice-shield-grip-marker" data-anchor="shield-grip" cx="-19" cy="15" r="1" opacity="0"/>
+  </g>
+  <g id="apprentice-pelvis-workshorts" data-joint="pelvis" data-pivot="0 17" data-material="cloth" data-normal="0 -0.15 -0.99" data-occlusion="0.16" data-shadow="cast" data-role="visual" data-z="1">
+    <polygon id="apprentice-workshorts-shape" points="-14,8 15,8 17,26 7,31 0,25 -7,31 -17,26" fill="#4c5551"/>
+  </g>
+  <g id="apprentice-shirt" data-joint="chest" data-pivot="0 -23" data-material="cloth" data-normal="0 -0.18 -0.98" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="0">
+    <polygon id="apprentice-shirt-shape" points="-15,-31 -7,-37 8,-36 16,-28 13,9 -13,9 -18,-12" fill="#70786f"/>
+  </g>
+  <g id="apprentice-neck-cloth" data-joint="neck" data-pivot="0 -32" data-material="cloth" data-normal="0 -0.18 -0.98" data-occlusion="0.15" data-shadow="cast" data-role="visual" data-z="-1">
+    <polygon id="apprentice-neck-cloth-shape" points="-7,-36 7,-36 9,-29 0,-24 -9,-30" fill="#3d4542"/>
+  </g>
+  <g id="apprentice-head" data-joint="head" data-pivot="0 -42" data-material="skin" data-normal="0 -0.12 -0.99" data-occlusion="0.08" data-shadow="cast" data-role="visual" data-z="-2">
+    <polygon id="apprentice-face-shape" points="-7,-55 4,-59 10,-52 8,-39 1,-34 -7,-39 -10,-49" fill="#cda079"/>
+  </g>
+  <g id="apprentice-hair" data-joint="head" data-pivot="0 -42" data-material="cloth" data-normal="-0.12 -0.22 -0.97" data-occlusion="0.18" data-shadow="cast" data-role="visual" data-z="-3">
+    <polygon id="apprentice-hair-shape" points="-10,-52 -5,-62 8,-62 13,-53 8,-45 5,-51 -3,-47 -9,-42 -12,-49" fill="#252a2b"/>
+  </g>
+  <g id="apprentice-cross-strap" data-joint="chest" data-pivot="0 -23" data-material="leather" data-normal="0.18 -0.08 -0.98" data-occlusion="0.1" data-shadow="cast" data-role="visual" data-z="-4">
+    <polygon id="apprentice-cross-strap-shape" points="-12,-34 -7,-36 13,4 8,7" fill="#604b3a"/>
+  </g>
+  <g id="apprentice-belt" data-joint="pelvis" data-pivot="0 17" data-material="leather" data-normal="0 -0.1 -0.99" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="-4">
+    <polygon id="apprentice-belt-shape" points="-15,6 14,6 15,12 -15,12" fill="#45382f"/>
+    <polygon id="apprentice-belt-buckle-mid-shape" data-lod="mid" points="-3,6 4,6 4,11 -3,11" fill="#a98546" data-material="brass" data-normal="0 -0.05 -1" data-occlusion="0.05"/>
+    <polygon id="apprentice-belt-buckle-near-shape" data-lod="near" points="-3,5 4,5 5,12 -3,12" fill="#b3904c" data-material="brass" data-normal="0 -0.05 -1" data-occlusion="0.06"/>
+    <polygon id="apprentice-belt-buckle-near-inset" data-lod="near" points="-1,7 3,7 3,10 -1,10" fill="#d0b267" data-material="brass" data-normal="0 -0.03 -1" data-occlusion="0.03"/>
+  </g>
+  <g id="apprentice-satchel" data-joint="pelvis" data-pivot="0 17" data-material="leather" data-normal="0.32 -0.15 -0.93" data-occlusion="0.15" data-shadow="cast" data-role="visual" data-z="-3">
+    <polygon id="apprentice-satchel-shape" points="10,10 23,13 21,30 9,28" fill="#5b4533"/>
+  </g>
+  <g id="apprentice-near-upper-leg" data-joint="nearHip" data-pivot="8 20" data-material="cloth" data-normal="0.2 -0.16 -0.97" data-occlusion="0.12" data-shadow="cast" data-role="visual" data-z="-5">
+    <polygon id="apprentice-near-thigh-shape" points="2,18 15,17 18,33 13,51 3,50 -2,30" fill="#414a48"/>
+  </g>
+  <g id="apprentice-near-lower-leg" data-joint="nearKnee" data-pivot="8 50" data-material="cloth" data-normal="0.24 -0.12 -0.96" data-occlusion="0.14" data-shadow="cast" data-role="visual" data-z="-5">
+    <polygon id="apprentice-near-calf-shape" points="3,47 14,48 15,64 10,80 1,77" fill="#38413f"/>
+  </g>
+  <g id="apprentice-near-boot" data-joint="nearFoot" data-pivot="8 82" data-material="leather" data-normal="0.2 -0.24 -0.95" data-occlusion="0.18" data-shadow="contact" data-role="visual" data-z="-5">
+    <polygon id="apprentice-near-boot-shape" points="2,75 12,76 20,82 19,87 0,87 -3,83" fill="#38312c"/>
+  </g>
+  <g id="apprentice-near-upper-arm" data-joint="nearShoulder" data-pivot="14 -25" data-material="cloth" data-normal="0.3 -0.16 -0.94" data-occlusion="0.1" data-shadow="cast" data-role="visual" data-z="-6">
+    <polygon id="apprentice-near-upper-arm-shape" points="8,-30 19,-28 22,-18 16,0 8,1 4,-6" fill="#778078"/>
+  </g>
+  <g id="apprentice-near-forearm" data-joint="nearElbow" data-pivot="14 0" data-material="skin" data-normal="0.22 -0.08 -0.97" data-occlusion="0.1" data-shadow="cast" data-role="visual" data-z="-6">
+    <polygon id="apprentice-near-forearm-shape" points="9,-3 17,-2 30,17 26,23 20,20 13,8" fill="#d0a27a"/>
+    <polygon id="apprentice-near-bracer-shape" points="19,9 27,7 32,18 27,24 21,21" fill="#6b4f36" data-material="leather" data-normal="0.24 -0.08 -0.97" data-occlusion="0.13"/>
+  </g>
+  <g id="weapon" data-joint="nearHand" data-pivot="27 20" data-material="raw-steel" data-normal="0.12 -0.36 -0.92" data-occlusion="0.08" data-shadow="cast" data-role="visual" data-z="-8">
+    <polygon id="apprentice-field-cutter-contour" points="25,15 32,20 -45,70 -60,64 -49,47" fill="#aeb6b4"/>
+    <circle id="apprentice-weapon-grip-marker" data-anchor="weapon-grip" cx="27" cy="20" r="1" opacity="0"/>
+    <circle id="apprentice-weapon-tip-marker" data-anchor="weapon-tip" cx="-54" cy="61" r="1" opacity="0"/>
+  </g>
+</svg>

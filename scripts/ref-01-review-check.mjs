@@ -17,14 +17,21 @@ assert.ok(width >= 1600 && height >= 900, `REF-01 candidate is too small: ${widt
 assert.ok(ratio >= 1.6 && ratio <= 1.9, `REF-01 candidate ratio is unexpected: ${ratio}`);
 
 const page = fs.readFileSync(pagePath, 'utf8');
-assert.match(page, /REF-01 · 1차 승인 후보/);
-assert.match(page, /Human 승인 대기 · runtime 미적용/);
+assert.match(page, /REF-01 · 1안 선택됨/);
+assert.match(page, /Human 선택 완료 · master SVG 원본\/export 생성 · runtime 미적용/);
 assert.match(page, /hero-rival-owner-candidate-v1\.png/);
 assert.match(page, /낮은 횡베기/);
 assert.match(page, /실제 전방 회전 구르기/);
-assert.match(page, /수정 또는 승인 기록 뒤에만/);
+assert.match(page, /3안 비교 승인 방식/);
+assert.match(page, /의미 있게 다른 3안/);
+assert.match(page, /검증된 REF-01 master SVG를 실제 player\/cast pose sampler에 연결/);
+assert.match(page, /scrapyard-apprentice\.master\.svg/);
+assert.match(page, /rival-scout\.master\.svg/);
+assert.match(page, /scrapyard-owner\.master\.svg/);
+assert.match(page, /href="\.\.\/\.\.\/public\/graphics\/scrapyard-apprentice\.master\.svg"/);
+assert.doesNotMatch(page, /&lt;a href=.*master\.svg/);
 assert.doesNotMatch(page, /REF-01[^<]{0,80}(?:승인 완료|runtime 적용 완료)/);
 
 console.log(
-  `PASS REF-01 review candidate: ${width}x${height}, approval pending, runtime not applied.`,
+  `PASS REF-01 selected direction: ${width}x${height}, option 1 selected, master/export built, runtime pending, future gates use 3 candidates.`,
 );

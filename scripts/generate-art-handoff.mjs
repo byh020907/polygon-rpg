@@ -414,31 +414,43 @@ document(
   'Reference 제작·승인 순서',
   '계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.',
   section(
-    'REF-01 · 1차 승인 후보',
-    '<aside class="notice"><strong>상태: Human 승인 대기 · runtime 미적용.</strong> 이 이미지는 체형·실루엣·대표 동작 방향을 합의하기 위한 후보이며, 승인된 master SVG·pose 원본이나 게임 교체 완료를 뜻하지 않습니다.</aside>' +
-      '<figure><img src="../references/ref-01/hero-rival-owner-candidate-v1.png" alt="주인공, 라이벌, 고철장 주인의 정면·측면·사선면과 대표 동작을 한 장에 배치한 REF-01 1차 승인 후보"><figcaption><strong>REF-01 candidate v1.</strong> 위: 작은 머리와 길고 가는 팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과 갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지 안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through 후보입니다. ' +
+    'REF-01 · 1안 선택됨',
+    '<aside class="notice"><strong>상태: Human 선택 완료 · master SVG 원본/export 생성 · runtime 미적용.</strong> Human이 2026-09-12에 이 1안을 선호안으로 선택했습니다. 선택 방향을 세 인물의 의미 있는 부위·재질·도구 anchor로 옮겼으며, 실제 게임 교체와 gameplay-scale 검증은 다음 상태로 분리합니다.</aside>' +
+      '<figure><img src="../references/ref-01/hero-rival-owner-candidate-v1.png" alt="Human이 1안으로 선택한 주인공, 라이벌, 고철장 주인의 REF-01 제작 방향"><figcaption><strong>REF-01 selected direction · option 1.</strong> 위: 작은 머리와 길고 가는 팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과 갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지 안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through 방향입니다. ' +
       link('../references/ref-01/hero-rival-owner-candidate-v1.png', '원본 크기 PNG 열기') +
       '</figcaption></figure>' +
       table(
-        ['Human 검토 항목', '확인할 기준'],
+        ['선택 기록', '현재 기준'],
         [
-          ['주인공 체형', '작은 머리·길고 가는 팔다리·낮은 무게중심이 기존 확인 스타일과 맞는가'],
-          [
-            '공격과 구르기',
-            '낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전이 맞는가',
-          ],
-          [
-            '라이벌 구분',
-            '가벼운 정찰 체형·갈고리·스카프가 주인공과 같은 몸의 색상 변형이 아니라 별도 역할로 읽히는가',
-          ],
+          ['선택안', 'REF-01 option 1 · hero-rival-owner-candidate-v1.png'],
+          ['주인공 체형', '작은 머리·길고 가는 팔다리·낮은 무게중심'],
+          ['공격과 구르기', '낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전'],
+          ['라이벌 구분', '가벼운 정찰 체형·갈고리·스카프로 주인공과 다른 역할을 유지'],
           [
             '고철장 주인 구분',
-            '넓고 무거운 체형·작업복·정비/운반 도구가 생활형 산업 세계의 현장 인물로 읽히는가',
+            '넓고 무거운 체형·작업복·정비/운반 도구로 생활형 산업 현장 인물을 유지',
           ],
-          ['다음 단계', '수정 또는 승인 기록 뒤에만 REF-01 master SVG parts와 runtime 비교로 진행'],
+          ['다음 단계', '검증된 REF-01 master SVG를 실제 player/cast pose sampler에 연결'],
         ].map((row) => row.map(esc)),
-      ),
+      ) +
+      '<p>생성 원본: ' +
+      link('../../public/graphics/scrapyard-apprentice.master.svg', 'Hero master SVG') +
+      ' · ' +
+      link('../../public/graphics/rival-scout.master.svg', 'Rival master SVG') +
+      ' · ' +
+      link('../../public/graphics/scrapyard-owner.master.svg', 'Owner master SVG') +
+      '</p>',
   ) +
+    section(
+      `${ProductionContract.APPROVAL_CANDIDATE_COUNT}안 비교 승인 방식`,
+      p(
+        '앞으로 Human의 시각적 판단이 필요한 새 reference·Composition·중요 pose는 같은 조건에서 의미 있게 다른 3안을 한 번에 보여 줍니다. 선택된 한 안만 제작 authority가 되며 생성된 후보 수나 자동 검사 결과가 선택을 대신하지 않습니다.',
+      ) +
+        table(
+          ['단계', '계약'],
+          ProductionContract.APPROVAL_WORKFLOW_ROWS.map((row) => row.map(esc)),
+        ),
+    ) +
     section(
       '현재 우선순위',
       table(

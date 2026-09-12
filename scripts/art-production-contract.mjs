@@ -1,4 +1,17 @@
 // Current Human-confirmed production contract. This is editorial input for derived handoff pages.
+export const APPROVAL_CANDIDATE_COUNT = 3;
+export const APPROVAL_WORKFLOW_ROWS = [
+  ['후보 제시', '같은 검토 조건에서 시각적으로 의미가 다른 3안을 한 번에 나란히 제시'],
+  ['차이 설명', '실루엣·비율·구도·동작·재질 중 선택 결과를 바꾸는 핵심 차이를 각 안에 명시'],
+  [
+    'Human 선택',
+    'Human이 고른 한 안만 다음 master SVG·Composition·authored pose 제작 기준으로 기록',
+  ],
+  [
+    '후속 검증',
+    '선택, 원본 제작, export 검사, runtime 적용과 gameplay-scale 검증을 별도 상태로 유지',
+  ],
+];
 export const ART_DIRECTION_ROWS = [
   [
     '기준 스타일',

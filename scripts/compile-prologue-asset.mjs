@@ -24,6 +24,21 @@ const specifications = [
     target: 'src/graphics/assets/PrologueGarageZeroAsset.js',
     exportName: 'PROLOGUE_GARAGE_ZERO_ASSET',
   },
+  {
+    source: 'public/graphics/scrapyard-apprentice.master.svg',
+    target: 'src/graphics/assets/ScrapyardApprenticeAsset.js',
+    exportName: 'SCRAPYARD_APPRENTICE_ASSET',
+  },
+  {
+    source: 'public/graphics/rival-scout.master.svg',
+    target: 'src/graphics/assets/RivalScoutAsset.js',
+    exportName: 'RIVAL_SCOUT_ASSET',
+  },
+  {
+    source: 'public/graphics/scrapyard-owner.master.svg',
+    target: 'src/graphics/assets/ScrapyardOwnerAsset.js',
+    exportName: 'SCRAPYARD_OWNER_ASSET',
+  },
 ];
 const check = process.argv.includes('--check');
 for (const specification of specifications) {
@@ -38,7 +53,7 @@ for (const specification of specifications) {
   );
   if (check) {
     if (fs.readFileSync(specification.target, 'utf8') !== output)
-      throw Error(`Stale prologue SVG asset: ${specification.source}`);
+      throw Error(`Stale production SVG asset: ${specification.source}`);
   } else fs.writeFileSync(specification.target, output);
 }
-console.log(`${check ? 'PASS' : 'Compiled'} prologue SVG masters with provenance`);
+console.log(`${check ? 'PASS' : 'Compiled'} production SVG masters with provenance`);

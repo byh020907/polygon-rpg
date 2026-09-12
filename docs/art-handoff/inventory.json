@@ -1,6 +1,6 @@
 {
-  "fingerprint": "20f0439037eb",
-  "resourceCount": 590,
+  "fingerprint": "d1ee0e75d35a",
+  "resourceCount": 593,
   "records": [
     {
       "id": "player:protagonist",
@@ -17666,6 +17666,117 @@
       ],
       "itemIds": [],
       "page": "resources/scene-1.html#scene%3Ared-quarry%3Ared-quarry-cutter-yard"
+    },
+    {
+      "id": "svg:scrapyard-apprentice",
+      "label": "SVG · scrapyard-apprentice",
+      "category": "player",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": null,
+      "source": "public/graphics/scrapyard-apprentice.master.svg",
+      "notes": "REF-01 Human 선택 1안의 수정 가능한 주인공 master SVG입니다. 원본/export 검증과 runtime 적용 상태는 별도입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/player-1.html#svg%3Ascrapyard-apprentice"
+    },
+    {
+      "id": "svg:rival-scout",
+      "label": "SVG · rival-scout",
+      "category": "npc",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": "rival",
+      "source": "public/graphics/rival-scout.master.svg",
+      "notes": "REF-01 Human 선택 1안의 가벼운 정찰 체형·스카프·갈고리 master SVG입니다. runtime cast 연결 전입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/npc-4.html#svg%3Arival-scout"
+    },
+    {
+      "id": "svg:scrapyard-owner",
+      "label": "SVG · scrapyard-owner",
+      "category": "npc",
+      "producer": "svg",
+      "kind": "animated",
+      "regionId": null,
+      "roomId": null,
+      "actorId": "owner",
+      "source": "public/graphics/scrapyard-owner.master.svg",
+      "notes": "REF-01 Human 선택 1안의 넓은 작업 체형·앞치마·장부·스패너 master SVG입니다. runtime cast 연결 전입니다.",
+      "actions": [
+        {
+          "id": "far:base",
+          "label": "far · base",
+          "lod": "far",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "mid:base",
+          "label": "mid · base",
+          "lod": "mid",
+          "pose": "base",
+          "frameCount": 1
+        },
+        {
+          "id": "near:base",
+          "label": "near · base",
+          "lod": "near",
+          "pose": "base",
+          "frameCount": 1
+        }
+      ],
+      "itemIds": [],
+      "page": "resources/npc-4.html#svg%3Ascrapyard-owner"
     },
     {
       "id": "svg:prologue-control-core",
