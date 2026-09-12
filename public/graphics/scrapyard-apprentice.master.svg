@@ -21,8 +21,8 @@
     <polygon id="apprentice-far-forearm-shape" points="-10,-5 -2,-6 -14,17 -20,18 -21,12" fill="#c89c76"/>
     <polygon id="apprentice-far-bracer-shape" points="-20,7 -11,8 -14,18 -22,18 -24,13" fill="#654b35" data-material="leather" data-normal="-0.22 -0.12 -0.96" data-occlusion="0.28"/>
   </g>
-  <g id="shield" data-joint="farHand" data-pivot="-19 15" data-material="painted-steel" data-normal="-0.38 -0.18 -0.91" data-occlusion="0.34" data-shadow="cast" data-role="visual" data-z="3">
-    <polygon id="apprentice-shield-contour" points="-37,-11 -15,-8 -10,5 -13,42 -24,51 -42,39 -46,3" fill="#465056"/>
+  <g id="shield" data-joint="farHand" data-pivot="-19 15" transform="rotate(-3.4377467708 -19 15)" data-material="painted-steel" data-normal="-0.38 -0.18 -0.91" data-occlusion="0.34" data-shadow="contact" data-role="visual" data-z="3">
+    <polygon id="apprentice-shield-contour" points="-29,-2 -11,-4 -6,13 -12,33 -27,30 -31,15" fill="#465056"/>
     <circle id="apprentice-shield-grip-marker" data-anchor="shield-grip" cx="-19" cy="15" r="1" opacity="0"/>
   </g>
   <g id="apprentice-pelvis-workshorts" data-joint="pelvis" data-pivot="0 17" data-material="cloth" data-normal="0 -0.15 -0.99" data-occlusion="0.16" data-shadow="cast" data-role="visual" data-z="1">
@@ -68,9 +68,9 @@
     <polygon id="apprentice-near-forearm-shape" points="9,-3 17,-2 30,17 26,23 20,20 13,8" fill="#d0a27a"/>
     <polygon id="apprentice-near-bracer-shape" points="19,9 27,7 32,18 27,24 21,21" fill="#6b4f36" data-material="leather" data-normal="0.24 -0.08 -0.97" data-occlusion="0.13"/>
   </g>
-  <g id="weapon" data-joint="nearHand" data-pivot="27 20" data-material="raw-steel" data-normal="0.12 -0.36 -0.92" data-occlusion="0.08" data-shadow="cast" data-role="visual" data-z="-8">
-    <polygon id="apprentice-field-cutter-contour" points="25,15 32,20 -45,70 -60,64 -49,47" fill="#aeb6b4"/>
+  <g id="weapon" data-joint="nearHand" data-pivot="27 20" transform="rotate(20.0535228296 27 20)" data-material="raw-steel" data-normal="0.12 -0.36 -0.92" data-occlusion="0.08" data-shadow="contact" data-role="visual" data-z="-8">
+    <polygon id="apprentice-field-cutter-contour" points="32,17 132,11 158,20 132,29 32,24" fill="#aeb6b4"/>
     <circle id="apprentice-weapon-grip-marker" data-anchor="weapon-grip" cx="27" cy="20" r="1" opacity="0"/>
-    <circle id="apprentice-weapon-tip-marker" data-anchor="weapon-tip" cx="-54" cy="61" r="1" opacity="0"/>
+    <circle id="apprentice-weapon-tip-marker" data-anchor="weapon-tip" cx="158" cy="20" r="1" opacity="0"/>
   </g>
 </svg>

@@ -35,74 +35,26 @@ const SCRAPYARD_APPRENTICE_FIXTURE = deepFreezeFixture({
   landmarks: ['고글', '공구 가방', '소매 수리 붕대'],
 });
 
-const POSE_PARITY = Object.freeze({
-  'pose-idle': Object.freeze({
-    count: 26,
-    digest: '131d4454a536116eb1497c530aa347872a718de1d418e20e17320d63cfd3ffe5',
-  }),
-  'pose-move': Object.freeze({
-    count: 26,
-    digest: '8508c15143879e3589849477a8dc58dd696de5cbf607846cd8d4662098178081',
-  }),
-  'pose-guard': Object.freeze({
-    count: 26,
-    digest: 'bdb03fa99e8b7fb5ec89d744d369e3e6b162a4cd40bddda8de707db452a9ead1',
-  }),
-  'pose-roll': Object.freeze({
-    count: 26,
-    digest: '524fbebb2b8c7a864df4a13bd07a1622626f9453ea447669fff1cbc188aa03d9',
-  }),
-  'pose-ground-attack': Object.freeze({
-    count: 26,
-    digest: '0e15c78eea7920e939adcd2be88dd4f368b2d0afbb9b061c337542068e9b9eb6',
-  }),
-  'pose-air-attack': Object.freeze({
-    count: 26,
-    digest: '5cb51d99070db0c89b8176dcb6a34a11a9558d4c04ed7ece178dc14098d4ce1e',
-  }),
-  'pose-hit': Object.freeze({
-    count: 26,
-    digest: '01a0eb0c248d684e6ee1b3615c599b9a39a7730403e06dacf4e9eee734a02948',
-  }),
-});
+const POSE_SCENARIOS = Object.freeze([
+  'pose-idle',
+  'pose-move',
+  'pose-guard',
+  'pose-roll',
+  'pose-ground-attack',
+  'pose-air-attack',
+  'pose-hit',
+]);
 
-const EFFECT_PARITY = Object.freeze({
-  'combat-hit': Object.freeze({
-    count: 33,
-    digest: '0d5c702f394c9333f287e277033b419f0303ff5f08014c9a9f7f5d6fedd9140c',
-  }),
-  'combat-player-hit': Object.freeze({
-    count: 33,
-    digest: '9bfbdc168b3d7cf990627e9411eee73cc32a1778cddc501d2175829e61b7dc11',
-  }),
-  'combat-block': Object.freeze({
-    count: 32,
-    digest: 'eb56c05c925812d69eb173072317ad6b33f60d4eaa87621bb6a1b9074608f2f4',
-  }),
-  'combat-evade': Object.freeze({
-    count: 29,
-    digest: '3014ff993543adf8dc68156708d62b193192ddb1d8d68067a239bffa5930b1a9',
-  }),
-  'combat-punish': Object.freeze({
-    count: 32,
-    digest: '3d7a66c740a6c80972c27b71a7a718ee5ebe7fce7032c9e6e32ab699924a97d7',
-  }),
-  'combat-launch': Object.freeze({
-    count: 33,
-    digest: 'a1dab4101109812536697163f06276e5124c7f2700678fd2a613f389c4f90e41',
-  }),
-  'combat-guard-break': Object.freeze({
-    count: 32,
-    digest: '26fef069b154b5e64e97c795eda823786801ad490607f5bdd9747c29bee80dd3',
-  }),
-  'combat-just-guard': Object.freeze({
-    count: 37,
-    digest: '48db669f735009d2ca4f27dcebfd5b49e132ee4c520de98937635f9afe3bc7fe',
-  }),
-  'combat-guard-counter': Object.freeze({
-    count: 33,
-    digest: 'be15009264a70042f03127b1eeb8f73cf8fb9c952cd2f3782490f9070ccf31b4',
-  }),
+const EFFECT_SCENARIOS = Object.freeze({
+  'combat-hit': 'combat-enemy-hit-ring',
+  'combat-player-hit': 'player-hit-ring',
+  'combat-block': 'player-block-ring',
+  'combat-evade': 'player-evade-ring-0',
+  'combat-punish': 'enemy-punish-spark-0',
+  'combat-launch': 'combat-enemy-hit-ring',
+  'combat-guard-break': 'player-block-ring',
+  'combat-just-guard': 'player-just-guard-wave',
+  'combat-guard-counter': 'player-shield-counter-ring',
 });
 
 const round = (value) => Math.round(value * 1_000_000) / 1_000_000;
@@ -136,7 +88,7 @@ function digestItems(items) {
     .digest('hex');
 }
 
-function assertPublicParity(scenarioId, expected, setScenario) {
+function assertPublicPresentation(scenarioId, setScenario, effectId = null) {
   const scene = createTestGameScene({ mapDefinition: SCRAP_AWAKENING_MAP });
   scene.enterTree();
   try {
@@ -147,21 +99,71 @@ function assertPublicParity(scenarioId, expected, setScenario) {
       x: 560,
     });
     setScenario(scene, scenarioId);
-    const items = presentationItems(scene.createRenderFrame(0));
-    assert.equal(items.length, expected.count, `${scenarioId} item count parity`);
-    assert.equal(digestItems(items), expected.digest, `${scenarioId} fixed presentation parity`);
+    const frame = scene.createRenderFrame(0);
+    const items = presentationItems(frame);
+    const svg = frame.combatGeometry.svgPresentation;
+    assert.equal(svg?.assetId, 'scrapyard-apprentice', `${scenarioId} uses the authored hero SVG`);
+    assert.equal(svg.sharedToolContours, true, `${scenarioId} uses visible tool contours`);
+    for (const partId of ['apprentice-head', 'apprentice-shirt', 'apprentice-satchel']) {
+      assert.ok(
+        items.some((item) => item.partId === partId && item.opacity > 0),
+        `${scenarioId} renders SVG semantic part ${partId}`,
+      );
+    }
+    for (const [shapeId, geometry] of [
+      [svg.weaponShapeId, frame.combatGeometry.visibleWeapon],
+      [svg.shieldShapeId, frame.combatGeometry.visibleShield],
+    ]) {
+      const visibleItem = items.find((item) => item.id === shapeId);
+      assert.ok(visibleItem?.opacity > 0, `${scenarioId} visibly renders ${shapeId}`);
+      assert.strictEqual(
+        visibleItem.points,
+        geometry.points,
+        `${scenarioId} shares rendered ${shapeId} with gameplay contact geometry`,
+      );
+    }
+    for (const item of items) {
+      assert.ok(item.points?.length >= 3, `${scenarioId}: ${item.id} has a polygon`);
+      assert.ok(
+        item.points.every(({ x, y }) => Number.isFinite(x) && Number.isFinite(y)),
+        `${scenarioId}: ${item.id} has finite geometry`,
+      );
+      assert.ok(
+        Number.isFinite(item.opacity) && item.opacity >= 0,
+        `${scenarioId}: ${item.id} has valid opacity`,
+      );
+    }
+    assert.equal(
+      digestItems(items),
+      digestItems(presentationItems(scene.createRenderFrame(0))),
+      `${scenarioId} renders deterministically without advancing simulation`,
+    );
+    if (effectId) {
+      const effect = items.find((item) => item.id === effectId);
+      assert.ok(effect?.opacity > 0, `${scenarioId} renders its distinct feedback`);
+      const event = frame.combatEvents[0];
+      assert.ok(event?.position, `${scenarioId} exposes its contact event`);
+      assert.ok(
+        effect.points.some(
+          ({ x, y }) => Math.hypot(x - event.position.x, y - event.position.y) < 60,
+        ),
+        `${scenarioId} feedback remains near its event contact`,
+      );
+    }
   } finally {
     scene.exitTree();
   }
 }
 
-for (const [scenarioId, expected] of Object.entries(POSE_PARITY)) {
-  assertPublicParity(scenarioId, expected, (scene, id) => scene.setVisualQaPoseScenario(id));
+for (const scenarioId of POSE_SCENARIOS) {
+  assertPublicPresentation(scenarioId, (scene, id) => scene.setVisualQaPoseScenario(id));
 }
 
-for (const [scenarioId, expected] of Object.entries(EFFECT_PARITY)) {
-  assertPublicParity(scenarioId, expected, (scene, id) =>
-    scene.setVisualQaCombatScenario(id, 'active'),
+for (const [scenarioId, effectId] of Object.entries(EFFECT_SCENARIOS)) {
+  assertPublicPresentation(
+    scenarioId,
+    (scene, id) => scene.setVisualQaCombatScenario(id, 'active'),
+    effectId,
   );
 }
 
@@ -177,8 +179,8 @@ try {
   playerHitScene.setVisualQaCombatScenario('combat-player-hit', 'active');
   const playerHitFrame = playerHitScene.createRenderFrame(0);
   const playerHitRing = playerHitFrame.items.find((item) => item.id === 'player-hit-ring');
-  const playerHead = playerHitFrame.items.find((item) => item.id === 'head');
-  const playerTorso = playerHitFrame.items.find((item) => item.id === 'torso');
+  const playerHead = playerHitFrame.items.find((item) => item.partId === 'apprentice-head');
+  const playerTorso = playerHitFrame.items.find((item) => item.partId === 'apprentice-shirt');
   assert.ok(playerHitRing?.points?.length, 'player hit must render a contact-point ring');
   assert.ok(playerHead?.points?.length, 'player hit QA needs the rendered player head');
   assert.ok(playerTorso?.points?.length, 'player hit QA needs the rendered player torso');
@@ -435,10 +437,11 @@ console.log(
   JSON.stringify({
     status: 'PASS',
     probe: 'player-combat-presentation',
-    poseScenarios: Object.keys(POSE_PARITY),
-    effectScenarios: Object.keys(EFFECT_PARITY),
+    poseScenarios: POSE_SCENARIOS,
+    effectScenarios: Object.keys(EFFECT_SCENARIOS),
     invariants: [
-      'fixed-public-item-parity',
+      'public-svg-semantic-parts-and-shared-visible-contact',
+      'finite-deterministic-public-presentation-and-event-feedback',
       'deep-frozen-output',
       'shared-sword-shield-torso-head-geometry-identity',
       'authored-skeleton-torso-anchor-projection',

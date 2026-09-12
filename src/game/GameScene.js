@@ -501,14 +501,15 @@ export class GameScene extends SceneNode {
     return candidate;
   }
 
-  applySvgPlayerGeometry(geometry, pose, position, renderOrder = 30.5) {
+  applySvgPlayerGeometry(geometry, pose, position, renderOrder = 30.5, facing = this.facing) {
     if (!this.svgCharacterBinding) return geometry;
     const presentation = sampleSvgCharacterPresentation(this.svgCharacterBinding, {
       bonePose: pose.bonePose,
       position,
-      facing: this.facing,
+      facing,
       geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
       renderOrder,
+      weaponLengthScale: geometry.weaponLengthScale ?? 1,
     });
     return Object.freeze({
       ...geometry,

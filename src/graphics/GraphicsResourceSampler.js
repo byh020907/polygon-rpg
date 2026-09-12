@@ -247,14 +247,20 @@ export function createGraphicsResourceSampler(catalog) {
     const input = graphicsPlayerMotionInput(action.id, index, action.frameCount, action);
     const pose = scene.sampleSizedPlayerMotionPose(input);
     const sampleGeometry = (sampledPose) =>
-      samplePlayerCombatGeometry({
+      scene.applySvgPlayerGeometry(
+        samplePlayerCombatGeometry({
+          position,
+          facing,
+          targetPose: sampledPose.targetPose,
+          bonePose: sampledPose.bonePose,
+          geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+          weaponLengthScale: scene.getPresentationWeaponLengthScale(input.motionState.id),
+        }),
+        sampledPose,
         position,
+        30.5,
         facing,
-        targetPose: sampledPose.targetPose,
-        bonePose: sampledPose.bonePose,
-        geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
-        weaponLengthScale: scene.getPresentationWeaponLengthScale(input.motionState.id),
-      });
+      );
     const geometry = sampleGeometry(pose);
     const contactProfile = scene.getAttackHitProfile(input.motionState.id);
     let sweep = null;
@@ -316,7 +322,7 @@ export function createGraphicsResourceSampler(catalog) {
       presentation: {
         ...presentation,
         characterItems: applyEquipmentPresentation(
-          presentation.characterItems,
+          geometry.svgPresentation?.items ?? presentation.characterItems,
           scene.resolvedLoadout,
           {
             bonePose: pose.bonePose,

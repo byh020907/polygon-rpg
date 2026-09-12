@@ -214,6 +214,7 @@ export function samplePlayerCombatGeometry({
       scale: geometryScale,
     }),
     actor: 'player',
+    weaponLengthScale: resolvedWeaponLengthScale,
     origin: freezePoint(position),
     weapon: freezePolygon('weapon', pose(weaponPoints)),
     shield: freezePolygon('shield', pose(shieldPoints)),

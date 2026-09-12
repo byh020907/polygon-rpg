@@ -11,6 +11,7 @@ import { SCRAP_CAMPAIGN_PROFILE } from '../game/campaign/ScrapCampaignProfiles.j
 import { SCRAP_AWAKENING_PROFILE } from '../game/campaign/ScrapAwakeningProfile.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../game/character/CharacterPresentationProfiles.js';
 import { SCRAP_ART_DIRECTION_PROFILE } from '../game/ScrapArtDirectionProfiles.js';
+import { SCRAPYARD_APPRENTICE_ASSET } from '../graphics/assets/ScrapyardApprenticeAsset.js';
 
 function createEncounter(options) {
   return TRAINING_ENCOUNTER_SCENE.instantiate({
@@ -23,7 +24,7 @@ function createEncounter(options) {
 // The browser app, resource review, and deterministic fixtures share this authored
 // composition. GameScene stays independent of concrete maps and content catalogs.
 export function createGameScene(options = {}) {
-  return new GameScene({
+  const scene = new GameScene({
     mapDefinition: SCRAP_AWAKENING_MAP,
     scenePresentationFactory:
       !options.mapDefinition || options.mapDefinition.id === SCRAP_AWAKENING_MAP.id
@@ -41,4 +42,9 @@ export function createGameScene(options = {}) {
     enchantmentCatalog: ENCHANTMENT_CATALOG,
     ...options,
   });
+  scene.setCharacterAnimationSettings({
+    svgAsset: SCRAPYARD_APPRENTICE_ASSET,
+    svgRootFrame: [-100, -100, 300, 220],
+  });
+  return scene;
 }

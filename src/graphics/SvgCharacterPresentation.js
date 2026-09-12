@@ -2,6 +2,15 @@ import { createSvgRigBinding, sampleSvgRigProjection } from '../animation/SvgRig
 import { PLAYER_RIG } from '../animation/PlayerRig.js';
 import { sampleSvgAsset } from './svg/SvgAssetSampler.js';
 import { frameMatrix, point, freeze, multiply, inverse } from './svg/SvgMath.js';
+const HERO_ITEM_IDS = Object.freeze({
+  'apprentice-face-shape': 'head',
+  'apprentice-shirt-shape': 'torso',
+  'apprentice-near-boot-shape': 'front-boot',
+  'apprentice-far-boot-shape': 'back-boot',
+  'apprentice-cross-strap-shape': 'cross-body-strap',
+  'apprentice-satchel-shape': 'tool-bag',
+  'apprentice-neck-cloth-shape': 'work-collar',
+});
 function convex(points) {
   let sign = 0;
   for (let i = 0; i < points.length; i++) {
@@ -87,6 +96,7 @@ export function createSvgCharacterBinding(
     partJointIds,
     weaponPartId,
     shieldPartId,
+    restWeaponJoint: restJoints[partJointIds[weaponPartId]],
   });
 }
 export function sampleSvgCharacterPresentation(
@@ -98,6 +108,7 @@ export function sampleSvgCharacterPresentation(
     geometryScale = 1,
     renderOrder = 30,
     lod = 'near',
+    weaponLengthScale = 1,
     authoredOverride = bonePose?.authoredOverride,
   } = {},
 ) {
@@ -108,7 +119,9 @@ export function sampleSvgCharacterPresentation(
     ![-1, 1].includes(facing) ||
     !Number.isFinite(geometryScale) ||
     geometryScale <= 0 ||
-    !Number.isFinite(renderOrder)
+    !Number.isFinite(renderOrder) ||
+    !Number.isFinite(weaponLengthScale) ||
+    weaponLengthScale <= 0
   )
     throw new Error(
       'SVG character requires finite world placement, positive scale and facing -1/1',
@@ -126,6 +139,23 @@ export function sampleSvgCharacterPresentation(
   });
   const sample = sampleSvgAsset(binding.asset, { lod, pose });
   const toCanonical = frameMatrix(binding.rootFrame);
+  const sourceFrame = frameMatrix(binding.asset.viewBox);
+  const toSource = inverse(sourceFrame);
+  const restWeapon = binding.restWeaponJoint;
+  const restBasis = [
+    restWeapon.axisX.x,
+    restWeapon.axisX.y,
+    restWeapon.axisY.x,
+    restWeapon.axisY.y,
+    restWeapon.x,
+    restWeapon.y,
+  ];
+  const sizeWeaponPoint = (p, partId) => {
+    if (partId !== binding.weaponPartId || weaponLengthScale === 1) return p;
+    const local = point(inverse(restBasis), point(sourceFrame, p));
+    if (local.x > 5) local.x = 5 + (local.x - 5) * weaponLengthScale;
+    return point(toSource, point(restBasis, local));
+  };
   const projections = Object.fromEntries(
     binding.asset.parts.map((part) => [
       part.id,
@@ -142,7 +172,9 @@ export function sampleSvgCharacterPresentation(
   const items = sample.items
     .filter((i) => i.role !== 'occluder' && i.opacity > 0)
     .map((shape, index) => {
-      const canonical = shape.points.map((p) => point(projections[shape.partId], p));
+      const canonical = shape.points.map((p) =>
+        point(projections[shape.partId], sizeWeaponPoint(p, shape.partId)),
+      );
       const points = canonical.map(worldPoint),
         jointId = binding.partJointIds[shape.partId],
         joint = jointId ? bonePose.worldJoints[jointId] : null;
@@ -160,7 +192,14 @@ export function sampleSvgCharacterPresentation(
       );
       return {
         ...shape,
-        id: `${binding.asset.id}:${shape.id}`,
+        id:
+          binding.asset.id === 'scrapyard-apprentice' && shape.partId === binding.weaponPartId
+            ? 'sword-blade'
+            : binding.asset.id === 'scrapyard-apprentice' && shape.partId === binding.shieldPartId
+              ? 'shield'
+              : binding.asset.id === 'scrapyard-apprentice' && HERO_ITEM_IDS[shape.id]
+                ? HERO_ITEM_IDS[shape.id]
+                : `${binding.asset.id}:${shape.id}`,
         points,
         depths,
         surface: { points, depths, triangles: shape.triangles },
@@ -180,7 +219,7 @@ export function sampleSvgCharacterPresentation(
     });
   const anchors = sample.anchors.map((anchor) => ({
     ...anchor,
-    ...worldPoint(point(projections[anchor.partId], anchor)),
+    ...worldPoint(point(projections[anchor.partId], sizeWeaponPoint(anchor, anchor.partId))),
     depth:
       ((bonePose.worldJoints[binding.partJointIds[anchor.partId]]?.z ?? 0) - anchor.z) *
       geometryScale,

@@ -18,17 +18,10 @@ const CAST_IDS = [
   'scene:ref-01-cast-lineup',
 ];
 const CAST_ACTIONS = ['idle', 'run'];
+const REF_01_STATUS = 'ref-01-candidate-1-selected-runtime-review';
 const EXPECTED_PROPS = Object.freeze({
-  'rival-scout': [
-    'rival-scout:survey-goggles',
-    'rival-scout:salvage-hook',
-    'rival-scout:salvage-band',
-  ],
-  'scrapyard-owner': [
-    'scrapyard-owner:welding-goggles',
-    'scrapyard-owner:ledger',
-    'scrapyard-owner:wrench',
-  ],
+  'rival-scout': ['rival-survey-goggles', 'salvage-hook', 'rival-salvage-band'],
+  'scrapyard-owner': ['owner-welding-goggles', 'ledger', 'wrench'],
 });
 
 function finitePolygon(item) {
@@ -53,15 +46,15 @@ function diagnostic(sample, profileId, jointId) {
 }
 
 try {
-  // The four review anchors are stable, explicit technical-baseline resources.
+  // Selection of the source candidate is distinct from final runtime visual approval.
   for (const id of CAST_IDS) {
     const resource = catalog.get(id);
     assert.ok(resource, `${id} exists`);
     assert.equal(resource.referenceGroupId, 'REF-01', `${id} is linked to REF-01`);
     assert.equal(
       resource.approvalStatus,
-      'runtime-baseline-unapproved',
-      `${id} remains visibly unapproved`,
+      REF_01_STATUS,
+      `${id} identifies the selected candidate and pending runtime review`,
     );
     assert.match(id, /^[A-Za-z0-9:-]+$/, `${id} is URL-usable`);
     assert.ok(resource.actions.length > 0, `${id} has review actions`);
@@ -86,13 +79,13 @@ try {
   for (const resourceId of ['npc:cast:rival-scout', 'npc:cast:scrapyard-owner']) {
     const resource = catalog.get(resourceId);
     const profileId = resource.presentationProfileId;
-    const depthGroup = `cast:cast-${profileId}`;
+    const depthGroup = `cast:${profileId}`;
     const expectedPropIds = EXPECTED_PROPS[profileId];
     for (const actionId of CAST_ACTIONS) {
       const sample = sampler.sample(resourceId, { actionId, frameIndex: 0, facing: 1 });
       castSamples.set(`${profileId}:${actionId}`, sample);
       assert.equal(sample.frame.castReview.referenceGroupId, 'REF-01');
-      assert.equal(sample.frame.castReview.approvalStatus, 'runtime-baseline-unapproved');
+      assert.equal(sample.frame.castReview.approvalStatus, REF_01_STATUS);
       assert.equal(sample.frame.castReview.profileId, profileId);
       assert.equal(sample.frame.castReview.bodyProfileId, resource.bodyProfileId);
       assert.equal(sample.boneDiagnostics.length, Object.keys(SIDE_VIEW_SKELETON_PARENTS).length);
@@ -121,7 +114,7 @@ try {
         `${resourceId}/${actionId} has one cast depth group`,
       );
       for (const propId of expectedPropIds) {
-        const prop = sample.frame.items.find((item) => item.id === propId);
+        const prop = sample.frame.items.find((item) => item.partId === propId);
         assert.ok(prop, `${resourceId}/${actionId} keeps attached prop ${propId}`);
         assert.ok(visible(prop), `${propId} is visible`);
         assert.equal(prop.depthGroup, depthGroup, `${propId} shares cast depth group`);
@@ -172,7 +165,7 @@ try {
   // The gameplay-scale lineup keeps the hero weapon and both cast identities visible.
   const lineup = sampler.sample('scene:ref-01-cast-lineup', { actionId: 'idle', frameIndex: 0 });
   assert.equal(lineup.frame.castReview.referenceGroupId, 'REF-01');
-  assert.equal(lineup.frame.castReview.approvalStatus, 'runtime-baseline-unapproved');
+  assert.equal(lineup.frame.castReview.approvalStatus, REF_01_STATUS);
   assert.deepEqual(lineup.frame.castReview.profiles, [
     { profileId: 'scrapyard-apprentice', bodyProfileId: 'player' },
     { profileId: 'rival-scout', bodyProfileId: 'rival' },
@@ -181,19 +174,19 @@ try {
   assert.ok(lineup.bounds.width > 250, 'lineup spans gameplay-scale actor spacing');
   assert.ok(lineup.bounds.height > 90, 'lineup has gameplay-scale actor height');
   for (const id of [
-    'sword-blade',
-    'sword-hilt',
+    'weapon',
+    'shield',
     ...EXPECTED_PROPS['rival-scout'],
     ...EXPECTED_PROPS['scrapyard-owner'],
   ]) {
-    const item = lineup.frame.items.find((candidate) => candidate.id === id);
+    const item = lineup.frame.items.find((candidate) => candidate.partId === id);
     assert.ok(item, `lineup contains ${id}`);
     assert.ok(visible(item), `lineup keeps ${id} visible`);
     finitePolygon(item);
   }
   assert.ok(lineup.frame.items.some((item) => item.depthGroup === 'player'));
-  assert.ok(lineup.frame.items.some((item) => item.depthGroup === 'cast:cast-rival-scout'));
-  assert.ok(lineup.frame.items.some((item) => item.depthGroup === 'cast:cast-scrapyard-owner'));
+  assert.ok(lineup.frame.items.some((item) => item.depthGroup === 'cast:rival-scout'));
+  assert.ok(lineup.frame.items.some((item) => item.depthGroup === 'cast:scrapyard-owner'));
 
   // Stable IDs/actions can be copied into a review URL and repeated sampling is byte-stable.
   const selection = {
@@ -230,9 +223,9 @@ try {
     );
   }
   console.log(
-    'PASS cast reference review: REF-01 technical baseline, frozen distinct body profiles, shared pose diagnostics, attached props, gameplay-scale lineup, and deterministic URL/sample IDs.',
+    'PASS cast reference review: REF-01 selected master runtime, frozen distinct body profiles, shared pose diagnostics, semantic SVG props, gameplay-scale lineup, and deterministic URL/sample IDs.',
   );
-  console.log('Reference/art approval remains unverified by this fixture.');
+  console.log('Final runtime visual approval remains unverified by this fixture.');
 } finally {
   sampler.destroy();
 }

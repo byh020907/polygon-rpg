@@ -59,6 +59,14 @@ export const MATERIAL_LIGHTING_PROFILES = Object.freeze({
     roughness: 0.03,
     variationSeed: 11,
   }),
+  leather: Object.freeze({
+    diffuse: 0.76,
+    normalPower: 0.8,
+    specular: 0.12,
+    highlightPower: 5,
+    roughness: 0.04,
+    variationSeed: 19,
+  }),
   cloth: Object.freeze({
     diffuse: 0.78,
     normalPower: 0.72,

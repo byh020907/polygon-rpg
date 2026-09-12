@@ -320,7 +320,7 @@ try {
         `${stageId} keeps the ${actorId} cast actor visible`,
       );
     assert.ok(
-      garageOutput.frame.items.some((item) => item.id === 'cast-scrapyard-owner:torso'),
+      garageOutput.frame.items.some((item) => item.id === 'cast-scrapyard-owner:owner-shirt-shape'),
       `${stageId} keeps the owner presentation in the same production frame`,
     );
   }

@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-RUNNING — Human이 REF-01 1안을 선택해 수정 가능한 master SVG 제작 단계로 전환했다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
+RUNNING — 선택된 REF-01 master SVG를 실제 주인공·프롤로그 cast와 검토실에 연결했다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
 
 ## Active Execution Goal
 
-Human Feedback Priority — 선택된 REF-01 master SVG를 주인공과 prologue 라이벌·고철장 주인의 실제 pose sampler/runtime에 연결한다. 검토실의 기존 stable ID와 gameplay contact authority를 보존하고, 지역별 구형 정적 라이벌 외형은 별도 잔존 Gap으로 명시한 뒤 한 체형씩 실제 화면에서 검증한다.
+Human Feedback Priority — REF-01 선택 콘셉트 대비 단순한 vector 외형·중요 pose의 완성도를 개선하고 실제 gameplay scale에서 검토한다. 현재 주인공/프롤로그 cast 연결을 유지하며 지역별 구형 정적 라이벌은 잔존 Gap으로 추적한다. 새 시각적 선택은 3안을 제시하고 Human 선택을 받는다.
 
 ## Current Evidence / Gap
 
@@ -20,7 +20,11 @@ Human Feedback Priority — 선택된 REF-01 master SVG를 주인공과 prologue
 - Human이 REF-01 option 1을 제작 방향으로 선택했다. `docs/art-handoff/reference-approval.html`은 선택 기록과 `master SVG/runtime 미적용` 상태를 분리하고, 이후 새 시각 판단은 의미 있게 다른 3안을 한 번에 비교해 Human이 고른 안만 제작 authority로 넘기는 계약을 표시한다.
 - 선택 방향을 `scrapyard-apprentice` 22 parts/26 shapes, `rival-scout` 25 parts/32 shapes, `scrapyard-owner` 26 parts/34 shapes의 Humanoid master SVG로 옮겼다. 각 원본은 material/normal/occlusion, ground와 역할별 tool grip/tip anchor, 고유 체형·복장·도구와 실제 far/mid/near 디테일 차이를 유지하며 adjacent LOD SVG·compiled JSON 및 source provenance를 생성·검사한다.
 
-Human Feedback Priority Gap: REF-01 master는 export까지 검증했지만 실제 player/cast runtime에는 아직 연결하지 않았다. 주인공의 강공 후반·구르기 장비 anchor, prologue 라이벌/주인 pose retarget와 다섯 지역에 남은 정적 라이벌 외형을 실제 gameplay scale에서 확인해야 한다. REF-02 Core/Retrieval Arm부터 새 시각 판단은 3안 Human gate를 거치며, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition도 아직 없다. 강제 `WEBGL_lose_context` restore와 실제 legacy Chromium reopen, 측정 기기 밖의 설치형 mobile GPU·장시간 memory는 계속 unverified다. 남은 INBOX 원문은 보존한다.
+- 실제 createGameScene가 주인공 master를 기본 연결하고 게임·검토실이 같은 visible weapon/shield를 사용한다. 잘못 뒤를 향하던 master 검 부착을 전방 축에 정렬하고 기존 장비/공격별 길이와 도달거리를 보존했다. 11종 공격의 양방향 contact·miss·도달거리와 실제 damage owner 검사를 통과했다.
+- 라이벌/주인은 SVG 원본 limb 축과 길이를 canonical pose에 매핑한다. 80개 자세·방향 표본에서 8개 limb endpoint 및 hook/wrench/ledger grip의 손 부착, 게임/검토 동일 형상과 고유 ID를 검증했다. 원본이 사용하는 leather의 조명 반응도 명시했다.
+- artifacts/ref-01-runtime의 desktop/mobile은 주인공 idle/slash/roll과 세 인물 비교를 실제 renderer로 캡처했다. artifacts/ref-01-play-desktop 및 ref-01-play-mobile은 실제 입력 연속 화면 245/336개를 포함한다. 선택 콘셉트 대비 낮은 세부 밀도·단순한 형태는 여전히 시각 품질 Gap이며 연결 성공을 최종 아트 승인으로 취급하지 않는다.
+
+Human Feedback Priority Gap: REF-01은 주인공/프롤로그 runtime 연결까지 검증했고, 선택 raster에 비해 단순한 vector 형태·세부와 추가 authored key pose는 미완성이다. 다섯 지역에 남은 정적 라이벌 외형은 아직 전환하지 않았다. REF-02 Core/Retrieval Arm부터 새 시각 판단은 3안 Human gate를 거치며, REF-03 Ancient Machine, REF-04 Garage 0%의 승인 원본/Composition도 아직 없다. 강제 WEBGL_lose_context restore와 실제 legacy Chromium reopen, 측정 기기 밖의 설치형 mobile GPU·장시간 memory는 계속 unverified다. 남은 INBOX 원문은 보존한다.
 
 ## Preserved Work Reference
 

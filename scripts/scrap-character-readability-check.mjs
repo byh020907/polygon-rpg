@@ -68,7 +68,12 @@ assert.ok(
   headCount >= 6 && headCount <= 8,
   'slim protagonist must read as roughly seven heads tall, received ' + headCount,
 );
-for (const itemId of ['tool-bag', 'work-collar', 'cross-body-strap', 'workwear-back-panel']) {
+for (const itemId of [
+  'tool-bag',
+  'work-collar',
+  'cross-body-strap',
+  'scrapyard-apprentice:apprentice-workshorts-shape',
+]) {
   assert.ok(
     playerFrame.items.some((item) => item.id === itemId),
     `실제 Player frame에는 ${itemId} landmark가 필요합니다.`,

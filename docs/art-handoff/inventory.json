@@ -1,5 +1,5 @@
 {
-  "fingerprint": "d1ee0e75d35a",
+  "fingerprint": "fef0cb64f315",
   "resourceCount": 593,
   "records": [
     {
@@ -11,8 +11,8 @@
       "regionId": null,
       "roomId": null,
       "actorId": "protagonist",
-      "source": "src/game/PlayerCombatPresentation.js",
-      "notes": "REF-01 기술 기준선 · 기존 승인 동작 스타일 유지 · 최종 front/side/3/4 SVG reference 승인은 별도입니다.",
+      "source": "public/graphics/scrapyard-apprentice.master.svg",
+      "notes": "REF-01 1안 기반 master SVG · 실제 게임과 같은 자세·장비 길이·접촉 형상을 검토합니다.",
       "actions": [
         {
           "id": "idle",
@@ -127,15 +127,15 @@
     },
     {
       "id": "npc:cast:rival-scout",
-      "label": "라이벌 · REF-01 기술 기준선",
+      "label": "라이벌 · REF-01 1안 SVG",
       "category": "npc",
       "producer": "cast",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": "rival",
-      "source": "src/game/character/CastCharacterPresentation.js",
-      "notes": "실제 cast profile·공용 3D pose sampler·Polygon renderer 연결 기준선입니다. 도구는 관절에 붙어 이동하지만 최종 SVG 형태와 대표 pose는 아직 승인되지 않았습니다.",
+      "source": "public/graphics/rival-scout.master.svg",
+      "notes": "선택된 1안 master SVG가 프롤로그 cast와 같은 자세 계산을 사용합니다. 도구는 고유 grip anchor로 손을 따라갑니다.",
       "actions": [
         {
           "id": "idle",
@@ -153,15 +153,15 @@
     },
     {
       "id": "npc:cast:scrapyard-owner",
-      "label": "고물상인 · REF-01 기술 기준선",
+      "label": "고물상인 · REF-01 1안 SVG",
       "category": "npc",
       "producer": "cast",
       "kind": "animated",
       "regionId": null,
       "roomId": null,
       "actorId": "owner",
-      "source": "src/game/character/CastCharacterPresentation.js",
-      "notes": "실제 cast profile·공용 3D pose sampler·Polygon renderer 연결 기준선입니다. 도구는 관절에 붙어 이동하지만 최종 SVG 형태와 대표 pose는 아직 승인되지 않았습니다.",
+      "source": "public/graphics/scrapyard-owner.master.svg",
+      "notes": "선택된 1안 master SVG가 프롤로그 cast와 같은 자세 계산을 사용합니다. 도구는 고유 grip anchor로 손을 따라갑니다.",
       "actions": [
         {
           "id": "idle",
@@ -187,7 +187,7 @@
       "roomId": null,
       "actorId": null,
       "source": "src/game/character/CastCharacterPresentation.js",
-      "notes": "Hero/Rival/Owner를 같은 960×540 gameplay 좌표·pose sampler·renderer에서 비교하는 미승인 기술 composite입니다. REF-01 reference 또는 REF-05 Composition 승인으로 표시하지 않습니다.",
+      "notes": "선택된 1안 기반 Hero/Rival/Owner SVG를 같은 960×540 gameplay 좌표·pose sampler·renderer에서 비교합니다. 최종 아트 및 REF-05 Composition 승인은 별도입니다.",
       "actions": [
         {
           "id": "idle",
@@ -17714,7 +17714,7 @@
       "roomId": null,
       "actorId": "rival",
       "source": "public/graphics/rival-scout.master.svg",
-      "notes": "REF-01 Human 선택 1안의 가벼운 정찰 체형·스카프·갈고리 master SVG입니다. runtime cast 연결 전입니다.",
+      "notes": "REF-01 Human 선택 1안의 가벼운 정찰 체형·스카프·갈고리 master SVG입니다. 프롤로그 runtime cast에 연결되었습니다.",
       "actions": [
         {
           "id": "far:base",
@@ -17751,7 +17751,7 @@
       "roomId": null,
       "actorId": "owner",
       "source": "public/graphics/scrapyard-owner.master.svg",
-      "notes": "REF-01 Human 선택 1안의 넓은 작업 체형·앞치마·장부·스패너 master SVG입니다. runtime cast 연결 전입니다.",
+      "notes": "REF-01 Human 선택 1안의 넓은 작업 체형·앞치마·장부·스패너 master SVG입니다. 프롤로그 runtime cast에 연결되었습니다.",
       "actions": [
         {
           "id": "far:base",

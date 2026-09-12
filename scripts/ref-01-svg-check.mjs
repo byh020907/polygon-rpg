@@ -75,7 +75,7 @@ for (const specification of specifications) {
     (candidate) => candidate.id === specification.resourceId,
   );
   assert.equal(resource?.referenceGroupId, 'REF-01');
-  assert.equal(resource?.approvalStatus, 'selected-direction-master-runtime-pending');
+  assert.equal(resource?.approvalStatus, 'ref-01-candidate-1-selected-runtime-review');
   assert.equal(resource?.svgAsset.provenance.source, specification.source);
 }
 

@@ -526,8 +526,8 @@ for (const [stageId, entityId, x, motionId] of [
   assert.equal(rival.bodyProfileId, 'rival');
   assert.equal(rival.motionId, motionId);
   assert.equal(rival.dialogueAnchor.x, x);
-  assert.ok(frame.items.some((item) => item.id === `${entityId}:torso`));
-  assert.ok(frame.items.some((item) => item.id === `${entityId}:salvage-hook`));
+  assert.ok(frame.items.some((item) => item.id === `${entityId}:rival-vest-shape`));
+  assert.ok(frame.items.some((item) => item.id === `${entityId}:rival-salvage-hook-contour`));
   assert.equal(
     frame.items.some((item) => item.id.startsWith('scrap-rival-')),
     false,
@@ -553,18 +553,20 @@ assert.deepEqual(
   })),
   [{ entityId: SCRAP_OWNER_CAST_ENTITY_ID, bodyProfileId: 'owner' }],
 );
-assert.ok(commissionFrame.items.some((item) => item.id === 'cast-scrapyard-owner:ledger'));
+assert.ok(
+  commissionFrame.items.some((item) => item.id === 'cast-scrapyard-owner:owner-ledger-contour'),
+);
 
 let prologueSequence = 1;
 setAtStoryInteraction(scene, 'scrapyard-owner-commission');
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE);
-assert.ok(itemIds(scene).includes('cast-rival-departure:torso'));
+assert.ok(itemIds(scene).includes('cast-rival-departure:rival-vest-shape'));
 
 setAtStoryInteraction(scene, 'scrap-rival-departure');
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_CLEARANCE);
-assert.ok(itemIds(scene).includes('cast-rival-yard:salvage-hook'));
+assert.ok(itemIds(scene).includes('cast-rival-yard:rival-salvage-hook-contour'));
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
@@ -1822,8 +1824,8 @@ for (let tick = 0; tick < 1_200 && stage(scene) !== SCRAP_AWAKENING_STAGE.COMPLE
   if (observedStages.at(-1) !== currentStage) observedStages.push(currentStage);
   if (currentStage === SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED) {
     rescuedAfterStateObserved =
-      itemIds(scene).includes('cast-rival-rescued:torso') &&
-      !itemIds(scene).includes('cast-rival-trapped:torso');
+      itemIds(scene).includes('cast-rival-rescued:rival-vest-shape') &&
+      !itemIds(scene).includes('cast-rival-trapped:rival-vest-shape');
   }
   const cameraOffset = scene.combatCameraFeedback.snapshot();
   if (Math.abs(cameraOffset.x) > 0.01 || Math.abs(cameraOffset.y) > 0.01) shakeObserved = true;

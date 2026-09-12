@@ -278,14 +278,13 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       category: 'player',
       kind: 'animated',
       producer: 'player',
-      source: 'src/game/PlayerCombatPresentation.js',
+      source: 'public/graphics/scrapyard-apprentice.master.svg',
       presentationProfileId: 'scrapyard-apprentice',
       bodyProfileId: 'player',
       referenceGroupId: 'REF-01',
-      approvalStatus: 'runtime-baseline-unapproved',
+      approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
       actions: graphicsPlayerActions(),
-      notes:
-        'REF-01 기술 기준선 · 기존 승인 동작 스타일 유지 · 최종 front/side/3/4 SVG reference 승인은 별도입니다.',
+      notes: 'REF-01 1안 기반 master SVG · 실제 게임과 같은 자세·장비 길이·접촉 형상을 검토합니다.',
     },
     ...[
       ['rival-scout', 'rival'],
@@ -294,19 +293,19 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       const profile = CHARACTER_PRESENTATION_PROFILE.getProfile(profileId);
       return {
         id: `npc:cast:${profileId}`,
-        label: `${profile.label} · REF-01 기술 기준선`,
+        label: `${profile.label} · REF-01 1안 SVG`,
         category: 'npc',
         kind: 'animated',
         producer: 'cast',
-        source: 'src/game/character/CastCharacterPresentation.js',
+        source: `public/graphics/${profileId}.master.svg`,
         presentationProfileId: profileId,
         bodyProfileId,
         referenceGroupId: 'REF-01',
-        approvalStatus: 'runtime-baseline-unapproved',
+        approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
         placements: castPlacements.get(profileId) ?? [],
         actions: graphicsCastReviewActions(),
         notes:
-          '실제 cast profile·공용 3D pose sampler·Polygon renderer 연결 기준선입니다. 도구는 관절에 붙어 이동하지만 최종 SVG 형태와 대표 pose는 아직 승인되지 않았습니다.',
+          '선택된 1안 master SVG가 프롤로그 cast와 같은 자세 계산을 사용합니다. 도구는 고유 grip anchor로 손을 따라갑니다.',
       };
     }),
     {
@@ -317,10 +316,10 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       producer: 'cast-lineup',
       source: 'src/game/character/CastCharacterPresentation.js',
       referenceGroupId: 'REF-01',
-      approvalStatus: 'runtime-baseline-unapproved',
+      approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
       actions: graphicsCastReviewActions(),
       notes:
-        'Hero/Rival/Owner를 같은 960×540 gameplay 좌표·pose sampler·renderer에서 비교하는 미승인 기술 composite입니다. REF-01 reference 또는 REF-05 Composition 승인으로 표시하지 않습니다.',
+        '선택된 1안 기반 Hero/Rival/Owner SVG를 같은 960×540 gameplay 좌표·pose sampler·renderer에서 비교합니다. 최종 아트 및 REF-05 Composition 승인은 별도입니다.',
     },
     ...EQUIPMENT_ITEMS.map((equipment) => {
       const family = EQUIPMENT_CATALOG.getFamily(equipment.familyId);

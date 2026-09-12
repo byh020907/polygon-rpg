@@ -8,6 +8,18 @@ import {
 import { createPlayerCombatPresentation } from '../PlayerCombatPresentation.js';
 import { CHARACTER_PRESENTATION_PROFILE } from './CharacterPresentationProfiles.js';
 import { withPlateDepth } from '../../animation/ProjectedBodySurface.js';
+import { RIVAL_SCOUT_ASSET } from '../../graphics/assets/RivalScoutAsset.js';
+import { SCRAPYARD_OWNER_ASSET } from '../../graphics/assets/ScrapyardOwnerAsset.js';
+import {
+  createSvgCastBinding,
+  sampleSvgCastPresentation,
+} from '../../graphics/SvgCastPresentation.js';
+
+const REF_01_CAST_ASSETS = new Map([
+  ['rival-scout', RIVAL_SCOUT_ASSET],
+  ['scrapyard-owner', SCRAPYARD_OWNER_ASSET],
+]);
+const castBindings = new Map();
 
 const REMOVED_PLAYER_PARTS = new Set([
   'tool-bag',
@@ -244,6 +256,29 @@ export function sampleCastCharacterPresentation({
     geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
     weaponLengthScale: 1,
   });
+  const asset = REF_01_CAST_ASSETS.get(profileId);
+  if (asset) {
+    const bindingKey = `${profileId}:${bodyProfileId}`;
+    if (!castBindings.has(bindingKey))
+      castBindings.set(bindingKey, createSvgCastBinding(asset, pose.bonePose));
+    const presentation = sampleSvgCastPresentation(castBindings.get(bindingKey), {
+      bonePose: pose.bonePose,
+      position,
+      facing,
+      geometryScale: PLAYER_COMBAT_GEOMETRY_SCALE,
+      renderOrder,
+    });
+    return freeze({
+      profileId,
+      bodyProfileId,
+      referenceStatus: presentation.diagnostics.referenceStatus,
+      pose,
+      geometry,
+      items: presentation.items,
+      anchors: presentation.anchors,
+      svgDiagnostics: presentation.diagnostics,
+    });
+  }
   const presentation = createPlayerCombatPresentation({
     appearanceProfile,
     position,

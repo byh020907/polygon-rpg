@@ -101,7 +101,7 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
     {
       category: 'player',
       referenceGroupId: 'REF-01',
-      approvalStatus: 'selected-direction-master-runtime-pending',
+      approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
       notes:
         'REF-01 Human 선택 1안의 수정 가능한 주인공 master SVG입니다. 원본/export 검증과 runtime 적용 상태는 별도입니다.',
     },
@@ -109,9 +109,9 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
   resourceFor(RIVAL_SCOUT_ASSET, 'svg:rival-scout', 'public/graphics/rival-scout.master.svg', {
     category: 'npc',
     referenceGroupId: 'REF-01',
-    approvalStatus: 'selected-direction-master-runtime-pending',
+    approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
     notes:
-      'REF-01 Human 선택 1안의 가벼운 정찰 체형·스카프·갈고리 master SVG입니다. runtime cast 연결 전입니다.',
+      'REF-01 Human 선택 1안의 가벼운 정찰 체형·스카프·갈고리 master SVG입니다. 프롤로그 runtime cast에 연결되었습니다.',
   }),
   resourceFor(
     SCRAPYARD_OWNER_ASSET,
@@ -120,9 +120,9 @@ export const BUILTIN_SVG_RESOURCES = Object.freeze([
     {
       category: 'npc',
       referenceGroupId: 'REF-01',
-      approvalStatus: 'selected-direction-master-runtime-pending',
+      approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
       notes:
-        'REF-01 Human 선택 1안의 넓은 작업 체형·앞치마·장부·스패너 master SVG입니다. runtime cast 연결 전입니다.',
+        'REF-01 Human 선택 1안의 넓은 작업 체형·앞치마·장부·스패너 master SVG입니다. 프롤로그 runtime cast에 연결되었습니다.',
     },
   ),
   resourceFor(
