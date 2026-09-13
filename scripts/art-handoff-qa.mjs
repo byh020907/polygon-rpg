@@ -18,6 +18,7 @@ for (const [name, width, height] of [
       'environment-authoring.html',
       'character-animation.html',
       'reference-approval.html',
+      'prologue-map-candidates.html',
       'scenarios/abandoned-mine.html',
       'scenarios/finale.html',
       'resources/npc-1.html',
@@ -46,7 +47,7 @@ for (const [name, width, height] of [
         'rgb(0, 164, 149)',
         'controlled document styles',
       );
-      if (page === 'art-direction.html')
+      if (['art-direction.html', 'prologue-map-candidates.html'].includes(page))
         await b.until('[...document.images].every(i=>i.complete&&i.naturalWidth>0)');
       await b.screenshot(
         'artifacts/art-handoff/' + name + '-' + page.replaceAll('/', '-') + '.png',

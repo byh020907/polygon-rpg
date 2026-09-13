@@ -2,13 +2,16 @@
 
 ## Current Phase
 
-RUNNING — REF-01 외형 보강 2안의 세 인물 원본·게임 연결·다섯 지역 전파를 검증했다. 다음 reference 제작 순서는 REF-02다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
+WAITING_FOR_HUMAN — 도입 맵·진행 재구성의 씬 이미지 3안과 구간별 행동·변화·진행 조건을 제시한다. Human이 맵 방향을 선택해야 다음 지형/진행 구현을 확정할 수 있다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
 
 ## Active Execution Goal
 
-Human Feedback Priority — 다음 REF-02 제어핵·회수팔의 후보 3안을 제작한다. 선택된 REF-01 인물과 장비·접촉 기준을 유지하며 connected/captured/tension/detached/released 상태를 비교 가능하게 제시한다. 새 시각 후보의 선택은 Human이 소유한다.
+Human Feedback Priority — docs/art-handoff/prologue-map-candidates.html의 도입 동선 3안 중 Human이 선택한다. 같은 맵의 대화·처치 반복을 공간 이동·통로 개방·붕괴·달라진 귀환으로 바꾸는 것이 우선이다. 선택 후 지형·연결·상호작용·전투 목적·사건 전후를 함께 구현한다. 이번 시안은 REF-02~05 개별 자산 승인이나 runtime 변경이 아니다.
 
 ## Current Evidence / Gap
+
+- Human이 현재 도입을 동일 맵의 대화·반복 처치로 느낀다는 피드백을 INBOX에 원문으로 보존했다. Product Goal은 장소·높이·통로·귀환 변화로 도입 진행을 체감해야 한다는 요구를 소유한다. 실제 맵 개편은 아직 미구현이다.
+- 도입 후보는 1안 상층 진입/하층 귀환, 2안 레일 원정/변화한 귀환, 3안 폐병기 상·하 접근 분기/흉곽 합류다. 각 6개 장면과 장소·행동·지형 변화·다음 구간 조건을 scripts/prologue-scene-candidates.mjs에서 생성한다. 이미지·프롬프트는 docs/references/prologue-scenes에 보존한다.
 
 - 모든 읽기용 HTML 문서는 Product Goal과 같은 위키 포맷을 공유한다. docs/wiki.css와 scripts/wiki-document.mjs가 51개 저장소 문서 및 모션 보고서의 기본 구조를 소유하며 AGENTS/Architecture/docs/document-format.md가 새 문서에도 같은 규칙을 요구한다. 기존 NPC 목록 주소는 현 목록으로 연결하면서 ID를 보존한다. 기존 캡처 보고서 12개의 표시를 갱신했고 PNG/JSON 3,206개와 재생 스크립트·시간 정보는 유지했다.
 
@@ -20,7 +23,7 @@ Human Feedback Priority — 다음 REF-02 제어핵·회수팔의 후보 3안을
 - 기존 WebGL2 렌더러, PWA 자동 업데이트와 v10/v11 저장 보존은 유지한다. 이번 외형 적용을 게임 전체 또는 다음 reference의 Human 승인으로 확대하지 않는다.
 - 이번 범위의 독립 검토, 전투 11종·장비·캐릭터·SVG export/anchor, 그래픽 2569 samples/870 RenderFrame 비교, 시스템, 프롤로그·지역 33개 흐름, PC/mobile 실제 화면과 PWA 검사를 통과했다. 원본 주인공 318-frame 연속 입력과 mobile 341-frame 입력에서 세부 장비가 유지되는지 판독했다.
 
-Human Feedback Priority Gap: 다음 제작 대상은 REF-02 Core/Retrieval Arm이며 새 시각 방향은 후보 3안 제시 후 Human이 선택한다. REF-03 Ancient Machine, REF-04 Garage 0%와 REF-05 composite도 이후 승인 순서를 따른다. 기존 강제 WEBGL_lose_context restore, legacy Chromium reopen, 다른 기기의 GPU·장시간 memory는 unverified다. 남은 INBOX 원문은 보존한다.
+Human Feedback Priority Gap: 도입 맵·진행 개편은 Human의 동선 선택 대기이며 실제 게임의 동일 공간 반복은 아직 해결되지 않았다. 확정 동선 안에서 REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%와 REF-05 composite의 원본/승인을 이어간다. 기존 강제 WEBGL_lose_context restore, legacy Chromium reopen, 다른 기기의 GPU·장시간 memory는 unverified다. 남은 INBOX 원문은 보존한다.
 
 ## Preserved Work Reference
 

@@ -1,5 +1,5 @@
 {
-  "fingerprint": "fd33853988e8",
+  "fingerprint": "5a7aaae9a3fc",
   "resourceCount": 568,
   "records": [
     {
@@ -19815,6 +19815,7 @@
     "enemies.html",
     "environment-authoring.html",
     "index.html",
+    "prologue-map-candidates.html",
     "reference-approval.html",
     "request.html",
     "resources/background-1.html",

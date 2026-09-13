@@ -1,5 +1,6 @@
 import * as ProductionContract from './art-production-contract.mjs';
 import { renderWikiDocument } from './wiki-document.mjs';
+import { PROLOGUE_SCENE_CANDIDATES, PROLOGUE_PACING_NOTES } from './prologue-scene-candidates.mjs';
 import prettier from 'prettier';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -88,6 +89,7 @@ const fingerprint = crypto
     JSON.stringify({
       records,
       productionContract: ProductionContract,
+      prologueSceneCandidates: PROLOGUE_SCENE_CANDIDATES,
       productGoal: fs.readFileSync(path.join(root, 'PRODUCT_GOAL.html'), 'utf8'),
       architecture: fs.readFileSync(path.join(root, 'ARCHITECTURE.md'), 'utf8'),
       campaign,
@@ -753,10 +755,58 @@ const introGraphics = (id) =>
           ? '수거 유닛·지지대·구조 줄·흉갑·현장 표식·동행 라이벌'
           : '고물상 작업대·주인공·라이벌·말풍선';
 document(
+  'prologue-map-candidates.html',
+  '도입 맵·플레이 진행 · 씬 구성 3안',
+  '같은 맵의 대화·처치 반복을 공간 이동과 상태 변화로 바꾸는 Human 선택용 제안입니다.',
+  '<aside class="notice"><strong>선택 대기 · 맵/runtime 미적용.</strong> 이미지의 번호 01~06은 아래 표의 구간과 대응합니다. 배치·통로·진행 조건은 제안이며 기존 이야기의 인과를 유지합니다. 핵·회수팔·병기·차고의 임시 형태는 개별 reference 승인과 구분합니다.</aside>' +
+    section(
+      '공통 진행 원칙',
+      list(PROLOGUE_PACING_NOTES.map(esc)) +
+        link('../references/prologue-scenes/PROMPTS.md', '이미지 생성 프롬프트와 검수 보정'),
+    ) +
+    section(
+      '세 안의 차이',
+      table(
+        ['안', '동선', '주요 경험', '제작 시 주의점'],
+        PROLOGUE_SCENE_CANDIDATES.map((candidate) => [
+          link('#prologue-option-' + candidate.id, candidate.id + '안 · ' + candidate.title),
+          esc(candidate.route),
+          esc(candidate.distinction),
+          esc(candidate.tradeoff),
+        ]),
+      ),
+    ) +
+    PROLOGUE_SCENE_CANDIDATES.map((candidate) =>
+      section(
+        candidate.id + '안 · ' + candidate.title,
+        `<figure><a href="../references/prologue-scenes/${esc(candidate.image)}"><img src="../references/prologue-scenes/${esc(candidate.image)}" alt="${esc(candidate.title)}: 01부터 06까지의 도입 플레이 장면"></a><figcaption>AI 생성 구성 시안 · 실제 게임 캡처가 아닙니다. 클릭하면 원본 크기로 확인할 수 있습니다.</figcaption></figure>` +
+          p(candidate.route) +
+          table(
+            ['장면', '공간', '플레이어 행동', '눈으로 보이는 변화', '다음 구간 조건'],
+            candidate.beats.map((row) => row.map(esc)),
+          ),
+        'prologue-option-' + candidate.id,
+      ),
+    ).join('') +
+    section(
+      '선택 뒤 제작 범위',
+      p(
+        '선택한 동선을 Product/Architecture의 현재 설계에 반영하고 각 구간의 지형·연결·상호작용·적 배치·붕괴 전후·귀환 상태를 실제 게임에 구현합니다. 지금 작성된 stage 개수나 전투 횟수를 그대로 늘리는 작업으로 해석하지 않습니다. 검증은 새 게임부터 직접 이동해 구조와 귀환까지 잇는 플레이로 수행합니다.',
+      ),
+    ),
+);
+
+document(
   'scenarios/prologue.html',
   '도입 · 첫 수거 의뢰와 각성',
   '사람을 먼저 구한 선택이 재난의 원인이 됩니다. 값나가는 부품 수집 동기로 바꾸지 않습니다. 고대 병기는 옛 명령을 문자 그대로 실행하며 사무적인 낡은 방송과 과장된 조립·수거 행동으로 위협과 웃음을 함께 보여 줍니다. 신체 공포물 방향이 아닙니다.',
-  section('등장인물', characterLinks('scrap-waste-edge')) +
+  section(
+    '맵과 진행 재구성 시안',
+    p(
+      '동일한 맵에서 대화·적 처치가 반복되는 현재 문제를 해결하기 위해 공간과 진행이 다른 3안을 검토합니다. 아래 기존 stage 목록은 현재 작성된 자료이며 새 맵의 승인된 동선을 뜻하지 않습니다.',
+    ) + link('../prologue-map-candidates.html', '6개 장면으로 보는 도입 맵·진행 3안'),
+  ) +
+    section('등장인물', characterLinks('scrap-waste-edge')) +
     section(
       '전체 도입 단계',
       table(
