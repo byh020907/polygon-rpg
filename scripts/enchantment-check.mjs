@@ -79,9 +79,9 @@ function createEncounter({
   });
 }
 
-function playerFrame() {
+function playerFrame(position = { x: 600, y: 338 }) {
   return Object.freeze({
-    position: Object.freeze({ x: 600, y: 338 }),
+    position: Object.freeze({ ...position }),
     facing: 1,
     isGrounded: true,
     health: 100,
@@ -94,7 +94,7 @@ function playerFrame() {
   });
 }
 
-function contactFrame(encounter, kind = 'basic') {
+function contactFrame(encounter, kind = 'basic', playerPosition) {
   contactSequence += 1;
   const shield = kind === 'shield';
   const strong = kind === 'strong';
@@ -129,7 +129,7 @@ function contactFrame(encounter, kind = 'basic') {
       sweep: contactPart,
       shield: contactPart,
     }),
-    player: playerFrame(),
+    player: playerFrame(playerPosition),
   });
 }
 
@@ -546,21 +546,27 @@ function verifyCampaignEnemyMaterialRewards() {
 
   const scene = createTestGameScene({
     progressionSnapshot: mergeProgressionSnapshot(fresh, {
-      scrapCampaign: { ...fresh.scrapCampaign, awakeningStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD },
+      scrapCampaign: {
+        ...fresh.scrapCampaign,
+        awakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
+      },
     }),
   });
   scene.enterTree();
   try {
     const encounter = scene.roomSceneNode.encounter;
-    assert.equal(encounter.getGameplaySnapshot().profileId, 'yard-guard-collector');
+    assert.equal(encounter.getGameplaySnapshot().profileId, 'yard-scout-collector');
     const snapshots = [];
     scene.progressionChanged.connect((snapshot) => snapshots.push(snapshot));
-    encounter.enemy.position.x = 650;
+    encounter.enemy.position.x = scene.position.x + 70;
     encounter.enemy.health = 1;
-    assert.equal(encounter.resolvePlayerAttack(contactFrame(encounter, 'basic')), true);
+    assert.equal(
+      encounter.resolvePlayerAttack(contactFrame(encounter, 'basic', scene.position)),
+      true,
+    );
     assert.equal(
       scene.getProgressionSnapshot().scrapCampaign.awakeningStageId,
-      SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+      SCRAP_AWAKENING_STAGE.YARD_SURVEY,
     );
     assert.equal(scene.getProgressionSnapshot().gold, 120);
     assert.equal(
@@ -576,9 +582,9 @@ function verifyCampaignEnemyMaterialRewards() {
     const afterVictory = scene.getProgressionSnapshot();
     assert.equal(
       scene.resolveCampaignEncounter({
-        entityId: 'scrap-yard-guard-collector',
-        profileId: 'yard-guard-collector',
-        scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
+        entityId: 'scrap-yard-scout-collector',
+        profileId: 'yard-scout-collector',
+        scrapAwakeningNextStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
       }).changed,
       false,
     );

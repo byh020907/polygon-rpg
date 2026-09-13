@@ -1,6 +1,6 @@
 export const SCRAP_EQUIPMENT_FORGE_PROFILE = Object.freeze({
   choiceGroupId: 'scrap-weapon-archetype',
-  sourceId: 'scrap-yard-guard-collector',
+  sourceId: 'scrap-yard-scout-collector',
   materialId: 'salvaged-drive-core',
   materialLabel: '회수한 구동핵',
   sourceQuantity: 1,
@@ -13,11 +13,12 @@ export const SCRAP_EQUIPMENT_FORGE_PROFILE = Object.freeze({
 });
 
 // Rewards belong to concrete victories, never entering a room or replaying a conversation.
-// The final yard fight supplies the first equipment/skill choice at the existing 120 Gold cost.
+// The one route-opening prologue fight supplies the first equipment/skill choice at the existing
+// 120 Gold cost, so removing repetitive fights never removes the campaign's opening growth reward.
 export const SCRAP_ENCOUNTER_REWARDS = Object.freeze(
   Object.fromEntries(
     [
-      ['scrap-yard-guard-collector', 'yard-guard-collector', 'lightning', 120, 3, true],
+      ['scrap-yard-scout-collector', 'yard-scout-collector', 'lightning', 120, 3, true],
       ['mine-tunnel-collector-unit', 'mine-claim-jacker', 'earth'],
       ['mine-collapse-walker-boss', 'mine-collapse-boss', 'earth'],
       ['shipyard-drydock-collector-unit', 'dock-salvage-raider', 'lightning'],

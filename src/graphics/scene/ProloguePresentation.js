@@ -4,8 +4,9 @@ import { PROLOGUE_ANCIENT_MACHINE_ASSET } from '../assets/PrologueAncientMachine
 import { PROLOGUE_GARAGE_ZERO_ASSET } from '../assets/PrologueGarageZeroAsset.js';
 import { SceneAssetRegistry } from './SceneAssetRegistry.js';
 import { SceneCompositionRuntime } from './SceneComposition.js';
-// Existing core/arm silhouettes and stage placements are retained through an explicit migration adapter.
-// They are runtime integration baselines, not approved new art.
+// Existing core/arm/machine silhouettes are retained through an explicit migration adapter.
+// Their transforms follow the selected multi-room underground route, but they remain runtime
+// integration baselines rather than approved REF-02/03/04 art.
 export function createProloguePresentation() {
   const assets = new SceneAssetRegistry();
   assets.register(PROLOGUE_CORE_ASSET);
@@ -20,8 +21,8 @@ export function createProloguePresentation() {
           id: 'world-control-core',
           assetId: PROLOGUE_CORE_ASSET.id,
           role: 'interactive',
-          tags: ['control-core', 'existing-art-adapter'],
-          transform: { x: 774, y: -354, z: 0 },
+          tags: ['control-core', 'existing-art-adapter', 'runtime-baseline-unapproved'],
+          transform: { x: 3134, y: -1434, z: 0 },
           size: { width: 22.5166604983954, height: 34 },
           scale: 1,
           renderBias: 0,
@@ -34,7 +35,7 @@ export function createProloguePresentation() {
           assetId: PROLOGUE_RETRIEVAL_ARM_ASSET.id,
           role: 'interactive-machine',
           tags: ['retrieval-arm', 'existing-art-adapter', 'runtime-baseline-unapproved'],
-          transform: { x: 1055, y: -295, z: 0 },
+          transform: { x: 3415, y: -1375, z: 0 },
           size: { width: 130, height: 150 },
           scale: 1,
           renderBias: 0.02,
@@ -60,6 +61,27 @@ export function createProloguePresentation() {
                 'scrap-retrieval-arm-grab-signal',
               ],
             },
+          ],
+          depthMode: 'surface',
+          shadowRole: 'cast',
+          shadowOpacity: 0.18,
+        },
+        {
+          id: 'world-ramp-retrieval-arm',
+          assetId: PROLOGUE_RETRIEVAL_ARM_ASSET.id,
+          role: 'investigation-landmark',
+          tags: [
+            'retrieval-arm',
+            'chest-ramp',
+            'existing-art-adapter',
+            'runtime-baseline-unapproved',
+          ],
+          transform: { x: 3235, y: -835, z: 0 },
+          size: { width: 130, height: 150 },
+          scale: 1,
+          renderBias: 0.02,
+          legacyUseBounds: false,
+          legacyPoseBindings: [
             {
               id: 'dormant',
               pose: 'dormant',
@@ -85,7 +107,7 @@ export function createProloguePresentation() {
             'existing-art-adapter',
             'runtime-baseline-unapproved',
           ],
-          transform: { x: 985, y: -280, z: 0 },
+          transform: { x: 3345, y: -1360, z: 0 },
           size: { width: 570, height: 300 },
           scale: 1,
           renderBias: 0.0001537625,
@@ -201,25 +223,33 @@ export function createProloguePresentation() {
       compositions: [
         {
           id: 'prologue-yard-context',
-          bounds: { x: 0, y: -600, width: 1000, height: 700 },
+          bounds: { x: 1, y: -539, width: 958, height: 538 },
           preloadMargin: 180,
-          objectIds: [
-            'world-control-core',
-            'world-retrieval-arm',
-            'world-ancient-machine',
-            'world-garage-zero',
-          ],
+          objectIds: ['world-control-core', 'world-garage-zero'],
+        },
+        {
+          id: 'prologue-upper-deck-context',
+          bounds: { x: 1441, y: -1079, width: 1438, height: 538 },
+          preloadMargin: 180,
+          objectIds: [],
+        },
+        {
+          id: 'prologue-chest-ramp-context',
+          bounds: { x: 2881, y: -1079, width: 958, height: 538 },
+          preloadMargin: 180,
+          objectIds: ['world-ramp-retrieval-arm'],
         },
         {
           id: 'prologue-machine-context',
-          bounds: { x: 650, y: -600, width: 900, height: 700 },
+          bounds: { x: 2881, y: -1619, width: 958, height: 538 },
           preloadMargin: 180,
-          objectIds: [
-            'world-control-core',
-            'world-retrieval-arm',
-            'world-ancient-machine',
-            'world-garage-zero',
-          ],
+          objectIds: ['world-control-core', 'world-retrieval-arm', 'world-ancient-machine'],
+        },
+        {
+          id: 'prologue-maintenance-return-context',
+          bounds: { x: 1441, y: -1619, width: 1438, height: 538 },
+          preloadMargin: 180,
+          objectIds: [],
         },
       ],
     },

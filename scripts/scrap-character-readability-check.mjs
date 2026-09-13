@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const profiles = CHARACTER_PRESENTATION_PROFILE.profiles;
@@ -167,8 +168,8 @@ assert.equal(quarryBossEncounter.weakPoint.id, 'quarry-cutter-main-bearing');
 gameplayScene.setVisualQaScrapAwakeningStage('yard-clearance');
 gameplayScene.setVisualQaLocation({
   regionId: 'scrap-waste-edge',
-  roomId: 'abandoned-weapon-yard',
-  x: 500,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+  x: 400,
 });
 const trainingFrame = gameplayScene.createRenderFrame(1);
 assert.equal(trainingFrame.combatEnemy.presentationProfileId, 'collector-unit');

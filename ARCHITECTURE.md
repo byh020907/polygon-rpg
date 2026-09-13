@@ -156,6 +156,10 @@ Keyboard / Touch / DOM intent
 ## World, Map and Story Contracts
 
 - World/Region의 논리 진행과 Composition의 시각/로딩 단위를 구분한다. Composition은 stable world object를 참조하고 Room/Chunk는 필요시 gameplay 위치/충돌 경계를 표현한다. 기존 room 경계를 화면 전환 또는 고정 Composition 길이로 강제하지 않는다.
+- 프롤로그의 실제 플레이 공간은 하나의 평면 Room이 아니라 동일한 side-view world 안에서 offset으로 배치한 고물상 앞마당, 지하 유적 상층 선별 데크, 고대 병기 흉곽 경사로, 하부 제어실과 하층 정비 귀환로로 구성한다. Room 사이 local portal은 fixed-step Map transition으로 원자 이동하고 시간 비용을 만들지 않으며, 멀리 보이던 하층 길과 사건 뒤 사용하는 귀환길이 같은 world 관계로 이어져야 한다.
+- 프롤로그의 기존 awakening stage ID와 순서는 저장 호환 authority로 유지한다. 한 번의 공간 행동이 과거의 세분 단계를 지나갈 때 authored target stage까지 순차 commit하되 stage를 새 alias나 병렬 flag로 복제하지 않는다. 복원 시 현재 stage를 authoritative resume Room과 local spawn으로 해석하여 상층 조사, 흉곽 경사로, 하부 제어실, 하층 귀환길 또는 고물상 중 맞는 공간에서 시작하고, 저장 schema에 일시적인 Room 좌표를 별도 authority로 추가하지 않는다.
+- 붕괴 stage는 scripted relocation으로 하부 제어실의 안전한 시작점에 배치하고, 각성·D-30 뒤 complete stage는 미리 보아 둔 하층 정비 귀환로의 시작점에 배치한다. 두 이동은 campaign stage commit과 같은 결과에서 한 번만 실행되며 reload/repeated trigger에서 낙하·귀환을 중복 적용하거나 이전 Room의 input·encounter를 넘기지 않는다.
+- 붕괴 전 필수 encounter는 지지 케이블을 끌어당기는 수거 유닛 한 기뿐이며, 완료 결과가 실제 다리 surface/portal을 연다. 나머지 호환 stage는 위치·관찰·조사 checkpoint로 소비하고 같은 Room의 동일 처치 encounter를 재생성하지 않는다. 고대 지지판 조사와 붕괴, 회수팔-제어핵 구조는 authored interaction과 stage transition이 소유한다.
 - Gameplay surface와 render geometry를 분리하고 polygon top edge를 render/collision이 함께 읽는다. One-way platform은 이전 발 위치와 하강 상태로만 collision을 승인한다.
 - Gameplay 위치 전환은 source authority 아래 fixed-step에서 원자 반영한다. 그 표현은 Composition의 additive/overlap/preload 계약과 연동하며 전환 화면으로 장소의 연속성을 끊지 않는다.
 - Conditional 변화는 stable object ID patch로 적용한다. 같은 priority/target/property 중복 writer와 필수 경로 차단은 invalid다.

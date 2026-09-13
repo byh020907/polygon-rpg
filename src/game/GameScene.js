@@ -85,6 +85,7 @@ import {
 import {
   advanceScrapGarageReveal,
   advanceScrapAwakening,
+  advanceScrapAwakeningTo,
   commitScrapCampaignAction,
   createScrapCampaignSnapshot,
   getScrapCampaignReadModel,
@@ -266,6 +267,9 @@ function assertScrapAwakeningProfile(profile) {
     typeof profile.mapId !== 'string' ||
     typeof profile.regionId !== 'string' ||
     typeof profile.roomId !== 'string' ||
+    !Array.isArray(profile.roomIds) ||
+    !profile.roomIds.includes(profile.roomId) ||
+    !profile.roomIds.every((roomId) => typeof roomId === 'string') ||
     typeof profile.deviceEntityId !== 'string' ||
     typeof profile.ownerEntityId !== 'string' ||
     typeof profile.restEntityId !== 'string' ||
@@ -273,6 +277,9 @@ function assertScrapAwakeningProfile(profile) {
     typeof profile.wallMapEntityId !== 'string' ||
     !Number.isFinite(profile.focusX) ||
     !Number.isFinite(profile.garageFocusX) ||
+    typeof profile.getResumeLocation !== 'function' ||
+    typeof profile.getStageRelocation !== 'function' ||
+    typeof profile.getStageFocusX !== 'function' ||
     typeof profile.getStageDurationSeconds !== 'function' ||
     typeof profile.getGarageStageDurationSeconds !== 'function'
   ) {
@@ -615,6 +622,28 @@ export class GameScene extends SceneNode {
           position: endpoint.spawn ?? endpoint.anchor,
           facing: endpoint.facing ?? 1,
         });
+      }
+    } else {
+      const resume = this.scrapAwakeningProfile.getResumeLocation?.(
+        scrapCampaign.awakeningStageId,
+        scrapCampaign.garageRevealStageId,
+      );
+      if (resume) {
+        const room = this.mapRuntime.definition.getRoom(
+          this.scrapAwakeningProfile.regionId,
+          resume.roomId,
+        );
+        mapSnapshot = this.mapRuntime.setActiveLocation(
+          this.scrapAwakeningProfile.regionId,
+          resume.roomId,
+          {
+            position: {
+              x: room.bounds.x + resume.position.x,
+              y: room.bounds.y + resume.position.y,
+            },
+            facing: resume.facing ?? 1,
+          },
+        );
       }
     }
     const spawn = mapSnapshot.spawn?.position ?? { x: 270, y: 350 };
@@ -1467,8 +1496,40 @@ export class GameScene extends SceneNode {
     return (
       this.mapRuntime.definition.id === this.scrapAwakeningProfile.mapId &&
       location.regionId === this.scrapAwakeningProfile.regionId &&
-      location.roomId === this.scrapAwakeningProfile.roomId
+      (this.scrapAwakeningProfile.roomIds ?? [this.scrapAwakeningProfile.roomId]).includes(
+        location.roomId,
+      )
     );
+  }
+
+  relocateScrapAwakeningStage(stageId) {
+    const relocation = this.scrapAwakeningProfile.getStageRelocation?.(stageId);
+    if (!relocation) return false;
+    const current = this.mapRuntime.getActiveLocation();
+    if (current.roomId === relocation.roomId) return false;
+    const room = this.mapRuntime.definition.getRoom(
+      this.scrapAwakeningProfile.regionId,
+      relocation.roomId,
+    );
+    const position = {
+      x: room.bounds.x + relocation.position.x,
+      y: room.bounds.y + relocation.position.y,
+    };
+    const snapshot = this.mapRuntime.setActiveLocation(
+      this.scrapAwakeningProfile.regionId,
+      relocation.roomId,
+      { position, facing: relocation.facing ?? 1 },
+    );
+    this.replaceRoomScene(snapshot, { resetExisting: true });
+    this.position = { ...position };
+    this.previousPosition = { ...position };
+    this.facing = relocation.facing ?? snapshot.spawn?.facing ?? this.facing;
+    this.cameraPosition = { ...snapshot.cameraPosition };
+    this.previousCameraPosition = { ...this.cameraPosition };
+    this.verticalVelocity = 0;
+    this.isGrounded = true;
+    this.storyInteractionOwner.reset();
+    return true;
   }
 
   syncScrapAwakeningWorldContext() {
@@ -1506,6 +1567,7 @@ export class GameScene extends SceneNode {
     this.scrapAwakeningElapsedSeconds = 0;
     this.commitProgression(progressionTransaction);
     this.syncScrapAwakeningWorldContext();
+    this.relocateScrapAwakeningStage(transaction.snapshot.awakeningStageId);
     this.statusNode.publish({ force: true });
     return Object.freeze({ ...transaction, progressionSnapshot: this.progressionSnapshot });
   }
@@ -2082,9 +2144,10 @@ export class GameScene extends SceneNode {
       .getResolvedSnapshot()
       .entities.find((entity) => entity.conversationId === conversationId);
     if (interaction?.scrapAwakeningNextStageId) {
-      const transaction = advanceScrapAwakening(
+      const transaction = advanceScrapAwakeningTo(
         this.progressionSnapshot.scrapCampaign,
         this.scrapCampaignProfile,
+        interaction.scrapAwakeningNextStageId,
       );
       if (
         !transaction.changed ||
@@ -2158,6 +2221,25 @@ export class GameScene extends SceneNode {
       this.position = { ...completion.position };
       this.cameraPosition = { ...presentation.destinationCameraPosition };
       this.storyInteractionOwner.reset();
+      if (completion.scrapAwakeningNextStageId) {
+        const awakeningTransaction = advanceScrapAwakeningTo(
+          this.progressionSnapshot.scrapCampaign,
+          this.scrapCampaignProfile,
+          completion.scrapAwakeningNextStageId,
+        );
+        if (
+          !awakeningTransaction.changed ||
+          awakeningTransaction.snapshot.awakeningStageId !== completion.scrapAwakeningNextStageId
+        ) {
+          throw new Error(
+            `도입 room 전환 stage를 적용할 수 없습니다: ${completion.scrapAwakeningNextStageId}`,
+          );
+        }
+        this.progressionNotice = getScrapAwakeningPresentation(
+          completion.scrapAwakeningNextStageId,
+        ).cue;
+        this.commitScrapAwakening(awakeningTransaction);
+      }
       if (presentation.campaignAction) {
         campaignTransaction = commitScrapCampaignAction(
           this.progressionSnapshot.scrapCampaign,
@@ -2222,11 +2304,15 @@ export class GameScene extends SceneNode {
     const minimumX = bounds.x + 480;
     const maximumX = bounds.x + bounds.width - 480;
     const awakening = this.getScrapAwakeningReadModel();
+    const localFocusX = this.scrapAwakeningProfile.getStageFocusX?.(
+      awakening.awakeningStageId,
+      snapshot.active.roomId,
+    );
     const desiredX =
       this.isScrapAwakeningLocation() && awakening.awakeningActive
-        ? this.scrapAwakeningProfile.focusX
+        ? bounds.x + (localFocusX ?? this.scrapAwakeningProfile.focusX)
         : this.isScrapAwakeningLocation() && awakening.garageRevealActive
-          ? this.scrapAwakeningProfile.garageFocusX
+          ? bounds.x + this.scrapAwakeningProfile.garageFocusX
           : this.position.x;
     const targetX = Math.max(minimumX, Math.min(maximumX, desiredX));
     const targetY = bounds.y + 270;
@@ -3018,9 +3104,10 @@ export class GameScene extends SceneNode {
     if (fieldEvent) return this.commitProgression(this.fieldQuests.perform(fieldEvent));
     if (result.scrapAwakeningNextStageId) {
       assertScrapAwakeningStageId(result.scrapAwakeningNextStageId);
-      const transaction = advanceScrapAwakening(
+      const transaction = advanceScrapAwakeningTo(
         this.progressionSnapshot.scrapCampaign,
         this.scrapCampaignProfile,
+        result.scrapAwakeningNextStageId,
       );
       if (
         !transaction.changed ||
@@ -3836,7 +3923,9 @@ export class GameScene extends SceneNode {
     );
     const gameOverPresentation = getScrapGameOverPresentation(this.scrapGameOverPresentationState);
     const scrapAwakeningLocation =
-      map.id === this.scrapAwakeningProfile.mapId && roomId === this.scrapAwakeningProfile.roomId;
+      map.id === this.scrapAwakeningProfile.mapId &&
+      location.regionId === this.scrapAwakeningProfile.regionId &&
+      (this.scrapAwakeningProfile.roomIds ?? [this.scrapAwakeningProfile.roomId]).includes(roomId);
     const scrapCampaignRegion = this.scrapCampaignProfile.getRegion(location.regionId);
     const scrapCampaignRegionReadModel = scrapCampaign.regions.find(
       (region) => region.id === scrapCampaignRegion?.id,

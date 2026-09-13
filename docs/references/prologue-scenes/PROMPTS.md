@@ -26,3 +26,27 @@ Output is one large LANDSCAPE storyboard sheet with EXACTLY six 16:9 game-view p
 ## 검수 보정
 
 06 차고 장면의 회수한 핵은 작업대 위 단 하나만 존재하도록 정리한다. 차고의 0% 상태는 빈 코어 소켓과 독립 모듈 장착부가 있는 조립 지그로 표현하며, 지역 모듈을 이미 장착한 완성된 팔·다리·장갑을 배치하지 않는다. 다른 장면은 유지한다.
+
+## Human 선택 1안 · 지하 유적 정제본
+
+출력: `prologue-scene-option-1-underground-selected.png`. 기존 1안 이미지를 동선·인물·패널 구성 reference로 사용한 built-in ImageGen 편집본이다. 이 정제본은 선택된 지하 유적 동선과 Composition 기준이며, 고대 병기의 개별 최종 외형 승인은 아니다.
+
+```text
+Use case: precise-object-edit
+Asset type: Polygon RPG selected prologue environment storyboard / gameplay-scale composition reference
+Input images: Image 1 is the edit target and route-composition reference.
+Primary request: Refine option 1 so the story unmistakably reads “two apprentices explore a buried ancient military ruin and accidentally awaken an ancient weapon.” Change the environment and lighting of panels 02–05 from open-air surface scrapyard decks into a deep subterranean ruin while preserving the six-panel sequence and actions.
+Scene/backdrop:
+- Panel 01 remains the lived-in daylight scrapyard workshop where the owner sends the two apprentices out.
+- Panel 02 is a descending entrance and upper sorting gallery inside an immense buried ruin. The characters cross broken elevated platforms; far below, a lower maintenance corridor is visibly foreshadowed.
+- Panel 03 is an ancient rib-cage/chest-armor ramp inside the ruin. Exactly one cable-hauling collector enemy pulls a support cable; defeating it deploys a real bridge/ramp. Show stone arches, riveted armor plates, deep darkness, dust and falling fragments—no open sky.
+- Panel 04 is the lower control chamber after collapse. The rival hangs from a retrieval arm directly linked by a cyan cable to one removable control core/socket; the hero is choosing to remove it. Keep the causal connection visually explicit.
+- Panel 05 is the same underground chamber immediately after the core was removed: the rescued pair flee through the previously glimpsed lower maintenance route while only a huge partial ancient-machine silhouette, one red eye, shifting debris, and an empty sealed socket indicate awakening. Do not reveal a polished final full-body ancient-machine design.
+- Panel 06 remains return to the lived-in workshop at dusk/interior light: the owner analyzes the cyan core and an empty 0% garage frame is revealed.
+Style/medium: retain the source's clean, readable, hand-painted 2D indie action-RPG concept art; compact believable gameplay scale; simple strong silhouettes; warm lived-in workshop contrasted with cold charcoal stone/oxidized steel and cyan ancient device light.
+Composition/framing: preserve the 2-column × 3-row storyboard, black gutters, large option numeral “1”, and exact panel number labels 01, 02, 03, 04, 05, 06. Keep the same recurring hero, rival, and owner designs and left-to-right action readability. In panel 02 make upper and lower paths visible in one frame; in panel 05 show the changed lower return route.
+Lighting/mood: panels 02–05 are underground: low ambient light, warm work lamps near human infrastructure, narrow dust-filled shafts from ceiling cracks only, cyan device glow in control room, red eye after awakening. No blue sky, clouds, trees, town skyline, broad daylight, or surface cranes in panels 02–05.
+Text (verbatim): “1”, “01”, “02”, “03”, “04”, “05”, “06”
+Constraints: change only the underground setting/lighting and scene-specific ancient-ruin architecture in panels 02–05; preserve panel layout, character identities, sequence, tools, proportions, action poses, option number, panel labels, workshop identity in panels 01 and 06. Exactly one enemy in panel 03. One removable cyan core only. The retrieval arm must visibly connect to the core/socket. Ancient machine remains a partial technical silhouette, not final design approval. No dialogue text, captions, logos, watermark, or extra panels.
+Avoid: surface daylight in panels 02–05, generic sci-fi spaceship interiors, neon cyberpunk, pristine technology, boss-battle composition, multiple enemies, unrelated monsters, full polished robot reveal, illegible panel numbering.
+```

@@ -20,6 +20,7 @@ import {
 } from '../src/game/PlayerCombatPresentation.js';
 import { PLAYER_CHARACTER_FOOT_OFFSET } from '../src/combat/SharedCombatGeometry.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { CHARACTER_PRESENTATION_PROFILE } from '../src/game/character/CharacterPresentationProfiles.js';
 import { TRAINING_ENEMY_ATTACK_PROFILES } from '../src/game/training/TrainingEnemyAttackProfiles.js';
 import { createTrainingEnemyItems } from '../src/game/training/TrainingEncounterPresentation.js';
@@ -415,14 +416,17 @@ scene.enterTree();
 scene.setVisualQaScrapAwakeningStage('yard-clearance');
 scene.setVisualQaLocation({
   regionId: 'scrap-waste-edge',
-  roomId: 'abandoned-weapon-yard',
-  x: 560,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+  x: 330,
 });
 const liveEnemy = scene.roomSceneNode.encounter.enemy;
 // Begin outside the movement bodies: an overlapping fixture is separated on the
 // first tick and tests depenetration, not a normal attack contact.
 const enemyBody = scene.roomSceneNode.getEncounterGameplaySnapshot().bodyCollider;
-liveEnemy.position = { x: scene.position.x + 20 + enemyBody.halfWidth + 1, y: 420 };
+liveEnemy.position = {
+  x: scene.position.x + 20 + enemyBody.halfWidth + 1,
+  y: scene.position.y + PLAYER_CHARACTER_FOOT_OFFSET,
+};
 liveEnemy.aiState = 'idle';
 liveEnemy.aiSeconds = 1;
 let liveHit = null;

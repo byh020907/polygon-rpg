@@ -29,6 +29,7 @@ import {
   SCRAP_SHIPYARD_REGION_ID,
   SCRAP_SHIPYARD_ROAD_ROOM_ID,
 } from '../game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../game/maps/PrologueUndergroundMap.js';
 
 export const VISUAL_QA_PHASE_IDS = Object.freeze(['start', 'active', 'end']);
 const VISUAL_QA_PHASES = new Set(VISUAL_QA_PHASE_IDS);
@@ -204,9 +205,9 @@ function createBaselinePlaybackScenario(inputTimeline, expectation = {}) {
   return Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
-    x: 500,
+    x: 300,
     inputTimelineByPhase: Object.freeze({
       active: Object.freeze(
         inputTimeline.map((segment) =>
@@ -273,7 +274,7 @@ function createCombatScenarioLocation(boss) {
     : {
         mapId: SCRAP_AWAKENING_MAP_ID,
         regionId: SCRAP_AWAKENING_REGION_ID,
-        roomId: SCRAP_AWAKENING_ROOM_ID,
+        roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
         scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
       };
 }
@@ -284,7 +285,7 @@ const WORKSHOP_QA_PROGRESSION = awardCampaignEncounterReward(
     ENCHANTMENT_CATALOG,
     SCRAP_CAMPAIGN_PROFILE,
   ),
-  { entityId: 'scrap-yard-guard-collector', profileId: 'yard-guard-collector' },
+  { entityId: 'scrap-yard-scout-collector', profileId: 'yard-scout-collector' },
   COMBAT_PROGRESSION_PROFILE,
   ENCHANTMENT_CATALOG,
   SCRAP_CAMPAIGN_PROFILE,
@@ -342,95 +343,128 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-walk': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 500,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: 300,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     inputTimelineByPhase: Object.freeze({
       active: Object.freeze([Object.freeze({ frames: 2, input: Object.freeze({ right: true }) })]),
     }),
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
+      expectedPatchIds: Object.freeze([
+        'scrap-prologue-yard-clearance',
+        'prologue-underground-bridge-locked',
+      ]),
+      expectedItems: Object.freeze([
+        'underground-upper-sorter-frame',
+        'underground-upper-broken-span',
+        'underground-upper-route-locked',
+        'combat-enemy-collector-eye',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'underground-upper-bridge-deployed',
+        'scrap-device-core',
+      ]),
     }),
   }),
   'scrap-intro-yard-brace': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 700,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: 520,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_BRACE,
       expectedPatchIds: Object.freeze(['scrap-prologue-yard-brace']),
-      expectedItems: Object.freeze(['cast-rival-yard:salvage-hook']),
-      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+      expectedItems: Object.freeze([
+        'underground-upper-sorter-frame',
+        'underground-upper-broken-span',
+        'cast-rival-yard:rival-salvage-hook-contour',
+      ]),
+      expectedAbsentItems: Object.freeze(['combat-enemy-collector-eye', 'scrap-device-core']),
     }),
   }),
   'scrap-intro-brace': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 870,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: 520,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_PERIMETER,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_PERIMETER,
       expectedPatchIds: Object.freeze(['scrap-prologue-yard-perimeter']),
-      expectedItems: Object.freeze(['combat-enemy-collector-eye', 'cast-rival-yard:salvage-hook']),
-      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+      expectedItems: Object.freeze([
+        'underground-upper-sorter-frame',
+        'underground-upper-broken-span',
+        'cast-rival-yard:rival-salvage-hook-contour',
+      ]),
+      expectedAbsentItems: Object.freeze(['combat-enemy-collector-eye', 'scrap-device-core']),
     }),
   }),
   'scrap-intro-survey': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1010,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: 930,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SURVEY,
-      expectedPatchIds: Object.freeze(['scrap-prologue-yard-survey']),
-      expectedItems: Object.freeze([
-        'scrap-yard-winch-base',
-        'scrap-yard-winch-base-mark',
-        'scrap-yard-chest-plate-mark',
-        'scrap-retrieval-arm-dormant-upper',
-        'scrap-retrieval-arm-dormant-forearm',
-        'scrap-retrieval-arm-dormant-claw',
-        'cast-rival-yard:salvage-hook',
+      expectedPatchIds: Object.freeze([
+        'scrap-prologue-yard-survey',
+        'prologue-underground-bridge-opened',
       ]),
-      expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-retrieval-arm-grab-claw']),
+      expectedItems: Object.freeze([
+        'underground-upper-bridge-deployed',
+        'underground-upper-route-ready',
+        'underground-upper-cyan-conduit',
+        'underground-upper-lower-return-glimpse',
+        'underground-upper-lower-return-rail',
+        'cast-rival-yard:rival-salvage-hook-contour',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'combat-enemy-collector-eye',
+        'scrap-device-core',
+        'scrap-retrieval-arm-grab-claw',
+      ]),
     }),
   }),
   'scrap-intro-approach': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1060,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: 1120,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_APPROACH,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_APPROACH,
-      expectedPatchIds: Object.freeze(['scrap-prologue-yard-approach']),
-      expectedItems: Object.freeze([
-        'combat-enemy-collector-eye',
-        'scrap-yard-winch-base',
-        'scrap-yard-winch-base-mark',
-        'scrap-yard-chest-plate-mark',
-        'scrap-retrieval-arm-dormant-upper',
-        'scrap-retrieval-arm-dormant-forearm',
-        'scrap-retrieval-arm-dormant-claw',
-        'cast-rival-yard:salvage-hook',
+      expectedPatchIds: Object.freeze([
+        'scrap-prologue-yard-approach',
+        'prologue-underground-bridge-opened',
+        'prologue-underground-ramp-route',
       ]),
-      expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-retrieval-arm-grab-claw']),
+      expectedItems: Object.freeze([
+        'underground-upper-bridge-deployed',
+        'underground-upper-route-ready',
+        'cast-rival-yard:rival-salvage-hook-contour',
+      ]),
+      expectedAbsentItems: Object.freeze([
+        'combat-enemy-collector-eye',
+        'scrap-device-core',
+        'scrap-retrieval-arm-grab-claw',
+      ]),
     }),
   }),
   'scrap-intro-plate': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1160,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP,
+    x: 360,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_PLATE,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_PLATE,
       expectedPatchIds: Object.freeze(['scrap-prologue-yard-plate']),
       expectedItems: Object.freeze([
+        'underground-chest-ramp-visible',
+        'underground-ramp-depth-marker',
         'scrap-yard-winch-base',
         'scrap-yard-winch-base-mark',
         'scrap-yard-chest-plate-mark',
@@ -439,7 +473,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-retrieval-arm-dormant-upper',
         'scrap-retrieval-arm-dormant-forearm',
         'scrap-retrieval-arm-dormant-claw',
-        'cast-rival-yard:salvage-hook',
+        'cast-rival-chest-ramp:rival-salvage-hook-contour',
       ]),
       expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-retrieval-arm-grab-claw']),
     }),
@@ -447,14 +481,15 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-ridge': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1240,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP,
+    x: 360,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_RIDGE,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_RIDGE,
       expectedPatchIds: Object.freeze(['scrap-prologue-yard-ridge']),
       expectedItems: Object.freeze([
-        'combat-enemy-collector-eye',
+        'underground-chest-ramp-visible',
+        'underground-ramp-depth-marker',
         'scrap-yard-winch-base',
         'scrap-yard-winch-base-mark',
         'scrap-yard-chest-plate-mark',
@@ -463,7 +498,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-retrieval-arm-dormant-upper',
         'scrap-retrieval-arm-dormant-forearm',
         'scrap-retrieval-arm-dormant-claw',
-        'cast-rival-yard:salvage-hook',
+        'cast-rival-chest-ramp:rival-salvage-hook-contour',
       ]),
       expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-retrieval-arm-grab-claw']),
     }),
@@ -471,14 +506,15 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-guard': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1278,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP,
+    x: 360,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_GUARD,
       expectedPatchIds: Object.freeze(['scrap-prologue-yard-guard']),
       expectedItems: Object.freeze([
-        'combat-enemy-collector-eye',
+        'underground-chest-ramp-visible',
+        'underground-ramp-depth-marker',
         'scrap-yard-winch-base',
         'scrap-yard-winch-base-mark',
         'scrap-yard-chest-plate-mark',
@@ -487,7 +523,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-retrieval-arm-dormant-upper',
         'scrap-retrieval-arm-dormant-forearm',
         'scrap-retrieval-arm-dormant-claw',
-        'cast-rival-yard:salvage-hook',
+        'cast-rival-chest-ramp:rival-salvage-hook-contour',
       ]),
       expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-retrieval-arm-grab-claw']),
     }),
@@ -495,13 +531,15 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-search': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 1332,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP,
+    x: 640,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_SEARCH,
       expectedPatchIds: Object.freeze(['scrap-prologue-yard-search']),
       expectedItems: Object.freeze([
+        'underground-chest-ramp-visible',
+        'underground-ramp-depth-marker',
         'scrap-yard-winch-base',
         'scrap-yard-winch-base-mark',
         'scrap-yard-chest-plate-mark',
@@ -510,7 +548,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-retrieval-arm-dormant-upper',
         'scrap-retrieval-arm-dormant-forearm',
         'scrap-retrieval-arm-dormant-claw',
-        'cast-rival-yard:salvage-hook',
+        'cast-rival-chest-ramp:rival-salvage-hook-contour',
       ]),
       expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-retrieval-arm-grab-claw']),
     }),
@@ -518,8 +556,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-before': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 760,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+    x: 254,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.PLAYER_DECISION,
@@ -528,12 +566,14 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-prologue-player-decision',
       ]),
       expectedItems: Object.freeze([
+        'underground-control-core-dais',
+        'underground-control-cyan-conduit',
         'scrap-device-core',
         'scrap-device-glow-outer',
-        'cast-rival-trapped:torso',
-        'cast-rival-trapped:sword-upper-arm',
-        'cast-rival-trapped:salvage-band',
-        'cast-rival-trapped:salvage-hook',
+        'cast-rival-trapped:rival-vest-shape',
+        'cast-rival-trapped:rival-far-upper-arm-shape',
+        'cast-rival-trapped:rival-salvage-band-shape',
+        'cast-rival-trapped:rival-salvage-hook-contour',
         'scrap-retrieval-arm-grab-upper',
         'scrap-retrieval-arm-grab-claw',
         'scrap-retrieval-arm-grab-signal',
@@ -551,8 +591,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-release': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 900,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+    x: 510,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
@@ -562,6 +602,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrap-device-recovered',
       ]),
       expectedItems: Object.freeze([
+        'underground-control-core-dais',
         'scrap-rescue-signal',
         'scrap-retrieval-arm-grab-upper',
         'scrap-retrieval-arm-grab-claw',
@@ -573,8 +614,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-awakening': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 740,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+    x: 510,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.EYES_LIT,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.EYES_LIT,
@@ -587,8 +628,8 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-d30': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 740,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+    x: 510,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED,
@@ -612,18 +653,22 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'scrap-intro-after': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x: 740,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_MAINTENANCE_RETURN,
+    x: 510,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
     expectation: Object.freeze({
       expectedAwakeningStageId: SCRAP_AWAKENING_STAGE.COMPLETE,
       expectedAwakeningActive: false,
-      expectedItems: Object.freeze([
-        'scrap-king-eye-left',
-        'scrap-king-shoulder-left',
-        'scrap-king-route-beacon',
+      expectedPatchIds: Object.freeze([
+        'scrap-prologue-rival-return',
+        'prologue-underground-return-route',
       ]),
-      expectedAbsentItems: Object.freeze(['scrap-device-core']),
+      expectedItems: Object.freeze([
+        'underground-maintenance-service-rail',
+        'underground-maintenance-cyan-conduit',
+        'cast-rival-return:rival-salvage-hook-contour',
+      ]),
+      expectedAbsentItems: Object.freeze(['scrap-device-core', 'scrap-king-route-beacon']),
     }),
   }),
   'scrap-garage-analysis': Object.freeze({
@@ -643,9 +688,9 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
         'scrapyard-device-analysis',
       ]),
       expectedItems: Object.freeze([
-        'cast-scrapyard-owner:welding-goggles',
-        'cast-scrapyard-owner:ledger',
-        'cast-scrapyard-owner:wrench',
+        'cast-scrapyard-owner:owner-goggles-shape',
+        'cast-scrapyard-owner:owner-ledger-contour',
+        'cast-scrapyard-owner:owner-heavy-wrench-contour',
         'scrapyard-device-analysis-beam',
         'scrapyard-analysis-device-core',
       ]),
@@ -1501,7 +1546,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'enchant-fire-contact': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-fire-contact',
@@ -1525,7 +1570,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'enchant-lightning-contact': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-lightning-contact',
@@ -1549,7 +1594,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'enchant-ice-status': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-ice-status',
@@ -1602,7 +1647,7 @@ const VISUAL_QA_SCENARIOS = Object.freeze({
   'enchant-shield-excluded': Object.freeze({
     mapId: SCRAP_AWAKENING_MAP_ID,
     regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
     scrapAwakeningStageId: SCRAP_AWAKENING_STAGE.YARD_CLEARANCE,
     x: 500,
     combatScenarioId: 'enchant-shield-excluded',
@@ -1724,20 +1769,20 @@ export function visualQaScenarioIds() {
 // The developer panel is a campaign inspection surface, not the complete fixture catalog.
 // Combat fixtures and the developer panel both use the current scrap campaign.
 const DEBUG_SCENARIO_LABELS = Object.freeze({
-  'scrap-intro-walk': '도입 · 고물상 수거장 동행',
-  'scrap-intro-yard-brace': '도입 · 첫 전투 뒤 지지대 동행 안내',
-  'scrap-intro-brace': '도입 · 지지대 통로 수거 유닛',
-  'scrap-intro-survey': '도입 · 끊긴 winch 점검',
-  'scrap-intro-approach': '도입 · 흉곽 안쪽 경계 전투',
-  'scrap-intro-plate': '도입 · 떨어진 흉갑 조각 점검',
-  'scrap-intro-ridge': '도입 · 흉곽 능선 경계 전투',
-  'scrap-intro-guard': '도입 · 심부 방패 경계 전투',
-  'scrap-intro-search': '도입 · 폐병기 내부 현장 조사',
-  'scrap-intro-before': '도입 · 붕괴 뒤 제어핵 선택',
+  'scrap-intro-walk': '도입 · 지하 유적 상층 진입과 단일 길 열기 전투',
+  'scrap-intro-yard-brace': '도입 · 상층 분류 데크 전투 후 체크포인트',
+  'scrap-intro-brace': '도입 · 상층 분류 데크 호환 체크포인트',
+  'scrap-intro-survey': '도입 · 열린 교량과 하층 신호 관찰',
+  'scrap-intro-approach': '도입 · 흉갑 경사로 진입',
+  'scrap-intro-plate': '도입 · 내려앉은 흉갑 경사로 조사',
+  'scrap-intro-ridge': '도입 · 흉갑 내부 연결 확인',
+  'scrap-intro-guard': '도입 · 하층 제어실 깊이 확인',
+  'scrap-intro-search': '도입 · 지하 유적 중심 조사와 붕괴 직전',
+  'scrap-intro-before': '도입 · 하층 제어실의 라이벌과 제어핵 선택',
   'scrap-intro-release': '도입 · 제어핵 분리와 회수팔 해제',
-  'scrap-intro-awakening': '도입 · 고대 병기 각성',
-  'scrap-intro-d30': '도입 · D-30 경보',
-  'scrap-intro-after': '도입 · 귀환 완료',
+  'scrap-intro-awakening': '도입 · 하층 제어실 고대 병기 각성',
+  'scrap-intro-d30': '도입 · 하층 제어실 D-30 경보',
+  'scrap-intro-after': '도입 · 하층 정비 귀환로',
   'scrap-garage-analysis': '차고 · 주인 분석',
   'scrap-workshop': '고물상 · 회수 재료 제작·인챈트·수련',
   'scrap-dialogue-review': '대화 UI · 고물상 분석 보고',

@@ -17,6 +17,7 @@ import {
   createPlayerCombatPresentation,
 } from '../src/game/PlayerCombatPresentation.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 function deepFreezeFixture(value) {
@@ -95,8 +96,8 @@ function assertPublicPresentation(scenarioId, setScenario, effectId = null) {
     scene.setVisualQaScrapAwakeningStage('yard-clearance');
     scene.setVisualQaLocation({
       regionId: 'scrap-waste-edge',
-      roomId: 'abandoned-weapon-yard',
-      x: 560,
+      roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+      x: 400,
     });
     setScenario(scene, scenarioId);
     const frame = scene.createRenderFrame(0);
@@ -173,8 +174,8 @@ try {
   playerHitScene.setVisualQaScrapAwakeningStage('yard-clearance');
   playerHitScene.setVisualQaLocation({
     regionId: 'scrap-waste-edge',
-    roomId: 'abandoned-weapon-yard',
-    x: 560,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: 400,
   });
   playerHitScene.setVisualQaCombatScenario('combat-player-hit', 'active');
   const playerHitFrame = playerHitScene.createRenderFrame(0);

@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 
 import {
   SCRAP_AWAKENING_STAGE,
+  SCRAP_AWAKENING_STAGE_IDS,
   getScrapAwakeningPresentation,
 } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_AWAKENING_PROFILE } from '../src/game/campaign/ScrapAwakeningProfile.js';
 import { SCRAP_CAST } from '../src/game/campaign/ScrapCastProfile.js';
 import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
 import { SCRAP_CAMPAIGN_PROFILE } from '../src/game/campaign/ScrapCampaignProfiles.js';
@@ -19,12 +21,9 @@ import {
   SCRAP_AWAKENING_MAP,
   SCRAP_AWAKENING_REGION_ID,
   SCRAP_AWAKENING_ROOM_ID,
+  SCRAP_AWAKENING_DEVICE_ENTITY_ID,
   SCRAPYARD_OWNER_COMMISSION_ENTITY_ID,
   SCRAPYARD_REST_ENTITY_ID,
-  SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID,
-  SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID,
-  SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID,
-  SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID,
   SCRAP_MINE_WAITING_MINER_ENTITY_ID,
   SCRAP_MINE_WAITING_WORKING_ENTITY_ID,
   SCRAP_MINE_WAITING_AFTER_ENTITY_ID,
@@ -46,15 +45,8 @@ import {
   SCRAP_QUARRY_WAITING_AFTER_ENTITY_ID,
   SCRAP_QUARRY_RIVAL_SCOUT_ENTITY_ID,
   SCRAP_RIVAL_PLATE_ENTITY_ID,
-  SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID,
-  SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID,
-  SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID,
   SCRAP_RIVAL_SURVEY_ENTITY_ID,
-  SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID,
-  SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID,
-  SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID,
-  SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID,
   SCRAP_RIVAL_SEARCH_ENTITY_ID,
   SCRAP_RIVAL_RESCUE_ENTITY_ID,
   SCRAP_PLAYER_DECISION_ENTITY_ID,
@@ -91,6 +83,12 @@ import {
   SCRAP_QUARRY_CUT_ROOM_ID,
   SCRAP_QUARRY_CUTTER_ROOM_ID,
 } from '../src/game/maps/scrapAwakening.js';
+import {
+  PROLOGUE_RAMP_RIVAL_CAST_ENTITY_ID,
+  PROLOGUE_UNDERGROUND_PORTAL_IDS,
+  PROLOGUE_UNDERGROUND_RESUME_BY_STAGE,
+  PROLOGUE_UNDERGROUND_ROOM_IDS,
+} from '../src/game/maps/PrologueUndergroundMap.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
 import { MobileInputAdapter } from '../src/input/MobileInputAdapter.js';
@@ -201,14 +199,6 @@ function completeEncounterWithGameplayInput(scene, expectedEntityId, expectedNex
     }
   }
 
-  if (stage(scene) === expectedNextStageId) {
-    scene.setVisualQaLocation({
-      regionId: SCRAP_AWAKENING_REGION_ID,
-      roomId: SCRAP_AWAKENING_ROOM_ID,
-      x: 164,
-    });
-  }
-
   for (let tick = 0; tick < 240; tick += 1) {
     const combatState = scene.combatCommands.snapshot();
     if (
@@ -244,16 +234,23 @@ function completeEncounterWithGameplayInput(scene, expectedEntityId, expectedNex
   if (enteredHere) scene.exitTree();
 }
 
-function createAwakeningScene({ progressionSnapshot = null, x = 740 } = {}) {
+function createAwakeningScene({
+  progressionSnapshot = null,
+  roomId = PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD,
+  x = 250,
+  useProfileResume = false,
+} = {}) {
   const scene = createTestGameScene({
     mapDefinition: SCRAP_AWAKENING_MAP,
     ...(progressionSnapshot ? { progressionSnapshot } : {}),
   });
-  scene.setVisualQaLocation({
-    regionId: SCRAP_AWAKENING_REGION_ID,
-    roomId: SCRAP_AWAKENING_ROOM_ID,
-    x,
-  });
+  if (!useProfileResume) {
+    scene.setVisualQaLocation({
+      regionId: SCRAP_AWAKENING_REGION_ID,
+      roomId,
+      x,
+    });
+  }
   return scene;
 }
 
@@ -280,6 +277,22 @@ function finishPortalTransition(scene) {
   );
 }
 
+function enterLocalPortal(scene, portalId, jumpSequence) {
+  const portal = scene.mapRuntime.getPortal(portalId);
+  assert.ok(portal, `${portalId}가 현재 room에서 활성화되어야 합니다.`);
+  const active = scene.mapRuntime.getActiveLocation();
+  const endpoint = portal.from.roomId === active.roomId ? portal.from : portal.to;
+  scene.setVisualQaLocation({
+    regionId: active.regionId,
+    roomId: active.roomId,
+    x: endpoint.anchor.x,
+  });
+  scene.update(STEP_SECONDS, input({ jump: true, jumpSequence }));
+  assert.equal(scene.mapRuntime.getTransition()?.portalId, portalId);
+  finishPortalTransition(scene);
+  return jumpSequence + 1;
+}
+
 function completeDialogue(scene, sequence) {
   scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: sequence }));
   sequence += 1;
@@ -297,10 +310,11 @@ function setAtCampaignInteraction(scene, roomId, stageKind) {
     .getResolvedSnapshot()
     .entities.find((entity) => entity.campaignStageKind === stageKind);
   assert.ok(interaction, `${roomId}에는 ${stageKind} interaction이 필요합니다.`);
+  const room = scene.mapRuntime.definition.getRoom(interaction.campaignRegionId, roomId);
   scene.setVisualQaLocation({
     regionId: interaction.campaignRegionId,
     roomId,
-    x: interaction.position.x,
+    x: interaction.position.x - room.bounds.x,
   });
   return interaction;
 }
@@ -319,10 +333,11 @@ function setAtStoryInteraction(scene, interactionId) {
     .entities.find((entity) => entity.id === interactionId);
   assert.ok(interaction, `${interactionId} story interaction이 현재 stage에 필요합니다.`);
   const active = scene.mapRuntime.getActiveLocation();
+  const room = scene.mapRuntime.definition.getRoom(active.regionId, active.roomId);
   scene.setVisualQaLocation({
     regionId: active.regionId,
     roomId: active.roomId,
-    x: interaction.position.x,
+    x: interaction.position.x - room.bounds.x,
   });
   return interaction;
 }
@@ -483,11 +498,11 @@ assert.doesNotMatch(
 
 const rescueDialogueText = mapEntityLines(SCRAP_RIVAL_RESCUE_ENTITY_ID).join('\n');
 assert.match(rescueDialogueText, /회수팔/);
-assert.match(rescueDialogueText, /청록 장치/);
-assert.match(rescueDialogueText, /빼야 멈출/);
+assert.match(rescueDialogueText, /청록 제어핵/);
+assert.match(rescueDialogueText, /핵을 빼야/);
 assert.doesNotMatch(rescueDialogueText, /winch|전원만 들어오면/);
 const playerDecisionText = mapEntityLines(SCRAP_PLAYER_DECISION_ENTITY_ID).join('\n');
-assert.match(playerDecisionText, /제어핵은 회수팔을 움직이는 장치/);
+assert.match(playerDecisionText, /제어핵.*회수팔.*직접/);
 assert.doesNotMatch(playerDecisionText, /winch에 연결/);
 const ownerAnalysisText = mapEntityLines(SCRAPYARD_OWNER_ENTITY_ID).join('\n');
 assert.match(ownerAnalysisText, /회수팔을 움직이던 장치/);
@@ -495,55 +510,211 @@ assert.match(ownerAnalysisText, /중앙 지휘소.*옛 본부/);
 assert.match(ownerAnalysisText, /군수 인장.*전쟁 때 쓰던 잠금/);
 const collapseBriefing = getScrapAwakeningPresentation(SCRAP_AWAKENING_STAGE.COLLAPSE).briefing;
 assert.match(collapseBriefing, /회수팔/);
-assert.match(collapseBriefing, /끌고 가/);
+assert.match(collapseBriefing, /잡아당기.*무너/);
 const rescueBriefing = getScrapAwakeningPresentation(SCRAP_AWAKENING_STAGE.RESCUE_REQUEST).briefing;
 assert.match(rescueBriefing, /회수팔/);
 assert.match(rescueBriefing, /빼야 멈춘/);
 assert.doesNotMatch(rescueBriefing, /winch.*전원/);
 
-for (const [stageId, entityId, x, motionId] of [
-  [SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE, SCRAP_RIVAL_DEPARTURE_CAST_ENTITY_ID, 431, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_CLEARANCE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 540, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_BRACE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 790, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_PERIMETER, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 870, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_SURVEY, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1012, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_APPROACH, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1038, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_PLATE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1160, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_RIDGE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1196, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_GUARD, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1244, 'idle'],
-  [SCRAP_AWAKENING_STAGE.YARD_SEARCH, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 1332, 'idle'],
-  [SCRAP_AWAKENING_STAGE.PLAYER_DECISION, SCRAP_RIVAL_TRAPPED_CAST_ENTITY_ID, 1030, 'knocked-out'],
-  [SCRAP_AWAKENING_STAGE.EYES_LIT, SCRAP_RIVAL_RESCUED_CAST_ENTITY_ID, 1030, 'idle'],
-  [SCRAP_AWAKENING_STAGE.COMPLETE, SCRAP_RIVAL_RETURN_CAST_ENTITY_ID, 620, 'run'],
+const prologueRegion = SCRAP_AWAKENING_MAP.getRegion(SCRAP_AWAKENING_REGION_ID);
+assert.ok(prologueRegion, '도입 region이 존재해야 합니다.');
+assert.equal(
+  SCRAP_AWAKENING_ROOM_ID,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD,
+  '기존 작업 마당 stable room ID는 저장·지역 이동 호환을 위해 유지해야 합니다.',
+);
+assert.deepEqual(
+  prologueRegion.rooms.map((room) => room.id),
+  Object.values(PROLOGUE_UNDERGROUND_ROOM_IDS),
+  '도입은 작업 마당, 상층 선별 데크, 흉갑 경사로, 하층 제어실, 하층 정비 귀환로로 나뉘어야 합니다.',
+);
+assert.equal(
+  new Set(prologueRegion.rooms.map((room) => JSON.stringify(room.bounds))).size,
+  5,
+  '다섯 공간은 같은 bounds를 공유하는 이름뿐인 room이면 안 됩니다.',
+);
+for (const roomId of Object.values(PROLOGUE_UNDERGROUND_ROOM_IDS)) {
+  const room = SCRAP_AWAKENING_MAP.getRoom(SCRAP_AWAKENING_REGION_ID, roomId);
+  assert.ok(room, roomId + ' room이 필요합니다.');
+  assert.ok(room.surfaces.length > 0, roomId + '에 실제 이동 surface가 필요합니다.');
+  assert.ok(room.portals.length > 0, roomId + '에 다음 공간으로 이어지는 경로가 필요합니다.');
+}
+
+const prologueCombatEntities = prologueRegion.rooms.flatMap((room) =>
+  room.entities.filter((entity) => entity.kind === 'combat-enemy'),
+);
+assert.deepEqual(
+  prologueCombatEntities.map((entity) => entity.id),
+  ['scrap-yard-scout-collector'],
+  '붕괴 전 필수 전투는 실제 통로를 여는 수거 유닛 한 번뿐이어야 합니다.',
+);
+assert.equal(
+  prologueCombatEntities[0].scrapAwakeningNextStageId,
+  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
+  '단일 통로 개방 전투는 구형 중간 stage를 건너뛰어 조사 단계까지 원자적으로 진행해야 합니다.',
+);
+assert.deepEqual(Object.keys(PROLOGUE_UNDERGROUND_PORTAL_IDS).sort(), [
+  'CONTROL_TO_MAINTENANCE',
+  'COURTYARD_TO_UPPER',
+  'MAINTENANCE_TO_COURTYARD',
+  'RAMP_TO_CONTROL',
+  'UPPER_TO_RAMP',
+]);
+for (const portalId of Object.values(PROLOGUE_UNDERGROUND_PORTAL_IDS)) {
+  assert.ok(SCRAP_AWAKENING_MAP.getPortal(portalId), portalId + ' portal이 필요합니다.');
+}
+assert.equal(
+  SCRAP_AWAKENING_MAP.getPortal(PROLOGUE_UNDERGROUND_PORTAL_IDS.UPPER_TO_RAMP)
+    .scrapAwakeningNextStageId,
+  SCRAP_AWAKENING_STAGE.YARD_PLATE,
+  '상층에서 흉갑 경사로로 내려가면 구형 접근 stage를 건너뛰고 조사 단계로 이어져야 합니다.',
+);
+
+const courtyardInputSeparationScene = createAwakeningScene();
+courtyardInputSeparationScene.setVisualQaScrapGarageRevealStage(SCRAP_GARAGE_REVEAL_STAGE.COMPLETE);
+const completedCourtyardSnapshot = courtyardInputSeparationScene.mapRuntime.getResolvedSnapshot();
+const completedCourtyardInteractions = completedCourtyardSnapshot.entities.filter(
+  (entity) => entity.enabled !== false && Number.isFinite(entity.interactionRange),
+);
+for (const portalId of [
+  SCRAP_MINE_ROAD_PORTAL_ID,
+  SCRAP_SHIPYARD_ROAD_PORTAL_ID,
+  SCRAP_GREENHOUSE_ROAD_PORTAL_ID,
+  SCRAP_SNOW_ROAD_PORTAL_ID,
+  SCRAP_QUARRY_ROAD_PORTAL_ID,
+]) {
+  const portal = completedCourtyardSnapshot.portals.find((candidate) => candidate.id === portalId);
+  assert.ok(portal, portalId + '가 차고 개방 뒤 작업 마당에서 활성화되어야 합니다.');
+  const endpoint =
+    portal.from.roomId === PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD ? portal.from : portal.to;
+  for (const interaction of completedCourtyardInteractions) {
+    assert.ok(
+      Math.abs(endpoint.anchor.x - interaction.position.x) > interaction.interactionRange,
+      portalId + ' 입력 지점이 ' + interaction.id + ' 상호작용 범위와 겹치면 안 됩니다.',
+    );
+  }
+}
+courtyardInputSeparationScene.dispose();
+
+assert.deepEqual(
+  SCRAP_AWAKENING_PROFILE.roomIds,
+  Object.values(PROLOGUE_UNDERGROUND_ROOM_IDS),
+  '각성 profile은 다섯 도입 room을 모두 같은 staged event 영역으로 소유해야 합니다.',
+);
+for (const stageId of SCRAP_AWAKENING_STAGE_IDS) {
+  const expectedResume = PROLOGUE_UNDERGROUND_RESUME_BY_STAGE[stageId];
+  assert.ok(expectedResume, stageId + ' legacy stage의 resume mapping이 필요합니다.');
+  assert.deepEqual(
+    SCRAP_AWAKENING_PROFILE.getResumeLocation(
+      stageId,
+      stageId === SCRAP_AWAKENING_STAGE.COMPLETE
+        ? SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+        : SCRAP_GARAGE_REVEAL_STAGE.LOCKED,
+    ),
+    expectedResume,
+    stageId + '는 저장 schema를 늘리지 않고 안전한 새 room 위치로 복원되어야 합니다.',
+  );
+
+  const setupScene = createAwakeningScene();
+  setupScene.setVisualQaScrapAwakeningStage(stageId);
+  const resumedStageScene = createAwakeningScene({
+    progressionSnapshot: setupScene.getProgressionSnapshot(),
+    useProfileResume: true,
+  });
+  const resumedLocation = resumedStageScene.mapRuntime.getActiveLocation();
+  assert.deepEqual(resumedLocation, {
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: expectedResume.roomId,
+  });
+  const resumedRoom = SCRAP_AWAKENING_MAP.getRoom(SCRAP_AWAKENING_REGION_ID, expectedResume.roomId);
+  assert.deepEqual(resumedStageScene.position, {
+    x: resumedRoom.bounds.x + expectedResume.position.x,
+    y: resumedRoom.bounds.y + expectedResume.position.y,
+  });
+  const enabledPrologueFights = resumedStageScene.mapRuntime
+    .getResolvedMap()
+    .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+    .rooms.flatMap((room) => room.entities)
+    .filter((entity) => entity.kind === 'combat-enemy' && entity.enabled !== false);
+  assert.deepEqual(
+    enabledPrologueFights.map((entity) => entity.id),
+    stageId === SCRAP_AWAKENING_STAGE.YARD_CLEARANCE ? ['scrap-yard-scout-collector'] : [],
+    stageId + ' resume에서 반복 전투가 되살아나면 안 됩니다.',
+  );
+  setupScene.dispose();
+  resumedStageScene.dispose();
+}
+assert.equal(
+  SCRAP_AWAKENING_PROFILE.getResumeLocation(
+    SCRAP_AWAKENING_STAGE.COMPLETE,
+    SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+  ).roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD,
+  '고물상 보고가 시작된 저장은 다시 하층 귀환로가 아니라 작업 마당에서 복원해야 합니다.',
+);
+assert.deepEqual(
+  SCRAP_AWAKENING_PROFILE.getStageRelocation(SCRAP_AWAKENING_STAGE.COLLAPSE),
+  PROLOGUE_UNDERGROUND_RESUME_BY_STAGE[SCRAP_AWAKENING_STAGE.COLLAPSE],
+  '붕괴 stage는 하층 제어실로 실제 relocation되어야 합니다.',
+);
+assert.deepEqual(
+  SCRAP_AWAKENING_PROFILE.getStageRelocation(SCRAP_AWAKENING_STAGE.COMPLETE),
+  PROLOGUE_UNDERGROUND_RESUME_BY_STAGE[SCRAP_AWAKENING_STAGE.COMPLETE],
+  '각성 완료 stage는 앞서 본 하층 정비 귀환로로 실제 relocation되어야 합니다.',
+);
+
+for (const [stageId, entityId, motionId] of [
+  [SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE, SCRAP_RIVAL_DEPARTURE_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_CLEARANCE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_BRACE, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_PERIMETER, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_SURVEY, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_APPROACH, SCRAP_RIVAL_YARD_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_PLATE, PROLOGUE_RAMP_RIVAL_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_RIDGE, PROLOGUE_RAMP_RIVAL_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_GUARD, PROLOGUE_RAMP_RIVAL_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.YARD_SEARCH, PROLOGUE_RAMP_RIVAL_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.PLAYER_DECISION, SCRAP_RIVAL_TRAPPED_CAST_ENTITY_ID, 'knocked-out'],
+  [SCRAP_AWAKENING_STAGE.EYES_LIT, SCRAP_RIVAL_RESCUED_CAST_ENTITY_ID, 'idle'],
+  [SCRAP_AWAKENING_STAGE.COMPLETE, SCRAP_RIVAL_RETURN_CAST_ENTITY_ID, 'run'],
 ]) {
   const castScene = createAwakeningScene();
   castScene.setVisualQaScrapAwakeningStage(stageId);
+  const resume = PROLOGUE_UNDERGROUND_RESUME_BY_STAGE[stageId];
+  castScene.setVisualQaLocation({
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: resume.roomId,
+    x: resume.position.x,
+  });
   const frame = castScene.createRenderFrame(1);
   const rivalSamples = frame.castCharacters.filter(({ actorId }) => actorId === 'rival-scout');
-  assert.equal(rivalSamples.length, 1, `${stageId}에는 라이벌 cast actor 하나만 있어야 합니다.`);
+  assert.equal(rivalSamples.length, 1, stageId + '에는 라이벌 cast actor 하나만 있어야 합니다.');
   const rival = rivalSamples[0];
+  const castEntity = castScene.mapRuntime
+    .getResolvedSnapshot()
+    .entities.find((entity) => entity.id === entityId);
+  assert.ok(castEntity, stageId + ' cast entity가 해당 공간에 있어야 합니다.');
   assert.equal(rival.entityId, entityId);
   assert.equal(rival.bodyProfileId, 'rival');
   assert.equal(rival.motionId, motionId);
-  assert.equal(rival.dialogueAnchor.x, x);
-  assert.ok(frame.items.some((item) => item.id === `${entityId}:rival-vest-shape`));
-  assert.ok(frame.items.some((item) => item.id === `${entityId}:rival-salvage-hook-contour`));
-  assert.equal(
-    frame.items.some((item) => item.id.startsWith('scrap-rival-')),
-    false,
-  );
+  assert.equal(rival.dialogueAnchor.x, castEntity.position.x);
+  assert.ok(frame.items.some((item) => item.id === entityId + ':rival-vest-shape'));
+  assert.ok(frame.items.some((item) => item.id === entityId + ':rival-salvage-hook-contour'));
   castScene.dispose();
 }
 
 const scene = createAwakeningScene();
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COMMISSION);
+assert.deepEqual(scene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD,
+});
 assert.equal(scene.getWorldStatus().operationMapAvailable, false);
 assert.ok(!itemIds(scene).includes('scrap-device-core'));
-assert.ok(!itemIds(scene).includes('scrap-king-eye-left'));
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrapyard-owner-commission'),
+    .entities.some((entity) => entity.id === SCRAPYARD_OWNER_COMMISSION_ENTITY_ID),
 );
 const commissionFrame = scene.createRenderFrame(1);
 assert.deepEqual(
@@ -558,7 +729,7 @@ assert.ok(
 );
 
 let prologueSequence = 1;
-setAtStoryInteraction(scene, 'scrapyard-owner-commission');
+setAtStoryInteraction(scene, SCRAPYARD_OWNER_COMMISSION_ENTITY_ID);
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE);
 assert.ok(itemIds(scene).includes('cast-rival-departure:rival-vest-shape'));
@@ -566,1181 +737,277 @@ assert.ok(itemIds(scene).includes('cast-rival-departure:rival-vest-shape'));
 setAtStoryInteraction(scene, 'scrap-rival-departure');
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_CLEARANCE);
-assert.ok(itemIds(scene).includes('cast-rival-yard:rival-salvage-hook-contour'));
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
-  `${SCRAP_CAST.RIVAL.name}과 수거장에 들어간 뒤에는 현장 조사를 막는 소형 수거 유닛이 필요합니다.`,
+assert.deepEqual(
+  scene.mapRuntime.getActiveLocation(),
+  { regionId: SCRAP_AWAKENING_REGION_ID, roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD },
+  '출발 대화 뒤 바로 순간이동하지 않고 작업 마당의 지하 입구를 직접 사용해야 합니다.',
 );
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '수거 유닛을 정리하기 전에는 붕괴를 일으키는 현장 조사를 시작하면 안 됩니다.',
+prologueSequence = enterLocalPortal(
+  scene,
+  PROLOGUE_UNDERGROUND_PORTAL_IDS.COURTYARD_TO_UPPER,
+  prologueSequence,
 );
+assert.deepEqual(scene.mapRuntime.getActiveLocation(), {
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+});
 
 scene.setVisualQaLocation({
   regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 500,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+  x: 180,
 });
 scene.update(STEP_SECONDS, input({ right: true }));
 const ambientDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  ambientDialogue.active,
-  true,
-  '동행 중 짧은 ambient 말풍선이 자동으로 시작되어야 합니다.',
-);
+assert.equal(ambientDialogue.active, true, '지하 진입 동행 말풍선이 자동으로 시작되어야 합니다.');
 assert.equal(ambientDialogue.presentationMode, 'ambient');
 assert.equal(ambientDialogue.prompt, '이동 중 대화');
-assert.deepEqual(ambientDialogue.worldAnchor, { x: 540, y: 272 });
 const ambientStartX = scene.position.x;
 scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
-assert.ok(
-  scene.position.x > ambientStartX,
-  'ambient 말풍선은 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  true,
-  '이동 input은 ambient 말풍선을 닫으면 안 됩니다.',
-);
+assert.ok(scene.position.x > ambientStartX, '동행 말풍선은 이동과 jump 입력을 잠그면 안 됩니다.');
 for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
 }
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  'ambient 말풍선은 입력 없이 짧게 종료되어야 합니다.',
-);
-const ambientQaRequest = readVisualQaRequest(
-  '?visualQa=1&gameStart=scrap-intro-walk&visualQaRenderer=polygon&visualQaPhase=active',
-);
-assert.equal(ambientQaRequest.scenario.mapId, SCRAP_AWAKENING_MAP.id);
+assert.equal(scene.getWorldStatus().dialogue.active, false);
 
+const upperBeforeFight = scene.mapRuntime
+  .getResolvedMap()
+  .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+  .rooms.find((room) => room.id === PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK);
+assert.deepEqual(
+  upperBeforeFight.surfaces.find(
+    (surface) => surface.id === 'underground-upper-safety-shelf-surface',
+  ).points,
+  [
+    { x: 560, y: 505 },
+    { x: 1050, y: 505 },
+  ],
+  '잠긴 교량 아래에는 재시도 가능한 추락 방지 정비 발판이 항상 있어야 합니다.',
+);
+assert.deepEqual(
+  upperBeforeFight.surfaces.find(
+    (surface) => surface.id === 'underground-upper-recovery-ramp-surface',
+  ).points,
+  [
+    { x: 1050, y: 505 },
+    { x: 1350, y: 426 },
+  ],
+  '아래 발판은 다음 portal 높이까지 실제로 복귀하는 완만한 경사에 이어져야 합니다.',
+);
+assert.equal(
+  upperBeforeFight.surfaces.find((surface) => surface.id === 'underground-upper-bridge-surface')
+    .enabled,
+  false,
+  '전투 전에는 끊긴 교량 collision이 잠겨야 합니다.',
+);
+assert.equal(
+  upperBeforeFight.renderItems.find((item) => item.id === 'underground-upper-route-locked').enabled,
+  true,
+  '전투 전에는 잠긴 길이 화면에 보여야 합니다.',
+);
 scene.replaceRoomScene(scene.mapRuntime.getResolvedSnapshot(), { forceReplace: true });
 assert.equal(
   scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
   'yard-scout-collector',
-  '도입 수거장에는 기존 기본기 grammar를 배우는 산업 수거 유닛이 필요합니다.',
+  '상층에는 실제 길을 여는 한 번의 기본기 전투가 필요합니다.',
 );
 completeEncounterWithGameplayInput(
   scene,
   'scrap-yard-scout-collector',
-  SCRAP_AWAKENING_STAGE.YARD_BRACE,
-);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_BRACE);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
-  false,
-  '전투 완료 뒤 수거 유닛은 같은 stage에서 다시 나타나면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-brace'),
-  `첫 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 안전 지지대를 점검해야 합니다.`,
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID),
-  `첫 전투 뒤 지지대로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
-);
-const braceGuideLines = mapEntityLines(SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID).join('\n');
-assert.match(braceGuideLines, /지지대/);
-assert.match(braceGuideLines, /방패/);
-assert.doesNotMatch(braceGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 700,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const braceGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  braceGuideDialogue.active,
-  true,
-  '첫 전투 뒤 지지대 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
-);
-assert.equal(braceGuideDialogue.presentationMode, 'ambient');
-assert.equal(braceGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(braceGuideDialogue.interactionId, SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID);
-assert.equal(braceGuideDialogue.prompt, '이동 중 대화');
-const braceGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > braceGuideStartX,
-  '지지대 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
 );
 assert.equal(
   stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_BRACE,
-  '지지대 ambient 안내는 stage를 바꾸면 안 됩니다.',
+  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
+  '통로 개방 전투는 brace/perimeter 반복 stage를 건너뛰어야 합니다.',
 );
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
 assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '지지대 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+  scene.mapRuntime
+    .getResolvedMap()
+    .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+    .rooms.flatMap((room) => room.entities)
+    .filter((entity) => entity.kind === 'combat-enemy' && entity.enabled !== false).length,
+  0,
+  '첫 전투 뒤 도입 필수 전투가 더 생기면 안 됩니다.',
 );
+const upperAfterFight = scene.mapRuntime
+  .getResolvedMap()
+  .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+  .rooms.find((room) => room.id === PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK);
+assert.equal(
+  upperAfterFight.surfaces.find((surface) => surface.id === 'underground-upper-bridge-surface')
+    .enabled,
+  true,
+  '수거 유닛 처치가 실제 교량 collision을 열어야 합니다.',
+);
+assert.equal(
+  upperAfterFight.renderItems.find((item) => item.id === 'underground-upper-bridge-deployed')
+    .enabled,
+  true,
+  '수거 유닛 처치 뒤 내려온 교량이 화면에 보여야 합니다.',
+);
+assert.equal(
+  upperAfterFight.renderItems.find((item) => item.id === 'underground-upper-route-ready').enabled,
+  true,
+  '열린 다음 길을 청록 신호로 읽을 수 있어야 합니다.',
+);
+
 const clearanceReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
+  useProfileResume: true,
 });
-assert.equal(stage(clearanceReload), SCRAP_AWAKENING_STAGE.YARD_BRACE);
+assert.equal(stage(clearanceReload), SCRAP_AWAKENING_STAGE.YARD_SURVEY);
+assert.equal(
+  clearanceReload.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+  '통로 개방 저장은 상층 조사 위치에서 재개되어야 합니다.',
+);
 assert.equal(
   clearanceReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-scout-collector'),
-  false,
-  '도입 전투 완료 저장을 다시 열어도 조우를 반복해서 확정하면 안 됩니다.',
+    .getResolvedMap()
+    .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+    .rooms.flatMap((room) => room.entities)
+    .filter((entity) => entity.kind === 'combat-enemy' && entity.enabled !== false).length,
+  0,
+  '통로 개방 reload는 전투를 되살리면 안 됩니다.',
 );
 
-setAtStoryInteraction(scene, 'scrap-rival-yard-brace');
-prologueSequence = completeDialogue(scene, prologueSequence);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_PERIMETER);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_BRACE_GUIDE_ENTITY_ID),
-  false,
-  '지지대 점검 뒤에는 동행 안내가 다시 나타나면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID),
-  `지지대 점검 뒤 두 번째 유닛으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
-);
-const perimeterGuideLines = mapEntityLines(SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID).join('\n');
-assert.match(perimeterGuideLines, /수거 유닛/);
-assert.match(perimeterGuideLines, /방패/);
-assert.doesNotMatch(perimeterGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 870,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const perimeterGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  perimeterGuideDialogue.active,
-  true,
-  '지지대 점검 뒤 두 번째 유닛 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
-);
-assert.equal(perimeterGuideDialogue.presentationMode, 'ambient');
-assert.equal(perimeterGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(perimeterGuideDialogue.interactionId, SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID);
-assert.equal(perimeterGuideDialogue.prompt, '이동 중 대화');
-const perimeterGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > perimeterGuideStartX,
-  '외곽 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_PERIMETER,
-  '외곽 ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '외곽 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
-assert.equal(
-  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'yard-brace-collector',
-  '안전 지지대를 점검한 뒤에는 guard/Strong을 연습할 두 번째 수거 유닛이 필요합니다.',
-);
-completeEncounterWithGameplayInput(
-  scene,
-  'scrap-yard-brace-collector',
-  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
-);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SURVEY);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-brace-collector'),
-  false,
-  '두 번째 수거 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PERIMETER_GUIDE_ENTITY_ID),
-  false,
-  '두 번째 전투 뒤에는 외곽 동행 안내가 다시 나타나면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
-  `두 번째 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 끊긴 구조 줄을 점검해야 합니다.`,
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID),
-  `두 번째 전투 뒤 구조 줄 받침으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
-);
-const surveyGuideLines = mapEntityLines(SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID).join('\n');
-assert.match(surveyGuideLines, /구조 줄/);
-assert.match(surveyGuideLines, /방패/);
-assert.doesNotMatch(surveyGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 975,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const surveyGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  surveyGuideDialogue.active,
-  true,
-  '두 번째 전투 뒤 구조 줄 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
-);
-assert.equal(surveyGuideDialogue.presentationMode, 'ambient');
-assert.equal(surveyGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(surveyGuideDialogue.interactionId, SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID);
-assert.equal(surveyGuideDialogue.prompt, '이동 중 대화');
-const surveyGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > surveyGuideStartX,
-  'winch 이동 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_SURVEY,
-  'winch 이동 ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  'winch 이동 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  'winch 점검 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base-mark'));
-assert.ok(itemIds(scene).includes('scrap-yard-chest-plate-mark'));
-assert.ok(
-  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
-  'winch 점검 단계부터 접힌 자동 회수팔이 보여야 합니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-retrieval-arm-dormant-forearm'));
-assert.ok(itemIds(scene).includes('scrap-retrieval-arm-dormant-claw'));
-assert.equal(
-  itemIds(scene).includes('scrap-retrieval-arm-grab-claw'),
-  false,
-  '붕괴 전에는 회수팔 포획 자세를 보여주면 안 됩니다.',
-);
-const perimeterReload = createAwakeningScene({
-  progressionSnapshot: scene.getProgressionSnapshot(),
-});
-assert.equal(stage(perimeterReload), SCRAP_AWAKENING_STAGE.YARD_SURVEY);
-assert.equal(
-  perimeterReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-brace-collector'),
-  false,
-  '두 번째 도입 전투 완료 저장도 조우를 반복해서 확정하면 안 됩니다.',
-);
-assert.ok(itemIds(perimeterReload).includes('scrap-yard-winch-base'));
-
-setAtStoryInteraction(scene, 'scrap-rival-yard-survey');
+setAtStoryInteraction(scene, SCRAP_RIVAL_SURVEY_ENTITY_ID);
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_APPROACH);
-assert.equal(
-  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'yard-approach-collector',
-  'winch 점검 뒤에는 흉곽 안쪽 경계를 막는 세 번째 수거 유닛이 필요합니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_SURVEY_GUIDE_ENTITY_ID),
-  false,
-  'winch 점검 뒤에는 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '경계 수거 유닛을 정리하기 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
 assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  `winch 점검 뒤 흉곽 경계로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 안내가 필요합니다.`,
+  scene.mapRuntime.getPortal(PROLOGUE_UNDERGROUND_PORTAL_IDS.UPPER_TO_RAMP),
+  '공간 관찰 beat를 마친 YARD_APPROACH stage에서만 흉갑 경사로 portal이 열려야 합니다.',
 );
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1000,
+const approachReload = createAwakeningScene({
+  progressionSnapshot: scene.getProgressionSnapshot(),
+  useProfileResume: true,
 });
-scene.update(STEP_SECONDS, input({ left: true }));
-const approachGuideDialogue = scene.getWorldStatus().dialogue;
+assert.equal(stage(approachReload), SCRAP_AWAKENING_STAGE.YARD_APPROACH);
 assert.equal(
-  approachGuideDialogue.active,
-  true,
-  '경계 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
+  approachReload.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+  '공간 관찰 완료 stage는 portal 진입 전 상층 끝에서 durable하게 재개되어야 합니다.',
 );
-assert.equal(approachGuideDialogue.presentationMode, 'ambient');
-assert.equal(approachGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-const approachGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ left: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
 assert.ok(
-  scene.position.x < approachGuideStartX,
-  'ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+  approachReload.mapRuntime.getPortal(PROLOGUE_UNDERGROUND_PORTAL_IDS.UPPER_TO_RAMP),
+  'YARD_APPROACH reload에서도 흉갑 경사로 gate가 유지되어야 합니다.',
 );
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_APPROACH,
-  'ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  'ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
-completeEncounterWithGameplayInput(
+prologueSequence = enterLocalPortal(
   scene,
-  'scrap-yard-approach-collector',
-  SCRAP_AWAKENING_STAGE.YARD_PLATE,
-);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_PLATE);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-approach-collector'),
-  false,
-  '세 번째 수거 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '흉갑 조각 점검 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_ENTITY_ID),
-  `경계 전투 뒤에는 ${SCRAP_CAST.RIVAL.name}과 떨어진 흉갑 조각을 점검해야 합니다.`,
-);
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
-assert.ok(itemIds(scene).includes('scrap-yard-plate-fragment'));
-assert.ok(itemIds(scene).includes('scrap-yard-plate-fragment-mark'));
-assert.ok(
-  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
-  '흉갑 조각 점검 단계에서도 접힌 자동 회수팔이 보여야 합니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  `경계 전투 뒤 흉갑 조각으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 단계에서는 뒤에 남은 경계 이동 안내가 다시 나타나면 안 됩니다.',
-);
-const plateGuideLines = mapEntityLines(SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID).join('\n');
-assert.match(plateGuideLines, /흉갑/);
-assert.match(plateGuideLines, /방패/);
-assert.doesNotMatch(plateGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1112,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const plateGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  plateGuideDialogue.active,
-  true,
-  '경계 전투 뒤 흉갑 조각 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
-);
-assert.equal(plateGuideDialogue.presentationMode, 'ambient');
-assert.equal(plateGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(plateGuideDialogue.interactionId, SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID);
-assert.equal(plateGuideDialogue.prompt, '이동 중 대화');
-const plateGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > plateGuideStartX,
-  '흉갑 조각 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
+  PROLOGUE_UNDERGROUND_PORTAL_IDS.UPPER_TO_RAMP,
+  prologueSequence,
 );
 assert.equal(
   stage(scene),
   SCRAP_AWAKENING_STAGE.YARD_PLATE,
-  '흉갑 조각 ambient 안내는 stage를 바꾸면 안 됩니다.',
+  '흉갑 경사로 진입은 구형 approach 단계를 다시 요구하지 않아야 합니다.',
 );
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
+assert.equal(scene.mapRuntime.getActiveLocation().roomId, PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP);
+const rampAtPlate = scene.mapRuntime
+  .getResolvedMap()
+  .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+  .rooms.find((room) => room.id === PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP);
 assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '흉갑 조각 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
+  rampAtPlate.surfaces.find((surface) => surface.id === 'underground-chest-ramp-surface').enabled,
+  true,
+  '전투 뒤 흉갑 경사로 collision이 실제로 열려야 합니다.',
 );
+assert.equal(
+  rampAtPlate.renderItems.find((item) => item.id === 'underground-chest-ramp-visible').enabled,
+  true,
+  '흉갑 경사로의 높이 변화가 화면에 보여야 합니다.',
+);
+
 const plateLines = mapEntityLines(SCRAP_RIVAL_PLATE_ENTITY_ID).join('\n');
 assert.match(plateLines, /흉갑/);
-assert.match(plateLines, /방패/);
-assert.doesNotMatch(plateLines, /winch.*전원/);
-const plateReload = createAwakeningScene({
-  progressionSnapshot: scene.getProgressionSnapshot(),
-});
-assert.equal(stage(plateReload), SCRAP_AWAKENING_STAGE.YARD_PLATE);
+assert.match(plateLines, /제어실|청록/);
 assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-approach-collector'),
-  false,
-  '경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
+  mapEntityLines(SCRAP_RIVAL_PLATE_ENTITY_ID).length,
+  prologueTranscriptById.get(SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE).lines.length,
+  '경사로 조사는 authored 3줄 transcript를 그대로 사용해야 합니다.',
 );
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '흉갑 조각 점검 완료 저장 뒤에도 현장 조사가 미리 열리면 안 됩니다.',
-);
-assert.ok(itemIds(plateReload).includes('scrap-yard-plate-fragment'));
-assert.ok(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  '흉갑 조각 점검 저장 뒤에도 전방 동행 안내가 유지되어야 합니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 저장 뒤에 뒤처진 경계 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 저장 뒤에 능선 동행 안내가 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
-  false,
-  '흉갑 조각 점검 저장 뒤에 능선 경계 유닛이 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 저장 뒤에 심부 방패 안내가 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-guard-collector'),
-  false,
-  '흉갑 조각 점검 저장 뒤에 심부 경계 유닛이 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 저장 뒤에 심부 동행 안내가 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  plateReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 저장 뒤에 심부 관찰 독백이 미리 열리면 안 됩니다.',
-);
-
-setAtStoryInteraction(scene, 'scrap-rival-yard-plate');
+setAtStoryInteraction(scene, SCRAP_RIVAL_PLATE_ENTITY_ID);
 prologueSequence = completeDialogue(scene, prologueSequence);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_RIDGE);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 뒤에는 점검 interaction이 다시 활성화되면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '능선 경계 전투를 마치기 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  `흉갑 조각 점검 뒤 능선으로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  false,
-  '흉갑 조각 점검 뒤에는 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  false,
-  '능선 경계 단계에서는 뒤에 남은 경계 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
-assert.ok(
-  itemIds(scene).includes('scrap-yard-plate-fragment'),
-  '능선 경계 단계에서도 떨어진 흉갑 조각이 유지되어야 합니다.',
-);
-assert.ok(
-  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
-  '능선 경계 단계에서도 접힌 자동 회수팔이 보여야 합니다.',
-);
-assert.equal(
-  itemIds(scene).includes('scrap-retrieval-arm-grab-claw'),
-  false,
-  '붕괴 전에는 회수팔 포획 자세를 보여주면 안 됩니다.',
-);
-const ridgeGuideLines = mapEntityLines(SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID).join('\n');
-assert.match(ridgeGuideLines, /구르/);
-assert.match(ridgeGuideLines, /Strong/);
-assert.doesNotMatch(ridgeGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1196,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const ridgeGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  ridgeGuideDialogue.active,
-  true,
-  '흉갑 조각 점검 뒤 능선 이동 중 짧은 ambient 안내가 자동으로 시작되어야 합니다.',
-);
-assert.equal(ridgeGuideDialogue.presentationMode, 'ambient');
-assert.equal(ridgeGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(ridgeGuideDialogue.interactionId, SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID);
-assert.equal(ridgeGuideDialogue.prompt, '이동 중 대화');
-const ridgeGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > ridgeGuideStartX,
-  '능선 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
 assert.equal(
   stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_RIDGE,
-  '능선 ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '능선 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
-const ridgeReload = createAwakeningScene({
-  progressionSnapshot: scene.getProgressionSnapshot(),
-});
-assert.equal(stage(ridgeReload), SCRAP_AWAKENING_STAGE.YARD_RIDGE);
-assert.ok(
-  ridgeReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  '흉갑 조각 점검 저장 뒤에도 능선 동행 안내가 유지되어야 합니다.',
-);
-assert.ok(
-  ridgeReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
-  '흉갑 조각 점검 뒤에는 능선 경계 유닛이 통로를 막아야 합니다.',
-);
-assert.equal(
-  ridgeReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '능선 경계 전투 전에는 안쪽 현장 조사가 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  ridgeReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  false,
-  '능선 경계 저장 뒤에 흉갑 이동 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  ridgeReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID),
-  false,
-  '능선 경계 저장 뒤에 심부 방패 안내가 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  ridgeReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-guard-collector'),
-  false,
-  '능선 경계 저장 뒤에 심부 경계 유닛이 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  itemIds(ridgeReload).includes('scrap-retrieval-arm-grab-claw'),
-  false,
-  '능선 경계 저장 뒤에 포획 자세가 미리 보이면 안 됩니다.',
-);
-assert.equal(
-  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'yard-ridge-collector',
-  '흉갑 조각 점검 뒤에는 방향 roll과 Strong을 연습할 네 번째 경계 유닛이 필요합니다.',
-);
-completeEncounterWithGameplayInput(
-  scene,
-  'scrap-yard-ridge-collector',
-  SCRAP_AWAKENING_STAGE.YARD_GUARD,
-);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_GUARD);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
-  false,
-  '네 번째 경계 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  false,
-  '심부 방패 단계에서는 뒤에 남은 능선 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '심부 경계 전투를 마치기 전에는 안쪽 현장 조사를 시작하면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID),
-  `능선 경계 전투 뒤 심부로 이동하는 동안 ${SCRAP_CAST.RIVAL.name}의 ambient 방패 안내가 필요합니다.`,
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  false,
-  '능선 경계 전투 뒤에는 흉갑 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  false,
-  '심부 방패 단계에서는 뒤에 남은 경계 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
-assert.ok(
-  itemIds(scene).includes('scrap-yard-plate-fragment'),
-  '심부 방패 단계에서도 떨어진 흉갑 조각이 유지되어야 합니다.',
-);
-assert.ok(
-  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
-  '심부 방패 단계에서도 접힌 자동 회수팔이 보여야 합니다.',
-);
-assert.equal(
-  itemIds(scene).includes('scrap-retrieval-arm-grab-claw'),
-  false,
-  '붕괴 전에는 회수팔 포획 자세를 보여주면 안 됩니다.',
-);
-const guardGuideLines = mapEntityLines(SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID).join('\n');
-assert.match(guardGuideLines, /방패/);
-assert.match(guardGuideLines, /Basic/);
-assert.match(guardGuideLines, /순간/);
-assert.doesNotMatch(guardGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1244,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const guardGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  guardGuideDialogue.active,
-  true,
-  '능선 전투 뒤 심부 이동 중 짧은 ambient 방패 안내가 자동으로 시작되어야 합니다.',
-);
-assert.equal(guardGuideDialogue.presentationMode, 'ambient');
-assert.equal(guardGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(guardGuideDialogue.interactionId, SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID);
-assert.equal(guardGuideDialogue.prompt, '이동 중 대화');
-const guardGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > guardGuideStartX,
-  '심부 방패 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_GUARD,
-  '심부 방패 ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '심부 방패 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
-const guardReload = createAwakeningScene({
-  progressionSnapshot: scene.getProgressionSnapshot(),
-});
-assert.equal(stage(guardReload), SCRAP_AWAKENING_STAGE.YARD_GUARD);
-assert.ok(
-  guardReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID),
-  '능선 전투 저장 뒤에도 심부 방패 안내가 유지되어야 합니다.',
-);
-assert.ok(
-  guardReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-guard-collector'),
-  '능선 전투 뒤에는 심부 경계 유닛이 통로를 막아야 합니다.',
-);
-assert.equal(
-  guardReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  false,
-  '심부 경계 전투 전에는 안쪽 현장 조사가 미리 열리면 안 됩니다.',
-);
-assert.equal(
-  guardReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  false,
-  '심부 방패 저장 뒤에 능선 이동 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  itemIds(guardReload).includes('scrap-retrieval-arm-grab-claw'),
-  false,
-  '심부 방패 저장 뒤에 포획 자세가 미리 보이면 안 됩니다.',
-);
-assert.equal(
-  scene.roomSceneNode.getEncounterGameplaySnapshot().profileId,
-  'yard-guard-collector',
-  '능선 전투 뒤에는 공격 순간에 방패를 맞대는 다섯 번째 경계 유닛이 필요합니다.',
-);
-completeEncounterWithGameplayInput(
-  scene,
-  'scrap-yard-guard-collector',
   SCRAP_AWAKENING_STAGE.YARD_SEARCH,
-);
-assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-guard-collector'),
-  false,
-  '다섯 번째 경계 유닛도 저장 가능한 완료 stage 뒤에는 다시 나타나면 안 됩니다.',
+  '경사로 조사는 ridge/guard 반복 stage를 건너뛰어 유적 중심 조사로 이어져야 합니다.',
 );
 assert.equal(
   scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 단계에서는 뒤에 남은 심부 방패 안내가 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 단계에서는 뒤에 남은 능선 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-search'),
-  `심부 경계 전투 뒤에만 ${SCRAP_CAST.RIVAL.name}의 현장 조사를 시작할 수 있어야 합니다.`,
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  false,
-  '심부 경계 전투 뒤에는 흉갑 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.equal(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 단계에서는 뒤에 남은 경계 이동 안내가 다시 나타나면 안 됩니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-yard-winch-base'));
-assert.ok(
-  itemIds(scene).includes('scrap-yard-plate-fragment'),
-  '현장 조사 단계에서도 떨어진 흉갑 조각이 유지되어야 합니다.',
-);
-const surveyReload = createAwakeningScene({
-  progressionSnapshot: scene.getProgressionSnapshot(),
-});
-assert.equal(stage(surveyReload), SCRAP_AWAKENING_STAGE.YARD_SEARCH);
-assert.ok(
-  itemIds(surveyReload).includes('scrap-retrieval-arm-dormant-upper'),
-  '현장 조사 저장 뒤에도 접힌 회수팔이 유지되어야 합니다.',
-);
-assert.ok(itemIds(surveyReload).includes('scrap-retrieval-arm-dormant-claw'));
-assert.equal(
-  itemIds(surveyReload).includes('scrap-retrieval-arm-grab-claw'),
-  false,
-  '현장 조사 저장 뒤에 포획 자세가 미리 보이면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-approach-collector'),
-  false,
-  '경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-rival-yard-survey'),
-  false,
-  'winch 점검 완료 저장 뒤에는 점검 interaction이 다시 활성화되면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_APPROACH_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 저장 뒤에 뒤처진 경계 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_PLATE_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 저장 뒤에 흉갑 이동 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RIDGE_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 저장 뒤에 능선 이동 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-ridge-collector'),
-  false,
-  '능선 경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_GUARD_GUIDE_ENTITY_ID),
-  false,
-  '현장 조사 저장 뒤에 심부 방패 안내가 다시 생기면 안 됩니다.',
-);
-assert.equal(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-yard-guard-collector'),
-  false,
-  '심부 경계 전투 완료 저장 뒤에는 조우가 다시 활성화되면 안 됩니다.',
-);
-assert.ok(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
-  '현장 조사 저장 뒤에는 심부 동행 안내가 유지되어야 합니다.',
-);
-assert.ok(
-  surveyReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID),
-  '현장 조사 저장 뒤에는 심부 관찰 독백이 유지되어야 합니다.',
+    .getResolvedMap()
+    .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+    .rooms.flatMap((room) => room.entities)
+    .filter((entity) => entity.kind === 'combat-enemy' && entity.enabled !== false).length,
+  0,
 );
 
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_PLAYER_SEARCH_NOTICE_ENTITY_ID),
-  `현장 조사에 들어가면 ${SCRAP_CAST.PROTAGONIST.monologueName}의 관찰 독백이 필요합니다.`,
-);
 scene.setVisualQaLocation({
   regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1188,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP,
+  x: 490,
 });
 scene.update(STEP_SECONDS, input({ right: true }));
 const searchNoticeDialogue = scene.getWorldStatus().dialogue;
 assert.equal(
   searchNoticeDialogue.active,
   true,
-  '현장 조사 중 주인공 관찰 독백이 자동으로 시작되어야 합니다.',
+  '유적 중심에서는 짧은 관찰 독백이 시작되어야 합니다.',
 );
 assert.equal(searchNoticeDialogue.presentationMode, 'ambient');
 assert.equal(searchNoticeDialogue.speaker, SCRAP_CAST.PROTAGONIST.monologueName);
-assert.equal(searchNoticeDialogue.worldAnchor.x, scene.position.x);
 const searchNoticeStartX = scene.position.x;
 scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
-assert.ok(
-  scene.position.x > searchNoticeStartX,
-  '관찰 독백은 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
-  '관찰 독백은 stage를 바꾸면 안 됩니다.',
-);
+assert.ok(scene.position.x > searchNoticeStartX, '관찰 독백은 이동을 잠그면 안 됩니다.');
 for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
 }
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '관찰 독백은 입력 없이 짧게 종료되어야 합니다.',
-);
 
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID),
-  `현장 조사 끝자락에는 ${SCRAP_CAST.RIVAL.name}의 붕괴 직전 ambient 경고가 필요합니다.`,
-);
-const collapseWarningLines = mapEntityLines(SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID).join('\n');
-assert.match(collapseWarningLines, /흔들/);
-assert.match(collapseWarningLines, /회수팔/);
-assert.doesNotMatch(collapseWarningLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1214,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const collapseWarningDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  collapseWarningDialogue.active,
-  true,
-  '붕괴 직전 라이벌 ambient 경고가 자동으로 시작되어야 합니다.',
-);
-assert.equal(collapseWarningDialogue.presentationMode, 'ambient');
-assert.equal(collapseWarningDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(collapseWarningDialogue.interactionId, SCRAP_RIVAL_COLLAPSE_WARNING_ENTITY_ID);
-assert.equal(collapseWarningDialogue.prompt, '이동 중 대화');
-const collapseWarningStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > collapseWarningStartX,
-  '붕괴 경고 ambient는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
-  '붕괴 경고 ambient는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '붕괴 경고 ambient는 입력 없이 짧게 종료되어야 합니다.',
-);
-
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID),
-  `현장 조사 단계에서 흉곽 심부로 동행하는 ${SCRAP_CAST.RIVAL.name}의 ambient 안내가 필요합니다.`,
-);
-const deepGuideLines = mapEntityLines(SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID).join('\n');
-assert.match(deepGuideLines, /회수팔/);
-assert.match(deepGuideLines, /방패/);
-assert.doesNotMatch(deepGuideLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1272,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const deepGuideDialogue = scene.getWorldStatus().dialogue;
-assert.equal(
-  deepGuideDialogue.active,
-  true,
-  '흉곽 심부 동행 ambient 안내는 자동으로 시작되어야 합니다.',
-);
-assert.equal(deepGuideDialogue.presentationMode, 'ambient');
-assert.equal(deepGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
-assert.equal(deepGuideDialogue.interactionId, SCRAP_RIVAL_DEEP_GUIDE_ENTITY_ID);
-assert.equal(deepGuideDialogue.prompt, '이동 중 대화');
-const deepGuideStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > deepGuideStartX,
-  '심부 동행 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
-  '심부 동행 ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '심부 동행 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
-
-assert.ok(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID),
-  `현장 조사 단계에서 ${SCRAP_CAST.PROTAGONIST.monologueName}의 심부 관찰 독백이 필요합니다.`,
-);
-const deepNoticeLines = mapEntityLines(SCRAP_PLAYER_DEEP_NOTICE_ENTITY_ID).join('\n');
-assert.match(deepNoticeLines, /흉곽/);
-assert.match(deepNoticeLines, /회수팔/);
-assert.doesNotMatch(deepNoticeLines, /winch.*전원/);
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 1302,
-});
-scene.update(STEP_SECONDS, input({ right: true }));
-const deepNoticeDialogue = scene.getWorldStatus().dialogue;
-assert.equal(deepNoticeDialogue.active, true, '심부 관찰 독백은 자동으로 시작되어야 합니다.');
-assert.equal(deepNoticeDialogue.presentationMode, 'ambient');
-assert.equal(deepNoticeDialogue.speaker, SCRAP_CAST.PROTAGONIST.monologueName);
-assert.equal(deepNoticeDialogue.worldAnchor.x, scene.position.x);
-const deepNoticeStartX = scene.position.x;
-scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
-prologueSequence += 1;
-assert.ok(
-  scene.position.x > deepNoticeStartX,
-  '심부 관찰 독백은 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.YARD_SEARCH,
-  '심부 관찰 독백은 stage를 바꾸면 안 됩니다.',
-);
-for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
-  scene.update(STEP_SECONDS, EMPTY_INPUT);
-}
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '심부 관찰 독백은 입력 없이 짧게 종료되어야 합니다.',
-);
-
-const deepSearchInteraction = scene.mapRuntime
-  .getResolvedSnapshot()
-  .entities.find((entity) => entity.id === 'scrap-rival-yard-search');
-assert.ok(deepSearchInteraction, '현장 조사 interaction이 현재 stage에 있어야 합니다.');
-assert.ok(
-  deepSearchInteraction.position.x > 1302,
-  '현장 조사는 심부 동선을 마친 뒤 동쪽에서 시작되어야 합니다.',
-);
-
-setAtStoryInteraction(scene, 'scrap-rival-yard-search');
+setAtStoryInteraction(scene, SCRAP_RIVAL_SEARCH_ENTITY_ID);
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.COLLAPSE);
-const collapseLockedX = scene.position.x;
+assert.equal(
+  scene.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+  '조사 데크 붕괴는 하층 제어실로 실제 위치를 바꿔야 합니다.',
+);
+const collapseLockedPosition = Object.freeze({ ...scene.position });
 scene.update(STEP_SECONDS, input({ right: true, jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
-assert.equal(scene.position.x, collapseLockedX, '붕괴 cinematic 동안 이동 입력은 잠겨야 합니다.');
+assert.deepEqual(
+  scene.position,
+  collapseLockedPosition,
+  '붕괴 cinematic 동안 이동 입력은 잠겨야 합니다.',
+);
 for (let tick = 0; tick < 240 && stage(scene) === SCRAP_AWAKENING_STAGE.COLLAPSE; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
 }
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.RESCUE_REQUEST);
-assert.ok(itemIds(scene).includes('scrap-collapse-debris'));
-assert.ok(
-  itemIds(scene).includes('scrap-retrieval-arm-grab-upper'),
-  '붕괴 뒤에는 라이벌을 낚아챈 회수팔 포획 자세가 보여야 합니다.',
-);
-assert.ok(itemIds(scene).includes('scrap-retrieval-arm-grab-claw'));
-assert.ok(itemIds(scene).includes('scrap-retrieval-arm-grab-signal'));
 assert.equal(
-  itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'),
-  false,
-  '포획 뒤에는 접힌 대기 자세가 남으면 안 됩니다.',
+  scene.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
 );
+assert.ok(itemIds(scene).includes('scrap-collapse-debris'));
+assert.ok(itemIds(scene).includes('scrap-retrieval-arm-grab-upper'));
+assert.ok(itemIds(scene).includes('scrap-retrieval-arm-grab-claw'));
+assert.equal(itemIds(scene).includes('scrap-retrieval-arm-dormant-upper'), false);
 
-setAtStoryInteraction(scene, 'scrap-rival-rescue-request');
+setAtStoryInteraction(scene, SCRAP_RIVAL_RESCUE_ENTITY_ID);
 prologueSequence = completeDialogue(scene, prologueSequence);
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.PLAYER_DECISION);
 
-const playerDecision = setAtStoryInteraction(scene, 'scrap-player-device-decision');
+const playerDecision = setAtStoryInteraction(scene, SCRAP_PLAYER_DECISION_ENTITY_ID);
+const controlRoom = SCRAP_AWAKENING_MAP.getRoom(
+  SCRAP_AWAKENING_REGION_ID,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+);
 scene.setVisualQaLocation({
   regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: playerDecision.position.x - 40,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+  x: playerDecision.position.x - controlRoom.bounds.x - 36,
 });
 scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
@@ -1748,7 +1015,6 @@ const monologue = scene.getWorldStatus().dialogue;
 assert.equal(monologue.active, true);
 assert.equal(monologue.presentationMode, 'monologue');
 assert.equal(monologue.worldAnchor.x, scene.position.x);
-assert.notEqual(monologue.worldAnchor.x, playerDecision.position.x);
 const monologueLockedPosition = Object.freeze({ ...scene.position });
 combatBasicSequence += 1;
 scene.update(
@@ -1758,7 +1024,7 @@ scene.update(
 assert.deepEqual(
   scene.position,
   monologueLockedPosition,
-  '중요 선택 독백 중에는 Player 머리 위 anchor가 움직이지 않도록 이동을 잠가야 합니다.',
+  '중요 선택 독백 중에는 이동과 공격을 잠가야 합니다.',
 );
 assert.equal(scene.combatCommands.snapshot().id, 'idle');
 prologueSequence = completeDialogue(scene, prologueSequence);
@@ -1767,7 +1033,6 @@ assert.ok(itemIds(scene).includes('scrap-device-core'));
 assert.deepEqual(scene.getProgressionSnapshot().viewedConversationIds, [
   SCRAP_PROLOGUE_CONVERSATION_ID.OWNER_COMMISSION,
   SCRAP_PROLOGUE_CONVERSATION_ID.RIVAL_DEPARTURE,
-  SCRAP_PROLOGUE_CONVERSATION_ID.YARD_BRACE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SURVEY,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_PLATE,
   SCRAP_PROLOGUE_CONVERSATION_ID.YARD_SEARCH,
@@ -1776,7 +1041,6 @@ assert.deepEqual(scene.getProgressionSnapshot().viewedConversationIds, [
 ]);
 
 const beforeInteraction = Object.freeze({ ...scene.position });
-
 scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence }));
 prologueSequence += 1;
 assert.equal(stage(scene), SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
@@ -1813,11 +1077,11 @@ for (let tick = 0; tick < 45; tick += 1) {
 }
 assert.equal(scene.position.x, lockedX, '각성 연출 중 이동 입력은 잠겨야 합니다.');
 assert.equal(scene.combatCommands.snapshot().id, 'idle', '각성 연출 중 공격은 시작되면 안 됩니다.');
-assert.ok(scene.cameraPosition.x > lockedX, '각성 연출 camera는 폐병기 쪽으로 이동해야 합니다.');
 
 const observedStages = [stage(scene)];
 let shakeObserved = false;
 let rescuedAfterStateObserved = false;
+let ancientMachineObserved = false;
 for (let tick = 0; tick < 1_200 && stage(scene) !== SCRAP_AWAKENING_STAGE.COMPLETE; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
   const currentStage = stage(scene);
@@ -1826,6 +1090,11 @@ for (let tick = 0; tick < 1_200 && stage(scene) !== SCRAP_AWAKENING_STAGE.COMPLE
     rescuedAfterStateObserved =
       itemIds(scene).includes('cast-rival-rescued:rival-vest-shape') &&
       !itemIds(scene).includes('cast-rival-trapped:rival-vest-shape');
+  }
+  if ([SCRAP_AWAKENING_STAGE.EYES_LIT, SCRAP_AWAKENING_STAGE.ASSEMBLED].includes(currentStage)) {
+    ancientMachineObserved ||=
+      itemIds(scene).includes('scrap-king-eye-left') &&
+      itemIds(scene).includes('scrap-king-shoulder-left');
   }
   const cameraOffset = scene.combatCameraFeedback.snapshot();
   if (Math.abs(cameraOffset.x) > 0.01 || Math.abs(cameraOffset.y) > 0.01) shakeObserved = true;
@@ -1842,7 +1111,12 @@ assert.equal(shakeObserved, true, '눈 점등·부품 결합 경계는 camera sh
 assert.equal(
   rescuedAfterStateObserved,
   true,
-  `구조 성공 직후 ${SCRAP_CAST.RIVAL.name}은 잔해 밖 standing after-state로 실제 장면에 남아야 합니다.`,
+  '구조 성공 뒤 라이벌은 standing after-state로 남아야 합니다.',
+);
+assert.equal(
+  ancientMachineObserved,
+  true,
+  '하층 제어실에서 고대 병기의 눈과 몸체 각성이 보여야 합니다.',
 );
 for (const cinematicStageId of [
   SCRAP_AWAKENING_STAGE.COLLAPSE,
@@ -1855,7 +1129,7 @@ for (const cinematicStageId of [
   assert.match(
     getScrapAwakeningPresentation(cinematicStageId).objective,
     /기다리세요/,
-    `${cinematicStageId} bottom objective는 사건 설명 대신 Player action만 전달해야 합니다.`,
+    cinematicStageId + ' bottom objective는 사건 설명 대신 Player action만 전달해야 합니다.',
   );
 }
 const completeStatus = scene.getWorldStatus();
@@ -1863,107 +1137,129 @@ assert.equal(completeStatus.campaign.deadlineRevealed, true);
 assert.equal(completeStatus.campaign.hudLabel, 'Day 1 · 아침 · D-30');
 assert.equal(completeStatus.journeyLabel, '각성 완료 · D-30 · 고물상 복귀');
 assert.equal(garageStage(scene), SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY);
-assert.match(completeStatus.objective, /왼쪽 고물상/);
+assert.match(
+  completeStatus.objective,
+  /하층 정비.*고물상/,
+  '실제 world status도 바뀐 귀환로와 보고 목적을 함께 알려야 합니다.',
+);
+assert.match(
+  getScrapAwakeningPresentation(SCRAP_AWAKENING_STAGE.COMPLETE).objective,
+  /하층 정비.*고물상/,
+  '각성 authored objective는 달라진 하층 정비 귀환 동선을 명시해야 합니다.',
+);
 assert.match(completeStatus.wardLabel, /분석 대기/);
-assert.ok(itemIds(scene).includes('scrap-king-eye-left'));
-assert.ok(itemIds(scene).includes('scrap-king-shoulder-left'));
-assert.ok(itemIds(scene).includes('scrap-king-route-beacon'));
+assert.equal(
+  scene.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_MAINTENANCE_RETURN,
+  '각성 뒤에는 들어온 상층 길이 아니라 앞서 본 하층 정비로로 나와야 합니다.',
+);
 
 const completeX = scene.position.x;
 scene.update(STEP_SECONDS, input({ right: true }));
 assert.ok(scene.position.x > completeX, '각성 완료 뒤 이동 조작이 돌아와야 합니다.');
-
 assert.ok(
   scene.mapRuntime
     .getResolvedSnapshot()
     .entities.some((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID),
-  `각성 완료 뒤 서쪽 귀환 동선에는 ${SCRAP_CAST.RIVAL.name}의 ambient 동행 안내가 필요합니다.`,
+  '하층 정비 귀환로에 라이벌 동행 안내가 필요합니다.',
 );
-scene.setVisualQaLocation({
-  regionId: SCRAP_AWAKENING_REGION_ID,
-  roomId: SCRAP_AWAKENING_ROOM_ID,
-  x: 620,
-});
-scene.update(STEP_SECONDS, input({ left: true }));
+for (let tick = 0; tick < 1_200 && !scene.getWorldStatus().dialogue.active; tick += 1) {
+  scene.update(STEP_SECONDS, input({ left: true }));
+}
 const returnGuideDialogue = scene.getWorldStatus().dialogue;
 assert.equal(
   returnGuideDialogue.active,
   true,
-  '서쪽 귀환 중 구조된 라이벌의 ambient 안내가 자동으로 시작되어야 합니다.',
+  '하층 정비 귀환 중 ambient 안내가 시작되어야 합니다.',
 );
 assert.equal(returnGuideDialogue.presentationMode, 'ambient');
 assert.equal(returnGuideDialogue.speaker, SCRAP_CAST.RIVAL.name);
 assert.equal(returnGuideDialogue.interactionId, SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID);
-assert.match(
-  scene.mapRuntime
-    .getResolvedSnapshot()
-    .entities.find((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID)
-    .lines.join('\n'),
-  /고물상/,
-  '귀환 안내는 왼쪽 고물상 작업대로 향하는 이유를 말풍선으로 전달해야 합니다.',
+assert.ok(
+  completeX - scene.position.x > 650,
+  '각성 지점에서 귀환 안내까지 하층 정비 통로를 실제로 횡단해야 합니다.',
 );
 const returnGuideStartX = scene.position.x;
 scene.update(STEP_SECONDS, input({ left: true, jump: true, jumpSequence: prologueSequence }));
-assert.ok(
-  scene.position.x < returnGuideStartX,
-  '귀환 ambient 안내는 이동과 jump 입력을 잠그면 안 됩니다.',
-);
-assert.equal(
-  stage(scene),
-  SCRAP_AWAKENING_STAGE.COMPLETE,
-  '귀환 ambient 안내는 stage를 바꾸면 안 됩니다.',
-);
-assert.equal(
-  garageStage(scene),
-  SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY,
-  '귀환 ambient 안내는 차고 stage를 바꾸면 안 됩니다.',
-);
+prologueSequence += 1;
+assert.ok(scene.position.x < returnGuideStartX, '귀환 ambient 안내는 이동을 잠그면 안 됩니다.');
 for (let tick = 0; tick < 1_200 && scene.getWorldStatus().dialogue.active; tick += 1) {
   scene.update(STEP_SECONDS, EMPTY_INPUT);
 }
-assert.equal(
-  scene.getWorldStatus().dialogue.active,
-  false,
-  '귀환 ambient 안내는 입력 없이 짧게 종료되어야 합니다.',
-);
 
-const resumed = createAwakeningScene({ progressionSnapshot: afterRecovery });
+const resumed = createAwakeningScene({
+  progressionSnapshot: afterRecovery,
+  useProfileResume: true,
+});
 assert.equal(stage(resumed), SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED);
+assert.equal(
+  resumed.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+);
 assert.ok(!itemIds(resumed).includes('scrap-device-core'));
 for (let tick = 0; tick < 120; tick += 1) resumed.update(STEP_SECONDS, EMPTY_INPUT);
 assert.notEqual(
   stage(resumed),
   SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED,
-  '저장된 stage는 reload 뒤 해당 경계부터 결정적으로 재생되어야 합니다.',
+  '저장된 각성 stage는 하층 제어실 경계부터 결정적으로 재생되어야 합니다.',
 );
 
 const completedReload = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
+  useProfileResume: true,
 });
 assert.equal(stage(completedReload), SCRAP_AWAKENING_STAGE.COMPLETE);
-assert.ok(
-  !completedReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === 'scrap-control-device'),
+assert.equal(
+  completedReload.mapRuntime.getActiveLocation().roomId,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_MAINTENANCE_RETURN,
+);
+assert.equal(
+  completedReload.mapRuntime
+    .getResolvedMap()
+    .regions.find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+    .rooms.flatMap((room) => room.entities)
+    .some((entity) => entity.id === 'scrap-control-device' && entity.enabled !== false),
+  false,
   '완료 reload 뒤 제어핵 trigger가 다시 생기면 안 됩니다.',
 );
 completedReload.update(STEP_SECONDS, input({ jump: true, jumpSequence: 1 }));
 assert.equal(stage(completedReload), SCRAP_AWAKENING_STAGE.COMPLETE);
-assert.equal(completedReload.isGrounded, false, '완료 뒤 ↑는 다시 Player jump여야 합니다.');
-assert.ok(
-  completedReload.mapRuntime
-    .getResolvedSnapshot()
-    .entities.some((entity) => entity.id === SCRAP_RIVAL_RETURN_GUIDE_ENTITY_ID),
-  '완료 저장 뒤에도 서쪽 귀환 ambient 안내가 유지되어야 합니다.',
+assert.equal(
+  completedReload.isGrounded,
+  false,
+  '완료 뒤 portal 밖 ↑는 다시 Player jump여야 합니다.',
 );
 
-for (let tick = 0; tick < 300 && scene.position.x > 255; tick += 1) {
+const maintenanceRoom = SCRAP_AWAKENING_MAP.getRoom(
+  SCRAP_AWAKENING_REGION_ID,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_MAINTENANCE_RETURN,
+);
+for (let tick = 0; tick < 1_200 && scene.position.x - maintenanceRoom.bounds.x > 90; tick += 1) {
+  scene.update(STEP_SECONDS, input({ left: true }));
+}
+assert.ok(
+  completeX - scene.position.x > 1_100,
+  '하층 정비 귀환로는 시작점에서 지상 출구까지 충분히 긴 실제 이동 구간이어야 합니다.',
+);
+scene.update(STEP_SECONDS, input({ jump: true, jumpSequence: prologueSequence }));
+assert.equal(
+  scene.mapRuntime.getTransition()?.portalId,
+  PROLOGUE_UNDERGROUND_PORTAL_IDS.MAINTENANCE_TO_COURTYARD,
+);
+finishPortalTransition(scene);
+assert.deepEqual(
+  scene.mapRuntime.getActiveLocation(),
+  { regionId: SCRAP_AWAKENING_REGION_ID, roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD },
+  '하층 정비 귀환로는 작업 마당으로 실제 연결되어야 합니다.',
+);
+for (let tick = 0; tick < 720 && scene.position.x > 255; tick += 1) {
   scene.update(STEP_SECONDS, input({ left: true }));
 }
 assert.ok(
   scene.position.x <= 255,
-  `각성지에서 왼쪽 ${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 직접 돌아갈 수 있어야 합니다.`,
+  '지하 정비 출구에서 고물상 주인에게 직접 걸어갈 수 있어야 합니다.',
 );
+
 const durableGarageStages = [];
 scene.progressionChanged.connect((snapshot) => {
   durableGarageStages.push(snapshot.scrapCampaign.garageRevealStageId);
@@ -2073,8 +1369,8 @@ const archiveCommands = archiveDialogue.commands.filter(
 );
 assert.equal(
   archiveCommands.length,
-  9,
-  '작전 기록기에서 도입 여덟 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
+  8,
+  '작전 기록기에서 지하 유적 도입 일곱 대화와 고물상 분석을 현재 장면과 분리해 다시 열어야 합니다.',
 );
 const beforeReplay = scene.getProgressionSnapshot();
 const replayResult = scene.executeDialogueCommand(
@@ -2190,8 +1486,8 @@ assert.ok(
 
 const failedTravelScene = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
-  x: 1340,
 });
+setAtPortalToRoom(failedTravelScene, SCRAP_AWAKENING_ROOM_ID, SCRAP_MINE_ROAD_ROOM_ID);
 const failedTravelBefore = failedTravelScene.getProgressionSnapshot().scrapCampaign;
 failedTravelScene.update(STEP_SECONDS, input({ jump: true, jumpSequence: 10 }));
 assert.equal(failedTravelScene.confirmScrapCampaignTravel().started, true);
@@ -2220,8 +1516,8 @@ assert.match(failedTravelScene.getWorldStatus().encounterHint, /Room 전환 실�
 
 const travelScene = createAwakeningScene({
   progressionSnapshot: scene.getProgressionSnapshot(),
-  x: 1340,
 });
+setAtPortalToRoom(travelScene, SCRAP_AWAKENING_ROOM_ID, SCRAP_MINE_ROAD_ROOM_ID);
 let campaignTravelRequest = null;
 travelScene.campaignActionPreviewRequested.connect((request) => {
   campaignTravelRequest = request;
@@ -4601,11 +3897,26 @@ assert.equal(travelScene.getWorldStatus().campaign.phaseLabel, '저녁');
 
 const keyboardScene = createAwakeningScene();
 keyboardScene.setVisualQaScrapAwakeningStage(SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED);
+const inputParityDevice = SCRAP_AWAKENING_MAP.getRoom(
+  SCRAP_AWAKENING_REGION_ID,
+  PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+).entities.find((entity) => entity.id === SCRAP_AWAKENING_DEVICE_ENTITY_ID);
+assert.ok(inputParityDevice, 'input parity 검증에도 production 제어핵 entity를 사용해야 합니다.');
+keyboardScene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+  x: inputParityDevice.position.x,
+});
 const keyboard = new KeyboardInputAdapter({ isActive: () => true });
 keyboard.onKeyDown({ code: 'ArrowUp', target: { closest: () => null }, preventDefault() {} });
 keyboardScene.update(STEP_SECONDS, keyboard.snapshot());
 const mobileScene = createAwakeningScene();
 mobileScene.setVisualQaScrapAwakeningStage(SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED);
+mobileScene.setVisualQaLocation({
+  regionId: SCRAP_AWAKENING_REGION_ID,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+  x: inputParityDevice.position.x,
+});
 const mobile = new MobileInputAdapter();
 mobile.press('jump', 17);
 mobileScene.update(STEP_SECONDS, mobile.snapshot());
@@ -4628,7 +3939,7 @@ assert.deepEqual(
 );
 
 const completionChecks = [
-  'five-prologue-encounters-complete-through-gameplay-input-and-shared-contact-evidence',
+  'one-route-opening-prologue-encounter-completes-through-gameplay-input-and-shared-contact-evidence',
   'owner-rival-search-collapse-rescue-decision-stage-order',
   'prologue-transcripts-recorded-and-replayable',
   'rescue-success-before-awakening-signal',

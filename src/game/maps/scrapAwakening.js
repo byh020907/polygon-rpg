@@ -7,6 +7,7 @@ import {
 import { SCRAP_PROLOGUE_CONVERSATION_ID } from '../story/ScrapPrologueStory.js';
 import { SCRAP_REGION_CONVERSATION } from '../story/ScrapRegionStory.js';
 import { defineMap } from '../map/MapDefinition.js';
+import { applyPrologueUndergroundMap } from './PrologueUndergroundMap.js';
 import { createEnvironmentPortalLandmarkItems } from './PortalRenderItems.js';
 
 export const SCRAP_AWAKENING_MAP_ID = 'scrap-awakening-commission';
@@ -2973,7 +2974,7 @@ const garageOpenStages = [
   SCRAP_GARAGE_REVEAL_STAGE.COMPLETE,
 ];
 
-export const SCRAP_AWAKENING_MAP = defineMap({
+const SCRAP_AWAKENING_RAW_MAP = {
   id: SCRAP_AWAKENING_MAP_ID,
   name: '왕국 외곽 고철 수거장',
   version: 1,
@@ -6809,4 +6810,6 @@ export const SCRAP_AWAKENING_MAP = defineMap({
       ],
     },
   ],
-});
+};
+
+export const SCRAP_AWAKENING_MAP = defineMap(applyPrologueUndergroundMap(SCRAP_AWAKENING_RAW_MAP));

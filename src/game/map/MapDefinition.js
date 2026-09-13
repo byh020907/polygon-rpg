@@ -168,6 +168,12 @@ function normalizePortal(portal, mapId, index) {
       );
     }
   }
+  if (normalized.scrapAwakeningNextStageId !== undefined) {
+    assertId(
+      normalized.scrapAwakeningNextStageId,
+      `${normalized.qualifiedId}.scrapAwakeningNextStageId`,
+    );
+  }
   assertFinite(
     normalized.transition.durationSeconds,
     `${normalized.qualifiedId}.transition.durationSeconds`,

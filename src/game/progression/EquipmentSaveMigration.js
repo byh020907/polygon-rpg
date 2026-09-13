@@ -158,6 +158,8 @@ export const LEGACY_EQUIPMENT_ID_ALIASES = Object.freeze({
   'posture-breaker-sword': 'field-cutter-breaker',
   'rear-punish-sword': 'field-cutter-reach',
 });
+const LEGACY_FORGE_SOURCE_ID = 'scrap-yard-guard-collector';
+
 export function migrateEquipmentSaveV10(
   value,
   { enchantmentCatalog, equipmentForgeProfile, scrapCampaignProfile } = {},
@@ -178,10 +180,12 @@ export function migrateEquipmentSaveV10(
   )
     throw new Error('Unknown legacy forge field');
   const forge = value.weaponForge;
+  const forgeSourceId = (id) =>
+    id === LEGACY_FORGE_SOURCE_ID && equipmentForgeProfile ? equipmentForgeProfile.sourceId : id;
   if (equipmentForgeProfile) {
     if (
       Object.keys(forge.materialQuantities).some((id) => id !== equipmentForgeProfile.materialId) ||
-      forge.claimedSourceIds.some((id) => id !== equipmentForgeProfile.sourceId) ||
+      forge.claimedSourceIds.some((id) => forgeSourceId(id) !== equipmentForgeProfile.sourceId) ||
       Object.entries(forge.selectedProfileIdsByGroup).some(
         ([group, id]) =>
           group !== equipmentForgeProfile.choiceGroupId ||
@@ -241,7 +245,7 @@ export function migrateEquipmentSaveV10(
     discoveredSpecialSynergyIds: [],
     equipmentForge: {
       materialQuantities: { ...forge.materialQuantities },
-      claimedSourceIds: [...forge.claimedSourceIds],
+      claimedSourceIds: [...new Set(forge.claimedSourceIds.map(forgeSourceId))],
       selectedItemIdsByGroup: Object.fromEntries(
         Object.entries(forge.selectedProfileIdsByGroup).map(([key, id]) => [key, alias(id)]),
       ),

@@ -2,16 +2,17 @@
 
 ## Current Phase
 
-WAITING_FOR_HUMAN — 도입 맵·진행 재구성의 씬 이미지 3안과 구간별 행동·변화·진행 조건을 제시한다. Human이 맵 방향을 선택해야 다음 지형/진행 구현을 확정할 수 있다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
+WAITING_FOR_HUMAN — Human이 선택한 1안의 지하 유적 도입 동선과 진행을 실제 runtime·문서·PC/mobile 입력 검증까지 반영했다. 다음 시각 제작 단계인 REF-02 Core/Retrieval Arm은 서로 다른 후보 3개를 제시한 뒤 Human 선택을 받아야 한다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
 
 ## Active Execution Goal
 
-Human Feedback Priority — docs/art-handoff/prologue-map-candidates.html의 도입 동선 3안 중 Human이 선택한다. 같은 맵의 대화·처치 반복을 공간 이동·통로 개방·붕괴·달라진 귀환으로 바꾸는 것이 우선이다. 선택 후 지형·연결·상호작용·전투 목적·사건 전후를 함께 구현한다. 이번 시안은 REF-02~05 개별 자산 승인이나 runtime 변경이 아니다.
+Human Feedback Priority — 선택된 지하 유적 도입을 기준 Composition으로 사용해 다음 그래픽 제작 순서인 REF-02 Core/Retrieval Arm의 gameplay-scale 후보 3개를 준비하고 Human 선택 뒤에만 master/runtime 자산으로 확정한다. 현재 지하 맵의 기술용 핵·회수팔·고대 병기·차고 실루엣은 동선과 인과 검증용 baseline이며 REF-02~05 최종 디자인 승인이 아니다.
 
 ## Current Evidence / Gap
 
-- Human이 현재 도입을 동일 맵의 대화·반복 처치로 느낀다는 피드백을 INBOX에 원문으로 보존했다. Product Goal은 장소·높이·통로·귀환 변화로 도입 진행을 체감해야 한다는 요구를 소유한다. 실제 맵 개편은 아직 미구현이다.
-- 도입 후보는 1안 상층 진입/하층 귀환, 2안 레일 원정/변화한 귀환, 3안 폐병기 상·하 접근 분기/흉곽 합류다. 각 6개 장면과 장소·행동·지형 변화·다음 구간 조건을 scripts/prologue-scene-candidates.mjs에서 생성한다. 이미지·프롬프트는 docs/references/prologue-scenes에 보존한다.
+- Product Goal과 Architecture는 생활형 고물상 → 지하 유적 상층 선별 데크 → 케이블 수거 유닛 한 기로 실제 다리 개방 → 흉곽 경사로·지지판 조사 → 하부 제어실 붕괴·제어핵 구조·고대 병기 각성 → D-30 → 하층 정비로 귀환 → 핵 분석·0% 차고를 현재 도입으로 소유한다. 선택 기록은 docs/art-handoff/prologue-map-candidates.html, 지하 유적 정제 이미지는 docs/references/prologue-scenes/prologue-scene-option-1-underground-selected.png다. 2·3안은 비선택 비교 기록이다.
+- runtime은 고물상·상층 데크·흉곽 경사로·하부 제어실·하층 정비 귀환로의 다섯 Room과 stage별 재개 위치를 사용한다. 기존 21 stage ID는 저장 호환을 유지하지만 실제 필수 전투는 길을 여는 한 번이며, 붕괴와 각성 완료는 각각 제어실과 정비 귀환로로 이동한다. 교량 아래 복귀 발판·상층 복귀 경사, 지하 조명 material, 고물상 interaction/portal 간격과 하층 왼쪽 방향 표식을 검증했다.
+- blank save PC 1280×720 keyboard와 mobile 844×390 native touch가 고물상→상층→경사로→제어실→정비로→고물상을 실제 입력으로 완주했다. 정비로는 오른쪽 끝에서 왼쪽 portal까지 1,238px 이동하며 중간/최종 reload, 구조→핵 회수→각성→D-30 순서, 차고 0%, console error 0을 보존한다. 도입 runtime 33 checks와 map/systems/platform/graphics/story/campaign/visual 검사를 통과했다.
 
 - 모든 읽기용 HTML 문서는 Product Goal과 같은 위키 포맷을 공유한다. docs/wiki.css와 scripts/wiki-document.mjs가 51개 저장소 문서 및 모션 보고서의 기본 구조를 소유하며 AGENTS/Architecture/docs/document-format.md가 새 문서에도 같은 규칙을 요구한다. 기존 NPC 목록 주소는 현 목록으로 연결하면서 ID를 보존한다. 기존 캡처 보고서 12개의 표시를 갱신했고 PNG/JSON 3,206개와 재생 스크립트·시간 정보는 유지했다.
 
@@ -23,7 +24,7 @@ Human Feedback Priority — docs/art-handoff/prologue-map-candidates.html의 도
 - 기존 WebGL2 렌더러, PWA 자동 업데이트와 v10/v11 저장 보존은 유지한다. 이번 외형 적용을 게임 전체 또는 다음 reference의 Human 승인으로 확대하지 않는다.
 - 이번 범위의 독립 검토, 전투 11종·장비·캐릭터·SVG export/anchor, 그래픽 2569 samples/870 RenderFrame 비교, 시스템, 프롤로그·지역 33개 흐름, PC/mobile 실제 화면과 PWA 검사를 통과했다. 원본 주인공 318-frame 연속 입력과 mobile 341-frame 입력에서 세부 장비가 유지되는지 판독했다.
 
-Human Feedback Priority Gap: 도입 맵·진행 개편은 Human의 동선 선택 대기이며 실제 게임의 동일 공간 반복은 아직 해결되지 않았다. 확정 동선 안에서 REF-02 Core/Retrieval Arm, REF-03 Ancient Machine, REF-04 Garage 0%와 REF-05 composite의 원본/승인을 이어간다. 기존 강제 WEBGL_lose_context restore, legacy Chromium reopen, 다른 기기의 GPU·장시간 memory는 unverified다. 남은 INBOX 원문은 보존한다.
+Human Feedback Priority Gap: 동일 공간 대화·5연전이던 도입 맵·진행 Gap은 선택된 지하 유적 동선과 실제 입력 증거로 닫혔다. 다음에는 이 Composition 안에서 REF-02 Core/Retrieval Arm 후보 3개를 먼저 비교하고, 선택 뒤 REF-03 Ancient Machine, REF-04 Garage 0%와 REF-05 composite의 원본·승인을 이어간다. 현재 기술용 polygon/SVG 외형을 최종 아트 승인으로 확대하지 않는다. 기존 강제 WEBGL_lose_context restore, legacy Chromium reopen, 다른 기기의 GPU·장시간 memory는 unverified다. 이번 범위와 무관한 남은 INBOX 원문은 보존한다.
 
 ## Preserved Work Reference
 

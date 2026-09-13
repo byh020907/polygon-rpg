@@ -48,7 +48,9 @@ assert.equal(
 );
 const scene = createGameScene();
 const frame = scene.createRenderFrame(1);
-const ownerTorso = frame.items.find((item) => item.id === 'cast-scrapyard-owner:torso');
+const ownerTorso = frame.items.find(
+  (item) => item.id.startsWith('cast-scrapyard-owner:') && item.partId === 'owner-shirt',
+);
 assert.ok(ownerTorso);
 const ownerBounds = {
   left: Math.min(...ownerTorso.points.map((point) => point.x)),

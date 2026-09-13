@@ -72,7 +72,7 @@ export function getScrapGarageRevealPresentation(stageId) {
     [SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY]: {
       title: '고물상으로 복귀',
       briefing: `회수한 제어핵을 ${SCRAP_CAST.SCRAPYARD_OWNER.name}에게 가져가 분석을 부탁합니다.`,
-      objective: '왼쪽 고물상 작업대의 주인에게 돌아가 ↑로 보고하세요.',
+      objective: '왼쪽 하층 정비 통로를 따라 고물상 작업대의 주인에게 돌아가 ↑로 보고하세요.',
       cue: `${SCRAP_CAST.SCRAPYARD_OWNER.name} · 상호작용 ↑`,
     },
     [SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS]: {

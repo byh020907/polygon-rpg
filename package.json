@@ -23,7 +23,7 @@
     "test:recovery": "node scripts/scrap-recovery-check.mjs",
     "test:intro": "node scripts/ref-01-regional-cast-check.mjs && node scripts/scrap-awakening-check.mjs",
     "test:character": "node scripts/scrap-character-readability-check.mjs",
-    "test:map": "node scripts/scrap-runtime-boundary-check.mjs && node scripts/one-way-platform-check.mjs",
+    "test:map": "node scripts/prologue-underground-map-check.mjs && node scripts/scrap-runtime-boundary-check.mjs && node scripts/one-way-platform-check.mjs",
     "test:growth": "node scripts/progression-growth-check.mjs",
     "test:visual": "node scripts/cell-lighting-check.mjs && node scripts/scrap-art-direction-check.mjs && node scripts/depth-polygon-check.mjs && node scripts/projected-body-check.mjs && node scripts/scrap-workshop-layout-check.mjs && node scripts/polygon-only-check.mjs",
     "test:platform": "node scripts/platform-access-check.mjs && node scripts/test-play-session-check.mjs && node scripts/test-play-config-check.mjs",

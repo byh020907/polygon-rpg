@@ -2,6 +2,7 @@ import { createAttackEnvelope } from '../src/combat/AttackEnvelope.js';
 import assert from 'node:assert/strict';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { CUTTER_LOADOUTS } from './fixtures/equipment-loadouts.mjs';
 import { ATTACK_SPATIAL_PROFILES } from '../src/combat/AttackSpatialProfiles.js';
 import { sampleCombatFrame } from '../src/combat/CombatFrame.js';
@@ -16,8 +17,8 @@ scene.enterTree();
 scene.setVisualQaScrapAwakeningStage('yard-clearance');
 scene.setVisualQaLocation({
   regionId: 'scrap-waste-edge',
-  roomId: 'abandoned-weapon-yard',
-  x: 560,
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+  x: 330,
 });
 const encounter = scene.roomSceneNode.encounter;
 let sequence = 100;

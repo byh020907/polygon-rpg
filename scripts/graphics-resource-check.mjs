@@ -10,6 +10,7 @@ import {
   graphicsPlayerMotionInput,
 } from '../src/graphics/GraphicsResourceSampler.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { EQUIPMENT_ITEMS } from '../src/game/equipment/EquipmentCatalog.js';
 import { createGameScene } from '../src/app/createGameScene.js';
@@ -35,6 +36,46 @@ try {
   const rawItems = SCRAP_AWAKENING_MAP.regions.flatMap((region) =>
     region.rooms.flatMap((room) => room.renderItems),
   );
+  const prologueRegion = SCRAP_AWAKENING_MAP.regions.find(
+    (region) => region.id === 'scrap-waste-edge',
+  );
+  assert.deepEqual(
+    prologueRegion.rooms.map((room) => room.id),
+    Object.values(PROLOGUE_UNDERGROUND_ROOM_IDS),
+    'the prologue graphics inventory must preserve all five selected underground spaces',
+  );
+  for (const room of prologueRegion.rooms) {
+    const sceneResource = catalog.get(`scene:${prologueRegion.id}:${room.id}`);
+    assert.equal(sceneResource?.category, 'scene', `${room.id} must be reviewable as a scene`);
+    assert.equal(sceneResource?.roomId, room.id);
+    assert.ok(room.renderItems.length > 0, `${room.id} must own authored graphics`);
+    for (const item of room.renderItems) {
+      const resource = catalog.get(`map:${item.qualifiedId}`);
+      assert.equal(resource?.regionId, prologueRegion.id, item.qualifiedId);
+      assert.equal(resource?.roomId, room.id, item.qualifiedId);
+    }
+  }
+  for (const [roomId, itemId, category] of [
+    [PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD, 'scrap-yard-skyline', 'background'],
+    [PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK, 'underground-upper-vault', 'terrain'],
+    [PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP, 'underground-chest-ramp-visible', 'terrain'],
+    [
+      PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+      'underground-control-core-dais',
+      'terrain',
+    ],
+    [
+      PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_MAINTENANCE_RETURN,
+      'underground-maintenance-service-rail',
+      'terrain',
+    ],
+  ]) {
+    const item = prologueRegion.rooms
+      .find((room) => room.id === roomId)
+      .renderItems.find((candidate) => candidate.id === itemId);
+    const resource = catalog.get(`map:${item.qualifiedId}`);
+    assert.equal(resource.category, category, `${roomId}/${itemId} keeps its semantic category`);
+  }
   assert.equal(catalog.inventory.rawItemCount, rawItems.length);
   assert.equal(
     catalog.inventory.disabledItemCount,
@@ -42,28 +83,31 @@ try {
   );
   for (const item of rawItems) assert.ok(catalog.get(`map:${item.qualifiedId}`), item.qualifiedId);
   const extendedMap = SCRAP_AWAKENING_MAP.toObject();
-  extendedMap.regions[0].rooms[0].renderItems.push(
-    {
-      id: 'new-unknown-resource',
-      points: [
-        { x: 1, y: 1 },
-        { x: 3, y: 1 },
-        { x: 2, y: 3 },
-      ],
-      fill: '#ffffff',
-      enabled: false,
-    },
-    {
-      id: 'new-authored-group-body',
-      points: [
-        { x: 5, y: 1 },
-        { x: 7, y: 1 },
-        { x: 6, y: 3 },
-      ],
-      fill: '#ffffff',
-      graphics: { category: 'npc', groupId: 'new-authored-group', label: '새 현장 인물' },
-    },
-  );
+  extendedMap.regions
+    .find((region) => region.id === 'scrap-waste-edge')
+    .rooms.find((room) => room.id === PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD)
+    .renderItems.push(
+      {
+        id: 'new-unknown-resource',
+        points: [
+          { x: 1, y: 1 },
+          { x: 3, y: 1 },
+          { x: 2, y: 3 },
+        ],
+        fill: '#ffffff',
+        enabled: false,
+      },
+      {
+        id: 'new-authored-group-body',
+        points: [
+          { x: 5, y: 1 },
+          { x: 7, y: 1 },
+          { x: 6, y: 3 },
+        ],
+        fill: '#ffffff',
+        graphics: { category: 'npc', groupId: 'new-authored-group', label: '새 현장 인물' },
+      },
+    );
   const extended = createMapGraphicResources(defineMap(extendedMap));
   assert.ok(
     extended.resources.some(
@@ -93,8 +137,50 @@ try {
   for (const profile of Object.values(ENCOUNTER_PROFILES))
     assert.ok(catalog.get(`enemy:${profile.id}`));
   assert.equal(catalog.inventory.enemyProfileCount, Object.keys(ENCOUNTER_PROFILES).length);
-  assert.equal(catalog.inventory.placedEnemyProfileCount, 16);
-  assert.equal(catalog.inventory.unplacedEnemyProfileIds.length, 5);
+  const placedEnemyProfileIds = new Set(
+    SCRAP_AWAKENING_MAP.regions.flatMap((region) =>
+      region.rooms.flatMap((room) =>
+        room.entities
+          .filter((entity) => entity.encounterProfileId)
+          .map((entity) => entity.encounterProfileId),
+      ),
+    ),
+  );
+  assert.equal(catalog.inventory.placedEnemyProfileCount, placedEnemyProfileIds.size);
+  assert.deepEqual(
+    [...catalog.inventory.unplacedEnemyProfileIds].sort(),
+    Object.keys(ENCOUNTER_PROFILES)
+      .filter((profileId) => !placedEnemyProfileIds.has(profileId))
+      .sort(),
+  );
+  const prologueCombatEntities = prologueRegion.rooms.flatMap((room) =>
+    room.entities
+      .filter((entity) => entity.kind === 'combat-enemy')
+      .map((entity) => ({
+        id: entity.id,
+        profileId: entity.encounterProfileId,
+        roomId: room.id,
+      })),
+  );
+  assert.deepEqual(prologueCombatEntities, [
+    {
+      id: 'scrap-yard-scout-collector',
+      profileId: 'yard-scout-collector',
+      roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    },
+  ]);
+  assert.deepEqual(
+    catalog
+      .get('enemy:yard-scout-collector')
+      .placements.filter((placement) => placement.regionId === prologueRegion.id),
+    [
+      {
+        regionId: prologueRegion.id,
+        roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+        entityId: 'scrap-yard-scout-collector',
+      },
+    ],
+  );
   for (const equipment of EQUIPMENT_ITEMS) assert.ok(catalog.get(`equipment:${equipment.id}`));
   for (const effect of GRAPHICS_EFFECT_DEFINITIONS) assert.ok(catalog.get(`effect:${effect.id}`));
   for (const category of GRAPHICS_CATEGORIES)
@@ -255,8 +341,8 @@ try {
       live.reset();
       live.setVisualQaLocation({
         regionId: 'scrap-waste-edge',
-        roomId: 'abandoned-weapon-yard',
-        x: 600,
+        roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+        x: 300,
       });
       const frameLimit = actionId === 'jump' ? 47 : actionId === 'roll' ? 24 : 12;
       for (let frameIndex = 1; frameIndex <= frameLimit; frameIndex += 1) {

@@ -78,7 +78,7 @@ function openWeaponMerchantDialogue(scene) {
 function claimIntroReward(snapshot) {
   return awardCampaignEncounterReward(
     snapshot,
-    { entityId: 'scrap-yard-guard-collector', profileId: 'yard-guard-collector' },
+    { entityId: 'scrap-yard-scout-collector', profileId: 'yard-scout-collector' },
     COMBAT_PROGRESSION_PROFILE,
     ENCHANTMENT_CATALOG,
     SCRAP_CAMPAIGN_PROFILE,

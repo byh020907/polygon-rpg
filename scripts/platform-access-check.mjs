@@ -10,6 +10,10 @@ import {
   resolveReducedMotionPreference,
 } from '../src/app/GameApp.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { SCRAP_AWAKENING_PROFILE } from '../src/game/campaign/ScrapAwakeningProfile.js';
+import { SCRAP_AWAKENING_STAGE } from '../src/game/campaign/ScrapAwakeningState.js';
+import { SCRAP_GARAGE_REVEAL_STAGE } from '../src/game/campaign/ScrapGarageRevealState.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
 import { GameInputController } from '../src/input/GameInputController.js';
 import { KeyboardInputAdapter } from '../src/input/KeyboardInputAdapter.js';
@@ -678,11 +682,85 @@ function verifyVisualQaReducedMotionOverride() {
 
 function verifyQaInputScenarioMapSelection() {
   const combatScenario = readQaInputScenario('?inputQa=1&inputQaStart=combat-hit');
-  assert.equal(combatScenario.roomId, 'abandoned-weapon-yard');
+  assert.equal(combatScenario.roomId, PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK);
   assert.equal(
     resolveInitialMapDefinition({ qaInputScenario: combatScenario }),
     SCRAP_AWAKENING_MAP,
-    'combat input QA도 현재 campaign의 실제 수거장에 구성해야 한다.',
+    'combat input QA도 현재 campaign의 지하 유적 상층 단일 encounter에 구성해야 한다.',
+  );
+
+  const prologueRegion = SCRAP_AWAKENING_MAP.regions.find(
+    (region) => region.id === SCRAP_AWAKENING_PROFILE.regionId,
+  );
+  assert.deepEqual(
+    SCRAP_AWAKENING_PROFILE.roomIds,
+    Object.values(PROLOGUE_UNDERGROUND_ROOM_IDS),
+    'platform adapters must recognize every prologue room owned by the profile',
+  );
+  assert.deepEqual(
+    prologueRegion.rooms.map((room) => room.id),
+    SCRAP_AWAKENING_PROFILE.roomIds,
+  );
+  const expectedResumeRoomByStage = new Map([
+    [SCRAP_AWAKENING_STAGE.COMMISSION, PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD],
+    [SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE, PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD],
+    [SCRAP_AWAKENING_STAGE.YARD_CLEARANCE, PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK],
+    [SCRAP_AWAKENING_STAGE.YARD_BRACE, PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK],
+    [SCRAP_AWAKENING_STAGE.YARD_PERIMETER, PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK],
+    [SCRAP_AWAKENING_STAGE.YARD_SURVEY, PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK],
+    [SCRAP_AWAKENING_STAGE.YARD_APPROACH, PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK],
+    [SCRAP_AWAKENING_STAGE.YARD_PLATE, PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP],
+    [SCRAP_AWAKENING_STAGE.YARD_RIDGE, PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP],
+    [SCRAP_AWAKENING_STAGE.YARD_GUARD, PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP],
+    [SCRAP_AWAKENING_STAGE.YARD_SEARCH, PROLOGUE_UNDERGROUND_ROOM_IDS.CHEST_RAMP],
+    [SCRAP_AWAKENING_STAGE.COLLAPSE, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.RESCUE_REQUEST, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.PLAYER_DECISION, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [
+      SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED,
+      PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER,
+    ],
+    [SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.EYES_LIT, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.ASSEMBLED, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_CONTROL_CHAMBER],
+    [SCRAP_AWAKENING_STAGE.COMPLETE, PROLOGUE_UNDERGROUND_ROOM_IDS.LOWER_MAINTENANCE_RETURN],
+  ]);
+  assert.deepEqual(
+    [...expectedResumeRoomByStage.keys()],
+    Object.values(SCRAP_AWAKENING_STAGE),
+    'every stable awakening stage must have an explicit platform resume expectation',
+  );
+  for (const [stageId, roomId] of expectedResumeRoomByStage) {
+    assert.equal(
+      SCRAP_AWAKENING_PROFILE.getResumeLocation(stageId, SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY)
+        .roomId,
+      roomId,
+      `${stageId} must resume in ${roomId}`,
+    );
+  }
+  assert.equal(
+    SCRAP_AWAKENING_PROFILE.getResumeLocation(
+      SCRAP_AWAKENING_STAGE.COMPLETE,
+      SCRAP_GARAGE_REVEAL_STAGE.OWNER_ANALYSIS,
+    ).roomId,
+    PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD,
+    'garage analysis resumes in the courtyard after the maintenance return is complete',
+  );
+  const reachableQaRooms = new Set(
+    [
+      'scrap-garage-analysis',
+      'scrap-intro-walk',
+      'scrap-intro-plate',
+      'scrap-intro-before',
+      'scrap-intro-after',
+    ].map((start) => readQaInputScenario(`?inputQa=1&inputQaStart=${start}`).roomId),
+  );
+  assert.deepEqual(
+    [...reachableQaRooms].sort(),
+    [...SCRAP_AWAKENING_PROFILE.roomIds].sort(),
+    'test play must expose at least one stable scenario for every prologue room',
   );
 
   const campaignScenario = readQaInputScenario('?inputQa=1&inputQaStart=scrap-shipyard-roadhead');

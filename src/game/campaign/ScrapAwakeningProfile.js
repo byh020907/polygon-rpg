@@ -1,5 +1,9 @@
-import { scrapAwakeningStageDurationSeconds } from './ScrapAwakeningState.js';
 import {
+  SCRAP_AWAKENING_STAGE,
+  scrapAwakeningStageDurationSeconds,
+} from './ScrapAwakeningState.js';
+import {
+  SCRAP_GARAGE_REVEAL_STAGE,
   SCRAPYARD_OWNER_ANALYSIS_CONVERSATION_ID,
   scrapGarageRevealStageDurationSeconds,
 } from './ScrapGarageRevealState.js';
@@ -14,12 +18,71 @@ import {
   SCRAPYARD_REST_ENTITY_ID,
   SCRAPYARD_WALL_MAP_ENTITY_ID,
 } from '../maps/scrapAwakening.js';
+import {
+  PROLOGUE_UNDERGROUND_RESUME_BY_STAGE,
+  PROLOGUE_UNDERGROUND_ROOM_IDS,
+} from '../maps/PrologueUndergroundMap.js';
+
+const PROLOGUE_ROOM_IDS = Object.freeze(Object.values(PROLOGUE_UNDERGROUND_ROOM_IDS));
+const COURTYARD_RETURN_LOCATION = Object.freeze({
+  roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.COURTYARD,
+  position: Object.freeze({ x: 250, y: 350 }),
+  facing: 1,
+});
+
+const STAGE_FOCUS_X = Object.freeze({
+  [SCRAP_AWAKENING_STAGE.COMMISSION]: 250,
+  [SCRAP_AWAKENING_STAGE.RIVAL_DEPARTURE]: 430,
+  [SCRAP_AWAKENING_STAGE.YARD_CLEARANCE]: 520,
+  [SCRAP_AWAKENING_STAGE.YARD_BRACE]: 520,
+  [SCRAP_AWAKENING_STAGE.YARD_PERIMETER]: 620,
+  [SCRAP_AWAKENING_STAGE.YARD_SURVEY]: 900,
+  [SCRAP_AWAKENING_STAGE.YARD_APPROACH]: 1080,
+  [SCRAP_AWAKENING_STAGE.YARD_PLATE]: 360,
+  [SCRAP_AWAKENING_STAGE.YARD_RIDGE]: 480,
+  [SCRAP_AWAKENING_STAGE.YARD_GUARD]: 620,
+  [SCRAP_AWAKENING_STAGE.YARD_SEARCH]: 680,
+  [SCRAP_AWAKENING_STAGE.COLLAPSE]: 480,
+  [SCRAP_AWAKENING_STAGE.RESCUE_REQUEST]: 540,
+  [SCRAP_AWAKENING_STAGE.PLAYER_DECISION]: 480,
+  [SCRAP_AWAKENING_STAGE.DEVICE_INVESTIGATED]: 480,
+  [SCRAP_AWAKENING_STAGE.DEVICE_RECOVERED]: 480,
+  [SCRAP_AWAKENING_STAGE.RESCUE_SUCCEEDED]: 480,
+  [SCRAP_AWAKENING_STAGE.EYES_LIT]: 480,
+  [SCRAP_AWAKENING_STAGE.ASSEMBLED]: 480,
+  [SCRAP_AWAKENING_STAGE.DEADLINE_REVEALED]: 480,
+  [SCRAP_AWAKENING_STAGE.COMPLETE]: 720,
+});
+
+function getResumeLocation(stageId, garageStageId) {
+  if (
+    stageId === SCRAP_AWAKENING_STAGE.COMPLETE &&
+    garageStageId !== SCRAP_GARAGE_REVEAL_STAGE.LOCKED &&
+    garageStageId !== SCRAP_GARAGE_REVEAL_STAGE.REPORT_READY
+  ) {
+    return COURTYARD_RETURN_LOCATION;
+  }
+  return PROLOGUE_UNDERGROUND_RESUME_BY_STAGE[stageId] ?? COURTYARD_RETURN_LOCATION;
+}
+
+function getStageRelocation(stageId) {
+  if (stageId !== SCRAP_AWAKENING_STAGE.COLLAPSE && stageId !== SCRAP_AWAKENING_STAGE.COMPLETE) {
+    return null;
+  }
+  return PROLOGUE_UNDERGROUND_RESUME_BY_STAGE[stageId];
+}
+
+function getStageFocusX(stageId, roomId) {
+  if (!PROLOGUE_ROOM_IDS.includes(roomId)) return null;
+  return STAGE_FOCUS_X[stageId] ?? null;
+}
 
 export const SCRAP_AWAKENING_PROFILE = Object.freeze({
   id: 'first-scrap-commission-awakening',
   mapId: SCRAP_AWAKENING_MAP_ID,
   regionId: SCRAP_AWAKENING_REGION_ID,
   roomId: SCRAP_AWAKENING_ROOM_ID,
+  roomIds: PROLOGUE_ROOM_IDS,
   deviceEntityId: SCRAP_AWAKENING_DEVICE_ENTITY_ID,
   ownerEntityId: SCRAPYARD_OWNER_ENTITY_ID,
   restEntityId: SCRAPYARD_REST_ENTITY_ID,
@@ -27,6 +90,9 @@ export const SCRAP_AWAKENING_PROFILE = Object.freeze({
   wallMapEntityId: SCRAPYARD_WALL_MAP_ENTITY_ID,
   focusX: SCRAP_AWAKENING_FOCUS_X,
   garageFocusX: SCRAP_GARAGE_REVEAL_FOCUS_X,
+  getResumeLocation,
+  getStageRelocation,
+  getStageFocusX,
   getStageDurationSeconds: scrapAwakeningStageDurationSeconds,
   getGarageStageDurationSeconds: scrapGarageRevealStageDurationSeconds,
 });

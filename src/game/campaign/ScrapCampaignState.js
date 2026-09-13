@@ -11,6 +11,7 @@ import {
 import {
   SCRAP_AWAKENING_STAGE,
   assertScrapAwakeningStageId,
+  compareScrapAwakeningStage,
   getScrapAwakeningPresentation,
   isScrapAwakeningActive,
   isScrapAwakeningDeadlineRevealed,
@@ -387,6 +388,38 @@ export function advanceScrapAwakening(snapshot, profile) {
     return Object.freeze({ changed: false, reason: 'not-advancing', snapshot: current });
   }
   return awakeningTransaction(current, nextScrapAwakeningStage(current.awakeningStageId));
+}
+
+export function advanceScrapAwakeningTo(snapshot, profile, targetStageId) {
+  const target = assertScrapAwakeningStageId(targetStageId);
+  let current = toScrapCampaignSnapshot(snapshot, profile);
+  const difference = compareScrapAwakeningStage(target, current.awakeningStageId);
+  if (difference <= 0) {
+    return Object.freeze({
+      changed: false,
+      reason: difference === 0 ? 'already-at-stage' : 'stage-target-behind-current',
+      snapshot: current,
+      advancedStageIds: Object.freeze([]),
+    });
+  }
+  const advancedStageIds = [];
+  while (current.awakeningStageId !== target) {
+    const nextStageId = nextScrapAwakeningStage(current.awakeningStageId);
+    if (compareScrapAwakeningStage(nextStageId, target) > 0) {
+      throw new Error(
+        `도입 stage target을 건너뛸 수 없습니다: ${current.awakeningStageId} → ${target}`,
+      );
+    }
+    current = awakeningTransaction(current, nextStageId).snapshot;
+    advancedStageIds.push(nextStageId);
+  }
+  return Object.freeze({
+    changed: true,
+    reason:
+      advancedStageIds.length === 1 ? 'awakening-stage-advanced' : 'awakening-stages-condensed',
+    snapshot: current,
+    advancedStageIds: Object.freeze(advancedStageIds),
+  });
 }
 
 function garageRevealTransaction(current, nextStageId) {

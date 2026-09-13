@@ -16,6 +16,9 @@ import {
 import { RECOVERY_SLOT_IDS } from './CampaignRecoveryPolicy.js';
 
 const RECOVERY_STORAGE_SCHEMA_VERSION = 1;
+const EQUIPMENT_FORGE_SOURCE_ALIASES = Object.freeze({
+  'scrap-yard-guard-collector': 'scrap-yard-scout-collector',
+});
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -74,10 +77,17 @@ function validateEquipmentForgeSnapshot(value, profile, ownedEquipmentItemIds) {
   if (materialEntries.some(([materialId]) => materialId !== profile.materialId)) {
     throw new TypeError('저장된 무기 forge material ID가 올바르지 않습니다.');
   }
-  if (
-    !Array.isArray(value.claimedSourceIds) ||
-    value.claimedSourceIds.some((sourceId) => sourceId !== profile.sourceId)
-  ) {
+  if (!Array.isArray(value.claimedSourceIds)) {
+    throw new TypeError('저장된 무기 forge source ID가 올바르지 않습니다.');
+  }
+  const claimedSourceIds = [
+    ...new Set(
+      value.claimedSourceIds.map(
+        (sourceId) => EQUIPMENT_FORGE_SOURCE_ALIASES[sourceId] ?? sourceId,
+      ),
+    ),
+  ];
+  if (claimedSourceIds.some((sourceId) => sourceId !== profile.sourceId)) {
     throw new TypeError('저장된 무기 forge source ID가 올바르지 않습니다.');
   }
   if (!isRecord(value.selectedItemIdsByGroup)) {
@@ -94,7 +104,7 @@ function validateEquipmentForgeSnapshot(value, profile, ownedEquipmentItemIds) {
   ) {
     throw new TypeError('저장된 무기 forge archetype 선택이 올바르지 않습니다.');
   }
-  return value;
+  return { ...value, claimedSourceIds };
 }
 
 function validateCurrentSnapshot(
@@ -115,7 +125,7 @@ function validateCurrentSnapshot(
   ) {
     throw new TypeError('현재 저장에는 모든 인챈트 소재의 명시적인 수량이 필요합니다.');
   }
-  validateEquipmentForgeSnapshot(
+  const equipmentForge = validateEquipmentForgeSnapshot(
     value.equipmentForge,
     equipmentForgeProfile,
     value.ownedEquipmentItemIds,
@@ -124,6 +134,7 @@ function validateCurrentSnapshot(
     value,
     {
       scrapCampaign: toScrapCampaignSnapshot(value.scrapCampaign, scrapCampaignProfile),
+      equipmentForge,
       enchantment: canonicalizeEnchantmentSnapshot(
         value.enchantment,
         enchantmentCatalog,

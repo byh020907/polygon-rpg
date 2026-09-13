@@ -756,9 +756,9 @@ const introGraphics = (id) =>
           : '고물상 작업대·주인공·라이벌·말풍선';
 document(
   'prologue-map-candidates.html',
-  '도입 맵·플레이 진행 · 씬 구성 3안',
-  '같은 맵의 대화·처치 반복을 공간 이동과 상태 변화로 바꾸는 Human 선택용 제안입니다.',
-  '<aside class="notice"><strong>선택 대기 · 맵/runtime 미적용.</strong> 이미지의 번호 01~06은 아래 표의 구간과 대응합니다. 배치·통로·진행 조건은 제안이며 기존 이야기의 인과를 유지합니다. 핵·회수팔·병기·차고의 임시 형태는 개별 reference 승인과 구분합니다.</aside>' +
+  '도입 맵·플레이 진행 · 1안 선택 기록',
+  'Human이 선택한 지하 유적 상층 조사·붕괴·하층 귀환 동선과 비선택 비교안을 구분합니다.',
+  '<aside class="notice"><strong>1안 선택 · 지하 유적 동선 기준.</strong> 2안과 3안은 비선택 비교 기록이며 현재 기획·runtime·reference의 권위가 아닙니다. 이미지의 번호 01~06은 아래 표의 구간과 대응합니다. 새 지하 유적 정제본은 선택된 동선·장면 구도의 제작 기준이고, 지상·낮빛 인상이 강한 선택 전 이미지는 후보 증거로만 남깁니다. 실제 runtime 적용과 REF-02~05 개별 최종 디자인 승인은 별도 evidence로 판정합니다.</aside>' +
     section(
       '공통 진행 원칙',
       list(PROLOGUE_PACING_NOTES.map(esc)) +
@@ -767,19 +767,24 @@ document(
     section(
       '세 안의 차이',
       table(
-        ['안', '동선', '주요 경험', '제작 시 주의점'],
+        ['상태', '안', '동선', '주요 경험', '권위와 제작 시 주의점'],
         PROLOGUE_SCENE_CANDIDATES.map((candidate) => [
+          esc(candidate.selectionStatus),
           link('#prologue-option-' + candidate.id, candidate.id + '안 · ' + candidate.title),
           esc(candidate.route),
           esc(candidate.distinction),
-          esc(candidate.tradeoff),
+          esc(candidate.authorityNote + ' ' + candidate.tradeoff),
         ]),
       ),
     ) +
     PROLOGUE_SCENE_CANDIDATES.map((candidate) =>
       section(
-        candidate.id + '안 · ' + candidate.title,
-        `<figure><a href="../references/prologue-scenes/${esc(candidate.image)}"><img src="../references/prologue-scenes/${esc(candidate.image)}" alt="${esc(candidate.title)}: 01부터 06까지의 도입 플레이 장면"></a><figcaption>AI 생성 구성 시안 · 실제 게임 캡처가 아닙니다. 클릭하면 원본 크기로 확인할 수 있습니다.</figcaption></figure>` +
+        candidate.id + '안 · ' + candidate.title + ' · ' + candidate.selectionStatus,
+        p(candidate.authorityNote) +
+          `<figure><a href="../references/prologue-scenes/${esc(candidate.image)}"><img src="../references/prologue-scenes/${esc(candidate.image)}" alt="${esc(candidate.title)}: 01부터 06까지의 도입 플레이 장면"></a><figcaption>AI 생성 구성 시안 · 실제 게임 캡처가 아닙니다. ${esc(candidate.imageAssessment)} 클릭하면 원본 크기로 확인할 수 있습니다.</figcaption></figure>` +
+          (candidate.previousImage
+            ? `<p>${link(`../references/prologue-scenes/${candidate.previousImage}`, '선택 전 1안 동선 후보 이미지')} · ${esc(candidate.previousImageAssessment)}</p>`
+            : '') +
           p(candidate.route) +
           table(
             ['장면', '공간', '플레이어 행동', '눈으로 보이는 변화', '다음 구간 조건'],
@@ -789,9 +794,9 @@ document(
       ),
     ).join('') +
     section(
-      '선택 뒤 제작 범위',
+      '선택안 적용 범위',
       p(
-        '선택한 동선을 Product/Architecture의 현재 설계에 반영하고 각 구간의 지형·연결·상호작용·적 배치·붕괴 전후·귀환 상태를 실제 게임에 구현합니다. 지금 작성된 stage 개수나 전투 횟수를 그대로 늘리는 작업으로 해석하지 않습니다. 검증은 새 게임부터 직접 이동해 구조와 귀환까지 잇는 플레이로 수행합니다.',
+        '선택된 1안의 지하 유적 동선을 Product/Architecture의 현재 설계에 반영하고 각 구간의 지형·연결·상호작용·한 번의 목적 전투·붕괴 전후·달라진 귀환 상태를 실제 게임에 구현합니다. 기존 stage ID는 저장 호환을 위해 유지하되 같은 방의 대화·동일 처치 횟수로 분량을 늘리지 않습니다. 검증은 새 게임부터 직접 이동해 구조와 귀환까지 잇는 플레이로 수행하며, 이 문서만으로 runtime 완료나 최종 아트 승인을 선언하지 않습니다.',
       ),
     ),
 );

@@ -70,7 +70,7 @@ for (const [id, mapped] of Object.entries(LEGACY_EQUIPMENT_ID_ALIASES)) {
   const bytes = JSON.stringify(value);
   memory.setItem('save', bytes);
   const result = load();
-  assert.equal(result.ok, true);
+  assert.equal(result.ok, true, result.error?.message ?? result.reason);
   const s = result.snapshot;
   assert.equal(s.version, 12);
   assert.equal(s.loadout.weaponItemId, mapped);
@@ -89,7 +89,7 @@ for (const [id, mapped] of Object.entries(LEGACY_EQUIPMENT_ID_ALIASES)) {
       value.enchantment.swordEnchantments[oldId],
     );
   assert.deepEqual(s.equipmentForge.materialQuantities, value.weaponForge.materialQuantities);
-  assert.deepEqual(s.equipmentForge.claimedSourceIds, value.weaponForge.claimedSourceIds);
+  assert.deepEqual(s.equipmentForge.claimedSourceIds, ['scrap-yard-scout-collector']);
   assert.equal(
     s.equipmentForge.selectedItemIdsByGroup['scrap-weapon-archetype'],
     'field-cutter-swift',
@@ -103,6 +103,14 @@ for (const [id, mapped] of Object.entries(LEGACY_EQUIPMENT_ID_ALIASES)) {
   assert.equal(store.save(s).ok, true);
   assert.deepEqual(load().snapshot, s, 'v11 reading is idempotent');
 }
+const currentWithLegacyForgeSource = structuredClone(fresh);
+currentWithLegacyForgeSource.equipmentForge.claimedSourceIds = ['scrap-yard-guard-collector'];
+memory.setItem('save', JSON.stringify(currentWithLegacyForgeSource));
+const canonicalCurrentForge = load();
+assert.equal(canonicalCurrentForge.ok, true);
+assert.deepEqual(canonicalCurrentForge.snapshot.equipmentForge.claimedSourceIds, [
+  'scrap-yard-scout-collector',
+]);
 for (const change of [
   (v) => (v.gold = -1),
   (v) => v.ownedEquipmentIds.push('unknown'),

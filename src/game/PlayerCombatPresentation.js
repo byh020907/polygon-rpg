@@ -102,7 +102,9 @@ function limbSegment(id, start, end, width, fill, options = {}) {
 
 function arcRibbonPoints(origin, startAngle, endAngle, innerRadius, outerRadius, segments = 7) {
   const points = [];
-  for (let index = 0; index <= segments; index += 1) {
+  const fullCircle = Math.abs(Math.abs(endAngle - startAngle) - Math.PI * 2) <= 1e-6;
+  const lastIndex = fullCircle ? segments - 1 : segments;
+  for (let index = 0; index <= lastIndex; index += 1) {
     const progress = index / segments;
     const angle = startAngle + (endAngle - startAngle) * progress;
     points.push({
@@ -110,7 +112,7 @@ function arcRibbonPoints(origin, startAngle, endAngle, innerRadius, outerRadius,
       y: origin.y + Math.sin(angle) * outerRadius,
     });
   }
-  for (let index = segments; index >= 0; index -= 1) {
+  for (let index = lastIndex; index >= 0; index -= 1) {
     const progress = index / segments;
     const angle = startAngle + (endAngle - startAngle) * progress;
     points.push({

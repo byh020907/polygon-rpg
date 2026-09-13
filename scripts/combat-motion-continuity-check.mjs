@@ -31,6 +31,7 @@ import { CUTTER_LOADOUTS } from './fixtures/equipment-loadouts.mjs';
 import { ENCOUNTER_PROFILES } from '../src/game/encounter/EncounterProfiles.js';
 import { resolveEncounterBodyCollider } from '../src/game/encounter/EncounterBodyCollider.js';
 import { SCRAP_AWAKENING_MAP } from '../src/game/maps/scrapAwakening.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
 import { createTestGameScene } from './GameSceneTestFixture.mjs';
 
 const STEP = 1 / 120;
@@ -715,8 +716,8 @@ function withScene(run) {
     scene.setVisualQaScrapAwakeningStage('yard-clearance');
     scene.setVisualQaLocation({
       regionId: 'scrap-waste-edge',
-      roomId: 'abandoned-weapon-yard',
-      x: 430,
+      roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+      x: 330,
     });
     const encounter = scene.roomSceneNode.getEncounterGameplaySnapshot();
     assert.ok(encounter, 'current scrapyard needs an encounter for body-collision coverage');

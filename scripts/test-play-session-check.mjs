@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { GameApp } from '../src/app/GameApp.js';
 import { GameApplication } from '../src/app/GameApplication.js';
 import { readVisualQaRequest } from '../src/app/VisualQaConfig.js';
+import { PROLOGUE_UNDERGROUND_ROOM_IDS } from '../src/game/maps/PrologueUndergroundMap.js';
+import { SCRAP_AWAKENING_MAP, SCRAP_AWAKENING_REGION_ID } from '../src/game/maps/scrapAwakening.js';
 
 const frames = new Map();
 let nextFrame = 0;
@@ -207,8 +209,21 @@ assert.equal(application.currentApp.scene.createRenderFrame(0).player.facing, -1
 // Exercise diagnostics through the real GameApp and native input adapters. The
 // observer must stop the fixed-step owner, not patch the enemy or command state.
 const contactRequest = readVisualQaRequest('?visualQa=1&gameStart=pose-idle&gameFrame=0');
+const contactRoom = SCRAP_AWAKENING_MAP.regions
+  .find((region) => region.id === SCRAP_AWAKENING_REGION_ID)
+  ?.rooms.find((room) => room.id === PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK);
+const contactEnemy = contactRoom?.entities.find(
+  (entity) => entity.encounterProfileId === 'yard-scout-collector',
+);
+assert.ok(contactEnemy, 'the underground upper deck must author the route-opening collector');
 application.startTestPlay(contactRequest, {
-  location: { regionId: 'scrap-waste-edge', roomId: 'abandoned-weapon-yard', x: 540 },
+  location: {
+    regionId: SCRAP_AWAKENING_REGION_ID,
+    roomId: PROLOGUE_UNDERGROUND_ROOM_IDS.UPPER_SORTING_DECK,
+    x: contactEnemy.position.x - 70,
+    facing: 1,
+  },
+  expectedEntityId: contactEnemy.id,
 });
 const contactApp = application.currentApp;
 application.controlTestDiagnostics('overlay');
