@@ -415,7 +415,8 @@ document(
   '계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.',
   section(
     'REF-01 · 1안 선택됨',
-    '<aside class="notice"><strong>상태: Human 선택 완료 · master SVG 원본/export 생성 · 주인공/프롤로그 cast runtime 연결.</strong> 선택된 방향의 master를 실제 자세 계산과 연결했습니다. 현재 vector 표현은 선택 콘셉트의 단순화된 구현이며 최종 아트 승인과 구분합니다. 다섯 지역의 정적 라이벌 표현과 추가 중요 key pose는 후속 검토 대상입니다.</aside>' +
+    '<figure><img src="../references/ref-01/appearance-option-2-selected.png" alt="선택된 외형 보강 2안: 굵은 외곽선과 단순한 명암"><figcaption>외형 보강 방식: 2번 선택. 기존 인물 디자인 1안에 굵은 외곽선과 두 단계 명암을 적용합니다.</figcaption></figure>' +
+      '<aside class="notice"><strong>상태: Human 선택 완료 · master SVG 원본/export 생성 · 주인공/프롤로그 cast runtime 연결.</strong> 선택된 방향의 master를 실제 자세 계산과 연결했습니다. 현재 vector 표현은 선택 콘셉트의 단순화된 구현이며 최종 아트 승인과 구분합니다. 다섯 지역의 정적 라이벌 표현과 추가 중요 key pose는 후속 검토 대상입니다.</aside>' +
       '<figure><img src="../references/ref-01/hero-rival-owner-candidate-v1.png" alt="Human이 1안으로 선택한 주인공, 라이벌, 고철장 주인의 REF-01 제작 방향"><figcaption><strong>REF-01 selected direction · option 1.</strong> 위: 작은 머리와 길고 가는 팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과 갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지 안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through 방향입니다. ' +
       link('../references/ref-01/hero-rival-owner-candidate-v1.png', '원본 크기 PNG 열기') +
       '</figcaption></figure>' +

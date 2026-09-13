@@ -14,6 +14,10 @@ export const APPROVAL_WORKFLOW_ROWS = [
 ];
 export const ART_DIRECTION_ROWS = [
   [
+    'REF-01 외형 보강 2안',
+    '선택된 기존 인물·복장을 유지하며 굵은 외곽선과 단순한 두 단계 명암을 적용합니다. 큰 형태를 선명하게 나누고 내부 디테일 선은 절제합니다. 기준 이미지: docs/references/ref-01/appearance-option-2-selected.png.',
+  ],
+  [
     '기준 스타일',
     '실제 게임에서 재현 가능한 정돈된 레오곡 계열 Flat Design. 고밀도 컨셉 일러스트를 목표로 하지 않습니다. 밝은 자연광·sky value·더 밝은 원경과 낮은 detail 밀도를 기본으로 합니다. 작은 캐릭터와 넓은 세계, 안정된 실루엣, 단순하고 명확한 vector/polygon, 작은 머리와 긴 가는 팔다리, 큰 면의 3~4단계 셀 명암. 특정 작품의 캐릭터 복제나 러프하고 삐뚤빼뚤한 손그림은 지양합니다.',
   ],

@@ -211,7 +211,29 @@ assert.equal(sample.level, Math.round(sample.quantizedLuminance * 3));
 
 assert.throws(() => toMutedHexColor('red'), /six-digit hexadecimal/);
 assert.throws(() => toMutedHexColor('#ff0000', 1.1), /between 0 and 1/);
-assert.throws(() => quantizeLuminance(0.5, 5), /either 3 or 4/);
+assert.throws(() => quantizeLuminance(0.5, 5), /2, 3 or 4/);
+assert.equal(quantizeLuminance(0.2, 2), 0);
+assert.equal(quantizeLuminance(0.8, 2), 1);
+const bands = new Set();
+for (const ambientIntensity of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
+  const result = createCellLightingSample({
+    baseColor: '#ffffff',
+    position: { x: 0, y: 0 },
+    normal: { x: 0, y: -1 },
+    material: 'cloth',
+    lights: [],
+    ambientIntensity,
+    quantizationLevels: 2,
+    luminanceFloor: 0.62,
+  });
+  bands.add(result.shadedColor);
+  assert.ok(parseInt(result.shadedColor.slice(1, 3), 16) >= 185);
+}
+assert.equal(bands.size, 2, 'Readable actor lighting retains exactly two response bands');
+assert.throws(
+  () => createCellLightingSample({ ...immutableInput, luminanceFloor: 2 }),
+  /between 0 and 1/,
+);
 assert.throws(
   () =>
     computeLightContribution({

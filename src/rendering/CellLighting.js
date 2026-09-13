@@ -191,8 +191,8 @@ export function toMutedHexColor(hexColor, saturationRetention = DEFAULT_SATURATI
 
 export function quantizeLuminance(luminance, levels = 4) {
   assertUnitInterval(luminance, 'luminance');
-  if (levels !== 3 && levels !== 4) {
-    throw new RangeError('levels must be either 3 or 4 for cell lighting.');
+  if (![2, 3, 4].includes(levels)) {
+    throw new RangeError('levels must be 2, 3 or 4 for cell lighting.');
   }
   return Math.round(luminance * (levels - 1)) / (levels - 1);
 }
@@ -450,6 +450,7 @@ export function createCellLightingSample({
   quantizationLevels = 4,
   saturationRetention = DEFAULT_SATURATION_RETENTION,
   structuralOcclusion = 0,
+  luminanceFloor = 0,
 }) {
   parseHexColor(baseColor);
   assertPoint(position, 'position');
@@ -463,6 +464,7 @@ export function createCellLightingSample({
   quantizeLuminance(0, quantizationLevels);
   assertUnitInterval(saturationRetention, 'saturationRetention');
   assertUnitInterval(structuralOcclusion, 'structuralOcclusion');
+  assertUnitInterval(luminanceFloor, 'luminanceFloor');
 
   const contributions = lights.map((light) => {
     const contribution = computeLightContribution({
@@ -495,7 +497,10 @@ export function createCellLightingSample({
   return Object.freeze({
     material,
     mutedColor,
-    shadedColor: shadeMutedColor(mutedColor, quantizedLuminance),
+    shadedColor: shadeMutedColor(
+      mutedColor,
+      luminanceFloor + quantizedLuminance * (1 - luminanceFloor),
+    ),
     rawLuminance,
     quantizedLuminance,
     level: Math.round(quantizedLuminance * (quantizationLevels - 1)),

@@ -2,13 +2,15 @@
 
 ## Current Phase
 
-RUNNING — 선택된 REF-01 master SVG를 실제 주인공·프롤로그 cast와 검토실에 연결했다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
+RUNNING — 선택된 외형 보강 2안의 굵은 외곽선·두 단계 명암을 주인공·프롤로그 cast와 검토실에 적용했다. Codex heartbeat와 OpenCode 자동 실행은 Human pause 상태이며 명시적 재개 전까지 유지한다.
 
 ## Active Execution Goal
 
 Human Feedback Priority — REF-01 선택 콘셉트 대비 단순한 vector 외형·중요 pose의 완성도를 개선하고 실제 gameplay scale에서 검토한다. 현재 주인공/프롤로그 cast 연결을 유지하며 지역별 구형 정적 라이벌은 잔존 Gap으로 추적한다. 새 시각적 선택은 3안을 제시하고 Human 선택을 받는다.
 
 ## Current Evidence / Gap
+
+- 외형 보강 2안은 docs/references/ref-01/appearance-option-2-selected.png를 기준으로 한다. 공유 Ref01Appearance가 큰 부위의 굵은 외곽선과 내부 디테일 선 절제, 두 명암 단계의 최저 밝기를 소유한다. 게임/검토의 같은 SVG item에 적용하며 기존 body/tool 좌표·anchor·공격 거리는 변경하지 않는다. 상세 복장·형태의 시안 충실도는 별도 미완성으로 유지한다.
 
 - 게임·그래픽 검토실·저장 없는 테스트 플레이는 같은 `WebGlPolygonRenderer`와 immutable RenderFrame/pose/geometry를 사용한다. 기존 CPU `DepthPolygonRasterizer`, ImageData/putImageData와 Canvas 2D production renderer는 제거했고 release `85c50776f3ef`은 네 WebGL module을 offline asset으로 포함한다.
 - scene painter order와 연속 depth group을 분리하고 opaque depth/write → 가려지는 polygon stroke → back-to-front translucent no-write → visible silhouette 순서로 합성한다. DPR/resize, 4× review, shared thumbnail staging context, screen replacement rollback, resource dispose, context-loss 감지와 WebGL2 미지원 안내를 실제 browser fixture로 검사했다.

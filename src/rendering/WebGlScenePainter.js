@@ -41,7 +41,8 @@ export function resolveWebGlCellFill(item, frame, occluders) {
       (occluder) =>
         occluder.id !== item.id && (!item.worldObjectId || occluder.ownerId !== item.worldObjectId),
     ),
-    quantizationLevels: artDirection.quantizationLevels,
+    quantizationLevels: item.quantizationLevels ?? artDirection.quantizationLevels,
+    luminanceFloor: item.luminanceFloor ?? 0,
     structuralOcclusion: item.structuralOcclusion ?? 0,
     saturationRetention:
       item.saturationRetention ?? (item.depthGroup ? 1 : artDirection.saturationRetention),

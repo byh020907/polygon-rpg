@@ -1,5 +1,6 @@
 import { createSvgRigBinding, sampleSvgRigProjection } from '../animation/SvgRigBinding.js';
 import { PLAYER_RIG } from '../animation/PlayerRig.js';
+import { ref01Appearance } from './Ref01Appearance.js';
 import { sampleSvgAsset } from './svg/SvgAssetSampler.js';
 import { frameMatrix, point, freeze, multiply, inverse } from './svg/SvgMath.js';
 const HERO_ITEM_IDS = Object.freeze({
@@ -192,6 +193,7 @@ export function sampleSvgCharacterPresentation(
       );
       return {
         ...shape,
+        ...ref01Appearance(binding.asset.id, shape, geometryScale),
         id:
           binding.asset.id === 'scrapyard-apprentice' && shape.partId === binding.weaponPartId
             ? 'sword-blade'

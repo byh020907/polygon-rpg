@@ -1,5 +1,6 @@
 import { createSvgRigBinding, sampleSvgRigProjection } from '../animation/SvgRigBinding.js';
 import { PLAYER_RIG } from '../animation/PlayerRig.js';
+import { ref01Appearance } from './Ref01Appearance.js';
 import { sampleSvgAsset } from './svg/SvgAssetSampler.js';
 import { frameMatrix, point, freeze, multiply, inverse } from './svg/SvgMath.js';
 
@@ -110,6 +111,7 @@ export function sampleSvgCastPresentation(
       );
       return {
         ...shape,
+        ...ref01Appearance(binding.asset.id, shape, geometryScale),
         id: `${binding.asset.id}:${shape.id}`,
         points,
         depths,
