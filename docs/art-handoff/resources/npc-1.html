@@ -3,1192 +3,1261 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>NPC · 전체 목록 1/3 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>NPC · 전체 목록 1/3 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>NPC · 전체 목록 1/3</h1>
-        <p>현재 등록 68개 중 1–30. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">원본 ID/이름</th>
-              <th scope="col">역할·제작 묶음</th>
-              <th scope="col">사용 장소/시나리오</th>
-              <th scope="col">현재 등록 상태</th>
-              <th scope="col">검토/출처</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <strong id="npc:cast:rival-scout" data-resource-id="npc:cast:rival-scout"
-                  >라이벌 · 외형 2안 SVG</strong
-                ><br /><code>npc:cast:rival-scout</code>
-              </td>
-              <td>
-                라이벌 · 탐색·측량·선점·회수를 맡는 동년배 견습생·구조 대상·반복 정찰 인물<br /><a
-                  href="../characters.html#rival"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 2개</summary>
-                  <ul>
-                    <li>공용 대기 clip · <code>idle</code> · 25프레임</li>
-                    <li>공용 이동 clip · 부착 확인 · <code>run</code> · 160프레임</li>
-                  </ul>
-                </details>
-                인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다. 게임
-                cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Acast%3Arival-scout"
-                  >게임 검토실</a
-                ><br /><a href="../../../public/graphics/rival-scout.master.svg"
-                  >public/graphics/rival-scout.master.svg</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="npc:cast:scrapyard-owner" data-resource-id="npc:cast:scrapyard-owner"
-                  >고물상인 · 외형 2안 SVG</strong
-                ><br /><code>npc:cast:scrapyard-owner</code>
-              </td>
-              <td>
-                고물상인 · 전직 현장 수거·복구반·의뢰인·제어핵 분석·지도/차고 공개·생활권 성장
-                서비스<br /><a href="../characters.html#owner">인물 역할표</a>
-              </td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 2개</summary>
-                  <ul>
-                    <li>공용 대기 clip · <code>idle</code> · 25프레임</li>
-                    <li>공용 이동 clip · 부착 확인 · <code>run</code> · 160프레임</li>
-                  </ul>
-                </details>
-                인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다. 게임
-                cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Acast%3Ascrapyard-owner"
-                  >게임 검토실</a
-                ><br /><a href="../../../public/graphics/scrapyard-owner.master.svg"
-                  >public/graphics/scrapyard-owner.master.svg</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:abandoned-mine-roadhead:mine-waiting-miner"
-                  data-resource-id="npc:abandoned-mine-roadhead:mine-waiting-miner"
-                  >대기 광부</strong
-                ><br /><code>npc:abandoned-mine-roadhead:mine-waiting-miner</code>
-              </td>
-              <td>
-                대기 광부 · 갇힌 동료를 기다리며 구조 성과를 생활로 보여 주는 주민<br /><a
-                  href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-waiting-miner"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:abandoned-mine-roadhead:mine-foreman"
-                  data-resource-id="npc:abandoned-mine-roadhead:mine-foreman"
-                  >폐광 작업반장</strong
-                ><br /><code>npc:abandoned-mine-roadhead:mine-foreman</code>
-              </td>
-              <td>
-                폐광 작업반장 · 붕괴 구조 판단과 굴착기 인수 결정<br /><a
-                  href="../characters.html#mine-foreman"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-foreman"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:abandoned-mine-roadhead:mine-gate-miner"
-                  data-resource-id="npc:abandoned-mine-roadhead:mine-gate-miner"
-                  >구조 갱도 앞 대기 광부</strong
-                ><br /><code>npc:abandoned-mine-roadhead:mine-gate-miner</code>
-              </td>
-              <td>
-                대기 광부 · 갇힌 동료를 기다리며 구조 성과를 생활로 보여 주는 주민<br /><a
-                  href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-gate-miner"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat"
-                  >대기 광부 · 분진 작업복</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat</code
-                >
-              </td>
-              <td>
-                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mine-worker · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet"
-                  >대기 광부 · 광부등</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet</code
-                >
-              </td>
-              <td>
-                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mining-helmet · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe"
-                  >대기 광부 · 곡괭이</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe</code
-                >
-              </td>
-              <td>
-                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · pickaxe · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-pickaxe"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-workwear"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-workwear"
-                  >폐광 작업반장 · 분진 작업복</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-workwear</code
-                >
-              </td>
-              <td>
-                폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-foreman"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mine-worker · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-workwear"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet"
-                  >mine-foreman-helmet</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet</code
-                >
-              </td>
-              <td>
-                폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-foreman"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mining-helmet · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-helmet"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp"
-                  >mine-foreman-lamp</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp</code
-                >
-              </td>
-              <td>
-                폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-foreman"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · helmet-lamp · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-lamp"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe"
-                  >mine-foreman-pickaxe</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe</code
-                >
-              </td>
-              <td>
-                폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-foreman"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · pickaxe · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-pickaxe"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat"
-                  >구조 갱도 앞 대기 광부 · 분진 작업복</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat</code
-                >
-              </td>
-              <td>
-                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mine-worker · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-coat"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet"
-                  >구조 갱도 앞 대기 광부 · 광부등</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet</code
-                >
-              </td>
-              <td>
-                대기 광부 · 조립 부위; 별도 인물 아님<br /><a href="../characters.html#mine-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mining-helmet · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-helmet"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:abandoned-mine-rescue-tunnel:mine-trapped-worker"
-                  data-resource-id="npc:abandoned-mine-rescue-tunnel:mine-trapped-worker"
-                  >갇힌 폐광 작업자</strong
-                ><br /><code>npc:abandoned-mine-rescue-tunnel:mine-trapped-worker</code>
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 구조 사건의 실제 대상; 대사상 동료 셋<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-signal"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-signal"
-                  >갇힌 작업자 생존 신호</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-signal</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · rescue-signal · metal
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-signal"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat"
-                  >갇힌 폐광 작업자 · 분진 작업복</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mine-worker · cloth
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-coat"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head"
-                  >mine-trapped-worker-head</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · worker-head-silhouette · cloth
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-head"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet"
-                  >mine-trapped-worker-helmet</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mining-helmet · metal
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-helmet"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp"
-                  >mine-trapped-worker-lamp</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · helmet-lamp · metal
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-lamp"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack"
-                  >mine-trapped-worker-pack</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · rescue-gear-pack · cloth
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-pack"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool"
-                  data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool"
-                  >mine-trapped-worker-tool</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool</code
-                >
-              </td>
-              <td>
-                갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#mine-trapped"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mine-rescue-tool · metal
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-tool"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:harbor-shipyard-roadhead:shipyard-waiting-crew"
-                  data-resource-id="npc:harbor-shipyard-roadhead:shipyard-waiting-crew"
-                  >대기 갑판원</strong
-                ><br /><code>npc:harbor-shipyard-roadhead:shipyard-waiting-crew</code>
-              </td>
-              <td>
-                대기 갑판원 · 출항을 기다리고 갑판 정리로 복구를 보여 주는 주민<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:harbor-shipyard-roadhead:shipyard-gate-crew"
-                  data-resource-id="npc:harbor-shipyard-roadhead:shipyard-gate-crew"
-                  >건선거 앞 대기 갑판원</strong
-                ><br /><code>npc:harbor-shipyard-roadhead:shipyard-gate-crew</code>
-              </td>
-              <td>
-                대기 갑판원 · 출항을 기다리고 갑판 정리로 복구를 보여 주는 주민<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="npc:harbor-shipyard-roadhead:shipyard-worker"
-                  data-resource-id="npc:harbor-shipyard-roadhead:shipyard-worker"
-                  >조선소 용접공</strong
-                ><br /><code>npc:harbor-shipyard-roadhead:shipyard-worker</code>
-              </td>
-              <td>
-                조선소 용접공 · 도크 탈환·마지막 선박 외판 수리·크레인 인수 판단<br /><a
-                  href="../characters.html#shipyard-worker"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>조립 묶음</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로
-                표시합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aharbor-shipyard-roadhead%3Ashipyard-worker"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-apron"
-                  data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-apron"
-                  >대기 갑판원 · 방열 앞치마</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-apron</code
-                >
-              </td>
-              <td>
-                대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · shipyard-worker · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-apron"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask"
-                  data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask"
-                  >대기 갑판원 · 용접 마스크</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask</code
-                >
-              </td>
-              <td>
-                대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · welding-mask · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-mask"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook"
-                  data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook"
-                  >대기 갑판원 · 계류 갈고리</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook</code
-                >
-              </td>
-              <td>
-                대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · mooring-hook · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-hook"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron"
-                  data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron"
-                  >건선거 앞 대기 갑판원 · 방열 앞치마</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron</code
-                >
-              </td>
-              <td>
-                대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · shipyard-worker · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-apron"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask"
-                  data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask"
-                  >건선거 앞 대기 갑판원 · 용접 마스크</strong
-                ><br /><code
-                  >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask</code
-                >
-              </td>
-              <td>
-                대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
-                  href="../characters.html#shipyard-waiting"
-                  >인물 역할표</a
-                >
-              </td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                  </ul>
-                </details>
-                원본 기본 활성 리소스 · welding-mask · stone
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-mask"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <nav class="pager"><a href="index.html">전체 분류</a> <a href="npc-2.html">다음</a></nav>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>NPC · 전체 목록 1/3</h1>
+                <p class="wiki-document-subtitle">
+                  현재 등록 68개 중 1–30. 조각/상태를 독립 제작 건수로 합산하지 않습니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">원본 ID/이름</th>
+                    <th scope="col">역할·제작 묶음</th>
+                    <th scope="col">사용 장소/시나리오</th>
+                    <th scope="col">현재 등록 상태</th>
+                    <th scope="col">검토/출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong id="npc:cast:rival-scout" data-resource-id="npc:cast:rival-scout"
+                        >라이벌 · 외형 2안 SVG</strong
+                      ><br /><code>npc:cast:rival-scout</code>
+                    </td>
+                    <td>
+                      라이벌 · 탐색·측량·선점·회수를 맡는 동년배 견습생·구조 대상·반복 정찰 인물<br /><a
+                        href="../characters.html#rival"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 2개</summary>
+                        <ul>
+                          <li>공용 대기 clip · <code>idle</code> · 25프레임</li>
+                          <li>공용 이동 clip · 부착 확인 · <code>run</code> · 160프레임</li>
+                        </ul>
+                      </details>
+                      인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다.
+                      게임 cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Acast%3Arival-scout"
+                        >게임 검토실</a
+                      ><br /><a href="../../../public/graphics/rival-scout.master.svg"
+                        >public/graphics/rival-scout.master.svg</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:cast:scrapyard-owner"
+                        data-resource-id="npc:cast:scrapyard-owner"
+                        >고물상인 · 외형 2안 SVG</strong
+                      ><br /><code>npc:cast:scrapyard-owner</code>
+                    </td>
+                    <td>
+                      고물상인 · 전직 현장 수거·복구반·의뢰인·제어핵 분석·지도/차고 공개·생활권 성장
+                      서비스<br /><a href="../characters.html#owner">인물 역할표</a>
+                    </td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 2개</summary>
+                        <ul>
+                          <li>공용 대기 clip · <code>idle</code> · 25프레임</li>
+                          <li>공용 이동 clip · 부착 확인 · <code>run</code> · 160프레임</li>
+                        </ul>
+                      </details>
+                      인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다.
+                      게임 cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Acast%3Ascrapyard-owner"
+                        >게임 검토실</a
+                      ><br /><a href="../../../public/graphics/scrapyard-owner.master.svg"
+                        >public/graphics/scrapyard-owner.master.svg</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:abandoned-mine-roadhead:mine-waiting-miner"
+                        data-resource-id="npc:abandoned-mine-roadhead:mine-waiting-miner"
+                        >대기 광부</strong
+                      ><br /><code>npc:abandoned-mine-roadhead:mine-waiting-miner</code>
+                    </td>
+                    <td>
+                      대기 광부 · 갇힌 동료를 기다리며 구조 성과를 생활로 보여 주는 주민<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-waiting-miner"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:abandoned-mine-roadhead:mine-foreman"
+                        data-resource-id="npc:abandoned-mine-roadhead:mine-foreman"
+                        >폐광 작업반장</strong
+                      ><br /><code>npc:abandoned-mine-roadhead:mine-foreman</code>
+                    </td>
+                    <td>
+                      폐광 작업반장 · 붕괴 구조 판단과 굴착기 인수 결정<br /><a
+                        href="../characters.html#mine-foreman"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-foreman"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:abandoned-mine-roadhead:mine-gate-miner"
+                        data-resource-id="npc:abandoned-mine-roadhead:mine-gate-miner"
+                        >구조 갱도 앞 대기 광부</strong
+                      ><br /><code>npc:abandoned-mine-roadhead:mine-gate-miner</code>
+                    </td>
+                    <td>
+                      대기 광부 · 갇힌 동료를 기다리며 구조 성과를 생활로 보여 주는 주민<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-roadhead%3Amine-gate-miner"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat"
+                        >대기 광부 · 분진 작업복</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-coat</code
+                      >
+                    </td>
+                    <td>
+                      대기 광부 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mine-worker · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-coat"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet"
+                        >대기 광부 · 광부등</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-helmet</code
+                      >
+                    </td>
+                    <td>
+                      대기 광부 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mining-helmet · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-helmet"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe"
+                        >대기 광부 · 곡괭이</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-waiting-miner-pickaxe</code
+                      >
+                    </td>
+                    <td>
+                      대기 광부 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · pickaxe · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-waiting-miner-pickaxe"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-workwear"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-workwear"
+                        >폐광 작업반장 · 분진 작업복</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-workwear</code
+                      >
+                    </td>
+                    <td>
+                      폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-foreman"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mine-worker · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-workwear"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet"
+                        >mine-foreman-helmet</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-helmet</code
+                      >
+                    </td>
+                    <td>
+                      폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-foreman"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mining-helmet · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-helmet"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp"
+                        >mine-foreman-lamp</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-lamp</code
+                      >
+                    </td>
+                    <td>
+                      폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-foreman"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · helmet-lamp · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-lamp"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe"
+                        >mine-foreman-pickaxe</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-foreman-pickaxe</code
+                      >
+                    </td>
+                    <td>
+                      폐광 작업반장 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-foreman"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · pickaxe · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-foreman-pickaxe"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat"
+                        >구조 갱도 앞 대기 광부 · 분진 작업복</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat</code
+                      >
+                    </td>
+                    <td>
+                      대기 광부 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mine-worker · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-coat"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet"
+                        >구조 갱도 앞 대기 광부 · 광부등</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-helmet</code
+                      >
+                    </td>
+                    <td>
+                      대기 광부 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mining-helmet · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-gate-miner-helmet"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:abandoned-mine-rescue-tunnel:mine-trapped-worker"
+                        data-resource-id="npc:abandoned-mine-rescue-tunnel:mine-trapped-worker"
+                        >갇힌 폐광 작업자</strong
+                      ><br /><code>npc:abandoned-mine-rescue-tunnel:mine-trapped-worker</code>
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 구조 사건의 실제 대상; 대사상 동료 셋<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-signal"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-signal"
+                        >갇힌 작업자 생존 신호</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-signal</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · rescue-signal · metal
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-signal"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat"
+                        >갇힌 폐광 작업자 · 분진 작업복</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-coat</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mine-worker · cloth
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-coat"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head"
+                        >mine-trapped-worker-head</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-head</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · worker-head-silhouette · cloth
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-head"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet"
+                        >mine-trapped-worker-helmet</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-helmet</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mining-helmet · metal
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-helmet"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp"
+                        >mine-trapped-worker-lamp</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-lamp</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · helmet-lamp · metal
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-lamp"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack"
+                        >mine-trapped-worker-pack</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-pack</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · rescue-gear-pack · cloth
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-pack"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool"
+                        data-resource-id="map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool"
+                        >mine-trapped-worker-tool</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:abandoned-mine:abandoned-mine-rescue-tunnel:mine-trapped-worker-tool</code
+                      >
+                    </td>
+                    <td>
+                      갇힌 폐광 작업자 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#mine-trapped"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mine-rescue-tool · metal
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel%3Amine-trapped-worker-tool"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:harbor-shipyard-roadhead:shipyard-waiting-crew"
+                        data-resource-id="npc:harbor-shipyard-roadhead:shipyard-waiting-crew"
+                        >대기 갑판원</strong
+                      ><br /><code>npc:harbor-shipyard-roadhead:shipyard-waiting-crew</code>
+                    </td>
+                    <td>
+                      대기 갑판원 · 출항을 기다리고 갑판 정리로 복구를 보여 주는 주민<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:harbor-shipyard-roadhead:shipyard-gate-crew"
+                        data-resource-id="npc:harbor-shipyard-roadhead:shipyard-gate-crew"
+                        >건선거 앞 대기 갑판원</strong
+                      ><br /><code>npc:harbor-shipyard-roadhead:shipyard-gate-crew</code>
+                    </td>
+                    <td>
+                      대기 갑판원 · 출항을 기다리고 갑판 정리로 복구를 보여 주는 주민<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="npc:harbor-shipyard-roadhead:shipyard-worker"
+                        data-resource-id="npc:harbor-shipyard-roadhead:shipyard-worker"
+                        >조선소 용접공</strong
+                      ><br /><code>npc:harbor-shipyard-roadhead:shipyard-worker</code>
+                    </td>
+                    <td>
+                      조선소 용접공 · 도크 탈환·마지막 선박 외판 수리·크레인 인수 판단<br /><a
+                        href="../characters.html#shipyard-worker"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>조립 묶음</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을
+                      그대로 표시합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=npc%3Aharbor-shipyard-roadhead%3Ashipyard-worker"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-apron"
+                        data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-apron"
+                        >대기 갑판원 · 방열 앞치마</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-apron</code
+                      >
+                    </td>
+                    <td>
+                      대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · shipyard-worker · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-apron"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask"
+                        data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask"
+                        >대기 갑판원 · 용접 마스크</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask</code
+                      >
+                    </td>
+                    <td>
+                      대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · welding-mask · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-mask"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook"
+                        data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook"
+                        >대기 갑판원 · 계류 갈고리</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook</code
+                      >
+                    </td>
+                    <td>
+                      대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · mooring-hook · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-hook"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron"
+                        data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron"
+                        >건선거 앞 대기 갑판원 · 방열 앞치마</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron</code
+                      >
+                    </td>
+                    <td>
+                      대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · shipyard-worker · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-apron"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask"
+                        data-resource-id="map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask"
+                        >건선거 앞 대기 갑판원 · 용접 마스크</strong
+                      ><br /><code
+                        >map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask</code
+                      >
+                    </td>
+                    <td>
+                      대기 갑판원 · 조립 부위; 별도 인물 아님<br /><a
+                        href="../characters.html#shipyard-waiting"
+                        >인물 역할표</a
+                      >
+                    </td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                        </ul>
+                      </details>
+                      원본 기본 활성 리소스 · welding-mask · stone
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=npc&amp;resource=map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-mask"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <nav class="pager">
+              <a href="index.html">전체 분류</a> <a href="npc-2.html">다음</a>
+            </nav>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>

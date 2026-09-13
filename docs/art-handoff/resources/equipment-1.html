@@ -3,580 +3,660 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>무기·장비 · 전체 목록 1/1 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>무기·장비 · 전체 목록 1/1 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>무기·장비 · 전체 목록 1/1</h1>
-        <p>현재 등록 10개 중 1–10. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">원본 ID/이름</th>
-              <th scope="col">역할·제작 묶음</th>
-              <th scope="col">사용 장소/시나리오</th>
-              <th scope="col">현재 등록 상태</th>
-              <th scope="col">검토/출처</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-cutter-balanced"
-                  data-resource-id="equipment:field-cutter-balanced"
-                  >속공형 현장 절단검</strong
-                ><br /><code>equipment:field-cutter-balanced</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
-                    <li>올려베기 · <code>rising</code> · 32프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
-                  </ul>
-                </details>
-                Item field-cutter-balanced · Family field-cutter · Slot weapon · oneHand · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-cutter-shared. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-balanced"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-cutter-heavy"
-                  data-resource-id="equipment:field-cutter-heavy"
-                  >중량형 현장 절단검</strong
-                ><br /><code>equipment:field-cutter-heavy</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 6프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 36프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 54프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 30프레임</li>
-                    <li>올려베기 · <code>rising</code> · 42프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 57프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 30프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 35프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 29프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 48프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 35프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 30프레임</li>
-                  </ul>
-                </details>
-                Item field-cutter-heavy · Family field-cutter · Slot weapon · oneHand · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 관련 있음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-cutter-shared. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-heavy"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-cutter-swift"
-                  data-resource-id="equipment:field-cutter-swift"
-                  >연환형 현장 절단검</strong
-                ><br /><code>equipment:field-cutter-swift</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 24프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 37프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 19프레임</li>
-                    <li>올려베기 · <code>rising</code> · 29프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 39프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 19프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 23프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 18프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 33프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 23프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 21프레임</li>
-                  </ul>
-                </details>
-                Item field-cutter-swift · Family field-cutter · Slot weapon · oneHand · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-cutter-shared. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-swift"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-cutter-breaker"
-                  data-resource-id="equipment:field-cutter-breaker"
-                  >파쇄형 현장 절단검</strong
-                ><br /><code>equipment:field-cutter-breaker</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 6프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 35프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 53프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 29프레임</li>
-                    <li>올려베기 · <code>rising</code> · 41프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 56프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 29프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 34프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 27프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 47프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 34프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 30프레임</li>
-                  </ul>
-                </details>
-                Item field-cutter-breaker · Family field-cutter · Slot weapon · oneHand · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-cutter-shared. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-breaker"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-cutter-reach"
-                  data-resource-id="equipment:field-cutter-reach"
-                  >추격형 현장 절단검</strong
-                ><br /><code>equipment:field-cutter-reach</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 34프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 50프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 28프레임</li>
-                    <li>올려베기 · <code>rising</code> · 39프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 53프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 28프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 33프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 27프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 44프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 33프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 28프레임</li>
-                  </ul>
-                </details>
-                Item field-cutter-reach · Family field-cutter · Slot weapon · oneHand · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-cutter-shared. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-reach"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-shield-standard"
-                  data-resource-id="equipment:field-shield-standard"
-                  >기본 방호판</strong
-                ><br /><code>equipment:field-shield-standard</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
-                    <li>올려베기 · <code>rising</code> · 32프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
-                  </ul>
-                </details>
-                Item field-shield-standard · Family field-shield · Slot shield · oneHand · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 관련 있음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-shield-shared. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-shield-standard"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-work-helmet"
-                  data-resource-id="equipment:field-work-helmet"
-                  >작업모</strong
-                ><br /><code>equipment:field-work-helmet</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
-                    <li>올려베기 · <code>rising</code> · 32프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
-                  </ul>
-                </details>
-                Item field-work-helmet · Family helmet · Slot helmet · none · Moveset
-                cutter-shield-standard · Set field-work-set · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-work-helmet. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-helmet"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="equipment:field-work-body" data-resource-id="equipment:field-work-body"
-                  >작업 덧옷</strong
-                ><br /><code>equipment:field-work-body</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
-                    <li>올려베기 · <code>rising</code> · 32프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
-                  </ul>
-                </details>
-                Item field-work-body · Family body-armor · Slot bodyArmor · none · Moveset
-                cutter-shield-standard · Set field-work-set · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-work-body. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-body"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="equipment:field-work-boots"
-                  data-resource-id="equipment:field-work-boots"
-                  >작업화</strong
-                ><br /><code>equipment:field-work-boots</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
-                    <li>올려베기 · <code>rising</code> · 32프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
-                  </ul>
-                </details>
-                Item field-work-boots · Family boots · Slot boots · none · Moveset
-                cutter-shield-standard · Set field-work-set · 특수 조합 관련 있음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace · Visual
-                field-work-boots. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-boots"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="equipment:field-work-lamp" data-resource-id="equipment:field-work-lamp"
-                  >재사용 작업등</strong
-                ><br /><code>equipment:field-work-lamp</code>
-              </td>
-              <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 22개</summary>
-                  <ul>
-                    <li>장비 실제 크기 · <code>static</code></li>
-                    <li>대기 · <code>idle</code> · 25프레임</li>
-                    <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
-                    <li>점프 상승 · <code>jump</code> · 24프레임</li>
-                    <li>낙하 · <code>fall</code> · 24프레임</li>
-                    <li>착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임</li>
-                    <li>전방 구르기 · <code>roll</code> · 25프레임</li>
-                    <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
-                    <li>피격 · <code>hit</code> · 14프레임</li>
-                    <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
-                    <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
-                    <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
-                    <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
-                    <li>찌르기 · <code>thrust</code> · 22프레임</li>
-                    <li>올려베기 · <code>rising</code> · 32프레임</li>
-                    <li>회전 공격 · <code>spin</code> · 43프레임</li>
-                    <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
-                    <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
-                    <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
-                    <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
-                    <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
-                    <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
-                  </ul>
-                </details>
-                Item field-work-lamp · Family tool · Slot tool · none · Moveset
-                cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
-                light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace,
-                illuminate · Visual field-work-lamp. 현재 placeholder를 사용합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-lamp"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
-                  >src/game/equipment/EquipmentItemProfiles.js</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <nav class="pager"><a href="index.html">전체 분류</a></nav>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>무기·장비 · 전체 목록 1/1</h1>
+                <p class="wiki-document-subtitle">
+                  현재 등록 10개 중 1–10. 조각/상태를 독립 제작 건수로 합산하지 않습니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">원본 ID/이름</th>
+                    <th scope="col">역할·제작 묶음</th>
+                    <th scope="col">사용 장소/시나리오</th>
+                    <th scope="col">현재 등록 상태</th>
+                    <th scope="col">검토/출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-cutter-balanced"
+                        data-resource-id="equipment:field-cutter-balanced"
+                        >속공형 현장 절단검</strong
+                      ><br /><code>equipment:field-cutter-balanced</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                          <li>올려베기 · <code>rising</code> · 32프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                        </ul>
+                      </details>
+                      Item field-cutter-balanced · Family field-cutter · Slot weapon · oneHand ·
+                      Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
+                      light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace ·
+                      Visual field-cutter-shared. 현재 placeholder를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-balanced"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-cutter-heavy"
+                        data-resource-id="equipment:field-cutter-heavy"
+                        >중량형 현장 절단검</strong
+                      ><br /><code>equipment:field-cutter-heavy</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 6프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 36프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 54프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 30프레임</li>
+                          <li>올려베기 · <code>rising</code> · 42프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 57프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 30프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 35프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 29프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 48프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 35프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 30프레임</li>
+                        </ul>
+                      </details>
+                      Item field-cutter-heavy · Family field-cutter · Slot weapon · oneHand ·
+                      Moveset cutter-shield-standard · Set 없음 · 특수 조합 관련 있음 · Field
+                      cable-cut, light-plate-cut, light-machine-disable, debris-guard,
+                      pressure-block, brace · Visual field-cutter-shared. 현재 placeholder를
+                      사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-heavy"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-cutter-swift"
+                        data-resource-id="equipment:field-cutter-swift"
+                        >연환형 현장 절단검</strong
+                      ><br /><code>equipment:field-cutter-swift</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 24프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 37프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 19프레임</li>
+                          <li>올려베기 · <code>rising</code> · 29프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 39프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 19프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 23프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 18프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 33프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 23프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 21프레임</li>
+                        </ul>
+                      </details>
+                      Item field-cutter-swift · Family field-cutter · Slot weapon · oneHand ·
+                      Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
+                      light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace ·
+                      Visual field-cutter-shared. 현재 placeholder를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-swift"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-cutter-breaker"
+                        data-resource-id="equipment:field-cutter-breaker"
+                        >파쇄형 현장 절단검</strong
+                      ><br /><code>equipment:field-cutter-breaker</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 6프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 35프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 53프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 29프레임</li>
+                          <li>올려베기 · <code>rising</code> · 41프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 56프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 29프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 34프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 27프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 47프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 34프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 30프레임</li>
+                        </ul>
+                      </details>
+                      Item field-cutter-breaker · Family field-cutter · Slot weapon · oneHand ·
+                      Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
+                      light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace ·
+                      Visual field-cutter-shared. 현재 placeholder를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-breaker"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-cutter-reach"
+                        data-resource-id="equipment:field-cutter-reach"
+                        >추격형 현장 절단검</strong
+                      ><br /><code>equipment:field-cutter-reach</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 34프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 50프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 28프레임</li>
+                          <li>올려베기 · <code>rising</code> · 39프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 53프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 28프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 33프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 27프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 44프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 33프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 28프레임</li>
+                        </ul>
+                      </details>
+                      Item field-cutter-reach · Family field-cutter · Slot weapon · oneHand ·
+                      Moveset cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
+                      light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace ·
+                      Visual field-cutter-shared. 현재 placeholder를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-cutter-reach"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-shield-standard"
+                        data-resource-id="equipment:field-shield-standard"
+                        >기본 방호판</strong
+                      ><br /><code>equipment:field-shield-standard</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                          <li>올려베기 · <code>rising</code> · 32프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                        </ul>
+                      </details>
+                      Item field-shield-standard · Family field-shield · Slot shield · oneHand ·
+                      Moveset cutter-shield-standard · Set 없음 · 특수 조합 관련 있음 · Field
+                      cable-cut, light-plate-cut, light-machine-disable, debris-guard,
+                      pressure-block, brace · Visual field-shield-shared. 현재 placeholder를
+                      사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-shield-standard"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-work-helmet"
+                        data-resource-id="equipment:field-work-helmet"
+                        >작업모</strong
+                      ><br /><code>equipment:field-work-helmet</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                          <li>올려베기 · <code>rising</code> · 32프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                        </ul>
+                      </details>
+                      Item field-work-helmet · Family helmet · Slot helmet · none · Moveset
+                      cutter-shield-standard · Set field-work-set · 특수 조합 없음 · Field
+                      cable-cut, light-plate-cut, light-machine-disable, debris-guard,
+                      pressure-block, brace · Visual field-work-helmet. 현재 placeholder를
+                      사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-helmet"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-work-body"
+                        data-resource-id="equipment:field-work-body"
+                        >작업 덧옷</strong
+                      ><br /><code>equipment:field-work-body</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                          <li>올려베기 · <code>rising</code> · 32프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                        </ul>
+                      </details>
+                      Item field-work-body · Family body-armor · Slot bodyArmor · none · Moveset
+                      cutter-shield-standard · Set field-work-set · 특수 조합 없음 · Field
+                      cable-cut, light-plate-cut, light-machine-disable, debris-guard,
+                      pressure-block, brace · Visual field-work-body. 현재 placeholder를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-body"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-work-boots"
+                        data-resource-id="equipment:field-work-boots"
+                        >작업화</strong
+                      ><br /><code>equipment:field-work-boots</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                          <li>올려베기 · <code>rising</code> · 32프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                        </ul>
+                      </details>
+                      Item field-work-boots · Family boots · Slot boots · none · Moveset
+                      cutter-shield-standard · Set field-work-set · 특수 조합 관련 있음 · Field
+                      cable-cut, light-plate-cut, light-machine-disable, debris-guard,
+                      pressure-block, brace · Visual field-work-boots. 현재 placeholder를
+                      사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-boots"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="equipment:field-work-lamp"
+                        data-resource-id="equipment:field-work-lamp"
+                        >재사용 작업등</strong
+                      ><br /><code>equipment:field-work-lamp</code>
+                    </td>
+                    <td>6슬롯 실제 Item의 산업 장비 형태·도달 범위·재질·현장 기능 구분</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 22개</summary>
+                        <ul>
+                          <li>장비 실제 크기 · <code>static</code></li>
+                          <li>대기 · <code>idle</code> · 25프레임</li>
+                          <li>달리기 · 정상 33주기 · <code>run</code> · 160프레임</li>
+                          <li>점프 상승 · <code>jump</code> · 24프레임</li>
+                          <li>낙하 · <code>fall</code> · 24프레임</li>
+                          <li>
+                            착지 · 현재 gameplay에서 미사용 자세 · <code>landing</code> · 8프레임
+                          </li>
+                          <li>전방 구르기 · <code>roll</code> · 25프레임</li>
+                          <li>방어 · 정상 7주기 · <code>guard</code> · 200프레임</li>
+                          <li>피격 · <code>hit</code> · 14프레임</li>
+                          <li>기본공격 방어 반동 · <code>block</code> · 8프레임</li>
+                          <li>쓰러짐 · 고정 자세 · <code>knocked-out</code></li>
+                          <li>기본 횡베기 · <code>slash</code> · 27프레임</li>
+                          <li>강한 사선 베기 · <code>heavy</code> · 41프레임</li>
+                          <li>찌르기 · <code>thrust</code> · 22프레임</li>
+                          <li>올려베기 · <code>rising</code> · 32프레임</li>
+                          <li>회전 공격 · <code>spin</code> · 43프레임</li>
+                          <li>공중 베기 · <code>airSlash</code> · 22프레임</li>
+                          <li>공중 강공 · <code>airHeavy</code> · 26프레임</li>
+                          <li>공중 되베기 · <code>airReturn</code> · 22프레임</li>
+                          <li>공중 회전 · <code>airSpin</code> · 36프레임</li>
+                          <li>공중 교차 베기 · <code>airCross</code> · 26프레임</li>
+                          <li>방패 반격 · <code>shieldBash</code> · 23프레임</li>
+                        </ul>
+                      </details>
+                      Item field-work-lamp · Family tool · Slot tool · none · Moveset
+                      cutter-shield-standard · Set 없음 · 특수 조합 없음 · Field cable-cut,
+                      light-plate-cut, light-machine-disable, debris-guard, pressure-block, brace,
+                      illuminate · Visual field-work-lamp. 현재 placeholder를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=equipment&amp;resource=equipment%3Afield-work-lamp"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/equipment/EquipmentItemProfiles.js"
+                        >src/game/equipment/EquipmentItemProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <nav class="pager"><a href="index.html">전체 분류</a></nav>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>

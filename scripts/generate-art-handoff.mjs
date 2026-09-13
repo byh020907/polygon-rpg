@@ -1,4 +1,5 @@
 import * as ProductionContract from './art-production-contract.mjs';
+import { renderWikiDocument } from './wiki-document.mjs';
 import prettier from 'prettier';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -110,7 +111,25 @@ function document(file, title, subtitle, body) {
     repo = '../'.repeat(depth + 2);
   files.set(
     file,
-    `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Polygon RPG 제작 요청</title><link rel="stylesheet" href="${base}handbook.css"></head><body><header class="masthead"><a href="${base}index.html">POLYGON RPG / GRAPHICS HANDOFF</a><nav>${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}${link(base + 'asset-contract.html', '제작 계약')}${link(base + 'characters.html', '인물')}${link(base + 'enemies.html', '몹')}${link(base + 'scenarios/index.html', '시나리오')}${link(base + 'resources/index.html', '전체 목록')}${link(base + 'request.html', '요청서')}</nav></header><main><header class="page-title"><p class="eyebrow">그래픽 담당자 전달 자료 · 기준 ${fingerprint}</p><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></header><aside class="notice">제품 기준은 ${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}입니다. 이 문서는 확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>. ${link(base + 'decisions.html', '미정·충돌 확인')}을 함께 읽으세요.</aside>${body}</main><footer>필요한 인물·지역 문서만 전달하세요. 계약 해설 원본: <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신: <code>npm run docs:art</code> · ${link(repo + 'scripts/art-handoff-content.mjs', '요청 해설 원본')} · ${link(repo + 'scripts/generate-art-handoff.mjs', '생성기')}</footer></body></html>\n`,
+    renderWikiDocument({
+      title,
+      subtitle,
+      category: '그래픽 제작 문서',
+      repoHref: repo,
+      cssHref: `${base}../wiki.css`,
+      sourceHref: `${repo}scripts/art-handoff-content.mjs`,
+      meta: `그래픽 담당자 전달 자료 · 기준 ${fingerprint}`,
+      nav: [
+        [repo + 'PRODUCT_GOAL.html', 'Product Goal'],
+        [base + 'index.html', '제작 안내'],
+        [base + 'asset-contract.html', '제작 계약'],
+        [base + 'characters.html', '인물'],
+        [base + 'scenarios/index.html', '시나리오'],
+        [base + 'resources/index.html', '전체 목록'],
+      ],
+      body: `<aside class="notice">제품 기준은 ${link(repo + 'PRODUCT_GOAL.html', 'Product Goal')}입니다. 이 문서는 확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>. ${link(base + 'decisions.html', '미정·충돌 확인')}을 함께 읽으세요.</aside>${body}`,
+      footer: `필요한 인물·지역 문서만 전달하세요. 계약 해설 원본: <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신: <code>npm run docs:art</code> · ${link(repo + 'scripts/art-handoff-content.mjs', '요청 해설 원본')} · ${link(repo + 'scripts/generate-art-handoff.mjs', '생성기')}`,
+    }),
   );
 }
 const preview = (r, depth = 0) =>
@@ -1093,6 +1112,34 @@ Hurt: semantic region / primitive / body·weak·armor·guard·immune / 허용 �
       ),
     ),
 );
+
+// Preserve previously published anchors after the NPC list shrank to three pages.
+if (!files.has('resources/npc-4.html')) {
+  const legacyIds = [
+    'map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-gate-filler-helmet',
+    'svg:rival-scout',
+    'svg:scrapyard-owner',
+  ];
+  document(
+    'resources/npc-4.html',
+    'NPC · 이전 목록 주소',
+    '현재 NPC 목록과 원본으로 이동할 수 있습니다.',
+    section(
+      '현재 목록',
+      p('목록 재구성 전 주소입니다. 아래 원본 ID 링크는 현재 생성된 목록으로 연결됩니다.') +
+        table(
+          ['원본 ID', '현재 목록'],
+          legacyIds.map((id) => {
+            const resource = resources.find((r) => r.id === id);
+            return [
+              `<span id="${esc(id)}">${esc(id)}</span>`,
+              resource ? ref(resource, 1) : link('npc-1.html', 'NPC 목록'),
+            ];
+          }),
+        ),
+    ),
+  );
+}
 
 // Machine-readable index is optional; it is not loaded by the handbook or game.
 files.set(

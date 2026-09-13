@@ -3,973 +3,1037 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>몹 · 전체 목록 1/1 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>몹 · 전체 목록 1/1 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>몹 · 전체 목록 1/1</h1>
-        <p>현재 등록 22개 중 1–22. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">원본 ID/이름</th>
-              <th scope="col">역할·제작 묶음</th>
-              <th scope="col">사용 장소/시나리오</th>
-              <th scope="col">현재 등록 상태</th>
-              <th scope="col">검토/출처</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:yard-scout-collector"
-                  data-resource-id="enemy:yard-scout-collector"
-                  >폐병기 소형 수거 유닛</strong
-                ><br /><code>enemy:yard-scout-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 32프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-scout-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:yard-brace-collector"
-                  data-resource-id="enemy:yard-brace-collector"
-                  >지지대 회수 유닛</strong
-                ><br /><code>enemy:yard-brace-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 29프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-brace-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:yard-approach-collector"
-                  data-resource-id="enemy:yard-approach-collector"
-                  >흉곽 경계 수거 유닛</strong
-                ><br /><code>enemy:yard-approach-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 27프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-approach-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:yard-ridge-collector"
-                  data-resource-id="enemy:yard-ridge-collector"
-                  >흉곽 능선 경계 유닛</strong
-                ><br /><code>enemy:yard-ridge-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 27프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-ridge-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:yard-guard-collector"
-                  data-resource-id="enemy:yard-guard-collector"
-                  >심부 방패 경계 유닛</strong
-                ><br /><code>enemy:yard-guard-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 28프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-guard-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:mine-tunnel-collector"
-                  data-resource-id="enemy:mine-tunnel-collector"
-                  >갱도 수거 유닛</strong
-                ><br /><code>enemy:mine-tunnel-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 29프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는 고정
-                자세이며 새 애니메이션을 꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-tunnel-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="enemy:mine-claim-jacker" data-resource-id="enemy:mine-claim-jacker"
-                  >광산 선점 수거반</strong
-                ><br /><code>enemy:mine-claim-jacker</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 29프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>항복 · 고정 자세 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-claim-jacker"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:mine-seal-plate-raider"
-                  data-resource-id="enemy:mine-seal-plate-raider"
-                  >밀폐 철판 절취 수거반</strong
-                ><br /><code>enemy:mine-seal-plate-raider</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 28프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는 고정
-                자세이며 새 애니메이션을 꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-seal-plate-raider"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="enemy:mine-collapse-boss" data-resource-id="enemy:mine-collapse-boss"
-                  >붕괴 광산 굴착기 Boss</strong
-                ><br /><code>enemy:mine-collapse-boss</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 31프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-collapse-boss"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:shipyard-drydock-collector"
-                  data-resource-id="enemy:shipyard-drydock-collector"
-                  >건선거 케이블 수거 유닛</strong
-                ><br /><code>enemy:shipyard-drydock-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 27프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ashipyard-drydock-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="enemy:dock-salvage-raider" data-resource-id="enemy:dock-salvage-raider"
-                  >부두 선점 수거반</strong
-                ><br /><code>enemy:dock-salvage-raider</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 27프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Adock-salvage-raider"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:shipyard-twin-crane-boss"
-                  data-resource-id="enemy:shipyard-twin-crane-boss"
-                  >점거된 쌍둥이 크레인 Boss</strong
-                ><br /><code>enemy:shipyard-twin-crane-boss</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 29프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ashipyard-twin-crane-boss"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:greenhouse-pipe-parasite"
-                  data-resource-id="enemy:greenhouse-pipe-parasite"
-                  >지열 배관 기생 기계</strong
-                ><br /><code>enemy:greenhouse-pipe-parasite</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/greenhouse-plains.html">온실 평원</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 32프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-pipe-parasite"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:greenhouse-coolant-parasite"
-                  data-resource-id="enemy:greenhouse-coolant-parasite"
-                  >냉각수 배관 기생 기계</strong
-                ><br /><code>enemy:greenhouse-coolant-parasite</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 31프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는 고정
-                자세이며 새 애니메이션을 꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-coolant-parasite"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:greenhouse-geothermal-boss"
-                  data-resource-id="enemy:greenhouse-geothermal-boss"
-                  >과열 지열 조절기 Boss</strong
-                ><br /><code>enemy:greenhouse-geothermal-boss</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/greenhouse-plains.html">온실 평원</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 32프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-geothermal-boss"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:snow-tunnel-collector"
-                  data-resource-id="enemy:snow-tunnel-collector"
-                  >터널 열선 수거 유닛</strong
-                ><br /><code>enemy:snow-tunnel-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 30프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는 고정
-                자세이며 새 애니메이션을 꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-tunnel-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="enemy:snow-route-raider" data-resource-id="enemy:snow-route-raider"
-                  >설산 길목 수거반</strong
-                ><br /><code>enemy:snow-route-raider</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/snow-trade-road.html">설산 교역로</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 28프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>항복 · 고정 자세 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-route-raider"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="enemy:snow-thermal-raider" data-resource-id="enemy:snow-thermal-raider"
-                  >내한 케이블 절취 수거반</strong
-                ><br /><code>enemy:snow-thermal-raider</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 27프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는 고정
-                자세이며 새 애니메이션을 꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-thermal-raider"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="enemy:snowplow-train-boss" data-resource-id="enemy:snowplow-train-boss"
-                  >폭주 장갑 제설 열차 Boss</strong
-                ><br /><code>enemy:snowplow-train-boss</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/snow-trade-road.html">설산 교역로</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 27프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnowplow-train-boss"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:quarry-cut-collector"
-                  data-resource-id="enemy:quarry-cut-collector"
-                  >발파선 점거 수거 유닛</strong
-                ><br /><code>enemy:quarry-cut-collector</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/red-quarry.html">붉은 채석장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 28프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Aquarry-cut-collector"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="enemy:quarry-rock-cutter-boss"
-                  data-resource-id="enemy:quarry-rock-cutter-boss"
-                  >폭주 초대형 암반 절단기 Boss</strong
-                ><br /><code>enemy:quarry-rock-cutter-boss</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/red-quarry.html">붉은 채석장</a><br /></td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 14개</summary>
-                  <ul>
-                    <li>대기 · <code>idle</code> · 27프레임</li>
-                    <li>접근 · <code>advance</code> · 32프레임</li>
-                    <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
-                    <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
-                    <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
-                    <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
-                    <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
-                    <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
-                    <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
-                    <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
-                    <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
-                    <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
-                    <li>방어 · 현재 고정 자세 · <code>guard</code></li>
-                    <li>종료 자세 · 고정 · <code>surrender</code></li>
-                  </ul>
-                </details>
-                현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새 애니메이션을
-                꾸미지 않습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Aquarry-rock-cutter-boss"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
-                  >src/game/encounter/EncounterProfiles.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="field:mine-night-enemy" data-resource-id="field:mine-night-enemy"
-                  >수락 회차의 밤 작업선 수거 유닛</strong
-                ><br /><code>field:mine-night-enemy</code>
-              </td>
-              <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
-              <td><a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br /></td>
-              <td>
-                <strong>정적 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>밤 의뢰 수락 · 실제 조우 · <code>accepted-night</code></li>
-                  </ul>
-                </details>
-                실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이 아니며 일반
-                테스트 플레이 시작 상태와 구분합니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=field%3Amine-night-enemy"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/quests/FieldQuestRuntime.js"
-                  >src/game/quests/FieldQuestRuntime.js</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <nav class="pager"><a href="index.html">전체 분류</a></nav>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>몹 · 전체 목록 1/1</h1>
+                <p class="wiki-document-subtitle">
+                  현재 등록 22개 중 1–22. 조각/상태를 독립 제작 건수로 합산하지 않습니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">원본 ID/이름</th>
+                    <th scope="col">역할·제작 묶음</th>
+                    <th scope="col">사용 장소/시나리오</th>
+                    <th scope="col">현재 등록 상태</th>
+                    <th scope="col">검토/출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:yard-scout-collector"
+                        data-resource-id="enemy:yard-scout-collector"
+                        >폐병기 소형 수거 유닛</strong
+                      ><br /><code>enemy:yard-scout-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 32프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-scout-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:yard-brace-collector"
+                        data-resource-id="enemy:yard-brace-collector"
+                        >지지대 회수 유닛</strong
+                      ><br /><code>enemy:yard-brace-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 29프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-brace-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:yard-approach-collector"
+                        data-resource-id="enemy:yard-approach-collector"
+                        >흉곽 경계 수거 유닛</strong
+                      ><br /><code>enemy:yard-approach-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 27프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-approach-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:yard-ridge-collector"
+                        data-resource-id="enemy:yard-ridge-collector"
+                        >흉곽 능선 경계 유닛</strong
+                      ><br /><code>enemy:yard-ridge-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 27프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-ridge-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:yard-guard-collector"
+                        data-resource-id="enemy:yard-guard-collector"
+                        >심부 방패 경계 유닛</strong
+                      ><br /><code>enemy:yard-guard-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 28프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ayard-guard-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:mine-tunnel-collector"
+                        data-resource-id="enemy:mine-tunnel-collector"
+                        >갱도 수거 유닛</strong
+                      ><br /><code>enemy:mine-tunnel-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 29프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는
+                      고정 자세이며 새 애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-tunnel-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:mine-claim-jacker"
+                        data-resource-id="enemy:mine-claim-jacker"
+                        >광산 선점 수거반</strong
+                      ><br /><code>enemy:mine-claim-jacker</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 29프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>항복 · 고정 자세 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-claim-jacker"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:mine-seal-plate-raider"
+                        data-resource-id="enemy:mine-seal-plate-raider"
+                        >밀폐 철판 절취 수거반</strong
+                      ><br /><code>enemy:mine-seal-plate-raider</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 28프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는
+                      고정 자세이며 새 애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-seal-plate-raider"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:mine-collapse-boss"
+                        data-resource-id="enemy:mine-collapse-boss"
+                        >붕괴 광산 굴착기 Boss</strong
+                      ><br /><code>enemy:mine-collapse-boss</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 31프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Amine-collapse-boss"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:shipyard-drydock-collector"
+                        data-resource-id="enemy:shipyard-drydock-collector"
+                        >건선거 케이블 수거 유닛</strong
+                      ><br /><code>enemy:shipyard-drydock-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 27프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ashipyard-drydock-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:dock-salvage-raider"
+                        data-resource-id="enemy:dock-salvage-raider"
+                        >부두 선점 수거반</strong
+                      ><br /><code>enemy:dock-salvage-raider</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 27프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Adock-salvage-raider"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:shipyard-twin-crane-boss"
+                        data-resource-id="enemy:shipyard-twin-crane-boss"
+                        >점거된 쌍둥이 크레인 Boss</strong
+                      ><br /><code>enemy:shipyard-twin-crane-boss</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 29프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Ashipyard-twin-crane-boss"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:greenhouse-pipe-parasite"
+                        data-resource-id="enemy:greenhouse-pipe-parasite"
+                        >지열 배관 기생 기계</strong
+                      ><br /><code>enemy:greenhouse-pipe-parasite</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/greenhouse-plains.html">온실 평원</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 32프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-pipe-parasite"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:greenhouse-coolant-parasite"
+                        data-resource-id="enemy:greenhouse-coolant-parasite"
+                        >냉각수 배관 기생 기계</strong
+                      ><br /><code>enemy:greenhouse-coolant-parasite</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 31프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는
+                      고정 자세이며 새 애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-coolant-parasite"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:greenhouse-geothermal-boss"
+                        data-resource-id="enemy:greenhouse-geothermal-boss"
+                        >과열 지열 조절기 Boss</strong
+                      ><br /><code>enemy:greenhouse-geothermal-boss</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/greenhouse-plains.html">온실 평원</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 32프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-geothermal-boss"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:snow-tunnel-collector"
+                        data-resource-id="enemy:snow-tunnel-collector"
+                        >터널 열선 수거 유닛</strong
+                      ><br /><code>enemy:snow-tunnel-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 30프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는
+                      고정 자세이며 새 애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-tunnel-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:snow-route-raider"
+                        data-resource-id="enemy:snow-route-raider"
+                        >설산 길목 수거반</strong
+                      ><br /><code>enemy:snow-route-raider</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/snow-trade-road.html">설산 교역로</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 28프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>항복 · 고정 자세 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-route-raider"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:snow-thermal-raider"
+                        data-resource-id="enemy:snow-thermal-raider"
+                        >내한 케이블 절취 수거반</strong
+                      ><br /><code>enemy:snow-thermal-raider</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 27프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 authored profile · 맵 미배치 · 피격·방어·종료는 production이 샘플하는
+                      고정 자세이며 새 애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnow-thermal-raider"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:snowplow-train-boss"
+                        data-resource-id="enemy:snowplow-train-boss"
+                        >폭주 장갑 제설 열차 Boss</strong
+                      ><br /><code>enemy:snowplow-train-boss</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/snow-trade-road.html">설산 교역로</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 27프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Asnowplow-train-boss"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:quarry-cut-collector"
+                        data-resource-id="enemy:quarry-cut-collector"
+                        >발파선 점거 수거 유닛</strong
+                      ><br /><code>enemy:quarry-cut-collector</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/red-quarry.html">붉은 채석장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 28프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Aquarry-cut-collector"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="enemy:quarry-rock-cutter-boss"
+                        data-resource-id="enemy:quarry-rock-cutter-boss"
+                        >폭주 초대형 암반 절단기 Boss</strong
+                      ><br /><code>enemy:quarry-rock-cutter-boss</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/red-quarry.html">붉은 채석장</a><br /></td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 14개</summary>
+                        <ul>
+                          <li>대기 · <code>idle</code> · 27프레임</li>
+                          <li>접근 · <code>advance</code> · 32프레임</li>
+                          <li>강공 · 공격 준비 · <code>windup:heavy</code> · 30프레임</li>
+                          <li>강공 · 공격 · <code>attack:heavy</code> · 16프레임</li>
+                          <li>강공 · 회수 · <code>recovery:heavy</code> · 35프레임</li>
+                          <li>기본 · 공격 준비 · <code>windup:light</code> · 14프레임</li>
+                          <li>기본 · 공격 · <code>attack:light</code> · 10프레임</li>
+                          <li>기본 · 회수 · <code>recovery:light</code> · 14프레임</li>
+                          <li>대공 · 공격 준비 · <code>windup:antiAir</code> · 19프레임</li>
+                          <li>대공 · 공격 · <code>attack:antiAir</code> · 12프레임</li>
+                          <li>대공 · 회수 · <code>recovery:antiAir</code> · 28프레임</li>
+                          <li>피격 · 현재 고정 반응 자세 · <code>hit</code></li>
+                          <li>방어 · 현재 고정 자세 · <code>guard</code></li>
+                          <li>종료 자세 · 고정 · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      현재 맵 배치 · 피격·방어·종료는 production이 샘플하는 고정 자세이며 새
+                      애니메이션을 꾸미지 않습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Aquarry-rock-cutter-boss"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/encounter/EncounterProfiles.js"
+                        >src/game/encounter/EncounterProfiles.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="field:mine-night-enemy" data-resource-id="field:mine-night-enemy"
+                        >수락 회차의 밤 작업선 수거 유닛</strong
+                      ><br /><code>field:mine-night-enemy</code>
+                    </td>
+                    <td>일반 조우·지역 Boss의 공격 예고와 전투 결과</td>
+                    <td><a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br /></td>
+                    <td>
+                      <strong>정적 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>밤 의뢰 수락 · 실제 조우 · <code>accepted-night</code></li>
+                        </ul>
+                      </details>
+                      실제 현장 runtime의 저장과 분리된 상태 표본입니다. 최종 공급 아트 승인이
+                      아니며 일반 테스트 플레이 시작 상태와 구분합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=field%3Amine-night-enemy"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/quests/FieldQuestRuntime.js"
+                        >src/game/quests/FieldQuestRuntime.js</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <nav class="pager"><a href="index.html">전체 분류</a></nav>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>

@@ -3,742 +3,812 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>UI·아이콘 · 전체 목록 1/1 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>UI·아이콘 · 전체 목록 1/1 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>UI·아이콘 · 전체 목록 1/1</h1>
-        <p>현재 등록 27개 중 1–27. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">원본 ID/이름</th>
-              <th scope="col">역할·제작 묶음</th>
-              <th scope="col">사용 장소/시나리오</th>
-              <th scope="col">현재 등록 상태</th>
-              <th scope="col">검토/출처</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <strong id="ui:enemy-status-bars" data-resource-id="ui:enemy-status-bars"
-                  >적 체력·자세·항복 표시</strong
-                ><br /><code>ui:enemy-status-bars</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>정적 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 5개</summary>
-                  <ul>
-                    <li>full · <code>full</code></li>
-                    <li>low-health · <code>low-health</code></li>
-                    <li>posture · <code>posture</code></li>
-                    <li>groggy · <code>groggy</code></li>
-                    <li>surrender · <code>surrender</code></li>
-                  </ul>
-                </details>
-                실제 Canvas enemy health/posture/resolution producer입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%3Aenemy-status-bars"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/training/TrainingEncounterPresentation.js"
-                  >src/game/training/TrainingEncounterPresentation.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/journal-equipment" data-resource-id="ui/journal-equipment"
-                  >장비 장착·강화</strong
-                ><br /><code>ui/journal-equipment</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-equipment"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/journal-materials" data-resource-id="ui/journal-materials"
-                  >재료 장부</strong
-                ><br /><code>ui/journal-materials</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-materials"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/journal-quests" data-resource-id="ui/journal-quests"
-                  >주요·연결·일반 의뢰</strong
-                ><br /><code>ui/journal-quests</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-quests"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/journal-codex" data-resource-id="ui/journal-codex"
-                  >세트·특수 조합 도감</strong
-                ><br /><code>ui/journal-codex</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-codex"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/menu" data-resource-id="ui/menu"
-                  >메인 메뉴 · 버전 / 저장 / PWA</strong
-                ><br /><code>ui/menu</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-                PWA 상태는 실제 브라우저의 현재 상태입니다.
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fmenu"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/menu-world" data-resource-id="ui/menu-world"
-                  >메뉴 배경 · 달 / 산 / 광산</strong
-                ><br /><code>ui/menu-world</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fmenu-world"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/hud" data-resource-id="ui/hud">체력 · 스태미나 · 통화</strong
-                ><br /><code>ui/hud</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fhud"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/campaign-clock" data-resource-id="ui/campaign-clock"
-                  >날짜 · D-DAY · 지역명</strong
-                ><br /><code>ui/campaign-clock</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fcampaign-clock"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/objective" data-resource-id="ui/objective"
-                  >현재 목표와 조작 안내</strong
-                ><br /><code>ui/objective</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fobjective"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/dialogue" data-resource-id="ui/dialogue">현장 대사 말풍선</strong
-                ><br /><code>ui/dialogue</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fdialogue"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/workshop" data-resource-id="ui/workshop"
-                  >고물상 · 제작 / 장착 / 인챈트 / 수련</strong
-                ><br /><code>ui/workshop</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fworkshop"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/operation-map" data-resource-id="ui/operation-map"
-                  >작전 지도 · 연결 이슈 · 조립</strong
-                ><br /><code>ui/operation-map</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Foperation-map"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/action-preview" data-resource-id="ui/action-preview"
-                  >이동 · 사건 확정과 시간 비교</strong
-                ><br /><code>ui/action-preview</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Faction-preview"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/deadline" data-resource-id="ui/deadline">고대 병기 D-30 경보</strong
-                ><br /><code>ui/deadline</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fdeadline"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/garage" data-resource-id="ui/garage">차고 개방 · 조립 안내</strong
-                ><br /><code>ui/garage</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fgarage"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/game-over" data-resource-id="ui/game-over"
-                  >게임오버 · 복구 지점</strong
-                ><br /><code>ui/game-over</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fgame-over"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/recovery" data-resource-id="ui/recovery"
-                  >저장된 작전 기록 · 복구 선택</strong
-                ><br /><code>ui/recovery</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Frecovery"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/encounter" data-resource-id="ui/encounter"
-                  >전투 상태와 적 체력</strong
-                ><br /><code>ui/encounter</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fencounter"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/growth" data-resource-id="ui/growth">장비와 command 성장</strong
-                ><br /><code>ui/growth</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fgrowth"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/touch" data-resource-id="ui/touch">모바일 이동 · 전투 버튼</strong
-                ><br /><code>ui/touch</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ftouch"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/help" data-resource-id="ui/help">데스크톱 조작 도움말</strong
-                ><br /><code>ui/help</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-                데스크톱 전용입니다. 모바일에서는 이동·전투 버튼의 안내를 사용합니다.
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fhelp"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/orientation" data-resource-id="ui/orientation"
-                  >모바일 방향 안내</strong
-                ><br /><code>ui/orientation</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Forientation"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/debug" data-resource-id="ui/debug">디버그 설정 패널</strong
-                ><br /><code>ui/debug</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>UI</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>현재 컴포넌트 · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fdebug"
-                  >게임 검토실</a
-                ><br /><a href="../../../index.html">index.html</a> ·
-                <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
-                <a href="../../../src/style.css">style.css</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/icon-192" data-resource-id="ui/icon-192">앱 아이콘 · 192</strong
-                ><br /><code>ui/icon-192</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>이미지</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>원본 PNG · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ficon-192"
-                  >게임 검토실</a
-                ><br /><a href="../../../public/icons/icon-192.png">public/icons/icon-192.png</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/icon-512" data-resource-id="ui/icon-512">앱 아이콘 · 512</strong
-                ><br /><code>ui/icon-512</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>이미지</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>원본 PNG · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ficon-512"
-                  >게임 검토실</a
-                ><br /><a href="../../../public/icons/icon-512.png">public/icons/icon-512.png</a>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="ui/icon-maskable-512" data-resource-id="ui/icon-maskable-512"
-                  >앱 아이콘 · maskable-512</strong
-                ><br /><code>ui/icon-maskable-512</code>
-              </td>
-              <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>이미지</strong>
-                <details>
-                  <summary>현재 상태·동작 1개</summary>
-                  <ul>
-                    <li>원본 PNG · <code>static</code></li>
-                  </ul>
-                </details>
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ficon-maskable-512"
-                  >게임 검토실</a
-                ><br /><a href="../../../public/icons/icon-maskable-512.png"
-                  >public/icons/icon-maskable-512.png</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <nav class="pager"><a href="index.html">전체 분류</a></nav>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>UI·아이콘 · 전체 목록 1/1</h1>
+                <p class="wiki-document-subtitle">
+                  현재 등록 27개 중 1–27. 조각/상태를 독립 제작 건수로 합산하지 않습니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">원본 ID/이름</th>
+                    <th scope="col">역할·제작 묶음</th>
+                    <th scope="col">사용 장소/시나리오</th>
+                    <th scope="col">현재 등록 상태</th>
+                    <th scope="col">검토/출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong id="ui:enemy-status-bars" data-resource-id="ui:enemy-status-bars"
+                        >적 체력·자세·항복 표시</strong
+                      ><br /><code>ui:enemy-status-bars</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>정적 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 5개</summary>
+                        <ul>
+                          <li>full · <code>full</code></li>
+                          <li>low-health · <code>low-health</code></li>
+                          <li>posture · <code>posture</code></li>
+                          <li>groggy · <code>groggy</code></li>
+                          <li>surrender · <code>surrender</code></li>
+                        </ul>
+                      </details>
+                      실제 Canvas enemy health/posture/resolution producer입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%3Aenemy-status-bars"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/training/TrainingEncounterPresentation.js"
+                        >src/game/training/TrainingEncounterPresentation.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/journal-equipment" data-resource-id="ui/journal-equipment"
+                        >장비 장착·강화</strong
+                      ><br /><code>ui/journal-equipment</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-equipment"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/journal-materials" data-resource-id="ui/journal-materials"
+                        >재료 장부</strong
+                      ><br /><code>ui/journal-materials</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-materials"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/journal-quests" data-resource-id="ui/journal-quests"
+                        >주요·연결·일반 의뢰</strong
+                      ><br /><code>ui/journal-quests</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-quests"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/journal-codex" data-resource-id="ui/journal-codex"
+                        >세트·특수 조합 도감</strong
+                      ><br /><code>ui/journal-codex</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fjournal-codex"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/menu" data-resource-id="ui/menu"
+                        >메인 메뉴 · 버전 / 저장 / PWA</strong
+                      ><br /><code>ui/menu</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                      PWA 상태는 실제 브라우저의 현재 상태입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fmenu"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/menu-world" data-resource-id="ui/menu-world"
+                        >메뉴 배경 · 달 / 산 / 광산</strong
+                      ><br /><code>ui/menu-world</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fmenu-world"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/hud" data-resource-id="ui/hud">체력 · 스태미나 · 통화</strong
+                      ><br /><code>ui/hud</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fhud"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/campaign-clock" data-resource-id="ui/campaign-clock"
+                        >날짜 · D-DAY · 지역명</strong
+                      ><br /><code>ui/campaign-clock</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fcampaign-clock"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/objective" data-resource-id="ui/objective"
+                        >현재 목표와 조작 안내</strong
+                      ><br /><code>ui/objective</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fobjective"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/dialogue" data-resource-id="ui/dialogue"
+                        >현장 대사 말풍선</strong
+                      ><br /><code>ui/dialogue</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fdialogue"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/workshop" data-resource-id="ui/workshop"
+                        >고물상 · 제작 / 장착 / 인챈트 / 수련</strong
+                      ><br /><code>ui/workshop</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fworkshop"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/operation-map" data-resource-id="ui/operation-map"
+                        >작전 지도 · 연결 이슈 · 조립</strong
+                      ><br /><code>ui/operation-map</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Foperation-map"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/action-preview" data-resource-id="ui/action-preview"
+                        >이동 · 사건 확정과 시간 비교</strong
+                      ><br /><code>ui/action-preview</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Faction-preview"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/deadline" data-resource-id="ui/deadline"
+                        >고대 병기 D-30 경보</strong
+                      ><br /><code>ui/deadline</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fdeadline"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/garage" data-resource-id="ui/garage"
+                        >차고 개방 · 조립 안내</strong
+                      ><br /><code>ui/garage</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fgarage"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/game-over" data-resource-id="ui/game-over"
+                        >게임오버 · 복구 지점</strong
+                      ><br /><code>ui/game-over</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fgame-over"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/recovery" data-resource-id="ui/recovery"
+                        >저장된 작전 기록 · 복구 선택</strong
+                      ><br /><code>ui/recovery</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Frecovery"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/encounter" data-resource-id="ui/encounter"
+                        >전투 상태와 적 체력</strong
+                      ><br /><code>ui/encounter</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fencounter"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/growth" data-resource-id="ui/growth"
+                        >장비와 command 성장</strong
+                      ><br /><code>ui/growth</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fgrowth"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/touch" data-resource-id="ui/touch"
+                        >모바일 이동 · 전투 버튼</strong
+                      ><br /><code>ui/touch</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ftouch"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/help" data-resource-id="ui/help">데스크톱 조작 도움말</strong
+                      ><br /><code>ui/help</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                      데스크톱 전용입니다. 모바일에서는 이동·전투 버튼의 안내를 사용합니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fhelp"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/orientation" data-resource-id="ui/orientation"
+                        >모바일 방향 안내</strong
+                      ><br /><code>ui/orientation</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Forientation"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/debug" data-resource-id="ui/debug">디버그 설정 패널</strong
+                      ><br /><code>ui/debug</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>UI</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>현재 컴포넌트 · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Fdebug"
+                        >게임 검토실</a
+                      ><br /><a href="../../../index.html">index.html</a> ·
+                      <a href="../../../src/ui/gameShell.js">gameShell.js</a> ·
+                      <a href="../../../src/style.css">style.css</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/icon-192" data-resource-id="ui/icon-192"
+                        >앱 아이콘 · 192</strong
+                      ><br /><code>ui/icon-192</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>이미지</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>원본 PNG · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ficon-192"
+                        >게임 검토실</a
+                      ><br /><a href="../../../public/icons/icon-192.png"
+                        >public/icons/icon-192.png</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/icon-512" data-resource-id="ui/icon-512"
+                        >앱 아이콘 · 512</strong
+                      ><br /><code>ui/icon-512</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>이미지</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>원본 PNG · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ficon-512"
+                        >게임 검토실</a
+                      ><br /><a href="../../../public/icons/icon-512.png"
+                        >public/icons/icon-512.png</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="ui/icon-maskable-512" data-resource-id="ui/icon-maskable-512"
+                        >앱 아이콘 · maskable-512</strong
+                      ><br /><code>ui/icon-maskable-512</code>
+                    </td>
+                    <td>조작·상태·대화·지도·저장·앱 진입 안내</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>이미지</strong>
+                      <details>
+                        <summary>현재 상태·동작 1개</summary>
+                        <ul>
+                          <li>원본 PNG · <code>static</code></li>
+                        </ul>
+                      </details>
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=ui&amp;resource=ui%2Ficon-maskable-512"
+                        >게임 검토실</a
+                      ><br /><a href="../../../public/icons/icon-maskable-512.png"
+                        >public/icons/icon-maskable-512.png</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <nav class="pager"><a href="index.html">전체 분류</a></nav>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>

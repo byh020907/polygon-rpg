@@ -3,141 +3,192 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>전체 그래픽 리소스 목록 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>전체 그래픽 리소스 목록 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>전체 그래픽 리소스 목록</h1>
-        <p>
-          568개 stable ID를 분류별 최대 30행으로 나눴습니다. 필요할 때만 해당 페이지를 읽습니다.
-        </p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">분류</th>
-              <th scope="col">현재 등록 수</th>
-              <th scope="col">목록 페이지</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>주인공</td>
-              <td>2</td>
-              <td><a href="player-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>NPC</td>
-              <td>68</td>
-              <td>
-                <a href="npc-1.html">1쪽</a> · <a href="npc-2.html">2쪽</a> ·
-                <a href="npc-3.html">3쪽</a>
-              </td>
-            </tr>
-            <tr>
-              <td>몹</td>
-              <td>22</td>
-              <td><a href="enemy-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>몹 유형 시안</td>
-              <td>4</td>
-              <td><a href="enemy-reference-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>무기·장비</td>
-              <td>10</td>
-              <td><a href="equipment-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>배경</td>
-              <td>15</td>
-              <td><a href="background-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>전경</td>
-              <td>4</td>
-              <td><a href="foreground-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>지형</td>
-              <td>29</td>
-              <td><a href="terrain-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>건물</td>
-              <td>96</td>
-              <td>
-                <a href="building-1.html">1쪽</a> · <a href="building-2.html">2쪽</a> ·
-                <a href="building-3.html">3쪽</a> · <a href="building-4.html">4쪽</a>
-              </td>
-            </tr>
-            <tr>
-              <td>설비</td>
-              <td>114</td>
-              <td>
-                <a href="facility-1.html">1쪽</a> · <a href="facility-2.html">2쪽</a> ·
-                <a href="facility-3.html">3쪽</a> · <a href="facility-4.html">4쪽</a>
-              </td>
-            </tr>
-            <tr>
-              <td>소품</td>
-              <td>126</td>
-              <td>
-                <a href="prop-1.html">1쪽</a> · <a href="prop-2.html">2쪽</a> ·
-                <a href="prop-3.html">3쪽</a> · <a href="prop-4.html">4쪽</a> ·
-                <a href="prop-5.html">5쪽</a>
-              </td>
-            </tr>
-            <tr>
-              <td>이펙트</td>
-              <td>33</td>
-              <td><a href="effect-1.html">1쪽</a> · <a href="effect-2.html">2쪽</a></td>
-            </tr>
-            <tr>
-              <td>장면</td>
-              <td>18</td>
-              <td><a href="scene-1.html">1쪽</a></td>
-            </tr>
-            <tr>
-              <td>UI·아이콘</td>
-              <td>27</td>
-              <td><a href="ui-1.html">1쪽</a></td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <p>
-        현재 action의 frameCount가 1인 map patch는 상태 표본이며 애니메이션 완료를 뜻하지 않습니다.
-        npc: 묶음과 map: 부위는 원본 item을 공유할 수 있습니다. 미배치 적과 검토용 유형 견본은 실전
-        완료로 합산하지 않습니다.
-      </p>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>전체 그래픽 리소스 목록</h1>
+                <p class="wiki-document-subtitle">
+                  568개 stable ID를 분류별 최대 30행으로 나눴습니다. 필요할 때만 해당 페이지를
+                  읽습니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">분류</th>
+                    <th scope="col">현재 등록 수</th>
+                    <th scope="col">목록 페이지</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>주인공</td>
+                    <td>2</td>
+                    <td><a href="player-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>NPC</td>
+                    <td>68</td>
+                    <td>
+                      <a href="npc-1.html">1쪽</a> · <a href="npc-2.html">2쪽</a> ·
+                      <a href="npc-3.html">3쪽</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>몹</td>
+                    <td>22</td>
+                    <td><a href="enemy-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>몹 유형 시안</td>
+                    <td>4</td>
+                    <td><a href="enemy-reference-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>무기·장비</td>
+                    <td>10</td>
+                    <td><a href="equipment-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>배경</td>
+                    <td>15</td>
+                    <td><a href="background-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>전경</td>
+                    <td>4</td>
+                    <td><a href="foreground-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>지형</td>
+                    <td>29</td>
+                    <td><a href="terrain-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>건물</td>
+                    <td>96</td>
+                    <td>
+                      <a href="building-1.html">1쪽</a> · <a href="building-2.html">2쪽</a> ·
+                      <a href="building-3.html">3쪽</a> · <a href="building-4.html">4쪽</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>설비</td>
+                    <td>114</td>
+                    <td>
+                      <a href="facility-1.html">1쪽</a> · <a href="facility-2.html">2쪽</a> ·
+                      <a href="facility-3.html">3쪽</a> · <a href="facility-4.html">4쪽</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>소품</td>
+                    <td>126</td>
+                    <td>
+                      <a href="prop-1.html">1쪽</a> · <a href="prop-2.html">2쪽</a> ·
+                      <a href="prop-3.html">3쪽</a> · <a href="prop-4.html">4쪽</a> ·
+                      <a href="prop-5.html">5쪽</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>이펙트</td>
+                    <td>33</td>
+                    <td><a href="effect-1.html">1쪽</a> · <a href="effect-2.html">2쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>장면</td>
+                    <td>18</td>
+                    <td><a href="scene-1.html">1쪽</a></td>
+                  </tr>
+                  <tr>
+                    <td>UI·아이콘</td>
+                    <td>27</td>
+                    <td><a href="ui-1.html">1쪽</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              현재 action의 frameCount가 1인 map patch는 상태 표본이며 애니메이션 완료를 뜻하지
+              않습니다. npc: 묶음과 map: 부위는 원본 item을 공유할 수 있습니다. 미배치 적과 검토용
+              유형 견본은 실전 완료로 합산하지 않습니다.
+            </p>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>

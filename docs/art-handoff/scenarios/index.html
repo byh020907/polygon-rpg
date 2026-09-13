@@ -3,258 +3,318 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>전체 시나리오와 그래픽 연결 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>전체 시나리오와 그래픽 연결 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
+      </div>
     </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>전체 시나리오와 그래픽 연결</h1>
-        <p>
-          다섯 지역은 순서가 고정된 챕터가 아닙니다. 지역 선택 뒤 다른 지역을 거쳐 돌아오는
-          이야기입니다.
-        </p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
       </aside>
-      <section>
-        <h2>처음부터 결말까지</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">구간</th>
-                <th scope="col">이야기의 역할</th>
-                <th scope="col">상세 자료</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1 · 첫 수거 의뢰/사고</td>
-                <td>라이벌을 구하려 핵을 떼어 고대 병기를 깨운다.</td>
-                <td><a href="prologue.html">도입 20~30분 목표</a></td>
-              </tr>
-              <tr>
-                <td>2 · 귀환/차고</td>
-                <td>분석·작전 지도·대항 병기 0% 공개. 핵은 우리 로봇의 두뇌가 된다.</td>
-                <td><a href="garage.html">첫 귀환과 모듈 조립</a></td>
-              </tr>
-              <tr>
-                <td>3 · 자유 순서</td>
-                <td>붕괴 광산 구조와 굴착기 인수 → 다리</td>
-                <td><a href="abandoned-mine.html">폐광 산촌</a></td>
-              </tr>
-              <tr>
-                <td>3 · 자유 순서</td>
-                <td>조선소 탈환과 마지막 선박 수리 → 팔</td>
-                <td><a href="harbor-shipyard.html">항구 조선소</a></td>
-              </tr>
-              <tr>
-                <td>3 · 자유 순서</td>
-                <td>지열 설비 복구와 구형 동력로 분리 → 주 동력원</td>
-                <td><a href="greenhouse-plains.html">온실 평원</a></td>
-              </tr>
-              <tr>
-                <td>3 · 자유 순서</td>
-                <td>옛 터널 개통과 제설 열차 인수 → 장갑</td>
-                <td><a href="snow-trade-road.html">설산 교역로</a></td>
-              </tr>
-              <tr>
-                <td>3 · 자유 순서</td>
-                <td>마지막 채굴과 채석장 안전 폐쇄 → 거대 검</td>
-                <td><a href="red-quarry.html">붉은 채석장</a></td>
-              </tr>
-              <tr>
-                <td>4 · 결전/후일담</td>
-                <td>
-                  다섯 모듈을 갖춰 출격 → 적 장갑/무기 파괴 → 핵 재설치·정지 → 산업 복귀/공식 수거팀
-                </td>
-                <td><a href="finale.html">결전·에필로그</a></td>
-              </tr>
-              <tr>
-                <td>실패 경로</td>
-                <td>D-DAY 0 → 수도 도착/파괴 → 저장 기록 복구. 시간 역행 이야기가 아니다.</td>
-                <td><a href="failure.html">게임오버/복구</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>지역 간 연결 사건 전체</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">시작 주목표</th>
-                <th scope="col">방문 지역</th>
-                <th scope="col">필요한 사건/그래픽</th>
-                <th scope="col">현재 전투 조건</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><a href="abandoned-mine.html">붕괴 광산 작업자 구조</a></td>
-                <td><a href="harbor-shipyard.html">항구 조선소</a></td>
-                <td>
-                  승강기용 crane cable 확보<br />점거된 도크에서 구조용 굵은 cable의 위치와 인양
-                  상태를 확인하세요.
-                </td>
-                <td>
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#shipyard-drydock-collector"
-                        >건선거 케이블 수거 유닛</a
-                      >
-                    </li>
-                    <li><a href="../enemies.html#dock-salvage-raider">부두 선점 수거반</a></li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td><a href="abandoned-mine.html">붕괴 광산 작업자 구조</a></td>
-                <td><a href="greenhouse-plains.html">온실 평원</a></td>
-                <td>
-                  승강기 압력 버팀쇠 설계 확인<br />온실 기술자와 파열 배관을 조사해 압력 버팀쇠
-                  규격을 확인하세요.
-                </td>
-                <td>
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#greenhouse-pipe-parasite">지열 배관 기생 기계</a>
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td><a href="harbor-shipyard.html">조선소 탈환과 마지막 선박 수리</a></td>
-                <td><a href="greenhouse-plains.html">온실 평원</a></td>
-                <td>
-                  용접선 냉각수 확보<br />파열 배관 구역에서 용접선을 식힐 지열 냉각수 상태를
-                  확인하세요.
-                </td>
-                <td>
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#greenhouse-coolant-parasite"
-                        >냉각수 배관 기생 기계</a
-                      >
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td><a href="harbor-shipyard.html">조선소 탈환과 마지막 선박 수리</a></td>
-                <td><a href="snow-trade-road.html">설산 교역로</a></td>
-                <td>
-                  선박 인양 winch 규격 확인<br />제설 열차 승무원에게 산악 인양 winch 규격을
-                  확인하세요.
-                </td>
-                <td>
-                  <ul>
-                    <li><a href="../enemies.html#snow-route-raider">설산 길목 수거반</a></li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td><a href="greenhouse-plains.html">온실 지열 설비 복구</a></td>
-                <td><a href="snow-trade-road.html">설산 교역로</a></td>
-                <td>
-                  내한 열선 cable 확보<br />눈 막힌 옛 터널에서 지열 배관용 내한 cable 상태를
-                  확인하세요.
-                </td>
-                <td>
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#snow-thermal-raider">내한 케이블 절취 수거반</a>
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td><a href="greenhouse-plains.html">온실 지열 설비 복구</a></td>
-                <td><a href="abandoned-mine.html">폐광 산촌</a></td>
-                <td>
-                  배관 밀폐 철판 규격 확인<br />폐광 구조 현황판에서 굴착기용 밀폐 철판 규격을
-                  확인하세요.
-                </td>
-                <td>
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#mine-seal-plate-raider">밀폐 철판 절취 수거반</a>
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td><a href="snow-trade-road.html">옛 터널 개통과 교역로 복구</a></td>
-                <td><a href="red-quarry.html">붉은 채석장</a></td>
-                <td>
-                  터널 축열석 확보<br />채석장 절개 갱도에서 터널 열선용 축열석 상태를 확인하세요.
-                </td>
-                <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
-              </tr>
-              <tr>
-                <td><a href="snow-trade-road.html">옛 터널 개통과 교역로 복구</a></td>
-                <td><a href="harbor-shipyard.html">항구 조선소</a></td>
-                <td>
-                  제동용 단열 hose 규격 확인<br />항구 도크에서 크레인 유압 hose의 단열 규격을
-                  확인하세요.
-                </td>
-                <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
-              </tr>
-              <tr>
-                <td><a href="red-quarry.html">마지막 채굴과 안전 폐쇄</a></td>
-                <td><a href="abandoned-mine.html">폐광 산촌</a></td>
-                <td>
-                  절개면 지지대 확보<br />폐광 구조 갱도에서 채석장 폐쇄용 지지대 규격을 확인하세요.
-                </td>
-                <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
-              </tr>
-              <tr>
-                <td><a href="red-quarry.html">마지막 채굴과 안전 폐쇄</a></td>
-                <td><a href="greenhouse-plains.html">온실 평원</a></td>
-                <td>
-                  절단기 냉각 분무 규격 확인<br />온실 배관 현장에서 절단기 냉각 분무 규격을
-                  확인하세요.
-                </td>
-                <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>공통 인과와 분량</h2>
-        <p>
-          의뢰·현장 관찰 → 연결 사건 → 귀환 → Boss/군수 인장 해제 → 생계 대체/마지막 작업 → 기계
-          분리 → 부품 회수 → 실제 길 차단에 따른 우회/차고 갱신. 대화·일반 전투·지역 내 탐색은 시간
-          무료, 장거리 이동·휴식·KO·핵심 사건 확정은 시간 소비입니다. 10시간/부품당 2시간은 기획
-          목표이지 현재 플레이 분량의 검증 결과가 아닙니다.
-        </p>
-        <a href="../../../PRODUCT_GOAL.html#PG-OPEN-CAMPAIGN">PG-OPEN-CAMPAIGN</a>
-      </section>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>전체 시나리오와 그래픽 연결</h1>
+                <p class="wiki-document-subtitle">
+                  다섯 지역은 순서가 고정된 챕터가 아닙니다. 지역 선택 뒤 다른 지역을 거쳐 돌아오는
+                  이야기입니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 처음부터 결말까지</a></li>
+                <li class="toc-level-2"><a href="#doc-section-2">2. 지역 간 연결 사건 전체</a></li>
+                <li class="toc-level-2"><a href="#doc-section-3">3. 공통 인과와 분량</a></li>
+              </ol>
+            </details>
+          </nav>
+          <aside class="notice">
+            제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+            확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의
+            기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+            <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+            <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+          </aside>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 처음부터 결말까지
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">구간</th>
+                    <th scope="col">이야기의 역할</th>
+                    <th scope="col">상세 자료</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1 · 첫 수거 의뢰/사고</td>
+                    <td>라이벌을 구하려 핵을 떼어 고대 병기를 깨운다.</td>
+                    <td><a href="prologue.html">도입 20~30분 목표</a></td>
+                  </tr>
+                  <tr>
+                    <td>2 · 귀환/차고</td>
+                    <td>분석·작전 지도·대항 병기 0% 공개. 핵은 우리 로봇의 두뇌가 된다.</td>
+                    <td><a href="garage.html">첫 귀환과 모듈 조립</a></td>
+                  </tr>
+                  <tr>
+                    <td>3 · 자유 순서</td>
+                    <td>붕괴 광산 구조와 굴착기 인수 → 다리</td>
+                    <td><a href="abandoned-mine.html">폐광 산촌</a></td>
+                  </tr>
+                  <tr>
+                    <td>3 · 자유 순서</td>
+                    <td>조선소 탈환과 마지막 선박 수리 → 팔</td>
+                    <td><a href="harbor-shipyard.html">항구 조선소</a></td>
+                  </tr>
+                  <tr>
+                    <td>3 · 자유 순서</td>
+                    <td>지열 설비 복구와 구형 동력로 분리 → 주 동력원</td>
+                    <td><a href="greenhouse-plains.html">온실 평원</a></td>
+                  </tr>
+                  <tr>
+                    <td>3 · 자유 순서</td>
+                    <td>옛 터널 개통과 제설 열차 인수 → 장갑</td>
+                    <td><a href="snow-trade-road.html">설산 교역로</a></td>
+                  </tr>
+                  <tr>
+                    <td>3 · 자유 순서</td>
+                    <td>마지막 채굴과 채석장 안전 폐쇄 → 거대 검</td>
+                    <td><a href="red-quarry.html">붉은 채석장</a></td>
+                  </tr>
+                  <tr>
+                    <td>4 · 결전/후일담</td>
+                    <td>
+                      다섯 모듈을 갖춰 출격 → 적 장갑/무기 파괴 → 핵 재설치·정지 → 산업 복귀/공식
+                      수거팀
+                    </td>
+                    <td><a href="finale.html">결전·에필로그</a></td>
+                  </tr>
+                  <tr>
+                    <td>실패 경로</td>
+                    <td>D-DAY 0 → 수도 도착/파괴 → 저장 기록 복구. 시간 역행 이야기가 아니다.</td>
+                    <td><a href="failure.html">게임오버/복구</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-2">
+              <a class="wiki-section-number" href="#doc-section-2">2.</a> 지역 간 연결 사건 전체
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">시작 주목표</th>
+                    <th scope="col">방문 지역</th>
+                    <th scope="col">필요한 사건/그래픽</th>
+                    <th scope="col">현재 전투 조건</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a href="abandoned-mine.html">붕괴 광산 작업자 구조</a></td>
+                    <td><a href="harbor-shipyard.html">항구 조선소</a></td>
+                    <td>
+                      승강기용 crane cable 확보<br />점거된 도크에서 구조용 굵은 cable의 위치와 인양
+                      상태를 확인하세요.
+                    </td>
+                    <td>
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#shipyard-drydock-collector"
+                            >건선거 케이블 수거 유닛</a
+                          >
+                        </li>
+                        <li><a href="../enemies.html#dock-salvage-raider">부두 선점 수거반</a></li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="abandoned-mine.html">붕괴 광산 작업자 구조</a></td>
+                    <td><a href="greenhouse-plains.html">온실 평원</a></td>
+                    <td>
+                      승강기 압력 버팀쇠 설계 확인<br />온실 기술자와 파열 배관을 조사해 압력 버팀쇠
+                      규격을 확인하세요.
+                    </td>
+                    <td>
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#greenhouse-pipe-parasite">지열 배관 기생 기계</a>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="harbor-shipyard.html">조선소 탈환과 마지막 선박 수리</a></td>
+                    <td><a href="greenhouse-plains.html">온실 평원</a></td>
+                    <td>
+                      용접선 냉각수 확보<br />파열 배관 구역에서 용접선을 식힐 지열 냉각수 상태를
+                      확인하세요.
+                    </td>
+                    <td>
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#greenhouse-coolant-parasite"
+                            >냉각수 배관 기생 기계</a
+                          >
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="harbor-shipyard.html">조선소 탈환과 마지막 선박 수리</a></td>
+                    <td><a href="snow-trade-road.html">설산 교역로</a></td>
+                    <td>
+                      선박 인양 winch 규격 확인<br />제설 열차 승무원에게 산악 인양 winch 규격을
+                      확인하세요.
+                    </td>
+                    <td>
+                      <ul>
+                        <li><a href="../enemies.html#snow-route-raider">설산 길목 수거반</a></li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="greenhouse-plains.html">온실 지열 설비 복구</a></td>
+                    <td><a href="snow-trade-road.html">설산 교역로</a></td>
+                    <td>
+                      내한 열선 cable 확보<br />눈 막힌 옛 터널에서 지열 배관용 내한 cable 상태를
+                      확인하세요.
+                    </td>
+                    <td>
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#snow-thermal-raider">내한 케이블 절취 수거반</a>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="greenhouse-plains.html">온실 지열 설비 복구</a></td>
+                    <td><a href="abandoned-mine.html">폐광 산촌</a></td>
+                    <td>
+                      배관 밀폐 철판 규격 확인<br />폐광 구조 현황판에서 굴착기용 밀폐 철판 규격을
+                      확인하세요.
+                    </td>
+                    <td>
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#mine-seal-plate-raider">밀폐 철판 절취 수거반</a>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><a href="snow-trade-road.html">옛 터널 개통과 교역로 복구</a></td>
+                    <td><a href="red-quarry.html">붉은 채석장</a></td>
+                    <td>
+                      터널 축열석 확보<br />채석장 절개 갱도에서 터널 열선용 축열석 상태를
+                      확인하세요.
+                    </td>
+                    <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
+                  </tr>
+                  <tr>
+                    <td><a href="snow-trade-road.html">옛 터널 개통과 교역로 복구</a></td>
+                    <td><a href="harbor-shipyard.html">항구 조선소</a></td>
+                    <td>
+                      제동용 단열 hose 규격 확인<br />항구 도크에서 크레인 유압 hose의 단열 규격을
+                      확인하세요.
+                    </td>
+                    <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
+                  </tr>
+                  <tr>
+                    <td><a href="red-quarry.html">마지막 채굴과 안전 폐쇄</a></td>
+                    <td><a href="abandoned-mine.html">폐광 산촌</a></td>
+                    <td>
+                      절개면 지지대 확보<br />폐광 구조 갱도에서 채석장 폐쇄용 지지대 규격을
+                      확인하세요.
+                    </td>
+                    <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
+                  </tr>
+                  <tr>
+                    <td><a href="red-quarry.html">마지막 채굴과 안전 폐쇄</a></td>
+                    <td><a href="greenhouse-plains.html">온실 평원</a></td>
+                    <td>
+                      절단기 냉각 분무 규격 확인<br />온실 배관 현장에서 절단기 냉각 분무 규격을
+                      확인하세요.
+                    </td>
+                    <td>명시된 필수 encounter ID 없음 · 사건 밀도 확인 필요</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-3">
+              <a class="wiki-section-number" href="#doc-section-3">3.</a> 공통 인과와 분량
+            </h2>
+            <p>
+              의뢰·현장 관찰 → 연결 사건 → 귀환 → Boss/군수 인장 해제 → 생계 대체/마지막 작업 → 기계
+              분리 → 부품 회수 → 실제 길 차단에 따른 우회/차고 갱신. 대화·일반 전투·지역 내 탐색은
+              시간 무료, 장거리 이동·휴식·KO·핵심 사건 확정은 시간 소비입니다. 10시간/부품당 2시간은
+              기획 목표이지 현재 플레이 분량의 검증 결과가 아닙니다.
+            </p>
+            <a href="../../../PRODUCT_GOAL.html#PG-OPEN-CAMPAIGN">PG-OPEN-CAMPAIGN</a>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav>
+          <a href="#doc-section-1">1. 처음부터 결말까지</a
+          ><a href="#doc-section-2">2. 지역 간 연결 사건 전체</a
+          ><a href="#doc-section-3">3. 공통 인과와 분량</a>
+        </nav>
+      </aside>
+    </div>
   </body>
 </html>

@@ -283,6 +283,7 @@ Keyboard / Touch / DOM intent
 
 ## Graphics Handoff Documentation
 
+- 모든 HTML 문서는 PRODUCT_GOAL.html의 나무위키형 구조를 기본으로 한다. 공통 표시 원본은 docs/wiki.css, 생성 문서 틀은 scripts/wiki-document.mjs이며 게임 UI·오프라인 화면·테스트 fixture와 분리한다. 읽기용 제작 문서는 build 시점에 목차와 절 번호를 생성해 JavaScript 없이 내용을 읽을 수 있게 한다. 다운로드용 검증 보고서는 같은 CSS를 HTML에 포함하고 기존 재생 controls·원본 이미지·timestamp를 보존한다. 자세한 작성 계약은 docs/document-format.md에 둔다.
 - Product What의 authority는 PRODUCT_GOAL.html 하나다. docs/art-handoff는 기준 링크, 제작 요청 해설과 현재 authored data의 파생 목록이며 새로운 기획 authority가 아니다. 요구와 구현의 불일치·미정은 명시하여 외주 확정으로 복사하지 않는다.
 - 담당자용 인물/몹/지역별 문서와 최대 30행의 resource 목록 페이지를 분리한다. 각 resource는 기존 stable ID, producer, action/variant와 검토 URL을 보존하며 조립 묶음·부위 중복을 제작 건수로 합산하지 않는다.
 - scripts/generate-art-handoff.mjs가 production catalog/campaign/story를 읽어 정적 HTML과 기계용 index를 생성한다. 사람이 관리하는 요청 해설은 scripts/art-handoff-content.mjs에 한 번만 두고, 생성물의 누락/중복/링크 및 최신성을 검사한다. 문서와 원본 reference는 게임 PWA runtime asset에 포함하지 않는다. 공개 docs namespace는 HTML·CSS·reference를 네트워크로 읽고 게임 release cache와 분리한다. 게임 import의 cache-only 계약은 유지한다. local server도 docs와 요청서 generator/content의 명시적 공개 경로만 허용한다.

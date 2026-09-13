@@ -10,6 +10,8 @@ Human Feedback Priority — 다음 REF-02 제어핵·회수팔의 후보 3안을
 
 ## Current Evidence / Gap
 
+- 모든 읽기용 HTML 문서는 Product Goal과 같은 위키 포맷을 공유한다. docs/wiki.css와 scripts/wiki-document.mjs가 51개 저장소 문서 및 모션 보고서의 기본 구조를 소유하며 AGENTS/Architecture/docs/document-format.md가 새 문서에도 같은 규칙을 요구한다. 기존 NPC 목록 주소는 현 목록으로 연결하면서 ID를 보존한다. 기존 캡처 보고서 12개의 표시를 갱신했고 PNG/JSON 3,206개와 재생 스크립트·시간 정보는 유지했다.
+
 - 선택 이미지: docs/references/ref-01/appearance-option-2-selected.png. 공유 Ref01Appearance가 굵은 큰 부위 외곽선, 절제된 내부선, 두 단계 명암과 최저 밝기를 소유한다. 게임 인물과 원본 SVG 검토에도 같은 표현을 적용한다.
 - 주인공 master는 25 parts/54 shapes로 소매·옷깃·교차 스트랩·버클·튜닉·부츠 커프·손·검 손잡이·방패 패널을 갖춘다. 라이벌은 27 parts/70 shapes로 조끼·스카프·손·감개·파우치·갈고리를, 주인은 28 parts/79 shapes로 넓은 작업복·앞치마·공구 벨트·장갑·장부·스패너를 갖춘다. 모든 원본은 실제 far/mid/near 구분과 provenance export를 유지한다.
 - 주인공의 damaging weapon/shield contour와 기존 도달거리는 보존한다. 새 방패 장식에도 equipmentSlot을 부여해 방패 해제 시 장식이 남지 않는다. 11종 공격의 양방향 contact/miss/도달거리, 캐릭터 비율, 장비 적용과 shared pose/anchor 검사를 수행한다.

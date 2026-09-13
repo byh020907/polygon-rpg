@@ -3,1083 +3,1194 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>장면 · 전체 목록 1/1 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>장면 · 전체 목록 1/1 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>장면 · 전체 목록 1/1</h1>
-        <p>현재 등록 18개 중 1–18. 조각/상태를 독립 제작 건수로 합산하지 않습니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">원본 ID/이름</th>
-              <th scope="col">역할·제작 묶음</th>
-              <th scope="col">사용 장소/시나리오</th>
-              <th scope="col">현재 등록 상태</th>
-              <th scope="col">검토/출처</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <strong id="scene:ref-01-cast-lineup" data-resource-id="scene:ref-01-cast-lineup"
-                  >REF-01 Hero · Rival · Owner gameplay-scale 비교</strong
-                ><br /><code>scene:ref-01-cast-lineup</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>공용/미배치·개별 자료 확인</td>
-              <td>
-                <strong>동작 리소스</strong>
-                <details>
-                  <summary>현재 상태·동작 2개</summary>
-                  <ul>
-                    <li>공용 대기 clip · <code>idle</code> · 25프레임</li>
-                    <li>공용 이동 clip · 부착 확인 · <code>run</code> · 160프레임</li>
-                  </ul>
-                </details>
-                선택된 1안 기반 Hero/Rival/Owner SVG를 같은 960×540 gameplay 좌표·pose
-                sampler·renderer에서 비교합니다. 최종 아트 및 REF-05 Composition 승인은 별도입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aref-01-cast-lineup"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/character/CastCharacterPresentation.js"
-                  >src/game/character/CastCharacterPresentation.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:scrap-waste-edge:abandoned-weapon-yard"
-                  data-resource-id="scene:scrap-waste-edge:abandoned-weapon-yard"
-                  >첫 수거 의뢰 · 폐병기 구역</strong
-                ><br /><code>scene:scrap-waste-edge:abandoned-weapon-yard</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거 의뢰 ·
-                폐병기 구역
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 57개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · scrap-prologue-owner-commission ·
-                      <code>patch:scrap-prologue-owner-commission</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-rival-departure ·
-                      <code>patch:scrap-prologue-rival-departure</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-clearance ·
-                      <code>patch:scrap-prologue-yard-clearance</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-brace ·
-                      <code>patch:scrap-prologue-yard-brace</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-perimeter ·
-                      <code>patch:scrap-prologue-yard-perimeter</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-survey ·
-                      <code>patch:scrap-prologue-yard-survey</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-approach ·
-                      <code>patch:scrap-prologue-yard-approach</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-plate ·
-                      <code>patch:scrap-prologue-yard-plate</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-ridge ·
-                      <code>patch:scrap-prologue-yard-ridge</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-guard ·
-                      <code>patch:scrap-prologue-yard-guard</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-yard-search ·
-                      <code>patch:scrap-prologue-yard-search</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-collapse-and-rescue ·
-                      <code>patch:scrap-prologue-collapse-and-rescue</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-rescue-request ·
-                      <code>patch:scrap-prologue-rescue-request</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-player-decision ·
-                      <code>patch:scrap-prologue-player-decision</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-device-investigated ·
-                      <code>patch:scrap-prologue-device-investigated</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-rescue-powered ·
-                      <code>patch:scrap-prologue-rescue-powered</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-rival-rescued ·
-                      <code>patch:scrap-prologue-rival-rescued</code>
-                    </li>
-                    <li>
-                      조건 · scrap-device-recovered · <code>patch:scrap-device-recovered</code>
-                    </li>
-                    <li>조건 · scrap-king-eyes-lit · <code>patch:scrap-king-eyes-lit</code></li>
-                    <li>
-                      조건 · scrap-king-parts-assembled ·
-                      <code>patch:scrap-king-parts-assembled</code>
-                    </li>
-                    <li>
-                      조건 · scrap-king-deadline-revealed ·
-                      <code>patch:scrap-king-deadline-revealed</code>
-                    </li>
-                    <li>
-                      조건 · scrap-prologue-rival-return ·
-                      <code>patch:scrap-prologue-rival-return</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-owner-returned · <code>patch:scrapyard-owner-returned</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-device-analysis ·
-                      <code>patch:scrapyard-device-analysis</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-operation-map-revealed ·
-                      <code>patch:scrapyard-operation-map-revealed</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-garage-opened · <code>patch:scrapyard-garage-opened</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-workshop-ready · <code>patch:scrapyard-workshop-ready</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-wall-map-interactive ·
-                      <code>patch:scrapyard-wall-map-interactive</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-mine-road-open · <code>patch:scrapyard-mine-road-open</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-shipyard-road-open ·
-                      <code>patch:scrapyard-shipyard-road-open</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-greenhouse-road-open ·
-                      <code>patch:scrapyard-greenhouse-road-open</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-snow-road-open · <code>patch:scrapyard-snow-road-open</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-quarry-road-open ·
-                      <code>patch:scrapyard-quarry-road-open</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-walker-drive-installed ·
-                      <code>patch:scrapyard-walker-drive-installed</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-crane-hydraulics-installed ·
-                      <code>patch:scrapyard-crane-hydraulics-installed</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-arcane-reactor-installed ·
-                      <code>patch:scrapyard-arcane-reactor-installed</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-walker-crane-forty-percent ·
-                      <code>patch:scrapyard-walker-crane-forty-percent</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-walker-reactor-forty-percent ·
-                      <code>patch:scrapyard-walker-reactor-forty-percent</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-crane-reactor-forty-percent ·
-                      <code>patch:scrapyard-crane-reactor-forty-percent</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-first-three-sixty-percent ·
-                      <code>patch:scrapyard-first-three-sixty-percent</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-snowplow-armor-installed ·
-                      <code>patch:scrapyard-snowplow-armor-installed</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-quarry-cutter-installed ·
-                      <code>patch:scrapyard-quarry-cutter-installed</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-two-part-completion ·
-                      <code>patch:scrapyard-two-part-completion</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-three-part-completion ·
-                      <code>patch:scrapyard-three-part-completion</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-four-part-completion ·
-                      <code>patch:scrapyard-four-part-completion</code>
-                    </li>
-                    <li>
-                      조건 · scrapyard-five-part-completion ·
-                      <code>patch:scrapyard-five-part-completion</code>
-                    </li>
-                    <li>
-                      조건 · mine-core-event-started · <code>patch:mine-core-event-started</code>
-                    </li>
-                    <li>조건 · mine-campaign-updated · <code>patch:mine-campaign-updated</code></li>
-                    <li>
-                      조건 · shipyard-core-event-started ·
-                      <code>patch:shipyard-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-campaign-updated ·
-                      <code>patch:shipyard-campaign-updated</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-core-event-started ·
-                      <code>patch:greenhouse-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-campaign-updated ·
-                      <code>patch:greenhouse-campaign-updated</code>
-                    </li>
-                    <li>
-                      조건 · snow-core-event-started · <code>patch:snow-core-event-started</code>
-                    </li>
-                    <li>조건 · snow-campaign-updated · <code>patch:snow-campaign-updated</code></li>
-                    <li>
-                      조건 · quarry-core-event-started ·
-                      <code>patch:quarry-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · quarry-campaign-updated · <code>patch:quarry-campaign-updated</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ascrap-waste-edge%3Aabandoned-weapon-yard"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:abandoned-mine:abandoned-mine-roadhead"
-                  data-resource-id="scene:abandoned-mine:abandoned-mine-roadhead"
-                  >폐광 산촌 · 연결로 진입부</strong
-                ><br /><code>scene:abandoned-mine:abandoned-mine-roadhead</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 8개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · scrapyard-mine-road-open · <code>patch:scrapyard-mine-road-open</code>
-                    </li>
-                    <li>
-                      조건 · mine-briefing-complete · <code>patch:mine-briefing-complete</code>
-                    </li>
-                    <li>조건 · mine-cast-rival-scout · <code>patch:mine-cast-rival-scout</code></li>
-                    <li>조건 · mine-cast-working · <code>patch:mine-cast-working</code></li>
-                    <li>
-                      조건 · mine-core-event-started · <code>patch:mine-core-event-started</code>
-                    </li>
-                    <li>조건 · mine-campaign-updated · <code>patch:mine-campaign-updated</code></li>
-                    <li>조건 · mine-cast-after · <code>patch:mine-cast-after</code></li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aabandoned-mine%3Aabandoned-mine-roadhead"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:abandoned-mine:abandoned-mine-rescue-tunnel"
-                  data-resource-id="scene:abandoned-mine:abandoned-mine-rescue-tunnel"
-                  >폐광 산촌 · 구조 갱도</strong
-                ><br /><code>scene:abandoned-mine:abandoned-mine-rescue-tunnel</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 3개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · mine-core-event-started · <code>patch:mine-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · mine-journey-combat-complete ·
-                      <code>patch:mine-journey-combat-complete</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:abandoned-mine:abandoned-mine-machine-yard"
-                  data-resource-id="scene:abandoned-mine:abandoned-mine-machine-yard"
-                  >폐광 산촌 · 보행식 굴착기 작업장</strong
-                ><br /><code>scene:abandoned-mine:abandoned-mine-machine-yard</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 보행식
-                굴착기 작업장
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 6개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · mine-journey-combat-complete ·
-                      <code>patch:mine-journey-combat-complete</code>
-                    </li>
-                    <li>조건 · mine-boss-defeated · <code>patch:mine-boss-defeated</code></li>
-                    <li>
-                      조건 · mine-replacement-complete ·
-                      <code>patch:mine-replacement-complete</code>
-                    </li>
-                    <li>
-                      조건 · mine-machine-separated · <code>patch:mine-machine-separated</code>
-                    </li>
-                    <li>조건 · mine-campaign-updated · <code>patch:mine-campaign-updated</code></li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aabandoned-mine%3Aabandoned-mine-machine-yard"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:harbor-shipyard:harbor-shipyard-roadhead"
-                  data-resource-id="scene:harbor-shipyard:harbor-shipyard-roadhead"
-                  >항구 조선소 · 연결로 진입부</strong
-                ><br /><code>scene:harbor-shipyard:harbor-shipyard-roadhead</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 9개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · scrapyard-shipyard-road-open ·
-                      <code>patch:scrapyard-shipyard-road-open</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-briefing-complete ·
-                      <code>patch:shipyard-briefing-complete</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-cast-rival-scout ·
-                      <code>patch:shipyard-cast-rival-scout</code>
-                    </li>
-                    <li>조건 · shipyard-cast-working · <code>patch:shipyard-cast-working</code></li>
-                    <li>
-                      조건 · shipyard-core-event-started ·
-                      <code>patch:shipyard-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-mine-linked-route-open ·
-                      <code>patch:shipyard-mine-linked-route-open</code>
-                    </li>
-                    <li>조건 · shipyard-cast-after · <code>patch:shipyard-cast-after</code></li>
-                    <li>
-                      조건 · shipyard-campaign-updated ·
-                      <code>patch:shipyard-campaign-updated</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aharbor-shipyard%3Aharbor-shipyard-roadhead"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:harbor-shipyard:harbor-shipyard-occupied-drydock"
-                  data-resource-id="scene:harbor-shipyard:harbor-shipyard-occupied-drydock"
-                  >항구 조선소 · 점거된 건선거</strong
-                ><br /><code>scene:harbor-shipyard:harbor-shipyard-occupied-drydock</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                점거된 건선거
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 6개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · shipyard-core-event-started ·
-                      <code>patch:shipyard-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-mine-linked-route-open ·
-                      <code>patch:shipyard-mine-linked-route-open</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-mine-linked-cable-combat ·
-                      <code>patch:shipyard-mine-linked-cable-combat</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-mine-linked-raider-combat ·
-                      <code>patch:shipyard-mine-linked-raider-combat</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-journey-combat-complete ·
-                      <code>patch:shipyard-journey-combat-complete</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aharbor-shipyard%3Aharbor-shipyard-occupied-drydock"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:harbor-shipyard:harbor-shipyard-twin-crane-pier"
-                  data-resource-id="scene:harbor-shipyard:harbor-shipyard-twin-crane-pier"
-                  >항구 조선소 · 쌍둥이 크레인 부두</strong
-                ><br /><code>scene:harbor-shipyard:harbor-shipyard-twin-crane-pier</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
-                쌍둥이 크레인 부두
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 6개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · shipyard-journey-combat-complete ·
-                      <code>patch:shipyard-journey-combat-complete</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-boss-defeated · <code>patch:shipyard-boss-defeated</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-replacement-complete ·
-                      <code>patch:shipyard-replacement-complete</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-machine-separated ·
-                      <code>patch:shipyard-machine-separated</code>
-                    </li>
-                    <li>
-                      조건 · shipyard-campaign-updated ·
-                      <code>patch:shipyard-campaign-updated</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aharbor-shipyard%3Aharbor-shipyard-twin-crane-pier"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:greenhouse-plains:greenhouse-plains-roadhead"
-                  data-resource-id="scene:greenhouse-plains:greenhouse-plains-roadhead"
-                  >온실 평원 · 연결로 진입부</strong
-                ><br /><code>scene:greenhouse-plains:greenhouse-plains-roadhead</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/greenhouse-plains.html">온실 평원</a><br />온실 평원 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 9개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · scrapyard-greenhouse-road-open ·
-                      <code>patch:scrapyard-greenhouse-road-open</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-briefing-complete ·
-                      <code>patch:greenhouse-briefing-complete</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-cast-rival-scout ·
-                      <code>patch:greenhouse-cast-rival-scout</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-cast-working · <code>patch:greenhouse-cast-working</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-core-event-started ·
-                      <code>patch:greenhouse-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-mine-linked-route-open ·
-                      <code>patch:greenhouse-mine-linked-route-open</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-campaign-updated ·
-                      <code>patch:greenhouse-campaign-updated</code>
-                    </li>
-                    <li>조건 · greenhouse-cast-after · <code>patch:greenhouse-cast-after</code></li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-roadhead"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:greenhouse-plains:greenhouse-plains-broken-pipeline"
-                  data-resource-id="scene:greenhouse-plains:greenhouse-plains-broken-pipeline"
-                  >온실 평원 · 파열 지열 배관</strong
-                ><br /><code>scene:greenhouse-plains:greenhouse-plains-broken-pipeline</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/greenhouse-plains.html">온실 평원</a><br />온실 평원 · 파열
-                지열 배관
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 5개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · greenhouse-core-event-started ·
-                      <code>patch:greenhouse-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-mine-linked-route-open ·
-                      <code>patch:greenhouse-mine-linked-route-open</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-mine-linked-brace-combat ·
-                      <code>patch:greenhouse-mine-linked-brace-combat</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-journey-combat-complete ·
-                      <code>patch:greenhouse-journey-combat-complete</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-broken-pipeline"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:greenhouse-plains:greenhouse-plains-reactor-house"
-                  data-resource-id="scene:greenhouse-plains:greenhouse-plains-reactor-house"
-                  >온실 평원 · 구형 고출력 동력로실</strong
-                ><br /><code>scene:greenhouse-plains:greenhouse-plains-reactor-house</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/greenhouse-plains.html">온실 평원</a><br />온실 평원 · 구형
-                고출력 동력로실
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 6개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · greenhouse-journey-combat-complete ·
-                      <code>patch:greenhouse-journey-combat-complete</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-boss-defeated · <code>patch:greenhouse-boss-defeated</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-replacement-complete ·
-                      <code>patch:greenhouse-replacement-complete</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-machine-separated ·
-                      <code>patch:greenhouse-machine-separated</code>
-                    </li>
-                    <li>
-                      조건 · greenhouse-campaign-updated ·
-                      <code>patch:greenhouse-campaign-updated</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-reactor-house"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:snow-trade-road:snow-trade-road-roadhead"
-                  data-resource-id="scene:snow-trade-road:snow-trade-road-roadhead"
-                  >설산 교역로 · 연결로 진입부</strong
-                ><br /><code>scene:snow-trade-road:snow-trade-road-roadhead</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/snow-trade-road.html">설산 교역로</a><br />설산 교역로 ·
-                연결로 진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 8개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · scrapyard-snow-road-open · <code>patch:scrapyard-snow-road-open</code>
-                    </li>
-                    <li>
-                      조건 · snow-briefing-complete · <code>patch:snow-briefing-complete</code>
-                    </li>
-                    <li>조건 · snow-cast-rival-scout · <code>patch:snow-cast-rival-scout</code></li>
-                    <li>조건 · snow-cast-working · <code>patch:snow-cast-working</code></li>
-                    <li>
-                      조건 · snow-core-event-started · <code>patch:snow-core-event-started</code>
-                    </li>
-                    <li>조건 · snow-campaign-updated · <code>patch:snow-campaign-updated</code></li>
-                    <li>조건 · snow-cast-after · <code>patch:snow-cast-after</code></li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Asnow-trade-road%3Asnow-trade-road-roadhead"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:snow-trade-road:snow-trade-road-old-tunnel"
-                  data-resource-id="scene:snow-trade-road:snow-trade-road-old-tunnel"
-                  >설산 교역로 · 막힌 옛 터널</strong
-                ><br /><code>scene:snow-trade-road:snow-trade-road-old-tunnel</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/snow-trade-road.html">설산 교역로</a><br />설산 교역로 · 막힌
-                옛 터널
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 3개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · snow-core-event-started · <code>patch:snow-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · snow-journey-combat-complete ·
-                      <code>patch:snow-journey-combat-complete</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Asnow-trade-road%3Asnow-trade-road-old-tunnel"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:snow-trade-road:snow-trade-road-snowplow-siding"
-                  data-resource-id="scene:snow-trade-road:snow-trade-road-snowplow-siding"
-                  >설산 교역로 · 장갑 제설 열차 대피선</strong
-                ><br /><code>scene:snow-trade-road:snow-trade-road-snowplow-siding</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/snow-trade-road.html">설산 교역로</a><br />설산 교역로 · 장갑
-                제설 열차 대피선
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 6개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · snow-journey-combat-complete ·
-                      <code>patch:snow-journey-combat-complete</code>
-                    </li>
-                    <li>조건 · snow-boss-defeated · <code>patch:snow-boss-defeated</code></li>
-                    <li>
-                      조건 · snow-replacement-complete ·
-                      <code>patch:snow-replacement-complete</code>
-                    </li>
-                    <li>
-                      조건 · snow-machine-separated · <code>patch:snow-machine-separated</code>
-                    </li>
-                    <li>조건 · snow-campaign-updated · <code>patch:snow-campaign-updated</code></li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Asnow-trade-road%3Asnow-trade-road-snowplow-siding"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:red-quarry:red-quarry-roadhead"
-                  data-resource-id="scene:red-quarry:red-quarry-roadhead"
-                  >붉은 채석장 · 연결로 진입부</strong
-                ><br /><code>scene:red-quarry:red-quarry-roadhead</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/red-quarry.html">붉은 채석장</a><br />붉은 채석장 · 연결로
-                진입부
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 8개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · scrapyard-quarry-road-open ·
-                      <code>patch:scrapyard-quarry-road-open</code>
-                    </li>
-                    <li>
-                      조건 · quarry-briefing-complete · <code>patch:quarry-briefing-complete</code>
-                    </li>
-                    <li>
-                      조건 · quarry-cast-rival-scout · <code>patch:quarry-cast-rival-scout</code>
-                    </li>
-                    <li>조건 · quarry-cast-working · <code>patch:quarry-cast-working</code></li>
-                    <li>
-                      조건 · quarry-core-event-started ·
-                      <code>patch:quarry-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · quarry-campaign-updated · <code>patch:quarry-campaign-updated</code>
-                    </li>
-                    <li>조건 · quarry-cast-after · <code>patch:quarry-cast-after</code></li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ared-quarry%3Ared-quarry-roadhead"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:red-quarry:red-quarry-final-cut"
-                  data-resource-id="scene:red-quarry:red-quarry-final-cut"
-                  >붉은 채석장 · 마지막 절개 갱도</strong
-                ><br /><code>scene:red-quarry:red-quarry-final-cut</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/red-quarry.html">붉은 채석장</a><br />붉은 채석장 · 마지막
-                절개 갱도
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 3개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · quarry-core-event-started ·
-                      <code>patch:quarry-core-event-started</code>
-                    </li>
-                    <li>
-                      조건 · quarry-journey-combat-complete ·
-                      <code>patch:quarry-journey-combat-complete</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ared-quarry%3Ared-quarry-final-cut"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong
-                  id="scene:red-quarry:red-quarry-cutter-yard"
-                  data-resource-id="scene:red-quarry:red-quarry-cutter-yard"
-                  >붉은 채석장 · 초대형 암반 절단기 작업장</strong
-                ><br /><code>scene:red-quarry:red-quarry-cutter-yard</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td>
-                <a href="../scenarios/red-quarry.html">붉은 채석장</a><br />붉은 채석장 · 초대형
-                암반 절단기 작업장
-              </td>
-              <td>
-                <strong>원본 부위/장면</strong>
-                <details>
-                  <summary>현재 상태·동작 6개</summary>
-                  <ul>
-                    <li>기본 상태 · <code>base</code></li>
-                    <li>
-                      조건 · quarry-journey-combat-complete ·
-                      <code>patch:quarry-journey-combat-complete</code>
-                    </li>
-                    <li>조건 · quarry-boss-defeated · <code>patch:quarry-boss-defeated</code></li>
-                    <li>
-                      조건 · quarry-replacement-complete ·
-                      <code>patch:quarry-replacement-complete</code>
-                    </li>
-                    <li>
-                      조건 · quarry-machine-separated · <code>patch:quarry-machine-separated</code>
-                    </li>
-                    <li>
-                      조건 · quarry-campaign-updated · <code>patch:quarry-campaign-updated</code>
-                    </li>
-                  </ul>
-                </details>
-                실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
-                표본입니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ared-quarry%3Ared-quarry-cutter-yard"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/maps/scrapAwakening.js"
-                  >src/game/maps/scrapAwakening.js</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong id="scene:final-battle" data-resource-id="scene:final-battle"
-                  >대항 병기와 고대 병기 · 최종 전장</strong
-                ><br /><code>scene:final-battle</code>
-              </td>
-              <td>주변 환경과 배치를 함께 검토하는 장면</td>
-              <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
-              <td>
-                <strong>장면</strong>
-                <details>
-                  <summary>현재 상태·동작 5개</summary>
-                  <ul>
-                    <li>armor · <code>armor</code></li>
-                    <li>weapon · <code>weapon</code></li>
-                    <li>control-core · <code>control-core</code></li>
-                    <li>core-reinstalled · <code>core-reinstalled</code></li>
-                    <li>epilogue · <code>epilogue</code></li>
-                  </ul>
-                </details>
-                현재 production stage별 정적 조립. 시간축 robot 애니메이션은 아직 없습니다.
-              </td>
-              <td>
-                <a
-                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Afinal-battle"
-                  >게임 검토실</a
-                ><br /><a href="../../../src/game/campaign/ScrapFinalBattlePresentation.js"
-                  >src/game/campaign/ScrapFinalBattlePresentation.js</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <nav class="pager"><a href="index.html">전체 분류</a></nav>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>장면 · 전체 목록 1/1</h1>
+                <p class="wiki-document-subtitle">
+                  현재 등록 18개 중 1–18. 조각/상태를 독립 제작 건수로 합산하지 않습니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">원본 ID/이름</th>
+                    <th scope="col">역할·제작 묶음</th>
+                    <th scope="col">사용 장소/시나리오</th>
+                    <th scope="col">현재 등록 상태</th>
+                    <th scope="col">검토/출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:ref-01-cast-lineup"
+                        data-resource-id="scene:ref-01-cast-lineup"
+                        >REF-01 Hero · Rival · Owner gameplay-scale 비교</strong
+                      ><br /><code>scene:ref-01-cast-lineup</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>공용/미배치·개별 자료 확인</td>
+                    <td>
+                      <strong>동작 리소스</strong>
+                      <details>
+                        <summary>현재 상태·동작 2개</summary>
+                        <ul>
+                          <li>공용 대기 clip · <code>idle</code> · 25프레임</li>
+                          <li>공용 이동 clip · 부착 확인 · <code>run</code> · 160프레임</li>
+                        </ul>
+                      </details>
+                      선택된 1안 기반 Hero/Rival/Owner SVG를 같은 960×540 gameplay 좌표·pose
+                      sampler·renderer에서 비교합니다. 최종 아트 및 REF-05 Composition 승인은
+                      별도입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aref-01-cast-lineup"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/character/CastCharacterPresentation.js"
+                        >src/game/character/CastCharacterPresentation.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:scrap-waste-edge:abandoned-weapon-yard"
+                        data-resource-id="scene:scrap-waste-edge:abandoned-weapon-yard"
+                        >첫 수거 의뢰 · 폐병기 구역</strong
+                      ><br /><code>scene:scrap-waste-edge:abandoned-weapon-yard</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br />첫 수거
+                      의뢰 · 폐병기 구역
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 57개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · scrap-prologue-owner-commission ·
+                            <code>patch:scrap-prologue-owner-commission</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-rival-departure ·
+                            <code>patch:scrap-prologue-rival-departure</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-clearance ·
+                            <code>patch:scrap-prologue-yard-clearance</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-brace ·
+                            <code>patch:scrap-prologue-yard-brace</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-perimeter ·
+                            <code>patch:scrap-prologue-yard-perimeter</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-survey ·
+                            <code>patch:scrap-prologue-yard-survey</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-approach ·
+                            <code>patch:scrap-prologue-yard-approach</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-plate ·
+                            <code>patch:scrap-prologue-yard-plate</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-ridge ·
+                            <code>patch:scrap-prologue-yard-ridge</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-guard ·
+                            <code>patch:scrap-prologue-yard-guard</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-yard-search ·
+                            <code>patch:scrap-prologue-yard-search</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-collapse-and-rescue ·
+                            <code>patch:scrap-prologue-collapse-and-rescue</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-rescue-request ·
+                            <code>patch:scrap-prologue-rescue-request</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-player-decision ·
+                            <code>patch:scrap-prologue-player-decision</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-device-investigated ·
+                            <code>patch:scrap-prologue-device-investigated</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-rescue-powered ·
+                            <code>patch:scrap-prologue-rescue-powered</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-rival-rescued ·
+                            <code>patch:scrap-prologue-rival-rescued</code>
+                          </li>
+                          <li>
+                            조건 · scrap-device-recovered ·
+                            <code>patch:scrap-device-recovered</code>
+                          </li>
+                          <li>
+                            조건 · scrap-king-eyes-lit · <code>patch:scrap-king-eyes-lit</code>
+                          </li>
+                          <li>
+                            조건 · scrap-king-parts-assembled ·
+                            <code>patch:scrap-king-parts-assembled</code>
+                          </li>
+                          <li>
+                            조건 · scrap-king-deadline-revealed ·
+                            <code>patch:scrap-king-deadline-revealed</code>
+                          </li>
+                          <li>
+                            조건 · scrap-prologue-rival-return ·
+                            <code>patch:scrap-prologue-rival-return</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-owner-returned ·
+                            <code>patch:scrapyard-owner-returned</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-device-analysis ·
+                            <code>patch:scrapyard-device-analysis</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-operation-map-revealed ·
+                            <code>patch:scrapyard-operation-map-revealed</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-garage-opened ·
+                            <code>patch:scrapyard-garage-opened</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-workshop-ready ·
+                            <code>patch:scrapyard-workshop-ready</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-wall-map-interactive ·
+                            <code>patch:scrapyard-wall-map-interactive</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-mine-road-open ·
+                            <code>patch:scrapyard-mine-road-open</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-shipyard-road-open ·
+                            <code>patch:scrapyard-shipyard-road-open</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-greenhouse-road-open ·
+                            <code>patch:scrapyard-greenhouse-road-open</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-snow-road-open ·
+                            <code>patch:scrapyard-snow-road-open</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-quarry-road-open ·
+                            <code>patch:scrapyard-quarry-road-open</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-walker-drive-installed ·
+                            <code>patch:scrapyard-walker-drive-installed</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-crane-hydraulics-installed ·
+                            <code>patch:scrapyard-crane-hydraulics-installed</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-arcane-reactor-installed ·
+                            <code>patch:scrapyard-arcane-reactor-installed</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-walker-crane-forty-percent ·
+                            <code>patch:scrapyard-walker-crane-forty-percent</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-walker-reactor-forty-percent ·
+                            <code>patch:scrapyard-walker-reactor-forty-percent</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-crane-reactor-forty-percent ·
+                            <code>patch:scrapyard-crane-reactor-forty-percent</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-first-three-sixty-percent ·
+                            <code>patch:scrapyard-first-three-sixty-percent</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-snowplow-armor-installed ·
+                            <code>patch:scrapyard-snowplow-armor-installed</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-quarry-cutter-installed ·
+                            <code>patch:scrapyard-quarry-cutter-installed</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-two-part-completion ·
+                            <code>patch:scrapyard-two-part-completion</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-three-part-completion ·
+                            <code>patch:scrapyard-three-part-completion</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-four-part-completion ·
+                            <code>patch:scrapyard-four-part-completion</code>
+                          </li>
+                          <li>
+                            조건 · scrapyard-five-part-completion ·
+                            <code>patch:scrapyard-five-part-completion</code>
+                          </li>
+                          <li>
+                            조건 · mine-core-event-started ·
+                            <code>patch:mine-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · mine-campaign-updated · <code>patch:mine-campaign-updated</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-core-event-started ·
+                            <code>patch:shipyard-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-campaign-updated ·
+                            <code>patch:shipyard-campaign-updated</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-core-event-started ·
+                            <code>patch:greenhouse-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-campaign-updated ·
+                            <code>patch:greenhouse-campaign-updated</code>
+                          </li>
+                          <li>
+                            조건 · snow-core-event-started ·
+                            <code>patch:snow-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · snow-campaign-updated · <code>patch:snow-campaign-updated</code>
+                          </li>
+                          <li>
+                            조건 · quarry-core-event-started ·
+                            <code>patch:quarry-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · quarry-campaign-updated ·
+                            <code>patch:quarry-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ascrap-waste-edge%3Aabandoned-weapon-yard"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:abandoned-mine:abandoned-mine-roadhead"
+                        data-resource-id="scene:abandoned-mine:abandoned-mine-roadhead"
+                        >폐광 산촌 · 연결로 진입부</strong
+                      ><br /><code>scene:abandoned-mine:abandoned-mine-roadhead</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 8개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · scrapyard-mine-road-open ·
+                            <code>patch:scrapyard-mine-road-open</code>
+                          </li>
+                          <li>
+                            조건 · mine-briefing-complete ·
+                            <code>patch:mine-briefing-complete</code>
+                          </li>
+                          <li>
+                            조건 · mine-cast-rival-scout · <code>patch:mine-cast-rival-scout</code>
+                          </li>
+                          <li>조건 · mine-cast-working · <code>patch:mine-cast-working</code></li>
+                          <li>
+                            조건 · mine-core-event-started ·
+                            <code>patch:mine-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · mine-campaign-updated · <code>patch:mine-campaign-updated</code>
+                          </li>
+                          <li>조건 · mine-cast-after · <code>patch:mine-cast-after</code></li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aabandoned-mine%3Aabandoned-mine-roadhead"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:abandoned-mine:abandoned-mine-rescue-tunnel"
+                        data-resource-id="scene:abandoned-mine:abandoned-mine-rescue-tunnel"
+                        >폐광 산촌 · 구조 갱도</strong
+                      ><br /><code>scene:abandoned-mine:abandoned-mine-rescue-tunnel</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 · 구조
+                      갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 3개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · mine-core-event-started ·
+                            <code>patch:mine-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · mine-journey-combat-complete ·
+                            <code>patch:mine-journey-combat-complete</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aabandoned-mine%3Aabandoned-mine-rescue-tunnel"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:abandoned-mine:abandoned-mine-machine-yard"
+                        data-resource-id="scene:abandoned-mine:abandoned-mine-machine-yard"
+                        >폐광 산촌 · 보행식 굴착기 작업장</strong
+                      ><br /><code>scene:abandoned-mine:abandoned-mine-machine-yard</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/abandoned-mine.html">폐광 산촌</a><br />폐광 산촌 ·
+                      보행식 굴착기 작업장
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 6개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · mine-journey-combat-complete ·
+                            <code>patch:mine-journey-combat-complete</code>
+                          </li>
+                          <li>조건 · mine-boss-defeated · <code>patch:mine-boss-defeated</code></li>
+                          <li>
+                            조건 · mine-replacement-complete ·
+                            <code>patch:mine-replacement-complete</code>
+                          </li>
+                          <li>
+                            조건 · mine-machine-separated ·
+                            <code>patch:mine-machine-separated</code>
+                          </li>
+                          <li>
+                            조건 · mine-campaign-updated · <code>patch:mine-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aabandoned-mine%3Aabandoned-mine-machine-yard"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:harbor-shipyard:harbor-shipyard-roadhead"
+                        data-resource-id="scene:harbor-shipyard:harbor-shipyard-roadhead"
+                        >항구 조선소 · 연결로 진입부</strong
+                      ><br /><code>scene:harbor-shipyard:harbor-shipyard-roadhead</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 9개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · scrapyard-shipyard-road-open ·
+                            <code>patch:scrapyard-shipyard-road-open</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-briefing-complete ·
+                            <code>patch:shipyard-briefing-complete</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-cast-rival-scout ·
+                            <code>patch:shipyard-cast-rival-scout</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-cast-working · <code>patch:shipyard-cast-working</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-core-event-started ·
+                            <code>patch:shipyard-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-mine-linked-route-open ·
+                            <code>patch:shipyard-mine-linked-route-open</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-cast-after · <code>patch:shipyard-cast-after</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-campaign-updated ·
+                            <code>patch:shipyard-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aharbor-shipyard%3Aharbor-shipyard-roadhead"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:harbor-shipyard:harbor-shipyard-occupied-drydock"
+                        data-resource-id="scene:harbor-shipyard:harbor-shipyard-occupied-drydock"
+                        >항구 조선소 · 점거된 건선거</strong
+                      ><br /><code>scene:harbor-shipyard:harbor-shipyard-occupied-drydock</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      점거된 건선거
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 6개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · shipyard-core-event-started ·
+                            <code>patch:shipyard-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-mine-linked-route-open ·
+                            <code>patch:shipyard-mine-linked-route-open</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-mine-linked-cable-combat ·
+                            <code>patch:shipyard-mine-linked-cable-combat</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-mine-linked-raider-combat ·
+                            <code>patch:shipyard-mine-linked-raider-combat</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-journey-combat-complete ·
+                            <code>patch:shipyard-journey-combat-complete</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aharbor-shipyard%3Aharbor-shipyard-occupied-drydock"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:harbor-shipyard:harbor-shipyard-twin-crane-pier"
+                        data-resource-id="scene:harbor-shipyard:harbor-shipyard-twin-crane-pier"
+                        >항구 조선소 · 쌍둥이 크레인 부두</strong
+                      ><br /><code>scene:harbor-shipyard:harbor-shipyard-twin-crane-pier</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/harbor-shipyard.html">항구 조선소</a><br />항구 조선소 ·
+                      쌍둥이 크레인 부두
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 6개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · shipyard-journey-combat-complete ·
+                            <code>patch:shipyard-journey-combat-complete</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-boss-defeated ·
+                            <code>patch:shipyard-boss-defeated</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-replacement-complete ·
+                            <code>patch:shipyard-replacement-complete</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-machine-separated ·
+                            <code>patch:shipyard-machine-separated</code>
+                          </li>
+                          <li>
+                            조건 · shipyard-campaign-updated ·
+                            <code>patch:shipyard-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Aharbor-shipyard%3Aharbor-shipyard-twin-crane-pier"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:greenhouse-plains:greenhouse-plains-roadhead"
+                        data-resource-id="scene:greenhouse-plains:greenhouse-plains-roadhead"
+                        >온실 평원 · 연결로 진입부</strong
+                      ><br /><code>scene:greenhouse-plains:greenhouse-plains-roadhead</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/greenhouse-plains.html">온실 평원</a><br />온실 평원 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 9개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · scrapyard-greenhouse-road-open ·
+                            <code>patch:scrapyard-greenhouse-road-open</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-briefing-complete ·
+                            <code>patch:greenhouse-briefing-complete</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-cast-rival-scout ·
+                            <code>patch:greenhouse-cast-rival-scout</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-cast-working ·
+                            <code>patch:greenhouse-cast-working</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-core-event-started ·
+                            <code>patch:greenhouse-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-mine-linked-route-open ·
+                            <code>patch:greenhouse-mine-linked-route-open</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-campaign-updated ·
+                            <code>patch:greenhouse-campaign-updated</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-cast-after · <code>patch:greenhouse-cast-after</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-roadhead"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:greenhouse-plains:greenhouse-plains-broken-pipeline"
+                        data-resource-id="scene:greenhouse-plains:greenhouse-plains-broken-pipeline"
+                        >온실 평원 · 파열 지열 배관</strong
+                      ><br /><code>scene:greenhouse-plains:greenhouse-plains-broken-pipeline</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/greenhouse-plains.html">온실 평원</a><br />온실 평원 ·
+                      파열 지열 배관
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 5개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · greenhouse-core-event-started ·
+                            <code>patch:greenhouse-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-mine-linked-route-open ·
+                            <code>patch:greenhouse-mine-linked-route-open</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-mine-linked-brace-combat ·
+                            <code>patch:greenhouse-mine-linked-brace-combat</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-journey-combat-complete ·
+                            <code>patch:greenhouse-journey-combat-complete</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-broken-pipeline"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:greenhouse-plains:greenhouse-plains-reactor-house"
+                        data-resource-id="scene:greenhouse-plains:greenhouse-plains-reactor-house"
+                        >온실 평원 · 구형 고출력 동력로실</strong
+                      ><br /><code>scene:greenhouse-plains:greenhouse-plains-reactor-house</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/greenhouse-plains.html">온실 평원</a><br />온실 평원 ·
+                      구형 고출력 동력로실
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 6개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · greenhouse-journey-combat-complete ·
+                            <code>patch:greenhouse-journey-combat-complete</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-boss-defeated ·
+                            <code>patch:greenhouse-boss-defeated</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-replacement-complete ·
+                            <code>patch:greenhouse-replacement-complete</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-machine-separated ·
+                            <code>patch:greenhouse-machine-separated</code>
+                          </li>
+                          <li>
+                            조건 · greenhouse-campaign-updated ·
+                            <code>patch:greenhouse-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-reactor-house"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:snow-trade-road:snow-trade-road-roadhead"
+                        data-resource-id="scene:snow-trade-road:snow-trade-road-roadhead"
+                        >설산 교역로 · 연결로 진입부</strong
+                      ><br /><code>scene:snow-trade-road:snow-trade-road-roadhead</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/snow-trade-road.html">설산 교역로</a><br />설산 교역로 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 8개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · scrapyard-snow-road-open ·
+                            <code>patch:scrapyard-snow-road-open</code>
+                          </li>
+                          <li>
+                            조건 · snow-briefing-complete ·
+                            <code>patch:snow-briefing-complete</code>
+                          </li>
+                          <li>
+                            조건 · snow-cast-rival-scout · <code>patch:snow-cast-rival-scout</code>
+                          </li>
+                          <li>조건 · snow-cast-working · <code>patch:snow-cast-working</code></li>
+                          <li>
+                            조건 · snow-core-event-started ·
+                            <code>patch:snow-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · snow-campaign-updated · <code>patch:snow-campaign-updated</code>
+                          </li>
+                          <li>조건 · snow-cast-after · <code>patch:snow-cast-after</code></li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Asnow-trade-road%3Asnow-trade-road-roadhead"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:snow-trade-road:snow-trade-road-old-tunnel"
+                        data-resource-id="scene:snow-trade-road:snow-trade-road-old-tunnel"
+                        >설산 교역로 · 막힌 옛 터널</strong
+                      ><br /><code>scene:snow-trade-road:snow-trade-road-old-tunnel</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/snow-trade-road.html">설산 교역로</a><br />설산 교역로 ·
+                      막힌 옛 터널
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 3개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · snow-core-event-started ·
+                            <code>patch:snow-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · snow-journey-combat-complete ·
+                            <code>patch:snow-journey-combat-complete</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Asnow-trade-road%3Asnow-trade-road-old-tunnel"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:snow-trade-road:snow-trade-road-snowplow-siding"
+                        data-resource-id="scene:snow-trade-road:snow-trade-road-snowplow-siding"
+                        >설산 교역로 · 장갑 제설 열차 대피선</strong
+                      ><br /><code>scene:snow-trade-road:snow-trade-road-snowplow-siding</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/snow-trade-road.html">설산 교역로</a><br />설산 교역로 ·
+                      장갑 제설 열차 대피선
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 6개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · snow-journey-combat-complete ·
+                            <code>patch:snow-journey-combat-complete</code>
+                          </li>
+                          <li>조건 · snow-boss-defeated · <code>patch:snow-boss-defeated</code></li>
+                          <li>
+                            조건 · snow-replacement-complete ·
+                            <code>patch:snow-replacement-complete</code>
+                          </li>
+                          <li>
+                            조건 · snow-machine-separated ·
+                            <code>patch:snow-machine-separated</code>
+                          </li>
+                          <li>
+                            조건 · snow-campaign-updated · <code>patch:snow-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Asnow-trade-road%3Asnow-trade-road-snowplow-siding"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:red-quarry:red-quarry-roadhead"
+                        data-resource-id="scene:red-quarry:red-quarry-roadhead"
+                        >붉은 채석장 · 연결로 진입부</strong
+                      ><br /><code>scene:red-quarry:red-quarry-roadhead</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/red-quarry.html">붉은 채석장</a><br />붉은 채석장 ·
+                      연결로 진입부
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 8개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · scrapyard-quarry-road-open ·
+                            <code>patch:scrapyard-quarry-road-open</code>
+                          </li>
+                          <li>
+                            조건 · quarry-briefing-complete ·
+                            <code>patch:quarry-briefing-complete</code>
+                          </li>
+                          <li>
+                            조건 · quarry-cast-rival-scout ·
+                            <code>patch:quarry-cast-rival-scout</code>
+                          </li>
+                          <li>
+                            조건 · quarry-cast-working · <code>patch:quarry-cast-working</code>
+                          </li>
+                          <li>
+                            조건 · quarry-core-event-started ·
+                            <code>patch:quarry-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · quarry-campaign-updated ·
+                            <code>patch:quarry-campaign-updated</code>
+                          </li>
+                          <li>조건 · quarry-cast-after · <code>patch:quarry-cast-after</code></li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ared-quarry%3Ared-quarry-roadhead"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:red-quarry:red-quarry-final-cut"
+                        data-resource-id="scene:red-quarry:red-quarry-final-cut"
+                        >붉은 채석장 · 마지막 절개 갱도</strong
+                      ><br /><code>scene:red-quarry:red-quarry-final-cut</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/red-quarry.html">붉은 채석장</a><br />붉은 채석장 ·
+                      마지막 절개 갱도
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 3개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · quarry-core-event-started ·
+                            <code>patch:quarry-core-event-started</code>
+                          </li>
+                          <li>
+                            조건 · quarry-journey-combat-complete ·
+                            <code>patch:quarry-journey-combat-complete</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ared-quarry%3Ared-quarry-final-cut"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong
+                        id="scene:red-quarry:red-quarry-cutter-yard"
+                        data-resource-id="scene:red-quarry:red-quarry-cutter-yard"
+                        >붉은 채석장 · 초대형 암반 절단기 작업장</strong
+                      ><br /><code>scene:red-quarry:red-quarry-cutter-yard</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td>
+                      <a href="../scenarios/red-quarry.html">붉은 채석장</a><br />붉은 채석장 ·
+                      초대형 암반 절단기 작업장
+                    </td>
+                    <td>
+                      <strong>원본 부위/장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 6개</summary>
+                        <ul>
+                          <li>기본 상태 · <code>base</code></li>
+                          <li>
+                            조건 · quarry-journey-combat-complete ·
+                            <code>patch:quarry-journey-combat-complete</code>
+                          </li>
+                          <li>
+                            조건 · quarry-boss-defeated · <code>patch:quarry-boss-defeated</code>
+                          </li>
+                          <li>
+                            조건 · quarry-replacement-complete ·
+                            <code>patch:quarry-replacement-complete</code>
+                          </li>
+                          <li>
+                            조건 · quarry-machine-separated ·
+                            <code>patch:quarry-machine-separated</code>
+                          </li>
+                          <li>
+                            조건 · quarry-campaign-updated ·
+                            <code>patch:quarry-campaign-updated</code>
+                          </li>
+                        </ul>
+                      </details>
+                      실제 MapRuntime 배치·depth·광원·차폐. 조건 행은 해당 patch의 결정적 world fact
+                      표본입니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Ared-quarry%3Ared-quarry-cutter-yard"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/maps/scrapAwakening.js"
+                        >src/game/maps/scrapAwakening.js</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong id="scene:final-battle" data-resource-id="scene:final-battle"
+                        >대항 병기와 고대 병기 · 최종 전장</strong
+                      ><br /><code>scene:final-battle</code>
+                    </td>
+                    <td>주변 환경과 배치를 함께 검토하는 장면</td>
+                    <td><a href="../scenarios/prologue.html">왕국 외곽 고철 수거장</a><br /></td>
+                    <td>
+                      <strong>장면</strong>
+                      <details>
+                        <summary>현재 상태·동작 5개</summary>
+                        <ul>
+                          <li>armor · <code>armor</code></li>
+                          <li>weapon · <code>weapon</code></li>
+                          <li>control-core · <code>control-core</code></li>
+                          <li>core-reinstalled · <code>core-reinstalled</code></li>
+                          <li>epilogue · <code>epilogue</code></li>
+                        </ul>
+                      </details>
+                      현재 production stage별 정적 조립. 시간축 robot 애니메이션은 아직 없습니다.
+                    </td>
+                    <td>
+                      <a
+                        href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Afinal-battle"
+                        >게임 검토실</a
+                      ><br /><a href="../../../src/game/campaign/ScrapFinalBattlePresentation.js"
+                        >src/game/campaign/ScrapFinalBattlePresentation.js</a
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <nav class="pager"><a href="index.html">전체 분류</a></nav>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>

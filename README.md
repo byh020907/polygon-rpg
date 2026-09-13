@@ -12,6 +12,8 @@
 
 `AGENTS.md`는 위 경로만 bootstrap합니다. 개발 loop의 완료 의미는 특정 Agent, scheduler, worktree, CI나 orchestration 도구에 의존하지 않습니다.
 
+모든 HTML 문서는 Product Goal과 같은 나무위키형 포맷을 기본으로 사용합니다. 공통 스타일·생성기·모바일/인쇄·검증 보고서 갱신 기준은 [HTML 문서 작성 규칙](./docs/document-format.md)에 정리되어 있습니다.
+
 - [장비 시스템 명세](docs/game-systems/equipment.md): 6슬롯·Family/Moveset·성장·세트/특수 시너지·저장 계약
 
 ## 시작하기

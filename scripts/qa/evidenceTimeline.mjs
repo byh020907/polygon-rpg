@@ -1,5 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { wrapWikiReport } from '../wiki-document.mjs';
 
 // Embed captured pixels, not a pose reconstruction. This also makes downloads
 // work when the review HTML is opened directly from the filesystem.
@@ -24,13 +26,14 @@ export function writeEvidenceTimeline(
   const safeTitle = title.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   writeFileSync(
     join(directory, 'timeline.html'),
-    `<!doctype html>
+    wrapWikiReport(
+      `<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${safeTitle}</title>
-<style>body{margin:24px;background:#151a20;color:#edf1f5;font:16px system-ui}main{max-width:1200px;margin:auto}button,select{font:inherit;padding:9px;margin:4px;background:#28333e;color:inherit;border:1px solid #65717c;border-radius:5px}canvas{display:block;width:auto;max-width:100%;height:auto;max-height:60vh;background:repeating-conic-gradient(#28323a 0% 25%,#20282f 0% 50%) 0/24px 24px;image-rendering:auto}input{width:100%;margin:18px 0}p{line-height:1.5}output{display:block;font-variant-numeric:tabular-nums}a{color:#98d1ff}</style>
-<main><h1>${safeTitle}</h1><p>These are captured production renderer pixels, played at their original recorded timestamps. Playback never synthesizes poses or inserts interpolated frames. Transparent actor tracks, when present, rerender the same immutable gameplay frame through the production renderer.</p>
-<label>Sequence <select id="track"></select></label><button id="play">Pause</button><button id="restart">Restart</button><button id="png">Download frame PNG</button><button id="sheet">Download frame sheet</button>
-<canvas id="view"></canvas><input id="seek" type="range" min="0" step="1" value="0" aria-label="Captured frame"><output id="status"></output><p><a href="evidence.json">Capture timestamps and telemetry</a></p></main>
+<style>.evidence-timeline .timeline-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0}.evidence-timeline button,.evidence-timeline select{max-width:100%;font:inherit;padding:9px;color:inherit;background:#fafafa;border:1px solid #ccc;border-radius:2px}.evidence-timeline canvas{display:block;width:auto;max-width:100%;height:auto;max-height:60vh;background:repeating-conic-gradient(#28323a 0% 25%,#20282f 0% 50%) 0/24px 24px;image-rendering:auto}.evidence-timeline input{width:100%;margin:18px 0}.evidence-timeline output{display:block;margin-bottom:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}</style>
+<body><section class="evidence-timeline"><h2>Captured-frame playback</h2><p>These are captured production renderer pixels, played at their original recorded timestamps. Playback never synthesizes poses or inserts interpolated frames. Transparent actor tracks, when present, rerender the same immutable gameplay frame through the production renderer.</p>
+<div class="timeline-controls"><label>Sequence <select id="track"></select></label><button id="play">Pause</button><button id="restart">Restart</button><button id="png">Download frame PNG</button><button id="sheet">Download frame sheet</button></div>
+<canvas id="view"></canvas><input id="seek" type="range" min="0" step="1" value="0" aria-label="Captured frame"><output id="status"></output><p><a href="evidence.json">Capture timestamps and telemetry</a></p></section>
 <script>
 const tracks=${data};
 const selector=document.querySelector('#track'),canvas=document.querySelector('#view'),ctx=canvas.getContext('2d'),seek=document.querySelector('#seek'),status=document.querySelector('#status');
@@ -44,6 +47,12 @@ function download(data,name){const a=document.createElement('a');a.href=data;a.d
 selector.onchange=load;document.querySelector('#play').onclick=()=>setPlaying(!playing);document.querySelector('#restart').onclick=()=>{draw(0);start=performance.now()};seek.oninput=()=>{setPlaying(false);draw(Number(seek.value))};document.querySelector('#png').onclick=()=>download(current[index].image,current[index].file);
 document.querySelector('#sheet').onclick=()=>{if(!images.length)return;const r=crop??{x:0,y:0,width:images[0].width,height:images[0].height};const columns=8,w=256,h=Math.round(r.height/r.width*w),sheet=document.createElement('canvas');sheet.width=columns*w;sheet.height=Math.ceil(images.length/columns)*(h+24);const c=sheet.getContext('2d');c.imageSmoothingEnabled=true;images.forEach((im,i)=>{const x=(i%columns)*w,y=Math.floor(i/columns)*(h+24);c.drawImage(im,r.x,r.y,r.width,r.height,x,y,w,h);c.fillStyle='#151a20';c.fillRect(x,y+h,w,24);c.fillStyle='white';c.font='13px sans-serif';c.fillText(i+' · '+Math.round(current[i].time)+' ms',x+5,y+h+17)});download(sheet.toDataURL('image/png'),selector.value+'-sheet.png')};
 load();requestAnimationFrame(loop);
-</script></html>`,
+</script></body></html>`,
+      {
+        title,
+        category: '모션 검증 보고서',
+        repoHref: `${relative(resolve(directory), fileURLToPath(new URL('../../', import.meta.url))).replaceAll('\\', '/') || '.'}/`,
+      },
+    ),
   );
 }

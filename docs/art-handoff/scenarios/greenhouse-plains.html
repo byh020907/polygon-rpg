@@ -3,364 +3,487 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>온실 평원 · 사건과 제작 요청 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>온실 평원 · 사건과 제작 요청 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>온실 평원 · 사건과 제작 요청</h1>
-        <p>기획의 공통 흐름에 현재 작성된 지역 상세를 연결한 요청 자료입니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <section>
-        <h2>이 지역의 이야기</h2>
-        <p>
-          파열 배관과 기생 기계 때문에 난방이 멈춘 온실을 살린다. 설산 열선과 폐광 밀폐 철판 규격을
-          연결해 안전한 저압 배관으로 대체한다. 구형 동력로의 마지막 가동으로 관개 펌프를 돌려 적
-          진로를 우회시키고 동력원을 분리한다.
-        </p>
-        <a href="../../../PRODUCT_GOAL.html#PG-OPEN-CAMPAIGN">PG-OPEN-CAMPAIGN</a>
-      </section>
-      <section>
-        <h2>이 지역의 Color Identity와 제작</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">색상 방향</th>
-                <th scope="col">재질·표면</th>
-                <th scope="col">생활·형태</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>황동 / 탁한 녹색 / 수증기 백색</td>
-                <td>유리·배관·밸브·재배 구조물</td>
-                <td>배관·동력로는 농업 설비입니다. 응축수·녹청·압력 하드웨어로 지역화합니다.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <a href="../environment-authoring.html">Composition/Prefab/Kit/landmark 제작 계약</a>
-      </section>
-      <section>
-        <h2>인물과 장소</h2>
-        <ul>
-          <li><a href="../characters.html#protagonist">주인공</a></li>
-          <li><a href="../characters.html#rival">라이벌</a></li>
-          <li><a href="../characters.html#greenhouse-tech">온실 기술자</a></li>
-          <li><a href="../characters.html#greenhouse-waiting">대기 재배원</a></li>
-        </ul>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">장소</th>
-                <th scope="col">역할</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>온실 평원 · 연결로 진입부</td>
-                <td>주민·현황판·연결로·사건 전후 생활 상태</td>
-              </tr>
-              <tr>
-                <td>온실 평원 · 파열 지열 배관</td>
-                <td>연결 문제 해결을 위한 탐색/전투·중간 시설</td>
-              </tr>
-              <tr>
-                <td>온실 평원 · 구형 고출력 동력로실</td>
-                <td>지역 Boss·마지막 작업·기계 분리/회수</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>교차 지역 사건</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">필요한 연결</th>
-                <th scope="col">방문</th>
-                <th scope="col">현재 요구</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>내한 열선 cable 확보</td>
-                <td><a href="snow-trade-road.html">설산 교역로</a></td>
-                <td>
-                  눈 막힌 옛 터널에서 지열 배관용 내한 cable 상태를 확인하세요.
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#snow-thermal-raider">내한 케이블 절취 수거반</a>
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-              <tr>
-                <td>배관 밀폐 철판 규격 확인</td>
-                <td><a href="abandoned-mine.html">폐광 산촌</a></td>
-                <td>
-                  폐광 구조 현황판에서 굴착기용 밀폐 철판 규격을 확인하세요.
-                  <ul>
-                    <li>
-                      <a href="../enemies.html#mine-seal-plate-raider">밀폐 철판 절취 수거반</a>
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>전·중·후 그래픽</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">전</th>
-                <th scope="col">진행 중</th>
-                <th scope="col">해결 후</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>파열 지열 배관·멈춘 난방·위태로운 모종·과열 조절기</td>
-                <td>내한 케이블/밀폐 철판·배관 복구·모종 이식·재배등</td>
-                <td>
-                  새 저압 배관·동력로 분리·관개수로/습지 우회; 뜨거운 평원 대사와 충돌은 확인 필요
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>현재 작성된 사건 단계</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">단계</th>
-                <th scope="col">역할</th>
-                <th scope="col">현재 다음 행동</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>NPC 말풍선</td>
-                <td><code>greenhouse-plains:npc-briefing</code></td>
-                <td>오른쪽 지열 압력판에서 파손 범위, 17구간 비용과 성공 연장을 확인하세요.</td>
-              </tr>
-              <tr>
-                <td>지역 상태 확인</td>
-                <td><code>greenhouse-plains:facility-observed</code></td>
-                <td>파열된 온실 배관 구역으로 들어가 기생 기계를 제거하고 복구선을 확보하세요.</td>
-              </tr>
-              <tr>
-                <td>이동·전투 사건</td>
-                <td><code>greenhouse-plains:journey-combat</code></td>
-                <td>복구선을 따라 구형 동력로실로 이동해 과열 조절기 Boss를 제압하세요.</td>
-              </tr>
-              <tr>
-                <td>Boss 해결</td>
-                <td><code>greenhouse-plains:boss-defeated</code></td>
-                <td>온실 기술자와 동력로로 관개 펌프를 최대 출력 가동해 평원을 습지로 바꾸세요.</td>
-              </tr>
-              <tr>
-                <td>대체 설비·마지막 작업 완료</td>
-                <td><code>greenhouse-plains:replacement-complete</code></td>
-                <td>구형 고출력 동력로를 냉각하고 주 동력원을 분리하세요.</td>
-              </tr>
-              <tr>
-                <td>산업기계 분리</td>
-                <td><code>greenhouse-plains:machine-separated</code></td>
-                <td>동력로실 회수대에서 고출력 동력로를 수령하세요.</td>
-              </tr>
-              <tr>
-                <td>로봇 부품 회수</td>
-                <td><code>greenhouse-plains:part-claimed</code></td>
-                <td>고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.</td>
-              </tr>
-              <tr>
-                <td>D-DAY·경로·차고 갱신</td>
-                <td><code>greenhouse-plains:campaign-updated</code></td>
-                <td>고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p>
-          위 목표 문구는 현재 구현 관찰 자료입니다. 20%/100% 같은 고정 완성도는 자유 순서 디자인
-          근거가 아닙니다. 생계 복구와 경로 차단을 모두 포함합니다.
-        </p>
-      </section>
-      <section>
-        <h2>기계·회수 모듈·우회</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">현지 기계</th>
-                <th scope="col">회수</th>
-                <th scope="col">마지막 작업</th>
-                <th scope="col">지도 우회</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>구형 고출력 마력 동력로</td>
-                <td>고출력 동력로 → 주 동력원</td>
-                <td>동력로가 관개 펌프를 가동해 평원을 습지로 변경</td>
-                <td>습지 외곽 우회</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>현재 원본과 실제 검토</h2>
-        <ul>
-          <li>
-            <a href="../resources/enemy-1.html#enemy%3Agreenhouse-pipe-parasite"
-              >지열 배관 기생 기계</a
-            >
-            ·
-            <a
-              href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-pipe-parasite"
-              >게임 검토실</a
-            >
-          </li>
-          <li>
-            <a href="../resources/enemy-1.html#enemy%3Agreenhouse-geothermal-boss"
-              >과열 지열 조절기 Boss</a
-            >
-            ·
-            <a
-              href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-geothermal-boss"
-              >게임 검토실</a
-            >
-          </li>
-          <li>
-            <a
-              href="../resources/scene-1.html#scene%3Agreenhouse-plains%3Agreenhouse-plains-roadhead"
-              >온실 평원 · 연결로 진입부</a
-            >
-            ·
-            <a
-              href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-roadhead"
-              >게임 검토실</a
-            >
-          </li>
-          <li>
-            <a
-              href="../resources/scene-1.html#scene%3Agreenhouse-plains%3Agreenhouse-plains-broken-pipeline"
-              >온실 평원 · 파열 지열 배관</a
-            >
-            ·
-            <a
-              href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-broken-pipeline"
-              >게임 검토실</a
-            >
-          </li>
-          <li>
-            <a
-              href="../resources/scene-1.html#scene%3Agreenhouse-plains%3Agreenhouse-plains-reactor-house"
-              >온실 평원 · 구형 고출력 동력로실</a
-            >
-            ·
-            <a
-              href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-reactor-house"
-              >게임 검토실</a
-            >
-          </li>
-        </ul>
-        <a href="../../../src/game/campaign/ScrapCampaignProfiles.js"
-          >src/game/campaign/ScrapCampaignProfiles.js</a
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
         >
-      </section>
-      <section>
-        <h2>현재 작성된 대화 원문</h2>
-        <p>아래는 원본 대화 데이터입니다. 전체 최종 대본·컷 수의 확정본으로 해석하지 않습니다.</p>
-        <article id="greenhouse-plains:technician-briefing">
-          <h3>파열된 지열 설비 복구 요청</h3>
-          <p>온실 기술자 · <code>greenhouse-plains:technician-briefing</code></p>
-          <ol>
-            <li>
-              땅속 열을 데우는 주 배관이 터져 온실 난방이 멈췄어. 배관에 달라붙은 기계가 물길을 뜯고
-              있고.
-            </li>
-            <li>
-              안전한 약한 압력의 배관을 새로 잇면, 너무 세서 불안한 옛 동력로를 온실에서 떼어낼 수
-              있어.
-            </li>
-            <li>오른쪽 압력판에서 어디가 터졌는지와 복구 시간을 먼저 확인해 줘.</li>
-          </ol>
-        </article>
-        <article id="greenhouse-plains:waiting-grower">
-          <h3>모종을 지키는 재배원</h3>
-          <p>대기 재배원 · <code>greenhouse-plains:waiting-grower</code></p>
-          <ol>
-            <li>
-              주 배관이 터진 채로 있어. 기술자는 약한 압력 얘기만 하지만, 난 땅속 열 배관이 다시
-              데워지는 걸 보고 싶어.
-            </li>
-            <li>
-              네가 배관에 달라붙은 기계를 치우면 내가 먼저 들어가서 모종을 옮길게. 온도 재는 막대도
-              챙겼어.
-            </li>
-            <li>오른쪽 압력판은 봤어? 제때 끝내야 저 거대 병기가 뜨거워진 평원을 돌아간대.</li>
-          </ol>
-        </article>
-        <article id="greenhouse-plains:waiting-grower-working">
-          <h3>배관 앞에 선 대기 재배원</h3>
-          <p>대기 재배원 · <code>greenhouse-plains:waiting-grower-working</code></p>
-          <ol>
-            <li>통로가 열렸어. 재배등이 켜지면 내가 먼저 들어가서 모종을 옮길게.</li>
-            <li>넌 동력로 쪽을 맡아줘. 배관에 달라붙은 기계가 또 물길을 노릴지도 몰라.</li>
-          </ol>
-        </article>
-        <article id="greenhouse-plains:waiting-grower-after">
-          <h3>복구를 마친 대기 재배원</h3>
-          <p>대기 재배원 · <code>greenhouse-plains:waiting-grower-after</code></p>
-          <ol>
-            <li>
-              모종을 다 옮겼어! 재배등은 켜 둘게. 이제 이 온실은 약한 압력의 새 배관으로도 돌아가.
-            </li>
-            <li>
-              옛 동력로는 가져가. 네 로봇 동력원이 저 병기를 우리 평원 밖으로 돌게 만든 셈이니까.
-            </li>
-          </ol>
-        </article>
-        <a href="../../../src/game/story/ScrapRegionStory.js">src/game/story/ScrapRegionStory.js</a>
-      </section>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
+      </div>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>온실 평원 · 사건과 제작 요청</h1>
+                <p class="wiki-document-subtitle">
+                  기획의 공통 흐름에 현재 작성된 지역 상세를 연결한 요청 자료입니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 이 지역의 이야기</a></li>
+                <li class="toc-level-2">
+                  <a href="#doc-section-2">2. 이 지역의 Color Identity와 제작</a>
+                </li>
+                <li class="toc-level-2"><a href="#doc-section-3">3. 인물과 장소</a></li>
+                <li class="toc-level-2"><a href="#doc-section-4">4. 교차 지역 사건</a></li>
+                <li class="toc-level-2"><a href="#doc-section-5">5. 전·중·후 그래픽</a></li>
+                <li class="toc-level-2"><a href="#doc-section-6">6. 현재 작성된 사건 단계</a></li>
+                <li class="toc-level-2"><a href="#doc-section-7">7. 기계·회수 모듈·우회</a></li>
+                <li class="toc-level-2"><a href="#doc-section-8">8. 현재 원본과 실제 검토</a></li>
+                <li class="toc-level-2"><a href="#doc-section-9">9. 현재 작성된 대화 원문</a></li>
+                <li class="toc-level-3">
+                  <a href="#doc-section-10">9.1. 파열된 지열 설비 복구 요청</a>
+                </li>
+                <li class="toc-level-3"><a href="#doc-section-11">9.2. 모종을 지키는 재배원</a></li>
+                <li class="toc-level-3">
+                  <a href="#doc-section-12">9.3. 배관 앞에 선 대기 재배원</a>
+                </li>
+                <li class="toc-level-3">
+                  <a href="#doc-section-13">9.4. 복구를 마친 대기 재배원</a>
+                </li>
+              </ol>
+            </details>
+          </nav>
+          <aside class="notice">
+            제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+            확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의
+            기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+            <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+            <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+          </aside>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 이 지역의 이야기
+            </h2>
+            <p>
+              파열 배관과 기생 기계 때문에 난방이 멈춘 온실을 살린다. 설산 열선과 폐광 밀폐 철판
+              규격을 연결해 안전한 저압 배관으로 대체한다. 구형 동력로의 마지막 가동으로 관개 펌프를
+              돌려 적 진로를 우회시키고 동력원을 분리한다.
+            </p>
+            <a href="../../../PRODUCT_GOAL.html#PG-OPEN-CAMPAIGN">PG-OPEN-CAMPAIGN</a>
+          </section>
+          <section>
+            <h2 id="doc-section-2">
+              <a class="wiki-section-number" href="#doc-section-2">2.</a> 이 지역의 Color Identity와
+              제작
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">색상 방향</th>
+                    <th scope="col">재질·표면</th>
+                    <th scope="col">생활·형태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>황동 / 탁한 녹색 / 수증기 백색</td>
+                    <td>유리·배관·밸브·재배 구조물</td>
+                    <td>
+                      배관·동력로는 농업 설비입니다. 응축수·녹청·압력 하드웨어로 지역화합니다.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <a href="../environment-authoring.html">Composition/Prefab/Kit/landmark 제작 계약</a>
+          </section>
+          <section>
+            <h2 id="doc-section-3">
+              <a class="wiki-section-number" href="#doc-section-3">3.</a> 인물과 장소
+            </h2>
+            <ul>
+              <li><a href="../characters.html#protagonist">주인공</a></li>
+              <li><a href="../characters.html#rival">라이벌</a></li>
+              <li><a href="../characters.html#greenhouse-tech">온실 기술자</a></li>
+              <li><a href="../characters.html#greenhouse-waiting">대기 재배원</a></li>
+            </ul>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">장소</th>
+                    <th scope="col">역할</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>온실 평원 · 연결로 진입부</td>
+                    <td>주민·현황판·연결로·사건 전후 생활 상태</td>
+                  </tr>
+                  <tr>
+                    <td>온실 평원 · 파열 지열 배관</td>
+                    <td>연결 문제 해결을 위한 탐색/전투·중간 시설</td>
+                  </tr>
+                  <tr>
+                    <td>온실 평원 · 구형 고출력 동력로실</td>
+                    <td>지역 Boss·마지막 작업·기계 분리/회수</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-4">
+              <a class="wiki-section-number" href="#doc-section-4">4.</a> 교차 지역 사건
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">필요한 연결</th>
+                    <th scope="col">방문</th>
+                    <th scope="col">현재 요구</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>내한 열선 cable 확보</td>
+                    <td><a href="snow-trade-road.html">설산 교역로</a></td>
+                    <td>
+                      눈 막힌 옛 터널에서 지열 배관용 내한 cable 상태를 확인하세요.
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#snow-thermal-raider">내한 케이블 절취 수거반</a>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>배관 밀폐 철판 규격 확인</td>
+                    <td><a href="abandoned-mine.html">폐광 산촌</a></td>
+                    <td>
+                      폐광 구조 현황판에서 굴착기용 밀폐 철판 규격을 확인하세요.
+                      <ul>
+                        <li>
+                          <a href="../enemies.html#mine-seal-plate-raider">밀폐 철판 절취 수거반</a>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-5">
+              <a class="wiki-section-number" href="#doc-section-5">5.</a> 전·중·후 그래픽
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">전</th>
+                    <th scope="col">진행 중</th>
+                    <th scope="col">해결 후</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>파열 지열 배관·멈춘 난방·위태로운 모종·과열 조절기</td>
+                    <td>내한 케이블/밀폐 철판·배관 복구·모종 이식·재배등</td>
+                    <td>
+                      새 저압 배관·동력로 분리·관개수로/습지 우회; 뜨거운 평원 대사와 충돌은 확인
+                      필요
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-6">
+              <a class="wiki-section-number" href="#doc-section-6">6.</a> 현재 작성된 사건 단계
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">단계</th>
+                    <th scope="col">역할</th>
+                    <th scope="col">현재 다음 행동</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>NPC 말풍선</td>
+                    <td><code>greenhouse-plains:npc-briefing</code></td>
+                    <td>오른쪽 지열 압력판에서 파손 범위, 17구간 비용과 성공 연장을 확인하세요.</td>
+                  </tr>
+                  <tr>
+                    <td>지역 상태 확인</td>
+                    <td><code>greenhouse-plains:facility-observed</code></td>
+                    <td>
+                      파열된 온실 배관 구역으로 들어가 기생 기계를 제거하고 복구선을 확보하세요.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>이동·전투 사건</td>
+                    <td><code>greenhouse-plains:journey-combat</code></td>
+                    <td>복구선을 따라 구형 동력로실로 이동해 과열 조절기 Boss를 제압하세요.</td>
+                  </tr>
+                  <tr>
+                    <td>Boss 해결</td>
+                    <td><code>greenhouse-plains:boss-defeated</code></td>
+                    <td>
+                      온실 기술자와 동력로로 관개 펌프를 최대 출력 가동해 평원을 습지로 바꾸세요.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>대체 설비·마지막 작업 완료</td>
+                    <td><code>greenhouse-plains:replacement-complete</code></td>
+                    <td>구형 고출력 동력로를 냉각하고 주 동력원을 분리하세요.</td>
+                  </tr>
+                  <tr>
+                    <td>산업기계 분리</td>
+                    <td><code>greenhouse-plains:machine-separated</code></td>
+                    <td>동력로실 회수대에서 고출력 동력로를 수령하세요.</td>
+                  </tr>
+                  <tr>
+                    <td>로봇 부품 회수</td>
+                    <td><code>greenhouse-plains:part-claimed</code></td>
+                    <td>고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.</td>
+                  </tr>
+                  <tr>
+                    <td>D-DAY·경로·차고 갱신</td>
+                    <td><code>greenhouse-plains:campaign-updated</code></td>
+                    <td>고물상 차고와 작전 지도에서 새 주 동력원과 다음 지역을 확인하세요.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              위 목표 문구는 현재 구현 관찰 자료입니다. 20%/100% 같은 고정 완성도는 자유 순서 디자인
+              근거가 아닙니다. 생계 복구와 경로 차단을 모두 포함합니다.
+            </p>
+          </section>
+          <section>
+            <h2 id="doc-section-7">
+              <a class="wiki-section-number" href="#doc-section-7">7.</a> 기계·회수 모듈·우회
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">현지 기계</th>
+                    <th scope="col">회수</th>
+                    <th scope="col">마지막 작업</th>
+                    <th scope="col">지도 우회</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>구형 고출력 마력 동력로</td>
+                    <td>고출력 동력로 → 주 동력원</td>
+                    <td>동력로가 관개 펌프를 가동해 평원을 습지로 변경</td>
+                    <td>습지 외곽 우회</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-8">
+              <a class="wiki-section-number" href="#doc-section-8">8.</a> 현재 원본과 실제 검토
+            </h2>
+            <ul>
+              <li>
+                <a href="../resources/enemy-1.html#enemy%3Agreenhouse-pipe-parasite"
+                  >지열 배관 기생 기계</a
+                >
+                ·
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-pipe-parasite"
+                  >게임 검토실</a
+                >
+              </li>
+              <li>
+                <a href="../resources/enemy-1.html#enemy%3Agreenhouse-geothermal-boss"
+                  >과열 지열 조절기 Boss</a
+                >
+                ·
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=enemy&amp;resource=enemy%3Agreenhouse-geothermal-boss"
+                  >게임 검토실</a
+                >
+              </li>
+              <li>
+                <a
+                  href="../resources/scene-1.html#scene%3Agreenhouse-plains%3Agreenhouse-plains-roadhead"
+                  >온실 평원 · 연결로 진입부</a
+                >
+                ·
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-roadhead"
+                  >게임 검토실</a
+                >
+              </li>
+              <li>
+                <a
+                  href="../resources/scene-1.html#scene%3Agreenhouse-plains%3Agreenhouse-plains-broken-pipeline"
+                  >온실 평원 · 파열 지열 배관</a
+                >
+                ·
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-broken-pipeline"
+                  >게임 검토실</a
+                >
+              </li>
+              <li>
+                <a
+                  href="../resources/scene-1.html#scene%3Agreenhouse-plains%3Agreenhouse-plains-reactor-house"
+                  >온실 평원 · 구형 고출력 동력로실</a
+                >
+                ·
+                <a
+                  href="../../../?graphicsReview=1&amp;reviewCategory=scene&amp;resource=scene%3Agreenhouse-plains%3Agreenhouse-plains-reactor-house"
+                  >게임 검토실</a
+                >
+              </li>
+            </ul>
+            <a href="../../../src/game/campaign/ScrapCampaignProfiles.js"
+              >src/game/campaign/ScrapCampaignProfiles.js</a
+            >
+          </section>
+          <section>
+            <h2 id="doc-section-9">
+              <a class="wiki-section-number" href="#doc-section-9">9.</a> 현재 작성된 대화 원문
+            </h2>
+            <p>
+              아래는 원본 대화 데이터입니다. 전체 최종 대본·컷 수의 확정본으로 해석하지 않습니다.
+            </p>
+            <article id="greenhouse-plains:technician-briefing">
+              <h3 id="doc-section-10">
+                <a class="wiki-section-number" href="#doc-section-10">9.1.</a> 파열된 지열 설비 복구
+                요청
+              </h3>
+              <p>온실 기술자 · <code>greenhouse-plains:technician-briefing</code></p>
+              <ol>
+                <li>
+                  땅속 열을 데우는 주 배관이 터져 온실 난방이 멈췄어. 배관에 달라붙은 기계가 물길을
+                  뜯고 있고.
+                </li>
+                <li>
+                  안전한 약한 압력의 배관을 새로 잇면, 너무 세서 불안한 옛 동력로를 온실에서 떼어낼
+                  수 있어.
+                </li>
+                <li>오른쪽 압력판에서 어디가 터졌는지와 복구 시간을 먼저 확인해 줘.</li>
+              </ol>
+            </article>
+            <article id="greenhouse-plains:waiting-grower">
+              <h3 id="doc-section-11">
+                <a class="wiki-section-number" href="#doc-section-11">9.2.</a> 모종을 지키는 재배원
+              </h3>
+              <p>대기 재배원 · <code>greenhouse-plains:waiting-grower</code></p>
+              <ol>
+                <li>
+                  주 배관이 터진 채로 있어. 기술자는 약한 압력 얘기만 하지만, 난 땅속 열 배관이 다시
+                  데워지는 걸 보고 싶어.
+                </li>
+                <li>
+                  네가 배관에 달라붙은 기계를 치우면 내가 먼저 들어가서 모종을 옮길게. 온도 재는
+                  막대도 챙겼어.
+                </li>
+                <li>오른쪽 압력판은 봤어? 제때 끝내야 저 거대 병기가 뜨거워진 평원을 돌아간대.</li>
+              </ol>
+            </article>
+            <article id="greenhouse-plains:waiting-grower-working">
+              <h3 id="doc-section-12">
+                <a class="wiki-section-number" href="#doc-section-12">9.3.</a> 배관 앞에 선 대기
+                재배원
+              </h3>
+              <p>대기 재배원 · <code>greenhouse-plains:waiting-grower-working</code></p>
+              <ol>
+                <li>통로가 열렸어. 재배등이 켜지면 내가 먼저 들어가서 모종을 옮길게.</li>
+                <li>넌 동력로 쪽을 맡아줘. 배관에 달라붙은 기계가 또 물길을 노릴지도 몰라.</li>
+              </ol>
+            </article>
+            <article id="greenhouse-plains:waiting-grower-after">
+              <h3 id="doc-section-13">
+                <a class="wiki-section-number" href="#doc-section-13">9.4.</a> 복구를 마친 대기
+                재배원
+              </h3>
+              <p>대기 재배원 · <code>greenhouse-plains:waiting-grower-after</code></p>
+              <ol>
+                <li>
+                  모종을 다 옮겼어! 재배등은 켜 둘게. 이제 이 온실은 약한 압력의 새 배관으로도
+                  돌아가.
+                </li>
+                <li>
+                  옛 동력로는 가져가. 네 로봇 동력원이 저 병기를 우리 평원 밖으로 돌게 만든
+                  셈이니까.
+                </li>
+              </ol>
+            </article>
+            <a href="../../../src/game/story/ScrapRegionStory.js"
+              >src/game/story/ScrapRegionStory.js</a
+            >
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav>
+          <a href="#doc-section-1">1. 이 지역의 이야기</a
+          ><a href="#doc-section-2">2. 이 지역의 Color Identity와 제작</a
+          ><a href="#doc-section-3">3. 인물과 장소</a><a href="#doc-section-4">4. 교차 지역 사건</a
+          ><a href="#doc-section-5">5. 전·중·후 그래픽</a
+          ><a href="#doc-section-6">6. 현재 작성된 사건 단계</a
+          ><a href="#doc-section-7">7. 기계·회수 모듈·우회</a
+          ><a href="#doc-section-8">8. 현재 원본과 실제 검토</a
+          ><a href="#doc-section-9">9. 현재 작성된 대화 원문</a
+          ><a href="#doc-section-10">9.1. 파열된 지열 설비 복구 요청</a
+          ><a href="#doc-section-11">9.2. 모종을 지키는 재배원</a
+          ><a href="#doc-section-12">9.3. 배관 앞에 선 대기 재배원</a
+          ><a href="#doc-section-13">9.4. 복구를 마친 대기 재배원</a>
+        </nav>
+      </aside>
+    </div>
   </body>
 </html>

@@ -73,6 +73,8 @@ Before product work, read the selected Method and all four Project Sources compl
 
 ## Project Instructions
 
+- 모든 HTML 문서의 기본 포맷은 PRODUCT_GOAL.html과 같은 나무위키형 문서 구조다. docs/wiki.css와 scripts/wiki-document.mjs의 공통 스타일·틀을 사용하고, 제목·분류·접이식 목차·번호형 절·표·탐색 메뉴와 desktop/mobile/print 가독성을 유지한다. 제작 문서와 검증 보고서 생성기도 같은 규칙을 따른다. 게임 UI와 오프라인 안내, 테스트용 HTML fixture는 문서 포맷 적용 대상이 아니다. 세부 작성 기준은 docs/document-format.md를 따른다.
+
 - Codex and OpenCode completion/blocker notifications use `.ai/runtime/common/notify.mjs`; its `--help` defines the input contract. Use the existing account-level `PGL_NTFY_URL` and optional `PGL_NTFY_TOKEN`, never commit their values. Codex sends one verified completion or blocker summary with a stable event key; OpenCode's runner sends its result automatically. Busy/no-op and status queries do not notify.
 - Keep only one development trigger enabled for this repository: Codex heartbeat and OpenCode runner have independent guards. Preserve a Human pause when feedback arrives. Before changing execution engines, finish or preserve the current worker and inspect the preserved-work reference in `STATE.md`.
 

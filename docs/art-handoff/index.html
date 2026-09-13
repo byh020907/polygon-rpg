@@ -3,115 +3,175 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>그래픽 제작 요청 안내 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="handbook.css" />
+    <title>그래픽 제작 요청 안내 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="asset-contract.html">제작 계약</a
-        ><a href="characters.html">인물</a><a href="enemies.html">몹</a
-        ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a
-        ><a href="request.html">요청서</a>
-      </nav>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="index.html">제작 안내</a
+          ><a href="asset-contract.html">제작 계약</a><a href="characters.html">인물</a
+          ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
+      </div>
     </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>그래픽 제작 요청 안내</h1>
-        <p>인물의 역할과 이야기의 인과를 먼저 읽고, 제작할 묶음의 원본 ID를 골라 요청합니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된 제작
-        계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재
-        코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="index.html">제작 안내</a><a href="asset-contract.html">제작 계약</a
+          ><a href="characters.html">인물</a><a href="scenarios/index.html">시나리오</a
+          ><a href="resources/index.html">전체 목록</a>
+        </nav>
       </aside>
-      <section>
-        <h2>담당자에게 전달할 순서</h2>
-        <ol>
-          <li>
-            <a href="art-direction.html">공통 아트 기준</a>와
-            <a href="asset-contract.html">Master SVG 제작 계약</a> — 실제 제작 reference와 원본
-          </li>
-          <li>
-            <a href="characters.html">인물·NPC 역할표</a> 또는
-            <a href="enemies.html">몹·Boss 역할표</a> — 같은 사람의 상태 변형과 별도 디자인 구분
-          </li>
-          <li>
-            <a href="scenarios/index.html">전체 이야기 개요</a> → 담당
-            <a href="scenarios/prologue.html">도입</a> / 지역 한 편 — 장소·등장인물·필요 그래픽
-          </li>
-          <li>
-            <a href="request.html">요청서 양식</a>에 대상과 상태를 복사하고
-            <a href="decisions.html">미정 사항</a>을 남깁니다.
-          </li>
-        </ol>
-      </section>
-      <section>
-        <h2>목록의 수를 제작 건수로 해석하지 않기</h2>
-        <p>
-          현재 검토실은 568개 항목입니다. NPC 분류 68개에는 조립 묶음 18개와 몸/도구 조각이 함께
-          들어갑니다. 아래 인물표는 이를 13개 NPC 역할 묶음과 주인공 1개로 정리합니다. 갇힌 작업자
-          묶음은 한 명으로 확정한 것이 아닙니다.
-        </p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">자료</th>
-                <th scope="col">무엇을 요청하는가</th>
-                <th scope="col">읽을 범위</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><a href="characters.html">인물·NPC</a></td>
-                <td>고유 인물 디자인 + 전/중/후 변형 + 동작 제안</td>
-                <td>인물 하나와 등장 지역</td>
-              </tr>
-              <tr>
-                <td><a href="enemies.html">21개 현재 적 + 4개 유형 견본</a></td>
-                <td>실전 적과 검토용 템플릿을 구별</td>
-                <td>유형/부품 재사용과 공격 준비</td>
-              </tr>
-              <tr>
-                <td><a href="world.html">환경·기계·VFX·UI</a></td>
-                <td>장소·기계 전체 묶음과 작동/분리/복구 상태</td>
-                <td>담당 지역 한 편</td>
-              </tr>
-              <tr>
-                <td><a href="resources/index.html">전체 592개 원본 목록</a></td>
-                <td>기존 stable ID·원본·상태·검토 링크</td>
-                <td>필요한 분류의 최대 30행 페이지</td>
-              </tr>
-              <tr>
-                <td><a href="scenarios/index.html">전체 시나리오</a></td>
-                <td>도입→자유 순서의 5지역→결전/후일담·실패</td>
-                <td>개요 + 작업할 지역 한 편</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>요청 우선순위</h2>
-        <a href="reference-approval.html">5단계 reference 제작·승인 순서</a>
-        <p>
-          Hero/Rival/Owner → Control Core/Retrieval Arm → Ancient Machine Awakening → Garage 0% →
-          실제 gameplay-scale prologue composite를 먼저 제작·승인합니다. 이 기준 장면을 승인한 뒤
-          enemy archetype → 폐광↔항구 → 나머지 지역으로 확장합니다. 계약 확정은 reference나 runtime
-          구현 완료의 승인이 아닙니다.
-        </p>
-      </section>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>그래픽 제작 요청 안내</h1>
+                <p class="wiki-document-subtitle">
+                  인물의 역할과 이야기의 인과를 먼저 읽고, 제작할 묶음의 원본 ID를 골라 요청합니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a><a href="../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 담당자에게 전달할 순서</a></li>
+                <li class="toc-level-2">
+                  <a href="#doc-section-2">2. 목록의 수를 제작 건수로 해석하지 않기</a>
+                </li>
+                <li class="toc-level-2"><a href="#doc-section-3">3. 요청 우선순위</a></li>
+              </ol>
+            </details>
+          </nav>
+          <aside class="notice">
+            제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
+            제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의
+            기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+            <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+            <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+          </aside>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 담당자에게 전달할 순서
+            </h2>
+            <ol>
+              <li>
+                <a href="art-direction.html">공통 아트 기준</a>와
+                <a href="asset-contract.html">Master SVG 제작 계약</a> — 실제 제작 reference와 원본
+              </li>
+              <li>
+                <a href="characters.html">인물·NPC 역할표</a> 또는
+                <a href="enemies.html">몹·Boss 역할표</a> — 같은 사람의 상태 변형과 별도 디자인 구분
+              </li>
+              <li>
+                <a href="scenarios/index.html">전체 이야기 개요</a> → 담당
+                <a href="scenarios/prologue.html">도입</a> / 지역 한 편 — 장소·등장인물·필요 그래픽
+              </li>
+              <li>
+                <a href="request.html">요청서 양식</a>에 대상과 상태를 복사하고
+                <a href="decisions.html">미정 사항</a>을 남깁니다.
+              </li>
+            </ol>
+          </section>
+          <section>
+            <h2 id="doc-section-2">
+              <a class="wiki-section-number" href="#doc-section-2">2.</a> 목록의 수를 제작 건수로
+              해석하지 않기
+            </h2>
+            <p>
+              현재 검토실은 568개 항목입니다. NPC 분류 68개에는 조립 묶음 18개와 몸/도구 조각이 함께
+              들어갑니다. 아래 인물표는 이를 13개 NPC 역할 묶음과 주인공 1개로 정리합니다. 갇힌
+              작업자 묶음은 한 명으로 확정한 것이 아닙니다.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">자료</th>
+                    <th scope="col">무엇을 요청하는가</th>
+                    <th scope="col">읽을 범위</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><a href="characters.html">인물·NPC</a></td>
+                    <td>고유 인물 디자인 + 전/중/후 변형 + 동작 제안</td>
+                    <td>인물 하나와 등장 지역</td>
+                  </tr>
+                  <tr>
+                    <td><a href="enemies.html">21개 현재 적 + 4개 유형 견본</a></td>
+                    <td>실전 적과 검토용 템플릿을 구별</td>
+                    <td>유형/부품 재사용과 공격 준비</td>
+                  </tr>
+                  <tr>
+                    <td><a href="world.html">환경·기계·VFX·UI</a></td>
+                    <td>장소·기계 전체 묶음과 작동/분리/복구 상태</td>
+                    <td>담당 지역 한 편</td>
+                  </tr>
+                  <tr>
+                    <td><a href="resources/index.html">전체 592개 원본 목록</a></td>
+                    <td>기존 stable ID·원본·상태·검토 링크</td>
+                    <td>필요한 분류의 최대 30행 페이지</td>
+                  </tr>
+                  <tr>
+                    <td><a href="scenarios/index.html">전체 시나리오</a></td>
+                    <td>도입→자유 순서의 5지역→결전/후일담·실패</td>
+                    <td>개요 + 작업할 지역 한 편</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-3">
+              <a class="wiki-section-number" href="#doc-section-3">3.</a> 요청 우선순위
+            </h2>
+            <a href="reference-approval.html">5단계 reference 제작·승인 순서</a>
+            <p>
+              Hero/Rival/Owner → Control Core/Retrieval Arm → Ancient Machine Awakening → Garage 0%
+              → 실제 gameplay-scale prologue composite를 먼저 제작·승인합니다. 이 기준 장면을 승인한
+              뒤 enemy archetype → 폐광↔항구 → 나머지 지역으로 확장합니다. 계약 확정은 reference나
+              runtime 구현 완료의 승인이 아닙니다.
+            </p>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav>
+          <a href="#doc-section-1">1. 담당자에게 전달할 순서</a
+          ><a href="#doc-section-2">2. 목록의 수를 제작 건수로 해석하지 않기</a
+          ><a href="#doc-section-3">3. 요청 우선순위</a>
+        </nav>
+      </aside>
+    </div>
   </body>
 </html>

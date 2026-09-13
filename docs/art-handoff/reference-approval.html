@@ -3,299 +3,377 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reference 제작·승인 순서 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="handbook.css" />
+    <title>Reference 제작·승인 순서 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="asset-contract.html">제작 계약</a
-        ><a href="characters.html">인물</a><a href="enemies.html">몹</a
-        ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a
-        ><a href="request.html">요청서</a>
-      </nav>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../PRODUCT_GOAL.html">Product Goal</a><a href="index.html">제작 안내</a
+          ><a href="asset-contract.html">제작 계약</a><a href="characters.html">인물</a
+          ><a href="scenarios/index.html">시나리오</a><a href="resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
+      </div>
     </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>Reference 제작·승인 순서</h1>
-        <p>계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.</p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된 제작
-        계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며 현재
-        코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="index.html">제작 안내</a><a href="asset-contract.html">제작 계약</a
+          ><a href="characters.html">인물</a><a href="scenarios/index.html">시나리오</a
+          ><a href="resources/index.html">전체 목록</a>
+        </nav>
       </aside>
-      <section>
-        <h2>REF-01 · 1안 선택됨</h2>
-        <figure>
-          <img
-            src="../references/ref-01/appearance-option-2-selected.png"
-            alt="선택된 외형 보강 2안: 굵은 외곽선과 단순한 명암"
-          />
-          <figcaption>
-            외형 보강 방식: 2번 선택. 기존 인물 디자인 1안에 굵은 외곽선과 두 단계 명암을
-            적용합니다.
-          </figcaption>
-        </figure>
-        <aside class="notice">
-          <strong
-            >상태: Human 선택 완료 · master SVG 원본/export 생성 · 주인공/프롤로그 cast runtime
-            연결.</strong
-          >
-          외형 보강 2안의 복장·손·도구 디테일을 세 인물 원본에 반영했습니다. 다섯 지역의 라이벌도
-          같은 SVG를 사용하며 기존 대화와 진행 조건을 유지합니다. 구현 검증과 최종 아트 승인과
-          구분합니다.
-        </aside>
-        <div class="reference-grid">
-          <figure>
-            <img
-              src="../references/ref-01/appearance-option2-runtime-desktop.png"
-              alt="외형 2안의 세 인물 실제 검토실 화면"
-            />
-            <figcaption>PC 실제 렌더러: 주인공·라이벌·고철장 주인 비교</figcaption>
-          </figure>
-          <figure>
-            <img
-              src="../references/ref-01/appearance-option2-runtime-mobile.png"
-              alt="모바일 설산 지역의 주인공과 라이벌 실제 화면"
-            />
-            <figcaption>모바일 실제 게임: 지역에 전파된 같은 라이벌 외형</figcaption>
-          </figure>
-        </div>
-        <figure>
-          <img
-            src="../references/ref-01/hero-rival-owner-candidate-v1.png"
-            alt="Human이 1안으로 선택한 주인공, 라이벌, 고철장 주인의 REF-01 제작 방향"
-          />
-          <figcaption>
-            <strong>REF-01 selected direction · option 1.</strong> 위: 작은 머리와 길고 가는
-            팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운 체형과
-            갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장 주인. 이미지
-            안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의 follow-through
-            방향입니다.
-            <a href="../references/ref-01/hero-rival-owner-candidate-v1.png">원본 크기 PNG 열기</a>
-          </figcaption>
-        </figure>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">선택 기록</th>
-                <th scope="col">현재 기준</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>선택안</td>
-                <td>REF-01 option 1 · hero-rival-owner-candidate-v1.png</td>
-              </tr>
-              <tr>
-                <td>주인공 체형</td>
-                <td>작은 머리·길고 가는 팔다리·낮은 무게중심</td>
-              </tr>
-              <tr>
-                <td>공격과 구르기</td>
-                <td>낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전</td>
-              </tr>
-              <tr>
-                <td>라이벌 구분</td>
-                <td>가벼운 정찰 체형·갈고리·스카프로 주인공과 다른 역할을 유지</td>
-              </tr>
-              <tr>
-                <td>고철장 주인 구분</td>
-                <td>넓고 무거운 체형·작업복·정비/운반 도구로 생활형 산업 현장 인물을 유지</td>
-              </tr>
-              <tr>
-                <td>다음 단계</td>
-                <td>REF-02 제어핵·회수팔의 시각 후보 3안을 제작해 Human 선택</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p>
-          생성 원본:
-          <a href="../../public/graphics/scrapyard-apprentice.master.svg">Hero master SVG</a> ·
-          <a href="../../public/graphics/rival-scout.master.svg">Rival master SVG</a> ·
-          <a href="../../public/graphics/scrapyard-owner.master.svg">Owner master SVG</a>
-        </p>
-      </section>
-      <section>
-        <h2>3안 비교 승인 방식</h2>
-        <p>
-          앞으로 Human의 시각적 판단이 필요한 새 reference·Composition·중요 pose는 같은 조건에서
-          의미 있게 다른 3안을 한 번에 보여 줍니다. 선택된 한 안만 제작 authority가 되며 생성된 후보
-          수나 자동 검사 결과가 선택을 대신하지 않습니다.
-        </p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">단계</th>
-                <th scope="col">계약</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>후보 제시</td>
-                <td>같은 검토 조건에서 시각적으로 의미가 다른 3안을 한 번에 나란히 제시</td>
-              </tr>
-              <tr>
-                <td>차이 설명</td>
-                <td>실루엣·비율·구도·동작·재질 중 선택 결과를 바꾸는 핵심 차이를 각 안에 명시</td>
-              </tr>
-              <tr>
-                <td>Human 선택</td>
-                <td>
-                  Human이 고른 한 안만 다음 master SVG·Composition·authored pose 제작 기준으로 기록
-                </td>
-              </tr>
-              <tr>
-                <td>후속 검증</td>
-                <td>
-                  선택, 원본 제작, export 검사, runtime 적용과 gameplay-scale 검증을 별도 상태로
-                  유지
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>현재 우선순위</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">순서</th>
-                <th scope="col">제작 묶음</th>
-                <th scope="col">필수 reference/상태</th>
-                <th scope="col">이야기/역할</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>REF-01</td>
-                <td>Hero / Rival / Scrapyard Owner</td>
-                <td>
-                  design·개별 body profile·SVG parts·front/side/3/4·representative pose. 같은 family
-                  안에서 다른 몸과 도구로 읽히는지 확인.
-                </td>
-                <td><a href="characters.html">관련 자료</a></td>
-              </tr>
-              <tr>
-                <td>REF-02</td>
-                <td>Control Core / Retrieval Arm</td>
-                <td>
-                  connected / captured rival / tension / detached / released. 동일
-                  핵·손/갈고리·회수팔·소켓의 연결 anchor와 상태 관계.
-                </td>
-                <td><a href="scenarios/prologue.html">관련 자료</a></td>
-              </tr>
-              <tr>
-                <td>REF-03</td>
-                <td>Ancient Machine Awakening</td>
-                <td>
-                  dormant / socket seal / mono-eye on / scrap assembly / incomplete march. 비공포
-                  생활 산업 톤과 거대한 scale.
-                </td>
-                <td><a href="scenarios/prologue.html">관련 자료</a></td>
-              </tr>
-              <tr>
-                <td>REF-04</td>
-                <td>Garage 0%</td>
-                <td>
-                  empty frame / core socket / independent module mounts. 이후 다섯 모듈을 자유
-                  순서로 붙일 수 있는 하나의 기본 구조.
-                </td>
-                <td><a href="scenarios/garage.html">관련 자료</a></td>
-              </tr>
-              <tr>
-                <td>REF-05</td>
-                <td>Prologue gameplay-scale composite</td>
-                <td>
-                  실제 1280×720과 mobile 화면에서 인물·핵/팔·각성 병기·차고·배치·조명·주요 동작을
-                  함께 검수하고 승인.
-                </td>
-                <td><a href="scenarios/prologue.html">관련 자료</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>제출할 reference sheet</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">대상</th>
-                <th scope="col">포함할 내용</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>캐릭터</td>
-                <td>
-                  front / side / 3/4 / representative pose / action key pose / SVG part breakdown /
-                  joint·pivot / material / occlusion / gameplay scale
-                </td>
-              </tr>
-              <tr>
-                <td>애니메이션</td>
-                <td>
-                  key pose sheet / silhouette / line of action / center of mass / torso twist /
-                  weapon path / contact pose / follow-through. 승인 pose와 재사용 clip을 구분.
-                </td>
-              </tr>
-              <tr>
-                <td>환경</td>
-                <td>
-                  Composition reference / Unique Landmark / Prefab breakdown / Kit / XYZ·depth
-                  relationship / far·mid·near / color·material profile / gameplay-scale composite
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section>
-        <h2>승인 후 확장</h2>
-        <p>
-          REF-05의 prologue gameplay-scale composite를 승인한 뒤 enemy archetype → 폐광↔항구 →
-          나머지 지역으로 진행합니다. reference는 구현 authority이며 Codex가 중요한 액션 pose나 주요
-          Composition을 처음부터 임의로 만들고 완성 처리하지 않습니다. 기존 주인공 동작 스타일의
-          확인을 모든 새 sheet의 승인으로 확대하지 않습니다.
-        </p>
-      </section>
-      <section>
-        <h2>미정 처리</h2>
-        <p>
-          인물의 이름/성별/과거사, 미정 적 종류, 지역 사건 세부와 세계관을 임의로 채우지 않습니다.
-          구현 선택은 well-known 방식/업계 사례를 먼저 조사하고 명백한 hybrid+override는 반복 인터뷰
-          없이 제안합니다. 게임 느낌·아트 결과·콘텐츠 양·되돌리기 어려운 구조가 크게 갈릴 때만 조사
-          후 실질적으로 다른 3안을 제시합니다.
-        </p>
-        <a href="decisions.html">기존 이야기의 미정·충돌</a>
-      </section>
-      <section>
-        <h2>요청/승인 기록</h2>
-        <p>
-          요청서에 master/pose/Composition ID와 버전, 승인한 reference/composite, gameplay scale
-          capture, 미정과 runtime 검증 결과를 구분해 적습니다. 등록/생성/단위 테스트 통과는 승인
-          표시가 아닙니다.
-        </p>
-        <a href="request.html">갱신된 요청서</a>
-      </section>
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>Reference 제작·승인 순서</h1>
+                <p class="wiki-document-subtitle">
+                  계약은 확정됐지만 개별 reference/composite 승인과 runtime 구현 검증은 별개입니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a><a href="../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. REF-01 · 1안 선택됨</a></li>
+                <li class="toc-level-2"><a href="#doc-section-2">2. 3안 비교 승인 방식</a></li>
+                <li class="toc-level-2"><a href="#doc-section-3">3. 현재 우선순위</a></li>
+                <li class="toc-level-2"><a href="#doc-section-4">4. 제출할 reference sheet</a></li>
+                <li class="toc-level-2"><a href="#doc-section-5">5. 승인 후 확장</a></li>
+                <li class="toc-level-2"><a href="#doc-section-6">6. 미정 처리</a></li>
+                <li class="toc-level-2"><a href="#doc-section-7">7. 요청/승인 기록</a></li>
+              </ol>
+            </details>
+          </nav>
+          <aside class="notice">
+            제품 기준은 <a href="../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
+            제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의
+            기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+            <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+            <a href="decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+          </aside>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> REF-01 · 1안 선택됨
+            </h2>
+            <figure>
+              <img
+                src="../references/ref-01/appearance-option-2-selected.png"
+                alt="선택된 외형 보강 2안: 굵은 외곽선과 단순한 명암"
+              />
+              <figcaption>
+                외형 보강 방식: 2번 선택. 기존 인물 디자인 1안에 굵은 외곽선과 두 단계 명암을
+                적용합니다.
+              </figcaption>
+            </figure>
+            <aside class="notice">
+              <strong
+                >상태: Human 선택 완료 · master SVG 원본/export 생성 · 주인공/프롤로그 cast runtime
+                연결.</strong
+              >
+              외형 보강 2안의 복장·손·도구 디테일을 세 인물 원본에 반영했습니다. 다섯 지역의
+              라이벌도 같은 SVG를 사용하며 기존 대화와 진행 조건을 유지합니다. 구현 검증과 최종 아트
+              승인과 구분합니다.
+            </aside>
+            <div class="reference-grid">
+              <figure>
+                <img
+                  src="../references/ref-01/appearance-option2-runtime-desktop.png"
+                  alt="외형 2안의 세 인물 실제 검토실 화면"
+                />
+                <figcaption>PC 실제 렌더러: 주인공·라이벌·고철장 주인 비교</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="../references/ref-01/appearance-option2-runtime-mobile.png"
+                  alt="모바일 설산 지역의 주인공과 라이벌 실제 화면"
+                />
+                <figcaption>모바일 실제 게임: 지역에 전파된 같은 라이벌 외형</figcaption>
+              </figure>
+            </div>
+            <figure>
+              <img
+                src="../references/ref-01/hero-rival-owner-candidate-v1.png"
+                alt="Human이 1안으로 선택한 주인공, 라이벌, 고철장 주인의 REF-01 제작 방향"
+              />
+              <figcaption>
+                <strong>REF-01 selected direction · option 1.</strong> 위: 작은 머리와 길고 가는
+                팔다리의 주인공, 낮은 횡베기·접촉·강공 후반·실제 전방 회전 구르기. 가운데: 가벼운
+                체형과 갈고리 도구의 라이벌. 아래: 넓고 무거운 체형과 작업복·정비 도구의 고철장
+                주인. 이미지 안의 강공 후반 자세는 높은 준비 자세가 아니라 낮은 준비와 접촉 뒤의
+                follow-through 방향입니다.
+                <a href="../references/ref-01/hero-rival-owner-candidate-v1.png"
+                  >원본 크기 PNG 열기</a
+                >
+              </figcaption>
+            </figure>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">선택 기록</th>
+                    <th scope="col">현재 기준</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>선택안</td>
+                    <td>REF-01 option 1 · hero-rival-owner-candidate-v1.png</td>
+                  </tr>
+                  <tr>
+                    <td>주인공 체형</td>
+                    <td>작은 머리·길고 가는 팔다리·낮은 무게중심</td>
+                  </tr>
+                  <tr>
+                    <td>공격과 구르기</td>
+                    <td>낮은 횡베기/접촉/강공 후반의 궤적과 장비를 동반한 실제 전방 회전</td>
+                  </tr>
+                  <tr>
+                    <td>라이벌 구분</td>
+                    <td>가벼운 정찰 체형·갈고리·스카프로 주인공과 다른 역할을 유지</td>
+                  </tr>
+                  <tr>
+                    <td>고철장 주인 구분</td>
+                    <td>넓고 무거운 체형·작업복·정비/운반 도구로 생활형 산업 현장 인물을 유지</td>
+                  </tr>
+                  <tr>
+                    <td>다음 단계</td>
+                    <td>REF-02 제어핵·회수팔의 시각 후보 3안을 제작해 Human 선택</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              생성 원본:
+              <a href="../../public/graphics/scrapyard-apprentice.master.svg">Hero master SVG</a> ·
+              <a href="../../public/graphics/rival-scout.master.svg">Rival master SVG</a> ·
+              <a href="../../public/graphics/scrapyard-owner.master.svg">Owner master SVG</a>
+            </p>
+          </section>
+          <section>
+            <h2 id="doc-section-2">
+              <a class="wiki-section-number" href="#doc-section-2">2.</a> 3안 비교 승인 방식
+            </h2>
+            <p>
+              앞으로 Human의 시각적 판단이 필요한 새 reference·Composition·중요 pose는 같은 조건에서
+              의미 있게 다른 3안을 한 번에 보여 줍니다. 선택된 한 안만 제작 authority가 되며 생성된
+              후보 수나 자동 검사 결과가 선택을 대신하지 않습니다.
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">단계</th>
+                    <th scope="col">계약</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>후보 제시</td>
+                    <td>같은 검토 조건에서 시각적으로 의미가 다른 3안을 한 번에 나란히 제시</td>
+                  </tr>
+                  <tr>
+                    <td>차이 설명</td>
+                    <td>
+                      실루엣·비율·구도·동작·재질 중 선택 결과를 바꾸는 핵심 차이를 각 안에 명시
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Human 선택</td>
+                    <td>
+                      Human이 고른 한 안만 다음 master SVG·Composition·authored pose 제작 기준으로
+                      기록
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>후속 검증</td>
+                    <td>
+                      선택, 원본 제작, export 검사, runtime 적용과 gameplay-scale 검증을 별도 상태로
+                      유지
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-3">
+              <a class="wiki-section-number" href="#doc-section-3">3.</a> 현재 우선순위
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">순서</th>
+                    <th scope="col">제작 묶음</th>
+                    <th scope="col">필수 reference/상태</th>
+                    <th scope="col">이야기/역할</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>REF-01</td>
+                    <td>Hero / Rival / Scrapyard Owner</td>
+                    <td>
+                      design·개별 body profile·SVG parts·front/side/3/4·representative pose. 같은
+                      family 안에서 다른 몸과 도구로 읽히는지 확인.
+                    </td>
+                    <td><a href="characters.html">관련 자료</a></td>
+                  </tr>
+                  <tr>
+                    <td>REF-02</td>
+                    <td>Control Core / Retrieval Arm</td>
+                    <td>
+                      connected / captured rival / tension / detached / released. 동일
+                      핵·손/갈고리·회수팔·소켓의 연결 anchor와 상태 관계.
+                    </td>
+                    <td><a href="scenarios/prologue.html">관련 자료</a></td>
+                  </tr>
+                  <tr>
+                    <td>REF-03</td>
+                    <td>Ancient Machine Awakening</td>
+                    <td>
+                      dormant / socket seal / mono-eye on / scrap assembly / incomplete march.
+                      비공포 생활 산업 톤과 거대한 scale.
+                    </td>
+                    <td><a href="scenarios/prologue.html">관련 자료</a></td>
+                  </tr>
+                  <tr>
+                    <td>REF-04</td>
+                    <td>Garage 0%</td>
+                    <td>
+                      empty frame / core socket / independent module mounts. 이후 다섯 모듈을 자유
+                      순서로 붙일 수 있는 하나의 기본 구조.
+                    </td>
+                    <td><a href="scenarios/garage.html">관련 자료</a></td>
+                  </tr>
+                  <tr>
+                    <td>REF-05</td>
+                    <td>Prologue gameplay-scale composite</td>
+                    <td>
+                      실제 1280×720과 mobile 화면에서 인물·핵/팔·각성 병기·차고·배치·조명·주요
+                      동작을 함께 검수하고 승인.
+                    </td>
+                    <td><a href="scenarios/prologue.html">관련 자료</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-4">
+              <a class="wiki-section-number" href="#doc-section-4">4.</a> 제출할 reference sheet
+            </h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">대상</th>
+                    <th scope="col">포함할 내용</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>캐릭터</td>
+                    <td>
+                      front / side / 3/4 / representative pose / action key pose / SVG part
+                      breakdown / joint·pivot / material / occlusion / gameplay scale
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>애니메이션</td>
+                    <td>
+                      key pose sheet / silhouette / line of action / center of mass / torso twist /
+                      weapon path / contact pose / follow-through. 승인 pose와 재사용 clip을 구분.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>환경</td>
+                    <td>
+                      Composition reference / Unique Landmark / Prefab breakdown / Kit / XYZ·depth
+                      relationship / far·mid·near / color·material profile / gameplay-scale
+                      composite
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section>
+            <h2 id="doc-section-5">
+              <a class="wiki-section-number" href="#doc-section-5">5.</a> 승인 후 확장
+            </h2>
+            <p>
+              REF-05의 prologue gameplay-scale composite를 승인한 뒤 enemy archetype → 폐광↔항구 →
+              나머지 지역으로 진행합니다. reference는 구현 authority이며 Codex가 중요한 액션 pose나
+              주요 Composition을 처음부터 임의로 만들고 완성 처리하지 않습니다. 기존 주인공 동작
+              스타일의 확인을 모든 새 sheet의 승인으로 확대하지 않습니다.
+            </p>
+          </section>
+          <section>
+            <h2 id="doc-section-6">
+              <a class="wiki-section-number" href="#doc-section-6">6.</a> 미정 처리
+            </h2>
+            <p>
+              인물의 이름/성별/과거사, 미정 적 종류, 지역 사건 세부와 세계관을 임의로 채우지
+              않습니다. 구현 선택은 well-known 방식/업계 사례를 먼저 조사하고 명백한
+              hybrid+override는 반복 인터뷰 없이 제안합니다. 게임 느낌·아트 결과·콘텐츠 양·되돌리기
+              어려운 구조가 크게 갈릴 때만 조사 후 실질적으로 다른 3안을 제시합니다.
+            </p>
+            <a href="decisions.html">기존 이야기의 미정·충돌</a>
+          </section>
+          <section>
+            <h2 id="doc-section-7">
+              <a class="wiki-section-number" href="#doc-section-7">7.</a> 요청/승인 기록
+            </h2>
+            <p>
+              요청서에 master/pose/Composition ID와 버전, 승인한 reference/composite, gameplay scale
+              capture, 미정과 runtime 검증 결과를 구분해 적습니다. 등록/생성/단위 테스트 통과는 승인
+              표시가 아닙니다.
+            </p>
+            <a href="request.html">갱신된 요청서</a>
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav>
+          <a href="#doc-section-1">1. REF-01 · 1안 선택됨</a
+          ><a href="#doc-section-2">2. 3안 비교 승인 방식</a
+          ><a href="#doc-section-3">3. 현재 우선순위</a
+          ><a href="#doc-section-4">4. 제출할 reference sheet</a
+          ><a href="#doc-section-5">5. 승인 후 확장</a><a href="#doc-section-6">6. 미정 처리</a
+          ><a href="#doc-section-7">7. 요청/승인 기록</a>
+        </nav>
+      </aside>
+    </div>
   </body>
 </html>

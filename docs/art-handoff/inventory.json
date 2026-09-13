@@ -1,5 +1,5 @@
 {
-  "fingerprint": "4875e65094b9",
+  "fingerprint": "fd33853988e8",
   "resourceCount": 568,
   "records": [
     {
@@ -19836,6 +19836,7 @@
     "resources/npc-1.html",
     "resources/npc-2.html",
     "resources/npc-3.html",
+    "resources/npc-4.html",
     "resources/player-1.html",
     "resources/prop-1.html",
     "resources/prop-2.html",

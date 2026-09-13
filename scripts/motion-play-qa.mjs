@@ -1,11 +1,45 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, relative, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createStaticServer } from './serve.mjs';
 import { writeEvidenceTimeline } from './qa/evidenceTimeline.mjs';
 import { outlineParityExpression } from './qa/outlineParity.mjs';
+import { wrapWikiReport } from './wiki-document.mjs';
+
+// Report generation also works with saved evidence, without rerunning gameplay.
+export function writeMotionCaptureIndex(
+  directory,
+  captures,
+  { width, height, input = 'keyboard' },
+) {
+  writeFileSync(
+    join(directory, 'index.html'),
+    wrapWikiReport(
+      `<!doctype html><meta charset="utf-8"><title>Normal input real time motion</title><style>.motion-contact-sheet{display:flex;overflow-x:auto}.wiki-document .motion-contact-sheet figure{flex:0 0 640px;margin:4px}.motion-contact-sheet img{display:block;width:640px;max-width:100%;height:auto}.motion-contact-sheet small{display:block}</style><body><p>Each timestamp is actual wall clock elapsed time; renderer was never paused or directly posed.</p>${[
+        'right',
+        'left',
+      ]
+        .map(
+          (direction) =>
+            `<section><h2>${direction}</h2><div class="motion-contact-sheet">${captures
+              .filter((capture) => capture.file.startsWith(direction))
+              .map(
+                (capture) =>
+                  `<figure><img src="${capture.file}"><small>${capture.milliseconds} ms</small></figure>`,
+              )
+              .join('')}</div></section>`,
+        )
+        .join('')}</body>`,
+      {
+        title: `${width} × ${height} normal speed ${input} roll → run`,
+        category: '모션 검증 보고서',
+        repoHref: `${relative(resolve(directory), fileURLToPath(new URL('../', import.meta.url))).replaceAll('\\', '/') || '.'}/`,
+      },
+    ),
+  );
+}
 
 function parseArgs(argv) {
   const values = new Map();
@@ -680,23 +714,11 @@ async function run() {
         2,
       ),
     );
-    writeFileSync(
-      join(output, 'index.html'),
-      `<!doctype html><meta charset="utf-8"><title>Normal input real time motion</title><style>body{background:#161b20;color:white;font:14px sans-serif}section{display:flex;overflow:auto}figure{margin:4px}img{width:640px}small{display:block}</style><h1>${width} × ${height} normal speed keyboard roll → run</h1><p>Each timestamp is actual wall clock elapsed time; renderer was never paused or directly posed.</p>${[
-        'right',
-        'left',
-      ]
-        .map(
-          (d) =>
-            `<h2>${d}</h2><section>${captures
-              .filter((c) => c.file.startsWith(d))
-              .map(
-                (c) => `<figure><img src="${c.file}"><small>${c.milliseconds} ms</small></figure>`,
-              )
-              .join('')}</section>`,
-        )
-        .join('')}`,
-    );
+    writeMotionCaptureIndex(output, captures, {
+      width,
+      height,
+      input: mobile ? 'touch' : 'keyboard',
+    });
     writeEvidenceTimeline(output, captures, {
       title: `${width} × ${height} actual ${mobile ? 'touch' : 'keyboard'} input`,
     });
@@ -729,7 +751,9 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  process.stderr.write(`${error.stack}\n`);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  run().catch((error) => {
+    process.stderr.write(`${error.stack}\n`);
+    process.exitCode = 1;
+  });
+}

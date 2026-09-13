@@ -3,76 +3,127 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>D-DAY 실패와 저장 복구 · Polygon RPG 제작 요청</title>
-    <link rel="stylesheet" href="../handbook.css" />
+    <title>D-DAY 실패와 저장 복구 · Polygon RPG 문서</title>
+    <link rel="stylesheet" href="../../wiki.css" />
   </head>
-  <body>
-    <header class="masthead">
-      <a href="../index.html">POLYGON RPG / GRAPHICS HANDOFF</a>
-      <nav>
-        <a href="../../../PRODUCT_GOAL.html">Product Goal</a
-        ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
-        ><a href="../enemies.html">몹</a><a href="../scenarios/index.html">시나리오</a
-        ><a href="../resources/index.html">전체 목록</a><a href="../request.html">요청서</a>
-      </nav>
-    </header>
-    <main>
-      <header class="page-title">
-        <p class="eyebrow">그래픽 담당자 전달 자료 · 기준 4875e65094b9</p>
-        <h1>D-DAY 실패와 저장 복구</h1>
-        <p>
-          작전 실패를 보여 주고 저장 기록에서 다시 시작합니다. 세계 내 시간 역행 연출이 아닙니다.
-        </p>
-      </header>
-      <aside class="notice">
-        제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는 확정된
-        제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요 pose의 기준이며
-        현재 코드가 그 승인을 대신하지 않습니다. <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
-        <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
-      </aside>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">순서</th>
-              <th scope="col">그려야 할 결과</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>D-DAY 0</td>
-              <td>입력 잠금·위험 시간 표시·작전 신호 단절</td>
-            </tr>
-            <tr>
-              <td>수도 도착</td>
-              <td>지도상 마지막 구간이 닫히고 적 표식이 왕도에 겹침</td>
-            </tr>
-            <tr>
-              <td>파괴</td>
-              <td>수도 외곽 작업장·방벽 붕괴; 최종 파괴 컷 상세는 별도 설계</td>
-            </tr>
-            <tr>
-              <td>복구 선택</td>
-              <td>최근 아침/핵심 사건/행동 직전 저장을 구별하는 게임오버 UI</td>
-            </tr>
-            <tr>
-              <td>KO 거점 복귀</td>
-              <td>일반 KO와 수도 파괴를 별도 의미로 구분. 거점 복귀·시간 비용 안내</td>
-            </tr>
-          </tbody>
-        </table>
+  <body id="top" class="wiki-document">
+    <header class="wiki-global-header masthead">
+      <div class="wiki-global-inner">
+        <a class="wiki-brand" href="../../../PRODUCT_GOAL.html"
+          ><span class="wiki-brand-mark" aria-hidden="true">▲</span><span>POLYGON RPG</span></a
+        >
+        <nav class="wiki-global-nav" aria-label="위키 전역 메뉴">
+          <a href="../../../PRODUCT_GOAL.html">Product Goal</a><a href="../index.html">제작 안내</a
+          ><a href="../asset-contract.html">제작 계약</a><a href="../characters.html">인물</a
+          ><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+        <a class="wiki-search-link" href="#wiki-toc">⌕ 문서 목차</a>
       </div>
-      <a href="../../../PRODUCT_GOAL.html#PG-RECOVERY">PG-RECOVERY</a
-      ><a href="../../../src/game/campaign/ScrapGameOverPresentation.js"
-        >src/game/campaign/ScrapGameOverPresentation.js</a
-      >
-    </main>
-    <footer>
-      필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
-      <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
-      <code>npm run docs:art</code> ·
-      <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
-      <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
-    </footer>
+    </header>
+    <div class="wiki-shell">
+      <aside class="wiki-left-sidebar" aria-label="주요 문서 탐색">
+        <nav>
+          <strong>관련 문서</strong><a href="../../../PRODUCT_GOAL.html">Product Goal</a
+          ><a href="../index.html">제작 안내</a><a href="../asset-contract.html">제작 계약</a
+          ><a href="../characters.html">인물</a><a href="../scenarios/index.html">시나리오</a
+          ><a href="../resources/index.html">전체 목록</a>
+        </nav>
+      </aside>
+      <div class="page">
+        <nav class="wiki-breadcrumb" aria-label="문서 위치">
+          <a href="../../../PRODUCT_GOAL.html">Polygon RPG</a><span>›</span
+          ><span>그래픽 제작 문서</span>
+        </nav>
+        <main>
+          <header class="hero page-title">
+            <div class="wiki-document-heading">
+              <div>
+                <p class="kicker">그래픽 제작 문서</p>
+                <h1>D-DAY 실패와 저장 복구</h1>
+                <p class="wiki-document-subtitle">
+                  작전 실패를 보여 주고 저장 기록에서 다시 시작합니다. 세계 내 시간 역행 연출이
+                  아닙니다.
+                </p>
+              </div>
+              <nav class="wiki-document-actions" aria-label="문서 도구">
+                <a href="#wiki-toc">목차</a
+                ><a href="../../../scripts/art-handoff-content.mjs">원문</a
+                ><a href="../../../INBOX.md">피드백</a>
+              </nav>
+            </div>
+            <p class="wiki-document-meta">그래픽 담당자 전달 자료 · 기준 fd33853988e8</p>
+            <div class="wiki-category-box"><strong>분류:</strong>그래픽 제작 문서</div>
+          </header>
+          <nav class="wiki-toc" id="wiki-toc" aria-label="문서 목차">
+            <details open>
+              <summary>목차</summary>
+              <ol>
+                <li class="toc-level-2"><a href="#doc-section-1">1. 본문</a></li>
+              </ol>
+            </details>
+          </nav>
+          <section>
+            <h2 id="doc-section-1">
+              <a class="wiki-section-number" href="#doc-section-1">1.</a> 본문
+            </h2>
+            <aside class="notice">
+              제품 기준은 <a href="../../../PRODUCT_GOAL.html">Product Goal</a>입니다. 이 문서는
+              확정된 제작 계약과 현재 작성된 자료를 구분합니다. 승인 reference가 형태·구도·주요
+              pose의 기준이며 현재 코드가 그 승인을 대신하지 않습니다.
+              <strong>등록됨 ≠ 디자인 승인·구현 완료</strong>.
+              <a href="../decisions.html">미정·충돌 확인</a>을 함께 읽으세요.
+            </aside>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">순서</th>
+                    <th scope="col">그려야 할 결과</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>D-DAY 0</td>
+                    <td>입력 잠금·위험 시간 표시·작전 신호 단절</td>
+                  </tr>
+                  <tr>
+                    <td>수도 도착</td>
+                    <td>지도상 마지막 구간이 닫히고 적 표식이 왕도에 겹침</td>
+                  </tr>
+                  <tr>
+                    <td>파괴</td>
+                    <td>수도 외곽 작업장·방벽 붕괴; 최종 파괴 컷 상세는 별도 설계</td>
+                  </tr>
+                  <tr>
+                    <td>복구 선택</td>
+                    <td>최근 아침/핵심 사건/행동 직전 저장을 구별하는 게임오버 UI</td>
+                  </tr>
+                  <tr>
+                    <td>KO 거점 복귀</td>
+                    <td>일반 KO와 수도 파괴를 별도 의미로 구분. 거점 복귀·시간 비용 안내</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <a href="../../../PRODUCT_GOAL.html#PG-RECOVERY">PG-RECOVERY</a
+            ><a href="../../../src/game/campaign/ScrapGameOverPresentation.js"
+              >src/game/campaign/ScrapGameOverPresentation.js</a
+            >
+          </section>
+        </main>
+        <footer>
+          필요한 인물·지역 문서만 전달하세요. 계약 해설 원본:
+          <code>scripts/art-production-contract.mjs</code> · 자동 목록 갱신:
+          <code>npm run docs:art</code> ·
+          <a href="../../../scripts/art-handoff-content.mjs">요청 해설 원본</a> ·
+          <a href="../../../scripts/generate-art-handoff.mjs">생성기</a>
+        </footer>
+      </div>
+      <aside class="wiki-right-sidebar" aria-label="문서 내 탐색">
+        <strong>이 문서의 내용</strong>
+        <nav><a href="#doc-section-1">1. 본문</a></nav>
+      </aside>
+    </div>
   </body>
 </html>
