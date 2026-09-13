@@ -284,7 +284,8 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       referenceGroupId: 'REF-01',
       approvalStatus: 'ref-01-candidate-1-selected-runtime-review',
       actions: graphicsPlayerActions(),
-      notes: 'REF-01 1안 기반 master SVG · 실제 게임과 같은 자세·장비 길이·접촉 형상을 검토합니다.',
+      notes:
+        'REF-01 인물 디자인 1안 · 외형 보강 2안. 소매·교차 스트랩·튜닉·부츠·손·검과 방패 디테일을 실제 게임과 같은 자세·접촉 형상으로 검토합니다.',
     },
     ...[
       ['rival-scout', 'rival'],
@@ -293,7 +294,7 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
       const profile = CHARACTER_PRESENTATION_PROFILE.getProfile(profileId);
       return {
         id: `npc:cast:${profileId}`,
-        label: `${profile.label} · REF-01 1안 SVG`,
+        label: `${profile.label} · 외형 2안 SVG`,
         category: 'npc',
         kind: 'animated',
         producer: 'cast',
@@ -305,7 +306,7 @@ export function createGraphicsResourceCatalog({ additionalResources = [] } = {})
         placements: castPlacements.get(profileId) ?? [],
         actions: graphicsCastReviewActions(),
         notes:
-          '선택된 1안 master SVG가 프롤로그 cast와 같은 자세 계산을 사용합니다. 도구는 고유 grip anchor로 손을 따라갑니다.',
+          '인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다. 게임 cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.',
       };
     }),
     {

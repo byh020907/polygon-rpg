@@ -2297,8 +2297,8 @@ assert.equal(
 );
 assert.ok(itemIds(travelScene).includes('mine-waiting-miner-coat'));
 assert.ok(itemIds(travelScene).includes('mine-waiting-miner-pickaxe'));
-assert.ok(itemIds(travelScene).includes('mine-rival-scout-torso'));
-assert.ok(itemIds(travelScene).includes('mine-rival-scout-band'));
+assert.ok(itemIds(travelScene).includes('mine-rival-scout-cast:rival-vest-shape'));
+assert.ok(itemIds(travelScene).includes('mine-rival-scout-cast:rival-scarf-collar-shape'));
 assert.ok(itemIds(travelScene).includes('mine-gate-lantern-dim'));
 assert.equal(
   itemIds(travelScene).includes('mine-gate-lantern-lit'),
@@ -2397,7 +2397,9 @@ assert.ok(
   'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
 );
 assert.ok(itemIds(mineRoadheadQaScene).includes('mine-waiting-miner-helmet'));
-assert.ok(itemIds(mineRoadheadQaScene).includes('mine-rival-scout-hook'));
+assert.ok(
+  itemIds(mineRoadheadQaScene).includes('mine-rival-scout-cast:rival-salvage-hook-contour'),
+);
 assert.equal(
   itemIds(mineRoadheadQaScene).includes('mine-gate-lantern-lit'),
   false,
@@ -2409,7 +2411,9 @@ const mineRoadheadQaRequest = readVisualQaRequest(
 assert.equal(mineRoadheadQaRequest.scenario.roomId, SCRAP_MINE_ROAD_ROOM_ID);
 assert.equal(mineRoadheadQaRequest.scenario.x, 730);
 assert.ok(
-  mineRoadheadQaRequest.scenario.expectation.expectedItems.includes('mine-rival-scout-torso'),
+  mineRoadheadQaRequest.scenario.expectation.expectedItems.includes(
+    'mine-rival-scout-cast:rival-vest-shape',
+  ),
 );
 assert.equal(mineRoadheadQaRequest.scenario.inputQaFreshRegion, true);
 
@@ -2749,8 +2753,10 @@ assert.equal(
 );
 assert.ok(itemIds(shipyardFlowScene).includes('shipyard-waiting-crew-apron'));
 assert.ok(itemIds(shipyardFlowScene).includes('shipyard-waiting-crew-hook'));
-assert.ok(itemIds(shipyardFlowScene).includes('shipyard-rival-scout-torso'));
-assert.ok(itemIds(shipyardFlowScene).includes('shipyard-rival-scout-band'));
+assert.ok(itemIds(shipyardFlowScene).includes('shipyard-rival-scout-cast:rival-vest-shape'));
+assert.ok(
+  itemIds(shipyardFlowScene).includes('shipyard-rival-scout-cast:rival-scarf-collar-shape'),
+);
 assert.ok(itemIds(shipyardFlowScene).includes('shipyard-gate-lamp-dim'));
 assert.equal(
   itemIds(shipyardFlowScene).includes('shipyard-gate-lamp-lit'),
@@ -2850,7 +2856,9 @@ assert.ok(
   'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
 );
 assert.ok(itemIds(shipyardRoadheadQaScene).includes('shipyard-waiting-crew-mask'));
-assert.ok(itemIds(shipyardRoadheadQaScene).includes('shipyard-rival-scout-hook'));
+assert.ok(
+  itemIds(shipyardRoadheadQaScene).includes('shipyard-rival-scout-cast:rival-salvage-hook-contour'),
+);
 assert.equal(
   itemIds(shipyardRoadheadQaScene).includes('shipyard-gate-lamp-lit'),
   false,
@@ -2863,7 +2871,7 @@ assert.equal(shipyardRoadheadQaRequest.scenario.roomId, SCRAP_SHIPYARD_ROAD_ROOM
 assert.equal(shipyardRoadheadQaRequest.scenario.x, 730);
 assert.ok(
   shipyardRoadheadQaRequest.scenario.expectation.expectedItems.includes(
-    'shipyard-rival-scout-torso',
+    'shipyard-rival-scout-cast:rival-vest-shape',
   ),
 );
 
@@ -3296,8 +3304,10 @@ assert.equal(
 );
 assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-waiting-grower-vest'));
 assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-waiting-grower-sensor'));
-assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-rival-scout-torso'));
-assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-rival-scout-band'));
+assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-rival-scout-cast:rival-vest-shape'));
+assert.ok(
+  itemIds(greenhouseFlowScene).includes('greenhouse-rival-scout-cast:rival-scarf-collar-shape'),
+);
 assert.ok(itemIds(greenhouseFlowScene).includes('greenhouse-gate-lamp-dim'));
 assert.equal(
   itemIds(greenhouseFlowScene).includes('greenhouse-gate-lamp-lit'),
@@ -3401,7 +3411,11 @@ assert.ok(
   'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
 );
 assert.ok(itemIds(greenhouseRoadheadQaScene).includes('greenhouse-waiting-grower-visor'));
-assert.ok(itemIds(greenhouseRoadheadQaScene).includes('greenhouse-rival-scout-hook'));
+assert.ok(
+  itemIds(greenhouseRoadheadQaScene).includes(
+    'greenhouse-rival-scout-cast:rival-salvage-hook-contour',
+  ),
+);
 assert.equal(
   itemIds(greenhouseRoadheadQaScene).includes('greenhouse-gate-lamp-lit'),
   false,
@@ -3414,7 +3428,7 @@ assert.equal(greenhouseRoadheadQaRequest.scenario.roomId, SCRAP_GREENHOUSE_ROAD_
 assert.equal(greenhouseRoadheadQaRequest.scenario.x, 730);
 assert.ok(
   greenhouseRoadheadQaRequest.scenario.expectation.expectedItems.includes(
-    'greenhouse-rival-scout-torso',
+    'greenhouse-rival-scout-cast:rival-vest-shape',
   ),
 );
 
@@ -3733,8 +3747,8 @@ assert.equal(
 );
 assert.ok(itemIds(snowFlowScene).includes('snow-waiting-keeper-coat'));
 assert.ok(itemIds(snowFlowScene).includes('snow-waiting-keeper-lamp'));
-assert.ok(itemIds(snowFlowScene).includes('snow-rival-scout-torso'));
-assert.ok(itemIds(snowFlowScene).includes('snow-rival-scout-band'));
+assert.ok(itemIds(snowFlowScene).includes('snow-rival-scout-cast:rival-vest-shape'));
+assert.ok(itemIds(snowFlowScene).includes('snow-rival-scout-cast:rival-scarf-collar-shape'));
 assert.ok(itemIds(snowFlowScene).includes('snow-gate-lamp-dim'));
 assert.equal(
   itemIds(snowFlowScene).includes('snow-gate-lamp-lit'),
@@ -3834,7 +3848,9 @@ assert.ok(
   'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
 );
 assert.ok(itemIds(snowRoadheadQaScene).includes('snow-waiting-keeper-hat'));
-assert.ok(itemIds(snowRoadheadQaScene).includes('snow-rival-scout-hook'));
+assert.ok(
+  itemIds(snowRoadheadQaScene).includes('snow-rival-scout-cast:rival-salvage-hook-contour'),
+);
 assert.equal(
   itemIds(snowRoadheadQaScene).includes('snow-gate-lamp-lit'),
   false,
@@ -3846,7 +3862,9 @@ const snowRoadheadQaRequest = readVisualQaRequest(
 assert.equal(snowRoadheadQaRequest.scenario.roomId, SCRAP_SNOW_ROAD_ROOM_ID);
 assert.equal(snowRoadheadQaRequest.scenario.x, 730);
 assert.ok(
-  snowRoadheadQaRequest.scenario.expectation.expectedItems.includes('snow-rival-scout-torso'),
+  snowRoadheadQaRequest.scenario.expectation.expectedItems.includes(
+    'snow-rival-scout-cast:rival-vest-shape',
+  ),
 );
 
 setAtCampaignInteraction(snowFlowScene, SCRAP_SNOW_ROAD_ROOM_ID, 'npc-briefing');
@@ -4131,8 +4149,8 @@ assert.equal(
 );
 assert.ok(itemIds(quarryFlowScene).includes('quarry-waiting-filler-coat'));
 assert.ok(itemIds(quarryFlowScene).includes('quarry-waiting-filler-drill'));
-assert.ok(itemIds(quarryFlowScene).includes('quarry-rival-scout-torso'));
-assert.ok(itemIds(quarryFlowScene).includes('quarry-rival-scout-band'));
+assert.ok(itemIds(quarryFlowScene).includes('quarry-rival-scout-cast:rival-vest-shape'));
+assert.ok(itemIds(quarryFlowScene).includes('quarry-rival-scout-cast:rival-scarf-collar-shape'));
 assert.ok(itemIds(quarryFlowScene).includes('quarry-gate-blast-dim'));
 assert.equal(
   itemIds(quarryFlowScene).includes('quarry-gate-blast-lit'),
@@ -4232,7 +4250,9 @@ assert.ok(
   'roadhead QA 상태에서는 라이벌 연결 정찰 patch가 적용되어야 합니다.',
 );
 assert.ok(itemIds(quarryRoadheadQaScene).includes('quarry-waiting-filler-helmet'));
-assert.ok(itemIds(quarryRoadheadQaScene).includes('quarry-rival-scout-hook'));
+assert.ok(
+  itemIds(quarryRoadheadQaScene).includes('quarry-rival-scout-cast:rival-salvage-hook-contour'),
+);
 assert.equal(
   itemIds(quarryRoadheadQaScene).includes('quarry-gate-blast-lit'),
   false,
@@ -4244,7 +4264,9 @@ const quarryRoadheadQaRequest = readVisualQaRequest(
 assert.equal(quarryRoadheadQaRequest.scenario.roomId, SCRAP_QUARRY_ROAD_ROOM_ID);
 assert.equal(quarryRoadheadQaRequest.scenario.x, 730);
 assert.ok(
-  quarryRoadheadQaRequest.scenario.expectation.expectedItems.includes('quarry-rival-scout-torso'),
+  quarryRoadheadQaRequest.scenario.expectation.expectedItems.includes(
+    'quarry-rival-scout-cast:rival-vest-shape',
+  ),
 );
 
 setAtCampaignInteraction(quarryFlowScene, SCRAP_QUARRY_ROAD_ROOM_ID, 'npc-briefing');

@@ -3,7 +3,7 @@
 const ACTORS = new Set(['scrapyard-apprentice', 'rival-scout', 'scrapyard-owner']);
 export function ref01Appearance(assetId, shape, scale = 1) {
   if (!ACTORS.has(assetId) || shape.opacity < 1) return {};
-  const detail = /buckle|seam|inset|band|pocket|collar|goggles|bracer/.test(shape.id);
+  const detail = /buckle|seam|inset|band|pocket|collar|goggles|bracer|detail|fold/.test(shape.id);
   return {
     stroke: detail ? undefined : '#252925',
     lineWidth: detail ? 0 : 1.65 * scale,

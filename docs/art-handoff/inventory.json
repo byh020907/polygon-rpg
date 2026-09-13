@@ -1,6 +1,6 @@
 {
-  "fingerprint": "262a481c4fc2",
-  "resourceCount": 593,
+  "fingerprint": "4875e65094b9",
+  "resourceCount": 568,
   "records": [
     {
       "id": "player:protagonist",
@@ -12,7 +12,7 @@
       "roomId": null,
       "actorId": "protagonist",
       "source": "public/graphics/scrapyard-apprentice.master.svg",
-      "notes": "REF-01 1안 기반 master SVG · 실제 게임과 같은 자세·장비 길이·접촉 형상을 검토합니다.",
+      "notes": "REF-01 인물 디자인 1안 · 외형 보강 2안. 소매·교차 스트랩·튜닉·부츠·손·검과 방패 디테일을 실제 게임과 같은 자세·접촉 형상으로 검토합니다.",
       "actions": [
         {
           "id": "idle",
@@ -127,7 +127,7 @@
     },
     {
       "id": "npc:cast:rival-scout",
-      "label": "라이벌 · REF-01 1안 SVG",
+      "label": "라이벌 · 외형 2안 SVG",
       "category": "npc",
       "producer": "cast",
       "kind": "animated",
@@ -135,7 +135,7 @@
       "roomId": null,
       "actorId": "rival",
       "source": "public/graphics/rival-scout.master.svg",
-      "notes": "선택된 1안 master SVG가 프롤로그 cast와 같은 자세 계산을 사용합니다. 도구는 고유 grip anchor로 손을 따라갑니다.",
+      "notes": "인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다. 게임 cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.",
       "actions": [
         {
           "id": "idle",
@@ -153,7 +153,7 @@
     },
     {
       "id": "npc:cast:scrapyard-owner",
-      "label": "고물상인 · REF-01 1안 SVG",
+      "label": "고물상인 · 외형 2안 SVG",
       "category": "npc",
       "producer": "cast",
       "kind": "animated",
@@ -161,7 +161,7 @@
       "roomId": null,
       "actorId": "owner",
       "source": "public/graphics/scrapyard-owner.master.svg",
-      "notes": "선택된 1안 master SVG가 프롤로그 cast와 같은 자세 계산을 사용합니다. 도구는 고유 grip anchor로 손을 따라갑니다.",
+      "notes": "인물 디자인 1안에 선택된 외형 2안의 복장·손·도구와 선·명암을 반영했습니다. 게임 cast와 같은 자세를 쓰며 도구는 고유 grip anchor로 손을 따라갑니다.",
       "actions": [
         {
           "id": "idle",
@@ -8045,32 +8045,6 @@
       "page": "resources/npc-1.html#npc%3Aabandoned-mine-roadhead%3Amine-foreman"
     },
     {
-      "id": "npc:abandoned-mine-roadhead:mine-rival-scout",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "abandoned-mine",
-      "roomId": "abandoned-mine-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": [
-        "mine-rival-scout-torso",
-        "mine-rival-scout-head",
-        "mine-rival-scout-hook",
-        "mine-rival-scout-band"
-      ],
-      "page": "resources/npc-1.html#npc%3Aabandoned-mine-roadhead%3Amine-rival-scout"
-    },
-    {
       "id": "npc:abandoned-mine-roadhead:mine-gate-miner",
       "label": "구조 갱도 앞 대기 광부",
       "category": "npc",
@@ -8504,90 +8478,6 @@
       ],
       "itemIds": ["mine-shaft-status-signal"],
       "page": "resources/facility-2.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-shaft-status-signal"
-    },
-    {
-      "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-torso",
-      "label": "라이벌 · 정찰 작업복",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "abandoned-mine",
-      "roomId": "abandoned-mine-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["mine-rival-scout-torso"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-head",
-      "label": "라이벌 · 측량 고글",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "abandoned-mine",
-      "roomId": "abandoned-mine-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["mine-rival-scout-head"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-hook",
-      "label": "라이벌 · 정찰 갈고리",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "abandoned-mine",
-      "roomId": "abandoned-mine-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["mine-rival-scout-hook"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-rival-scout-band",
-      "label": "라이벌 · 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "abandoned-mine",
-      "roomId": "abandoned-mine-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["mine-rival-scout-band"],
-      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aabandoned-mine%3Aabandoned-mine-roadhead%3Amine-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:abandoned-mine:abandoned-mine-roadhead:mine-gate-miner-coat",
@@ -10586,32 +10476,6 @@
       "page": "resources/npc-1.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew"
     },
     {
-      "id": "npc:harbor-shipyard-roadhead:shipyard-rival-scout",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "harbor-shipyard",
-      "roomId": "harbor-shipyard-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": [
-        "shipyard-rival-scout-torso",
-        "shipyard-rival-scout-head",
-        "shipyard-rival-scout-hook",
-        "shipyard-rival-scout-band"
-      ],
-      "page": "resources/npc-1.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout"
-    },
-    {
       "id": "npc:harbor-shipyard-roadhead:shipyard-gate-crew",
       "label": "건선거 앞 대기 갑판원",
       "category": "npc",
@@ -10651,7 +10515,7 @@
         }
       ],
       "itemIds": ["shipyard-worker-apron", "shipyard-worker-mask", "shipyard-worker-rivet-gun"],
-      "page": "resources/npc-2.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-worker"
+      "page": "resources/npc-1.html#npc%3Aharbor-shipyard-roadhead%3Ashipyard-worker"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-roadhead-sky",
@@ -10756,7 +10620,7 @@
         }
       ],
       "itemIds": ["shipyard-waiting-crew-apron"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-apron"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-apron"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-mask",
@@ -10777,7 +10641,7 @@
         }
       ],
       "itemIds": ["shipyard-waiting-crew-mask"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-mask"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-mask"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-waiting-crew-hook",
@@ -10798,91 +10662,7 @@
         }
       ],
       "itemIds": ["shipyard-waiting-crew-hook"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-rival-scout-torso",
-      "label": "라이벌 · 정찰 작업복",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "harbor-shipyard",
-      "roomId": "harbor-shipyard-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["shipyard-rival-scout-torso"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-rival-scout-head",
-      "label": "라이벌 · 측량 고글",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "harbor-shipyard",
-      "roomId": "harbor-shipyard-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["shipyard-rival-scout-head"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-rival-scout-hook",
-      "label": "라이벌 · 정찰 갈고리",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "harbor-shipyard",
-      "roomId": "harbor-shipyard-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["shipyard-rival-scout-hook"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-rival-scout-band",
-      "label": "라이벌 · 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "harbor-shipyard",
-      "roomId": "harbor-shipyard-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["shipyard-rival-scout-band"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-rival-scout-band"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-waiting-crew-hook"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-apron",
@@ -10903,7 +10683,7 @@
         }
       ],
       "itemIds": ["shipyard-gate-crew-apron"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-apron"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-apron"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-crew-mask",
@@ -10924,7 +10704,7 @@
         }
       ],
       "itemIds": ["shipyard-gate-crew-mask"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-mask"
+      "page": "resources/npc-1.html#map%3Ascrap-awakening-commission%3Aharbor-shipyard%3Aharbor-shipyard-roadhead%3Ashipyard-gate-crew-mask"
     },
     {
       "id": "map:scrap-awakening-commission:harbor-shipyard:harbor-shipyard-roadhead:shipyard-gate-lamp-dim",
@@ -12515,32 +12295,6 @@
       "page": "resources/npc-2.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower"
     },
     {
-      "id": "npc:greenhouse-plains-roadhead:greenhouse-rival-scout",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "greenhouse-plains",
-      "roomId": "greenhouse-plains-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": [
-        "greenhouse-rival-scout-torso",
-        "greenhouse-rival-scout-head",
-        "greenhouse-rival-scout-hook",
-        "greenhouse-rival-scout-band"
-      ],
-      "page": "resources/npc-2.html#npc%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout"
-    },
-    {
       "id": "npc:greenhouse-plains-roadhead:greenhouse-gate-grower",
       "label": "배관 앞 대기 재배원",
       "category": "npc",
@@ -12711,90 +12465,6 @@
       ],
       "itemIds": ["greenhouse-waiting-grower-sensor"],
       "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-waiting-grower-sensor"
-    },
-    {
-      "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-torso",
-      "label": "라이벌 · 정찰 작업복",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "greenhouse-plains",
-      "roomId": "greenhouse-plains-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["greenhouse-rival-scout-torso"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-head",
-      "label": "라이벌 · 측량 고글",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "greenhouse-plains",
-      "roomId": "greenhouse-plains-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["greenhouse-rival-scout-head"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-hook",
-      "label": "라이벌 · 정찰 갈고리",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "greenhouse-plains",
-      "roomId": "greenhouse-plains-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["greenhouse-rival-scout-hook"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-rival-scout-band",
-      "label": "라이벌 · 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "greenhouse-plains",
-      "roomId": "greenhouse-plains-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["greenhouse-rival-scout-band"],
-      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Agreenhouse-plains%3Agreenhouse-plains-roadhead%3Agreenhouse-rival-scout-band"
     },
     {
       "id": "map:scrap-awakening-commission:greenhouse-plains:greenhouse-plains-roadhead:greenhouse-gate-grower-vest",
@@ -14277,33 +13947,7 @@
         "snow-waiting-keeper-hat",
         "snow-waiting-keeper-lamp"
       ],
-      "page": "resources/npc-3.html#npc%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper"
-    },
-    {
-      "id": "npc:snow-trade-road-roadhead:snow-rival-scout",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "snow-trade-road",
-      "roomId": "snow-trade-road-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": [
-        "snow-rival-scout-torso",
-        "snow-rival-scout-head",
-        "snow-rival-scout-hook",
-        "snow-rival-scout-band"
-      ],
-      "page": "resources/npc-3.html#npc%3Asnow-trade-road-roadhead%3Asnow-rival-scout"
+      "page": "resources/npc-2.html#npc%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper"
     },
     {
       "id": "npc:snow-trade-road-roadhead:snow-gate-keeper",
@@ -14324,7 +13968,7 @@
         }
       ],
       "itemIds": ["snow-gate-keeper-coat", "snow-gate-keeper-hat"],
-      "page": "resources/npc-3.html#npc%3Asnow-trade-road-roadhead%3Asnow-gate-keeper"
+      "page": "resources/npc-2.html#npc%3Asnow-trade-road-roadhead%3Asnow-gate-keeper"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-roadhead-sky",
@@ -14549,7 +14193,7 @@
         }
       ],
       "itemIds": ["snow-crew-coat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-crew-coat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-crew-coat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-crew-hat",
@@ -14570,7 +14214,7 @@
         }
       ],
       "itemIds": ["snow-crew-hat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-crew-hat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-crew-hat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-crew-signal-lamp",
@@ -14591,7 +14235,7 @@
         }
       ],
       "itemIds": ["snow-crew-signal-lamp"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-crew-signal-lamp"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-crew-signal-lamp"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-coat",
@@ -14612,7 +14256,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-coat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-coat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-coat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-hat",
@@ -14633,7 +14277,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-hat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-hat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-hat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-waiting-keeper-lamp",
@@ -14654,91 +14298,7 @@
         }
       ],
       "itemIds": ["snow-waiting-keeper-lamp"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-lamp"
-    },
-    {
-      "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-torso",
-      "label": "라이벌 · 정찰 작업복",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "snow-trade-road",
-      "roomId": "snow-trade-road-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["snow-rival-scout-torso"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-head",
-      "label": "라이벌 · 측량 고글",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "snow-trade-road",
-      "roomId": "snow-trade-road-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["snow-rival-scout-head"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-hook",
-      "label": "라이벌 · 정찰 갈고리",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "snow-trade-road",
-      "roomId": "snow-trade-road-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["snow-rival-scout-hook"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-rival-scout-band",
-      "label": "라이벌 · 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "snow-trade-road",
-      "roomId": "snow-trade-road-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["snow-rival-scout-band"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-rival-scout-band"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-waiting-keeper-lamp"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-gate-keeper-coat",
@@ -14759,7 +14319,7 @@
         }
       ],
       "itemIds": ["snow-gate-keeper-coat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-coat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-coat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-gate-keeper-hat",
@@ -14780,7 +14340,7 @@
         }
       ],
       "itemIds": ["snow-gate-keeper-hat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-hat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Asnow-trade-road%3Asnow-trade-road-roadhead%3Asnow-gate-keeper-hat"
     },
     {
       "id": "map:scrap-awakening-commission:snow-trade-road:snow-trade-road-roadhead:snow-gate-lamp-dim",
@@ -15953,7 +15513,7 @@
         }
       ],
       "itemIds": ["quarry-worker-coat", "quarry-worker-helmet", "quarry-worker-drill"],
-      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-worker"
+      "page": "resources/npc-2.html#npc%3Ared-quarry-roadhead%3Aquarry-worker"
     },
     {
       "id": "npc:red-quarry-roadhead:quarry-waiting-filler",
@@ -15978,33 +15538,7 @@
         "quarry-waiting-filler-helmet",
         "quarry-waiting-filler-drill"
       ],
-      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-waiting-filler"
-    },
-    {
-      "id": "npc:red-quarry-roadhead:quarry-rival-scout",
-      "label": "라이벌",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "red-quarry",
-      "roomId": "red-quarry-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "실제 맵의 조립된 NPC. 현재 별도 시간축 애니메이션은 없으며 상태별 폴리곤을 그대로 표시합니다.",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": [
-        "quarry-rival-scout-torso",
-        "quarry-rival-scout-head",
-        "quarry-rival-scout-hook",
-        "quarry-rival-scout-band"
-      ],
-      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-rival-scout"
+      "page": "resources/npc-2.html#npc%3Ared-quarry-roadhead%3Aquarry-waiting-filler"
     },
     {
       "id": "npc:red-quarry-roadhead:quarry-gate-filler",
@@ -16025,7 +15559,7 @@
         }
       ],
       "itemIds": ["quarry-gate-filler-coat", "quarry-gate-filler-helmet"],
-      "page": "resources/npc-3.html#npc%3Ared-quarry-roadhead%3Aquarry-gate-filler"
+      "page": "resources/npc-2.html#npc%3Ared-quarry-roadhead%3Aquarry-gate-filler"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-roadhead-sky",
@@ -16250,7 +15784,7 @@
         }
       ],
       "itemIds": ["quarry-worker-coat"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-coat"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-coat"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-worker-helmet",
@@ -16271,7 +15805,7 @@
         }
       ],
       "itemIds": ["quarry-worker-helmet"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-helmet"
+      "page": "resources/npc-2.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-worker-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-worker-drill",
@@ -16400,90 +15934,6 @@
       "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-waiting-filler-drill"
     },
     {
-      "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-torso",
-      "label": "라이벌 · 정찰 작업복",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "red-quarry",
-      "roomId": "red-quarry-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-apprentice · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["quarry-rival-scout-torso"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-torso"
-    },
-    {
-      "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-head",
-      "label": "라이벌 · 측량 고글",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "red-quarry",
-      "roomId": "red-quarry-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-head · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["quarry-rival-scout-head"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-head"
-    },
-    {
-      "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-hook",
-      "label": "라이벌 · 정찰 갈고리",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "red-quarry",
-      "roomId": "red-quarry-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · salvage-hook · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["quarry-rival-scout-hook"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-hook"
-    },
-    {
-      "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-rival-scout-band",
-      "label": "라이벌 · 청록 수거 표식띠",
-      "category": "npc",
-      "producer": "map",
-      "kind": "static",
-      "regionId": "red-quarry",
-      "roomId": "red-quarry-roadhead",
-      "actorId": "rival",
-      "source": "src/game/maps/scrapAwakening.js",
-      "notes": "원본 기본 활성 리소스 · rival-marker · stone",
-      "actions": [
-        {
-          "id": "base",
-          "label": "기본 상태",
-          "frameCount": 1
-        }
-      ],
-      "itemIds": ["quarry-rival-scout-band"],
-      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-rival-scout-band"
-    },
-    {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-gate-filler-coat",
       "label": "절개 갱도 앞 대기 채석공 · 적갈색 방진 작업복",
       "category": "npc",
@@ -16523,7 +15973,7 @@
         }
       ],
       "itemIds": ["quarry-gate-filler-helmet"],
-      "page": "resources/npc-4.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-gate-filler-helmet"
+      "page": "resources/npc-3.html#map%3Ascrap-awakening-commission%3Ared-quarry%3Ared-quarry-roadhead%3Aquarry-gate-filler-helmet"
     },
     {
       "id": "map:scrap-awakening-commission:red-quarry:red-quarry-roadhead:quarry-gate-blast-dim",
@@ -17739,7 +17189,7 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/npc-4.html#svg%3Arival-scout"
+      "page": "resources/npc-3.html#svg%3Arival-scout"
     },
     {
       "id": "svg:scrapyard-owner",
@@ -17776,7 +17226,7 @@
         }
       ],
       "itemIds": [],
-      "page": "resources/npc-4.html#svg%3Ascrapyard-owner"
+      "page": "resources/npc-3.html#svg%3Ascrapyard-owner"
     },
     {
       "id": "svg:prologue-control-core",
@@ -20386,7 +19836,6 @@
     "resources/npc-1.html",
     "resources/npc-2.html",
     "resources/npc-3.html",
-    "resources/npc-4.html",
     "resources/player-1.html",
     "resources/prop-1.html",
     "resources/prop-2.html",

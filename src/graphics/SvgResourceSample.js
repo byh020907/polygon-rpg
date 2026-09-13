@@ -1,6 +1,7 @@
 import { sampleSvgAsset } from './svg/SvgAssetSampler.js';
 import { IDENTITY, multiply, point } from './svg/SvgMath.js';
 import { freezeSceneData } from './scene/SceneAssetRegistry.js';
+import { ref01Appearance } from './Ref01Appearance.js';
 export function sampleSvgResource(resource, action, options, baseFrame) {
   const asset = resource.svgAsset,
     sample = sampleSvgAsset(asset, { lod: action.lod, pose: action.pose });
@@ -18,6 +19,7 @@ export function sampleSvgResource(resource, action, options, baseFrame) {
       const points = item.points.map(project);
       return {
         ...item,
+        ...ref01Appearance(asset.id, item, size / asset.viewBox[3]),
         id: `${resource.id}:${item.id}`,
         points,
         parallax: 1,

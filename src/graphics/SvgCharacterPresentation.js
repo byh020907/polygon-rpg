@@ -194,6 +194,11 @@ export function sampleSvgCharacterPresentation(
       return {
         ...shape,
         ...ref01Appearance(binding.asset.id, shape, geometryScale),
+        ...(binding.asset.id === 'scrapyard-apprentice' && /shield/.test(shape.partId)
+          ? { equipmentSlot: 'shield' }
+          : binding.asset.id === 'scrapyard-apprentice' && /weapon/.test(shape.partId)
+            ? { equipmentSlot: 'weapon' }
+            : {}),
         id:
           binding.asset.id === 'scrapyard-apprentice' && shape.partId === binding.weaponPartId
             ? 'sword-blade'

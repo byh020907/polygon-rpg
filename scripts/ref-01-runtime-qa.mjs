@@ -15,9 +15,13 @@ for (const [label, width, height] of [
     await b.until("document.querySelector('#graphics-review')?.dataset.ready==='true'", 60000);
     for (const [resource, action, frame] of [
       ['player:protagonist', 'idle', 0],
+      ['player:protagonist', 'run', 8],
       ['player:protagonist', 'slash', 12],
+      ['player:protagonist', 'heavy', 18],
       ['player:protagonist', 'roll', 12],
       ['scene:ref-01-cast-lineup', 'idle', 0],
+      ['npc:cast:rival-scout', 'run', 8],
+      ['npc:cast:scrapyard-owner', 'run', 8],
     ]) {
       await b.navigate(
         '?' +
@@ -40,7 +44,7 @@ for (const [label, width, height] of [
           "document.querySelector('[data-gr=stage]').scrollIntoView({block:'center'});",
         );
       await b.screenshot(
-        `artifacts/ref-01-runtime/${label}-${resource.startsWith('scene:') ? 'lineup' : action}.png`,
+        `artifacts/ref-01-runtime/${label}-${resource.startsWith('scene:') ? 'lineup' : resource.startsWith('npc:') ? resource.split(':').at(-1) + '-' + action : action}.png`,
       );
     }
     console.log(label + ' REF01 actual review renderer PASS');
